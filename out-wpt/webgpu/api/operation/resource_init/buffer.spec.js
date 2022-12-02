@@ -48,13 +48,11 @@ class F extends GPUTest {
         entryPoint: 'main',
       },
     });
-
     const outputTexture = this.device.createTexture({
       format: 'rgba8unorm',
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
     });
-
     this.trackForCleanup(outputTexture);
     const bindGroup = this.device.createBindGroup({
       layout: computePipeline.getBindGroupLayout(0),
@@ -67,7 +65,6 @@ class F extends GPUTest {
             size: boundBufferSize,
           },
         },
-
         {
           binding: 1,
           resource: outputTexture.createView(),
@@ -93,7 +90,6 @@ class F extends GPUTest {
         module: vertexShaderModule,
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -102,16 +98,13 @@ class F extends GPUTest {
             return i_color;
         }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: {
         topology: 'point-list',
       },
     };
-
     if (testVertexBuffer) {
       renderPipelineDescriptor.vertex.buffers = [
         {
@@ -135,7 +128,6 @@ class F extends GPUTest {
         },
       ],
     });
-
     renderPass.end();
   }
 
@@ -173,7 +165,6 @@ the buffer, the remaining part of that buffer will be initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(buffer);
 
     const copySize = 12;
@@ -203,7 +194,6 @@ have already been initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     await buffer.mapAsync(mapMode);
@@ -234,7 +224,6 @@ already been initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
@@ -270,7 +259,6 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     const mapped = new Uint8Array(buffer.getMappedRange());
@@ -305,7 +293,6 @@ array buffer of getMappedRange() and the GPUBuffer itself have all been initiali
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
@@ -336,7 +323,6 @@ CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialize
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     const expectedData = new Uint8Array(bufferSize);
@@ -360,7 +346,6 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       format: dstTextureFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-
     t.trackForCleanup(dstTexture);
     const layout = getTextureCopyLayout(dstTextureFormat, '2d', textureSize);
     const srcBufferSize = layout.byteLength + bufferOffset;
@@ -369,7 +354,6 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
       size: srcBufferSize,
       usage: srcBufferUsage,
     });
-
     t.trackForCleanup(srcBuffer);
 
     const encoder = t.device.createCommandEncoder();
@@ -380,7 +364,6 @@ CopyBufferToTexture(), the contents of the GPUBuffer have already been initializ
         bytesPerRow: layout.bytesPerRow,
         rowsPerImage: layout.rowsPerImage,
       },
-
       { texture: dstTexture },
       textureSize
     );
@@ -409,7 +392,6 @@ remaining part of it will be initialized to 0.`
       size: bufferSize,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(dstBuffer);
 
     const querySet = t.device.createQuerySet({ type: 'occlusion', count: 1 });
@@ -448,7 +430,6 @@ remaining part of it will be initialized to 0.`
       size: textureSize,
       mipLevelCount: copyMipLevel + 1,
     });
-
     t.trackForCleanup(srcTexture);
 
     const bytesPerRow = 256;
@@ -463,7 +444,6 @@ remaining part of it will be initialized to 0.`
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(dstBuffer);
 
     const encoder = t.device.createCommandEncoder();
@@ -478,14 +458,12 @@ remaining part of it will be initialized to 0.`
               arrayLayerCount: 1,
               baseMipLevel: copyMipLevel,
             }),
-
             clearValue: { r: layer + 1, g: 0, b: 0, a: 0 },
             loadOp: 'clear',
             storeOp: 'store',
           },
         ],
       });
-
       renderPass.end();
     }
 
@@ -526,7 +504,6 @@ g.test('uniform_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.UNIFORM,
     });
-
     t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
@@ -563,7 +540,6 @@ g.test('readonly_storage_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
-
     t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
@@ -600,7 +576,6 @@ g.test('storage_buffer')
       size: bufferOffset + boundBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
     });
-
     t.trackForCleanup(buffer);
 
     const computeShaderModule = t.device.createShaderModule({
@@ -652,7 +627,6 @@ g.test('vertex_buffer')
         return output;
       }`,
       }),
-
       true
     );
 
@@ -661,7 +635,6 @@ g.test('vertex_buffer')
       size: bufferSize,
       usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_SRC,
     });
-
     t.trackForCleanup(vertexBuffer);
 
     const outputTexture = t.device.createTexture({
@@ -669,7 +642,6 @@ g.test('vertex_buffer')
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     t.trackForCleanup(outputTexture);
 
     const encoder = t.device.createCommandEncoder();
@@ -683,7 +655,6 @@ g.test('vertex_buffer')
         },
       ],
     });
-
     renderPass.setVertexBuffer(0, vertexBuffer, bufferOffset);
     renderPass.setPipeline(renderPipeline);
     renderPass.draw(1);
@@ -722,7 +693,6 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
       return output;
     }`,
       }),
-
       false
     );
 
@@ -732,7 +702,6 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_SRC,
     });
-
     t.trackForCleanup(indexBuffer);
 
     const outputTexture = t.device.createTexture({
@@ -740,7 +709,6 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     t.trackForCleanup(outputTexture);
 
     const encoder = t.device.createCommandEncoder();
@@ -754,7 +722,6 @@ GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
         },
       ],
     });
-
     renderPass.setPipeline(renderPipeline);
     renderPass.setIndexBuffer(indexBuffer, 'uint16', bufferOffset, 4);
     renderPass.drawIndexed(1);
@@ -791,7 +758,6 @@ have been initialized to 0.`
       return output;
     }`,
       }),
-
       false
     );
 
@@ -803,7 +769,6 @@ have been initialized to 0.`
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
-
     t.trackForCleanup(indirectBuffer);
 
     const outputTexture = t.device.createTexture({
@@ -811,7 +776,6 @@ have been initialized to 0.`
       size: [1, 1, 1],
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     t.trackForCleanup(outputTexture);
 
     // Initialize outputTexture to green.
@@ -827,7 +791,6 @@ have been initialized to 0.`
         },
       ],
     });
-
     renderPass.setPipeline(renderPipeline);
 
     let indexBuffer = undefined;
@@ -836,7 +799,6 @@ have been initialized to 0.`
         size: 4,
         usage: GPUBufferUsage.INDEX,
       });
-
       t.trackForCleanup(indexBuffer);
       renderPass.setIndexBuffer(indexBuffer, 'uint16');
       renderPass.drawIndexedIndirect(indirectBuffer, bufferOffset);
@@ -873,7 +835,6 @@ g.test('indirect_buffer_for_dispatch_indirect')
           textureStore(outImage, vec2<i32>(0, 0), vec4<f32>(1.0, 0.0, 0.0, 1.0));
         }`,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -884,7 +845,6 @@ g.test('indirect_buffer_for_dispatch_indirect')
       size: bufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.INDIRECT,
     });
-
     t.trackForCleanup(indirectBuffer);
 
     const outputTexture = t.device.createTexture({
@@ -895,7 +855,6 @@ g.test('indirect_buffer_for_dispatch_indirect')
         GPUTextureUsage.RENDER_ATTACHMENT |
         GPUTextureUsage.STORAGE_BINDING,
     });
-
     t.trackForCleanup(outputTexture);
 
     // Initialize outputTexture to green.

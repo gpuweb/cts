@@ -41,8 +41,8 @@ class ErrorScopeTests extends Fixture {
         // Generating an out-of-memory error by allocating a massive buffer.
         this.device.createBuffer({
           size: kMaxUnsignedLongLongValue, // Unrealistically massive buffer size
-          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+        });
         break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.
@@ -92,8 +92,8 @@ class ErrorScopeTests extends Fixture {
       'Timeout occurred waiting for uncaptured error');
 
     });
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(ErrorScopeTests);
 

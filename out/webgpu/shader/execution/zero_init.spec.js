@@ -35,8 +35,8 @@ function prettyPrint(t) {
           return `${t.containerType}<${prettyPrint({
             type: 'scalar',
             scalarType: t.scalarType,
-            isAtomic: false })
-          }>`;}
+            isAtomic: false
+          })}>`;}
 
       break;
     case 'scalar':
@@ -104,8 +104,8 @@ expandWithParams(function* (p) {
         ...p,
         access: 'read_write',
         storageMode: undefined,
-        containerType: 'scalar' }) ?
-
+        containerType: 'scalar'
+      }) ?
       [true, false] :
       [false]) {
         for (const scalarType of supportedScalarTypes({ isAtomic, ...p })) {
@@ -118,8 +118,8 @@ expandWithParams(function* (p) {
           yield {
             type: 'scalar',
             scalarType,
-            isAtomic };
-
+            isAtomic
+          };
           if (!isAtomic) {
             // Vector types
             for (const vectorType of kVectorContainerTypes) {
@@ -139,8 +139,8 @@ expandWithParams(function* (p) {
               yield {
                 type: 'container',
                 containerType: vectorType,
-                scalarType };
-
+                scalarType
+              };
             }
             // Matrices can only be f32.
             if (scalarType === 'f32') {
@@ -148,8 +148,8 @@ expandWithParams(function* (p) {
                 yield {
                   type: 'container',
                   containerType: matrixType,
-                  scalarType };
-
+                  scalarType
+                };
               }
             }
           }
@@ -168,8 +168,8 @@ expandWithParams(function* (p) {
                 type: 'container',
                 containerType,
                 elementType: innerType,
-                length: elementCount };
-
+                length: elementCount
+              };
             }
           }
           break;
@@ -199,8 +199,8 @@ expandWithParams(function* (p) {
               const t = {
                 type: 'container',
                 containerType,
-                members };
-
+                members
+              };
               const serializedT = prettyPrint(t);
               if (seenTypes.has(serializedT)) {
                 // We produced an identical type. shuffle the member indices,
@@ -223,8 +223,8 @@ expandWithParams(function* (p) {
   for (const t of generateTypesMemo(p._containerDepth)) {
     yield {
       shaderTypeParam: prettyPrint(t),
-      _type: t };
-
+      _type: t
+    };
   }
 })).
 
@@ -284,8 +284,8 @@ fn(async (t) => {
             {
               type: 'scalar',
               scalarType: type.scalarType,
-              isAtomic: false },
-
+              isAtomic: false
+            },
             depth + 1)
             }>`;}
 
@@ -334,8 +334,8 @@ fn(async (t) => {
               {
                 type: 'scalar',
                 scalarType: type.scalarType,
-                isAtomic: false },
-
+                isAtomic: false
+              },
               depth + 1)
               }
                 }`;
@@ -349,8 +349,8 @@ fn(async (t) => {
               {
                 type: 'scalar',
                 scalarType: type.scalarType,
-                isAtomic: false },
-
+                isAtomic: false
+              },
               depth + 1)
               }
                   }
@@ -401,22 +401,22 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: wgsl }),
-
-      entryPoint: 'main' } });
-
-
+        code: wgsl
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   const resultBuffer = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
   t.trackForCleanup(resultBuffer);
 
   const zeroBuffer = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.UNIFORM });
-
+    usage: GPUBufferUsage.UNIFORM
+  });
   t.trackForCleanup(zeroBuffer);
 
   const bindGroup = t.device.createBindGroup({
@@ -425,17 +425,17 @@ fn(async (t) => {
     {
       binding: 0,
       resource: {
-        buffer: resultBuffer } },
-
-
+        buffer: resultBuffer
+      }
+    },
     {
       binding: 1,
       resource: {
-        buffer: zeroBuffer } }] });
+        buffer: zeroBuffer
+      }
+    }]
 
-
-
-
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();

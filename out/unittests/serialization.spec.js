@@ -210,8 +210,8 @@ g.test('anyOf').fn((t) => {
     for (const c of [
     {
       comparator: anyOf(i32(123)),
-      testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)] }])
-
+      testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)]
+    }])
     {
       const serialized = c.comparator;
       const deserialized = deserializeComparator(serialized);

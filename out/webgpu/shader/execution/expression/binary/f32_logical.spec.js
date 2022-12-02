@@ -148,8 +148,8 @@ export const d = makeCaseCache('binary/f32_logical', {
     return vectorTestValues(2, true).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
-  } });
-
+  }
+});
 
 g.test('equals').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').

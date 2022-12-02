@@ -101,7 +101,6 @@ g.test('require_location')
       io: t.params.stage === 'fragment' ? 'in' : 'out',
       use_struct: t.params.use_struct,
     });
-
     t.expectCompileResult(t.params.attribute === '@location(0)', code);
   });
 
@@ -142,6 +141,5 @@ g.test('duplicate')
       io: 'in',
       use_struct: false,
     });
-
     t.expectCompileResult(t.params.attr === '', code);
   });

@@ -69,7 +69,6 @@ g.test('writeTimestamp')
       type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
       count: 1,
     });
-
     const encoder = t.createEncoder('non-pass');
 
     t.shouldThrow(featureContainsTimestampQuery ? false : 'TypeError', () => {

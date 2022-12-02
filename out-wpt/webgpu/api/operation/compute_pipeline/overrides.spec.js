@@ -20,7 +20,6 @@ class F extends GPUTest {
         module: this.device.createShaderModule({
           code,
         }),
-
         entryPoint: 'main',
         constants,
       },
@@ -159,7 +158,6 @@ g.test('precision')
         c1,
         c2,
       },
-
       `
         override c1: f32;
         override c2: f32;
@@ -198,7 +196,6 @@ g.test('workgroup_size')
       {
         d: size,
       },
-
       `
         override d: ${type};
 
@@ -246,7 +243,6 @@ g.test('shared_shader_module')
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-
       t.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
@@ -264,7 +260,6 @@ g.test('shared_shader_module')
           },
         },
       },
-
       {
         layout: 'auto',
         compute: {
@@ -299,7 +294,6 @@ g.test('shared_shader_module')
 
         layout: pipelines[0].getBindGroupLayout(0),
       }),
-
       t.device.createBindGroup({
         entries: [
           {
@@ -370,17 +364,14 @@ g.test('multi_entry_points')
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-
       t.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-
       t.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
       }),
-
       t.device.createBuffer({
         size: Uint32Array.BYTES_PER_ELEMENT,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE,
@@ -398,7 +389,6 @@ g.test('multi_entry_points')
           },
         },
       },
-
       {
         layout: 'auto',
         compute: {
@@ -409,7 +399,6 @@ g.test('multi_entry_points')
           },
         },
       },
-
       {
         layout: 'auto',
         compute: {
@@ -421,7 +410,6 @@ g.test('multi_entry_points')
           },
         },
       },
-
       {
         layout: 'auto',
         compute: {
@@ -461,7 +449,6 @@ g.test('multi_entry_points')
 
         layout: pipelines[0].getBindGroupLayout(0),
       }),
-
       t.device.createBindGroup({
         entries: [
           {
@@ -472,7 +459,6 @@ g.test('multi_entry_points')
 
         layout: pipelines[1].getBindGroupLayout(0),
       }),
-
       t.device.createBindGroup({
         entries: [
           {
@@ -483,7 +469,6 @@ g.test('multi_entry_points')
 
         layout: pipelines[2].getBindGroupLayout(0),
       }),
-
       t.device.createBindGroup({
         entries: [
           {

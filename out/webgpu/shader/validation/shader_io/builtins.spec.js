@@ -81,8 +81,8 @@ fn((t) => {
     type: t.params.type,
     stage: t.params.target_stage,
     io: t.params.target_io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   // Expect to pass iff the built-in table contains an entry that matches.
   const expectation = kBuiltins.some(
@@ -122,8 +122,8 @@ fn((t) => {
     type: t.params.target_type,
     stage: t.params.stage,
     io: t.params.io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   // Expect to pass iff the built-in table contains an entry that matches.
   const expectation = kBuiltins.some(
@@ -159,8 +159,8 @@ fn((t) => {
     type: 'Outer',
     stage: t.params.target_stage,
     io: t.params.target_io,
-    use_struct: false });
-
+    use_struct: false
+  });
 
   // Expect to pass only if the struct is not used for entry point IO.
   t.expectCompileResult(t.params.target_stage === '', code);

@@ -126,8 +126,8 @@ fn(async (t) => {
 
   const querySet = t.createQuerySetWithState(querySetState, {
     type: 'timestamp',
-    count: 2 });
-
+    count: 2
+  });
 
   const encoder = t.createEncoder('non-pass');
   encoder.encoder.writeTimestamp(querySet, 0);
@@ -147,8 +147,8 @@ fn(async (t) => {
 
   const querySet = sourceDevice.createQuerySet({
     type: 'timestamp',
-    count: 2 });
-
+    count: 2
+  });
   t.trackForCleanup(querySet);
 
   const encoder = t.createEncoder('non-pass');

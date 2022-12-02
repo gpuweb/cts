@@ -547,8 +547,8 @@ export class ScalarType {
 
   toString() {
     return this.kind;
-  }}
-
+  }
+}
 
 /** ScalarType describes the type of WGSL Vector. */
 export class VectorType {
@@ -575,8 +575,8 @@ export class VectorType {
 
   toString() {
     return `vec${this.width}<${this.elementType}>`;
-  }}
-
+  }
+}
 
 // Maps a string representation of a vector type to vector type.
 const vectorTypes = new Map();
@@ -766,8 +766,8 @@ export class Scalar {
           return `${Colors.bold(this.value.toString())} (0x${hex})`;
         }}
 
-  }}
-
+  }
+}
 
 /** Create an f64 from a numeric value, a JS `number`. */
 export function f64(value) {
@@ -952,8 +952,8 @@ export class Vector {
   get w() {
     assert(3 < this.elements.length);
     return this.elements[3];
-  }}
-
+  }
+}
 
 /** Helper for constructing a new two-element vector with the provided values */
 export function vec2(x, y) {
@@ -1021,16 +1021,16 @@ export function serializeValue(v) {
     return {
       kind: 'scalar',
       type: kind,
-      value: value(kind, v) };
-
+      value: value(kind, v)
+    };
   }
   if (v instanceof Vector) {
     const kind = v.type.elementType.kind;
     return {
       kind: 'vector',
       type: kind,
-      value: v.elements.map((e) => value(kind, e)) };
-
+      value: v.elements.map((e) => value(kind, e))
+    };
   }
   unreachable(`unhandled value type: ${v}`);
 }

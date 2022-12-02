@@ -105,33 +105,28 @@ g.test('corr')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorrTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCorrTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCorrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCorrTestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
@@ -200,33 +195,28 @@ g.test('coww')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowwTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowwRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: storageMemoryCowwTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: storageMemoryCowwRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCowwTestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
@@ -248,7 +238,6 @@ g.test('coww')
       ...memoryModelTestParams,
       numBehaviors: 2,
     };
-
     const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
     await memModelTester.run(60, 1);
   });
@@ -312,33 +301,28 @@ g.test('cowr')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowrTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCowrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCowrTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCowrRMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCowrTestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
@@ -401,13 +385,11 @@ g.test('corw1')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorw1TestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCorw1TestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
@@ -428,7 +410,6 @@ g.test('corw1')
       ...memoryModelTestParams,
       numBehaviors: 2,
     };
-
     const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
     await memModelTester.run(60, 1);
   });
@@ -493,33 +474,28 @@ g.test('corw2')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorw2TestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryCorw2RMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCorw2TestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupStorageMemoryCorw2RMWTestCode,
       extraFlags: 'rmw_variant',
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,
       _testCode: workgroupMemoryCorw2TestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,

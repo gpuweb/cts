@@ -100,8 +100,8 @@ export class DevicePool {
       // Mark the holder as free so the device can be reused (if it's still in this.devices).
       holder.state = 'free';
     }
-  }}
-
+  }
+}
 
 /**
  * Map from GPUDeviceDescriptor to DeviceHolder.
@@ -183,8 +183,8 @@ class DescriptorToHolderMap {
         return;
       }
     }
-  }}
-
+  }
+}
 
 
 
@@ -240,8 +240,8 @@ desc)
   const descriptorCanonicalized = {
     requiredFeatures: featuresCanonicalized,
     requiredLimits: limitsCanonicalized,
-    defaultQueue: {} };
-
+    defaultQueue: {}
+  };
   return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }
 
@@ -387,5 +387,6 @@ class DeviceHolder {
    */
   releaseGPUDevice() {
     this._device = undefined;
-  }}
+  }
+}
 //# sourceMappingURL=device_pool.js.map

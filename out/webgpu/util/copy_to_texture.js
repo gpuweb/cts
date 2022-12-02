@@ -59,8 +59,8 @@ export class CopyToTextureUtils extends GPUTest {
         R: sourcePixels[pixelPos * 4] / divide,
         G: sourcePixels[pixelPos * 4 + 1] / divide,
         B: sourcePixels[pixelPos * 4 + 2] / divide,
-        A: sourcePixels[pixelPos * 4 + 3] / divide };
-
+        A: sourcePixels[pixelPos * 4 + 3] / divide
+      };
       applyConversion(rgba);
       return rgba;
     },
@@ -90,5 +90,6 @@ export class CopyToTextureUtils extends GPUTest {
 
     this.eventualExpectOK(resultPromise);
     this.trackForCleanup(dstTextureCopyView.texture);
-  }}
+  }
+}
 //# sourceMappingURL=copy_to_texture.js.map

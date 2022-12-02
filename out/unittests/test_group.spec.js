@@ -34,8 +34,8 @@ g.test('custom_fixture').fn(async (t0) => {
   class Counter extends UnitTest {
     count() {
       seen++;
-    }}
-
+    }
+  }
 
   const g = makeTestGroupForUnitTesting(Counter);
 

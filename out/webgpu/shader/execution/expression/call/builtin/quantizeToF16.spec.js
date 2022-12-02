@@ -61,8 +61,8 @@ export const d = makeCaseCache('quantizeToF16', {
     cases.push(...fullF32Range().map(makeCase));
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

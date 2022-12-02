@@ -50,8 +50,8 @@ class F extends ValidationTest {
     const attachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: attachmentSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -59,10 +59,10 @@ class F extends ValidationTest {
       {
         view: attachment.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.setViewport(v.x, v.y, v.w, v.h, v.minDepth, v.maxDepth);
     pass.end();
 
@@ -79,8 +79,8 @@ class F extends ValidationTest {
     const attachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: attachmentSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -88,10 +88,10 @@ class F extends ValidationTest {
       {
         view: attachment.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     if (success === 'type-error') {
       this.shouldThrow('TypeError', () => {
         pass.setScissorRect(s.x, s.y, s.w, s.h);
@@ -110,8 +110,8 @@ class F extends ValidationTest {
     const attachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: [1, 1, 1],
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -119,14 +119,14 @@ class F extends ValidationTest {
       {
         view: attachment.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
 
     return { encoder, pass };
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

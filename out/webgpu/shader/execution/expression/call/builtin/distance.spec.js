@@ -47,8 +47,8 @@ export const d = makeCaseCache('distance', {
     return kVectorSparseTestValues[4].flatMap((i) =>
     kVectorSparseTestValues[4].map((j) => makeCaseVecF32(i, j)));
 
-  } });
-
+  }
+});
 
 /** @returns a `distance` Case for a pair of vectors of f32s input */
 const makeCaseVecF32 = (x, y) => {

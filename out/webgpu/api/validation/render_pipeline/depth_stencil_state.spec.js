@@ -53,8 +53,8 @@ fn(async (t) => {
   const info = kTextureFormatInfo[format];
 
   const descriptor = t.getDescriptor({
-    depthStencil: { format, depthCompare } });
-
+    depthStencil: { format, depthCompare }
+  });
 
   const depthTestEnabled = depthCompare !== undefined && depthCompare !== 'always';
   t.doCreateRenderPipelineTest(isAsync, !depthTestEnabled || info.depth, descriptor);
@@ -80,8 +80,8 @@ fn(async (t) => {
   const info = kTextureFormatInfo[format];
 
   const descriptor = t.getDescriptor({
-    depthStencil: { format, depthWriteEnabled } });
-
+    depthStencil: { format, depthWriteEnabled }
+  });
   t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
 });
 

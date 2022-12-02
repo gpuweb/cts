@@ -27,8 +27,8 @@ export const d = makeCaseCache('normalize', {
   },
   f32_vec4: () => {
     return vectorTestValues(4, false).map(makeCaseVecF32);
-  } });
-
+  }
+});
 
 /** @returns a `normalize` Case for a vector of f32s input */
 const makeCaseVecF32 = (x) => {

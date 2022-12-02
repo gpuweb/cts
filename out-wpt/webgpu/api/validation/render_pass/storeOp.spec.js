@@ -53,7 +53,6 @@ g.test('store_op_and_read_only')
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const depthAttachmentView = depthAttachment.createView();
 
     const encoder = t.device.createCommandEncoder();
@@ -69,7 +68,6 @@ g.test('store_op_and_read_only')
         stencilReadOnly,
       },
     });
-
     pass.end();
 
     t.expectValidationError(() => {

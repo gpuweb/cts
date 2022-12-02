@@ -83,73 +83,61 @@ g.test('binary_arith')
       _body: 'return mul(&a, 10) - mul(&a, 10);',
       _result: 20 - 200,
     },
-
     {
       name: 'LeftSE', //
       _body: 'return mul(&a, 10) - a;',
       _result: 20 - 20,
     },
-
     {
       name: 'RightSE', //
       _body: 'return a - mul(&a, 10);',
       _result: 2 - 20,
     },
-
     {
       name: 'ThreeSE',
       _body: 'return mul(&a, 10) - mul(&a, 10) - mul(&a, 10);',
       _result: 20 - 200 - 2000,
     },
-
     {
       name: 'LeftmostSE',
       _body: 'return mul3_ret0(&a, &b, &c, 10) - a - b - c;',
       _result: 0 - 20 - 30 - 40,
     },
-
     {
       name: 'RightmostSE', //
       _body: 'return a - b - c - mul3_ret0(&a, &b, &c, 10);',
       _result: 2 - 3 - 4 - 0,
     },
-
     {
       name: 'MiddleSE', //
       _body: 'return a - b - mul3_ret0(&a, &b, &c, 10) - c;',
       _result: 2 - 3 - 0 - 40,
     },
-
     {
       name: 'LiteralAndSEAndVar', //
       _body: 'return 1 - mul(&a, 10) - a;',
       _result: 1 - 20 - 20,
     },
-
     {
       name: 'VarAndSEAndLiteral', //
       _body: 'return a - mul(&a, 10) - 1;',
       _result: 2 - 20 - 1,
     },
-
     {
       name: 'SEAndVarAndLiteral', //
       _body: 'return mul(&a, 10) - a - 1;',
       _result: 20 - 20 - 1,
     },
-
     {
       name: 'VarAndLiteralAndSE', //
       _body: 'return a - 1 - mul(&a, 10);',
       _result: 2 - 1 - 20,
     },
-
     {
       name: 'MemberAccessAndSE',
       _body: 'return vec4_zero.x + set_vec4_x(&vec4_zero, 42);',
       _result: 0,
     },
-
     {
       name: 'SEAndMemberAccess',
       _body: 'return set_vec4_x(&vec4_zero, 42) + vec4_zero.x;',
@@ -169,7 +157,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'LeftSE',
       _body:
@@ -177,7 +164,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'RightSE',
       _body:
@@ -185,7 +171,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'LeftmostSE',
       _body:
@@ -193,7 +178,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'RightmostSE',
       _body:
@@ -201,7 +185,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'MiddleSE',
       _body:
@@ -209,7 +192,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'ShortCircuit_And_LhsOnly',
       _body:
@@ -218,7 +200,6 @@ g.test('binary_logical')
         'return a;',
       _result: 2,
     },
-
     {
       name: 'ShortCircuit_And_LhsAndRhs',
       _body:
@@ -227,7 +208,6 @@ g.test('binary_logical')
         'return a;',
       _result: 20,
     },
-
     {
       name: 'ShortCircuit_Or_LhsOnly',
       _body:
@@ -237,7 +217,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'ShortCircuit_Or_LhsAndRhs',
       _body:
@@ -247,7 +226,6 @@ g.test('binary_logical')
         'return i32(r);',
       _result: 1,
     },
-
     {
       name: 'NoShortCircuit_And',
       _body:
@@ -256,7 +234,6 @@ g.test('binary_logical')
         'return a;',
       _result: 20,
     },
-
     {
       name: 'NoShortCircuit_Or',
       _body:
@@ -278,19 +255,16 @@ g.test('binary_mixed')
       _body: 'return mul(&a, 10) - i32(mul(&a, 10) == 200 && mul(&a, 10) == 2000);',
       _result: 20 - 1,
     },
-
     {
       name: 'LogicalAndArith',
       _body: 'return i32(mul(&a, 10) == 20 && mul(&a, 10) == 200) - mul(&a, 10);',
       _result: 1 - 2000,
     },
-
     {
       name: 'ArithAndLogical_ShortCircuit',
       _body: 'return mul(&a, 10) - i32(mul(&a, 10) != 200 && mul(&a, 10) == 2000);',
       _result: 20 - 0,
     },
-
     {
       name: 'LogicalAndArith_ShortCircuit',
       _body: 'return i32(mul(&a, 10) != 20 && mul(&a, 10) == 200) - mul(&a, 10);',
@@ -308,13 +282,11 @@ g.test('call')
       _body: 'return sub_mul3(mul(&a, 2), 2, a, 3, 3, 4);',
       _result: 4 * 2 - 4 * 3 - 3 * 4,
     },
-
     {
       name: 'AllSE',
       _body: 'return sub_mul3(mul(&a, 2), 2, mul(&a, 2), 3, mul(&a, 2), 4);',
       _result: 4 * 2 - 8 * 3 - 16 * 4,
     },
-
     {
       name: 'MiddleNotSE',
       _body: 'return sub_mul3(mul(&a, 2), 2, a, 3, mul(&a, 2), 4);',
@@ -332,13 +304,11 @@ g.test('index_accessor')
       _body: 'return arr2D[mul(&a, 2)][a];',
       _result: 4 * 10 + 4,
     },
-
     {
       name: 'RightSE', //
       _body: 'return arr2D[a][mul(&a, 2)];',
       _result: 2 * 10 + 4,
     },
-
     {
       name: 'BothSE',
       _body: 'return arr2D[mul(&a, 2)][mul(&a, 2)];',
@@ -358,7 +328,6 @@ g.test('assignment')
         'return arr1D_zero[8];',
       _result: 4,
     },
-
     {
       name: 'ToArray2D',
       _body:
@@ -366,7 +335,6 @@ g.test('assignment')
         'return arr2D_zero[8][16];',
       _result: 4,
     },
-
     {
       name: 'ToArrayFromArray',
       _body:
@@ -375,7 +343,6 @@ g.test('assignment')
         'return arr1D_zero[16];',
       _result: 123,
     },
-
     {
       name: 'ToArrayIndexedByArrayIndexedBySE',
       _body:
@@ -386,7 +353,6 @@ g.test('assignment')
         'return arr1[3];',
       _result: 4,
     },
-
     {
       name: 'ToVec_BothSE',
       _body:
@@ -395,7 +361,6 @@ g.test('assignment')
         'return vec4_zero[2];',
       _result: 1,
     },
-
     {
       name: 'ToVec_LeftSE',
       _body:
@@ -403,7 +368,6 @@ g.test('assignment')
         'return vec4_zero[3];',
       _result: 2,
     },
-
     {
       name: 'ToVec_RightSE',
       _body:
@@ -425,7 +389,6 @@ g.test('type_constructor')
         'return sub_mul3(r.x, 2, r.y, 3, r.z, 4);',
       _result: 4 * 2 - 8 * 3 - 16 * 4,
     },
-
     {
       name: 'Array1D',
       _body:
@@ -433,7 +396,6 @@ g.test('type_constructor')
         'return sub_mul3(r[0], 2, r[1], 3, r[2], 4);',
       _result: 4 * 2 - 8 * 3 - 16 * 4,
     },
-
     {
       name: 'Array2D',
       _body:
@@ -454,7 +416,6 @@ g.test('member_accessor')
       _body: 'return vec3(mul(&a, 2)).x - vec3(mul(&a, 3)).x;',
       _result: 4 - 12,
     },
-
     {
       name: 'Struct',
       _body: 'return make_S(mul(&a, 2)).x - make_S(mul(&a, 3)).x;',

@@ -42,19 +42,19 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module: sourceDevice.createShaderModule({
-        code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }` }),
-
-      entryPoint: 'main' },
-
+        code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: sourceDevice.createShaderModule({
-        code: '@fragment fn main() {}' }),
-
+        code: '@fragment fn main() {}'
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setPipeline(pipeline);

@@ -26,8 +26,8 @@ export const d = makeCaseCache('sign', {
     };
 
     return fullF32Range().map(makeCase);
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

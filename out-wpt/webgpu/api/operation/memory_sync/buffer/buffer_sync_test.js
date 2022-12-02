@@ -25,47 +25,36 @@ const kOpInfo = {
   'write-buffer': {
     contexts: ['queue'],
   },
-
   'b2t-copy': {
     contexts: ['command-encoder'],
   },
-
   'b2b-copy': {
     contexts: ['command-encoder'],
   },
-
   't2b-copy': {
     contexts: ['command-encoder'],
   },
-
   storage: {
     contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'storage-read': {
     contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'input-vertex': {
     contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'input-index': {
     contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'input-indirect': {
     contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'input-indirect-index': {
     contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
-
   'input-indirect-dispatch': {
     contexts: ['compute-pass-encoder'],
   },
-
   'constant-uniform': {
     contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
@@ -327,7 +316,6 @@ export class BufferSyncTest extends GPUTest {
         module: this.device.createShaderModule({
           code: wgslCompute,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -340,19 +328,15 @@ export class BufferSyncTest extends GPUTest {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
         }),
-
         entryPoint: 'vert_main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: wgslShaders.fragment,
         }),
-
         entryPoint: 'frag_main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
   }
@@ -503,7 +487,6 @@ export class BufferSyncTest extends GPUTest {
         module: this.device.createShaderModule({
           code: wgslCompute,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -555,7 +538,6 @@ export class BufferSyncTest extends GPUTest {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
         }),
-
         entryPoint: 'vert_main',
         buffers: [
           {
@@ -570,16 +552,13 @@ export class BufferSyncTest extends GPUTest {
           },
         ],
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: wgslShaders.fragment,
         }),
-
         entryPoint: 'frag_main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
   }
@@ -631,19 +610,15 @@ export class BufferSyncTest extends GPUTest {
         module: this.device.createShaderModule({
           code: wgslShaders.vertex,
         }),
-
         entryPoint: 'vert_main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: wgslShaders.fragment,
         }),
-
         entryPoint: 'frag_main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
   }

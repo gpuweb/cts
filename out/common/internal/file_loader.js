@@ -81,8 +81,8 @@ export class TestFileLoader extends EventTarget {
   async loadCases(query) {
     const tree = await this.loadTree(query);
     return tree.iterateLeaves();
-  }}
-
+  }
+}
 
 export class DefaultTestFileLoader extends TestFileLoader {
   async listing(suite) {
@@ -91,5 +91,6 @@ export class DefaultTestFileLoader extends TestFileLoader {
 
   import(path) {
     return import(`../../${path}`);
-  }}
+  }
+}
 //# sourceMappingURL=file_loader.js.map

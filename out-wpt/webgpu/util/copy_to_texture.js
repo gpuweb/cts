@@ -45,7 +45,6 @@ export class CopyToTextureUtils extends GPUTest {
           B: sourcePixels[pixelPos * 4 + 2] / divide,
           A: sourcePixels[pixelPos * 4 + 3] / divide,
         };
-
         applyConversion(rgba);
         return rgba;
       },

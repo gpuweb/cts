@@ -39,8 +39,8 @@ const memoryModelTestParams = {
   permuteSecond: 419,
   memStride: 4,
   aliasedMemory: false,
-  numBehaviors: 2 };
-
+  numBehaviors: 2
+};
 
 const storageMemoryBarrierStoreLoadTestCode = `
   test_locations.value[x_0] = 1u;
@@ -67,8 +67,8 @@ paramsSimple([
 { memType: MemoryType.NonAtomicStorageClass, _testCode: storageMemoryBarrierStoreLoadTestCode },
 {
   memType: MemoryType.NonAtomicWorkgroupClass,
-  _testCode: workgroupMemoryBarrierStoreLoadTestCode }]).
-
+  _testCode: workgroupMemoryBarrierStoreLoadTestCode
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -122,8 +122,8 @@ paramsSimple([
 { memType: MemoryType.NonAtomicStorageClass, _testCode: storageMemoryBarrierLoadStoreTestCode },
 {
   memType: MemoryType.NonAtomicWorkgroupClass,
-  _testCode: workgroupMemoryBarrierLoadStoreTestCode }]).
-
+  _testCode: workgroupMemoryBarrierLoadStoreTestCode
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -176,12 +176,12 @@ desc(
 paramsSimple([
 {
   memType: MemoryType.NonAtomicStorageClass,
-  _testCode: storageMemoryBarrierStoreStoreTestCode },
-
+  _testCode: storageMemoryBarrierStoreStoreTestCode
+},
 {
   memType: MemoryType.NonAtomicWorkgroupClass,
-  _testCode: workgroupMemoryBarrierStoreStoreTestCode }]).
-
+  _testCode: workgroupMemoryBarrierStoreStoreTestCode
+}]).
 
 fn(async (t) => {
   const resultCode = `

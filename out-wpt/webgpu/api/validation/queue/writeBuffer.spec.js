@@ -28,7 +28,6 @@ g.test('buffer_state')
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
-
     const data = new Uint8Array(16);
     const _valid = bufferState === 'valid';
 
@@ -62,7 +61,6 @@ g.test('ranges')
         size: bufferSize,
         usage: GPUBufferUsage.COPY_DST,
       });
-
       const arraySm = testBuffer ? new arrayType(8).buffer : new arrayType(8);
       const arrayMd = testBuffer ? new arrayType(16).buffer : new arrayType(16);
       const arrayLg = testBuffer ? new arrayType(32).buffer : new arrayType(32);
@@ -181,7 +179,6 @@ g.test('buffer,device_mismatch')
       size: 16,
       usage: GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(buffer);
 
     const data = new Uint8Array(16);

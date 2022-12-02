@@ -110,9 +110,9 @@ export class ParamsBuilderBase {
 
   /**
    * Hidden from test files. Use `builderIterateCasesWithSubcases` to access this.
-   */}
+   */
 
-
+}
 
 /**
  * Calls the (normally hidden) `iterateCasesWithSubcases()` method.
@@ -214,8 +214,8 @@ ParamsBuilderBase
       yield {};
     });
 
-  }}
-
+  }
+}
 
 /**
  * The unit CaseParamsBuilder, representing a single case with no params: `[ {} ]`.
@@ -297,8 +297,8 @@ ParamsBuilderBase
   /** @inheritDoc */
   unless(pred) {
     return this.filter((x) => !pred(x));
-  }}
-
+  }
+}
 
 function expanderGenerator(
 baseGenerator,

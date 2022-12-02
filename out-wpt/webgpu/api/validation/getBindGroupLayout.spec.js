@@ -39,10 +39,8 @@ g.test('index_range,explicit_layout')
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -51,7 +49,6 @@ g.test('index_range,explicit_layout')
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
@@ -87,10 +84,8 @@ g.test('index_range,auto_layout')
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -101,7 +96,6 @@ g.test('index_range,auto_layout')
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },

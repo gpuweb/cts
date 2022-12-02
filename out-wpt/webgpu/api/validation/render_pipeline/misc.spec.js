@@ -75,15 +75,12 @@ g.test('pipeline_layout,device_mismatch')
         module: t.device.createShaderModule({
           code: kDefaultVertexShaderCode,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: kDefaultFragmentShaderCode,
         }),
-
         entryPoint: 'main',
         targets: [{ format }],
       },

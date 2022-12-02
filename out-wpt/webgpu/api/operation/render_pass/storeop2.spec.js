@@ -43,10 +43,8 @@ TODO: needs review and rename
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -55,11 +53,9 @@ TODO: needs review and rename
             }
             `,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'r8unorm' }],
       },
-
       primitive: { topology: 'triangle-list' },
     });
 
@@ -75,7 +71,6 @@ TODO: needs review and rename
         },
       ],
     });
-
     pass.setPipeline(renderPipeline);
     pass.draw(3);
     pass.end();

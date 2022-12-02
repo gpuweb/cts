@@ -52,8 +52,8 @@ export const d = makeCaseCache('dot', {
         return makeCase(i, j);
       });
     });
-  } });
-
+  }
+});
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').

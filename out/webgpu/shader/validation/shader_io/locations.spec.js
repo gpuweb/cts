@@ -58,8 +58,8 @@ fn((t) => {
     type: 'f32',
     stage: t.params.target_stage,
     io: t.params.target_io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   // Expect to fail for compute shaders or when used as a non-struct vertex output (since the
   // position built-in must also be specified).
@@ -92,8 +92,8 @@ fn((t) => {
     type: t.params.type,
     stage: 'fragment',
     io: 'in',
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   // Expect to pass iff a valid type is used.
   t.expectCompileResult(t.params._valid, code);
@@ -123,8 +123,8 @@ fn((t) => {
     type: 'Outer',
     stage: t.params.target_stage,
     io: t.params.target_io,
-    use_struct: false });
-
+    use_struct: false
+  });
 
   // Expect to pass only if the struct is not used for entry point IO.
   t.expectCompileResult(t.params.target_stage === '', code);

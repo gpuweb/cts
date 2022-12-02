@@ -264,7 +264,6 @@ class F extends CopyToTextureUtils {
         bytesPerRow: width * 4,
         rowsPerImage: height,
       },
-
       {
         width,
         height,
@@ -324,7 +323,6 @@ class F extends CopyToTextureUtils {
         height: p.height,
         depthOrArrayLayers: 1,
       },
-
       format: p.dstColorFormat,
       usage:
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -356,7 +354,6 @@ class F extends CopyToTextureUtils {
         colorSpace: 'srgb',
         premultipliedAlpha: p.dstPremultiplied,
       },
-
       expectedDestinationImage,
       { width: p.width, height: p.height, depthOrArrayLayers: 1 },
       // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
@@ -652,7 +649,6 @@ g.test('color_space_conversion')
       maxFractionalDiff: 0,
       maxDiffULPsForNormFormat: 1,
     };
-
     if (srcColorSpace !== dstColorSpace) {
       // Color space conversion seems prone to errors up to about 0.0003 on f32, 0.0007 on f16.
       texelCompareOptions.maxFractionalDiff = 0.001;
@@ -668,7 +664,6 @@ g.test('color_space_conversion')
         colorSpace: dstColorSpace,
         premultipliedAlpha: dstPremultiplied,
       },
-
       expectedDestinationImage,
       { width, height, depthOrArrayLayers: 1 },
       texelCompareOptions

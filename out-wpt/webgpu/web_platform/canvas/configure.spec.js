@@ -100,7 +100,6 @@ g.test('device')
       device: t.device,
       format: 'rgba8unorm',
     });
-
     ctx.getCurrentTexture();
   });
 
@@ -197,7 +196,6 @@ g.test('usage')
           },
         ],
       });
-
       pass.end();
       t.device.queue.submit([encoder.finish()]);
     }

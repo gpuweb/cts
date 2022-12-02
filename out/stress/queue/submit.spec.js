@@ -29,15 +29,15 @@ fn(async (t) => {
                 @builtin(global_invocation_id) id: vec3<u32>) {
               buffer.data[id.x] = buffer.data[id.x] + 1u;
             }
-          ` }),
-
-      entryPoint: 'main' } });
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   const encoder = t.device.createCommandEncoder();
   const kNumIterations = 500_000;
   for (let i = 0; i < kNumIterations; ++i) {
@@ -74,15 +74,15 @@ fn(async (t) => {
                 @builtin(global_invocation_id) id: vec3<u32>) {
               buffer.data[id.x] = buffer.data[id.x] + 1u;
             }
-          ` }),
-
-      entryPoint: 'main' } });
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   const kNumIterations = 500_000;
   const buffers = [];
   for (let i = 0; i < kNumIterations; ++i) {

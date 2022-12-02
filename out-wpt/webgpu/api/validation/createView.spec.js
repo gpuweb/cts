@@ -97,7 +97,6 @@ g.test('dimension')
       size,
       usage: GPUTextureUsage.TEXTURE_BINDING,
     };
-
     const texture = t.device.createTexture(textureDescriptor);
 
     const view = { dimension: viewDimension };

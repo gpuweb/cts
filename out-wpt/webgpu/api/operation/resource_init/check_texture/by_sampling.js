@@ -88,7 +88,6 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
         size: 4,
         usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
       });
-
       new Int32Array(ubo.getMappedRange(), 0, 1)[0] = level;
       ubo.unmap();
 
@@ -98,7 +97,6 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
         size: byteLength,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
-
       t.trackForCleanup(resultBuffer);
 
       const bindGroup = t.device.createBindGroup({
@@ -108,7 +106,6 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
             binding: 0,
             resource: { buffer: ubo },
           },
-
           {
             binding: 1,
             resource: texture.createView({
@@ -117,7 +114,6 @@ export const checkContentsBySampling = (t, params, texture, state, subresourceRa
               dimension: params.dimension,
             }),
           },
-
           {
             binding: 3,
             resource: {

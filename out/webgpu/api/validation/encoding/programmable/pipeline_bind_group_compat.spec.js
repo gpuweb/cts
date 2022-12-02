@@ -56,16 +56,16 @@ class F extends ValidationTest {
   getIndexBuffer() {
     return this.device.createBuffer({
       size: 8 * Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.INDEX });
-
+      usage: GPUBufferUsage.INDEX
+    });
   }
 
   getIndirectBuffer(indirectParams) {
     const buffer = this.device.createBuffer({
       mappedAtCreation: true,
       size: indirectParams.length * Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST
+    });
     memcpy({ src: new Uint32Array(indirectParams) }, { dst: buffer.getMappedRange() });
     buffer.unmap();
     return buffer;
@@ -94,19 +94,19 @@ class F extends ValidationTest {
     const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries })) }),
-
+        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries }))
+      }),
       vertex: {
         module,
-        entryPoint: 'vs_main' },
-
+        entryPoint: 'vs_main'
+      },
       fragment: {
         module,
         entryPoint: 'fs_main',
-        targets: [{ format: 'rgba8unorm' }] },
-
-      primitive: { topology: 'triangle-list' } });
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
+      primitive: { topology: 'triangle-list' }
+    });
     return pipeline;
   }
 
@@ -122,13 +122,13 @@ class F extends ValidationTest {
     const module = this.device.createShaderModule({ code: shader });
     const pipeline = this.device.createComputePipeline({
       layout: this.device.createPipelineLayout({
-        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries })) }),
-
+        bindGroupLayouts: bindGroups.map((entries) => this.device.createBindGroupLayout({ entries }))
+      }),
       compute: {
         module,
-        entryPoint: 'main' } });
-
-
+        entryPoint: 'main'
+      }
+    });
     return pipeline;
   }
 
@@ -138,14 +138,14 @@ class F extends ValidationTest {
       const resource = this.getBindingResource(this.getBindingResourceType(entry));
       bgEntries.push({
         binding: entry.binding,
-        resource });
-
+        resource
+      });
     }
 
     return this.device.createBindGroup({
       entries: bgEntries,
-      layout: this.device.createBindGroupLayout({ entries: bglEntries }) });
-
+      layout: this.device.createBindGroupLayout({ entries: bglEntries })
+    });
   }
 
   doCompute(pass, call, callWithZero) {
@@ -195,8 +195,8 @@ class F extends ValidationTest {
   {
     const entry = {
       binding: 0,
-      visibility: encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.FRAGMENT };
-
+      visibility: encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.FRAGMENT
+    };
 
     switch (resourceType) {
       case 'uniformBuf':
@@ -258,8 +258,8 @@ class F extends ValidationTest {
     }
 
     validateFinish(success);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -292,8 +292,8 @@ fn((t) => {
     setBindGroup1,
     setUnusedBindGroup2,
     _success,
-    useU32Array } =
-  t.params;
+    useU32Array
+  } = t.params;
   const visibility =
   encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -376,9 +376,9 @@ fn(async (t) => {
     {
       binding: 0,
       resource: {
-        buffer: uniformBuffer } }],
-
-
+        buffer: uniformBuffer
+      }
+    }],
 
     layout: t.device.createBindGroupLayout({
       entries: [
@@ -386,10 +386,10 @@ fn(async (t) => {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
         buffer: {} // default type: uniform
-      }] }) });
+      }]
 
-
-
+    })
+  });
 
   // Create pipeline with different layouts
   const pipeline = t.createRenderPipelineWithLayout([
@@ -398,9 +398,9 @@ fn(async (t) => {
     binding: 0,
     visibility: GPUShaderStage.FRAGMENT,
     buffer: {
-      type } }]]);
-
-
+      type
+    }
+  }]]);
 
 
 
@@ -435,19 +435,19 @@ fn(async (t) => {
       resource:
       bgType === 'comparison' ?
       t.device.createSampler({ compare: 'always' }) :
-      t.device.createSampler() }],
-
+      t.device.createSampler()
+    }],
 
     layout: t.device.createBindGroupLayout({
       entries: [
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        sampler: { type: bgType } }] }) });
+        sampler: { type: bgType }
+      }]
 
-
-
-
+    })
+  });
 
   // Create pipeline with different layouts
   const pipeline = t.createRenderPipelineWithLayout([
@@ -456,9 +456,9 @@ fn(async (t) => {
     binding: 0,
     visibility: GPUShaderStage.FRAGMENT,
     sampler: {
-      type: bglType } }]]);
-
-
+      type: bglType
+    }
+  }]]);
 
 
 
@@ -495,8 +495,8 @@ fn((t) => {
     bgBindings,
     plBindings,
     _success,
-    useU32Array } =
-  t.params;
+    useU32Array
+  } = t.params;
   const visibility =
   encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -613,8 +613,8 @@ fn((t) => {
     callWithZero,
     bgResourceType,
     plResourceType,
-    useU32Array } =
-  t.params;
+    useU32Array
+  } = t.params;
 
   const bglEntries = [
   t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array)];
@@ -668,23 +668,23 @@ fn(async (t) => {
   }
 
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: emptyBGLs });
-
+    bindGroupLayouts: emptyBGLs
+  });
 
   const pipeline = t.device.createComputePipeline({
     layout: pipelineLayout,
     compute: {
       module: t.device.createShaderModule({
-        code: '@compute @workgroup_size(1) fn main() {}' }),
-
-      entryPoint: 'main' } });
-
-
+        code: '@compute @workgroup_size(1) fn main() {}'
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   const emptyBindGroup = t.device.createBindGroup({
     layout: emptyBGL,
-    entries: [] });
-
+    entries: []
+  });
 
   const encoder = t.device.createCommandEncoder();
   const computePass = encoder.beginComputePass();
@@ -730,39 +730,39 @@ fn(async (t) => {
   }
 
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: emptyBGLs });
-
+    bindGroupLayouts: emptyBGLs
+  });
 
   const colorFormat = 'rgba8unorm';
   const pipeline = t.device.createRenderPipeline({
     layout: pipelineLayout,
     vertex: {
       module: t.device.createShaderModule({
-        code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }` }),
-
-      entryPoint: 'main' },
-
+        code: `@vertex fn main() -> @builtin(position) vec4<f32> { return vec4<f32>(); }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
-        code: `@fragment fn main() {}` }),
-
+        code: `@fragment fn main() {}`
+      }),
       entryPoint: 'main',
-      targets: [{ format: colorFormat, writeMask: 0 }] } });
-
-
+      targets: [{ format: colorFormat, writeMask: 0 }]
+    }
+  });
 
   const emptyBindGroup = t.device.createBindGroup({
     layout: emptyBGL,
-    entries: [] });
-
+    entries: []
+  });
 
   const encoder = t.device.createCommandEncoder();
 
   const attachmentTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const renderPass = encoder.beginRenderPass({
     colorAttachments: [
@@ -770,10 +770,10 @@ fn(async (t) => {
       view: attachmentTexture.createView(),
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   renderPass.setPipeline(pipeline);
   for (let i = 0; i < bindGroupLayoutEntryCount; i++) {

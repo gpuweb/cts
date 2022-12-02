@@ -38,15 +38,15 @@ t)
   const texture = t.device.createTexture({
     format,
     size: [1, 1, 1],
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+  });
 
   t.device.queue.writeTexture(
   { texture },
   texelData,
   {
-    bytesPerRow: texelData.byteLength },
-
+    bytesPerRow: texelData.byteLength
+  },
   [1]);
 
 
@@ -71,32 +71,32 @@ t)
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: shader }),
-
-      entryPoint: 'main' } });
-
-
+        code: shader
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   const outputBuffer = t.device.createBuffer({
     size: rep.componentOrder.length * 4,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: texture.createView() },
-
+      resource: texture.createView()
+    },
     {
       binding: 1,
       resource: {
-        buffer: outputBuffer } }] });
+        buffer: outputBuffer
+      }
+    }]
 
-
-
-
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
@@ -129,8 +129,8 @@ fn)
     R: rep.componentInfo.R ? fn(rep.componentInfo.R.bitLength, 0) : undefined,
     G: rep.componentInfo.G ? fn(rep.componentInfo.G.bitLength, 1) : undefined,
     B: rep.componentInfo.B ? fn(rep.componentInfo.B.bitLength, 2) : undefined,
-    A: rep.componentInfo.A ? fn(rep.componentInfo.A.bitLength, 3) : undefined };
-
+    A: rep.componentInfo.A ? fn(rep.componentInfo.A.bitLength, 3) : undefined
+  };
 }
 
 g.test('unorm_texel_data_in_shader').

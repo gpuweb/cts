@@ -219,7 +219,6 @@ function canonicalizeDescriptor(desc) {
     requiredLimits: limitsCanonicalized,
     defaultQueue: {},
   };
-
   return [descriptorCanonicalized, JSON.stringify(descriptorCanonicalized)];
 }
 

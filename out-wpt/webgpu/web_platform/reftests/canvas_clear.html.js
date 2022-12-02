@@ -25,7 +25,6 @@ runRefTest(async t => {
         },
       ],
     });
-
     pass.end();
     t.device.queue.submit([encoder.finish()]);
   }

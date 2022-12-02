@@ -175,16 +175,16 @@ fn(async (t) => {
     vertex: { module, entryPoint: 'vtest' },
     primitive: {
       topology: 'point-list',
-      unclippedDepth },
-
+      unclippedDepth
+    },
     depthStencil: { format, depthWriteEnabled: true },
     multisample: multisampled ? { count: 4 } : undefined,
     fragment: {
       module,
       entryPoint: writeDepth ? 'ftest_WriteDepth' : 'ftest_NoWriteDepth',
-      targets: [] } });
-
-
+      targets: []
+    }
+  });
 
   // Use depth comparison to check that the depth attachment now has the expected values.
   const checkPipeline = t.device.createRenderPipeline({
@@ -199,22 +199,22 @@ fn(async (t) => {
       depthWriteEnabled: true // If the check failed, overwrite with the expected result.
     },
     multisample: multisampled ? { count: 4 } : undefined,
-    fragment: { module, entryPoint: 'fcheck', targets: [{ format: 'r8unorm' }] } });
-
+    fragment: { module, entryPoint: 'fcheck', targets: [{ format: 'r8unorm' }] }
+  });
 
   const dsTexture = t.device.createTexture({
     format,
     size: [kNumTestPoints],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    sampleCount: multisampled ? 4 : 1 });
-
+    sampleCount: multisampled ? 4 : 1
+  });
   const dsTextureView = dsTexture.createView();
 
   const checkTextureDesc = {
     format: 'r8unorm',
     size: [kNumTestPoints],
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC };
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  };
   const checkTexture = t.device.createTexture(checkTextureDesc);
   const checkTextureView = checkTexture.createView();
   const checkTextureMSView = multisampled ?
@@ -225,29 +225,29 @@ fn(async (t) => {
   !multisampled && info.bytesPerBlock ?
   t.device.createBuffer({
     size: kNumTestPoints * info.bytesPerBlock,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ }) :
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  }) :
   undefined;
   const dsExpected =
   !multisampled && info.bytesPerBlock ?
   t.device.createBuffer({
     size: kNumTestPoints * info.bytesPerBlock,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ }) :
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  }) :
   undefined;
   const checkBuffer = t.device.createBuffer({
     size: kNumTestPoints,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
 
   const fragInputZFailedBuffer = t.device.createBuffer({
     size: 4 * kNumTestPoints,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
   const testBindGroup = t.device.createBindGroup({
     layout: testPipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer: fragInputZFailedBuffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer: fragInputZFailedBuffer } }]
+  });
 
   const enc = t.device.createCommandEncoder();
   {
@@ -260,9 +260,9 @@ fn(async (t) => {
         depthStoreOp: 'store',
         stencilClearValue: info.stencil ? 0 : undefined,
         stencilLoadOp: info.stencil ? 'clear' : undefined,
-        stencilStoreOp: info.stencil ? 'discard' : undefined } });
-
-
+        stencilStoreOp: info.stencil ? 'discard' : undefined
+      }
+    });
     pass.setPipeline(testPipeline);
     pass.setBindGroup(0, testBindGroup);
     pass.setViewport(0, 0, kNumTestPoints, 1, kViewportMinDepth, kViewportMaxDepth);
@@ -282,8 +282,8 @@ fn(async (t) => {
         resolveTarget: checkTextureView,
         clearValue,
         loadOp: 'clear',
-        storeOp: 'discard' } :
-
+        storeOp: 'discard'
+      } :
       { view: checkTextureView, clearValue, loadOp: 'clear', storeOp: 'store' }],
 
       depthStencilAttachment: {
@@ -292,9 +292,9 @@ fn(async (t) => {
         depthStoreOp: 'store',
         stencilClearValue: info.stencil ? 0 : undefined,
         stencilLoadOp: info.stencil ? 'clear' : undefined,
-        stencilStoreOp: info.stencil ? 'discard' : undefined } });
-
-
+        stencilStoreOp: info.stencil ? 'discard' : undefined
+      }
+    });
     pass.setPipeline(checkPipeline);
     pass.setViewport(0, 0, kNumTestPoints, 1, 0.0, 1.0);
     pass.draw(kNumTestPoints);
@@ -329,8 +329,8 @@ fn(async (t) => {
   checkBuffer,
   (a) =>
   checkElementsPassPredicate(a, (index, value) => value === kCheckPassedValue, {
-    predicatePrinter }),
-
+    predicatePrinter
+  }),
   { type: Uint8Array, typedLength: kNumTestPoints, method: 'map' });
 
 });
@@ -428,8 +428,8 @@ fn(async (t) => {
     primitive: { topology: 'point-list' },
     depthStencil: { format, depthWriteEnabled: true },
     multisample: multisampled ? { count: 4 } : undefined,
-    fragment: { module, entryPoint: 'finit', targets: [] } });
-
+    fragment: { module, entryPoint: 'finit', targets: [] }
+  });
 
   // With a viewport set to [0.25,0.75], output values in [0.0,1.0] and check they're clamped
   // before the depth test, regardless of whether unclippedDepth is enabled.
@@ -438,26 +438,26 @@ fn(async (t) => {
     vertex: { module, entryPoint: 'vmain' },
     primitive: {
       topology: 'point-list',
-      unclippedDepth },
-
+      unclippedDepth
+    },
     depthStencil: { format, depthCompare: 'not-equal' },
     multisample: multisampled ? { count: 4 } : undefined,
-    fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] } });
-
+    fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] }
+  });
 
   const dsTexture = t.device.createTexture({
     format,
     size: [kNumDepthValues],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    sampleCount: multisampled ? 4 : 1 });
-
+    sampleCount: multisampled ? 4 : 1
+  });
   const dsTextureView = dsTexture.createView();
 
   const testTextureDesc = {
     format: 'r8unorm',
     size: [kNumDepthValues],
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC };
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  };
   const testTexture = t.device.createTexture(testTextureDesc);
   const testTextureView = testTexture.createView();
   const testTextureMSView = multisampled ?
@@ -466,8 +466,8 @@ fn(async (t) => {
 
   const resultBuffer = t.device.createBuffer({
     size: kNumDepthValues,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
 
   const enc = t.device.createCommandEncoder();
   {
@@ -480,9 +480,9 @@ fn(async (t) => {
         depthStoreOp: 'store',
         stencilClearValue: info.stencil ? 0 : undefined,
         stencilLoadOp: info.stencil ? 'clear' : undefined,
-        stencilStoreOp: info.stencil ? 'discard' : undefined } });
-
-
+        stencilStoreOp: info.stencil ? 'discard' : undefined
+      }
+    });
     pass.setPipeline(initPipeline);
     pass.draw(kNumDepthValues);
     pass.end();
@@ -497,8 +497,8 @@ fn(async (t) => {
         resolveTarget: testTextureView,
         clearValue,
         loadOp: 'clear',
-        storeOp: 'discard' } :
-
+        storeOp: 'discard'
+      } :
       { view: testTextureView, clearValue, loadOp: 'clear', storeOp: 'store' }],
 
       depthStencilAttachment: {
@@ -507,9 +507,9 @@ fn(async (t) => {
         depthStoreOp: 'store',
         stencilClearValue: info.stencil ? 0 : undefined,
         stencilLoadOp: info.stencil ? 'clear' : undefined,
-        stencilStoreOp: info.stencil ? 'discard' : undefined } });
-
-
+        stencilStoreOp: info.stencil ? 'discard' : undefined
+      }
+    });
     pass.setPipeline(testPipeline);
     pass.setViewport(0, 0, kNumDepthValues, 1, kViewportMinDepth, kViewportMaxDepth);
     pass.draw(kNumDepthValues);
@@ -519,7 +519,7 @@ fn(async (t) => {
   t.device.queue.submit([enc.finish()]);
 
   t.expectGPUBufferValuesEqual(resultBuffer, new Uint8Array(kNumDepthValues), 0, {
-    method: 'map' });
-
+    method: 'map'
+  });
 });
 //# sourceMappingURL=depth_clip_clamp.spec.js.map

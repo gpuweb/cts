@@ -22,8 +22,8 @@ fn((t) => {
   const { encoderType, state } = t.params;
   const indexBuffer = t.createBufferWithState(state, {
     size: 16,
-    usage: GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.INDEX
+  });
 
   const { encoder, validateFinishAndSubmitGivenState } = t.createEncoder(encoderType);
   encoder.setIndexBuffer(indexBuffer, 'uint32');
@@ -42,8 +42,8 @@ fn(async (t) => {
 
   const indexBuffer = sourceDevice.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.INDEX
+  });
   t.trackForCleanup(indexBuffer);
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
@@ -68,8 +68,8 @@ fn((t) => {
   const { encoderType, usage } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 16,
-    usage });
-
+    usage
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setIndexBuffer(indexBuffer, 'uint32');
@@ -93,8 +93,8 @@ fn((t) => {
   const { encoderType, indexFormat, offset } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.INDEX
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setIndexBuffer(indexBuffer, indexFormat, offset);
@@ -115,8 +115,8 @@ fn((t) => {
   const { encoderType, offset, size, _valid } = t.params;
   const indexBuffer = t.device.createBuffer({
     size: 256,
-    usage: GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.INDEX
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setIndexBuffer(indexBuffer, 'uint32', offset, size);

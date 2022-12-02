@@ -85,7 +85,6 @@ async function initCanvasContent(t, format, alphaMode, canvasType) {
     format,
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
-
   const tempTextureView = tempTexture.createView();
   const encoder = t.device.createCommandEncoder();
 
@@ -95,7 +94,6 @@ async function initCanvasContent(t, format, alphaMode, canvasType) {
         { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' },
       ],
     });
-
     pass.end();
     encoder.copyTextureToTexture(
       { texture: tempTexture },

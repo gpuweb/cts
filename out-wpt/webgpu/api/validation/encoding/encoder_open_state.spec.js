@@ -23,15 +23,12 @@ class F extends ValidationTest {
             }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `@fragment fn main() {}`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm', writeMask: 0 }],
       },
@@ -76,7 +73,6 @@ const kEncoderCommandInfo = {
   writeTimestamp: {},
   resolveQuerySet: {},
 };
-
 const kEncoderCommands = keysOf(kEncoderCommandInfo);
 
 const kRenderPassEncoderCommandInfo = {
@@ -99,7 +95,6 @@ const kRenderPassEncoderCommandInfo = {
   popDebugGroup: {},
   insertDebugMarker: {},
 };
-
 const kRenderPassEncoderCommands = keysOf(kRenderPassEncoderCommandInfo);
 
 const kRenderBundleEncoderCommandInfo = {
@@ -115,7 +110,6 @@ const kRenderBundleEncoderCommandInfo = {
   popDebugGroup: {},
   insertDebugMarker: {},
 };
-
 const kRenderBundleEncoderCommands = keysOf(kRenderBundleEncoderCommandInfo);
 
 // MAINTENANCE_TODO: remove the deprecated 'dispatch' and 'dispatchIndirect' here once they're
@@ -130,7 +124,6 @@ const kComputePassEncoderCommandInfo = {
   popDebugGroup: {},
   insertDebugMarker: {},
 };
-
 const kComputePassEncoderCommands = keysOf(kComputePassEncoderCommandInfo);
 
 g.test('non_pass_commands')
@@ -160,7 +153,6 @@ g.test('non_pass_commands')
       size: 16,
       usage: GPUBufferUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-
     const dstBuffer = t.device.createBuffer({
       size: 16,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.QUERY_RESOLVE,
@@ -173,7 +165,6 @@ g.test('non_pass_commands')
       format: textureFormat,
       usage: GPUTextureUsage.COPY_SRC,
     });
-
     const dstTexture = t.device.createTexture({
       size: textureSize,
       format: textureFormat,

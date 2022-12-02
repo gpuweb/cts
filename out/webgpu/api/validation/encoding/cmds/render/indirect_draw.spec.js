@@ -15,10 +15,10 @@ class F extends ValidationTest {
   makeIndexBuffer() {
     return this.device.createBuffer({
       size: 16,
-      usage: GPUBufferUsage.INDEX });
-
-  }}
-
+      usage: GPUBufferUsage.INDEX
+    });
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -34,8 +34,8 @@ fn((t) => {
   const pipeline = t.createNoOpRenderPipeline();
   const indirectBuffer = t.createBufferWithState(state, {
     size: 256,
-    usage: GPUBufferUsage.INDIRECT });
-
+    usage: GPUBufferUsage.INDIRECT
+  });
 
   const { encoder, validateFinishAndSubmitGivenState } = t.createEncoder(encoderType);
   encoder.setPipeline(pipeline);
@@ -65,8 +65,8 @@ fn(async (t) => {
 
   const indirectBuffer = sourceDevice.createBuffer({
     size: 256,
-    usage: GPUBufferUsage.INDIRECT });
-
+    usage: GPUBufferUsage.INDIRECT
+  });
   t.trackForCleanup(indirectBuffer);
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
@@ -98,8 +98,8 @@ fn((t) => {
   const { encoderType, indexed, usage } = t.params;
   const indirectBuffer = t.device.createBuffer({
     size: 256,
-    usage });
-
+    usage
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setPipeline(t.createNoOpRenderPipeline());
@@ -125,8 +125,8 @@ fn((t) => {
   const pipeline = t.createNoOpRenderPipeline();
   const indirectBuffer = t.device.createBuffer({
     size: 256,
-    usage: GPUBufferUsage.INDIRECT });
-
+    usage: GPUBufferUsage.INDIRECT
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setPipeline(pipeline);
@@ -185,8 +185,8 @@ fn((t) => {
   const pipeline = t.createNoOpRenderPipeline();
   const indirectBuffer = t.device.createBuffer({
     size: bufferSize,
-    usage: GPUBufferUsage.INDIRECT });
-
+    usage: GPUBufferUsage.INDIRECT
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setPipeline(pipeline);

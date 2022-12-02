@@ -33,7 +33,6 @@ function doTest(t) {
     {
       bytesPerRow: texelData.byteLength,
     },
-
     [1]
   );
 
@@ -60,7 +59,6 @@ function doTest(t) {
       module: t.device.createShaderModule({
         code: shader,
       }),
-
       entryPoint: 'main',
     },
   });
@@ -77,7 +75,6 @@ function doTest(t) {
         binding: 0,
         resource: texture.createView(),
       },
-
       {
         binding: 1,
         resource: {

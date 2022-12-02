@@ -90,8 +90,8 @@ fn(async (t) => {
     mipLevelCount,
     dimension,
     format,
-    usage };
-
+    usage
+  };
 
   const success = zeroArgument === 'none';
 
@@ -120,8 +120,8 @@ fn(async (t) => {
     size: [info.blockWidth, info.blockHeight, 1],
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -176,8 +176,8 @@ fn(async (t) => {
     mipLevelCount,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success = mipLevelCount <= maxMipLevelCount(descriptor);
 
@@ -235,8 +235,8 @@ fn(async (t) => {
     mipLevelCount: 0,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const mipLevelCount = maxMipLevelCount(descriptor);
   descriptor.mipLevelCount = mipLevelCount;
@@ -255,8 +255,8 @@ fn(async (t) => {
     size: [32, 32],
     mipLevelCount: 100,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -292,8 +292,8 @@ fn(async (t) => {
     sampleCount,
     dimension,
     format,
-    usage };
-
+    usage
+  };
 
   const success =
   sampleCount === 1 ||
@@ -371,8 +371,8 @@ fn(async (t) => {
     sampleCount,
     dimension,
     format,
-    usage };
-
+    usage
+  };
 
   const success =
   sampleCount === 1 ||
@@ -415,8 +415,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   t.device.createTexture(descriptor);
 });
@@ -456,8 +456,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   t.expectValidationError(() => {
     t.device.createTexture(descriptor);
@@ -491,8 +491,8 @@ fn(async (t) => {
     size: [width, height, depthOrArrayLayers],
     dimension: '1d',
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success =
   width <= kLimitInfo.maxTextureDimension1D.default && height === 1 && depthOrArrayLayers === 1;
@@ -535,8 +535,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success =
   size[0] <= kLimitInfo.maxTextureDimension2D.default &&
@@ -604,8 +604,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success =
   size[0] % info.blockWidth === 0 &&
@@ -654,8 +654,8 @@ fn(async (t) => {
     size,
     dimension: '3d',
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success =
   size[0] <= kLimitInfo.maxTextureDimension3D.default &&
@@ -731,8 +731,8 @@ fn(async (t) => {
     size,
     dimension: '3d',
     format,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const success =
   size[0] % info.blockWidth === 0 &&
@@ -776,8 +776,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage };
-
+    usage
+  };
 
   let success = true;
   const appliedDimension = dimension ?? '2d';
@@ -828,8 +828,8 @@ fn(async (t) => {
       format,
       size: [blockWidth, blockHeight],
       usage: GPUTextureUsage.TEXTURE_BINDING,
-      viewFormats: [viewFormat] });
-
+      viewFormats: [viewFormat]
+    });
   }, !compatible);
 
   // Test the viewFormat and the texture format in the list.
@@ -838,8 +838,8 @@ fn(async (t) => {
       format,
       size: [blockWidth, blockHeight],
       usage: GPUTextureUsage.TEXTURE_BINDING,
-      viewFormats: [viewFormat, format] });
-
+      viewFormats: [viewFormat, format]
+    });
   }, !compatible);
 
   // Test the viewFormat multiple times in the list.
@@ -848,8 +848,8 @@ fn(async (t) => {
       format,
       size: [blockWidth, blockHeight],
       usage: GPUTextureUsage.TEXTURE_BINDING,
-      viewFormats: [viewFormat, viewFormat] });
-
+      viewFormats: [viewFormat, viewFormat]
+    });
   }, !compatible);
 });
 //# sourceMappingURL=createTexture.spec.js.map

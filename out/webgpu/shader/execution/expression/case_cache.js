@@ -114,8 +114,8 @@ export function deserializeExpectation(data) {
 export function serializeCase(c) {
   return {
     input: c.input instanceof Array ? c.input.map((v) => serializeValue(v)) : serializeValue(c.input),
-    expected: serializeExpectation(c.expected) };
-
+    expected: serializeExpectation(c.expected)
+  };
 }
 
 /** serializeCase() converts an SerializedCase to a Case */
@@ -125,8 +125,8 @@ export function deserializeCase(data) {
     data.input instanceof Array ?
     data.input.map((v) => deserializeValue(v)) :
     deserializeValue(data.input),
-    expected: deserializeExpectation(data.expected) };
-
+    expected: deserializeExpectation(data.expected)
+  };
 }
 
 /** CaseListBuilder is a function that builds a CaseList */
@@ -191,11 +191,11 @@ export class CaseCache {
       casesByName[name] = cases;
     }
     return casesByName;
-  }}
+  }
 
 
 
-
+}
 
 export function makeCaseCache(name, builders) {
   return new CaseCache(name, builders);

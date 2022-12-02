@@ -58,10 +58,8 @@ function makeBlitPipeline(device, format, multisample) {
             return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }`,
       }),
-
       entryPoint: 'main',
     },
-
     fragment: {
       module:
         multisample.sample > 1
@@ -83,11 +81,9 @@ function makeBlitPipeline(device, format, multisample) {
               return textureLoad(src, vec2<i32>(coord.xy), 0);
             }`,
             }),
-
       entryPoint: 'main',
       targets: [{ format }],
     },
-
     multisample: {
       count: multisample.render,
     },
@@ -137,7 +133,6 @@ g.test('texture_binding')
             textureStore(dst, coord, textureLoad(src, coord, 0));
           }`,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -165,7 +160,6 @@ g.test('texture_binding')
             binding: 0,
             resource: reinterpretedView,
           },
-
           {
             binding: 1,
             resource: outputTexture.createView(),
@@ -187,7 +181,6 @@ g.test('texture_binding')
           clampToFormatRange: true,
         }),
       },
-
       { maxDiffULPsForNormFormat: 1 }
     );
 
@@ -273,7 +266,6 @@ in view format and match in base format.`
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.setBindGroup(
       0,
@@ -317,7 +309,6 @@ in view format and match in base format.`
           },
         ],
       });
-
       pass.setPipeline(pipeline);
       pass.setBindGroup(
         0,
@@ -343,7 +334,6 @@ in view format and match in base format.`
     const renderViewTexels = TexelView.fromTexelsAsColors(viewFormat, inputTexelView.color, {
       clampToFormatRange: true,
     });
-
     t.expectOK(
       await textureContentIsOKByT2B(
         t,

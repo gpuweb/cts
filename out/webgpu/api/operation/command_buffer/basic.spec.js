@@ -20,21 +20,21 @@ g.test('b2t2b').fn(async (t) => {
   const src = t.device.createBuffer({
     mappedAtCreation: true,
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
   const dst = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const mid = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'rgba8uint',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToTexture(
@@ -58,21 +58,21 @@ g.test('b2t2t2b').fn(async (t) => {
   const src = t.device.createBuffer({
     mappedAtCreation: true,
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
   const dst = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const midDesc = {
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'rgba8uint',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST };
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  };
   const mid1 = t.device.createTexture(midDesc);
   const mid2 = t.device.createTexture(midDesc);
 

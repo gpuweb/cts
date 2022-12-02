@@ -43,7 +43,6 @@ g.test('bool')
           { input: True, expected: True },
         ],
       },
-
       vec2: {
         type: TypeVec(2, TypeBool),
         cases: [
@@ -53,7 +52,6 @@ g.test('bool')
           { input: vec2(True, True), expected: True },
         ],
       },
-
       vec3: {
         type: TypeVec(3, TypeBool),
         cases: [
@@ -67,7 +65,6 @@ g.test('bool')
           { input: vec3(True, True, True), expected: True },
         ],
       },
-
       vec4: {
         type: TypeVec(4, TypeBool),
         cases: [
@@ -90,7 +87,6 @@ g.test('bool')
         ],
       },
     };
-
     const overload = overloads[t.params.overload];
 
     await run(t, builtin('all'), [overload.type], TypeBool, t.params, overload.cases);

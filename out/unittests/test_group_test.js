@@ -30,5 +30,6 @@ export class TestGroupTest extends UnitTest {
 got
   ${JSON.stringify(gcases)}`);
 
-  }}
+  }
+}
 //# sourceMappingURL=test_group_test.js.map

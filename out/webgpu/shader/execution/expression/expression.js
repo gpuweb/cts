@@ -233,8 +233,8 @@ inputSource)
   const outputBufferSize = cases.length * kValueStride;
   const outputBuffer = t.device.createBuffer({
     size: outputBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
+  });
 
   const [pipeline, group] = buildPipeline(
   t,
@@ -290,8 +290,8 @@ inputSource)
 
     t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
       type: Uint8Array,
-      typedLength: outputBufferSize });
-
+      typedLength: outputBufferSize
+    });
   };
 }
 
@@ -370,14 +370,14 @@ fn main() {
         // build the pipeline
         const pipeline = t.device.createComputePipeline({
           layout: 'auto',
-          compute: { module, entryPoint: 'main' } });
-
+          compute: { module, entryPoint: 'main' }
+        });
 
         // build the bind group
         const group = t.device.createBindGroup({
           layout: pipeline.getBindGroupLayout(0),
-          entries: [{ binding: 0, resource: { buffer: outputBuffer } }] });
-
+          entries: [{ binding: 0, resource: { buffer: outputBuffer } }]
+        });
 
         return [pipeline, group];
       }
@@ -464,17 +464,17 @@ fn main() {
         // build the pipeline
         const pipeline = t.device.createComputePipeline({
           layout: 'auto',
-          compute: { module, entryPoint: 'main' } });
-
+          compute: { module, entryPoint: 'main' }
+        });
 
         // build the bind group
         const group = t.device.createBindGroup({
           layout: pipeline.getBindGroupLayout(0),
           entries: [
           { binding: 0, resource: { buffer: outputBuffer } },
-          { binding: 1, resource: { buffer: inputBuffer } }] });
+          { binding: 1, resource: { buffer: inputBuffer } }]
 
-
+        });
 
         return [pipeline, group];
       }}
@@ -546,8 +546,8 @@ vectorWidth)
       return {
         matched,
         got: `${packedReturnType}(${gElements.join(', ')})`,
-        expected: `${packedReturnType}(${eElements.join(', ')})` };
-
+        expected: `${packedReturnType}(${eElements.join(', ')})`
+      };
     };
 
     // Append the new packed case
@@ -558,8 +558,8 @@ vectorWidth)
   return {
     cases: packedCases,
     parameterTypes: packedParameterTypes,
-    returnType: packedReturnType };
-
+    returnType: packedReturnType
+  };
 }
 
 /**
@@ -616,8 +616,8 @@ param2,
   const intervals = ops.map((o) => o(param0, param1, param2));
   return {
     input: [f32(param0), f32(param1), f32(param2)],
-    expected: anyOf(...intervals) };
-
+    expected: anyOf(...intervals)
+  };
 }
 
 /**
@@ -633,8 +633,8 @@ export function makeVectorToF32IntervalCase(param, ...ops) {
   const intervals = ops.map((o) => o(param));
   return {
     input: [new Vector(param_f32)],
-    expected: anyOf(...intervals) };
-
+    expected: anyOf(...intervals)
+  };
 }
 
 /**
@@ -657,8 +657,8 @@ param1,
   const intervals = ops.map((o) => o(param0, param1));
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
-    expected: anyOf(...intervals) };
-
+    expected: anyOf(...intervals)
+  };
 }
 
 /**
@@ -674,8 +674,8 @@ export function makeVectorToVectorIntervalCase(param, ...ops) {
   const vectors = ops.map((o) => o(param));
   return {
     input: [new Vector(param_f32)],
-    expected: anyOf(...vectors) };
-
+    expected: anyOf(...vectors)
+  };
 }
 
 /**
@@ -698,8 +698,8 @@ param1,
   const vectors = ops.map((o) => o(param0, param1));
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
-    expected: anyOf(...vectors) };
-
+    expected: anyOf(...vectors)
+  };
 }
 
 /**
@@ -716,7 +716,7 @@ export function makeU32ToVectorIntervalCase(param, ...ops) {
   const vectors = ops.map((o) => o(param));
   return {
     input: param_u32,
-    expected: anyOf(...vectors) };
-
+    expected: anyOf(...vectors)
+  };
 }
 //# sourceMappingURL=expression.js.map

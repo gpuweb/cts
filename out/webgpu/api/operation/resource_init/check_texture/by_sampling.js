@@ -82,17 +82,17 @@ subresourceRange) =>
               for (var i : u32 = 0u; i < ${componentCount}u; i = i + 1u) {
                 result.values[flatIndex + i] = texel.${indexExpression};
               }
-            }` }) } });
-
-
-
+            }`
+        })
+      }
+    });
 
     for (const layer of layers) {
       const ubo = t.device.createBuffer({
         mappedAtCreation: true,
         size: 4,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+      });
       new Int32Array(ubo.getMappedRange(), 0, 1)[0] = level;
       ubo.unmap();
 
@@ -100,8 +100,8 @@ subresourceRange) =>
       width * height * depth * ReadbackTypedArray.BYTES_PER_ELEMENT * rep.componentOrder.length;
       const resultBuffer = t.device.createBuffer({
         size: byteLength,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+      });
       t.trackForCleanup(resultBuffer);
 
       const bindGroup = t.device.createBindGroup({
@@ -109,24 +109,24 @@ subresourceRange) =>
         entries: [
         {
           binding: 0,
-          resource: { buffer: ubo } },
-
+          resource: { buffer: ubo }
+        },
         {
           binding: 1,
           resource: texture.createView({
             baseArrayLayer: layer,
             arrayLayerCount: 1,
-            dimension: params.dimension }) },
-
-
+            dimension: params.dimension
+          })
+        },
         {
           binding: 3,
           resource: {
-            buffer: resultBuffer } }] });
+            buffer: resultBuffer
+          }
+        }]
 
-
-
-
+      });
 
       const commandEncoder = t.device.createCommandEncoder();
       const pass = commandEncoder.beginComputePass();

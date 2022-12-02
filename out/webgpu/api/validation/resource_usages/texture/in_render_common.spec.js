@@ -17,8 +17,8 @@ class F extends ValidationTest {
       view,
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' };
-
+      storeOp: 'store'
+    };
   }
 
   createBindGroupForTest(
@@ -28,8 +28,8 @@ class F extends ValidationTest {
   {
     const bindGroupLayoutEntry = {
       binding: 0,
-      visibility: GPUShaderStage.FRAGMENT };
-
+      visibility: GPUShaderStage.FRAGMENT
+    };
     switch (textureUsage) {
       case 'texture':
         bindGroupLayoutEntry.texture = { viewDimension: '2d-array', sampleType };
@@ -38,20 +38,20 @@ class F extends ValidationTest {
         bindGroupLayoutEntry.storageTexture = {
           access: 'write-only',
           format: 'rgba8unorm',
-          viewDimension: '2d-array' };
-
+          viewDimension: '2d-array'
+        };
         break;
       default:
         unreachable();
         break;}
 
     const layout = this.device.createBindGroupLayout({
-      entries: [bindGroupLayoutEntry] });
-
+      entries: [bindGroupLayoutEntry]
+    });
     return this.device.createBindGroup({
       layout,
-      entries: [{ binding: 0, resource: textureView }] });
-
+      entries: [{ binding: 0, resource: textureView }]
+    });
   }
 
   isRangeNotOverlapped(start0, end0, start1, end1) {
@@ -60,8 +60,8 @@ class F extends ValidationTest {
     // [start0, end0] [start1, end1] or
     // [start1, end1] [start0, end0]
     return end0 < start1 || end1 < start0;
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -92,36 +92,36 @@ fn(async (t) => {
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
     size: [kTextureSize, kTextureSize, kTextureLayers],
-    mipLevelCount: kTextureLevels });
-
+    mipLevelCount: kTextureLevels
+  });
 
   const colorAttachment1 = t.getColorAttachment(texture, {
     dimension: '2d',
     baseArrayLayer: layer0,
     arrayLayerCount: 1,
     baseMipLevel: level0,
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
   const colorAttachment2 = t.getColorAttachment(texture, {
     dimension: '2d',
     baseArrayLayer: layer1,
     baseMipLevel: level1,
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
   const encoder = t.device.createCommandEncoder();
   if (inSamePass) {
     const renderPass = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment1, colorAttachment2] });
-
+      colorAttachments: [colorAttachment1, colorAttachment2]
+    });
     renderPass.end();
   } else {
     const renderPass1 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment1] });
-
+      colorAttachments: [colorAttachment1]
+    });
     renderPass1.end();
     const renderPass2 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment2] });
-
+      colorAttachments: [colorAttachment2]
+    });
     renderPass2.end();
   }
 
@@ -165,8 +165,8 @@ fn(async (t) => {
     bgLayer,
     bgLayerCount,
     bgUsage,
-    inSamePass } =
-  t.params;
+    inSamePass
+  } = t.params;
 
   const texture = t.device.createTexture({
     format: 'rgba8unorm',
@@ -175,15 +175,15 @@ fn(async (t) => {
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.STORAGE_BINDING,
     size: [kTextureSize, kTextureSize, kTextureLayers],
-    mipLevelCount: kTextureLevels });
-
+    mipLevelCount: kTextureLevels
+  });
   const bindGroupView = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: bgLayer,
     arrayLayerCount: bgLayerCount,
     baseMipLevel: bgLevel,
-    mipLevelCount: bgLevelCount });
-
+    mipLevelCount: bgLevelCount
+  });
   const bindGroup = t.createBindGroupForTest(bindGroupView, bgUsage, 'float');
 
   const colorAttachment = t.getColorAttachment(texture, {
@@ -191,13 +191,13 @@ fn(async (t) => {
     baseArrayLayer: colorAttachmentLayer,
     arrayLayerCount: 1,
     baseMipLevel: colorAttachmentLevel,
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
-    colorAttachments: [colorAttachment] });
-
+    colorAttachments: [colorAttachment]
+  });
   if (inSamePass) {
     renderPass.setBindGroup(0, bindGroup);
     renderPass.end();
@@ -208,12 +208,12 @@ fn(async (t) => {
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       size: [kTextureSize, kTextureSize, 1],
-      mipLevelCount: 1 });
-
+      mipLevelCount: 1
+    });
     const colorAttachment2 = t.getColorAttachment(texture2);
     const renderPass2 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment2] });
-
+      colorAttachments: [colorAttachment2]
+    });
     renderPass2.setBindGroup(0, bindGroup);
     renderPass2.end();
   }
@@ -274,23 +274,23 @@ fn(async (t) => {
     bgLayerCount,
     dsReadOnly,
     bgAspect,
-    inSamePass } =
-  t.params;
+    inSamePass
+  } = t.params;
 
   const texture = t.device.createTexture({
     format: 'depth24plus-stencil8',
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     size: [kTextureSize, kTextureSize, kTextureLayers],
-    mipLevelCount: kTextureLevels });
-
+    mipLevelCount: kTextureLevels
+  });
   const bindGroupView = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: bgLayer,
     arrayLayerCount: bgLayerCount,
     baseMipLevel: bgLevel,
     mipLevelCount: bgLevelCount,
-    aspect: bgAspect });
-
+    aspect: bgAspect
+  });
   const sampleType = bgAspect === 'depth-only' ? 'depth' : 'uint';
   const bindGroup = t.createBindGroupForTest(bindGroupView, 'texture', sampleType);
 
@@ -299,8 +299,8 @@ fn(async (t) => {
     baseArrayLayer: dsLayer,
     arrayLayerCount: 1,
     baseMipLevel: dsLevel,
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
   const depthStencilAttachment = {
     view: attachmentView,
     depthReadOnly: dsReadOnly,
@@ -308,14 +308,14 @@ fn(async (t) => {
     depthStoreOp: 'store',
     stencilReadOnly: dsReadOnly,
     stencilLoadOp: 'load',
-    stencilStoreOp: 'store' };
-
+    stencilStoreOp: 'store'
+  };
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
     colorAttachments: [],
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
   if (inSamePass) {
     renderPass.setBindGroup(0, bindGroup);
     renderPass.end();
@@ -326,12 +326,12 @@ fn(async (t) => {
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       size: [kTextureSize, kTextureSize, 1],
-      mipLevelCount: 1 });
-
+      mipLevelCount: 1
+    });
     const colorAttachment2 = t.getColorAttachment(texture2);
     const renderPass2 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment2] });
-
+      colorAttachments: [colorAttachment2]
+    });
     renderPass2.setBindGroup(0, bindGroup);
     renderPass2.end();
   }
@@ -403,22 +403,22 @@ fn(async (t) => {
     format: 'rgba8unorm',
     usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING,
     size: [kTextureSize, kTextureSize, kTextureLayers],
-    mipLevelCount: kTextureLevels });
-
+    mipLevelCount: kTextureLevels
+  });
   const bg0 = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: bg0Layers.base,
     arrayLayerCount: bg0Layers.count,
     baseMipLevel: bg0Levels.base,
-    mipLevelCount: bg0Levels.count });
-
+    mipLevelCount: bg0Levels.count
+  });
   const bg1 = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: bg1Layers.base,
     arrayLayerCount: bg1Layers.count,
     baseMipLevel: bg1Levels.base,
-    mipLevelCount: bg1Levels.count });
-
+    mipLevelCount: bg1Levels.count
+  });
   const bindGroup0 = t.createBindGroupForTest(bg0, bgUsage0, 'float');
   const bindGroup1 = t.createBindGroupForTest(bg1, bgUsage1, 'float');
 
@@ -426,13 +426,13 @@ fn(async (t) => {
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
     size: [kTextureSize, kTextureSize, 1],
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
   const colorAttachment = t.getColorAttachment(colorTexture);
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
-    colorAttachments: [colorAttachment] });
-
+    colorAttachments: [colorAttachment]
+  });
   if (inSamePass) {
     renderPass.setBindGroup(0, bindGroup0);
     renderPass.setBindGroup(1, bindGroup1);
@@ -442,8 +442,8 @@ fn(async (t) => {
     renderPass.end();
 
     const renderPass2 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment] });
-
+      colorAttachments: [colorAttachment]
+    });
     renderPass2.setBindGroup(1, bindGroup1);
     renderPass2.end();
   }
@@ -509,31 +509,31 @@ fn(async (t) => {
     view1Layers,
     aspect0,
     aspect1,
-    inSamePass } =
-  t.params;
+    inSamePass
+  } = t.params;
 
   const texture = t.device.createTexture({
     format: 'depth24plus-stencil8',
     usage: GPUTextureUsage.TEXTURE_BINDING,
     size: [kTextureSize, kTextureSize, kTextureLayers],
-    mipLevelCount: kTextureLevels });
-
+    mipLevelCount: kTextureLevels
+  });
   const bindGroupView0 = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: view0Layers.base,
     arrayLayerCount: view0Layers.count,
     baseMipLevel: view0Levels.base,
     mipLevelCount: view0Levels.count,
-    aspect: aspect0 });
-
+    aspect: aspect0
+  });
   const bindGroupView1 = texture.createView({
     dimension: '2d-array',
     baseArrayLayer: view1Layers.base,
     arrayLayerCount: view1Layers.count,
     baseMipLevel: view1Levels.base,
     mipLevelCount: view1Levels.count,
-    aspect: aspect1 });
-
+    aspect: aspect1
+  });
 
   const sampleType0 = aspect0 === 'depth-only' ? 'depth' : 'uint';
   const sampleType1 = aspect1 === 'depth-only' ? 'depth' : 'uint';
@@ -544,13 +544,13 @@ fn(async (t) => {
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
     size: [kTextureSize, kTextureSize, 1],
-    mipLevelCount: 1 });
-
+    mipLevelCount: 1
+  });
   const colorAttachment = t.getColorAttachment(colorTexture);
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
-    colorAttachments: [colorAttachment] });
-
+    colorAttachments: [colorAttachment]
+  });
   if (inSamePass) {
     renderPass.setBindGroup(0, bindGroup0);
     renderPass.setBindGroup(1, bindGroup1);
@@ -560,8 +560,8 @@ fn(async (t) => {
     renderPass.end();
 
     const renderPass2 = encoder.beginRenderPass({
-      colorAttachments: [colorAttachment] });
-
+      colorAttachments: [colorAttachment]
+    });
     renderPass2.setBindGroup(1, bindGroup1);
     renderPass2.end();
   }

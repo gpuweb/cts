@@ -195,7 +195,6 @@ export class GPUTest extends Fixture {
       size,
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(dst);
 
     const c = this.device.createCommandEncoder();
@@ -281,7 +280,6 @@ export class GPUTest extends Fixture {
       typedLength,
       method,
     });
-
     this.eventualAsyncExpectation(async niceStack => {
       const readback = await readbackPromise;
       this.expectOK(check(readback.data), { mode, niceStack });
@@ -341,7 +339,6 @@ export class GPUTest extends Fixture {
       size: bufferSize,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(storageBuffer);
 
     // This buffer conveys the data we expect to see for a single value read. Since we read 32 bits at
@@ -355,7 +352,6 @@ export class GPUTest extends Fixture {
       usage: GPUBufferUsage.STORAGE,
       mappedAtCreation: true,
     });
-
     this.trackForCleanup(expectedDataBuffer);
     const expectedData = new Uint32Array(expectedDataBuffer.getMappedRange());
     if (valueSize === 1) {
@@ -379,7 +375,6 @@ export class GPUTest extends Fixture {
       size: numRows * 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-
     this.trackForCleanup(resultBuffer);
 
     const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
@@ -456,7 +451,6 @@ export class GPUTest extends Fixture {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
@@ -467,7 +461,6 @@ export class GPUTest extends Fixture {
         origin: { x: 0, y: 0, z: slice },
         aspect: layout?.aspect,
       },
-
       { buffer, bytesPerRow, rowsPerImage },
       mipSize
     );
@@ -494,7 +487,6 @@ export class GPUTest extends Fixture {
       size: byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
@@ -702,7 +694,6 @@ export class GPUTest extends Fixture {
       format,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     });
-
     this.trackForCleanup(texture);
 
     const textureEncoder = this.device.createCommandEncoder();
@@ -820,7 +811,6 @@ export class GPUTest extends Fixture {
             depthReadOnly: fullAttachmentInfo.depthReadOnly,
             stencilReadOnly: fullAttachmentInfo.stencilReadOnly,
           };
-
           if (
             kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].depth &&
             !fullAttachmentInfo.depthReadOnly

@@ -44,8 +44,8 @@ export const d = makeCaseCache('min', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 /** Generate set of min test cases from list of interesting values */
 function generateTestCases(

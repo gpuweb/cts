@@ -15,10 +15,10 @@ class F extends ValidationTest {
   entryPoint = 'main')
   {
     return this.device.createShaderModule({
-      code: getShaderWithEntryPoint(shaderStage, entryPoint) });
-
-  }}
-
+      code: getShaderWithEntryPoint(shaderStage, entryPoint)
+    });
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -34,8 +34,8 @@ fn(async (t) => {
   const { isAsync } = t.params;
   t.doCreateComputePipelineTest(isAsync, true, {
     layout: 'auto',
-    compute: { module: t.getShaderModule('compute', 'main'), entryPoint: 'main' } });
-
+    compute: { module: t.getShaderModule('compute', 'main'), entryPoint: 'main' }
+  });
 });
 
 g.test('shader_module,invalid').
@@ -51,9 +51,9 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.createInvalidShaderModule(),
-      entryPoint: 'main' } });
-
-
+      entryPoint: 'main'
+    }
+  });
 });
 
 g.test('shader_module,compute').
@@ -74,9 +74,9 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.getShaderModule(shaderModuleStage, 'main'),
-      entryPoint: 'main' } };
-
-
+      entryPoint: 'main'
+    }
+  };
   t.doCreateComputePipelineTest(isAsync, shaderModuleStage === 'compute', descriptor);
 });
 
@@ -94,16 +94,16 @@ fn(async (t) => {
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
   const module = sourceDevice.createShaderModule({
-    code: '@compute @workgroup_size(1) fn main() {}' });
-
+    code: '@compute @workgroup_size(1) fn main() {}'
+  });
 
   const descriptor = {
     layout: 'auto',
     compute: {
       module,
-      entryPoint: 'main' } };
-
-
+      entryPoint: 'main'
+    }
+  };
 
   t.doCreateComputePipelineTest(isAsync, !mismatched, descriptor);
 });
@@ -126,9 +126,9 @@ fn(async (t) => {
     layout,
     compute: {
       module: t.getShaderModule('compute', 'main'),
-      entryPoint: 'main' } };
-
-
+      entryPoint: 'main'
+    }
+  };
 
   t.doCreateComputePipelineTest(isAsync, !mismatched, descriptor);
 });
@@ -163,11 +163,11 @@ fn(async (t) => {
           @compute @workgroup_size(64) fn main () {
             _ = data;
           }
-          ` }),
-
-      entryPoint: 'main' } };
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  };
   t.doCreateComputePipelineTest(isAsync, count <= countAtLimit, descriptor);
 });
 
@@ -200,11 +200,11 @@ fn(async (t) => {
         code: `
           @compute @workgroup_size(${size.join(',')}) fn main () {
           }
-          ` }),
-
-      entryPoint: 'main' } };
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  };
 
   t.doCreateComputePipelineTest(
   isAsync,
@@ -244,11 +244,11 @@ fn(async (t) => {
         code: `
           @compute @workgroup_size(${size.join(',')}) fn main () {
           }
-          ` }),
-
-      entryPoint: 'main' } };
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  };
 
   size[1] = size[1] ?? 1;
   size[2] = size[2] ?? 1;
@@ -300,12 +300,12 @@ fn(async (t) => {
               _ = u32(c1);
               _ = u32(c2);
               _ = u32(c3);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      constants } };
-
-
+      constants
+    }
+  };
 
   t.doCreateComputePipelineTest(isAsync, _success, descriptor);
 });
@@ -358,12 +358,12 @@ fn(async (t) => {
               _ = u32(c8);
               _ = u32(c9);
               _ = u32(c10);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      constants } };
-
-
+      constants
+    }
+  };
 
   t.doCreateComputePipelineTest(isAsync, _success, descriptor);
 });
@@ -384,8 +384,8 @@ override z: i32 = 1;
 @compute @workgroup_size(x, y, z) fn main () {
   _ = 0u;
 }
-` };
-
+`
+};
 
 g.test('overrides,workgroup_size').
 desc(
@@ -412,12 +412,12 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: kOverridesWorkgroupSizeShaders[type] }),
-
+        code: kOverridesWorkgroupSizeShaders[type]
+      }),
       entryPoint: 'main',
-      constants } };
-
-
+      constants
+    }
+  };
 
   t.doCreateComputePipelineTest(isAsync, _success, descriptor);
 });
@@ -443,16 +443,16 @@ fn(async (t) => {
       layout: 'auto',
       compute: {
         module: t.device.createShaderModule({
-          code: kOverridesWorkgroupSizeShaders[type] }),
-
+          code: kOverridesWorkgroupSizeShaders[type]
+        }),
         entryPoint: 'main',
         constants: {
           x,
           y,
-          z } } };
-
-
-
+          z
+        }
+      }
+    };
 
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   };
@@ -507,15 +507,15 @@ fn(async (t) => {
               @compute @workgroup_size(1) fn main() {
                 ${vec4Count <= 0 ? '' : '_ = vec4_data[0];'}
                 ${mat4Count <= 0 ? '' : '_ = mat4_data[0];'}
-              }` }),
-
+              }`
+        }),
         entryPoint: 'main',
         constants: {
           a: vec4Count,
-          b: mat4Count } } };
-
-
-
+          b: mat4Count
+        }
+      }
+    };
 
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   };

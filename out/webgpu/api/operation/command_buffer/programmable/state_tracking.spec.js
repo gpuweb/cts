@@ -48,8 +48,8 @@ fn(async (t) => {
     t.makeBufferWithContents(new Int32Array([2]), kBufferUsage),
     'read-only-storage'),
 
-    out: t.createBindGroup(out, 'storage') };
-
+    out: t.createBindGroup(out, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
@@ -98,8 +98,8 @@ fn(async (t) => {
     t.makeBufferWithContents(new Int32Array([2]), kBufferUsage),
     'read-only-storage'),
 
-    out: t.createBindGroup(out, 'storage') };
-
+    out: t.createBindGroup(out, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
   t.setPipeline(encoder, pipeline);
@@ -146,8 +146,8 @@ fn(async (t) => {
     t.makeBufferWithContents(new Int32Array([2]), kBufferUsage),
     'read-only-storage'),
 
-    out: t.createBindGroup(out, 'storage') };
-
+    out: t.createBindGroup(out, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
@@ -187,8 +187,8 @@ fn(async (t) => {
     t.makeBufferWithContents(new Int32Array([3]), kBufferUsage),
     'read-only-storage'),
 
-    out: t.createBindGroup(out, 'storage') };
-
+    out: t.createBindGroup(out, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
   t.setPipeline(encoder, pipeline);
@@ -233,8 +233,8 @@ fn(async (t) => {
     'read-only-storage'),
 
     badOut: t.createBindGroup(badOut, 'storage'),
-    out: t.createBindGroup(out, 'storage') };
-
+    out: t.createBindGroup(out, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
 
@@ -284,8 +284,8 @@ fn(async (t) => {
     'read-only-storage'),
 
     outA: t.createBindGroup(outA, 'storage'),
-    outB: t.createBindGroup(outB, 'storage') };
-
+    outB: t.createBindGroup(outB, 'storage')
+  };
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType);
   encoder.setBindGroup(0, bindGroups.a);

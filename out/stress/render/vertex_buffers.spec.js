@@ -11,8 +11,8 @@ function createHugeVertexBuffer(t, size) {
   const kBufferSize = size * size * 8;
   const buffer = t.device.createBuffer({
     size: kBufferSize,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
     compute: {
@@ -27,20 +27,20 @@ function createHugeVertexBuffer(t, size) {
             buffer.data[base + x] = vec2<u32>(x, id.x);
           }
         }
-        ` }),
-
-      entryPoint: 'main' } });
-
-
+        `
+      }),
+      entryPoint: 'main'
+    }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: { buffer } }] });
+      resource: { buffer }
+    }]
 
-
-
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
@@ -50,8 +50,8 @@ function createHugeVertexBuffer(t, size) {
 
   const vertexBuffer = t.device.createBuffer({
     size: kBufferSize,
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+  });
   encoder.copyBufferToBuffer(buffer, 0, vertexBuffer, 0, kBufferSize);
   t.device.queue.submit([encoder.finish()]);
   return vertexBuffer;
@@ -74,8 +74,8 @@ fn(async (t) => {
     @fragment fn fmain() -> @location(0) vec4<f32> {
       return vec4<f32>(1.0, 0.0, 1.0, 1.0);
     }
-    ` });
-
+    `
+  });
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
@@ -88,33 +88,33 @@ fn(async (t) => {
         {
           format: 'uint32x2',
           offset: 0,
-          shaderLocation: 0 }] }] },
+          shaderLocation: 0
+        }]
 
+      }]
 
-
-
-
+    },
     primitive: { topology: 'point-list' },
     fragment: {
       targets: [{ format: 'rgba8unorm' }],
       module,
-      entryPoint: 'fmain' } });
-
-
+      entryPoint: 'fmain'
+    }
+  });
   const renderTarget = t.device.createTexture({
     size: [kSize, kSize],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const renderPassDescriptor = {
     colorAttachments: [
     {
       view: renderTarget.createView(),
       loadOp: 'load',
-      storeOp: 'store' }] };
+      storeOp: 'store'
+    }]
 
-
-
+  };
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass(renderPassDescriptor);
@@ -125,7 +125,7 @@ fn(async (t) => {
   t.device.queue.submit([encoder.finish()]);
   t.expectSingleColor(renderTarget, 'rgba8unorm', {
     size: [kSize, kSize, 1],
-    exp: { R: 1, G: 0, B: 1, A: 1 } });
-
+    exp: { R: 1, G: 0, B: 1, A: 1 }
+  });
 });
 //# sourceMappingURL=vertex_buffers.spec.js.map

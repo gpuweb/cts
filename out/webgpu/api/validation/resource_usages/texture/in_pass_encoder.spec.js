@@ -40,8 +40,8 @@ class TextureUsageTracking extends ValidationTest {
       mipLevelCount = 1,
       sampleCount = 1,
       format = 'rgba8unorm',
-      usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING } =
-    options;
+      usage = GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+    } = options;
 
     return this.device.createTexture({
       size: { width, height, depthOrArrayLayers: arrayLayerCount },
@@ -49,8 +49,8 @@ class TextureUsageTracking extends ValidationTest {
       sampleCount,
       dimension: '2d',
       format,
-      usage });
-
+      usage
+    });
   }
 
   createBindGroupLayout(
@@ -79,9 +79,9 @@ class TextureUsageTracking extends ValidationTest {
 
     return this.device.createBindGroupLayout({
       entries: [
-      { binding, visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT, ...entry }] });
+      { binding, visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT, ...entry }]
 
-
+    });
   }
 
   createBindGroup(
@@ -96,8 +96,8 @@ class TextureUsageTracking extends ValidationTest {
   {
     return this.device.createBindGroup({
       entries: [{ binding, resource }],
-      layout: this.createBindGroupLayout(binding, bindingType, viewDimension, options) });
-
+      layout: this.createBindGroupLayout(binding, bindingType, viewDimension, options)
+    });
   }
 
   createAndExecuteBundle(
@@ -108,8 +108,8 @@ class TextureUsageTracking extends ValidationTest {
   {
     const bundleEncoder = this.device.createRenderBundleEncoder({
       colorFormats: ['rgba8unorm'],
-      depthStencilFormat });
-
+      depthStencilFormat
+    });
     bundleEncoder.setBindGroup(binding, bindGroup);
     const bundle = bundleEncoder.finish();
     pass.executeBundles([bundle]);
@@ -122,10 +122,10 @@ class TextureUsageTracking extends ValidationTest {
         view,
         clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
   }
 
   /**
@@ -134,8 +134,8 @@ class TextureUsageTracking extends ValidationTest {
    */
   makeConflictingBindGroups() {
     const view = this.createTexture({
-      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING }).
-    createView();
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.TEXTURE_BINDING
+    }).createView();
     const bindGroupLayouts = [
     this.createBindGroupLayout(0, 'sampled-texture', '2d'),
     this.createBindGroupLayout(0, 'writeonly-storage-texture', '2d', { format: 'rgba8unorm' })];
@@ -145,14 +145,14 @@ class TextureUsageTracking extends ValidationTest {
       bindGroups: [
       this.device.createBindGroup({
         layout: bindGroupLayouts[0],
-        entries: [{ binding: 0, resource: view }] }),
-
+        entries: [{ binding: 0, resource: view }]
+      }),
       this.device.createBindGroup({
         layout: bindGroupLayouts[1],
-        entries: [{ binding: 0, resource: view }] })] };
+        entries: [{ binding: 0, resource: view }]
+      })]
 
-
-
+    };
   }
 
   testValidationScope(
@@ -173,8 +173,8 @@ class TextureUsageTracking extends ValidationTest {
 
     // Create pipeline. Note that bindings unused in pipeline should be validated too.
     const pipelineLayout = this.device.createPipelineLayout({
-      bindGroupLayouts });
-
+      bindGroupLayouts
+    });
     const pipeline = compute ?
     this.createNoOpComputePipeline(pipelineLayout) :
     this.createNoOpRenderPipeline(pipelineLayout);
@@ -183,8 +183,8 @@ class TextureUsageTracking extends ValidationTest {
       bindGroup1: bindGroups[1],
       encoder,
       pass,
-      pipeline };
-
+      pipeline
+    };
   }
 
   setPipeline(
@@ -210,8 +210,8 @@ class TextureUsageTracking extends ValidationTest {
     const pipeline = this.createNoOpComputePipeline(layout);
     pass.setPipeline(pipeline);
     pass.dispatchWorkgroups(1);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(TextureUsageTracking);
 
@@ -267,8 +267,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: BASE_LAYER,
   layerCount1: 1,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // Two texture usages are binding to different mip levels of the same texture.
 {
@@ -278,8 +278,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: BASE_LAYER,
   layerCount1: 1,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 
 // Two texture usages are binding to different array layers of the same texture.
 {
@@ -289,8 +289,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: BASE_LAYER + 1,
   layerCount1: 1,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 
 // The second texture usage contains the whole mip chain where the first texture usage is
 // using.
@@ -301,8 +301,8 @@ combineWithParams([
   levelCount1: TOTAL_LEVELS,
   baseLayer1: BASE_LAYER,
   layerCount1: 1,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // The second texture usage contains all layers where the first texture usage is using.
 {
@@ -312,8 +312,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: 0,
   layerCount1: TOTAL_LAYERS,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // The second texture usage contains all subresources where the first texture usage is
 // using.
@@ -324,8 +324,8 @@ combineWithParams([
   levelCount1: TOTAL_LEVELS,
   baseLayer1: 0,
   layerCount1: TOTAL_LAYERS,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // Both of the two usages access a few mip levels on the same layer but they don't overlap.
 {
@@ -335,8 +335,8 @@ combineWithParams([
   levelCount1: 3,
   baseLayer1: BASE_LAYER,
   layerCount1: 1,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 
 // Both of the two usages access a few mip levels on the same layer and they overlap.
 {
@@ -346,8 +346,8 @@ combineWithParams([
   levelCount1: 3,
   baseLayer1: BASE_LAYER,
   layerCount1: 1,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // Both of the two usages access a few array layers on the same level but they don't
 // overlap.
@@ -358,8 +358,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: BASE_LAYER + SLICE_COUNT,
   layerCount1: 3,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 
 // Both of the two usages access a few array layers on the same level and they overlap.
 {
@@ -369,8 +369,8 @@ combineWithParams([
   levelCount1: 1,
   baseLayer1: BASE_LAYER + SLICE_COUNT - 1,
   layerCount1: 3,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 
 // Both of the two usages access a few array layers and mip levels but they don't overlap.
 {
@@ -380,8 +380,8 @@ combineWithParams([
   levelCount1: 3,
   baseLayer1: BASE_LAYER + SLICE_COUNT,
   layerCount1: 3,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 
 // Both of the two usages access a few array layers and mip levels and they overlap.
 {
@@ -391,8 +391,8 @@ combineWithParams([
   levelCount1: 3,
   baseLayer1: BASE_LAYER + SLICE_COUNT - 1,
   layerCount1: 3,
-  _resourceSuccess: false }]).
-
+  _resourceSuccess: false
+}]).
 
 unless(
 (p) =>
@@ -419,8 +419,8 @@ fn((t) => {
     type0,
     type1,
     _usageOK,
-    _resourceSuccess } =
-  t.params;
+    _resourceSuccess
+  } = t.params;
 
   const texture = t.createTexture({
     arrayLayerCount: TOTAL_LAYERS,
@@ -428,8 +428,8 @@ fn((t) => {
     usage:
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.STORAGE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT });
-
+    GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const dimension0 = layerCount0 !== 1 ? '2d-array' : '2d';
   const view0 = texture.createView({
@@ -437,8 +437,8 @@ fn((t) => {
     baseMipLevel: BASE_LEVEL,
     mipLevelCount: levelCount0,
     baseArrayLayer: BASE_LAYER,
-    arrayLayerCount: layerCount0 });
-
+    arrayLayerCount: layerCount0
+  });
 
   const dimension1 = layerCount1 !== 1 ? '2d-array' : '2d';
   const view1 = texture.createView({
@@ -446,8 +446,8 @@ fn((t) => {
     baseMipLevel: baseLevel1,
     mipLevelCount: levelCount1,
     baseArrayLayer: baseLayer1,
-    arrayLayerCount: layerCount1 });
-
+    arrayLayerCount: layerCount1
+  });
 
   const encoder = t.device.createCommandEncoder();
   if (type0 === 'render-target') {
@@ -459,16 +459,16 @@ fn((t) => {
         view: view0,
         clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' },
-
+        storeOp: 'store'
+      },
       {
         view: view1,
         clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.end();
   } else {
     const pass = compute ?
@@ -485,8 +485,8 @@ fn((t) => {
     const bgl0 = t.createBindGroupLayout(0, type0, dimension0, { format: storageTextureFormat0 });
     const bindGroup0 = t.device.createBindGroup({
       layout: bgl0,
-      entries: [{ binding: 0, resource: view0 }] });
-
+      entries: [{ binding: 0, resource: view0 }]
+    });
     bgls.push(bgl0);
 
     if (binding0InBundle) {
@@ -499,12 +499,12 @@ fn((t) => {
       const storageTextureFormat1 = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
 
       const bgl1 = t.createBindGroupLayout(1, type1, dimension1, {
-        format: storageTextureFormat1 });
-
+        format: storageTextureFormat1
+      });
       const bindGroup1 = t.device.createBindGroup({
         layout: bgl1,
-        entries: [{ binding: 1, resource: view1 }] });
-
+        entries: [{ binding: 1, resource: view1 }]
+      });
       bgls.push(bgl1);
 
       if (binding1InBundle) {
@@ -550,18 +550,18 @@ combineWithParams([
 {
   baseLevel: BASE_LEVEL,
   baseLayer: BASE_LAYER,
-  _resourceSuccess: false },
-
+  _resourceSuccess: false
+},
 {
   baseLevel: BASE_LEVEL + 1,
   baseLayer: BASE_LAYER,
-  _resourceSuccess: true },
-
+  _resourceSuccess: true
+},
 {
   baseLevel: BASE_LEVEL,
   baseLayer: BASE_LAYER + 1,
-  _resourceSuccess: true }]).
-
+  _resourceSuccess: true
+}]).
 
 combine('aspect0', ['all', 'depth-only', 'stencil-only']).
 combine('aspect1', ['all', 'depth-only', 'stencil-only']).
@@ -579,13 +579,13 @@ combineWithParams([
 {
   type0: 'sampled-texture',
   type1: 'sampled-texture',
-  _usageSuccess: true },
-
+  _usageSuccess: true
+},
 {
   type0: 'sampled-texture',
   type1: 'render-target',
-  _usageSuccess: false }]).
-
+  _usageSuccess: false
+}]).
 
 unless(
 // Can't sample a multiplanar texture without selecting an aspect.
@@ -633,14 +633,14 @@ fn((t) => {
     type0,
     type1,
     _resourceSuccess,
-    _usageSuccess } =
-  t.params;
+    _usageSuccess
+  } = t.params;
 
   const texture = t.createTexture({
     arrayLayerCount: TOTAL_LAYERS,
     mipLevelCount: TOTAL_LEVELS,
-    format });
-
+    format
+  });
 
   const view0 = texture.createView({
     dimension: '2d',
@@ -648,8 +648,8 @@ fn((t) => {
     mipLevelCount: 1,
     baseArrayLayer: BASE_LAYER,
     arrayLayerCount: 1,
-    aspect: aspect0 });
-
+    aspect: aspect0
+  });
 
   const view1 = texture.createView({
     dimension: '2d',
@@ -657,8 +657,8 @@ fn((t) => {
     mipLevelCount: 1,
     baseArrayLayer: baseLayer,
     arrayLayerCount: 1,
-    aspect: aspect1 });
-
+    aspect: aspect1
+  });
   const view1ResolvedFormat = kDepthStencilFormatResolvedAspect[format][aspect1];
   const view1HasDepth = kTextureFormatInfo[view1ResolvedFormat].depth;
   const view1HasStencil = kTextureFormatInfo[view1ResolvedFormat].stencil;
@@ -677,8 +677,8 @@ fn((t) => {
       view: t.createTexture({ width: size, height: size }).createView(),
       clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }],
-
+      storeOp: 'store'
+    }],
 
     depthStencilAttachment: depthStencilFormat ?
     {
@@ -686,10 +686,10 @@ fn((t) => {
       depthStoreOp: view1HasDepth ? 'discard' : undefined,
       depthLoadOp: view1HasDepth ? 'load' : undefined,
       stencilStoreOp: view1HasStencil ? 'discard' : undefined,
-      stencilLoadOp: view1HasStencil ? 'load' : undefined } :
-
-    undefined });
-
+      stencilLoadOp: view1HasStencil ? 'load' : undefined
+    } :
+    undefined
+  });
 
   const aspectSampleType = (format, aspect) => {
     switch (aspect) {
@@ -708,8 +708,8 @@ fn((t) => {
 
   // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
   const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', {
-    sampleType: type0 === 'sampled-texture' ? aspectSampleType(format, aspect0) : undefined });
-
+    sampleType: type0 === 'sampled-texture' ? aspectSampleType(format, aspect0) : undefined
+  });
   if (binding0InBundle) {
     assert(pass instanceof GPURenderPassEncoder);
     t.createAndExecuteBundle(0, bindGroup0, pass, depthStencilFormat);
@@ -718,8 +718,8 @@ fn((t) => {
   }
   if (type1 !== 'render-target') {
     const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', {
-      sampleType: type1 === 'sampled-texture' ? aspectSampleType(format, aspect1) : undefined });
-
+      sampleType: type1 === 'sampled-texture' ? aspectSampleType(format, aspect1) : undefined
+    });
     if (binding1InBundle) {
       assert(pass instanceof GPURenderPassEncoder);
       t.createAndExecuteBundle(1, bindGroup1, pass, depthStencilFormat);
@@ -779,17 +779,17 @@ fn((t) => {
     {
       binding: 1,
       visibility: writeVisibility,
-      storageTexture: { access: 'write-only', format: 'rgba8unorm' } }] });
+      storageTexture: { access: 'write-only', format: 'rgba8unorm' }
+    }]
 
-
-
+  });
   const bindGroup = t.device.createBindGroup({
     layout: bgl,
     entries: [
     { binding: 0, resource: view },
-    { binding: 1, resource: view2 }] });
+    { binding: 1, resource: view2 }]
 
-
+  });
 
   const encoder = t.device.createCommandEncoder();
   if (compute) {
@@ -799,8 +799,8 @@ fn((t) => {
     t.setComputePipelineAndCallDispatch(
     pass,
     t.device.createPipelineLayout({
-      bindGroupLayouts: [bgl] }));
-
+      bindGroupLayouts: [bgl]
+    }));
 
     pass.end();
   } else {
@@ -846,12 +846,12 @@ fn((t) => {
   const view = t.createTexture({ usage }).createView();
   const view2 = secondUseConflicts ? view : t.createTexture({ usage }).createView();
   const bgl = t.device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility: readVisibility, texture: {} }] });
-
+    entries: [{ binding: 0, visibility: readVisibility, texture: {} }]
+  });
   const bindGroup = t.device.createBindGroup({
     layout: bgl,
-    entries: [{ binding: 0, resource: view }] });
-
+    entries: [{ binding: 0, resource: view }]
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = t.beginSimpleRenderPass(encoder, view2);
@@ -899,8 +899,8 @@ fn((t) => {
   {
     binding: 1,
     visibility: GPUShaderStage.FRAGMENT,
-    ...entry }];
-
+    ...entry
+  }];
 
   const bgEntries0 = [
   { binding: 0, resource: sampledView },
@@ -908,8 +908,8 @@ fn((t) => {
 
   const bindGroup0 = t.device.createBindGroup({
     entries: bgEntries0,
-    layout: t.device.createBindGroupLayout({ entries: bglEntries0 }) });
-
+    layout: t.device.createBindGroupLayout({ entries: bglEntries0 })
+  });
 
   // Create bindGroup1. It has one binding, which use the same view/subresource of a binding in
   // bindGroup0. So it may or may not conflicts with that binding in bindGroup0.
@@ -977,8 +977,8 @@ expandWithParams(function* ({ type0, type1 }) {
     _sampleCount:
     type0 === 'multisampled-texture' || type1 === 'multisampled-texture' ?
     4 :
-    undefined };
-
+    undefined
+  };
 }).
 unless(
 (p) =>
@@ -1006,8 +1006,8 @@ fn((t) => {
     type1,
     _usage0,
     _usage1,
-    _sampleCount } =
-  t.params;
+    _sampleCount
+  } = t.params;
 
   // Two bindings are attached to the same texture view.
   const usage =
@@ -1017,8 +1017,8 @@ fn((t) => {
   const view = t.
   createTexture({
     usage,
-    sampleCount: _sampleCount }).
-
+    sampleCount: _sampleCount
+  }).
   createView();
 
   const bindGroups = [];
@@ -1046,8 +1046,8 @@ fn((t) => {
     // 'render-target').
     if (bindingsInBundle[i]) {
       const bundleEncoder = t.device.createRenderBundleEncoder({
-        colorFormats: ['rgba8unorm'] });
-
+        colorFormats: ['rgba8unorm']
+      });
       bundleEncoder.setBindGroup(i, bindGroups[i]);
       const bundleInPass = bundleEncoder.finish();
       pass.executeBundles([bundleInPass]);
@@ -1107,17 +1107,17 @@ fn((t) => {
     useBindGroup1,
     setBindGroupsOrder,
     setPipeline,
-    callDrawOrDispatch } =
-  t.params;
+    callDrawOrDispatch
+  } = t.params;
   const view = t.
   createTexture({ usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING }).
   createView();
   const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', {
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', {
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
 
   const wgslVertex = `@vertex fn main() -> @builtin(position) vec4<f32> {
   return vec4<f32>();
@@ -1147,28 +1147,28 @@ fn((t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: wgslCompute }),
-
-      entryPoint: 'main' } }) :
-
-
+        code: wgslCompute
+      }),
+      entryPoint: 'main'
+    }
+  }) :
   t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: wgslVertex }),
-
-      entryPoint: 'main' },
-
+        code: wgslVertex
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
-        code: wgslFragment }),
-
+        code: wgslFragment
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = compute ?
@@ -1179,10 +1179,10 @@ fn((t) => {
       view: t.createTexture().createView(),
       clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   const index0 = setBindGroupsOrder === 'common' ? 0 : 1;
   const index1 = setBindGroupsOrder === 'common' ? 1 : 0;
   if (setPipeline === 'before') t.setPipeline(pass, pipeline);
@@ -1299,13 +1299,13 @@ fn((t) => {
 
   const pipelineUsingBG0 = t.createNoOpComputePipeline(
   t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[0]] }));
-
+    bindGroupLayouts: [bindGroupLayouts[0]]
+  }));
 
   const pipelineUsingBG1 = t.createNoOpComputePipeline(
   t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[1]] }));
-
+    bindGroupLayouts: [bindGroupLayouts[1]]
+  }));
 
 
   let pass = encoder.beginComputePass();
@@ -1346,13 +1346,13 @@ fn((t) => {
 
   const pipelineUsingBG0 = t.createNoOpRenderPipeline(
   t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[0]] }));
-
+    bindGroupLayouts: [bindGroupLayouts[0]]
+  }));
 
   const pipelineUsingBG1 = t.createNoOpRenderPipeline(
   t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[1]] }));
-
+    bindGroupLayouts: [bindGroupLayouts[1]]
+  }));
 
 
   const attachment = t.createTexture().createView();

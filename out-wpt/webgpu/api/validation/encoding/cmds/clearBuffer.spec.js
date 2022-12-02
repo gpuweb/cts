@@ -65,7 +65,6 @@ g.test('buffer,device_mismatch')
       size,
       usage: GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(buffer);
 
     t.TestClearBuffer({

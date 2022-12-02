@@ -64,10 +64,8 @@ g.test('render_pass_resolve')
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -87,11 +85,9 @@ g.test('render_pass_resolve')
               );
             }`,
         }),
-
         entryPoint: 'main',
         targets,
       },
-
       primitive: { topology: 'triangle-list' },
       multisample: { count: 4 },
     });
@@ -130,7 +126,6 @@ g.test('render_pass_resolve')
             height: kResolveTargetSize,
             depthOrArrayLayers: t.params.resolveTargetBaseArrayLayer + 1,
           },
-
           sampleCount: 1,
           mipLevelCount: t.params.resolveTargetBaseMipLevel + 1,
           usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -165,7 +160,6 @@ g.test('render_pass_resolve')
     const pass = encoder.beginRenderPass({
       colorAttachments: renderPassColorAttachments,
     });
-
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();

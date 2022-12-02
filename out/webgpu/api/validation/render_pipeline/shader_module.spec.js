@@ -45,25 +45,25 @@ fn(async (t) => {
       module: vertex_mismatched ?
       t.mismatchedDevice.createShaderModule({ code }) :
       t.device.createShaderModule({ code }),
-      entryPoint: 'main' },
-
+      entryPoint: 'main'
+    },
     fragment: {
       module: fragment_mismatched ?
       t.mismatchedDevice.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
-        { values, plainType: 'f32', componentCount: 4 }]) }) :
+        { values, plainType: 'f32', componentCount: 4 }])
 
-
+      }) :
       t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
-        { values, plainType: 'f32', componentCount: 4 }]) }),
+        { values, plainType: 'f32', componentCount: 4 }])
 
-
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] },
-
-    layout: t.getPipelineLayout() };
-
+      targets: [{ format: 'rgba8unorm' }]
+    },
+    layout: t.getPipelineLayout()
+  };
 
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
@@ -78,12 +78,12 @@ fn(async (t) => {
     vertex: {
       module: isVertexShaderValid ?
       t.device.createShaderModule({
-        code: kDefaultVertexShaderCode }) :
-
+        code: kDefaultVertexShaderCode
+      }) :
       t.createInvalidShaderModule(),
-      entryPoint: 'main' } });
-
-
+      entryPoint: 'main'
+    }
+  });
 });
 
 g.test('invalid,fragment').
@@ -95,19 +95,19 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: kDefaultVertexShaderCode }),
-
-      entryPoint: 'main' },
-
+        code: kDefaultVertexShaderCode
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: isFragmentShaderValid ?
       t.device.createShaderModule({
-        code: kDefaultFragmentShaderCode }) :
-
+        code: kDefaultFragmentShaderCode
+      }) :
       t.createInvalidShaderModule(),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] } });
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  });
 });
 //# sourceMappingURL=shader_module.spec.js.map

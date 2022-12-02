@@ -28,14 +28,17 @@ import { SubresourceRange } from '../../../util/texture/subresource.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
 export let UninitializeMethod;
+
+// The texture was rendered to with GPUStoreOp "clear"
 (function (UninitializeMethod) {
   UninitializeMethod['Creation'] = 'Creation';
   UninitializeMethod['StoreOpClear'] = 'StoreOpClear';
 })(UninitializeMethod || (UninitializeMethod = {}));
-
 const kUninitializeMethods = Object.keys(UninitializeMethod);
 
 export let ReadMethod;
+
+// Read the texture as a storage texture
 
 // Test with these mip level counts
 (function (ReadMethod) {
@@ -79,6 +82,8 @@ const kUninitializedLayerRangesToTest = {
 // representation such that their values can be compared. ex.) An integer is needed to upload to an
 // unsigned normalized format, but its value is read as a float in the shader.
 export let InitializedState;
+
+// We check that uninitialized subresources are in this state when read back.
 (function (InitializedState) {
   InitializedState[(InitializedState['Canary'] = 0)] = 'Canary';
   InitializedState[(InitializedState['Zero'] = 1)] = 'Zero';
@@ -301,7 +306,6 @@ export class TextureZeroInitTest extends GPUTest {
         const depthStencilAttachment = {
           view: texture.createView(viewDescriptor),
         };
-
         if (kTextureFormatInfo[this.p.format].depth) {
           depthStencilAttachment.depthClearValue = initializedStateAsDepth[state];
           depthStencilAttachment.depthLoadOp = 'clear';
@@ -363,7 +367,6 @@ export class TextureZeroInitTest extends GPUTest {
           bytesPerRow,
           rowsPerImage,
         },
-
         { texture, mipLevel: level, origin: { x: 0, y: 0, z: layer } },
         { width, height, depthOrArrayLayers: depth }
       );
@@ -404,7 +407,6 @@ export class TextureZeroInitTest extends GPUTest {
         const depthStencilAttachment = {
           view: texture.createView(desc),
         };
-
         if (kTextureFormatInfo[this.p.format].depth) {
           depthStencilAttachment.depthLoadOp = 'load';
           depthStencilAttachment.depthStoreOp = 'discard';
@@ -560,7 +562,6 @@ g.test('uninitialized_texture_is_zero')
       mipLevelCount: t.params.mipLevelCount,
       sampleCount: t.params.sampleCount,
     });
-
     t.trackForCleanup(texture);
 
     if (t.params.canaryOnCreation) {

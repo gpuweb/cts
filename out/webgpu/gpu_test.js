@@ -56,8 +56,8 @@ descriptor)
     return { requiredFeatures: [descriptor] };
   } else if (descriptor instanceof Array) {
     return {
-      requiredFeatures: descriptor.filter((f) => f !== undefined) };
-
+      requiredFeatures: descriptor.filter((f) => f !== undefined)
+    };
   } else {
     return descriptor;
   }
@@ -164,8 +164,8 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
     // Suppress uncaught promise rejection (we'll catch it later).
     this.mismatchedProvider.catch(() => {});
-  }}
-
+  }
+}
 
 /**
  * Base fixture for WebGPU tests.
@@ -218,8 +218,8 @@ export class GPUTest extends Fixture {
 
     const dst = this.device.createBuffer({
       size,
-      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+    });
     this.trackForCleanup(dst);
 
     const c = this.device.createCommandEncoder();
@@ -258,13 +258,13 @@ export class GPUTest extends Fixture {
     srcByteOffset = 0,
     method = 'copy',
     type,
-    typedLength })
+    typedLength
 
 
 
 
 
-
+  })
   {
     assert(
     srcByteOffset % type.BYTES_PER_ELEMENT === 0,
@@ -302,8 +302,8 @@ export class GPUTest extends Fixture {
       cleanup() {
         mappable.unmap();
         mappable.destroy();
-      } };
-
+      }
+    };
   }
 
   /**
@@ -319,21 +319,21 @@ export class GPUTest extends Fixture {
     type,
     typedLength,
     method = 'copy',
-    mode = 'fail' })
+    mode = 'fail'
 
 
 
 
 
 
-
+  })
   {
     const readbackPromise = this.readGPUBufferRangeTyped(src, {
       srcByteOffset,
       type,
       typedLength,
-      method });
-
+      method
+    });
     this.eventualAsyncExpectation(async (niceStack) => {
       const readback = await readbackPromise;
       this.expectOK(check(readback.data), { mode, niceStack });
@@ -355,8 +355,8 @@ export class GPUTest extends Fixture {
       type: expected.constructor,
       typedLength: expected.length,
       method,
-      mode });
-
+      mode
+    });
   }
 
   /**
@@ -371,13 +371,13 @@ export class GPUTest extends Fixture {
     expectedValue,
     numRows,
     minBytesPerRow,
-    bytesPerRow })
+    bytesPerRow
 
 
 
 
 
-
+  })
   {
     const valueSize = expectedValue.byteLength;
     assert(valueSize === 1 || valueSize === 2 || valueSize % 4 === 0);
@@ -401,8 +401,8 @@ export class GPUTest extends Fixture {
     // Copy into a buffer suitable for STORAGE usage.
     const storageBuffer = this.device.createBuffer({
       size: bufferSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    });
     this.trackForCleanup(storageBuffer);
 
     // This buffer conveys the data we expect to see for a single value read. Since we read 32 bits at
@@ -414,8 +414,8 @@ export class GPUTest extends Fixture {
     const expectedDataBuffer = this.device.createBuffer({
       size: expectedDataSize,
       usage: GPUBufferUsage.STORAGE,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     this.trackForCleanup(expectedDataBuffer);
     const expectedData = new Uint32Array(expectedDataBuffer.getMappedRange());
     if (valueSize === 1) {
@@ -437,8 +437,8 @@ export class GPUTest extends Fixture {
     // read from the corresponding row matches the expected data derived above, or 0 otherwise.
     const resultBuffer = this.device.createBuffer({
       size: numRows * 4,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
     this.trackForCleanup(resultBuffer);
 
     const readsPerRow = Math.ceil(minBytesPerRow / expectedDataSize);
@@ -468,18 +468,18 @@ export class GPUTest extends Fixture {
       layout: 'auto',
       compute: {
         module: this.device.createShaderModule({ code: reducer }),
-        entryPoint: 'reduce' } });
-
-
+        entryPoint: 'reduce'
+      }
+    });
 
     const bindGroup = this.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [
       { binding: 0, resource: { buffer: expectedDataBuffer } },
       { binding: 1, resource: { buffer: storageBuffer } },
-      { binding: 2, resource: { buffer: resultBuffer } }] });
+      { binding: 2, resource: { buffer: resultBuffer } }]
 
-
+    });
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyBufferToBuffer(buffer, 0, storageBuffer, 0, bufferSize);
@@ -507,14 +507,14 @@ export class GPUTest extends Fixture {
     exp,
     dimension = '2d',
     slice = 0,
-    layout })
+    layout
 
 
 
 
 
 
-
+  })
   {
     format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
@@ -529,8 +529,8 @@ export class GPUTest extends Fixture {
 
     const buffer = this.device.createBuffer({
       size: byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
     this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
@@ -539,8 +539,8 @@ export class GPUTest extends Fixture {
       texture: src,
       mipLevel: layout?.mipLevel,
       origin: { x: 0, y: 0, z: slice },
-      aspect: layout?.aspect },
-
+      aspect: layout?.aspect
+    },
     { buffer, bytesPerRow, rowsPerImage },
     mipSize);
 
@@ -550,8 +550,8 @@ export class GPUTest extends Fixture {
       expectedValue: expectedTexelData,
       numRows: rowsPerImage,
       minBytesPerRow,
-      bytesPerRow });
-
+      bytesPerRow
+    });
   }
 
   /** Return a GPUBuffer that data are going to be written into. */
@@ -568,8 +568,8 @@ export class GPUTest extends Fixture {
 
     const buffer = this.device.createBuffer({
       size: byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
     this.trackForCleanup(buffer);
 
     const commandEncoder = this.device.createCommandEncoder();
@@ -597,18 +597,18 @@ export class GPUTest extends Fixture {
     exp,
     slice = 0,
     layout,
-    generateWarningOnly = false })
+    generateWarningOnly = false
 
 
 
 
 
-
+  })
   {
     const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
     this.expectGPUBufferValuesEqual(buffer, exp, 0, {
-      mode: generateWarningOnly ? 'warn' : 'fail' });
-
+      mode: generateWarningOnly ? 'warn' : 'fail'
+    });
   }
 
   /**
@@ -625,7 +625,7 @@ export class GPUTest extends Fixture {
     slice = 0,
     layout,
     generateWarningOnly = false,
-    checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [(i) => a[i], (i) => b[i]]) })
+    checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [(i) => a[i], (i) => b[i]])
 
 
 
@@ -635,7 +635,7 @@ export class GPUTest extends Fixture {
 
 
 
-
+  })
   {
     assert(exp[0].constructor === exp[1].constructor);
     const constructor = exp[0].constructor;
@@ -646,8 +646,8 @@ export class GPUTest extends Fixture {
     this.expectGPUBufferValuesPassCheck(buffer, (a) => checkElementsBetweenFn(a, exp), {
       type: constructor,
       typedLength,
-      mode: generateWarningOnly ? 'warn' : 'fail' });
-
+      mode: generateWarningOnly ? 'warn' : 'fail'
+    });
   }
 
   /**
@@ -662,13 +662,13 @@ export class GPUTest extends Fixture {
     exp,
     slice = 0,
     layout,
-    generateWarningOnly = false })
+    generateWarningOnly = false
 
 
 
 
 
-
+  })
   {
     this.expectSinglePixelBetweenTwoValuesIn2DTexture(
     src,
@@ -679,8 +679,8 @@ export class GPUTest extends Fixture {
       slice,
       layout,
       generateWarningOnly,
-      checkElementsBetweenFn: checkElementsFloat16Between });
-
+      checkElementsBetweenFn: checkElementsFloat16Between
+    });
 
   }
 
@@ -806,8 +806,8 @@ export class GPUTest extends Fixture {
       mipLevelCount,
       size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depthOrArrayLayers: 1 },
       format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING });
-
+      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+    });
     this.trackForCleanup(texture);
 
     const textureEncoder = this.device.createCommandEncoder();
@@ -875,19 +875,19 @@ export class GPUTest extends Fixture {
   encoderType,
   {
     attachmentInfo,
-    occlusionQuerySet } =
+    occlusionQuerySet
 
 
 
-  {})
+  } = {})
   {
     const fullAttachmentInfo = {
       // Defaults if not overridden:
       colorFormats: ['rgba8unorm'],
       sampleCount: 1,
       // Passed values take precedent.
-      ...attachmentInfo };
-
+      ...attachmentInfo
+    };
 
     switch (encoderType) {
       case 'non-pass':{
@@ -923,8 +923,8 @@ export class GPUTest extends Fixture {
             size: [16, 16, 1],
             format,
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            sampleCount: fullAttachmentInfo.sampleCount })).
-
+            sampleCount: fullAttachmentInfo.sampleCount
+          })).
           createView();
 
           let depthStencilAttachment = undefined;
@@ -932,8 +932,8 @@ export class GPUTest extends Fixture {
             depthStencilAttachment = {
               view: makeAttachmentView(fullAttachmentInfo.depthStencilFormat),
               depthReadOnly: fullAttachmentInfo.depthReadOnly,
-              stencilReadOnly: fullAttachmentInfo.stencilReadOnly };
-
+              stencilReadOnly: fullAttachmentInfo.stencilReadOnly
+            };
             if (
             kTextureFormatInfo[fullAttachmentInfo.depthStencilFormat].depth &&
             !fullAttachmentInfo.depthReadOnly)
@@ -958,13 +958,13 @@ export class GPUTest extends Fixture {
               view: makeAttachmentView(format),
               clearValue: [0, 0, 0, 0],
               loadOp: 'clear',
-              storeOp: 'store' } :
-
+              storeOp: 'store'
+            } :
             null),
 
             depthStencilAttachment,
-            occlusionQuerySet };
-
+            occlusionQuerySet
+          };
 
           const commandEncoder = this.device.createCommandEncoder();
           const encoder = commandEncoder.beginRenderPass(passDesc);
@@ -975,5 +975,6 @@ export class GPUTest extends Fixture {
         }}
 
     unreachable();
-  }}
+  }
+}
 //# sourceMappingURL=gpu_test.js.map

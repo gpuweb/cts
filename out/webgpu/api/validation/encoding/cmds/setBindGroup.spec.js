@@ -54,9 +54,9 @@ class F extends ValidationTest {
         return {
           buffer: this.createBufferWithState(state, {
             size: 4,
-            usage: GPUBufferUsage.STORAGE }) };
-
-
+            usage: GPUBufferUsage.STORAGE
+          })
+        };
       default:
         unreachable('unknown resource type');}
 
@@ -81,26 +81,26 @@ class F extends ValidationTest {
       entries: indices.map((binding) => ({
         binding,
         visibility: this.encoderTypeToStageFlag(encoderType),
-        ...(resourceType === 'buffer' ? { buffer: { type: 'storage' } } : { texture: {} }) })) });
-
-
+        ...(resourceType === 'buffer' ? { buffer: { type: 'storage' } } : { texture: {} })
+      }))
+    });
     const bindGroup = this.device.createBindGroup({
       layout,
       entries: indices.map((binding) => ({
         binding,
         resource: this.createBindingResourceWithState(
         resourceType,
-        state === 'destroyed' ? state : 'valid') })) });
+        state === 'destroyed' ? state : 'valid')
 
-
-
+      }))
+    });
 
     if (state === 'invalid') {
       void this.device.popErrorScope();
     }
     return bindGroup;
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -153,28 +153,28 @@ fn(async (t) => {
 
   const buffer = sourceDevice.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.STORAGE
+  });
 
   const layout = sourceDevice.createBindGroupLayout({
     entries: [
     {
       binding: 0,
       visibility: t.encoderTypeToStageFlag(encoderType),
-      buffer: { type: 'storage', hasDynamicOffset: useU32Array } }] });
+      buffer: { type: 'storage', hasDynamicOffset: useU32Array }
+    }]
 
-
-
+  });
 
   const bindGroup = sourceDevice.createBindGroup({
     layout,
     entries: [
     {
       binding: 0,
-      resource: { buffer } }] });
+      resource: { buffer }
+    }]
 
-
-
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   if (useU32Array) {
@@ -234,29 +234,29 @@ fn(async (t) => {
       visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
       buffer: {
         type: 'uniform',
-        hasDynamicOffset: true } },
-
-
+        hasDynamicOffset: true
+      }
+    },
     {
       binding: 1,
       visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
       buffer: {
         type: 'storage',
-        hasDynamicOffset: true } }] });
+        hasDynamicOffset: true
+      }
+    }]
 
-
-
-
+  });
 
   const uniformBuffer = t.device.createBuffer({
     size: 2 * kMinDynamicBufferOffsetAlignment + 8,
-    usage: GPUBufferUsage.UNIFORM });
-
+    usage: GPUBufferUsage.UNIFORM
+  });
 
   const storageBuffer = t.device.createBuffer({
     size: 2 * kMinDynamicBufferOffsetAlignment + 8,
-    usage: GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.STORAGE
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: bindGroupLayout,
@@ -265,18 +265,18 @@ fn(async (t) => {
       binding: 0,
       resource: {
         buffer: uniformBuffer,
-        size: kBindingSize } },
-
-
+        size: kBindingSize
+      }
+    },
     {
       binding: 1,
       resource: {
         buffer: storageBuffer,
-        size: kBindingSize } }] });
+        size: kBindingSize
+      }
+    }]
 
-
-
-
+  });
 
   const { encoderType, dynamicOffsets, useU32array, _success } = t.params;
 
@@ -297,33 +297,33 @@ paramsSubcasesOnly([
   offsets: [0],
   dynamicOffsetsDataStart: 0,
   dynamicOffsetsDataLength: 2,
-  _success: false },
-
+  _success: false
+},
 // dynamicOffsetsDataStart + dynamicOffsetsDataLength > offsets.length
 {
   offsets: [0],
   dynamicOffsetsDataStart: 1,
   dynamicOffsetsDataLength: 1,
-  _success: false },
-
+  _success: false
+},
 {
   offsets: [0, 0],
   dynamicOffsetsDataStart: 1,
   dynamicOffsetsDataLength: 1,
-  _success: true },
-
+  _success: true
+},
 {
   offsets: [0, 0, 0],
   dynamicOffsetsDataStart: 1,
   dynamicOffsetsDataLength: 1,
-  _success: true },
-
+  _success: true
+},
 {
   offsets: [0, 0],
   dynamicOffsetsDataStart: 0,
   dynamicOffsetsDataLength: 2,
-  _success: true }]).
-
+  _success: true
+}]).
 
 fn((t) => {
   const { offsets, dynamicOffsetsDataStart, dynamicOffsetsDataLength, _success } = t.params;
@@ -335,10 +335,10 @@ fn((t) => {
       visibility: GPUShaderStage.FRAGMENT,
       buffer: {
         type: 'storage',
-        hasDynamicOffset: true } })) });
-
-
-
+        hasDynamicOffset: true
+      }
+    }))
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: bindGroupLayout,
@@ -347,12 +347,12 @@ fn((t) => {
       resource: {
         buffer: t.createBufferWithState('valid', {
           size: kBindingSize,
-          usage: GPUBufferUsage.STORAGE }),
-
-        size: kBindingSize } })) });
-
-
-
+          usage: GPUBufferUsage.STORAGE
+        }),
+        size: kBindingSize
+      }
+    }))
+  });
 
   const { encoder, validateFinish } = t.createEncoder('render pass');
 
@@ -416,10 +416,10 @@ fn(async (t) => {
     {
       binding: 0,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type, hasDynamicOffset: true } }] });
+      buffer: { type, hasDynamicOffset: true }
+    }]
 
-
-
+  });
 
   let usage, isValid;
   if (type === 'uniform') {
@@ -432,13 +432,13 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: 3 * kMinDynamicBufferOffsetAlignment,
-    usage });
-
+    usage
+  });
 
   const bindGroup = t.device.createBindGroup({
     entries: [{ binding: 0, resource: { buffer, size: kBindingSize } }],
-    layout: bindGroupLayout });
-
+    layout: bindGroupLayout
+  });
 
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setBindGroup(0, bindGroup, [dynamicOffset]);

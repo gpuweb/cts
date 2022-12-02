@@ -40,8 +40,8 @@ export const d = makeCaseCache('faceForward', {
     kVectorSparseTestValues[4].map((k) => makeCase(i, j, k))));
 
 
-  } });
-
+  }
+});
 
 /**
  * @returns a `faceForward` Case for a triplet of vectors of f32s input
@@ -63,8 +63,8 @@ const makeCase = (x, y, z) => {
 
   return {
     input: [new Vector(x_f32), new Vector(y_f32), new Vector(z_f32)],
-    expected: anyOf(...intervals) };
-
+    expected: anyOf(...intervals)
+  };
 };
 
 g.test('abstract_float').

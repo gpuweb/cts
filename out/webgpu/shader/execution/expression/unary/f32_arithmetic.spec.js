@@ -23,8 +23,8 @@ export const d = makeCaseCache('unary/f32_arithmetic', {
     return fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map((x) =>
     makeCase(x));
 
-  } });
-
+  }
+});
 
 g.test('negation').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').

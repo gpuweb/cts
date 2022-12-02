@@ -26,8 +26,8 @@ fn(async (t) => {
     size: [1, 1, 1],
     format: 'rg11b10ufloat',
     sampleCount,
-    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT };
-
+    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT
+  };
   t.device.createTexture(descriptor);
 });
 
@@ -46,8 +46,8 @@ fn(async (t) => {
     size: [1, 1, 1],
     format: 'rg11b10ufloat',
     sampleCount: 1,
-    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT
+  });
   const encoder = t.device.createCommandEncoder();
   encoder.beginRenderPass({
     colorAttachments: [
@@ -55,10 +55,10 @@ fn(async (t) => {
       view: texture.createView(),
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 });
 
 g.test('begin_render_bundle_encoder').
@@ -73,8 +73,8 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   t.device.createRenderBundleEncoder({
-    colorFormats: ['rg11b10ufloat'] });
-
+    colorFormats: ['rg11b10ufloat']
+  });
 });
 
 g.test('create_render_pipeline').
@@ -92,18 +92,18 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: t.getNoOpShaderCode('VERTEX') }),
-
-      entryPoint: 'main' },
-
+        code: t.getNoOpShaderCode('VERTEX')
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
-        code: t.getNoOpShaderCode('FRAGMENT') }),
-
+        code: t.getNoOpShaderCode('FRAGMENT')
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rg11b10ufloat', writeMask: 0 }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'rg11b10ufloat', writeMask: 0 }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 });
 //# sourceMappingURL=rg11b10ufloat_renderable.spec.js.map

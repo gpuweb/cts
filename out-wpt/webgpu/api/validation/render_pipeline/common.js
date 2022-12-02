@@ -37,22 +37,18 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
         module: this.device.createShaderModule({
           code: kDefaultVertexShaderCode,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: noFragment
         ? undefined
         : {
             module: this.device.createShaderModule({
               code: fragmentShaderCode,
             }),
-
             entryPoint: 'main',
             targets,
             constants: fragmentConstants,
           },
-
       layout: this.getPipelineLayout(),
       primitive,
       multisample,

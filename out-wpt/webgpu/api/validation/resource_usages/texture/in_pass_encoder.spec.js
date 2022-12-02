@@ -78,7 +78,6 @@ class TextureUsageTracking extends ValidationTest {
       colorFormats: ['rgba8unorm'],
       depthStencilFormat,
     });
-
     bundleEncoder.setBindGroup(binding, bindGroup);
     const bundle = bundleEncoder.finish();
     pass.executeBundles([bundle]);
@@ -117,7 +116,6 @@ class TextureUsageTracking extends ValidationTest {
           layout: bindGroupLayouts[0],
           entries: [{ binding: 0, resource: view }],
         }),
-
         this.device.createBindGroup({
           layout: bindGroupLayouts[1],
           entries: [{ binding: 0, resource: view }],
@@ -138,7 +136,6 @@ class TextureUsageTracking extends ValidationTest {
     const pipelineLayout = this.device.createPipelineLayout({
       bindGroupLayouts,
     });
-
     const pipeline = compute
       ? this.createNoOpComputePipeline(pipelineLayout)
       : this.createNoOpRenderPipeline(pipelineLayout);
@@ -422,7 +419,6 @@ g.test('subresources_and_binding_types_combination_for_color')
             loadOp: 'clear',
             storeOp: 'store',
           },
-
           {
             view: view1,
             clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
@@ -431,7 +427,6 @@ g.test('subresources_and_binding_types_combination_for_color')
           },
         ],
       });
-
       pass.end();
     } else {
       const pass = compute
@@ -450,7 +445,6 @@ g.test('subresources_and_binding_types_combination_for_color')
         layout: bgl0,
         entries: [{ binding: 0, resource: view0 }],
       });
-
       bgls.push(bgl0);
 
       if (binding0InBundle) {
@@ -465,12 +459,10 @@ g.test('subresources_and_binding_types_combination_for_color')
         const bgl1 = t.createBindGroupLayout(1, type1, dimension1, {
           format: storageTextureFormat1,
         });
-
         const bindGroup1 = t.device.createBindGroup({
           layout: bgl1,
           entries: [{ binding: 1, resource: view1 }],
         });
-
         bgls.push(bgl1);
 
         if (binding1InBundle) {
@@ -518,13 +510,11 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           baseLayer: BASE_LAYER,
           _resourceSuccess: false,
         },
-
         {
           baseLevel: BASE_LEVEL + 1,
           baseLayer: BASE_LAYER,
           _resourceSuccess: true,
         },
-
         {
           baseLevel: BASE_LEVEL,
           baseLayer: BASE_LAYER + 1,
@@ -549,7 +539,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           type1: 'sampled-texture',
           _usageSuccess: true,
         },
-
         {
           type0: 'sampled-texture',
           type1: 'render-target',
@@ -628,7 +617,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       arrayLayerCount: 1,
       aspect: aspect1,
     });
-
     const view1ResolvedFormat = kDepthStencilFormatResolvedAspect[format][aspect1];
     const view1HasDepth = kTextureFormatInfo[view1ResolvedFormat].depth;
     const view1HasStencil = kTextureFormatInfo[view1ResolvedFormat].stencil;
@@ -681,7 +669,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
     const bindGroup0 = t.createBindGroup(0, view0, type0, '2d', {
       sampleType: type0 === 'sampled-texture' ? aspectSampleType(format, aspect0) : undefined,
     });
-
     if (binding0InBundle) {
       assert(pass instanceof GPURenderPassEncoder);
       t.createAndExecuteBundle(0, bindGroup0, pass, depthStencilFormat);
@@ -692,7 +679,6 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       const bindGroup1 = t.createBindGroup(1, view1, type1, '2d', {
         sampleType: type1 === 'sampled-texture' ? aspectSampleType(format, aspect1) : undefined,
       });
-
       if (binding1InBundle) {
         assert(pass instanceof GPURenderPassEncoder);
         t.createAndExecuteBundle(1, bindGroup1, pass, depthStencilFormat);
@@ -756,7 +742,6 @@ g.test('shader_stages_and_visibility,storage_write')
         },
       ],
     });
-
     const bindGroup = t.device.createBindGroup({
       layout: bgl,
       entries: [
@@ -823,7 +808,6 @@ g.test('shader_stages_and_visibility,attachment_write')
     const bgl = t.device.createBindGroupLayout({
       entries: [{ binding: 0, visibility: readVisibility, texture: {} }],
     });
-
     const bindGroup = t.device.createBindGroup({
       layout: bgl,
       entries: [{ binding: 0, resource: view }],
@@ -1024,7 +1008,6 @@ g.test('bindings_in_bundle')
         const bundleEncoder = t.device.createRenderBundleEncoder({
           colorFormats: ['rgba8unorm'],
         });
-
         bundleEncoder.setBindGroup(i, bindGroups[i]);
         const bundleInPass = bundleEncoder.finish();
         pass.executeBundles([bundleInPass]);
@@ -1092,7 +1075,6 @@ g.test('unused_bindings_in_pipeline')
     const bindGroup0 = t.createBindGroup(0, view, 'sampled-texture', '2d', {
       format: 'rgba8unorm',
     });
-
     const bindGroup1 = t.createBindGroup(0, view, 'writeonly-storage-texture', '2d', {
       format: 'rgba8unorm',
     });
@@ -1127,7 +1109,6 @@ g.test('unused_bindings_in_pipeline')
             module: t.device.createShaderModule({
               code: wgslCompute,
             }),
-
             entryPoint: 'main',
           },
         })
@@ -1137,19 +1118,15 @@ g.test('unused_bindings_in_pipeline')
             module: t.device.createShaderModule({
               code: wgslVertex,
             }),
-
             entryPoint: 'main',
           },
-
           fragment: {
             module: t.device.createShaderModule({
               code: wgslFragment,
             }),
-
             entryPoint: 'main',
             targets: [{ format: 'rgba8unorm', writeMask: 0 }],
           },
-
           primitive: { topology: 'triangle-list' },
         });
 
@@ -1166,7 +1143,6 @@ g.test('unused_bindings_in_pipeline')
             },
           ],
         });
-
     const index0 = setBindGroupsOrder === 'common' ? 0 : 1;
     const index1 = setBindGroupsOrder === 'common' ? 1 : 0;
     if (setPipeline === 'before') t.setPipeline(pass, pipeline);

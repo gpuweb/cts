@@ -37,8 +37,8 @@ const makeCaseF32 = (i, s, r) => {
 
   return {
     input: [new Vector(i_f32), new Vector(s_f32), r_f32],
-    expected: refractInterval(i, s, r) };
-
+    expected: refractInterval(i, s, r)
+  };
 };
 
 g.test('abstract_float').

@@ -80,10 +80,8 @@ g.test('color,attachments')
         module: t.device.createShaderModule({
           code: kVertexShader,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: getFragmentShaderCodeWithOutput(
@@ -104,11 +102,9 @@ g.test('color,attachments')
             )
           ),
         }),
-
         entryPoint: 'main',
         targets: range(attachmentCount, i => (i === emptyAttachmentId ? null : { format })),
       },
-
       primitive: { topology: 'triangle-list' },
     });
 
@@ -125,7 +121,6 @@ g.test('color,attachments')
             }
       ),
     });
-
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();
@@ -142,7 +137,6 @@ g.test('color,attachments')
         {
           expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
         },
-
         {
           maxIntDiff: 0,
           maxDiffULPsForNormFormat: 1,
@@ -188,10 +182,8 @@ g.test('color,component_count')
         module: t.device.createShaderModule({
           code: kVertexShader,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: getFragmentShaderCodeWithOutput([
@@ -202,11 +194,9 @@ g.test('color,component_count')
             },
           ]),
         }),
-
         entryPoint: 'main',
         targets: [{ format }],
       },
-
       primitive: { topology: 'triangle-list' },
     });
 
@@ -221,7 +211,6 @@ g.test('color,component_count')
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();
@@ -259,7 +248,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0, 0, 0, 0],
           output: [0],
@@ -268,7 +256,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [1, 0, 0, 0],
           output: [0],
@@ -277,7 +264,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'one',
         },
-
         {
           _result: [0.498, 0, 0, 0],
           output: [0.498],
@@ -286,7 +272,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'one',
         },
-
         {
           _result: [0, 1, 0, 0],
           output: [0, 1],
@@ -295,7 +280,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0, 1, 0, 0],
           output: [0, 1],
@@ -304,7 +288,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [1, 0, 0, 0],
           output: [0, 1],
@@ -313,7 +296,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'one',
         },
-
         {
           _result: [0, 1, 0, 0],
           output: [0, 1, 0],
@@ -322,7 +304,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0, 1, 0, 0],
           output: [0, 1, 0],
@@ -331,7 +312,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [1, 0, 0, 0],
           output: [0, 1, 0],
@@ -340,7 +320,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'one',
         },
-
         // fragment output has alpha
         {
           _result: [0.502, 1, 0, 0.498],
@@ -350,7 +329,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'one',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0.502, 0.498, 0, 0.498],
           output: [0, 1, 0, 0.498],
@@ -359,7 +337,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'one',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0, 1, 0, 0.498],
           output: [0, 1, 0, 0.498],
@@ -368,7 +345,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'one',
           alphaDstFactor: 'zero',
         },
-
         {
           _result: [0, 1, 0, 0.498],
           output: [0, 1, 0, 0.498],
@@ -377,7 +353,6 @@ The attachment has a load value of [1, 0, 0, 1]
           alphaSrcFactor: 'zero',
           alphaDstFactor: 'src',
         },
-
         {
           _result: [1, 0, 0, 1],
           output: [0, 1, 0, 0.498],
@@ -418,10 +393,8 @@ The attachment has a load value of [1, 0, 0, 1]
         module: t.device.createShaderModule({
           code: kVertexShader,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: getFragmentShaderCodeWithOutput([
@@ -432,7 +405,6 @@ The attachment has a load value of [1, 0, 0, 1]
             },
           ]),
         }),
-
         entryPoint: 'main',
         targets: [
           {
@@ -443,7 +415,6 @@ The attachment has a load value of [1, 0, 0, 1]
                 dstFactor: colorDstFactor,
                 operation: 'add',
               },
-
               alpha: {
                 srcFactor: alphaSrcFactor,
                 dstFactor: alphaDstFactor,
@@ -453,7 +424,6 @@ The attachment has a load value of [1, 0, 0, 1]
           },
         ],
       },
-
       primitive: { topology: 'triangle-list' },
     });
 
@@ -468,7 +438,6 @@ The attachment has a load value of [1, 0, 0, 1]
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();

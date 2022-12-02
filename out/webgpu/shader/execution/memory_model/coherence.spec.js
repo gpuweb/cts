@@ -41,8 +41,8 @@ const memoryModelTestParams = {
   permuteSecond: 1,
   memStride: 1,
   aliasedMemory: true,
-  numBehaviors: 4 };
-
+  numBehaviors: 4
+};
 
 const storageMemoryCorrTestCode = `
   atomicStore(&test_locations.value[x_0], 1u);
@@ -103,36 +103,36 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryCorrTestCode },
-
+  _testCode: storageMemoryCorrTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
   _testCode: storageMemoryCorrRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupStorageMemoryCorrTestCode },
-
+  _testCode: workgroupStorageMemoryCorrTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupStorageMemoryCorrRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryCorrTestCode },
-
+  _testCode: workgroupMemoryCorrTestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCorrRMWTestCode,
-  extraFlags: 'rmw_variant' }]).
-
+  extraFlags: 'rmw_variant'
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -192,36 +192,36 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryCowwTestCode },
-
+  _testCode: storageMemoryCowwTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
   _testCode: storageMemoryCowwRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: storageMemoryCowwTestCode },
-
+  _testCode: storageMemoryCowwTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
   _testCode: storageMemoryCowwRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryCowwTestCode },
-
+  _testCode: workgroupMemoryCowwTestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCowwRMWTestCode,
-  extraFlags: 'rmw_variant' }]).
-
+  extraFlags: 'rmw_variant'
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -235,8 +235,8 @@ fn(async (t) => {
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.TwoBehavior);
   const params = {
     ...memoryModelTestParams,
-    numBehaviors: 2 };
-
+    numBehaviors: 2
+  };
   const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
   await memModelTester.run(60, 1);
 });
@@ -298,36 +298,36 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryCowrTestCode },
-
+  _testCode: storageMemoryCowrTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
   _testCode: storageMemoryCowrRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupStorageMemoryCowrTestCode },
-
+  _testCode: workgroupStorageMemoryCowrTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupStorageMemoryCowrRMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryCowrTestCode },
-
+  _testCode: workgroupMemoryCowrTestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCowrRMWTestCode,
-  extraFlags: 'rmw_variant' }]).
-
+  extraFlags: 'rmw_variant'
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -381,18 +381,18 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryCorw1TestCode },
-
+  _testCode: storageMemoryCorw1TestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupStorageMemoryCorw1TestCode },
-
+  _testCode: workgroupStorageMemoryCorw1TestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryCorw1TestCode }]).
-
+  _testCode: workgroupMemoryCorw1TestCode
+}]).
 
 fn(async (t) => {
   const resultCode = `
@@ -406,8 +406,8 @@ fn(async (t) => {
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.TwoBehavior);
   const params = {
     ...memoryModelTestParams,
-    numBehaviors: 2 };
-
+    numBehaviors: 2
+  };
   const memModelTester = new MemoryModelTester(t, params, testShader, resultShader);
   await memModelTester.run(60, 1);
 });
@@ -470,36 +470,36 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryCorw2TestCode },
-
+  _testCode: storageMemoryCorw2TestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
   _testCode: storageMemoryCorw2RMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupStorageMemoryCorw2TestCode },
-
+  _testCode: workgroupStorageMemoryCorw2TestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupStorageMemoryCorw2RMWTestCode,
-  extraFlags: 'rmw_variant' },
-
+  extraFlags: 'rmw_variant'
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryCorw2TestCode },
-
+  _testCode: workgroupMemoryCorw2TestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCorw2RMWTestCode,
-  extraFlags: 'rmw_variant' }]).
-
+  extraFlags: 'rmw_variant'
+}]).
 
 fn(async (t) => {
   const resultCode = `

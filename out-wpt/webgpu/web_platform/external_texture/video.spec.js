@@ -40,31 +40,26 @@ const kVideoExpectations = [
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
-
   {
     videoName: 'red-green.theora.ogv',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
-
   {
     videoName: 'red-green.mp4',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
-
   {
     videoName: 'red-green.bt601.vp9.webm',
     _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]),
   },
-
   {
     videoName: 'red-green.bt709.vp9.webm',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
   },
-
   {
     videoName: 'red-green.bt2020.vp9.webm',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
@@ -93,10 +88,8 @@ function createExternalTextureSamplingTestPipeline(t) {
         }
         `,
       }),
-
       entryPoint: 'main',
     },
-
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -109,7 +102,6 @@ function createExternalTextureSamplingTestPipeline(t) {
         }
         `,
       }),
-
       entryPoint: 'main',
       targets: [
         {
@@ -117,7 +109,6 @@ function createExternalTextureSamplingTestPipeline(t) {
         },
       ],
     },
-
     primitive: { topology: 'triangle-list' },
   });
 
@@ -138,7 +129,6 @@ function createExternalTextureSamplingTestBindGroup(t, source, pipeline) {
         binding: 0,
         resource: linearSampler,
       },
-
       {
         binding: 1,
         resource: externalTexture,
@@ -213,7 +203,6 @@ for several combinations of video format and color space.
           },
         ],
       });
-
       passEncoder.setPipeline(pipeline);
       passEncoder.setBindGroup(0, bindGroup);
       passEncoder.draw(6);
@@ -274,7 +263,6 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const passDescriptor = {
       colorAttachments: [
         {
@@ -308,7 +296,6 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
       externalTexture = t.device.importExternalTexture({
         source: source,
       });
-
       // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
       bindGroup = t.device.createBindGroup({
         layout: bindGroupLayout,
@@ -393,7 +380,6 @@ compute shader, for several combinations of video format and color space.
               }
             `,
           }),
-
           entryPoint: 'main',
         },
       });

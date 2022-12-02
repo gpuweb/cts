@@ -49,7 +49,6 @@ g.test('usages')
       usage,
       format: 'rgba8unorm',
     });
-
     const data = new Uint8Array(16);
     const size = [1, 1];
 
@@ -101,7 +100,6 @@ g.test('texture,device_mismatch')
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     t.trackForCleanup(texture);
 
     const data = new Uint8Array(16);

@@ -22,30 +22,30 @@ class StencilTest extends GPUTest {
     const baseStencilState = {
       compare: 'always',
       failOp: 'keep',
-      passOp: 'replace' };
-
+      passOp: 'replace'
+    };
 
     const stencilState = {
       compare: compareFunction,
       failOp: 'keep',
-      passOp: 'keep' };
-
+      passOp: 'keep'
+    };
 
     const baseState = {
       format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: baseStencilState,
-      stencilBack: baseStencilState };
-
+      stencilBack: baseStencilState
+    };
 
     const state = {
       format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: stencilState,
-      stencilBack: stencilState };
-
+      stencilBack: stencilState
+    };
 
     this.runStencilStateTest(baseState, state, stencilRefValue, expectedColor);
   }
@@ -60,8 +60,8 @@ class StencilTest extends GPUTest {
     const renderTarget = this.device.createTexture({
       format: renderTargetFormat,
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const depthStencilFormat = 'depth24plus-stencil8';
     const depthTexture = this.device.createTexture({
@@ -69,16 +69,16 @@ class StencilTest extends GPUTest {
       format: depthStencilFormat,
       sampleCount: 1,
       mipLevelCount: 1,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST
+    });
 
     const depthStencilAttachment = {
       view: depthTexture.createView(),
       depthLoadOp: 'load',
       depthStoreOp: 'store',
       stencilLoadOp: 'load',
-      stencilStoreOp: 'store' };
-
+      stencilStoreOp: 'store'
+    };
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -86,11 +86,11 @@ class StencilTest extends GPUTest {
       {
         view: renderTarget.createView(),
         storeOp: 'store',
-        loadOp: 'load' }],
+        loadOp: 'load'
+      }],
 
-
-      depthStencilAttachment });
-
+      depthStencilAttachment
+    });
 
     // Draw the base triangle with stencil reference 1.
     // This clears the stencil buffer to 1.
@@ -125,8 +125,8 @@ class StencilTest extends GPUTest {
       R: expectedColor[0],
       G: expectedColor[1],
       B: expectedColor[2],
-      A: expectedColor[3] };
-
+      A: expectedColor[3]
+    };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, (coords) => expColor);
 
     const result = textureContentIsOKByT2B(
@@ -150,10 +150,10 @@ class StencilTest extends GPUTest {
             fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }
-            ` }),
-
-        entryPoint: 'main' },
-
+            `
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         targets: [{ format: 'rgba8unorm' }],
         module: this.device.createShaderModule({
@@ -165,13 +165,13 @@ class StencilTest extends GPUTest {
 
             @fragment fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(params.color);
-            }` }),
-
-        entryPoint: 'main' },
-
+            }`
+        }),
+        entryPoint: 'main'
+      },
       primitive: { topology: 'point-list' },
-      depthStencil });
-
+      depthStencil
+    });
   }
 
   createBindGroupForTest(layout, data) {
@@ -181,13 +181,13 @@ class StencilTest extends GPUTest {
       {
         binding: 0,
         resource: {
-          buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM) } }] });
+          buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM)
+        }
+      }]
 
-
-
-
-  }}
-
+    });
+  }
+}
 
 export const g = makeTestGroup(StencilTest);
 

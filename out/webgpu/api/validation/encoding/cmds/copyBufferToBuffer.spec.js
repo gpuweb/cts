@@ -53,8 +53,8 @@ class F extends ValidationTest {
         this.device.queue.submit([cmd]);
       }, expectation === 'SubmitError');
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -68,12 +68,12 @@ fn(async (t) => {
   const { srcBufferState, dstBufferState } = t.params;
   const srcBuffer = t.createBufferWithState(srcBufferState, {
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   const dstBuffer = t.createBufferWithState(dstBufferState, {
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const shouldFinishError = srcBufferState === 'invalid' || dstBufferState === 'invalid';
   const shouldSubmitSuccess = srcBufferState === 'valid' && dstBufferState === 'valid';
@@ -89,8 +89,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    expectation });
-
+    expectation
+  });
 });
 
 g.test('buffer,device_mismatch').
@@ -111,15 +111,15 @@ fn(async (t) => {
   const srcBufferDevice = srcMismatched ? t.mismatchedDevice : t.device;
   const srcBuffer = srcBufferDevice.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   t.trackForCleanup(srcBuffer);
 
   const dstBufferDevice = dstMismatched ? t.mismatchedDevice : t.device;
   const dstBuffer = dstBufferDevice.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
   t.trackForCleanup(dstBuffer);
 
   t.TestCopyBufferToBuffer({
@@ -128,8 +128,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    expectation: srcMismatched || dstMismatched ? 'FinishError' : 'Success' });
-
+    expectation: srcMismatched || dstMismatched ? 'FinishError' : 'Success'
+  });
 });
 
 g.test('buffer_usage').
@@ -143,12 +143,12 @@ fn(async (t) => {
 
   const srcBuffer = t.device.createBuffer({
     size: 16,
-    usage: srcUsage });
-
+    usage: srcUsage
+  });
   const dstBuffer = t.device.createBuffer({
     size: 16,
-    usage: dstUsage });
-
+    usage: dstUsage
+  });
 
   const isSuccess = srcUsage === GPUBufferUsage.COPY_SRC && dstUsage === GPUBufferUsage.COPY_DST;
   const expectation = isSuccess ? 'Success' : 'FinishError';
@@ -159,8 +159,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize: 8,
-    expectation });
-
+    expectation
+  });
 });
 
 g.test('copy_size_alignment').
@@ -176,12 +176,12 @@ fn(async (t) => {
 
   const srcBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const dstBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   t.TestCopyBufferToBuffer({
     srcBuffer,
@@ -189,8 +189,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset: 0,
     copySize,
-    expectation: isSuccess ? 'Success' : 'FinishError' });
-
+    expectation: isSuccess ? 'Success' : 'FinishError'
+  });
 });
 
 g.test('copy_offset_alignment').
@@ -211,12 +211,12 @@ fn(async (t) => {
 
   const srcBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const dstBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   t.TestCopyBufferToBuffer({
     srcBuffer,
@@ -224,8 +224,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize: 8,
-    expectation: isSuccess ? 'Success' : 'FinishError' });
-
+    expectation: isSuccess ? 'Success' : 'FinishError'
+  });
 });
 
 g.test('copy_overflow').
@@ -240,20 +240,20 @@ paramsSubcasesOnly([
 {
   srcOffset: kMaxSafeMultipleOf8,
   dstOffset: kMaxSafeMultipleOf8,
-  copySize: kMaxSafeMultipleOf8 }]).
-
+  copySize: kMaxSafeMultipleOf8
+}]).
 
 fn(async (t) => {
   const { srcOffset, dstOffset, copySize } = t.params;
 
   const srcBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const dstBuffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   t.TestCopyBufferToBuffer({
     srcBuffer,
@@ -261,8 +261,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize,
-    expectation: 'FinishError' });
-
+    expectation: 'FinishError'
+  });
 });
 
 g.test('copy_out_of_bounds').
@@ -283,12 +283,12 @@ fn(async (t) => {
 
   const srcBuffer = t.device.createBuffer({
     size: 32,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const dstBuffer = t.device.createBuffer({
     size: 32,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   t.TestCopyBufferToBuffer({
     srcBuffer,
@@ -296,8 +296,8 @@ fn(async (t) => {
     dstBuffer,
     dstOffset,
     copySize,
-    expectation: _isSuccess ? 'Success' : 'FinishError' });
-
+    expectation: _isSuccess ? 'Success' : 'FinishError'
+  });
 });
 
 g.test('copy_within_same_buffer').
@@ -312,8 +312,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   t.TestCopyBufferToBuffer({
     srcBuffer: buffer,
@@ -321,7 +321,7 @@ fn(async (t) => {
     dstBuffer: buffer,
     dstOffset,
     copySize,
-    expectation: 'FinishError' });
-
+    expectation: 'FinishError'
+  });
 });
 //# sourceMappingURL=copyBufferToBuffer.spec.js.map

@@ -41,8 +41,8 @@ fn(async (t) => {
   () =>
   t.device.createBuffer({
     size,
-    usage: write ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ }),
-
+    usage: write ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ
+  }),
   oom);
 
   const promise = t.expectGPUError(

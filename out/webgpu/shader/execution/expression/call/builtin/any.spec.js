@@ -39,18 +39,18 @@ fn(async (t) => {
       type: TypeBool,
       cases: [
       { input: False, expected: False },
-      { input: True, expected: True }] },
+      { input: True, expected: True }]
 
-
+    },
     vec2: {
       type: TypeVec(2, TypeBool),
       cases: [
       { input: vec2(False, False), expected: False },
       { input: vec2(True, False), expected: True },
       { input: vec2(False, True), expected: True },
-      { input: vec2(True, True), expected: True }] },
+      { input: vec2(True, True), expected: True }]
 
-
+    },
     vec3: {
       type: TypeVec(3, TypeBool),
       cases: [
@@ -61,9 +61,9 @@ fn(async (t) => {
       { input: vec3(False, False, True), expected: True },
       { input: vec3(True, False, True), expected: True },
       { input: vec3(False, True, True), expected: True },
-      { input: vec3(True, True, True), expected: True }] },
+      { input: vec3(True, True, True), expected: True }]
 
-
+    },
     vec4: {
       type: TypeVec(4, TypeBool),
       cases: [
@@ -82,10 +82,10 @@ fn(async (t) => {
       { input: vec4(True, True, False, False), expected: True },
       { input: vec4(True, True, False, True), expected: True },
       { input: vec4(True, True, True, False), expected: True },
-      { input: vec4(True, True, True, True), expected: True }] } };
+      { input: vec4(True, True, True, True), expected: True }]
 
-
-
+    }
+  };
   const overload = overloads[t.params.overload];
 
   await run(t, builtin('any'), [overload.type], TypeBool, t.params, overload.cases);

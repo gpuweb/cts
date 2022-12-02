@@ -73,7 +73,6 @@ g.test('while_mapped')
           usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
           mapMode: GPUConst.MapMode.WRITE,
         },
-
         {
           usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
           mapMode: GPUConst.MapMode.READ,

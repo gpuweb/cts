@@ -235,19 +235,16 @@ const typeInfoMap = {
     sizeInBytes: 4,
     validationFunc: 'return valid(v);',
   },
-
   float32x2: {
     wgslType: 'vec2<f32>',
     sizeInBytes: 8,
     validationFunc: 'return valid(v.x) && valid(v.y);',
   },
-
   float32x3: {
     wgslType: 'vec3<f32>',
     sizeInBytes: 12,
     validationFunc: 'return valid(v.x) && valid(v.y) && valid(v.z);',
   },
-
   float32x4: {
     wgslType: 'vec4<f32>',
     sizeInBytes: 16,
@@ -385,11 +382,9 @@ class F extends GPUTest {
             isIndexed,
           }),
         }),
-
         entryPoint: 'main',
         buffers,
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -397,14 +392,11 @@ class F extends GPUTest {
               return vec4<f32>(1.0, 0.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
-
     return pipeline;
   }
 
@@ -443,7 +435,6 @@ class F extends GPUTest {
       size: { width: 2, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const colorAttachmentView = colorAttachment.createView();
 
     const encoder = this.device.createCommandEncoder();
@@ -457,7 +448,6 @@ class F extends GPUTest {
         },
       ],
     });
-
     pass.setPipeline(pipeline);
 
     // Run the draw variant

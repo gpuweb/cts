@@ -195,11 +195,9 @@ struct VSOutputs {
         entryPoint: 'vsMain',
         buffers: bufferLayouts,
       },
-
       primitive: {
         topology: 'point-list',
       },
-
       fragment: {
         module,
         entryPoint: 'fsMain',
@@ -717,7 +715,6 @@ g.test('buffers_with_varying_step_mode')
         },
       ],
     }));
-
     t.runTest(state);
   });
 
@@ -891,7 +888,6 @@ g.test('vertex_buffer_used_multiple_times_interleaved')
         vbOffset: additionalVBOffset + i * alignedFormatByteSize,
         attributes: [],
       });
-
       testData.push({
         ...baseData[0],
         slot: i,
@@ -1036,7 +1032,6 @@ g.test('discontiguous_location_and_attribs')
           { format: 'uint8x2', offset: 0, shaderLocation: 8 },
         ],
       },
-
       {
         slot: 1,
         arrayStride: 16,

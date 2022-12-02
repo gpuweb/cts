@@ -184,49 +184,41 @@ Test that the order of mapping a buffer relative to when commands are recorded t
       mappedAtCreation: false,
       _shouldError: false,
     },
-
     {
       order: ['record', 'map', 'finish', 'unmap', 'submit'],
       mappedAtCreation: false,
       _shouldError: false,
     },
-
     {
       order: ['record', 'finish', 'map', 'unmap', 'submit'],
       mappedAtCreation: false,
       _shouldError: false,
     },
-
     {
       order: ['map', 'record', 'unmap', 'finish', 'submit'],
       mappedAtCreation: false,
       _shouldError: false,
     },
-
     {
       order: ['map', 'record', 'finish', 'unmap', 'submit'],
       mappedAtCreation: false,
       _shouldError: false,
     },
-
     {
       order: ['map', 'record', 'finish', 'submit', 'unmap'],
       mappedAtCreation: false,
       _shouldError: true,
     },
-
     {
       order: ['record', 'map', 'finish', 'submit', 'unmap'],
       mappedAtCreation: false,
       _shouldError: true,
     },
-
     {
       order: ['record', 'finish', 'map', 'submit', 'unmap'],
       mappedAtCreation: false,
       _shouldError: true,
     },
-
     { order: ['record', 'unmap', 'finish', 'submit'], mappedAtCreation: true, _shouldError: false },
     { order: ['record', 'finish', 'unmap', 'submit'], mappedAtCreation: true, _shouldError: false },
     { order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true },

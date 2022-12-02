@@ -40,5 +40,6 @@ export class TestWorker {
       this.resolvers.set(query, resolve);
     });
     rec.injectResult(workerResult);
-  }}
+  }
+}
 //# sourceMappingURL=test_worker.js.map

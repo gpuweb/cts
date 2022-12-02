@@ -62,8 +62,8 @@ fn(async (t) => {
     // This is a test of createView, not createTexture. Don't pass viewFormats here that
     // are not compatible, as that is tested in createTexture.spec.ts.
     viewFormats:
-    useViewFormatList && compatible && viewFormat !== undefined ? [viewFormat] : undefined });
-
+    useViewFormatList && compatible && viewFormat !== undefined ? [viewFormat] : undefined
+  });
 
   // Successful if there is no view format, no reinterpretation was required, or the formats are compatible
   // and is was specified in the viewFormats list.
@@ -94,8 +94,8 @@ fn((t) => {
     format: 'rgba8unorm',
     dimension: textureDimension,
     size,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
   const texture = t.device.createTexture(textureDescriptor);
 
   const view = { dimension: viewDimension };
@@ -130,8 +130,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     format,
     size: [info.blockWidth, info.blockHeight, 1],
-    usage: GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  });
 
   const success =
   aspect === 'all' ||
@@ -207,8 +207,8 @@ fn((t) => {
     textureLayers,
     textureLevels,
     baseArrayLayer,
-    arrayLayerCount } =
-  t.params;
+    arrayLayerCount
+  } = t.params;
 
   const kWidth = 1 << kLevels - 1; // 32
   const textureDescriptor = {
@@ -223,8 +223,8 @@ fn((t) => {
     [kWidth, kWidth, kWidth] :
     unreachable(),
     mipLevelCount: textureLevels,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const viewDescriptor = { dimension: viewDimension, baseArrayLayer, arrayLayerCount };
   const success = validateCreateViewLayersLevels(textureDescriptor, viewDescriptor);
@@ -266,8 +266,8 @@ fn((t) => {
     viewDimension,
     textureLevels,
     baseMipLevel,
-    mipLevelCount } =
-  t.params;
+    mipLevelCount
+  } = t.params;
 
   const textureDescriptor = {
     format: 'rgba8unorm',
@@ -275,8 +275,8 @@ fn((t) => {
     size:
     textureDimension === '1d' ? [32] : textureDimension === '3d' ? [32, 32, 32] : [32, 32, 18],
     mipLevelCount: textureLevels,
-    usage: GPUTextureUsage.TEXTURE_BINDING };
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  };
 
   const viewDescriptor = { dimension: viewDimension, baseMipLevel, mipLevelCount };
   const success = validateCreateViewLayersLevels(textureDescriptor, viewDescriptor);
@@ -310,8 +310,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     format: 'rgba8unorm',
     size,
-    usage: GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  });
 
   const success = dimension === '2d' || size[0] === size[1];
   t.expectValidationError(() => {

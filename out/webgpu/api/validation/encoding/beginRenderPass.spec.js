@@ -41,26 +41,26 @@ paramsSubcasesOnly([
   view0Mismatched: false,
   target0Mismatched: false,
   view1Mismatched: false,
-  target1Mismatched: false },
-// control case
+  target1Mismatched: false
+}, // control case
 {
   view0Mismatched: false,
   target0Mismatched: true,
   view1Mismatched: false,
-  target1Mismatched: true },
-
+  target1Mismatched: true
+},
 {
   view0Mismatched: true,
   target0Mismatched: false,
   view1Mismatched: true,
-  target1Mismatched: false },
-
+  target1Mismatched: false
+},
 {
   view0Mismatched: false,
   target0Mismatched: false,
   view1Mismatched: false,
-  target1Mismatched: true }]).
-
+  target1Mismatched: true
+}]).
 
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -90,17 +90,17 @@ fn(async (t) => {
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'store',
-      resolveTarget: target0Texture.createView() },
-
+      resolveTarget: target0Texture.createView()
+    },
     {
       view: view1Texture.createView(),
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'store',
-      resolveTarget: target1Texture.createView() }] });
+      resolveTarget: target1Texture.createView()
+    }]
 
-
-
+  });
   pass.end();
 
   encoder.validateFinish(!mismatched);
@@ -120,8 +120,8 @@ fn(async (t) => {
   const descriptor = {
     size: { width: 4, height: 4, depthOrArrayLayers: 1 },
     format: 'depth24plus-stencil8',
-    usage: GPUTextureUsage.RENDER_ATTACHMENT };
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  };
 
   const depthStencilTexture = mismatched ?
   t.getDeviceMismatchedTexture(descriptor) :
@@ -137,9 +137,9 @@ fn(async (t) => {
       depthStoreOp: 'store',
       stencilClearValue: 0,
       stencilLoadOp: 'clear',
-      stencilStoreOp: 'store' } });
-
-
+      stencilStoreOp: 'store'
+    }
+  });
   pass.end();
 
   encoder.validateFinish(!mismatched);
@@ -159,8 +159,8 @@ fn(async (t) => {
 
   const occlusionQuerySet = sourceDevice.createQuerySet({
     type: 'occlusion',
-    count: 1 });
-
+    count: 1
+  });
   t.trackForCleanup(occlusionQuerySet);
 
   const encoder = t.createEncoder('render pass', { occlusionQuerySet });
@@ -185,14 +185,14 @@ fn(async (t) => {
   const timestampWrite = {
     querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
     queryIndex: 0,
-    location: 'beginning' };
-
+    location: 'beginning'
+  };
 
   const colorTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.createEncoder('non-pass');
   const pass = encoder.encoder.beginRenderPass({
@@ -200,11 +200,11 @@ fn(async (t) => {
     {
       view: colorTexture.createView(),
       loadOp: 'load',
-      storeOp: 'store' }],
+      storeOp: 'store'
+    }],
 
-
-    timestampWrites: [timestampWrite] });
-
+    timestampWrites: [timestampWrite]
+  });
   pass.end();
 
   encoder.validateFinish(!mismatched);

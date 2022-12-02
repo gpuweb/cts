@@ -108,8 +108,8 @@ export class F32Interval {
       this._any = new F32Interval(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
     }
     return this._any;
-  }}
-
+  }
+}
 
 /**
  * SerializedF32Interval holds the serialized form of a F32Interval.
@@ -187,15 +187,15 @@ export function toF32Vector(v) {
 const kZeroVector = {
   2: toF32Vector([0, 0]),
   3: toF32Vector([0, 0, 0]),
-  4: toF32Vector([0, 0, 0, 0]) };
-
+  4: toF32Vector([0, 0, 0, 0])
+};
 
 /** F32Vector with all F32Interval.any() elements */
 const kAnyVector = {
   2: toF32Vector([F32Interval.any(), F32Interval.any()]),
   3: toF32Vector([F32Interval.any(), F32Interval.any(), F32Interval.any()]),
-  4: toF32Vector([F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()]) };
-
+  4: toF32Vector([F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()])
+};
 
 /**
  * @returns a F32Vector where each element is the span for corresponding
@@ -926,8 +926,8 @@ const CorrectlyRoundedIntervalOp = {
   impl: (n) => {
     assert(!Number.isNaN(n), `absolute not defined for NaN`);
     return toF32Interval(n);
-  } };
-
+  }
+};
 
 /** @returns an interval of the correctly rounded values around the point */
 export function correctlyRoundedInterval(n) {
@@ -939,8 +939,8 @@ function AbsoluteErrorIntervalOp(error_range) {
   const op = {
     impl: (_) => {
       return F32Interval.any();
-    } };
-
+    }
+  };
 
   if (isFiniteF32(error_range)) {
     op.impl = (n) => {
@@ -963,8 +963,8 @@ function ULPIntervalOp(numULP) {
   const op = {
     impl: (_) => {
       return F32Interval.any();
-    } };
-
+    }
+  };
 
   if (isFiniteF32(numULP)) {
     op.impl = (n) => {
@@ -993,8 +993,8 @@ export function ulpInterval(n, numULP) {
 const AbsIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.abs(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval for abs(n) */
 export function absInterval(n) {
@@ -1006,8 +1006,8 @@ const AcosIntervalOp = {
     // acos(n) = atan2(sqrt(1.0 - n * n), n)
     const y = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
     return atan2Interval(y, n);
-  }) };
-
+  })
+};
 
 /** Calculate an acceptance interval for acos(n) */
 export function acosInterval(n) {
@@ -1026,8 +1026,8 @@ const AcoshAlternativeIntervalOp = {
 
     const sqrt_value = sqrtInterval(inner_value);
     return logInterval(additionInterval(x, sqrt_value));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
 export function acoshAlternativeInterval(x) {
@@ -1040,8 +1040,8 @@ const AcoshPrimaryIntervalOp = {
     const inner_value = subtractionInterval(multiplicationInterval(x, x), 1.0);
     const sqrt_value = sqrtInterval(inner_value);
     return logInterval(additionInterval(x, sqrt_value));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
 export function acoshPrimaryInterval(x) {
@@ -1051,8 +1051,8 @@ export function acoshPrimaryInterval(x) {
 const AdditionIntervalOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(x + y);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of x + y */
 export function additionInterval(x, y) {
@@ -1064,8 +1064,8 @@ const AsinIntervalOp = {
     // asin(n) = atan2(n, sqrt(1.0 - n * n))
     const x = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
     return atan2Interval(n, x);
-  }) };
-
+  })
+};
 
 /** Calculate an acceptance interval for asin(n) */
 export function asinInterval(n) {
@@ -1078,8 +1078,8 @@ const AsinhIntervalOp = {
     const inner_value = additionInterval(multiplicationInterval(x, x), 1.0);
     const sqrt_value = sqrtInterval(inner_value);
     return logInterval(additionInterval(x, sqrt_value));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of asinh(x) */
 export function asinhInterval(n) {
@@ -1089,8 +1089,8 @@ export function asinhInterval(n) {
 const AtanIntervalOp = {
   impl: (n) => {
     return ulpInterval(Math.atan(n), 4096);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of atan(x) */
 export function atanInterval(n) {
@@ -1132,8 +1132,8 @@ const Atan2IntervalOp = {
       return [toF32Interval(0), x];
     }
     return [y, x];
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of atan2(y, x) */
 export function atan2Interval(y, x) {
@@ -1147,8 +1147,8 @@ const AtanhIntervalOp = {
     const denominator = subtractionInterval(1.0, n);
     const log_interval = logInterval(divisionInterval(numerator, denominator));
     return multiplicationInterval(log_interval, 0.5);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of atanh(x) */
 export function atanhInterval(n) {
@@ -1158,8 +1158,8 @@ export function atanhInterval(n) {
 const CeilIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.ceil(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of ceil(x) */
 export function ceilInterval(n) {
@@ -1181,8 +1181,8 @@ const ClampMedianIntervalOp = {
       return 0;
     })[1]);
 
-  } };
-
+  }
+};
 
 /** All acceptance interval functions for clamp(x, y, z) */
 export const clampIntervals = [clampMinMaxInterval, clampMedianInterval];
@@ -1204,8 +1204,8 @@ z)
 const ClampMinMaxIntervalOp = {
   impl: (x, low, high) => {
     return correctlyRoundedInterval(Math.min(Math.max(x, low), high));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
 export function clampMinMaxInterval(
@@ -1226,9 +1226,9 @@ const CosIntervalOp = {
   kNegPiToPiInterval,
   (n) => {
     return absoluteErrorInterval(Math.cos(n), 2 ** -11);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of cos(x) */
 export function cosInterval(n) {
@@ -1240,8 +1240,8 @@ const CoshIntervalOp = {
     // cosh(x) = (exp(x) + exp(-x)) * 0.5
     const minus_n = negationInterval(n);
     return multiplicationInterval(additionInterval(expInterval(n), expInterval(minus_n)), 0.5);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of cosh(x) */
 export function coshInterval(n) {
@@ -1271,8 +1271,8 @@ const CrossIntervalOp = {
     multiplicationInterval(x[1], y[0]));
 
     return [r0, r1, r2];
-  } };
-
+  }
+};
 
 export function crossInterval(x, y) {
   assert(x.length === 3, `Cross is only defined for vec3`);
@@ -1283,8 +1283,8 @@ export function crossInterval(x, y) {
 const DegreesIntervalOp = {
   impl: (n) => {
     return multiplicationInterval(n, 57.295779513082322865);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of degrees(x) */
 export function degreesInterval(n) {
@@ -1294,16 +1294,16 @@ export function degreesInterval(n) {
 const DistanceIntervalScalarOp = {
   impl: (x, y) => {
     return lengthInterval(subtractionInterval(x, y));
-  } };
-
+  }
+};
 
 const DistanceIntervalVectorOp = {
   impl: (x, y) => {
     return lengthInterval(
     runBinaryToIntervalOpComponentWise(toF32Vector(x), toF32Vector(y), SubtractionIntervalOp));
 
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of distance(x, y) */
 export function distanceInterval(x, y) {
@@ -1325,8 +1325,8 @@ const DivisionIntervalOp = {
   impl: limitBinaryToIntervalDomain(
   {
     x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
-    y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])] },
-
+    y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])]
+  },
   (x, y) => {
     if (y === 0) {
       return F32Interval.any();
@@ -1340,8 +1340,8 @@ const DivisionIntervalOp = {
       y = toF32Interval(0);
     }
     return [x, y];
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of x / y */
 export function divisionInterval(x, y) {
@@ -1357,8 +1357,8 @@ const DotIntervalOp = {
     MultiplicationIntervalOp);
 
     return multiplications.reduce((previous, current) => additionInterval(previous, current));
-  } };
-
+  }
+};
 
 export function dotInterval(x, y) {
   assert(x.length === y.length, `dot not defined for vectors with different lengths`);
@@ -1368,8 +1368,8 @@ export function dotInterval(x, y) {
 const ExpIntervalOp = {
   impl: (n) => {
     return ulpInterval(Math.exp(n), 3 + 2 * Math.abs(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval for exp(x) */
 export function expInterval(x) {
@@ -1379,8 +1379,8 @@ export function expInterval(x) {
 const Exp2IntervalOp = {
   impl: (n) => {
     return ulpInterval(Math.pow(2, n), 3 + 2 * Math.abs(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval for exp2(x) */
 export function exp2Interval(x) {
@@ -1429,8 +1429,8 @@ export function faceForwardIntervals(x, y, z) {
 const FloorIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.floor(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of floor(x) */
 export function floorInterval(n) {
@@ -1440,8 +1440,8 @@ export function floorInterval(n) {
 const FmaIntervalOp = {
   impl: (x, y, z) => {
     return additionInterval(multiplicationInterval(x, y), z);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval for fma(x, y, z) */
 export function fmaInterval(x, y, z) {
@@ -1466,8 +1466,8 @@ const FractIntervalOp = {
       return F32Interval.span(result, toF32Interval(kValue.f32.positive.less_than_one));
     }
     return result;
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of fract(x) */
 export function fractInterval(n) {
@@ -1479,9 +1479,9 @@ const InverseSqrtIntervalOp = {
   kGreaterThanZeroInterval,
   (n) => {
     return ulpInterval(1 / Math.sqrt(n), 2);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of inverseSqrt(x) */
 export function inverseSqrtInterval(n) {
@@ -1494,8 +1494,8 @@ const LdexpIntervalOp = {
   // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
   {
     x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
-    y: [toF32Interval([-126, 128])] },
-
+    y: [toF32Interval([-126, 128])]
+  },
   (e1, e2) => {
     // Though the spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, the
     // accuracy is listed as correctly rounded to the true value, so the
@@ -1508,9 +1508,9 @@ const LdexpIntervalOp = {
       return F32Interval.any();
     }
     return correctlyRoundedInterval(result);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of ldexp(e1, e2) */
 export function ldexpInterval(e1, e2) {
@@ -1520,14 +1520,14 @@ export function ldexpInterval(e1, e2) {
 const LengthIntervalScalarOp = {
   impl: (n) => {
     return sqrtInterval(multiplicationInterval(n, n));
-  } };
-
+  }
+};
 
 const LengthIntervalVectorOp = {
   impl: (n) => {
     return sqrtInterval(dotInterval(n, n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of length(x) */
 export function lengthInterval(n) {
@@ -1546,9 +1546,9 @@ const LogIntervalOp = {
       return absoluteErrorInterval(Math.log(n), 2 ** -21);
     }
     return ulpInterval(Math.log(n), 3);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of log(x) */
 export function logInterval(x) {
@@ -1563,9 +1563,9 @@ const Log2IntervalOp = {
       return absoluteErrorInterval(Math.log2(n), 2 ** -21);
     }
     return ulpInterval(Math.log2(n), 3);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of log2(x) */
 export function log2Interval(x) {
@@ -1575,8 +1575,8 @@ export function log2Interval(x) {
 const MaxIntervalOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(Math.max(x, y));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of max(x, y) */
 export function maxInterval(x, y) {
@@ -1586,8 +1586,8 @@ export function maxInterval(x, y) {
 const MinIntervalOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(Math.min(x, y));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of min(x, y) */
 export function minInterval(x, y) {
@@ -1600,8 +1600,8 @@ const MixImpreciseIntervalOp = {
     //  x + t, where t = (y - x) * z
     const t = multiplicationInterval(subtractionInterval(y, x), z);
     return additionInterval(x, t);
-  } };
-
+  }
+};
 
 /** All acceptance interval functions for mix(x, y, z) */
 export const mixIntervals = [mixImpreciseInterval, mixPreciseInterval];
@@ -1623,8 +1623,8 @@ const MixPreciseIntervalOp = {
     const t = multiplicationInterval(x, subtractionInterval(1.0, z));
     const s = multiplicationInterval(y, z);
     return additionInterval(t, s);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
 export function mixPreciseInterval(x, y, z) {
@@ -1646,14 +1646,14 @@ export function modfInterval(n) {
 const MultiplicationInnerOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(x * y);
-  } };
-
+  }
+};
 
 const MultiplicationIntervalOp = {
   impl: (x, y) => {
     return roundAndFlushBinaryToInterval(x, y, MultiplicationInnerOp);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of x * y */
 export function multiplicationInterval(
@@ -1666,8 +1666,8 @@ y)
 const NegationIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(-n);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of -x */
 export function negationInterval(n) {
@@ -1678,8 +1678,8 @@ const NormalizeIntervalOp = {
   impl: (n) => {
     const length = lengthInterval(n);
     return toF32Vector(n.map((e) => divisionInterval(e, length)));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of normalize(x) */
 export function normalizeInterval(n) {
@@ -1692,8 +1692,8 @@ const PowIntervalOp = {
   // enforce this, so there is no need to wrap the impl call here.
   impl: (x, y) => {
     return exp2Interval(multiplicationInterval(y, log2Interval(x)));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of pow(x, y) */
 export function powInterval(x, y) {
@@ -1708,8 +1708,8 @@ const QuantizeToF16IntervalOp = {
     const rounded = correctlyRoundedF16(n);
     const flushed = addFlushedIfNeededF16(rounded);
     return F32Interval.span(...flushed.map(toF32Interval));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of quanitizeToF16(x) */
 export function quantizeToF16Interval(n) {
@@ -1719,8 +1719,8 @@ export function quantizeToF16Interval(n) {
 const RadiansIntervalOp = {
   impl: (n) => {
     return multiplicationInterval(n, 0.017453292519943295474);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of radians(x) */
 export function radiansInterval(n) {
@@ -1741,8 +1741,8 @@ const ReflectIntervalOp = {
     const t = multiplicationInterval(2.0, dotInterval(x, y));
     const rhs = multiplyVectorByScalar(y, t);
     return runBinaryToIntervalOpComponentWise(toF32Vector(x), rhs, SubtractionIntervalOp);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of reflect(x, y) */
 export function reflectInterval(x, y) {
@@ -1802,8 +1802,8 @@ const RemainderIntervalOp = {
   impl: (x, y) => {
     // x % y = x - y * trunc(x/y)
     return subtractionInterval(x, multiplicationInterval(y, truncInterval(divisionInterval(x, y))));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval for x % y */
 export function remainderInterval(x, y) {
@@ -1827,8 +1827,8 @@ const RoundIntervalOp = {
       return correctlyRoundedInterval(k);
     }
     return correctlyRoundedInterval(k + 1);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of round(x) */
 export function roundInterval(n) {
@@ -1861,8 +1861,8 @@ const SignIntervalOp = {
     }
 
     return correctlyRoundedInterval(0.0);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of sin(x) */
 export function signInterval(n) {
@@ -1874,9 +1874,9 @@ const SinIntervalOp = {
   kNegPiToPiInterval,
   (n) => {
     return absoluteErrorInterval(Math.sin(n), 2 ** -11);
-  }) };
+  })
 
-
+};
 
 /** Calculate an acceptance interval of sin(x) */
 export function sinInterval(n) {
@@ -1888,8 +1888,8 @@ const SinhIntervalOp = {
     // sinh(x) = (exp(x) - exp(-x)) * 0.5
     const minus_n = negationInterval(n);
     return multiplicationInterval(subtractionInterval(expInterval(n), expInterval(minus_n)), 0.5);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of sinh(x) */
 export function sinhInterval(n) {
@@ -1915,8 +1915,8 @@ const SmoothStepOp = {
     multiplicationInterval(t,
     subtractionInterval(3.0,
     multiplicationInterval(2.0, t))));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of smoothStep(low, high, x) */
 export function smoothStepInterval(low, high, x) {
@@ -1931,8 +1931,8 @@ export function smoothStepInterval(low, high, x) {
 const SqrtIntervalOp = {
   impl: (n) => {
     return divisionInterval(1.0, inverseSqrtInterval(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of sqrt(x) */
 export function sqrtInterval(n) {
@@ -1945,8 +1945,8 @@ const StepIntervalOp = {
       return correctlyRoundedInterval(1.0);
     }
     return correctlyRoundedInterval(0.0);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance 'interval' for step(edge, x)
  *
@@ -1965,8 +1965,8 @@ export function stepInterval(edge, x) {
 const SubtractionIntervalOp = {
   impl: (x, y) => {
     return correctlyRoundedInterval(x - y);
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of x - y */
 export function subtractionInterval(x, y) {
@@ -1976,8 +1976,8 @@ export function subtractionInterval(x, y) {
 const TanIntervalOp = {
   impl: (n) => {
     return divisionInterval(sinInterval(n), cosInterval(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of tan(x) */
 export function tanInterval(n) {
@@ -1987,8 +1987,8 @@ export function tanInterval(n) {
 const TanhIntervalOp = {
   impl: (n) => {
     return divisionInterval(sinhInterval(n), coshInterval(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of tanh(x) */
 export function tanhInterval(n) {
@@ -1998,8 +1998,8 @@ export function tanhInterval(n) {
 const TruncIntervalOp = {
   impl: (n) => {
     return correctlyRoundedInterval(Math.trunc(n));
-  } };
-
+  }
+};
 
 /** Calculate an acceptance interval of trunc(x) */
 export function truncInterval(n) {

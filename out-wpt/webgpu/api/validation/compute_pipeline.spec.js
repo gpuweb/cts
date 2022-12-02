@@ -75,7 +75,6 @@ and check that the APIs only accept compute shader.
         entryPoint: 'main',
       },
     };
-
     t.doCreateComputePipelineTest(isAsync, shaderModuleStage === 'compute', descriptor);
   });
 
@@ -164,11 +163,9 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
           }
           `,
         }),
-
         entryPoint: 'main',
       },
     };
-
     t.doCreateComputePipelineTest(isAsync, count <= countAtLimit, descriptor);
   });
 
@@ -203,7 +200,6 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
           }
           `,
         }),
-
         entryPoint: 'main',
       },
     };
@@ -248,7 +244,6 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
           }
           `,
         }),
-
         entryPoint: 'main',
       },
     };
@@ -305,7 +300,6 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
               _ = u32(c3);
             }`,
         }),
-
         entryPoint: 'main',
         constants,
       },
@@ -364,7 +358,6 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
               _ = u32(c10);
             }`,
         }),
-
         entryPoint: 'main',
         constants,
       },
@@ -419,7 +412,6 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         module: t.device.createShaderModule({
           code: kOverridesWorkgroupSizeShaders[type],
         }),
-
         entryPoint: 'main',
         constants,
       },
@@ -451,7 +443,6 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
           module: t.device.createShaderModule({
             code: kOverridesWorkgroupSizeShaders[type],
           }),
-
           entryPoint: 'main',
           constants: {
             x,
@@ -516,7 +507,6 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
                 ${mat4Count <= 0 ? '' : '_ = mat4_data[0];'}
               }`,
           }),
-
           entryPoint: 'main',
           constants: {
             a: vec4Count,

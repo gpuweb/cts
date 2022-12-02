@@ -83,7 +83,6 @@ g.test('depth_write')
     const descriptor = t.getDescriptor({
       depthStencil: { format, depthWriteEnabled },
     });
-
     t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
   });
 

@@ -89,8 +89,8 @@ class Point2D {
 
   static getCentroid(a, b, c) {
     return new Point2D((a.x + b.x + c.x) / 3, (a.y + b.y + c.y) / 3);
-  }}
-
+  }
+}
 
 
 
@@ -121,18 +121,18 @@ function getLineTestLocations(expectedColor) {
   {
     // Line {v1, v2}
     location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Line {v3, v4}
     location: Point2D.getMidpoint(VertexLocations[2], VertexLocations[3]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Line {v5, v6}
     location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
-    color: expectedColor }];
-
+    color: expectedColor
+  }];
 
 }
 
@@ -142,13 +142,13 @@ function getPrimitiveRestartLineTestLocations(expectedColor) {
   {
     // Line {v1, v2}
     location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Line {v5, v6}
     location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
-    color: expectedColor }];
-
+    color: expectedColor
+  }];
 
 }
 
@@ -158,13 +158,13 @@ function getLineStripTestLocations(expectedColor) {
   {
     // Line {v2, v3}
     location: Point2D.getMidpoint(VertexLocations[1], VertexLocations[2]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Line {v4, v5}
     location: Point2D.getMidpoint(VertexLocations[3], VertexLocations[4]),
-    color: expectedColor }];
-
+    color: expectedColor
+  }];
 
 }
 
@@ -174,13 +174,13 @@ function getTriangleListTestLocations(expectedColor) {
   {
     // Triangle {v1, v2, v3}
     location: Point2D.getCentroid(VertexLocations[0], VertexLocations[1], VertexLocations[2]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Triangle {v4, v5, v6}
     location: Point2D.getCentroid(VertexLocations[3], VertexLocations[4], VertexLocations[5]),
-    color: expectedColor }];
-
+    color: expectedColor
+  }];
 
 }
 
@@ -190,25 +190,25 @@ function getTriangleStripTestLocations(expectedColor) {
   {
     // Triangle {v2, v3, v4}
     location: Point2D.getCentroid(VertexLocations[1], VertexLocations[2], VertexLocations[3]),
-    color: expectedColor },
-
+    color: expectedColor
+  },
   {
     // Triangle {v3, v4, v5}
     location: Point2D.getCentroid(VertexLocations[2], VertexLocations[3], VertexLocations[4]),
-    color: expectedColor }];
-
+    color: expectedColor
+  }];
 
 }
 
 function getDefaultTestLocations({
   topology,
   primitiveRestart = false,
-  invalidateLastInList = false })
+  invalidateLastInList = false
 
 
 
 
-{
+}) {
   function maybeInvalidateLast(locations) {
     if (!invalidateLastInList) return locations;
 
@@ -216,8 +216,8 @@ function getDefaultTestLocations({
       if (i === locations.length - 1) {
         return {
           location: tl.location,
-          color: kInvalidPixelColor };
-
+          color: kInvalidPixelColor
+        };
       } else {
         return tl;
       }
@@ -286,8 +286,8 @@ class PrimitiveTopologyTest extends GPUTest {
     return this.device.createTexture({
       format: kColorFormat,
       size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+    });
   }
 
   run({
@@ -295,14 +295,14 @@ class PrimitiveTopologyTest extends GPUTest {
     indirect,
     testLocations,
     primitiveRestart = false,
-    drawCount = kDefaultDrawCount })
+    drawCount = kDefaultDrawCount
 
 
 
 
 
 
-  {
+  }) {
     const colorAttachment = this.makeAttachmentTexture();
 
     // Color load operator will clear color attachment to zero.
@@ -313,10 +313,10 @@ class PrimitiveTopologyTest extends GPUTest {
         view: colorAttachment.createView(),
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
 
     let stripIndexFormat = undefined;
     if (topology === 'triangle-strip' || topology === 'line-strip') {
@@ -338,8 +338,8 @@ class PrimitiveTopologyTest extends GPUTest {
                 @location(0) pos : vec4<f32>
                 ) -> @builtin(position) vec4<f32> {
                 return pos;
-              }` }),
-
+              }`
+        }),
         entryPoint: 'main',
         buffers: [
         {
@@ -348,27 +348,27 @@ class PrimitiveTopologyTest extends GPUTest {
           {
             format: 'float32x4',
             offset: 0,
-            shaderLocation: 0 }] }] },
+            shaderLocation: 0
+          }]
 
+        }]
 
-
-
-
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
               @fragment fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-              }` }),
-
+              }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: kColorFormat }] },
-
+        targets: [{ format: kColorFormat }]
+      },
       primitive: {
         topology,
-        stripIndexFormat } }));
-
-
+        stripIndexFormat
+      }
+    }));
 
 
     // Create vertices for the primitive in a vertex buffer and bind it.
@@ -421,8 +421,8 @@ class PrimitiveTopologyTest extends GPUTest {
       { exp: testPixel.color });
 
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(PrimitiveTopologyTest);
 
@@ -458,8 +458,8 @@ unless(
 fn((t) => {
   t.run({
     ...t.params,
-    testLocations: getDefaultTestLocations(t.params) });
-
+    testLocations: getDefaultTestLocations(t.params)
+  });
 });
 
 g.test('unaligned_vertex_count').
@@ -493,7 +493,7 @@ fn((t) => {
   const testLocations = getDefaultTestLocations({ ...t.params, invalidateLastInList: true });
   t.run({
     ...t.params,
-    testLocations });
-
+    testLocations
+  });
 });
 //# sourceMappingURL=primitive_topology.spec.js.map

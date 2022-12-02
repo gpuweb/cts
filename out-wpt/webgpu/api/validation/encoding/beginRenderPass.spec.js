@@ -43,22 +43,19 @@ g.test('color_attachments,device_mismatch')
       target0Mismatched: false,
       view1Mismatched: false,
       target1Mismatched: false,
-    },
-    // control case
+    }, // control case
     {
       view0Mismatched: false,
       target0Mismatched: true,
       view1Mismatched: false,
       target1Mismatched: true,
     },
-
     {
       view0Mismatched: true,
       target0Mismatched: false,
       view1Mismatched: true,
       target1Mismatched: false,
     },
-
     {
       view0Mismatched: false,
       target0Mismatched: false,
@@ -96,7 +93,6 @@ g.test('color_attachments,device_mismatch')
           storeOp: 'store',
           resolveTarget: target0Texture.createView(),
         },
-
         {
           view: view1Texture.createView(),
           clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
@@ -106,7 +102,6 @@ g.test('color_attachments,device_mismatch')
         },
       ],
     });
-
     pass.end();
 
     encoder.validateFinish(!mismatched);
@@ -146,7 +141,6 @@ g.test('depth_stencil_attachment,device_mismatch')
         stencilStoreOp: 'store',
       },
     });
-
     pass.end();
 
     encoder.validateFinish(!mismatched);
@@ -168,7 +162,6 @@ g.test('occlusion_query_set,device_mismatch')
       type: 'occlusion',
       count: 1,
     });
-
     t.trackForCleanup(occlusionQuerySet);
 
     const encoder = t.createEncoder('render pass', { occlusionQuerySet });
@@ -214,7 +207,6 @@ g.test('timestamp_query_set,device_mismatch')
 
       timestampWrites: [timestampWrite],
     });
-
     pass.end();
 
     encoder.validateFinish(!mismatched);

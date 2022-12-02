@@ -174,7 +174,6 @@ g.test('texture_binding_must_have_correct_usage')
       usage: appliedUsage,
       sampleCount: info.resource === 'sampledTexMS' ? 4 : 1,
     };
-
     const resource = t.device.createTexture(descriptor).createView();
 
     const shouldError = (usage & info.usage) === 0;
@@ -661,7 +660,6 @@ g.test('binding_resources,device_mismatch')
           visibility: info.validStages,
           ...entry,
         },
-
         {
           binding: 1,
           visibility: info.validStages,
@@ -678,7 +676,6 @@ g.test('binding_resources,device_mismatch')
             binding: 0,
             resource: resource0,
           },
-
           {
             binding: 1,
             resource: resource1,

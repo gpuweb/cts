@@ -39,7 +39,6 @@ g.test('single')
       size: dstBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(dst);
 
     const encoder = t.device.createCommandEncoder();
@@ -99,7 +98,6 @@ g.test('copy_order')
       size: srcData.length * 4,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(dst);
 
     const encoder = t.device.createCommandEncoder();

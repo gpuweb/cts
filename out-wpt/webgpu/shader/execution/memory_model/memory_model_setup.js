@@ -58,7 +58,6 @@ export class MemoryModelTester {
         size: testLocationsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.makeBufferWithContents(
         new Uint32Array(testLocationsSize).fill(0),
         GPUBufferUsage.COPY_SRC
@@ -73,7 +72,6 @@ export class MemoryModelTester {
         size: readResultsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.makeBufferWithContents(
         new Uint32Array(readResultsSize).fill(0),
         GPUBufferUsage.COPY_SRC
@@ -88,7 +86,6 @@ export class MemoryModelTester {
         size: testResultsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       }),
-
       srcBuf: this.test.makeBufferWithContents(
         new Uint32Array(testResultsSize).fill(0),
         GPUBufferUsage.COPY_SRC
@@ -103,12 +100,10 @@ export class MemoryModelTester {
         size: shuffledWorkgroupsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.device.createBuffer({
         size: shuffledWorkgroupsSize,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
       }),
-
       size: shuffledWorkgroupsSize,
     };
 
@@ -118,7 +113,6 @@ export class MemoryModelTester {
         size: barrierSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.makeBufferWithContents(
         new Uint32Array(barrierSize).fill(0),
         GPUBufferUsage.COPY_SRC
@@ -133,7 +127,6 @@ export class MemoryModelTester {
         size: scratchpadSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.makeBufferWithContents(
         new Uint32Array(scratchpadSize).fill(0),
         GPUBufferUsage.COPY_SRC
@@ -148,12 +141,10 @@ export class MemoryModelTester {
         size: scratchMemoryLocationsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-
       srcBuf: this.test.device.createBuffer({
         size: scratchMemoryLocationsSize,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
       }),
-
       size: scratchMemoryLocationsSize,
     };
 
@@ -163,12 +154,10 @@ export class MemoryModelTester {
         size: stressParamsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.UNIFORM,
       }),
-
       srcBuf: this.test.device.createBuffer({
         size: stressParamsSize,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
       }),
-
       size: stressParamsSize,
     };
 
@@ -195,21 +184,17 @@ export class MemoryModelTester {
         { binding: 6, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
       ],
     });
-
     this.testPipeline = this.test.device.createComputePipeline({
       layout: this.test.device.createPipelineLayout({
         bindGroupLayouts: [testLayout],
       }),
-
       compute: {
         module: this.test.device.createShaderModule({
           code: testShader,
         }),
-
         entryPoint: 'main',
       },
     });
-
     this.testBindGroup = this.test.device.createBindGroup({
       entries: [
         { binding: 0, resource: { buffer: this.buffers.testLocations.deviceBuf } },
@@ -232,21 +217,17 @@ export class MemoryModelTester {
         { binding: 3, visibility: GPUShaderStage.COMPUTE, buffer: { type: 'uniform' } },
       ],
     });
-
     this.resultPipeline = this.test.device.createComputePipeline({
       layout: this.test.device.createPipelineLayout({
         bindGroupLayouts: [resultLayout],
       }),
-
       compute: {
         module: this.test.device.createShaderModule({
           code: resultShader,
         }),
-
         entryPoint: 'main',
       },
     });
-
     this.resultBindGroup = this.test.device.createBindGroup({
       entries: [
         { binding: 0, resource: { buffer: this.buffers.testLocations.deviceBuf } },

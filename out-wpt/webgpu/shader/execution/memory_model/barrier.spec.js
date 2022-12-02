@@ -184,7 +184,6 @@ g.test('workgroup_barrier_store_store')
       memType: MemoryType.NonAtomicStorageClass,
       _testCode: storageMemoryBarrierStoreStoreTestCode,
     },
-
     {
       memType: MemoryType.NonAtomicWorkgroupClass,
       _testCode: workgroupMemoryBarrierStoreStoreTestCode,

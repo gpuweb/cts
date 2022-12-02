@@ -40,8 +40,8 @@ export const d = makeCaseCache('length', {
   },
   f32_vec4: () => {
     return vectorTestValues(4, false).map(makeCaseVecF32);
-  } });
-
+  }
+});
 
 /** @returns a `length` Case for a vector of f32s input */
 const makeCaseVecF32 = (x) => {

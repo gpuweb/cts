@@ -20,10 +20,10 @@ export class ProgrammableStateTest extends GPUTest {
         {
           binding: 0,
           visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-          buffer: { type } }] }));
+          buffer: { type }
+        }]
 
-
-
+      }));
 
     }
     return this.commonBindGroupLayouts.get(type);
@@ -40,8 +40,8 @@ export class ProgrammableStateTest extends GPUTest {
   createBindGroup(buffer, type) {
     return this.device.createBindGroup({
       layout: this.getBindGroupLayout(type),
-      entries: [{ binding: 0, resource: { buffer } }] });
-
+      entries: [{ binding: 0, resource: { buffer } }]
+    });
   }
 
   setBindGroup(
@@ -77,15 +77,15 @@ export class ProgrammableStateTest extends GPUTest {
 
           return this.device.createComputePipeline({
             layout: this.device.createPipelineLayout({
-              bindGroupLayouts: this.getBindGroupLayouts(groups) }),
-
+              bindGroupLayouts: this.getBindGroupLayouts(groups)
+            }),
             compute: {
               module: this.device.createShaderModule({
-                code: wgsl }),
-
-              entryPoint: 'main' } });
-
-
+                code: wgsl
+              }),
+              entryPoint: 'main'
+            }
+          });
         }
       case 'render pass':
       case 'render bundle':{
@@ -109,28 +109,28 @@ export class ProgrammableStateTest extends GPUTest {
               out.value = ${algorithm};
               return vec4<f32>(1.0, 0.0, 0.0, 1.0);
             }
-          ` };
-
+          `
+          };
 
           return this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
-              bindGroupLayouts: this.getBindGroupLayouts(groups) }),
-
+              bindGroupLayouts: this.getBindGroupLayouts(groups)
+            }),
             vertex: {
               module: this.device.createShaderModule({
-                code: wgslShaders.vertex }),
-
-              entryPoint: 'vert_main' },
-
+                code: wgslShaders.vertex
+              }),
+              entryPoint: 'vert_main'
+            },
             fragment: {
               module: this.device.createShaderModule({
-                code: wgslShaders.fragment }),
-
+                code: wgslShaders.fragment
+              }),
               entryPoint: 'frag_main',
-              targets: [{ format: 'rgba8unorm' }] },
-
-            primitive: { topology: 'point-list' } });
-
+              targets: [{ format: 'rgba8unorm' }]
+            },
+            primitive: { topology: 'point-list' }
+          });
         }
       default:
         unreachable();}
@@ -153,5 +153,6 @@ export class ProgrammableStateTest extends GPUTest {
     } else if (pass instanceof GPURenderBundleEncoder) {
       pass.draw(1);
     }
-  }}
+  }
+}
 //# sourceMappingURL=programmable_state_test.js.map

@@ -15,19 +15,19 @@ class F extends GPUTest {
   {
     const dst = this.device.createBuffer({
       size: expected.byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+    });
 
     const descriptor = {
       layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
-          code }),
-
+          code
+        }),
         entryPoint: 'main',
-        constants } };
-
-
+        constants
+      }
+    };
 
     const promise = isAsync ?
     this.device.createComputePipelineAsync(descriptor) :
@@ -36,8 +36,8 @@ class F extends GPUTest {
     const pipeline = await promise;
     const bindGroup = this.device.createBindGroup({
       entries: [{ binding: 0, resource: { buffer: dst, offset: 0, size: expected.byteLength } }],
-      layout: pipeline.getBindGroupLayout(0) });
-
+      layout: pipeline.getBindGroupLayout(0)
+    });
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginComputePass();
@@ -48,8 +48,8 @@ class F extends GPUTest {
     this.device.queue.submit([encoder.finish()]);
 
     this.expectGPUBufferValuesEqual(dst, expected);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -160,8 +160,8 @@ fn(async (t) => {
   new Float32Array([c1, c2]),
   {
     c1,
-    c2 },
-
+    c2
+  },
   `
         override c1: f32;
         override c2: f32;
@@ -198,8 +198,8 @@ fn(async (t) => {
   isAsync,
   new Uint32Array([size]),
   {
-    d: size },
-
+    d: size
+  },
   `
         override d: ${type};
 
@@ -238,19 +238,19 @@ fn(async (t) => {
       
       @compute @workgroup_size(1) fn main() {
           buf.data[0] = a;
-      }` });
-
+      }`
+  });
 
   const expects = [new Uint32Array([1]), new Uint32Array([2])];
   const buffers = [
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE }),
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  }),
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE })];
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  })];
 
 
   const descriptors = [
@@ -260,20 +260,20 @@ fn(async (t) => {
       module,
       entryPoint: 'main',
       constants: {
-        a: 1 } } },
-
-
-
+        a: 1
+      }
+    }
+  },
   {
     layout: 'auto',
     compute: {
       module,
       entryPoint: 'main',
       constants: {
-        a: 2 } } }];
-
-
-
+        a: 2
+      }
+    }
+  }];
 
 
   const promises = t.params.isAsync ?
@@ -292,20 +292,20 @@ fn(async (t) => {
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[0].getBindGroupLayout(0) }),
-
+    layout: pipelines[0].getBindGroupLayout(0)
+  }),
   t.device.createBindGroup({
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[1].getBindGroupLayout(0) })];
-
+    layout: pipelines[1].getBindGroupLayout(0)
+  })];
 
 
   const encoder = t.device.createCommandEncoder();
@@ -351,8 +351,8 @@ fn(async (t) => {
     
     @compute @workgroup_size(c3) fn main3() {
         buf.data[0] = 3u;
-    }` });
-
+    }`
+  });
 
   const expects = [
   new Uint32Array([1]),
@@ -364,20 +364,20 @@ fn(async (t) => {
   const buffers = [
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE }),
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  }),
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE }),
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  }),
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE }),
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  }),
   t.device.createBuffer({
     size: Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE })];
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  })];
 
 
   const descriptors = [
@@ -387,20 +387,20 @@ fn(async (t) => {
       module,
       entryPoint: 'main1',
       constants: {
-        c1: 1 } } },
-
-
-
+        c1: 1
+      }
+    }
+  },
   {
     layout: 'auto',
     compute: {
       module,
       entryPoint: 'main2',
       constants: {
-        c2: 2 } } },
-
-
-
+        c2: 2
+      }
+    }
+  },
   {
     layout: 'auto',
     compute: {
@@ -408,10 +408,10 @@ fn(async (t) => {
       entryPoint: 'main3',
       constants: {
         // c3 is used as workgroup size
-        c3: 1 } } },
-
-
-
+        c3: 1
+      }
+    }
+  },
   {
     layout: 'auto',
     compute: {
@@ -419,10 +419,10 @@ fn(async (t) => {
       entryPoint: 'main1',
       constants: {
         // assign a different value to c1
-        c1: 4 } } }];
-
-
-
+        c1: 4
+      }
+    }
+  }];
 
 
   const promises = t.params.isAsync ?
@@ -445,38 +445,38 @@ fn(async (t) => {
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[0], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[0].getBindGroupLayout(0) }),
-
+    layout: pipelines[0].getBindGroupLayout(0)
+  }),
   t.device.createBindGroup({
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[1], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[1].getBindGroupLayout(0) }),
-
+    layout: pipelines[1].getBindGroupLayout(0)
+  }),
   t.device.createBindGroup({
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[2], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[2], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[2].getBindGroupLayout(0) }),
-
+    layout: pipelines[2].getBindGroupLayout(0)
+  }),
   t.device.createBindGroup({
     entries: [
     {
       binding: 0,
-      resource: { buffer: buffers[3], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT } }],
+      resource: { buffer: buffers[3], offset: 0, size: Uint32Array.BYTES_PER_ELEMENT }
+    }],
 
-
-    layout: pipelines[3].getBindGroupLayout(0) })];
-
+    layout: pipelines[3].getBindGroupLayout(0)
+  })];
 
 
   const encoder = t.device.createCommandEncoder();

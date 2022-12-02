@@ -44,7 +44,6 @@ class ErrorScopeTests extends Fixture {
           size: kMaxUnsignedLongLongValue, // Unrealistically massive buffer size
           usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
         });
-
         break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.

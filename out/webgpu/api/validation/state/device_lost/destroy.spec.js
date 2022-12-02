@@ -92,8 +92,8 @@ class DeviceDestroyTests extends ValidationTest {
           break;
         }}
 
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(DeviceDestroyTests);
 
@@ -131,8 +131,8 @@ fn(async (t) => {
     t.device.createBuffer({
       size: 16,
       usage: kBufferUsageInfo[usageType] | kBufferUsageCopyInfo[usageCopy],
-      mappedAtCreation });
-
+      mappedAtCreation
+    });
   }, awaitLost);
 });
 
@@ -166,8 +166,8 @@ fn(async (t) => {
     t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
-      format });
-
+      format
+    });
   }, awaitLost);
 });
 
@@ -205,8 +205,8 @@ fn(async (t) => {
     t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
-      format });
-
+      format
+    });
   }, awaitLost);
 });
 
@@ -239,8 +239,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
     usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
-    format });
-
+    format
+  });
   await t.executeAfterDestroy(() => {
     texture.createView({ format });
   }, awaitLost);
@@ -279,8 +279,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
     usage: kTextureUsageTypeInfo[usageType] | kTextureUsageCopyInfo[usageCopy],
-    format });
-
+    format
+  });
   await t.executeAfterDestroy(() => {
     texture.createView({ format });
   }, awaitLost);
@@ -316,8 +316,8 @@ fn(async (t) => {
   const visibility = bindingTypeInfo(entry).validStages;
   await t.executeAfterDestroy(() => {
     t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility, ...entry }] });
-
+      entries: [{ binding: 0, visibility, ...entry }]
+    });
   }, awaitLost);
 });
 
@@ -355,8 +355,8 @@ fn(async (t) => {
   const { awaitLost, resourceType, entry } = t.params;
   const visibility = bindingTypeInfo(entry).validStages;
   const layout = t.device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility, ...entry }] });
-
+    entries: [{ binding: 0, visibility, ...entry }]
+  });
   const resource = t.getBindingResource(resourceType);
   await t.executeAfterDestroy(() => {
     t.device.createBindGroup({ layout, entries: [{ binding: 0, resource }] });
@@ -378,12 +378,12 @@ fn(async (t) => {
   const { awaitLost, entry } = t.params;
   const visibility = bindingTypeInfo(entry).validStages;
   const bindGroupLayout = t.device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility, ...entry }] });
-
+    entries: [{ binding: 0, visibility, ...entry }]
+  });
   await t.executeAfterDestroy(() => {
     t.device.createPipelineLayout({
-      bindGroupLayouts: [bindGroupLayout] });
-
+      bindGroupLayouts: [bindGroupLayout]
+    });
   }, awaitLost);
 });
 
@@ -418,8 +418,8 @@ fn(async (t) => {
   await t.executeAfterDestroy(() => {
     t.device.createComputePipeline({
       layout: 'auto',
-      compute: { module: cShader, entryPoint: 'main' } });
-
+      compute: { module: cShader, entryPoint: 'main' }
+    });
   }, awaitLost);
 });
 
@@ -442,9 +442,9 @@ fn(async (t) => {
       fragment: {
         module: fShader,
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }] } });
-
-
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+      }
+    });
   }, awaitLost);
 });
 
@@ -515,12 +515,12 @@ fn(async (t) => {
   const kBufferSize = 16;
   const src = t.device.createBuffer({
     size: kBufferSize,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const dst = t.device.createBuffer({
     size: kBufferSize,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.copyBufferToBuffer(src, 0, dst, 0, kBufferSize);
     return maker;
@@ -545,16 +545,16 @@ fn(async (t) => {
   const src = {
     buffer: t.device.createBuffer({
       size: bytesPerBlock,
-      usage: GPUBufferUsage.COPY_SRC }) };
-
-
+      usage: GPUBufferUsage.COPY_SRC
+    })
+  };
   const dst = {
     texture: t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUTextureUsage.COPY_DST,
-      format }) };
-
-
+      format
+    })
+  };
   const copySize = { width: blockWidth, height: blockHeight };
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.copyBufferToTexture(src, dst, copySize);
@@ -581,15 +581,15 @@ fn(async (t) => {
     texture: t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUTextureUsage.COPY_SRC,
-      format }) };
-
-
+      format
+    })
+  };
   const dst = {
     buffer: t.device.createBuffer({
       size: bytesPerBlock,
-      usage: GPUBufferUsage.COPY_DST }) };
-
-
+      usage: GPUBufferUsage.COPY_DST
+    })
+  };
   const copySize = { width: blockWidth, height: blockHeight };
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.copyTextureToBuffer(src, dst, copySize);
@@ -616,16 +616,16 @@ fn(async (t) => {
     texture: t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUTextureUsage.COPY_SRC,
-      format }) };
-
-
+      format
+    })
+  };
   const dst = {
     texture: t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
       usage: GPUBufferUsage.COPY_DST,
-      format }) };
-
-
+      format
+    })
+  };
   const copySize = { width: blockWidth, height: blockHeight };
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.copyTextureToTexture(src, dst, copySize);
@@ -649,8 +649,8 @@ fn(async (t) => {
   const kBufferSize = 16;
   const buffer = t.device.createBuffer({
     size: kBufferSize,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.clearBuffer(buffer, 0, kBufferSize);
     return maker;
@@ -709,8 +709,8 @@ fn(async (t) => {
   const querySet = t.createQuerySetWithState('valid');
   const destination = t.createBufferWithState('valid', {
     size: kQueryCount * 8,
-    usage: GPUBufferUsage.QUERY_RESOLVE });
-
+    usage: GPUBufferUsage.QUERY_RESOLVE
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     maker.encoder.resolveQuerySet(querySet, 0, 1, destination, 0);
     return maker;
@@ -734,8 +734,8 @@ fn(async (t) => {
   const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module: cShader, entryPoint: 'main' } });
-
+    compute: { module: cShader, entryPoint: 'main' }
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'compute pass', (maker) => {
     maker.encoder.setPipeline(pipeline);
     maker.encoder.dispatchWorkgroups(1);
@@ -765,9 +765,9 @@ fn(async (t) => {
     fragment: {
       module: fShader,
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm', writeMask: 0 }] } });
-
-
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+    }
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'render pass', (maker) => {
     maker.encoder.setPipeline(pipeline);
     maker.encoder.draw(0);
@@ -797,9 +797,9 @@ fn(async (t) => {
     fragment: {
       module: fShader,
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm', writeMask: 0 }] } });
-
-
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+    }
+  });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'render bundle', (maker) => {
     maker.encoder.setPipeline(pipeline);
     maker.encoder.draw(0);
@@ -820,8 +820,8 @@ fn(async (t) => {
   const { numElements, awaitLost } = t.params;
   const buffer = t.device.createBuffer({
     size: numElements,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
   const data = new Uint8Array(numElements);
   await t.executeAfterDestroy(() => {
     t.device.queue.writeBuffer(buffer, 0, data);
@@ -844,8 +844,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
     usage: GPUTextureUsage.COPY_DST,
-    format });
-
+    format
+  });
   await t.executeAfterDestroy(() => {
     t.device.queue.writeTexture(
     { texture },
@@ -879,8 +879,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
     usage: GPUTextureUsage.COPY_DST,
-    format });
-
+    format
+  });
   await t.executeAfterDestroy(() => {
     t.device.queue.writeTexture(
     { texture },
@@ -913,8 +913,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 1, height: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_DST
+  });
 
   const ctx = canvas.getContext(contextType);
   if (ctx === null) {
@@ -949,8 +949,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 1, height: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_DST
+  });
 
   await t.executeAfterDestroy(() => {
     t.device.queue.copyExternalImageToTexture(

@@ -46,18 +46,15 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
               return vec4<f32>(x, y, z, w);
             }`,
         }),
-
         entryPoint: 'main',
         constants: vertexConstants,
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `@fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
@@ -136,18 +133,15 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
               return vec4<f32>(x, y, z, w);
             }`,
         }),
-
         entryPoint: 'main',
         constants: vertexConstants,
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `@fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },

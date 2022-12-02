@@ -40,10 +40,8 @@ class BlendingTest extends GPUTest {
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       vertex: {
         module: this.device.createShaderModule({
           code: `
@@ -58,7 +56,6 @@ class BlendingTest extends GPUTest {
             }
             `,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -243,10 +240,8 @@ struct Uniform {
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       vertex: {
         module: t.device.createShaderModule({
           code: `
@@ -255,10 +250,8 @@ struct Uniform {
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       primitive: {
         topology: 'point-list',
       },
@@ -281,7 +274,6 @@ struct Uniform {
         },
       ],
     });
-
     renderPass.setPipeline(pipeline);
     if (blendConstant) {
       renderPass.setBlendConstant(blendConstant);
@@ -371,10 +363,8 @@ g.test('blending,formats')
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       vertex: {
         module: t.device.createShaderModule({
           code: `
@@ -383,10 +373,8 @@ g.test('blending,formats')
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       primitive: {
         topology: 'point-list',
       },
@@ -409,7 +397,6 @@ g.test('blending,formats')
         },
       ],
     });
-
     renderPass.setPipeline(pipeline);
     renderPass.draw(1);
     renderPass.end();
@@ -461,7 +448,6 @@ g.test('blend_constant,initial')
         },
       ],
     });
-
     renderPass.setPipeline(testPipeline);
     renderPass.setBindGroup(
       0,
@@ -527,7 +513,6 @@ g.test('blend_constant,setting')
         },
       ],
     });
-
     renderPass.setPipeline(testPipeline);
     renderPass.setBlendConstant({ r, g, b, a });
     renderPass.setBindGroup(
@@ -587,7 +572,6 @@ g.test('blend_constant,not_inherited')
           },
         ],
       });
-
       renderPass.setPipeline(testPipeline);
       renderPass.setBlendConstant({ r: 1.0, g: 1.0, b: 1.0, a: 1.0 }); // Set to white color.
       renderPass.setBindGroup(
@@ -610,7 +594,6 @@ g.test('blend_constant,not_inherited')
           },
         ],
       });
-
       renderPass.setPipeline(testPipeline);
       renderPass.setBindGroup(
         0,
@@ -699,7 +682,6 @@ g.test('color_write_mask,channel_work')
           },
         ],
       });
-
       renderPass.setPipeline(testPipeline);
       renderPass.setBindGroup(
         0,
@@ -762,7 +744,6 @@ g.test('color_write_mask,blending_disabled')
           },
         ],
       });
-
       renderPass.setPipeline(testPipeline);
       renderPass.setBindGroup(
         0,
@@ -830,10 +811,8 @@ g.test('blending,clamping')
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       vertex: {
         module: t.device.createShaderModule({
           code: `
@@ -842,10 +821,8 @@ g.test('blending,clamping')
 }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       primitive: {
         topology: 'point-list',
       },
@@ -868,7 +845,6 @@ g.test('blending,clamping')
         },
       ],
     });
-
     renderPass.setPipeline(pipeline);
     renderPass.draw(1);
     renderPass.end();

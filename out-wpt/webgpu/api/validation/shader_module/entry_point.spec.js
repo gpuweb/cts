@@ -57,11 +57,9 @@ and check that the APIs only accept matching entryPoint.
         module: t.device.createShaderModule({
           code: getShaderWithEntryPoint('compute', shaderModuleEntryPoint),
         }),
-
         entryPoint: stageEntryPoint,
       },
     };
-
     const _success = shaderModuleEntryPoint === stageEntryPoint;
     t.doCreateComputePipelineTest(isAsync, _success, descriptor);
   });
@@ -82,11 +80,9 @@ and check that the APIs only accept matching entryPoint.
         module: t.device.createShaderModule({
           code: getShaderWithEntryPoint('vertex', shaderModuleEntryPoint),
         }),
-
         entryPoint: stageEntryPoint,
       },
     };
-
     const _success = shaderModuleEntryPoint === stageEntryPoint;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
@@ -107,20 +103,16 @@ and check that the APIs only accept matching entryPoint.
         module: t.device.createShaderModule({
           code: kDefaultVertexShaderCode,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: getShaderWithEntryPoint('fragment', shaderModuleEntryPoint),
         }),
-
         entryPoint: stageEntryPoint,
         targets: [{ format: 'rgba8unorm' }],
       },
     };
-
     const _success = shaderModuleEntryPoint === stageEntryPoint;
     t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });

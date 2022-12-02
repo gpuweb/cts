@@ -183,7 +183,6 @@ map-read and check the read-back result.`
       size,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
-
     const init = buffer.getMappedRange(...range);
 
     assert(init.byteLength === rangeSize);
@@ -263,7 +262,6 @@ g.test('mapAsync,read,typedArrayAccess')
       size,
       usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
     });
-
     const init = buffer.getMappedRange(...range);
 
     // Copy the expected values into the mapped range.
@@ -305,7 +303,6 @@ then expectContents (which does copyBufferToBuffer + map-read) to ensure the con
       size,
       usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0),
     });
-
     const arrayBuffer = buffer.getMappedRange(...range);
     t.checkMapWrite(buffer, range[0] ?? 0, arrayBuffer, rangeSize);
   });

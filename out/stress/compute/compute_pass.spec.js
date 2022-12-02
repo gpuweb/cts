@@ -28,15 +28,15 @@ fn(async (t) => {
                 @builtin(global_invocation_id) id: vec3<u32>) {
               buffer.data[id.x] = buffer.data[id.x] + 1u;
             }
-          ` }),
-
-      entryPoint: 'main' } });
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   const kNumIterations = 250_000;
   for (let i = 0; i < kNumIterations; ++i) {
     const encoder = t.device.createCommandEncoder();
@@ -72,17 +72,17 @@ fn(async (t) => {
         @compute @workgroup_size(1) fn main${i}() {
           buffer.data = buffer.data + 1u;
         }
-        ` }),
-
-    entryPoint: `main${i}` }));
-
+        `
+    }),
+    entryPoint: `main${i}`
+  }));
   for (const compute of stages) {
     const encoder = t.device.createCommandEncoder();
     const pipeline = t.device.createComputePipeline({ layout: 'auto', compute });
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
-      entries: [{ binding: 0, resource: { buffer } }] });
-
+      entries: [{ binding: 0, resource: { buffer } }]
+    });
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
@@ -119,13 +119,13 @@ fn(async (t) => {
           buffer1.data[id.x] = buffer1.data[id.x] + 1u;
           buffer2.data[id.x] = buffer2.data[id.x] + 2u;
         }
-      ` });
-
+      `
+  });
   const kNumIterations = 250_000;
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module, entryPoint: 'main' } });
-
+    compute: { module, entryPoint: 'main' }
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
@@ -136,9 +136,9 @@ fn(async (t) => {
       layout: pipeline.getBindGroupLayout(0),
       entries: [
       { binding: buffer1Binding, resource: { buffer: buffer1 } },
-      { binding: buffer2Binding, resource: { buffer: buffer2 } }] });
+      { binding: buffer2Binding, resource: { buffer: buffer2 } }]
 
-
+    });
     pass.setBindGroup(0, bindGroup);
     pass.dispatch(kNumElements);
   }
@@ -169,20 +169,20 @@ fn(async (t) => {
             @builtin(global_invocation_id) id: vec3<u32>) {
           buffer.data[id.x] = buffer.data[id.x] + 1u;
         }
-      ` });
-
+      `
+  });
   const kNumIterations = 1_000_000;
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module, entryPoint: 'main' } });
-
+    compute: { module, entryPoint: 'main' }
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   pass.setBindGroup(0, bindGroup);
   for (let i = 0; i < kNumIterations; ++i) {
     pass.dispatch(kNumElements);
@@ -215,17 +215,17 @@ fn(async (t) => {
           let index = (id.z * 512u + id.y) * 512u + id.x;
           buffer.data[index] = buffer.data[index] + 1u;
         }
-      ` });
-
+      `
+  });
   const kNumIterations = 16;
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module, entryPoint: 'main' } });
-
+    compute: { module, entryPoint: 'main' }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   for (let i = 0; i < kNumIterations; ++i) {
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginComputePass();

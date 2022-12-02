@@ -68,8 +68,8 @@ fn((t) => {
   const texture = t.device.createTexture({
     size: { width: size, height: size, depthOrArrayLayers: 1 },
     format,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  });
 
   let depthTexture = undefined;
   let depthStencilAttachment = undefined;
@@ -77,15 +77,15 @@ fn((t) => {
     depthTexture = t.device.createTexture({
       size: { width: size, height: size, depthOrArrayLayers: 1 },
       format: t.params.depthStencilFormat,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     depthStencilAttachment = {
       view: depthTexture.createView(),
       depthClearValue: 1.0,
       depthLoadOp: 'clear',
-      depthStoreOp: 'store' };
-
+      depthStoreOp: 'store'
+    };
 
     if (t.params.depthStencilFormat && kTextureFormatInfo[t.params.depthStencilFormat].stencil) {
       depthStencilAttachment.stencilClearValue = 0;
@@ -101,11 +101,11 @@ fn((t) => {
       view: texture.createView(),
       clearValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }],
+      storeOp: 'store'
+    }],
 
-
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
 
   // Draw two triangles with different winding orders:
   // 1. The top-left one is counterclockwise (CCW)
@@ -127,10 +127,10 @@ fn((t) => {
                     vec2<f32>( 1.0,  0.0),
                     vec2<f32>( 1.0, -1.0));
                 return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-              }` }),
-
-      entryPoint: 'main' },
-
+              }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -144,20 +144,20 @@ fn((t) => {
                   color = vec4<f32>(1.0, 0.0, 0.0, 1.0);
                 }
                 return color;
-              }` }),
-
+              }`
+      }),
       entryPoint: 'main',
-      targets: [{ format }] },
-
+      targets: [{ format }]
+    },
     primitive: {
       topology: t.params.primitiveTopology,
       frontFace: t.params.frontFace,
-      cullMode: t.params.cullMode },
-
+      cullMode: t.params.cullMode
+    },
     depthStencil: depthTexture ?
     { format: t.params.depthStencilFormat } :
-    undefined }));
-
+    undefined
+  }));
 
 
   pass.draw(6, 1, 0, 0);

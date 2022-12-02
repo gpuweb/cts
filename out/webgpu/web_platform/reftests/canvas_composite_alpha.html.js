@@ -40,8 +40,8 @@ writeCanvasMethod)
       device: t.device,
       format,
       usage,
-      alphaMode });
-
+      alphaMode
+    });
 
     // The blending behavior here is to mimic 2d context blending behavior
     // of drawing rects in order
@@ -50,14 +50,14 @@ writeCanvasMethod)
       color: {
         srcFactor: 'src-alpha',
         dstFactor: 'one-minus-src-alpha',
-        operation: 'add' },
-
+        operation: 'add'
+      },
       alpha: {
         srcFactor: 'one',
         dstFactor: 'one-minus-src-alpha',
-        operation: 'add' } };
-
-
+        operation: 'add'
+      }
+    };
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
@@ -98,10 +98,10 @@ output.Position = vec4<f32>(pos[VertexIndex % 6u] + offset[VertexIndex / 6u], 0.
 output.fragColor = color[VertexIndex / 6u];
 return output;
 }
-        ` }),
-
-        entryPoint: 'main' },
-
+        `
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -109,20 +109,20 @@ return output;
 fn main(@location(0) fragColor: vec4<f32>) -> @location(0) vec4<f32> {
 return fragColor;
 }
-        ` }),
-
+        `
+        }),
         entryPoint: 'main',
         targets: [
         {
           format,
-          blend: { premultiplied: kBlendStateSourceOver, opaque: undefined }[alphaMode] }] },
+          blend: { premultiplied: kBlendStateSourceOver, opaque: undefined }[alphaMode]
+        }]
 
-
-
+      },
       primitive: {
-        topology: 'triangle-list' } });
-
-
+        topology: 'triangle-list'
+      }
+    });
 
     let renderTarget;
     switch (writeCanvasMethod) {
@@ -133,8 +133,8 @@ return fragColor;
         renderTarget = t.device.createTexture({
           size: [ctx.canvas.width, ctx.canvas.height],
           format,
-          usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+          usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+        });
         break;}
 
     const renderPassDescriptor = {
@@ -143,10 +143,10 @@ return fragColor;
         view: renderTarget.createView(),
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] };
+        storeOp: 'store'
+      }]
 
-
-
+    };
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
@@ -163,11 +163,11 @@ return fragColor;
       case 'copy':
         commandEncoder.copyTextureToTexture(
         {
-          texture: renderTarget },
-
+          texture: renderTarget
+        },
         {
-          texture: ctx.getCurrentTexture() },
-
+          texture: ctx.getCurrentTexture()
+        },
         [ctx.canvas.width, ctx.canvas.height]);
 
         break;}

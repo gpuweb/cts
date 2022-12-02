@@ -78,13 +78,11 @@ g.test('atomicity')
       testType: TestType.InterWorkgroup,
       _testCode: storageMemoryTestCode,
     },
-
     {
       memType: MemoryType.AtomicStorageClass,
       testType: TestType.IntraWorkgroup,
       _testCode: storageMemoryTestCode,
     },
-
     {
       memType: MemoryType.AtomicWorkgroupClass,
       testType: TestType.IntraWorkgroup,

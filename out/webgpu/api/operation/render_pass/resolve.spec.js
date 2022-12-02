@@ -61,10 +61,10 @@ fn((t) => {
                   vec2<f32>(-1.0,  1.0),
                   vec2<f32>( 1.0,  1.0));
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-            }` }),
-
-      entryPoint: 'main' },
-
+            }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -82,14 +82,14 @@ fn((t) => {
                 vec4<f32>(1.0, 1.0, 1.0, 1.0),
                 vec4<f32>(1.0, 1.0, 1.0, 1.0)
               );
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets },
-
+      targets
+    },
     primitive: { topology: 'triangle-list' },
-    multisample: { count: 4 } });
-
+    multisample: { count: 4 }
+  });
 
   const resolveTargets = [];
   const renderPassColorAttachments = [];
@@ -105,8 +105,8 @@ fn((t) => {
       sampleCount: 4,
       mipLevelCount: 1,
       usage:
-      GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+      GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     if (t.params.slotsToResolve.includes(i)) {
       const colorAttachment = t.device.createTexture({
@@ -115,20 +115,20 @@ fn((t) => {
         sampleCount: 4,
         mipLevelCount: 1,
         usage:
-        GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+        GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+      });
 
       const resolveTarget = t.device.createTexture({
         format: kFormat,
         size: {
           width: kResolveTargetSize,
           height: kResolveTargetSize,
-          depthOrArrayLayers: t.params.resolveTargetBaseArrayLayer + 1 },
-
+          depthOrArrayLayers: t.params.resolveTargetBaseArrayLayer + 1
+        },
         sampleCount: 1,
         mipLevelCount: t.params.resolveTargetBaseMipLevel + 1,
-        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+      });
 
       // Clear to black for the load operation. After the draw, the top left half of the attachment
       // will be white and the bottom right half will be black.
@@ -139,9 +139,9 @@ fn((t) => {
         storeOp: t.params.storeOperation,
         resolveTarget: resolveTarget.createView({
           baseMipLevel: t.params.resolveTargetBaseMipLevel,
-          baseArrayLayer: t.params.resolveTargetBaseArrayLayer }) });
-
-
+          baseArrayLayer: t.params.resolveTargetBaseArrayLayer
+        })
+      });
 
       resolveTargets.push(resolveTarget);
     } else {
@@ -149,16 +149,16 @@ fn((t) => {
         view: colorAttachment.createView(),
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
         loadOp: 'clear',
-        storeOp: t.params.storeOperation });
-
+        storeOp: t.params.storeOperation
+      });
     }
   }
 
   const encoder = t.device.createCommandEncoder();
 
   const pass = encoder.beginRenderPass({
-    colorAttachments: renderPassColorAttachments });
-
+    colorAttachments: renderPassColorAttachments
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -174,8 +174,8 @@ fn((t) => {
     {
       exp: new Uint8Array([0xff, 0xff, 0xff, 0xff]),
       slice: t.params.resolveTargetBaseArrayLayer,
-      layout: { mipLevel: t.params.resolveTargetBaseMipLevel } });
-
+      layout: { mipLevel: t.params.resolveTargetBaseMipLevel }
+    });
 
 
     // Test bottom right pixel, which should be {0, 0, 0, 0}.
@@ -186,8 +186,8 @@ fn((t) => {
     {
       exp: new Uint8Array([0x00, 0x00, 0x00, 0x00]),
       slice: t.params.resolveTargetBaseArrayLayer,
-      layout: { mipLevel: t.params.resolveTargetBaseMipLevel } });
-
+      layout: { mipLevel: t.params.resolveTargetBaseMipLevel }
+    });
 
 
     // Test top right pixel, which should be {127, 127, 127, 127} due to the multisampled resolve.
@@ -198,8 +198,8 @@ fn((t) => {
     {
       exp: [new Uint8Array([0x7f, 0x7f, 0x7f, 0x7f]), new Uint8Array([0x80, 0x80, 0x80, 0x80])],
       slice: t.params.resolveTargetBaseArrayLayer,
-      layout: { mipLevel: t.params.resolveTargetBaseMipLevel } });
-
+      layout: { mipLevel: t.params.resolveTargetBaseMipLevel }
+    });
 
   }
 });

@@ -72,5 +72,6 @@ export class ShaderValidationTest extends GPUTest {
       fn main() {
         ${code}
       }`;
-  }}
+  }
+}
 //# sourceMappingURL=shader_validation_test.js.map

@@ -41,8 +41,8 @@ const memoryModelTestParams = {
   permuteSecond: 419,
   memStride: 2,
   aliasedMemory: false,
-  numBehaviors: 4 };
-
+  numBehaviors: 4
+};
 
 const workgroupMemoryMessagePassingTestCode = `
   atomicStore(&wg_test_locations[x_0], 1u);

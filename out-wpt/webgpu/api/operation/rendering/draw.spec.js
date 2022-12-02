@@ -107,7 +107,6 @@ struct Output {
           },
         ],
       },
-
       fragment: {
         module: fragmentModule,
         entryPoint: 'frag_main',
@@ -301,7 +300,6 @@ struct Output {
             x: (1 / 3 + primitiveId) * tileSizeX,
             y: (2 / 3 + instanceId) * tileSizeY,
           },
-
           {
             exp: expectedColor,
           }
@@ -483,7 +481,6 @@ g.test('vertex_attributes,basic')
           shaderLocation,
           offset,
         };
-
         attributes.push(attribute);
 
         offset += ExpectedDataConstructor.BYTES_PER_ELEMENT;
@@ -622,11 +619,9 @@ ${accumulateVariableAssignmentsInVertexShader}
 }
           `,
         }),
-
         entryPoint: 'main',
         buffers: bufferLayouts,
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -654,7 +649,6 @@ ${accumulateVariableAssignmentsInFragmentShader}
 }
           `,
         }),
-
         entryPoint: 'main',
         targets: [
           {
@@ -663,7 +657,6 @@ ${accumulateVariableAssignmentsInFragmentShader}
           },
         ],
       },
-
       primitive: {
         topology: 'point-list',
       },

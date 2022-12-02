@@ -30,8 +30,8 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
             vec4<f32>(input.vertexPosition, 0.5, 0.0, 1.0);
           outputs.color = input.vertexColor;
           return outputs;
-        }` }),
-
+        }`
+        }),
         entryPoint: 'main',
         buffers: [
         {
@@ -40,17 +40,17 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
           {
             format: 'float32',
             offset: 0,
-            shaderLocation: 0 },
-
+            shaderLocation: 0
+          },
           {
             format: 'unorm8x4',
             offset: 4,
-            shaderLocation: 1 }] }] },
+            shaderLocation: 1
+          }]
 
+        }]
 
-
-
-
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -60,19 +60,19 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
         @fragment
         fn main(input : Input) -> @location(0) vec4<f32> {
           return input.color;
-        }` }),
-
+        }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] },
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
       primitive: {
-        topology: 'point-list' } });
-
-
+        topology: 'point-list'
+      }
+    });
   }
 
-  kVertexAttributeSize = 8;}
-
+  kVertexAttributeSize = 8;
+}
 
 export const g = makeTestGroup(VertexAndIndexStateTrackingTest);
 
@@ -96,8 +96,8 @@ fn(async (t) => {
   const vertexBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.VERTEX,
     size: t.kVertexAttributeSize * kVertexAttributesCount,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   t.trackForCleanup(vertexBuffer);
   const vertexAttributes = vertexBuffer.getMappedRange();
   const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, -0.4];
@@ -132,8 +132,8 @@ fn(async (t) => {
   const outputTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: [kPositions.length - 1, 1, 1],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
@@ -142,10 +142,10 @@ fn(async (t) => {
       view: outputTexture.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(renderPipeline);
   renderPass.setVertexBuffer(0, vertexBuffer);
 
@@ -208,8 +208,8 @@ fn(async (t) => {
   const vertexBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.VERTEX,
     size: t.kVertexAttributeSize * kVertexAttributesCount,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   t.trackForCleanup(vertexBuffer);
   const vertexAttributes = vertexBuffer.getMappedRange();
   for (let i = 0; i < kPositions.length; ++i) {
@@ -227,8 +227,8 @@ fn(async (t) => {
   const outputTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: [kPositions.length, 1, 1],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
@@ -237,10 +237,10 @@ fn(async (t) => {
       view: outputTexture.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(renderPipeline);
 
   // Change 'size' in setVertexBuffer()
@@ -308,8 +308,8 @@ fn(async (t) => {
   const vertexBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.VERTEX,
     size: t.kVertexAttributeSize * kPositions.length,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   t.trackForCleanup(vertexBuffer);
   // Note that kPositions[1], kColors[1], kPositions[5] and kColors[5] are not used.
   const vertexAttributes = vertexBuffer.getMappedRange();
@@ -330,8 +330,8 @@ fn(async (t) => {
   const outputTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: [kPointsCount, 1, 1],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
@@ -340,10 +340,10 @@ fn(async (t) => {
       view: outputTexture.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   // Update render pipeline before setVertexBuffer. The applied vertex attribute stride should be
   // 2 * kVertexAttributeSize.
@@ -401,11 +401,11 @@ fn(async (t) => {
       @fragment
       fn main(input : Input) -> @location(0) vec4<f32> {
         return input.color;
-      }` }),
-
+      }`
+    }),
     entryPoint: 'main',
-    targets: [{ format: 'rgba8unorm' }] };
-
+    targets: [{ format: 'rgba8unorm' }]
+  };
 
   // Create renderPipeline1 that uses both positionBuffer and colorBuffer.
   const renderPipeline1 = t.device.createRenderPipeline({
@@ -428,8 +428,8 @@ fn(async (t) => {
             vec4<f32>(input.vertexPosition, 0.5, 0.0, 1.0);
           outputs.color = input.vertexColor;
           return outputs;
-        }` }),
-
+        }`
+      }),
       entryPoint: 'main',
       buffers: [
       {
@@ -438,27 +438,27 @@ fn(async (t) => {
         {
           format: 'unorm8x4',
           offset: 0,
-          shaderLocation: 0 }] },
+          shaderLocation: 0
+        }]
 
-
-
+      },
       {
         arrayStride: kAttributeStride,
         attributes: [
         {
           format: 'float32',
           offset: 0,
-          shaderLocation: 1 }] }] },
+          shaderLocation: 1
+        }]
 
+      }]
 
-
-
-
+    },
     fragment: fragmentState,
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const renderPipeline2 = t.device.createRenderPipeline({
     layout: 'auto',
@@ -481,8 +481,8 @@ fn(async (t) => {
               vec4(kPositions[input.vertexIndex], 0.5, 0.0, 1.0);
           outputs.color = input.vertexColor;
           return outputs;
-        }` }),
-
+        }`
+      }),
       entryPoint: 'main',
       buffers: [
       {
@@ -491,24 +491,24 @@ fn(async (t) => {
         {
           format: 'unorm8x4',
           offset: 0,
-          shaderLocation: 0 }] }] },
+          shaderLocation: 0
+        }]
 
+      }]
 
-
-
-
+    },
     fragment: fragmentState,
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const kPointsCount = 4;
   const outputTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: [kPointsCount, 1, 1],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
@@ -517,10 +517,10 @@ fn(async (t) => {
       view: outputTexture.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   renderPass.setVertexBuffer(0, colorBuffer);
   renderPass.setVertexBuffer(1, positionBuffer);
@@ -570,8 +570,8 @@ fn(async (t) => {
   const vertexBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.VERTEX,
     size: t.kVertexAttributeSize * kPositions.length,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   t.trackForCleanup(vertexBuffer);
   const vertexAttributes = vertexBuffer.getMappedRange();
   for (let i = 0; i < kPositions.length; ++i) {
@@ -592,8 +592,8 @@ fn(async (t) => {
   const outputTexture = t.device.createTexture({
     format: 'rgba8unorm',
     size: [kPointsCount, 1, 1],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPass = encoder.beginRenderPass({
@@ -602,10 +602,10 @@ fn(async (t) => {
       view: outputTexture.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   // The first draw call is an indexed one (the third and fourth color are involved)
   renderPass.setVertexBuffer(0, vertexBuffer);

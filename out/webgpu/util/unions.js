@@ -9,15 +9,15 @@
     return {
       x: v[0] ?? 0,
       y: v[1] ?? 0,
-      z: v[2] ?? 0 };
-
+      z: v[2] ?? 0
+    };
   } else {
     const v = val;
     return {
       x: v.x ?? 0,
       y: v.y ?? 0,
-      z: v.z ?? 0 };
-
+      z: v.z ?? 0
+    };
   }
 }
 
@@ -32,15 +32,15 @@ val)
     return {
       width: v[0] ?? 1,
       height: v[1] ?? 1,
-      depthOrArrayLayers: v[2] ?? 1 };
-
+      depthOrArrayLayers: v[2] ?? 1
+    };
   } else {
     const v = val;
     return {
       width: v.width ?? 1,
       height: v.height ?? 1,
-      depthOrArrayLayers: v.depthOrArrayLayers ?? 1 };
-
+      depthOrArrayLayers: v.depthOrArrayLayers ?? 1
+    };
   }
 }
 //# sourceMappingURL=unions.js.map

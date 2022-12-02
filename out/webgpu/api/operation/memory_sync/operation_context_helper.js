@@ -62,11 +62,11 @@ export const kBoundaryInfo =
 
 {
   'queue-op': {
-    contexts: queueContexts },
-
+    contexts: queueContexts
+  },
   'command-buffer': {
-    contexts: commandBufferContexts },
-
+    contexts: commandBufferContexts
+  },
   'pass': {
     contexts: [
     ['compute-pass-encoder', 'compute-pass-encoder'],
@@ -75,34 +75,34 @@ export const kBoundaryInfo =
     ['render-pass-encoder', 'render-pass-encoder'],
     ['render-bundle-encoder', 'render-pass-encoder'],
     ['render-pass-encoder', 'render-bundle-encoder'],
-    ['render-bundle-encoder', 'render-bundle-encoder']] },
+    ['render-bundle-encoder', 'render-bundle-encoder']]
 
-
+  },
   'execute-bundles': {
     contexts: [
-    ['render-bundle-encoder', 'render-bundle-encoder']] },
+    ['render-bundle-encoder', 'render-bundle-encoder']]
 
-
+  },
   'render-bundle': {
     contexts: [
     ['render-bundle-encoder', 'render-pass-encoder'],
     ['render-pass-encoder', 'render-bundle-encoder'],
-    ['render-bundle-encoder', 'render-bundle-encoder']] },
+    ['render-bundle-encoder', 'render-bundle-encoder']]
 
-
+  },
   'dispatch': {
     contexts: [
-    ['compute-pass-encoder', 'compute-pass-encoder']] },
+    ['compute-pass-encoder', 'compute-pass-encoder']]
 
-
+  },
   'draw': {
     contexts: [
     ['render-pass-encoder', 'render-pass-encoder'],
     ['render-bundle-encoder', 'render-pass-encoder'],
-    ['render-pass-encoder', 'render-bundle-encoder']] } };
+    ['render-pass-encoder', 'render-bundle-encoder']]
 
-
-
+  }
+};
 
 export class OperationContextHelper {
   // We start at the queue context which is top-level.
@@ -176,14 +176,14 @@ export class OperationContextHelper {
     this.device.createTexture({
       format: this.kTextureFormat,
       size: this.kTextureSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT }));
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    }));
 
     return {
       view: texture.createView(),
       loadOp: 'load',
-      storeOp: 'store' };
-
+      storeOp: 'store'
+    };
   }
 
   ensureContext(context) {
@@ -248,8 +248,8 @@ export class OperationContextHelper {
           case 'command-encoder':
             assert(this.commandEncoder !== undefined);
             this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()] });
-
+              colorAttachments: [this.makeDummyAttachment()]
+            });
             break;
           case 'render-pass-encoder':
           case 'render-bundle-encoder':
@@ -265,13 +265,13 @@ export class OperationContextHelper {
           case 'command-encoder':
             assert(this.commandEncoder !== undefined);
             this.renderPassEncoder = this.commandEncoder.beginRenderPass({
-              colorAttachments: [this.makeDummyAttachment()] });
-
+              colorAttachments: [this.makeDummyAttachment()]
+            });
           // fallthrough
           case 'render-pass-encoder':
             this.renderBundleEncoder = this.device.createRenderBundleEncoder({
-              colorFormats: [this.kTextureFormat] });
-
+              colorFormats: [this.kTextureFormat]
+            });
             break;
           case 'render-bundle-encoder':
           case 'compute-pass-encoder':
@@ -330,5 +330,6 @@ export class OperationContextHelper {
         this.flushRenderBundles();
         break;}
 
-  }}
+  }
+}
 //# sourceMappingURL=operation_context_helper.js.map

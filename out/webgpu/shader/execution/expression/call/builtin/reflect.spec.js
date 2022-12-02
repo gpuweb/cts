@@ -39,8 +39,8 @@ export const d = makeCaseCache('reflect', {
     return kVectorSparseTestValues[4].flatMap((i) =>
     kVectorSparseTestValues[4].map((j) => makeCaseVecF32(i, j)));
 
-  } });
-
+  }
+});
 
 /** @returns a `reflect` Case for a pair of vectors of f32s input */
 const makeCaseVecF32 = (x, y) => {

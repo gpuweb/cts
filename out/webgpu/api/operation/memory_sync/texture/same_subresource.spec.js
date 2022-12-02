@@ -70,8 +70,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
     t.device.createTexture({
       size: this.kTextureSize,
       format: this.kTextureFormat,
-      ...textureCreationParams }));
-
+      ...textureCreationParams
+    }));
 
   }
 
@@ -87,15 +87,15 @@ class TextureSyncTestHelper extends OperationContextHelper {
           this.device.createTexture({
             size: this.kTextureSize,
             format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST }));
-
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+          }));
 
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyTextureToTexture(
           {
-            texture: this.texture },
-
+            texture: this.texture
+          },
           { texture },
           this.kTextureSize);
 
@@ -109,23 +109,23 @@ class TextureSyncTestHelper extends OperationContextHelper {
           const buffer = this.t.trackForCleanup(
           this.device.createBuffer({
             size: byteLength,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST }));
-
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+          }));
 
 
           const texture = this.t.trackForCleanup(
           this.device.createTexture({
             size: this.kTextureSize,
             format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST }));
-
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+          }));
 
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyTextureToBuffer(
           {
-            texture: this.texture },
-
+            texture: this.texture
+          },
           { buffer, bytesPerRow },
           this.kTextureSize);
 
@@ -141,8 +141,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
           this.device.createTexture({
             size: this.kTextureSize,
             format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING }));
-
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING
+          }));
 
 
           const bindGroupLayout = this.device.createBindGroupLayout({
@@ -151,33 +151,33 @@ class TextureSyncTestHelper extends OperationContextHelper {
               binding: 0,
               visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
               texture: {
-                sampleType: 'unfilterable-float' } },
-
-
+                sampleType: 'unfilterable-float'
+              }
+            },
             {
               binding: 1,
               visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
               storageTexture: {
                 access: 'write-only',
-                format: this.kTextureFormat } }] });
+                format: this.kTextureFormat
+              }
+            }]
 
-
-
-
+          });
 
           const bindGroup = this.device.createBindGroup({
             layout: bindGroupLayout,
             entries: [
             {
               binding: 0,
-              resource: this.texture.createView() },
-
+              resource: this.texture.createView()
+            },
             {
               binding: 1,
-              resource: texture.createView() }] });
+              resource: texture.createView()
+            }]
 
-
-
+          });
 
           switch (context) {
             case 'render-pass-encoder':
@@ -193,16 +193,16 @@ class TextureSyncTestHelper extends OperationContextHelper {
                   textureStore(outputTex, coord, textureLoad(inputTex, coord, 0));
                   return vec4<f32>();
                 }
-              ` });
-
+              `
+                });
                 const renderPipeline = this.device.createRenderPipeline({
                   layout: this.device.createPipelineLayout({
-                    bindGroupLayouts: [bindGroupLayout] }),
-
+                    bindGroupLayouts: [bindGroupLayout]
+                  }),
                   vertex: {
                     module,
-                    entryPoint: 'vert_main' },
-
+                    entryPoint: 'vert_main'
+                  },
                   fragment: {
                     module,
                     entryPoint: 'frag_main',
@@ -212,11 +212,11 @@ class TextureSyncTestHelper extends OperationContextHelper {
                     targets: [
                     {
                       format: this.kTextureFormat,
-                      writeMask: 0 }] } });
+                      writeMask: 0
+                    }]
 
-
-
-
+                  }
+                });
 
                 switch (context) {
                   case 'render-bundle-encoder':
@@ -248,17 +248,17 @@ class TextureSyncTestHelper extends OperationContextHelper {
                   let coord = vec2<i32>(gid.xy);
                   textureStore(outputTex, coord, textureLoad(inputTex, coord, 0));
                 }
-              ` });
-
+              `
+                });
                 const computePipeline = this.device.createComputePipeline({
                   layout: this.device.createPipelineLayout({
-                    bindGroupLayouts: [bindGroupLayout] }),
-
+                    bindGroupLayouts: [bindGroupLayout]
+                  }),
                   compute: {
                     module,
-                    entryPoint: 'main' } });
-
-
+                    entryPoint: 'main'
+                  }
+                });
 
                 assert(this.computePassEncoder !== undefined);
                 this.computePassEncoder.setPipeline(computePipeline);
@@ -298,10 +298,10 @@ class TextureSyncTestHelper extends OperationContextHelper {
               // [2] Use non-solid-color texture values
               clearValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
               loadOp: 'clear',
-              storeOp: 'store' }] });
+              storeOp: 'store'
+            }]
 
-
-
+          });
           this.currentContext = 'render-pass-encoder';
           break;
         }
@@ -319,8 +319,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
           { texture: this.texture },
           fullTexelData,
           {
-            bytesPerRow: texelData.byteLength * this.kTextureSize[0] },
-
+            bytesPerRow: texelData.byteLength * this.kTextureSize[0]
+          },
           this.kTextureSize);
 
           break;
@@ -329,8 +329,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
           const texture = this.device.createTexture({
             size: this.kTextureSize,
             format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+          });
 
           // [2] Use non-solid-color texture values
           const rep = kTexelRepresentationInfo[this.kTextureFormat];
@@ -345,8 +345,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
           { texture },
           fullTexelData,
           {
-            bytesPerRow: texelData.byteLength * this.kTextureSize[0] },
-
+            bytesPerRow: texelData.byteLength * this.kTextureSize[0]
+          },
           this.kTextureSize);
 
 
@@ -370,8 +370,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
               { src: texelData },
               {
                 dst: fullTexelData,
-                start: i * bytesPerRow + j * texelData.byteLength });
-
+                start: i * bytesPerRow + j * texelData.byteLength
+              });
 
             }
           }
@@ -379,8 +379,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
           const buffer = this.t.trackForCleanup(
           this.device.createBuffer({
             size: fullTexelData.byteLength,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST }));
-
+            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+          }));
 
 
           this.queue.writeBuffer(buffer, 0, fullTexelData);
@@ -400,8 +400,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
             format: this.kTextureFormat,
             size: this.kTextureSize,
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            sampleCount: 4 }));
-
+            sampleCount: 4
+          }));
 
           this.renderPassEncoder = this.commandEncoder.beginRenderPass({
             colorAttachments: [
@@ -411,10 +411,10 @@ class TextureSyncTestHelper extends OperationContextHelper {
               // [2] Use non-solid-color texture values
               clearValue: [data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0],
               loadOp: 'clear',
-              storeOp: 'discard' }] });
+              storeOp: 'discard'
+            }]
 
-
-
+          });
           this.currentContext = 'render-pass-encoder';
           break;
         }
@@ -426,21 +426,21 @@ class TextureSyncTestHelper extends OperationContextHelper {
               visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
               storageTexture: {
                 access: 'write-only',
-                format: this.kTextureFormat } }] });
+                format: this.kTextureFormat
+              }
+            }]
 
-
-
-
+          });
 
           const bindGroup = this.device.createBindGroup({
             layout: bindGroupLayout,
             entries: [
             {
               binding: 0,
-              resource: this.texture.createView() }] });
+              resource: this.texture.createView()
+            }]
 
-
-
+          });
 
           // [2] Use non-solid-color texture values
           const storedValue = `vec4<f32>(${[data.R ?? 0, data.G ?? 0, data.B ?? 0, data.A ?? 0].
@@ -459,16 +459,16 @@ class TextureSyncTestHelper extends OperationContextHelper {
                   textureStore(outputTex, vec2<i32>(fragCoord.xy), ${storedValue});
                   return vec4<f32>();
                 }
-              ` });
-
+              `
+                });
                 const renderPipeline = this.device.createRenderPipeline({
                   layout: this.device.createPipelineLayout({
-                    bindGroupLayouts: [bindGroupLayout] }),
-
+                    bindGroupLayouts: [bindGroupLayout]
+                  }),
                   vertex: {
                     module,
-                    entryPoint: 'vert_main' },
-
+                    entryPoint: 'vert_main'
+                  },
                   fragment: {
                     module,
                     entryPoint: 'frag_main',
@@ -478,11 +478,11 @@ class TextureSyncTestHelper extends OperationContextHelper {
                     targets: [
                     {
                       format: this.kTextureFormat,
-                      writeMask: 0 }] } });
+                      writeMask: 0
+                    }]
 
-
-
-
+                  }
+                });
 
                 switch (context) {
                   case 'render-bundle-encoder':
@@ -513,17 +513,17 @@ class TextureSyncTestHelper extends OperationContextHelper {
                   let coord = vec2<i32>(gid.xy);
                   textureStore(outputTex, coord, ${storedValue});
                 }
-              ` });
-
+              `
+                });
                 const computePipeline = this.device.createComputePipeline({
                   layout: this.device.createPipelineLayout({
-                    bindGroupLayouts: [bindGroupLayout] }),
-
+                    bindGroupLayouts: [bindGroupLayout]
+                  }),
                   compute: {
                     module,
-                    entryPoint: 'main' } });
-
-
+                    entryPoint: 'main'
+                  }
+                });
 
                 assert(this.computePassEncoder !== undefined);
                 this.computePassEncoder.setPipeline(computePipeline);
@@ -543,8 +543,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
       case 'sample':
         unreachable();}
 
-  }}
-
+  }
+}
 
 g.test('rw').
 desc(
@@ -564,8 +564,8 @@ expandWithParams(function* ({ _context }) {
       if (checkOpsValidForContext([read, write], _context)) {
         yield {
           read: { op: read, in: _context[0] },
-          write: { op: write, in: _context[1] } };
-
+          write: { op: write, in: _context[1] }
+        };
       }
     }
   }
@@ -576,8 +576,8 @@ fn((t) => {
     usage:
     GPUTextureUsage.COPY_DST |
     kOpInfo[t.params.read.op].readUsage |
-    kOpInfo[t.params.write.op].writeUsage });
-
+    kOpInfo[t.params.write.op].writeUsage
+  });
   // [2] Use non-solid-color texture value.
   const texelValue1 = { R: 0, G: 1, B: 0, A: 1 };
   const texelValue2 = { R: 1, G: 0, B: 0, A: 1 };
@@ -592,8 +592,8 @@ fn((t) => {
   // Contents should be the first value written, not the second.
   t.expectSingleColor(readbackTexture, helper.kTextureFormat, {
     size: [...helper.kTextureSize, 1],
-    exp: texelValue1 });
-
+    exp: texelValue1
+  });
 });
 
 g.test('wr').
@@ -616,8 +616,8 @@ expandWithParams(function* ({ _context }) {
       if (checkOpsValidForContext([write, read], _context)) {
         yield {
           write: { op: write, in: _context[0] },
-          read: { op: read, in: _context[1] } };
-
+          read: { op: read, in: _context[1] }
+        };
       }
     }
   }
@@ -625,8 +625,8 @@ expandWithParams(function* ({ _context }) {
 
 fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
-    usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage });
-
+    usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage
+  });
   // [2] Use non-solid-color texture value.
   const texelValue = { R: 0, G: 1, B: 0, A: 1 };
 
@@ -638,8 +638,8 @@ fn((t) => {
   // Contents should be exactly the values written.
   t.expectSingleColor(readbackTexture, helper.kTextureFormat, {
     size: [...helper.kTextureSize, 1],
-    exp: texelValue });
-
+    exp: texelValue
+  });
 });
 
 g.test('ww').
@@ -660,8 +660,8 @@ expandWithParams(function* ({ _context }) {
       if (checkOpsValidForContext([first, second], _context)) {
         yield {
           first: { op: first, in: _context[0] },
-          second: { op: second, in: _context[1] } };
-
+          second: { op: second, in: _context[1] }
+        };
       }
     }
   }
@@ -672,8 +672,8 @@ fn((t) => {
     usage:
     GPUTextureUsage.COPY_SRC |
     kOpInfo[t.params.first.op].writeUsage |
-    kOpInfo[t.params.second.op].writeUsage });
-
+    kOpInfo[t.params.second.op].writeUsage
+  });
   // [2] Use non-solid-color texture value.
   const texelValue1 = { R: 1, G: 0, B: 0, A: 1 };
   const texelValue2 = { R: 0, G: 1, B: 0, A: 1 };
@@ -690,8 +690,8 @@ fn((t) => {
   // Contents should be the second value written.
   t.expectSingleColor(readbackTexture, helper.kTextureFormat, {
     size: [...helper.kTextureSize, 1],
-    exp: texelValue2 });
-
+    exp: texelValue2
+  });
 });
 
 g.test('rw,single_pass,load_store').

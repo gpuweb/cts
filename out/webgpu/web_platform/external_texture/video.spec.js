@@ -32,8 +32,8 @@ const kVideoInfo = makeTable(
   'red-green.mp4': ['REC601', 'video/mp4; codecs=avc1.4d400c'],
   'red-green.bt601.vp9.webm': ['REC601', 'video/webm; codecs=vp9'],
   'red-green.bt709.vp9.webm': ['REC709', 'video/webm; codecs=vp9'],
-  'red-green.bt2020.vp9.webm': ['REC2020', 'video/webm; codecs=vp9'] });
-
+  'red-green.bt2020.vp9.webm': ['REC2020', 'video/webm; codecs=vp9']
+});
 
 
 
@@ -41,33 +41,33 @@ const kVideoExpectations = [
 {
   videoName: 'red-green.webmvp8.webm',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
-
+  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff])
+},
 {
   videoName: 'red-green.theora.ogv',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
-
+  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff])
+},
 {
   videoName: 'red-green.mp4',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
-
+  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff])
+},
 {
   videoName: 'red-green.bt601.vp9.webm',
   _redExpectation: new Uint8Array([0xd9, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff]) },
-
+  _greenExpectation: new Uint8Array([0x01, 0xef, 0x00, 0xff])
+},
 {
   videoName: 'red-green.bt709.vp9.webm',
   _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]) },
-
+  _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff])
+},
 {
   videoName: 'red-green.bt2020.vp9.webm',
   _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-  _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]) }];
-
+  _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff])
+}];
 
 
 export const g = makeTestGroup(GPUTest);
@@ -89,10 +89,10 @@ function createExternalTextureSamplingTestPipeline(t) {
             );
             return pos[VertexIndex];
         }
-        ` }),
-
-      entryPoint: 'main' },
-
+        `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -103,17 +103,17 @@ function createExternalTextureSamplingTestPipeline(t) {
                                  -> @location(0) vec4<f32> {
             return textureSampleBaseClampToEdge(t, s, FragCoord.xy / vec2<f32>(16.0, 16.0));
         }
-        ` }),
-
+        `
+      }),
       entryPoint: 'main',
       targets: [
       {
-        format: kFormat }] },
+        format: kFormat
+      }]
 
-
-
-    primitive: { topology: 'triangle-list' } });
-
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   return pipeline;
 }
@@ -127,22 +127,22 @@ pipeline)
 
   const externalTexture = t.device.importExternalTexture({
 
-    source: source });
-
+    source: source
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: linearSampler },
-
+      resource: linearSampler
+    },
     {
       binding: 1,
-      resource: externalTexture }] });
+      resource: externalTexture
+    }]
 
-
-
+  });
 
   return bindGroup;
 }
@@ -198,8 +198,8 @@ fn(async (t) => {
     const colorAttachment = t.device.createTexture({
       format: kFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
     const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
@@ -211,10 +211,10 @@ fn(async (t) => {
         view: colorAttachment.createView(),
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.draw(6);
@@ -228,8 +228,8 @@ fn(async (t) => {
     kFormat,
     { x: 5, y: 5 },
     {
-      exp: t.params._redExpectation });
-
+      exp: t.params._redExpectation
+    });
 
 
     // Bottom right corner should be green. Sample a few pixels away from the edges to avoid
@@ -239,8 +239,8 @@ fn(async (t) => {
     kFormat,
     { x: kWidth - 5, y: kHeight - 5 },
     {
-      exp: t.params._greenExpectation });
-
+      exp: t.params._greenExpectation
+    });
 
 
     if (sourceType === 'VideoFrame') source.close();
@@ -273,22 +273,22 @@ fn(async (t) => {
   const colorAttachment = t.device.createTexture({
     format: kFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const passDescriptor = {
     colorAttachments: [
     {
       view: colorAttachment.createView(),
       clearValue: [0, 0, 0, 1],
       loadOp: 'clear',
-      storeOp: 'store' }] };
+      storeOp: 'store'
+    }]
 
-
-
+  };
 
   const bindGroupLayout = t.device.createBindGroupLayout({
-    entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }] });
-
+    entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }]
+  });
 
   let bindGroup;
   const useExternalTexture = () => {
@@ -307,13 +307,13 @@ fn(async (t) => {
     videoElement;
     externalTexture = t.device.importExternalTexture({
 
-      source: source });
-
+      source: source
+    });
     // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
     bindGroup = t.device.createBindGroup({
       layout: bindGroupLayout,
-      entries: [{ binding: 0, resource: externalTexture }] });
-
+      entries: [{ binding: 0, resource: externalTexture }]
+    });
 
     const commandBuffer = useExternalTexture();
     t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
@@ -366,14 +366,14 @@ fn(async (t) => {
     videoElement;
     const externalTexture = t.device.importExternalTexture({
 
-      source: source });
-
+      source: source
+    });
 
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [2, 1, 1],
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING });
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING
+    });
 
     const pipeline = t.device.createComputePipeline({
       layout: 'auto',
@@ -392,19 +392,19 @@ fn(async (t) => {
                 textureStore(outImage, vec2<i32>(1, 0), green);
                 return;
               }
-            ` }),
-
-        entryPoint: 'main' } });
-
-
+            `
+        }),
+        entryPoint: 'main'
+      }
+    });
 
     const bg = t.device.createBindGroup({
       entries: [
       { binding: 0, resource: externalTexture },
       { binding: 1, resource: outputTexture.createView() }],
 
-      layout: pipeline.getBindGroupLayout(0) });
-
+      layout: pipeline.getBindGroupLayout(0)
+    });
 
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginComputePass();
@@ -420,8 +420,8 @@ fn(async (t) => {
     kFormat,
     { x: 0, y: 0 },
     {
-      exp: t.params._redExpectation });
-
+      exp: t.params._redExpectation
+    });
 
 
     // Pixel loaded from Bottom right corner should be green.
@@ -430,8 +430,8 @@ fn(async (t) => {
     kFormat,
     { x: 1, y: 0 },
     {
-      exp: t.params._greenExpectation });
-
+      exp: t.params._greenExpectation
+    });
 
 
     if (sourceType === 'VideoFrame') source.close();

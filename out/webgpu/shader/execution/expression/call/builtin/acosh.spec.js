@@ -33,8 +33,8 @@ export const d = makeCaseCache('acosh', {
     ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
     ...fullF32Range()].
     map(makeCase);
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -5,10 +5,10 @@ require('ts-node').register({
   // Specify the project file so ts-node doesn't try to find it itself based on the CWD.
   project: path.resolve(__dirname, '../../../tsconfig.json'),
   compilerOptions: {
-    module: 'commonjs' },
-
-  transpileOnly: true });
-
+    module: 'commonjs'
+  },
+  transpileOnly: true
+});
 const Module = require('module');
 
 // Redirect imports of .js files to .ts files

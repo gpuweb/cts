@@ -60,20 +60,17 @@ function generateCopySizeForSrcOOB({ srcOrigin }) {
       width: justFitCopySize.width + 1,
       height: justFitCopySize.height,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
-    },
-    // OOB in width
+    }, // OOB in width
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height + 1,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
-    },
-    // OOB in height
+    }, // OOB in height
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1,
-    },
-    // OOB in depthOrArrayLayers
+    }, // OOB in depthOrArrayLayers
   ];
 }
 
@@ -119,20 +116,17 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }) {
       width: justFitCopySize.width + 1,
       height: justFitCopySize.height,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
-    },
-    // OOB in width
+    }, // OOB in width
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height + 1,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers,
-    },
-    // OOB in height
+    }, // OOB in height
     {
       width: justFitCopySize.width,
       height: justFitCopySize.height,
       depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1,
-    },
-    // OOB in depthOrArrayLayers
+    }, // OOB in depthOrArrayLayers
   ];
 }
 
@@ -769,7 +763,6 @@ g.test('destination_texture,format')
       format,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     void t.device.popErrorScope();
 
     const success = kValidTextureFormatsForCopyE2T.includes(format);
@@ -806,7 +799,6 @@ g.test('OOB,source')
         height: kDefaultHeight + 1,
         depthOrArrayLayers: kDefaultDepth,
       },
-
       mipLevelCount: kDefaultMipLevelCount,
       format: 'bgra8unorm',
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -859,7 +851,6 @@ g.test('OOB,destination')
         height: kDefaultHeight,
         depthOrArrayLayers: kDefaultDepth,
       },
-
       format: 'bgra8unorm',
       mipLevelCount: kDefaultMipLevelCount,
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
@@ -888,7 +879,6 @@ g.test('OOB,destination')
         mipLevel,
         origin: dstOrigin,
       },
-
       copySize,
       success,
       hasOperationError ? 'OperationError' : ''

@@ -68,8 +68,8 @@ fn((t) => {
   const colorAttachment = t.device.createTexture({
     format: kColorFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const colorAttachmentView = colorAttachment.createView();
 
@@ -78,8 +78,8 @@ fn((t) => {
   const depthStencilAttachment = t.device.createTexture({
     format: kDepthStencilFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   // Color load operation will clear to {1.0, 1.0, 1.0, 1.0}.
   // Depth operation will clear to 1.0.
@@ -91,16 +91,16 @@ fn((t) => {
       view: colorAttachmentView,
       clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: t.params.colorStoreOperation }],
-
+      storeOp: t.params.colorStoreOperation
+    }],
 
     depthStencilAttachment: {
       view: depthStencilAttachment.createView(),
       depthClearValue: 1.0,
       depthLoadOp: 'clear',
-      depthStoreOp: t.params.depthStencilStoreOperation } });
-
-
+      depthStoreOp: t.params.depthStencilStoreOperation
+    }
+  });
   pass.end();
 
   t.device.queue.submit([encoder.finish()]);
@@ -116,8 +116,8 @@ fn((t) => {
   }
   t.expectSingleColor(colorAttachment, kColorFormat, {
     size: [kHeight, kWidth, 1],
-    exp: expectedColorValue });
-
+    exp: expectedColorValue
+  });
 
   // Check that the correct store operation occurred.
   let expectedDepthValue = {};
@@ -133,8 +133,8 @@ fn((t) => {
   t.expectSingleColor(depthStencilAttachment, kDepthStencilFormat, {
     size: [kHeight, kWidth, 1],
     exp: expectedDepthValue,
-    layout: { mipLevel: 0, aspect: 'depth-only' } });
-
+    layout: { mipLevel: 0, aspect: 'depth-only' }
+  });
 });
 
 // Tests that render pass color attachment store operations work correctly for all renderable color
@@ -158,15 +158,15 @@ fn((t) => {
     format: t.params.colorFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
     mipLevelCount: kMipLevelCount,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const colorViewDesc = {
     baseArrayLayer: t.params.arrayLayer,
     baseMipLevel: t.params.mipLevel,
     mipLevelCount: 1,
-    arrayLayerCount: 1 };
-
+    arrayLayerCount: 1
+  };
 
   const colorAttachmentView = colorAttachment.createView(colorViewDesc);
 
@@ -179,10 +179,10 @@ fn((t) => {
       view: colorAttachmentView,
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: t.params.storeOperation }] });
+      storeOp: t.params.storeOperation
+    }]
 
-
-
+  });
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
@@ -200,8 +200,8 @@ fn((t) => {
     size: [kHeight, kWidth, 1],
     slice: t.params.arrayLayer,
     exp: expectedValue,
-    layout: { mipLevel: t.params.mipLevel } });
-
+    layout: { mipLevel: t.params.mipLevel }
+  });
 });
 
 // Test with multiple color attachments to ensure each attachment's storeOp is set independently.
@@ -222,8 +222,8 @@ fn((t) => {
     t.device.createTexture({
       format: kColorFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT }));
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    }));
 
   }
 
@@ -236,14 +236,14 @@ fn((t) => {
       view: colorAttachments[i].createView(),
       clearValue: { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: i % 2 === 0 ? t.params.storeOperation1 : t.params.storeOperation2 });
-
+      storeOp: i % 2 === 0 ? t.params.storeOperation1 : t.params.storeOperation2
+    });
   }
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
-    colorAttachments: renderPassColorAttachments });
-
+    colorAttachments: renderPassColorAttachments
+  });
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
@@ -259,8 +259,8 @@ fn((t) => {
     }
     t.expectSingleColor(colorAttachments[i], kColorFormat, {
       size: [kHeight, kWidth, 1],
-      exp: expectedValue });
-
+      exp: expectedValue
+    });
   }
 });
 
@@ -288,15 +288,15 @@ fn((t) => {
     format: t.params.depthStencilFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: t.params.arrayLayer + 1 },
     mipLevelCount: kMipLevelCount,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const depthStencilViewDesc = {
     baseArrayLayer: t.params.arrayLayer,
     baseMipLevel: t.params.mipLevel,
     mipLevelCount: 1,
-    arrayLayerCount: 1 };
-
+    arrayLayerCount: 1
+  };
 
   const depthStencilAttachmentView = depthStencilTexture.createView(depthStencilViewDesc);
 
@@ -304,8 +304,8 @@ fn((t) => {
   // Depth-stencil store operate is determined by test params.
   const encoder = t.device.createCommandEncoder();
   const depthStencilAttachment = {
-    view: depthStencilAttachmentView };
-
+    view: depthStencilAttachmentView
+  };
   if (kTextureFormatInfo[t.params.depthStencilFormat].depth) {
     depthStencilAttachment.depthClearValue = 1.0;
     depthStencilAttachment.depthLoadOp = 'clear';
@@ -318,8 +318,8 @@ fn((t) => {
   }
   const pass = encoder.beginRenderPass({
     colorAttachments: [],
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
@@ -340,16 +340,16 @@ fn((t) => {
       size: [kHeight, kWidth, 1],
       slice: t.params.arrayLayer,
       exp: expectedDepthValue,
-      layout: { mipLevel: t.params.mipLevel, aspect: 'depth-only' } });
-
+      layout: { mipLevel: t.params.mipLevel, aspect: 'depth-only' }
+    });
   }
   if (kTextureFormatInfo[t.params.depthStencilFormat].stencil) {
     t.expectSingleColor(depthStencilTexture, t.params.depthStencilFormat, {
       size: [kHeight, kWidth, 1],
       slice: t.params.arrayLayer,
       exp: expectedStencilValue,
-      layout: { mipLevel: t.params.mipLevel, aspect: 'stencil-only' } });
-
+      layout: { mipLevel: t.params.mipLevel, aspect: 'stencil-only' }
+    });
   }
 });
 //# sourceMappingURL=storeOp.spec.js.map

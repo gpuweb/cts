@@ -358,7 +358,6 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
             copyWidthInBlocks: 256 / info.bytesPerBlock,
             _success: true,
           },
-
           // Copying into smaller texture when padding in bytesPerRow is enough should work unless
           // it is a depth/stencil typed format.
           {
@@ -367,7 +366,6 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
             copyWidthInBlocks: 256 / info.bytesPerBlock - 1,
             _success: !(info.stencil || info.depth),
           },
-
           // Unaligned bytesPerRow should not work unless the method is 'WriteTexture'.
           {
             bytesPerRow: 128,
@@ -375,14 +373,12 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
             copyWidthInBlocks: 128 / info.bytesPerBlock,
             _success: p.method === 'WriteTexture',
           },
-
           {
             bytesPerRow: 384,
             widthInBlocks: 384 / info.bytesPerBlock,
             copyWidthInBlocks: 384 / info.bytesPerBlock,
             _success: p.method === 'WriteTexture',
           },
-
           // When bytesPerRow is smaller than bytesInLastRow copying should fail.
           {
             bytesPerRow: 256,
@@ -390,7 +386,6 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
             copyWidthInBlocks: (2 * 256) / info.bytesPerBlock,
             _success: false,
           },
-
           // When copyHeightInBlocks > 1, bytesPerRow must be specified.
           {
             bytesPerRow: undefined,
@@ -432,7 +427,6 @@ Test that bytesPerRow, if specified must be big enough for a full copy row.
       height: copyHeightInBlocks * info.blockHeight,
       depthOrArrayLayers: copyDepth,
     };
-
     const { minDataSizeOrOverestimate } = dataBytesForCopyOrOverestimate({
       layout,
       format,

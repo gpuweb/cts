@@ -52,7 +52,6 @@ class F extends ValidationTest {
             usage: GPUBufferUsage.STORAGE,
           }),
         };
-
       default:
         unreachable('unknown resource type');
     }
@@ -75,7 +74,6 @@ class F extends ValidationTest {
         ...(resourceType === 'buffer' ? { buffer: { type: 'storage' } } : { texture: {} }),
       })),
     });
-
     const bindGroup = this.device.createBindGroup({
       layout,
       entries: indices.map(binding => ({
@@ -229,7 +227,6 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
             hasDynamicOffset: true,
           },
         },
-
         {
           binding: 1,
           visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
@@ -261,7 +258,6 @@ g.test('dynamic_offsets_match_expectations_in_pass_encoder')
             size: kBindingSize,
           },
         },
-
         {
           binding: 1,
           resource: {
@@ -293,7 +289,6 @@ g.test('u32array_start_and_length')
       dynamicOffsetsDataLength: 2,
       _success: false,
     },
-
     // dynamicOffsetsDataStart + dynamicOffsetsDataLength > offsets.length
     {
       offsets: [0],
@@ -301,21 +296,18 @@ g.test('u32array_start_and_length')
       dynamicOffsetsDataLength: 1,
       _success: false,
     },
-
     {
       offsets: [0, 0],
       dynamicOffsetsDataStart: 1,
       dynamicOffsetsDataLength: 1,
       _success: true,
     },
-
     {
       offsets: [0, 0, 0],
       dynamicOffsetsDataStart: 1,
       dynamicOffsetsDataLength: 1,
       _success: true,
     },
-
     {
       offsets: [0, 0],
       dynamicOffsetsDataStart: 0,
@@ -347,7 +339,6 @@ g.test('u32array_start_and_length')
             size: kBindingSize,
             usage: GPUBufferUsage.STORAGE,
           }),
-
           size: kBindingSize,
         },
       })),

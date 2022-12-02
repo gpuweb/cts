@@ -43,21 +43,21 @@ fn(async (t) => {
             @id(1000) override w: f32 = 1.0;
             @vertex fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>(x, y, z, w);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      constants: vertexConstants },
-
+      constants: vertexConstants
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `@fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] } });
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  });
 });
 
 g.test('identifier,fragment').
@@ -94,8 +94,8 @@ fn(async (t) => {
             -> @location(0) vec4<f32> {
             return vec4<f32>(r, g, b, a);
         }`,
-    fragmentConstants });
-
+    fragmentConstants
+  });
 
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
@@ -130,21 +130,21 @@ fn(async (t) => {
             override w: f32 = 1.0;
             @vertex fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>(x, y, z, w);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      constants: vertexConstants },
-
+      constants: vertexConstants
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `@fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] } });
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  });
 });
 
 g.test('uninitialized,fragment').
@@ -177,8 +177,8 @@ fn(async (t) => {
             return vec4<f32>(r, g, b, a);
         }
           `,
-    fragmentConstants });
-
+    fragmentConstants
+  });
 
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });

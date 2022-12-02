@@ -13,24 +13,24 @@ fn((t) => {
   const kNumGroups = 1_000_000;
   const buffer = t.device.createBuffer({
     size: 64,
-    usage: GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.STORAGE
+  });
   const layout = t.device.createBindGroupLayout({
     entries: [
     {
       binding: 0,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type: 'storage' } }] });
+      buffer: { type: 'storage' }
+    }]
 
-
-
+  });
   const bindGroups = [];
   for (let i = 0; i < kNumGroups; ++i) {
     bindGroups.push(
     t.device.createBindGroup({
       layout,
-      entries: [{ binding: 0, resource: { buffer } }] }));
-
+      entries: [{ binding: 0, resource: { buffer } }]
+    }));
 
   }
 });
@@ -45,22 +45,22 @@ fn((t) => {
   const kNumGroups = 5_000_000;
   const buffer = t.device.createBuffer({
     size: 64,
-    usage: GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.STORAGE
+  });
   const layout = t.device.createBindGroupLayout({
     entries: [
     {
       binding: 0,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type: 'storage' } }] });
+      buffer: { type: 'storage' }
+    }]
 
-
-
+  });
   for (let i = 0; i < kNumGroups; ++i) {
     t.device.createBindGroup({
       layout,
-      entries: [{ binding: 0, resource: { buffer } }] });
-
+      entries: [{ binding: 0, resource: { buffer } }]
+    });
   }
 });
 //# sourceMappingURL=bind_group_allocation.spec.js.map

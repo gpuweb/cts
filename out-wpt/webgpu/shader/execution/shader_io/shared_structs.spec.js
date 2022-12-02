@@ -63,7 +63,6 @@ g.test('shared_with_buffer')
       size: bufferNumElements * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-
     const bindGroup = t.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
       entries: [{ binding: 0, resource: { buffer: outputBuffer } }],
@@ -157,7 +156,6 @@ g.test('shared_between_stages')
         module,
         entryPoint: 'vert_main',
       },
-
       fragment: {
         module,
         entryPoint: 'frag_main',
@@ -175,7 +173,6 @@ g.test('shared_between_stages')
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',
     });
-
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -187,7 +184,6 @@ g.test('shared_between_stages')
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.draw(3);
     pass.end();
@@ -294,7 +290,6 @@ g.test('shared_with_non_entry_point_function')
           },
         ],
       },
-
       fragment: {
         module,
         entryPoint: 'frag_main',
@@ -318,7 +313,6 @@ g.test('shared_with_non_entry_point_function')
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       format: 'rgba8unorm',
     });
-
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -330,7 +324,6 @@ g.test('shared_with_non_entry_point_function')
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
     pass.draw(3);

@@ -15,8 +15,8 @@ class FixtureToTest extends UnitTest {
   }
   eventualAsyncExpectation(fn) {
     super.eventualAsyncExpectation(fn);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(TestGroupTest);
 

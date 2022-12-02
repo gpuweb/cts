@@ -35,7 +35,6 @@ export function run() {
         size: rows * bytesPerRow,
         usage: GPUBufferUsage.COPY_SRC,
       });
-
       const mapping = buffer.getMappedRange();
       const data = new Uint8Array(mapping);
 

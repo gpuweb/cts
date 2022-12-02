@@ -79,5 +79,6 @@
   generateAndCopyView(byteSize, start = 0, offset = 0) {
     this.generateData(byteSize, start, offset);
     return this.dataBuffer.slice(0, byteSize);
-  }}
+  }
+}
 //# sourceMappingURL=data_generation.js.map

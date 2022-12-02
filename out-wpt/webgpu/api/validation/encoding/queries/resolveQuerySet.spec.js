@@ -168,7 +168,6 @@ g.test('query_set_buffer,device_mismatch')
       type: 'occlusion',
       count: kQueryCount,
     });
-
     t.trackForCleanup(querySet);
 
     const bufferDevice = bufferMismatched ? t.mismatchedDevice : t.device;
@@ -176,7 +175,6 @@ g.test('query_set_buffer,device_mismatch')
       size: kQueryCount * 8,
       usage: GPUBufferUsage.QUERY_RESOLVE,
     });
-
     t.trackForCleanup(buffer);
 
     const encoder = t.createEncoder('non-pass');

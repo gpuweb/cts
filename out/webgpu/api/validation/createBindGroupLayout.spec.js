@@ -43,14 +43,14 @@ fn(async (t) => {
     entries.push({
       binding,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type: 'storage' } });
-
+      buffer: { type: 'storage' }
+    });
   }
 
   t.expectValidationError(() => {
     t.device.createBindGroupLayout({
-      entries });
-
+      entries
+    });
   }, !_valid);
 });
 
@@ -77,15 +77,15 @@ fn(async (t) => {
   entries.push({
     binding,
     visibility: GPUShaderStage.COMPUTE,
-    buffer: { type: 'storage' } });
-
+    buffer: { type: 'storage' }
+  });
 
   const success = binding < kMaxBindingsPerBindGroup;
 
   t.expectValidationError(() => {
     t.device.createBindGroupLayout({
-      entries });
-
+      entries
+    });
   }, !success);
 });
 
@@ -110,8 +110,8 @@ fn(async (t) => {
 
   t.expectValidationError(() => {
     t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility, ...entry }] });
-
+      entries: [{ binding: 0, visibility, ...entry }]
+    });
   }, !success);
 });
 
@@ -139,10 +139,10 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: shaderStage,
-        buffer: { type } }] });
+        buffer: { type }
+      }]
 
-
-
+    });
   }, !success);
 });
 
@@ -172,10 +172,10 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: shaderStage,
-        storageTexture: { access, format: 'rgba8unorm' } }] });
+        storageTexture: { access, format: 'rgba8unorm' }
+      }]
 
-
-
+    });
   }, !success);
 });
 
@@ -205,10 +205,10 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        texture: { multisampled: true, viewDimension, sampleType } }] });
+        texture: { multisampled: true, viewDimension, sampleType }
+      }]
 
-
-
+    });
   }, !success);
 });
 
@@ -238,21 +238,21 @@ fn(async (t) => {
     entries.push({
       binding: i,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type, hasDynamicOffset: true } });
-
+      buffer: { type, hasDynamicOffset: true }
+    });
   }
 
   for (let i = dynamicBufferCount; i < dynamicBufferCount + staticBuffers; i++) {
     entries.push({
       binding: i,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type, hasDynamicOffset: false } });
-
+      buffer: { type, hasDynamicOffset: false }
+    });
   }
 
   const descriptor = {
-    entries };
-
+    entries
+  };
 
   t.expectValidationError(() => {
     t.device.createBindGroupLayout(descriptor);
@@ -318,8 +318,8 @@ fn(async (t) => {
     maxResourceBindings.push({
       binding: i,
       visibility: maxedVisibility,
-      ...maxedEntry });
-
+      ...maxedEntry
+    });
   }
 
   const goodDescriptor = { entries: maxResourceBindings };
@@ -332,8 +332,8 @@ fn(async (t) => {
   newDescriptor.entries.push({
     binding: maxedCount,
     visibility: extraVisibility,
-    ...extraEntry });
-
+    ...extraEntry
+  });
 
   const newBindingCountsTowardSamePerStageLimit =
   (maxedVisibility & extraVisibility) !== 0 &&
@@ -369,8 +369,8 @@ fn(async (t) => {
     maxResourceBindings.push({
       binding: i,
       visibility: maxedVisibility,
-      ...maxedEntry });
-
+      ...maxedEntry
+    });
   }
 
   const goodLayout = t.device.createBindGroupLayout({ entries: maxResourceBindings });
@@ -383,10 +383,10 @@ fn(async (t) => {
     {
       binding: 0,
       visibility: extraVisibility,
-      ...extraEntry }] });
+      ...extraEntry
+    }]
 
-
-
+  });
 
   // Some binding types use the same limit, e.g. 'storage-buffer' and 'readonly-storage-buffer'.
   const newBindingCountsTowardSamePerStageLimit =
@@ -419,10 +419,10 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { format: 'rgba8unorm', viewDimension } }] });
+        storageTexture: { format: 'rgba8unorm', viewDimension }
+      }]
 
-
-
+    });
   }, !success);
 });
 
@@ -448,10 +448,10 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: GPUShaderStage.COMPUTE,
-        storageTexture: { format } }] });
+        storageTexture: { format }
+      }]
 
-
-
+    });
   }, !info.storage);
 });
 //# sourceMappingURL=createBindGroupLayout.spec.js.map

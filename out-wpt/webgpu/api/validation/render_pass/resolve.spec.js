@@ -47,7 +47,6 @@ Test various validation behaviors when a resolveTarget is provided.
       resolveTargetWidth: 4,
       _valid: true,
     },
-
     // a validation error should be created when resolveTarget is invalid.
     { resolveTargetInvalid: true, _valid: false },
     // a validation error should be created when mip count > 1
@@ -59,7 +58,6 @@ Test various validation behaviors when a resolveTarget is provided.
       resolveTargetWidth: 4,
       _valid: false,
     },
-
     // non-zero resolve target base array layer should be valid.
     { resolveTargetViewBaseArrayLayer: 1, _valid: true },
     // a validation error should be created when array layer count > 1
@@ -118,7 +116,6 @@ Test various validation behaviors when a resolveTarget is provided.
               height: colorAttachmentHeight,
               depthOrArrayLayers: 1,
             },
-
             sampleCount: colorAttachmentSamples,
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
           });
@@ -131,7 +128,6 @@ Test various validation behaviors when a resolveTarget is provided.
               depthOrArrayLayers:
                 resolveTargetViewBaseArrayLayer + resolveTargetViewArrayLayerCount,
             },
-
             sampleCount: resolveTargetSamples,
             mipLevelCount: resolveTargetViewBaseMipLevel + resolveTargetViewMipCount,
             usage: resolveTargetUsage,
@@ -161,7 +157,6 @@ Test various validation behaviors when a resolveTarget is provided.
               height: colorAttachmentHeight,
               depthOrArrayLayers: 1,
             },
-
             sampleCount: colorAttachmentSamples,
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
           });
@@ -173,7 +168,6 @@ Test various validation behaviors when a resolveTarget is provided.
               height: colorAttachmentHeight,
               depthOrArrayLayers: 1,
             },
-
             sampleCount: 1,
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
           });
@@ -190,7 +184,6 @@ Test various validation behaviors when a resolveTarget is provided.
       const pass = encoder.beginRenderPass({
         colorAttachments: renderPassColorAttachmentDescriptors,
       });
-
       pass.end();
 
       t.expectValidationError(() => {

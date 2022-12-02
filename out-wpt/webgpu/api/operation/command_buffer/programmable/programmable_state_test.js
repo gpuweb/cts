@@ -66,12 +66,10 @@ export class ProgrammableStateTest extends GPUTest {
           layout: this.device.createPipelineLayout({
             bindGroupLayouts: this.getBindGroupLayouts(groups),
           }),
-
           compute: {
             module: this.device.createShaderModule({
               code: wgsl,
             }),
-
             entryPoint: 'main',
           },
         });
@@ -105,24 +103,19 @@ export class ProgrammableStateTest extends GPUTest {
           layout: this.device.createPipelineLayout({
             bindGroupLayouts: this.getBindGroupLayouts(groups),
           }),
-
           vertex: {
             module: this.device.createShaderModule({
               code: wgslShaders.vertex,
             }),
-
             entryPoint: 'vert_main',
           },
-
           fragment: {
             module: this.device.createShaderModule({
               code: wgslShaders.fragment,
             }),
-
             entryPoint: 'frag_main',
             targets: [{ format: 'rgba8unorm' }],
           },
-
           primitive: { topology: 'point-list' },
         });
       }

@@ -71,8 +71,8 @@ class IndexFormatTest extends GPUTest {
           }
           return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
         }
-      ` });
-
+      `
+    });
 
     const fragmentModule = this.device.createShaderModule({
       code: `
@@ -80,8 +80,8 @@ class IndexFormatTest extends GPUTest {
         fn main() -> @location(0) u32 {
           return 1u;
         }
-      ` });
-
+      `
+    });
 
     return this.device.createRenderPipeline({
       layout: this.device.createPipelineLayout({ bindGroupLayouts: [] }),
@@ -89,13 +89,13 @@ class IndexFormatTest extends GPUTest {
       fragment: {
         module: fragmentModule,
         entryPoint: 'main',
-        targets: [{ format: kTextureFormat }] },
-
+        targets: [{ format: kTextureFormat }]
+      },
       primitive: {
         topology,
-        stripIndexFormat } });
-
-
+        stripIndexFormat
+      }
+    });
   }
 
   CreateIndexBuffer(indices, indexFormat) {
@@ -122,13 +122,13 @@ class IndexFormatTest extends GPUTest {
     const colorAttachment = this.device.createTexture({
       format: kTextureFormat,
       size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     const result = this.device.createBuffer({
       size: byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
 
     const encoder = this.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
@@ -137,10 +137,10 @@ class IndexFormatTest extends GPUTest {
         view: colorAttachment.createView(),
         clearValue: [0, 0, 0, 0],
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.setPipeline(pipeline);
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
     pass.drawIndexed(indexCount);
@@ -167,8 +167,8 @@ class IndexFormatTest extends GPUTest {
       }
     }
     return arrayBuffer;
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(IndexFormatTest);
 
@@ -236,13 +236,13 @@ fn((t) => {
   const colorAttachment = t.device.createTexture({
     format: kTextureFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const result = t.device.createBuffer({
     size: byteLength,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
@@ -251,10 +251,10 @@ fn((t) => {
       view: colorAttachment.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   if (t.params.setPipelineBeforeSetIndexBuffer) {
     pass.setPipeline(pipeline16);
@@ -293,13 +293,13 @@ fn((t) => {
   const colorAttachment = t.device.createTexture({
     format: kTextureFormat,
     size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const result = t.device.createBuffer({
     size: byteLength,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   let encoder = t.device.createCommandEncoder();
   {
@@ -314,10 +314,10 @@ fn((t) => {
         view: colorAttachment.createView(),
         clearValue: [0, 0, 0, 0],
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
 
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
     pass.setPipeline(pipeline);
@@ -346,10 +346,10 @@ fn((t) => {
         view: colorAttachment.createView(),
         clearValue: [0, 0, 0, 0],
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
 
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
     pass.setPipeline(pipeline);
@@ -468,9 +468,9 @@ combineWithParams([
   [0, 0, 0, 0, 1, 0, 0, 1],
   [0, 0, 0, 0, 0, 0, 0, 0],
   [0, 0, 0, 0, 0, 0, 0, 0],
-  [1, 0, 0, 0, 1, 0, 0, 1]] },
+  [1, 0, 0, 0, 1, 0, 0, 1]]
 
-
+},
 {
   primitiveTopology: 'line-list',
   _indices: [0, 1, -1, 2, 3, 0],
@@ -478,9 +478,9 @@ combineWithParams([
   [0, 0, 0, 0, 1, 0, 1, 1],
   [0, 0, 0, 0, 1, 1, 0, 0],
   [0, 0, 1, 1, 1, 0, 1, 0],
-  [1, 1, 0, 0, 1, 0, 0, 1]] },
+  [1, 1, 0, 0, 1, 0, 0, 1]]
 
-
+},
 {
   primitiveTopology: 'line-strip',
   _indices: [0, 1, -1, 2, 3, 0],
@@ -488,9 +488,9 @@ combineWithParams([
   [0, 0, 0, 0, 1, 0, 0, 1],
   [0, 0, 0, 0, 1, 1, 1, 0],
   [0, 0, 0, 0, 1, 1, 1, 0],
-  [0, 0, 0, 0, 1, 0, 0, 1]] },
+  [0, 0, 0, 0, 1, 0, 0, 1]]
 
-
+},
 {
   primitiveTopology: 'triangle-list',
   _indices: [0, 1, 3, -1, 2, 1, 0, 0],
@@ -498,9 +498,9 @@ combineWithParams([
   [0, 0, 0, 0, 0, 0, 0, 1],
   [0, 0, 0, 0, 1, 1, 1, 1],
   [0, 0, 0, 1, 1, 1, 1, 1],
-  [0, 1, 1, 1, 1, 1, 1, 1]] },
+  [0, 1, 1, 1, 1, 1, 1, 1]]
 
-
+},
 {
   primitiveTopology: 'triangle-strip',
   _indices: [3, 1, 0, -1, 2, 2, 1, 3],
@@ -508,9 +508,9 @@ combineWithParams([
   [0, 0, 0, 0, 0, 0, 0, 1],
   [0, 0, 0, 0, 1, 0, 1, 1],
   [0, 0, 0, 0, 1, 1, 1, 1],
-  [0, 0, 0, 0, 1, 1, 1, 1]] }])).
+  [0, 0, 0, 0, 1, 1, 1, 1]]
 
-
+}])).
 
 
 fn((t) => {

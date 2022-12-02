@@ -14,8 +14,8 @@ export const kScalarTypeInfo = {
   'i32': { layout: { alignment: 4, size: 4 }, supportsAtomics: true, arrayLength: 1, innerLength: 0 },
   'u32': { layout: { alignment: 4, size: 4 }, supportsAtomics: true, arrayLength: 1, innerLength: 0 },
   'f32': { layout: { alignment: 4, size: 4 }, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
-  'bool': { layout: undefined, supportsAtomics: false, arrayLength: 1, innerLength: 0 } };
-
+  'bool': { layout: undefined, supportsAtomics: false, arrayLength: 1, innerLength: 0 }
+};
 /** List of all plain scalar types. */
 export const kScalarTypes = keysOf(kScalarTypeInfo);
 
@@ -23,8 +23,8 @@ export const kScalarTypes = keysOf(kScalarTypeInfo);
 export const kVectorContainerTypeInfo = {
   'vec2': { layout: { alignment: 8, size: 8 }, arrayLength: 2, innerLength: 0 },
   'vec3': { layout: { alignment: 16, size: 12 }, arrayLength: 3, innerLength: 0 },
-  'vec4': { layout: { alignment: 16, size: 16 }, arrayLength: 4, innerLength: 0 } };
-
+  'vec4': { layout: { alignment: 16, size: 16 }, arrayLength: 4, innerLength: 0 }
+};
 /** List of all vecN<> container types. */
 export const kVectorContainerTypes = keysOf(kVectorContainerTypeInfo);
 
@@ -38,8 +38,8 @@ export const kMatrixContainerTypeInfo = {
   'mat4x3': { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 3 },
   'mat2x4': { layout: { alignment: 16, size: 32 }, arrayLength: 2, innerLength: 4 },
   'mat3x4': { layout: { alignment: 16, size: 48 }, arrayLength: 3, innerLength: 4 },
-  'mat4x4': { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 4 } };
-
+  'mat4x4': { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 4 }
+};
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
@@ -72,7 +72,7 @@ export function* generateTypes({
   storageClass,
   baseType,
   containerType,
-  isAtomic = false })
+  isAtomic = false
 
 
 
@@ -81,7 +81,7 @@ export function* generateTypes({
 
 
 
-{
+}) {
   const scalarInfo = kScalarTypeInfo[baseType];
   if (isAtomic) {
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
@@ -99,9 +99,9 @@ export function* generateTypes({
       type: `${scalarType}`,
       _kTypeInfo: {
         elementBaseType: `${scalarType}`,
-        ...scalarInfo } };
-
-
+        ...scalarInfo
+      }
+    };
   }
 
   // Vector types
@@ -109,8 +109,8 @@ export function* generateTypes({
     for (const vectorType of kVectorContainerTypes) {
       yield {
         type: `${vectorType}<${scalarType}>`,
-        _kTypeInfo: { elementBaseType: baseType, ...kVectorContainerTypeInfo[vectorType] } };
-
+        _kTypeInfo: { elementBaseType: baseType, ...kVectorContainerTypeInfo[vectorType] }
+      };
     }
   }
 
@@ -123,9 +123,9 @@ export function* generateTypes({
           type: `${matrixType}<${scalarType}>`,
           _kTypeInfo: {
             elementBaseType: `vec${matrixInfo.innerLength}<${scalarType}>`,
-            ...matrixInfo } };
-
-
+            ...matrixInfo
+          }
+        };
       }
     }
   }
@@ -144,19 +144,19 @@ export function* generateTypes({
         kArrayLength *
         arrayStride({
           ...scalarInfo.layout,
-          alignment: 16 }) :
-
-        kArrayLength * arrayStride(scalarInfo.layout) } :
-
-      undefined };
-
+          alignment: 16
+        }) :
+        kArrayLength * arrayStride(scalarInfo.layout)
+      } :
+      undefined
+    };
 
     // Sized
     if (storageClass === 'uniform') {
       yield {
         type: `array<vec4<${scalarType}>,${kArrayLength}>`,
-        _kTypeInfo: arrayTypeInfo };
-
+        _kTypeInfo: arrayTypeInfo
+      };
     } else {
       yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
     }

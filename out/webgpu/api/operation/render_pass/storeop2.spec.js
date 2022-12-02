@@ -22,8 +22,8 @@ fn(async (t) => {
   const renderTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'r8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   // create render pipeline
   const renderPipeline = t.device.createRenderPipeline({
@@ -40,23 +40,23 @@ fn(async (t) => {
                   vec2<f32>(-1.0,  1.0));
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             }
-            ` }),
-
-      entryPoint: 'main' },
-
+            `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(1.0, 0.0, 0.0, 1.0);
             }
-            ` }),
-
+            `
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'r8unorm' }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'r8unorm' }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   // encode pass and submit
   const encoder = t.device.createCommandEncoder();
@@ -66,10 +66,10 @@ fn(async (t) => {
       view: renderTexture.createView(),
       storeOp: t.params.storeOp,
       clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
-      loadOp: 'clear' }] });
+      loadOp: 'clear'
+    }]
 
-
-
+  });
   pass.setPipeline(renderPipeline);
   pass.draw(3);
   pass.end();
@@ -78,7 +78,7 @@ fn(async (t) => {
   // expect the buffer to be clear
   t.expectSingleColor(renderTexture, 'r8unorm', {
     size: [1, 1, 1],
-    exp: { R: t.params._expected } });
-
+    exp: { R: t.params._expected }
+  });
 });
 //# sourceMappingURL=storeop2.spec.js.map

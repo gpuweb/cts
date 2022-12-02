@@ -10,8 +10,8 @@ class F extends ValidationTest {
   getVertexBuffer() {
     return this.device.createBuffer({
       size: 256,
-      usage: GPUBufferUsage.VERTEX });
-
+      usage: GPUBufferUsage.VERTEX
+    });
   }
 
   createRenderPipeline(bufferCount) {
@@ -26,8 +26,8 @@ class F extends ValidationTest {
             @vertex fn main(input : Inputs
               ) -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }` }),
-
+            }`
+        }),
         entryPoint: 'main',
         buffers: [
         {
@@ -35,31 +35,31 @@ class F extends ValidationTest {
           attributes: range(bufferCount, (i) => ({
             format: 'float32x3',
             offset: 0,
-            shaderLocation: i })) }] },
+            shaderLocation: i
+          }))
+        }]
 
-
-
-
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] },
-
-      primitive: { topology: 'triangle-list' } });
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
+      primitive: { topology: 'triangle-list' }
+    });
   }
 
   beginRenderPass(commandEncoder) {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     return commandEncoder.beginRenderPass({
       colorAttachments: [
@@ -67,12 +67,12 @@ class F extends ValidationTest {
         view: attachmentTexture.createView(),
         clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
-  }}
-
+    });
+  }
+}
 
 export const g = makeTestGroup(F);
 

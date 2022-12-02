@@ -26,8 +26,8 @@ export class ErrorWithExtra extends Error {
     this.extra = Logger.globalDebugMode ?
     { ...oldExtras, ...newExtra() } :
     { omitted: 'pass ?debug=1' };
-  }}
-
+  }
+}
 
 /**
  * Asserts `condition` is true. Otherwise, throws an `Error` with the provided message.
@@ -54,9 +54,9 @@ export async function assertReject(p, msg) {
     await p;
     unreachable(msg);
   } catch (ex) {
+
     // Assertion OK
-  }
-}
+  }}
 
 /**
  * Assert this code is unreachable. Unconditionally throws an `Error`.
@@ -209,8 +209,8 @@ export function mapLazy(xs, f) {
       for (const x of xs) {
         yield f(x);
       }
-    } };
-
+    }
+  };
 }
 
 const TypedArrayBufferViewInstances = [
@@ -259,8 +259,8 @@ export const kTypedArrayBufferViews =
       result[v.constructor.name] = v.constructor;
     }
     return result;
-  })() };
-
+  })()
+};
 export const kTypedArrayBufferViewKeys = keysOf(kTypedArrayBufferViews);
 export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBufferViews);
 

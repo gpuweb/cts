@@ -122,7 +122,6 @@ class StencilTest extends GPUTest {
       B: expectedColor[2],
       A: expectedColor[3],
     };
-
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
 
     const result = textureContentIsOKByT2B(
@@ -149,10 +148,8 @@ class StencilTest extends GPUTest {
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         targets: [{ format: 'rgba8unorm' }],
         module: this.device.createShaderModule({
@@ -166,10 +163,8 @@ class StencilTest extends GPUTest {
                 return vec4<f32>(params.color);
             }`,
         }),
-
         entryPoint: 'main',
       },
-
       primitive: { topology: 'point-list' },
       depthStencil,
     });

@@ -62,21 +62,21 @@ fn(async (t) => {
   const {
     stencilFormat,
     stencilClearValue,
-    applyStencilClearValueAsStencilReferenceValue } =
-  t.params;
+    applyStencilClearValueAsStencilReferenceValue
+  } = t.params;
 
   const kSize = [1, 1, 1];
   const colorFormat = 'rgba8unorm';
   const stencilTexture = t.device.createTexture({
     format: stencilFormat,
     size: kSize,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  });
   const colorTexture = t.device.createTexture({
     format: colorFormat,
     size: kSize,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+  });
   const renderPipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
@@ -92,35 +92,35 @@ fn(async (t) => {
                   vec2<f32>( 1.0,  1.0),
                   vec2<f32>( 1.0, -1.0));
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-            }` }),
-
-      entryPoint: 'main' },
-
+            }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: colorFormat }] },
-
+      targets: [{ format: colorFormat }]
+    },
     depthStencil: {
       format: stencilFormat,
       depthCompare: 'always',
       stencilFront: {
-        compare: 'equal' },
-
+        compare: 'equal'
+      },
       stencilBack: {
-        compare: 'equal' } },
-
-
+        compare: 'equal'
+      }
+    },
     primitive: {
-      topology: 'triangle-list' } });
-
-
+      topology: 'triangle-list'
+    }
+  });
 
   const stencilAspectSizeInBytes = depthStencilFormatAspectSize(stencilFormat, 'stencil-only');
   assert(stencilAspectSizeInBytes > 0);
@@ -140,8 +140,8 @@ fn(async (t) => {
     view: stencilTexture.createView(),
     stencilLoadOp: 'clear',
     stencilStoreOp: 'store',
-    stencilClearValue };
-
+    stencilClearValue
+  };
   if (kTextureFormatInfo[stencilFormat].depth) {
     depthStencilAttachment.depthClearValue = 0;
     depthStencilAttachment.depthLoadOp = 'clear';
@@ -153,11 +153,11 @@ fn(async (t) => {
       view: colorTexture.createView(),
       loadOp: 'clear',
       storeOp: 'store',
-      clearValue: [1, 0, 0, 1] }],
+      clearValue: [1, 0, 0, 1]
+    }],
 
-
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
   renderPassEncoder.setPipeline(renderPipeline);
   renderPassEncoder.setStencilReference(stencilReference);
   renderPassEncoder.draw(6);
@@ -165,17 +165,17 @@ fn(async (t) => {
 
   const destinationBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    size: 4 });
-
+    size: 4
+  });
   t.trackForCleanup(destinationBuffer);
   encoder.copyTextureToBuffer(
   {
     texture: stencilTexture,
-    aspect: 'stencil-only' },
-
+    aspect: 'stencil-only'
+  },
   {
-    buffer: destinationBuffer },
-
+    buffer: destinationBuffer
+  },
   [1, 1, 1]);
 
 
@@ -183,8 +183,8 @@ fn(async (t) => {
 
   t.expectSingleColor(colorTexture, colorFormat, {
     size: [1, 1, 1],
-    exp: { R: 0, G: 1, B: 0, A: 1 } });
-
+    exp: { R: 0, G: 1, B: 0, A: 1 }
+  });
   t.expectGPUBufferValuesEqual(destinationBuffer, new Uint8Array([expectedStencilValue]));
 });
 //# sourceMappingURL=clear_value.spec.js.map

@@ -20,11 +20,11 @@ const srcDir = path.resolve(__dirname, '../../');
 const babelConfig = {
   ...require(path.resolve(srcDir, '../babel.config.js'))({
     cache: () => {
-      /* not used */
-    } }),
 
-  sourceMaps: 'inline' };
-
+      /* not used */}
+  }),
+  sourceMaps: 'inline'
+};
 
 // Caches for the generated listing file and compiled TS sources to speed up reloads.
 // Keyed by suite name
@@ -34,8 +34,8 @@ const compileCache = new Map();
 
 console.log('Watching changes in', srcDir);
 const watcher = chokidar.watch(srcDir, {
-  persistent: true });
-
+  persistent: true
+});
 
 /**
  * Handler to dirty the compile cache for changed .ts files.

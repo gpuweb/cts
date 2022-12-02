@@ -123,7 +123,6 @@ g.test('integer')
           0b10101010101010101010101010101010
         ),
       },
-
       {
         input: [all_1, pattern, u32(1), u32(31)],
         expected: V(
@@ -133,7 +132,6 @@ g.test('integer')
           0b10101010101010101010101010101011
         ),
       },
-
       {
         input: [all_0, pattern, u32(14), u32(18)],
         expected: V(
@@ -143,7 +141,6 @@ g.test('integer')
           0b01010101010101010100000000000000
         ),
       },
-
       {
         input: [all_1, pattern, u32(14), u32(18)],
         expected: V(
@@ -153,7 +150,6 @@ g.test('integer')
           0b01010101010101010111111111111111
         ),
       },
-
       {
         input: [all_0, pattern, u32(14), u32(7)],
         expected: V(
@@ -163,7 +159,6 @@ g.test('integer')
           0b00000000000101010100000000000000
         ),
       },
-
       {
         input: [all_1, pattern, u32(14), u32(7)],
         expected: V(
@@ -173,7 +168,6 @@ g.test('integer')
           0b11111111111101010111111111111111
         ),
       },
-
       {
         input: [all_0, pattern, u32(14), u32(4)],
         expected: V(
@@ -183,7 +177,6 @@ g.test('integer')
           0b00000000000000010100000000000000
         ),
       },
-
       {
         input: [all_1, pattern, u32(14), u32(4)],
         expected: V(
@@ -193,7 +186,6 @@ g.test('integer')
           0b11111111111111010111111111111111
         ),
       },
-
       {
         input: [all_0, pattern, u32(14), u32(3)],
         expected: V(
@@ -203,7 +195,6 @@ g.test('integer')
           0b00000000000000010100000000000000
         ),
       },
-
       {
         input: [all_1, pattern, u32(14), u32(3)],
         expected: V(
@@ -213,7 +204,6 @@ g.test('integer')
           0b11111111111111110111111111111111
         ),
       },
-
       {
         input: [all_0, pattern, u32(18), u32(3)],
         expected: V(
@@ -223,7 +213,6 @@ g.test('integer')
           0b00000000000101000000000000000000
         ),
       },
-
       {
         input: [all_1, pattern, u32(18), u32(3)],
         expected: V(
@@ -233,7 +222,6 @@ g.test('integer')
           0b11111111111101111111111111111111
         ),
       },
-
       {
         input: [pattern, all_0, u32(1), u32(31)],
         expected: V(
@@ -243,7 +231,6 @@ g.test('integer')
           0b00000000000000000000000000000001
         ),
       },
-
       {
         input: [pattern, all_1, u32(1), u32(31)],
         expected: V(
@@ -253,7 +240,6 @@ g.test('integer')
           0b11111111111111111111111111111111
         ),
       },
-
       {
         input: [pattern, all_0, u32(14), u32(18)],
         expected: V(
@@ -263,7 +249,6 @@ g.test('integer')
           0b00000000000000000001010101010101
         ),
       },
-
       {
         input: [pattern, all_1, u32(14), u32(18)],
         expected: V(
@@ -273,7 +258,6 @@ g.test('integer')
           0b11111111111111111101010101010101
         ),
       },
-
       {
         input: [pattern, all_0, u32(14), u32(7)],
         expected: V(
@@ -283,7 +267,6 @@ g.test('integer')
           0b01010101010000000001010101010101
         ),
       },
-
       {
         input: [pattern, all_1, u32(14), u32(7)],
         expected: V(
@@ -293,7 +276,6 @@ g.test('integer')
           0b01010101010111111101010101010101
         ),
       },
-
       {
         input: [pattern, all_0, u32(14), u32(4)],
         expected: V(
@@ -303,7 +285,6 @@ g.test('integer')
           0b01010101010101000001010101010101
         ),
       },
-
       {
         input: [pattern, all_1, u32(14), u32(4)],
         expected: V(
@@ -313,7 +294,6 @@ g.test('integer')
           0b01010101010101111101010101010101
         ),
       },
-
       {
         input: [pattern, all_0, u32(14), u32(3)],
         expected: V(
@@ -323,7 +303,6 @@ g.test('integer')
           0b01010101010101000001010101010101
         ),
       },
-
       {
         input: [pattern, all_1, u32(14), u32(3)],
         expected: V(
@@ -333,7 +312,6 @@ g.test('integer')
           0b01010101010101011101010101010101
         ),
       },
-
       {
         input: [pattern, all_0, u32(18), u32(3)],
         expected: V(
@@ -343,7 +321,6 @@ g.test('integer')
           0b01010101010000010101010101010101
         ),
       },
-
       {
         input: [pattern, all_1, u32(18), u32(3)],
         expected: V(
@@ -353,7 +330,6 @@ g.test('integer')
           0b01010101010111010101010101010101
         ),
       },
-
       {
         input: [pattern, pattern, u32(18), u32(3)],
         expected: V(
@@ -363,7 +339,6 @@ g.test('integer')
           0b01010101010101010101010101010101
         ),
       },
-
       {
         input: [pattern, pattern, u32(14), u32(7)],
         expected: V(

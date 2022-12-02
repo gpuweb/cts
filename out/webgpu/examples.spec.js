@@ -242,8 +242,8 @@ fn(async (t) => {
     t.device.createTexture({
       format: 'bc1-rgba-unorm',
       size: [4, 4, 1],
-      usage: GPUTextureUsage.TEXTURE_BINDING });
-
+      usage: GPUTextureUsage.TEXTURE_BINDING
+    });
   });
 });
 
@@ -268,8 +268,8 @@ fn(async (t) => {
     t.device.createTexture({
       format: 'etc2-rgb8unorm',
       size: [4, 4, 1],
-      usage: GPUTextureUsage.TEXTURE_BINDING });
-
+      usage: GPUTextureUsage.TEXTURE_BINDING
+    });
   });
 });
 //# sourceMappingURL=examples.spec.js.map

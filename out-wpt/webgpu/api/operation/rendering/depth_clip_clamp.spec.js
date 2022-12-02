@@ -174,7 +174,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
         topology: 'point-list',
         unclippedDepth,
       },
-
       depthStencil: { format, depthWriteEnabled: true },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: {
@@ -206,7 +205,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       sampleCount: multisampled ? 4 : 1,
     });
-
     const dsTextureView = dsTexture.createView();
 
     const checkTextureDesc = {
@@ -214,7 +212,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
       size: [kNumTestPoints],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     };
-
     const checkTexture = t.device.createTexture(checkTextureDesc);
     const checkTextureView = checkTexture.createView();
     const checkTextureMSView = multisampled
@@ -244,7 +241,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
       size: 4 * kNumTestPoints,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-
     const testBindGroup = t.device.createBindGroup({
       layout: testPipeline.getBindGroupLayout(0),
       entries: [{ binding: 0, resource: { buffer: fragInputZFailedBuffer } }],
@@ -264,7 +260,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
           stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
-
       pass.setPipeline(testPipeline);
       pass.setBindGroup(0, testBindGroup);
       pass.setViewport(0, 0, kNumTestPoints, 1, kViewportMinDepth, kViewportMaxDepth);
@@ -298,7 +293,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
           stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
-
       pass.setPipeline(checkPipeline);
       pass.setViewport(0, 0, kNumTestPoints, 1, 0.0, 1.0);
       pass.draw(kNumTestPoints);
@@ -336,7 +330,6 @@ have unexpected values then get drawn to the color buffer, which is later checke
         checkElementsPassPredicate(a, (index, value) => value === kCheckPassedValue, {
           predicatePrinter,
         }),
-
       { type: Uint8Array, typedLength: kNumTestPoints, method: 'map' }
     );
   });
@@ -446,7 +439,6 @@ to be empty.`
         topology: 'point-list',
         unclippedDepth,
       },
-
       depthStencil: { format, depthCompare: 'not-equal' },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] },
@@ -458,7 +450,6 @@ to be empty.`
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
       sampleCount: multisampled ? 4 : 1,
     });
-
     const dsTextureView = dsTexture.createView();
 
     const testTextureDesc = {
@@ -466,7 +457,6 @@ to be empty.`
       size: [kNumDepthValues],
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     };
-
     const testTexture = t.device.createTexture(testTextureDesc);
     const testTextureView = testTexture.createView();
     const testTextureMSView = multisampled
@@ -492,7 +482,6 @@ to be empty.`
           stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
-
       pass.setPipeline(initPipeline);
       pass.draw(kNumDepthValues);
       pass.end();
@@ -521,7 +510,6 @@ to be empty.`
           stencilStoreOp: info.stencil ? 'discard' : undefined,
         },
       });
-
       pass.setPipeline(testPipeline);
       pass.setViewport(0, 0, kNumDepthValues, 1, kViewportMinDepth, kViewportMaxDepth);
       pass.draw(kNumDepthValues);

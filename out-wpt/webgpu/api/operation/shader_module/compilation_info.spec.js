@@ -18,7 +18,6 @@ const kValidShaderSources = [
         return vec4<f32>(0.0, 0.0, 0.0, 1.0);
       }`,
   },
-
   {
     valid: true,
     name: 'unicode',
@@ -41,7 +40,6 @@ const kInvalidShaderSources = [
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,
   },
-
   {
     valid: false,
     name: 'unicode',
@@ -53,7 +51,6 @@ const kInvalidShaderSources = [
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,
   },
-
   {
     valid: false,
     name: 'carriage-return',

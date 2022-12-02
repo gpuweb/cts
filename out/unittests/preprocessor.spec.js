@@ -10,8 +10,8 @@ import { UnitTest } from './unit_test.js';
 class F extends UnitTest {
   test(act, exp) {
     this.expect(act === exp, 'got: ' + act.replace('\n', '⏎'));
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

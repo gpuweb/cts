@@ -9,8 +9,8 @@ function node() {
     existsSync,
     args: process.argv.slice(2),
     cwd: () => process.cwd(),
-    exit: (code) => process.exit(code) };
-
+    exit: (code) => process.exit(code)
+  };
 }
 
 
@@ -37,8 +37,8 @@ function deno() {
     existsSync,
     args: Deno.args,
     cwd: Deno.cwd,
-    exit: Deno.exit };
-
+    exit: Deno.exit
+  };
 }
 
 const sys = typeof globalThis.process !== 'undefined' ? node() : deno();

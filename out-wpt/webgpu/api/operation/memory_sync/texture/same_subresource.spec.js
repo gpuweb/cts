@@ -85,7 +85,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
           {
             texture: this.texture,
           },
-
           { texture },
           this.kTextureSize
         );
@@ -118,7 +117,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
           {
             texture: this.texture,
           },
-
           { buffer, bytesPerRow },
           this.kTextureSize
         );
@@ -149,7 +147,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 sampleType: 'unfilterable-float',
               },
             },
-
             {
               binding: 1,
               visibility: GPUShaderStage.FRAGMENT | GPUShaderStage.COMPUTE,
@@ -168,7 +165,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
               binding: 0,
               resource: this.texture.createView(),
             },
-
             {
               binding: 1,
               resource: texture.createView(),
@@ -192,17 +188,14 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 }
               `,
             });
-
             const renderPipeline = this.device.createRenderPipeline({
               layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [bindGroupLayout],
               }),
-
               vertex: {
                 module,
                 entryPoint: 'vert_main',
               },
-
               fragment: {
                 module,
                 entryPoint: 'frag_main',
@@ -251,12 +244,10 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 }
               `,
             });
-
             const computePipeline = this.device.createComputePipeline({
               layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [bindGroupLayout],
               }),
-
               compute: {
                 module,
                 entryPoint: 'main',
@@ -304,7 +295,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
             },
           ],
         });
-
         this.currentContext = 'render-pass-encoder';
         break;
       }
@@ -324,7 +314,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
           {
             bytesPerRow: texelData.byteLength * this.kTextureSize[0],
           },
-
           this.kTextureSize
         );
 
@@ -352,7 +341,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
           {
             bytesPerRow: texelData.byteLength * this.kTextureSize[0],
           },
-
           this.kTextureSize
         );
 
@@ -424,7 +412,6 @@ class TextureSyncTestHelper extends OperationContextHelper {
             },
           ],
         });
-
         this.currentContext = 'render-pass-encoder';
         break;
       }
@@ -471,17 +458,14 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 }
               `,
             });
-
             const renderPipeline = this.device.createRenderPipeline({
               layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [bindGroupLayout],
               }),
-
               vertex: {
                 module,
                 entryPoint: 'vert_main',
               },
-
               fragment: {
                 module,
                 entryPoint: 'frag_main',
@@ -529,12 +513,10 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 }
               `,
             });
-
             const computePipeline = this.device.createComputePipeline({
               layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [bindGroupLayout],
               }),
-
               compute: {
                 module,
                 entryPoint: 'main',
@@ -596,7 +578,6 @@ g.test('rw')
         kOpInfo[t.params.read.op].readUsage |
         kOpInfo[t.params.write.op].writeUsage,
     });
-
     // [2] Use non-solid-color texture value.
     const texelValue1 = { R: 0, G: 1, B: 0, A: 1 };
     const texelValue2 = { R: 1, G: 0, B: 0, A: 1 };
@@ -646,7 +627,6 @@ g.test('wr')
     const helper = new TextureSyncTestHelper(t, {
       usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage,
     });
-
     // [2] Use non-solid-color texture value.
     const texelValue = { R: 0, G: 1, B: 0, A: 1 };
 
@@ -694,7 +674,6 @@ g.test('ww')
         kOpInfo[t.params.first.op].writeUsage |
         kOpInfo[t.params.second.op].writeUsage,
     });
-
     // [2] Use non-solid-color texture value.
     const texelValue1 = { R: 1, G: 0, B: 0, A: 1 };
     const texelValue2 = { R: 0, G: 1, B: 0, A: 1 };

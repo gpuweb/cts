@@ -44,17 +44,14 @@ const dataType = {
     type: TypeBool,
     constructor: makeBool,
   },
-
   f: {
     type: TypeF32,
     constructor: f32,
   },
-
   i: {
     type: TypeI32,
     constructor: i32,
   },
-
   u: {
     type: TypeU32,
     constructor: u32,
@@ -97,7 +94,6 @@ g.test('scalar')
           { input: [c[0], c[1], True], expected: c[1] },
         ],
       },
-
       vec2: {
         type: TypeVec(2, componentType),
         cases: [
@@ -105,7 +101,6 @@ g.test('scalar')
           { input: [v2a, v2b, True], expected: v2b },
         ],
       },
-
       vec3: {
         type: TypeVec(3, componentType),
         cases: [
@@ -113,7 +108,6 @@ g.test('scalar')
           { input: [v3a, v3b, True], expected: v3b },
         ],
       },
-
       vec4: {
         type: TypeVec(4, componentType),
         cases: [
@@ -122,7 +116,6 @@ g.test('scalar')
         ],
       },
     };
-
     const overload = overloads[t.params.overload];
 
     await run(
@@ -173,7 +166,6 @@ g.test('vector')
             { input: [a, b, vec2(T, T)], expected: vec2(b.x, b.y) },
           ],
         };
-
         break;
       }
       case 'vec3': {
@@ -193,7 +185,6 @@ g.test('vector')
             { input: [a, b, vec3(T, T, T)], expected: vec3(b.x, b.y, b.z) },
           ],
         };
-
         break;
       }
       case 'vec4': {
@@ -221,7 +212,6 @@ g.test('vector')
             { input: [a, b, vec4(T, T, T, T)], expected: vec4(b.x, b.y, b.z, b.w) },
           ],
         };
-
         break;
       }
     }

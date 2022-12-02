@@ -80,7 +80,6 @@ that was destroyed {before, after} encoding finishes.
     const depthStencilAttachment = {
       view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect }),
     };
-
     if (kTextureFormatInfo[depthStencilTextureFormat].depth) {
       depthStencilAttachment.depthClearValue = 0;
       depthStencilAttachment.depthLoadOp = 'clear';
@@ -103,7 +102,6 @@ that was destroyed {before, after} encoding finishes.
 
       depthStencilAttachment,
     });
-
     renderPass.end();
 
     const cmd = commandEncoder.finish();

@@ -17,8 +17,8 @@ const kBufferUsageExp = {
   UNIFORM: 0x0040,
   STORAGE: 0x0080,
   INDIRECT: 0x0100,
-  QUERY_RESOLVE: 0x0200 };
-
+  QUERY_RESOLVE: 0x0200
+};
 g.test('BufferUsage,count').fn((t) => {
   t.assertMemberCount(GPUBufferUsage, kBufferUsageExp);
 });
@@ -34,8 +34,8 @@ const kTextureUsageExp = {
   COPY_DST: 0x02,
   TEXTURE_BINDING: 0x04,
   STORAGE_BINDING: 0x08,
-  RENDER_ATTACHMENT: 0x10 };
-
+  RENDER_ATTACHMENT: 0x10
+};
 g.test('TextureUsage,count').fn((t) => {
   t.assertMemberCount(GPUTextureUsage, kTextureUsageExp);
 });
@@ -51,8 +51,8 @@ const kColorWriteExp = {
   GREEN: 0x2,
   BLUE: 0x4,
   ALPHA: 0x8,
-  ALL: 0xf };
-
+  ALL: 0xf
+};
 g.test('ColorWrite,count').fn((t) => {
   t.assertMemberCount(GPUColorWrite, kColorWriteExp);
 });
@@ -66,8 +66,8 @@ fn((t) => {
 const kShaderStageExp = {
   VERTEX: 0x1,
   FRAGMENT: 0x2,
-  COMPUTE: 0x4 };
-
+  COMPUTE: 0x4
+};
 g.test('ShaderStage,count').fn((t) => {
   t.assertMemberCount(GPUShaderStage, kShaderStageExp);
 });

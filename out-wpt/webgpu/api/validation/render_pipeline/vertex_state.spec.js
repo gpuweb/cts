@@ -62,7 +62,6 @@ class F extends ValidationTest {
         entryPoint: 'main',
         buffers,
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -70,14 +69,11 @@ class F extends ValidationTest {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'triangle-list' },
     };
-
     return descriptor;
   }
 
@@ -98,13 +94,11 @@ class F extends ValidationTest {
           entryPoint: 'main',
           buffers,
         },
-
         fragment: {
           module: fsModule,
           entryPoint: 'main',
           targets: [{ format: 'rgba8unorm' }],
         },
-
         primitive: { topology: 'triangle-list' },
       });
     }, !success);
@@ -436,7 +430,6 @@ g.test('vertex_shader_input_location_in_vertex_state')
       extraAttributeCount,
       extraAttributeSkippedLocations: [testShaderLocation],
     });
-
     t.testVertexState(false, vertexBuffers, shader);
 
     // Add an attribute for the test location and try again.
@@ -444,7 +437,6 @@ g.test('vertex_shader_input_location_in_vertex_state')
       testAttribute: { format: 'float32', shaderLocation: testShaderLocation, offset: 0 },
       testAttributeAtStart,
     });
-
     t.testVertexState(true, vertexBuffers, shader);
   });
 

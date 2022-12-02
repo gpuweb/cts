@@ -25,8 +25,8 @@ class F extends ValidationTest {
     const attachmentTexture = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
     this.trackForCleanup(attachmentTexture);
     return commandEncoder.beginRenderPass({
       colorAttachments: [
@@ -34,12 +34,12 @@ class F extends ValidationTest {
         view: attachmentTexture.createView(),
         clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
-  }}
-
+    });
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -102,13 +102,13 @@ fn(async (t) => {
 
   const srcBuffer = t.device.createBuffer({
     size: 1024,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
 
   const dstBuffer = t.device.createBuffer({
     size: 1024,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   if (IsEncoderFinished) {
     encoder.finish();

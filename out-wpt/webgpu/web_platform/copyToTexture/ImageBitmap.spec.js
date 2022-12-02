@@ -26,7 +26,6 @@ const kColors = {
   White: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 },
   SemitransparentWhite: { R: 1.0, G: 1.0, B: 1.0, A: 0.6 },
 };
-
 const kTestColorsOpaque = [kColors.Red, kColors.Green, kColors.Blue, kColors.Black, kColors.White];
 
 const kTestColorsAll = [...kTestColorsOpaque, kColors.SemitransparentWhite];
@@ -116,7 +115,6 @@ g.test('from_ImageData')
       flipY: false,
       premultiplied: false,
     });
-
     const imageData = new ImageData(width, height);
     texelViewSource.writeTextureData(imageData.data, {
       bytesPerRow: width * 4,
@@ -156,7 +154,6 @@ g.test('from_ImageData')
         colorSpace: 'srgb',
         premultipliedAlpha: dstPremultiplied,
       },
-
       texelViewExpected,
       { width, height, depthOrArrayLayers: 1 },
       // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
@@ -248,7 +245,6 @@ g.test('from_canvas')
       flipY: false,
       premultiplied: false,
     });
-
     // Generate correct expected values
     const imageData = new ImageData(width, height);
     texelViewSource.writeTextureData(imageData.data, {
@@ -294,7 +290,6 @@ g.test('from_canvas')
         colorSpace: 'srgb',
         premultipliedAlpha: dstPremultiplied,
       },
-
       texelViewExpected,
       { width, height, depthOrArrayLayers: 1 },
       // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but

@@ -211,13 +211,13 @@ export function makeInPlaceColorConversion({
   srcPremultiplied,
   dstPremultiplied,
   srcColorSpace = 'srgb',
-  dstColorSpace = 'srgb' })
+  dstColorSpace = 'srgb'
 
 
 
 
 
-{
+}) {
   const requireColorSpaceConversion = srcColorSpace !== dstColorSpace;
   const requireUnpremultiplyAlpha =
   srcPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);

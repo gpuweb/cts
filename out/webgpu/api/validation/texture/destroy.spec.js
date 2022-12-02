@@ -60,14 +60,14 @@ fn(async (t) => {
   const colorTextureDesc = {
     size: { width: 16, height: 16, depthOrArrayLayers: 1 },
     format: colorTextureFormat,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT };
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  };
 
   const depthStencilTextureDesc = {
     size: { width: 16, height: 16, depthOrArrayLayers: 1 },
     format: depthStencilTextureFormat,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT };
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  };
 
   const colorTexture = t.device.createTexture(colorTextureDesc);
   const depthStencilTexture = t.device.createTexture(depthStencilTextureDesc);
@@ -81,8 +81,8 @@ fn(async (t) => {
 
   const commandEncoder = t.device.createCommandEncoder();
   const depthStencilAttachment = {
-    view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect }) };
-
+    view: depthStencilTexture.createView({ aspect: depthStencilTextureAspect })
+  };
   if (kTextureFormatInfo[depthStencilTextureFormat].depth) {
     depthStencilAttachment.depthClearValue = 0;
     depthStencilAttachment.depthLoadOp = 'clear';
@@ -99,11 +99,11 @@ fn(async (t) => {
       view: colorTexture.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }],
+      storeOp: 'store'
+    }],
 
-
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
   renderPass.end();
 
   const cmd = commandEncoder.finish();

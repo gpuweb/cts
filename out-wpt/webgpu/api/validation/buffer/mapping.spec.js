@@ -51,13 +51,11 @@ class F extends ValidationTest {
           size,
           usage: GPUBufferUsage.MAP_READ,
         });
-
       case GPUMapMode.WRITE:
         return this.device.createBuffer({
           size,
           usage: GPUBufferUsage.MAP_WRITE,
         });
-
       default:
         unreachable();
     }
@@ -137,7 +135,6 @@ g.test('mapAsync,state,mappedAtCreation')
       usage: validUsage,
       mappedAtCreation: true,
     });
-
     await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
 
     buffer.unmap();
@@ -435,7 +432,6 @@ Test for various cases of being unmapped: at creation, after a mapAsync call or 
         size: 16,
         mappedAtCreation: true,
       });
-
       buffer.unmap();
       t.testGetMappedRangeCall(false, buffer);
     }
@@ -526,7 +522,6 @@ Test for various cases of being destroyed: at creation, after a mapAsync call or
         size: 16,
         mappedAtCreation: true,
       });
-
       buffer.destroy();
       t.testGetMappedRangeCall(false, buffer);
     }
@@ -587,7 +582,6 @@ g.test('getMappedRange,offsetAndSizeAlignment,mappedAtCreation')
       usage: GPUBufferUsage.COPY_DST,
       mappedAtCreation: true,
     });
-
     const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
     t.testGetMappedRangeCall(success, buffer, offset, size);
   });
@@ -658,7 +652,6 @@ g.test('getMappedRange,sizeAndOffsetOOB,mapped')
           offset: undefined,
           size: kSizeAlignment,
         },
-
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: undefined },
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: 0 },
         {
@@ -668,7 +661,6 @@ g.test('getMappedRange,sizeAndOffsetOOB,mapped')
           offset: kOffsetAlignment,
           size: undefined,
         },
-
         { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: kOffsetAlignment, size: 0 },
 
         // Tests for an empty buffer, and explicit mapAsync size.
@@ -687,7 +679,6 @@ g.test('getMappedRange,sizeAndOffsetOOB,mapped')
           offset: 0,
           size: 80 + kSizeAlignment,
         },
-
         {
           bufferSize: 80,
           mapOffset: undefined,
@@ -705,7 +696,6 @@ g.test('getMappedRange,sizeAndOffsetOOB,mapped')
           offset: 0,
           size: 80 - 24 + kSizeAlignment,
         },
-
         {
           bufferSize: 80,
           mapOffset: 24,
@@ -823,7 +813,6 @@ g.test('getMappedRange,disjoinRanges_many')
       size: kStride * kNumStrides,
       usage: GPUBufferUsage.MAP_READ,
     });
-
     await buffer.mapAsync(GPUMapMode.READ);
 
     // Get a lot of small mapped ranges.
@@ -866,7 +855,6 @@ g.test('unmap,state,unmapped')
         size: 16,
         mappedAtCreation: true,
       });
-
       buffer.unmap();
       buffer.unmap();
     }
@@ -900,7 +888,6 @@ g.test('unmap,state,destroyed')
         size: 16,
         mappedAtCreation: true,
       });
-
       buffer.destroy();
       buffer.unmap();
     }

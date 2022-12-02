@@ -44,21 +44,21 @@ function makeBool(n) {
 const dataType = {
   b: {
     type: TypeBool,
-    constructor: makeBool },
-
+    constructor: makeBool
+  },
   f: {
     type: TypeF32,
-    constructor: f32 },
-
+    constructor: f32
+  },
   i: {
     type: TypeI32,
-    constructor: i32 },
-
+    constructor: i32
+  },
   u: {
     type: TypeU32,
-    constructor: u32 } };
-
-
+    constructor: u32
+  }
+};
 
 g.test('scalar').
 specURL('https://www.w3.org/TR/WGSL/#logical-builtin-functions').
@@ -93,31 +93,31 @@ fn(async (t) => {
       type: componentType,
       cases: [
       { input: [c[0], c[1], False], expected: c[0] },
-      { input: [c[0], c[1], True], expected: c[1] }] },
+      { input: [c[0], c[1], True], expected: c[1] }]
 
-
+    },
     vec2: {
       type: TypeVec(2, componentType),
       cases: [
       { input: [v2a, v2b, False], expected: v2a },
-      { input: [v2a, v2b, True], expected: v2b }] },
+      { input: [v2a, v2b, True], expected: v2b }]
 
-
+    },
     vec3: {
       type: TypeVec(3, componentType),
       cases: [
       { input: [v3a, v3b, False], expected: v3a },
-      { input: [v3a, v3b, True], expected: v3b }] },
+      { input: [v3a, v3b, True], expected: v3b }]
 
-
+    },
     vec4: {
       type: TypeVec(4, componentType),
       cases: [
       { input: [v4a, v4b, False], expected: v4a },
-      { input: [v4a, v4b, True], expected: v4b }] } };
+      { input: [v4a, v4b, True], expected: v4b }]
 
-
-
+    }
+  };
   const overload = overloads[t.params.overload];
 
   await run(
@@ -165,9 +165,9 @@ fn(async (t) => {
           { input: [a, b, vec2(F, F)], expected: vec2(a.x, a.y) },
           { input: [a, b, vec2(F, T)], expected: vec2(a.x, b.y) },
           { input: [a, b, vec2(T, F)], expected: vec2(b.x, a.y) },
-          { input: [a, b, vec2(T, T)], expected: vec2(b.x, b.y) }] };
+          { input: [a, b, vec2(T, T)], expected: vec2(b.x, b.y) }]
 
-
+        };
         break;
       }
     case 'vec3':{
@@ -184,9 +184,9 @@ fn(async (t) => {
           { input: [a, b, vec3(T, F, F)], expected: vec3(b.x, a.y, a.z) },
           { input: [a, b, vec3(T, F, T)], expected: vec3(b.x, a.y, b.z) },
           { input: [a, b, vec3(T, T, F)], expected: vec3(b.x, b.y, a.z) },
-          { input: [a, b, vec3(T, T, T)], expected: vec3(b.x, b.y, b.z) }] };
+          { input: [a, b, vec3(T, T, T)], expected: vec3(b.x, b.y, b.z) }]
 
-
+        };
         break;
       }
     case 'vec4':{
@@ -211,9 +211,9 @@ fn(async (t) => {
           { input: [a, b, vec4(T, T, F, F)], expected: vec4(b.x, b.y, a.z, a.w) },
           { input: [a, b, vec4(T, T, F, T)], expected: vec4(b.x, b.y, a.z, b.w) },
           { input: [a, b, vec4(T, T, T, F)], expected: vec4(b.x, b.y, b.z, a.w) },
-          { input: [a, b, vec4(T, T, T, T)], expected: vec4(b.x, b.y, b.z, b.w) }] };
+          { input: [a, b, vec4(T, T, T, T)], expected: vec4(b.x, b.y, b.z, b.w) }]
 
-
+        };
         break;
       }}
 

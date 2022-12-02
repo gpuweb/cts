@@ -149,7 +149,6 @@ g.test('depth_stencil_format,copy_buffer_size')
       size: minimumBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     const smallerBuffer = t.device.createBuffer({
       size: minimumBufferSize - kBufferCopyAlignment,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
@@ -193,7 +192,6 @@ g.test('depth_stencil_format,copy_buffer_size')
           bytesPerRow,
           rowsPerImage,
         },
-
         copySize,
         true
       );
@@ -205,7 +203,6 @@ g.test('depth_stencil_format,copy_buffer_size')
           bytesPerRow,
           rowsPerImage,
         },
-
         copySize,
         false
       );
@@ -290,7 +287,6 @@ g.test('depth_stencil_format,copy_buffer_offset')
           bytesPerRow,
           rowsPerImage,
         },
-
         textureSize,
         isSuccess
       );
@@ -349,7 +345,6 @@ const kRequiredTextureUsage = {
   CopyT2B: GPUConst.TextureUsage.COPY_SRC,
   CopyB2T: GPUConst.TextureUsage.COPY_DST,
 };
-
 const kRequiredBufferUsage = {
   CopyB2T: GPUConst.BufferUsage.COPY_SRC,
   CopyT2B: GPUConst.BufferUsage.COPY_DST,
@@ -426,7 +421,6 @@ g.test('device_mismatch')
       size: uploadBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(buffer);
 
     const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
@@ -435,7 +429,6 @@ g.test('device_mismatch')
       format: 'rgba8unorm',
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-
     t.trackForCleanup(texture);
 
     const isValid = !bufMismatched && !texMismatched;

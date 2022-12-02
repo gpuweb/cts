@@ -36,8 +36,8 @@ fn(async (t) => {
 
   const dst = t.device.createBuffer({
     size: dstBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   t.trackForCleanup(dst);
 
   const encoder = t.device.createCommandEncoder();
@@ -94,8 +94,8 @@ fn(async (t) => {
 
   const dst = t.device.createBuffer({
     size: srcData.length * 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   t.trackForCleanup(dst);
 
   const encoder = t.device.createCommandEncoder();

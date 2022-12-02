@@ -23,7 +23,6 @@ g.test('b2t2b').fn(async t => {
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
@@ -64,7 +63,6 @@ g.test('b2t2t2b').fn(async t => {
     size: 4,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
   });
-
   memcpy({ src: data }, { dst: src.getMappedRange() });
   src.unmap();
 
@@ -78,7 +76,6 @@ g.test('b2t2t2b').fn(async t => {
     format: 'rgba8uint',
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
   };
-
   const mid1 = t.device.createTexture(midDesc);
   const mid2 = t.device.createTexture(midDesc);
 

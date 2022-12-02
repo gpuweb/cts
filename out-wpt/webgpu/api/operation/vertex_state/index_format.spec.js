@@ -83,7 +83,6 @@ class IndexFormatTest extends GPUTest {
         entryPoint: 'main',
         targets: [{ format: kTextureFormat }],
       },
-
       primitive: {
         topology,
         stripIndexFormat,
@@ -128,7 +127,6 @@ class IndexFormatTest extends GPUTest {
         },
       ],
     });
-
     pass.setPipeline(pipeline);
     pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
     pass.drawIndexed(indexCount);
@@ -461,7 +459,6 @@ is different from what you would get if the topology were incorrect.
             [1, 0, 0, 0, 1, 0, 0, 1],
           ],
         },
-
         {
           primitiveTopology: 'line-list',
           _indices: [0, 1, -1, 2, 3, 0],
@@ -472,7 +469,6 @@ is different from what you would get if the topology were incorrect.
             [1, 1, 0, 0, 1, 0, 0, 1],
           ],
         },
-
         {
           primitiveTopology: 'line-strip',
           _indices: [0, 1, -1, 2, 3, 0],
@@ -483,7 +479,6 @@ is different from what you would get if the topology were incorrect.
             [0, 0, 0, 0, 1, 0, 0, 1],
           ],
         },
-
         {
           primitiveTopology: 'triangle-list',
           _indices: [0, 1, 3, -1, 2, 1, 0, 0],
@@ -494,7 +489,6 @@ is different from what you would get if the topology were incorrect.
             [0, 1, 1, 1, 1, 1, 1, 1],
           ],
         },
-
         {
           primitiveTopology: 'triangle-strip',
           _indices: [3, 1, 0, -1, 2, 2, 1, 3],

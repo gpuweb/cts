@@ -69,8 +69,8 @@ fn((t) => {
     type: 'f32',
     stage: t.params.stage,
     io: t.params.io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   t.expectCompileResult(kValidInterpolationAttributes.has(interpolate), code);
 });
@@ -98,8 +98,8 @@ fn((t) => {
     type: 'vec4<f32>',
     stage: t.params.stage,
     io: t.params.stage === 'fragment' ? 'in' : 'out',
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
   t.expectCompileResult(t.params.attribute === '@location(0)', code);
 });
 
@@ -123,8 +123,8 @@ fn((t) => {
     type: t.params.type,
     stage: t.params.stage,
     io: t.params.stage === 'vertex' ? 'out' : 'in',
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   t.expectCompileResult(t.params.attribute === '@interpolate(flat)', code);
 });
@@ -138,8 +138,8 @@ fn((t) => {
     type: 'vec4<f32>',
     stage: 'fragment',
     io: 'in',
-    use_struct: false });
-
+    use_struct: false
+  });
   t.expectCompileResult(t.params.attr === '', code);
 });
 //# sourceMappingURL=interpolate.spec.js.map

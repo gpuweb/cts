@@ -52,8 +52,8 @@ fn(async (t) => {
     size,
     dimension,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const success = textureState === 'valid';
   const submit = textureState !== 'invalid';
@@ -81,8 +81,8 @@ fn(async (t) => {
   const texture = sourceDevice.createTexture({
     size: { width: 4, height: 4, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   t.testRun(
   { texture },
@@ -130,8 +130,8 @@ fn(async (t) => {
     size,
     dimension,
     format: 'rgba8unorm',
-    usage });
-
+    usage
+  });
 
   const success =
   method === 'CopyT2B' ?
@@ -173,8 +173,8 @@ fn(async (t) => {
     GPUTextureUsage.COPY_SRC |
     GPUTextureUsage.COPY_DST |
     GPUTextureUsage.TEXTURE_BINDING |
-    GPUTextureUsage.RENDER_ATTACHMENT });
-
+    GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const success = sampleCount === 1;
 
@@ -217,8 +217,8 @@ fn(async (t) => {
     dimension,
     mipLevelCount,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const success = mipLevel < mipLevelCount;
 
@@ -278,8 +278,8 @@ fn(async (t) => {
     mipLevel,
     copyWidthModifier,
     copyHeightModifier,
-    copyDepthModifier } =
-  t.params;
+    copyDepthModifier
+  } = t.params;
 
   const info = kTextureFormatInfo[format];
   const size = { width: 32 * info.blockWidth, height: 32 * info.blockHeight, depthOrArrayLayers };
@@ -292,8 +292,8 @@ fn(async (t) => {
     dimension,
     format,
     mipLevelCount: dimension === '1d' ? 1 : 5,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   let success = true;
   if (
@@ -322,8 +322,8 @@ fn(async (t) => {
   {
     dataSize: 512 * 32 * 32,
     method,
-    success });
-
+    success
+  });
 
 });
 
@@ -366,8 +366,8 @@ fn(async (t) => {
     format,
     method,
     depthOrArrayLayers,
-    dimension } =
-  t.params;
+    dimension
+  } = t.params;
   const info = kTextureFormatInfo[format];
   const size = { width: 0, height: 0, depthOrArrayLayers };
   const origin = { x: 0, y: 0, z: 0 };
@@ -390,8 +390,8 @@ fn(async (t) => {
   t.testRun({ texture, origin }, { bytesPerRow: 0, rowsPerImage: 0 }, size, {
     dataSize: 1,
     method,
-    success });
-
+    success
+  });
 });
 
 g.test('size_alignment').
@@ -451,8 +451,8 @@ fn(async (t) => {
   t.testRun({ texture, origin }, { bytesPerRow, rowsPerImage }, size, {
     dataSize: 1,
     method,
-    success });
-
+    success
+  });
 });
 
 g.test('copy_rectangle').
@@ -486,8 +486,8 @@ fn(async (t) => {
     mipLevel,
     coordinateToTest,
     method,
-    dimension } =
-  t.params;
+    dimension
+  } = t.params;
   const format = 'rgba8unorm';
   const info = kTextureFormatInfo[format];
 
@@ -523,8 +523,8 @@ fn(async (t) => {
     dimension,
     mipLevelCount: dimension === '1d' ? 1 : 3,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   assert(copySize[0] % info.blockWidth === 0);
   const bytesPerRow = align(copySize[0] / info.blockWidth, 256);
@@ -533,7 +533,7 @@ fn(async (t) => {
   t.testRun({ texture, origin, mipLevel }, { bytesPerRow, rowsPerImage }, copySize, {
     dataSize: 1,
     method,
-    success });
-
+    success
+  });
 });
 //# sourceMappingURL=texture_related.spec.js.map

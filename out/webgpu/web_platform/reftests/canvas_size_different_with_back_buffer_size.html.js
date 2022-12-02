@@ -36,16 +36,16 @@ export function run() {
         device: t.device,
         format: 'bgra8unorm',
         usage: GPUTextureUsage.COPY_DST,
-        size: configureSize });
-
+        size: configureSize
+      });
 
       const rows = pixels.length;
       const bytesPerRow = 256;
       const buffer = t.device.createBuffer({
         mappedAtCreation: true,
         size: rows * bytesPerRow,
-        usage: GPUBufferUsage.COPY_SRC });
-
+        usage: GPUBufferUsage.COPY_SRC
+      });
       const mapping = buffer.getMappedRange();
       const data = new Uint8Array(mapping);
 

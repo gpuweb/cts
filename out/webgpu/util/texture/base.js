@@ -8,11 +8,11 @@ import { reifyExtent3D } from '../../util/unions.js';
  */
 export function maxMipLevelCount({
   size,
-  dimension = '2d' })
+  dimension = '2d'
 
 
 
-{
+}) {
   const sizeDict = reifyExtent3D(size);
 
   let maxMippedDimension = 0;
@@ -66,8 +66,8 @@ level)
         return {
           width: physicalWidthAtLevel,
           height: physicalHeightAtLevel,
-          depthOrArrayLayers: baseSize.depthOrArrayLayers };
-
+          depthOrArrayLayers: baseSize.depthOrArrayLayers
+        };
       }
 
     case '3d':{
@@ -83,8 +83,8 @@ level)
         return {
           width: Math.max(baseSize.width >> level, 1),
           height: Math.max(baseSize.height >> level, 1),
-          depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1) };
-
+          depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1)
+        };
       }}
 
 }
@@ -208,7 +208,7 @@ view)
     baseMipLevel,
     mipLevelCount,
     baseArrayLayer,
-    arrayLayerCount };
-
+    arrayLayerCount
+  };
 }
 //# sourceMappingURL=base.js.map

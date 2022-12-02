@@ -30,8 +30,8 @@ class DeviceLostTests extends Fixture {
         this.rec.expectationFailed(niceStack);
       }
     });
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(DeviceLostTests);
 

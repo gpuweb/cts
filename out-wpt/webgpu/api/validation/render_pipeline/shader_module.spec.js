@@ -48,7 +48,6 @@ g.test('device_mismatch')
           : t.device.createShaderModule({ code }),
         entryPoint: 'main',
       },
-
       fragment: {
         module: fragment_mismatched
           ? t.mismatchedDevice.createShaderModule({
@@ -61,11 +60,9 @@ g.test('device_mismatch')
                 { values, plainType: 'f32', componentCount: 4 },
               ]),
             }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       layout: t.getPipelineLayout(),
     };
 
@@ -101,10 +98,8 @@ g.test('invalid,fragment')
         module: t.device.createShaderModule({
           code: kDefaultVertexShaderCode,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: isFragmentShaderValid
           ? t.device.createShaderModule({

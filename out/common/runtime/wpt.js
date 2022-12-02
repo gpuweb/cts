@@ -26,8 +26,8 @@ import { TestWorker } from './helper/test_worker.js';
 setup({
   // It's convenient for us to asynchronously add tests to the page. Prevent done() from being
   // called implicitly when the page is finished loading.
-  explicit_done: true });
-
+  explicit_done: true
+});
 
 void (async () => {
   const workerEnabled = optionEnabled('worker');

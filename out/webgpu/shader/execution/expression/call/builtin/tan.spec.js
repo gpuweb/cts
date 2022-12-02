@@ -30,8 +30,8 @@ export const d = makeCaseCache('tan', {
     ...linearRange(-Math.PI, Math.PI, 100),
     ...fullF32Range()].
     map(makeCase);
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -31,16 +31,16 @@ fn(async (t) => {
   const { isAsync } = t.params;
 
   const goodDescriptor = t.getDescriptor({
-    targets: [{ format: 'rgba8unorm' }] });
-
+    targets: [{ format: 'rgba8unorm' }]
+  });
 
   // Control case
   t.doCreateRenderPipelineTest(isAsync, true, goodDescriptor);
 
   // Fail because lack of color states
   const badDescriptor = t.getDescriptor({
-    targets: [] });
-
+    targets: []
+  });
 
   t.doCreateRenderPipelineTest(isAsync, false, badDescriptor);
 });
@@ -58,8 +58,8 @@ fn(async (t) => {
       // Set writeMask to 0 for attachments without fragment output
       return { format: 'rgba8unorm', writeMask: i === 0 ? 0xf : 0 };
     }),
-    fragmentShaderCode: kDefaultFragmentShaderCode });
-
+    fragmentShaderCode: kDefaultFragmentShaderCode
+  });
 
   t.doCreateRenderPipelineTest(
   isAsync,
@@ -107,10 +107,10 @@ fn(async (t) => {
     targets: [
     {
       format,
-      blend: hasBlend ? { color: {}, alpha: {} } : undefined }] });
+      blend: hasBlend ? { color: {}, alpha: {} } : undefined
+    }]
 
-
-
+  });
 
   t.doCreateRenderPipelineTest(isAsync, !hasBlend || info.sampleType === 'float', descriptor);
 });
@@ -138,13 +138,13 @@ fn(async (t) => {
   const defaultBlendComponent = {
     srcFactor: 'src-alpha',
     dstFactor: 'dst-alpha',
-    operation: 'add' };
-
+    operation: 'add'
+  };
   const blendComponentToTest = {
     srcFactor,
     dstFactor,
-    operation };
-
+    operation
+  };
   const format = 'rgba8unorm';
 
   const descriptor = t.getDescriptor({
@@ -153,11 +153,11 @@ fn(async (t) => {
       format,
       blend: {
         color: component === 'color' ? blendComponentToTest : defaultBlendComponent,
-        alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent } }] });
+        alpha: component === 'alpha' ? blendComponentToTest : defaultBlendComponent
+      }
+    }]
 
-
-
-
+  });
 
   if (operation === 'min' || operation === 'max') {
     const _success = srcFactor === 'one' && dstFactor === 'one';
@@ -177,10 +177,10 @@ fn(async (t) => {
     targets: [
     {
       format: 'rgba8unorm',
-      writeMask }] });
+      writeMask
+    }]
 
-
-
+  });
 
   t.doCreateRenderPipelineTest(isAsync, writeMask < 16, descriptor);
 });
@@ -221,9 +221,9 @@ fn(async (t) => {
     fragmentShaderCode: getFragmentShaderCodeWithOutput(
     shaderOutput ?
     [{ values, plainType: shaderOutput.scalar, componentCount: shaderOutput.count }] :
-    []) });
+    [])
 
-
+  });
 
   let success = true;
   if (format) {
@@ -277,8 +277,8 @@ fn(async (t) => {
     colorSrcFactor,
     colorDstFactor,
     alphaSrcFactor,
-    alphaDstFactor } =
-  t.params;
+    alphaDstFactor
+  } = t.params;
   const info = kTextureFormatInfo[format];
 
   const descriptor = t.getDescriptor({
@@ -287,14 +287,14 @@ fn(async (t) => {
       format,
       blend: {
         color: { srcFactor: colorSrcFactor, dstFactor: colorDstFactor },
-        alpha: { srcFactor: alphaSrcFactor, dstFactor: alphaDstFactor } } }],
-
-
+        alpha: { srcFactor: alphaSrcFactor, dstFactor: alphaDstFactor }
+      }
+    }],
 
     fragmentShaderCode: getFragmentShaderCodeWithOutput([
-    { values, plainType: getPlainTypeInfo(sampleType), componentCount }]) });
+    { values, plainType: getPlainTypeInfo(sampleType), componentCount }])
 
-
+  });
 
   const colorBlendReadsSrcAlpha =
   colorSrcFactor?.includes('src-alpha') || colorDstFactor?.includes('src-alpha');

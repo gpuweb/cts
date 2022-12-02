@@ -81,5 +81,6 @@ export class CommandBufferMaker {
     this.validateFinishAndSubmitGivenState = (resourceState) => {
       this.validateFinishAndSubmit(resourceState !== 'invalid', resourceState !== 'destroyed');
     };
-  }}
+  }
+}
 //# sourceMappingURL=command_buffer_maker.js.map

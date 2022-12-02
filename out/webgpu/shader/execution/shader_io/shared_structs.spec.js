@@ -52,20 +52,20 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({ code: wgsl }),
-      entryPoint: 'main' } });
-
-
+      entryPoint: 'main'
+    }
+  });
 
   // Allocate a buffer to hold the output structure.
   const bufferNumElements = 32;
   const outputBuffer = t.device.createBuffer({
     size: bufferNumElements * Uint32Array.BYTES_PER_ELEMENT,
-    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  });
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer: outputBuffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer: outputBuffer } }]
+  });
 
   // Run the shader.
   const encoder = t.device.createCommandEncoder();
@@ -103,8 +103,8 @@ fn(async (t) => {
   };
   t.expectGPUBufferValuesPassCheck(outputBuffer, (outputData) => checkOutput(outputData), {
     type: Uint32Array,
-    typedLength: bufferNumElements });
-
+    typedLength: bufferNumElements
+  });
 });
 
 g.test('shared_between_stages').
@@ -153,25 +153,25 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module,
-      entryPoint: 'vert_main' },
-
+      entryPoint: 'vert_main'
+    },
     fragment: {
       module,
       entryPoint: 'frag_main',
       targets: [
       {
-        format: 'rgba8unorm' }] } });
+        format: 'rgba8unorm'
+      }]
 
-
-
-
+    }
+  });
 
   // Draw a red triangle.
   const renderTarget = t.device.createTexture({
     size,
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [
@@ -179,10 +179,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -197,8 +197,8 @@ fn(async (t) => {
   { x: 22, y: 20 }])
   {
     t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', p, {
-      exp: redPixel });
-
+      exp: redPixel
+    });
   }
   for (const p of [
   { x: 14, y: 15 },
@@ -206,8 +206,8 @@ fn(async (t) => {
   { x: 8, y: 20 }])
   {
     t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', p, {
-      exp: greenPixel });
-
+      exp: greenPixel
+    });
   }
   const blackPixel = new Uint8Array([0, 0, 0, 0]);
   for (const p of [
@@ -217,8 +217,8 @@ fn(async (t) => {
   { x: 28, y: 28 }])
   {
     t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', p, {
-      exp: blackPixel });
-
+      exp: blackPixel
+    });
   }
 });
 
@@ -281,23 +281,23 @@ fn(async (t) => {
         {
           shaderLocation: 0,
           format: 'float32x4',
-          offset: 0 }],
+          offset: 0
+        }],
 
+        arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT
+      }]
 
-        arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT }] },
-
-
-
+    },
     fragment: {
       module,
       entryPoint: 'frag_main',
       targets: [
       {
-        format: 'rgba8unorm' }] } });
+        format: 'rgba8unorm'
+      }]
 
-
-
-
+    }
+  });
 
   // Draw a triangle.
   // The vertex buffer contains the vertex colors (all red).
@@ -308,8 +308,8 @@ fn(async (t) => {
   const renderTarget = t.device.createTexture({
     size: [31, 31],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [
@@ -317,10 +317,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.setVertexBuffer(0, vertexBuffer);
   pass.draw(3);
@@ -336,8 +336,8 @@ fn(async (t) => {
   { x: 22, y: 20 }])
   {
     t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', p, {
-      exp: redPixel });
-
+      exp: redPixel
+    });
   }
   const blackPixel = new Uint8Array([0, 0, 0, 0]);
   for (const p of [
@@ -347,8 +347,8 @@ fn(async (t) => {
   { x: 28, y: 28 }])
   {
     t.expectSinglePixelIn2DTexture(renderTarget, 'rgba8unorm', p, {
-      exp: blackPixel });
-
+      exp: blackPixel
+    });
   }
 });
 //# sourceMappingURL=shared_structs.spec.js.map

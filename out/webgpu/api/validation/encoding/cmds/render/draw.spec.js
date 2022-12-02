@@ -116,20 +116,20 @@ buffers)
     layout: 'auto',
     vertex: {
       module: test.device.createShaderModule({
-        code: test.getNoOpShaderCode('VERTEX') }),
-
+        code: test.getNoOpShaderCode('VERTEX')
+      }),
       entryPoint: 'main',
-      buffers: bufferLayouts },
-
+      buffers: bufferLayouts
+    },
     fragment: {
       module: test.device.createShaderModule({
-        code: test.getNoOpShaderCode('FRAGMENT') }),
-
+        code: test.getNoOpShaderCode('FRAGMENT')
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 }
 
 function makeTestPipelineWithVertexAndInstanceBuffer(
@@ -147,10 +147,10 @@ attributeOffset = 0)
     {
       shaderLocation: 2,
       format: attributeFormat,
-      offset: attributeOffset }] },
+      offset: attributeOffset
+    }]
 
-
-
+  },
   {
     slot: 7,
     stepMode: 'instance',
@@ -159,10 +159,10 @@ attributeOffset = 0)
     {
       shaderLocation: 6,
       format: attributeFormat,
-      offset: attributeOffset }] }];
+      offset: attributeOffset
+    }]
 
-
-
+  }];
 
 
   return makeTestPipeline(test, vertexBufferLayouts);
@@ -171,14 +171,14 @@ attributeOffset = 0)
 // Default parameters for all kind of draw call, arbitrary non-zero values that is not very large.
 const kDefaultParameterForDraw = {
   instanceCount: 100,
-  firstInstance: 100 };
-
+  firstInstance: 100
+};
 
 // Default parameters for non-indexed draw, arbitrary non-zero values that is not very large.
 const kDefaultParameterForNonIndexedDraw = {
   vertexCount: 100,
-  firstVertex: 100 };
-
+  firstVertex: 100
+};
 
 // Default parameters for indexed draw call and required index buffer, arbitrary non-zero values
 // that is not very large.
@@ -224,21 +224,21 @@ fn(async (t) => {
     smallInstanceBuffer,
     drawType,
     bufferOffset,
-    boundSize } =
-  t.params;
+    boundSize
+  } = t.params;
   const renderPipeline = t.createNoOpRenderPipeline();
   const bufferSize = bufferOffset + boundSize;
   const smallBuffer = t.createBufferWithState('valid', {
     size: bufferSize,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.VERTEX });
-
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.VERTEX
+  });
 
   // An index buffer of enough size, used if smallIndexBuffer === false
   const { indexFormat, indexBufferSize } = kDefaultParameterForIndexedDraw;
   const indexBuffer = t.createBufferWithState('valid', {
     size: indexBufferSize,
-    usage: GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.INDEX
+  });
 
   for (const encoderType of ['render bundle', 'render pass']) {
     for (const setPipelineBeforeBuffer of [false, true]) {
@@ -270,14 +270,14 @@ fn(async (t) => {
       if (drawType === 'draw' || drawType === 'drawIndirect') {
         const drawParam = {
           ...kDefaultParameterForDraw,
-          ...kDefaultParameterForNonIndexedDraw };
-
+          ...kDefaultParameterForNonIndexedDraw
+        };
         callDraw(t, renderEncoder, drawType, drawParam);
       } else {
         const drawParam = {
           ...kDefaultParameterForDraw,
-          ...kDefaultParameterForIndexedDraw };
-
+          ...kDefaultParameterForIndexedDraw
+        };
         callDrawIndexed(t, renderEncoder, drawType, drawParam);
       }
 
@@ -314,8 +314,8 @@ fn(async (t) => {
     bindingSizeInElements,
     bufferSizeInElements,
     drawIndexCount,
-    drawType } =
-  t.params;
+    drawType
+  } = t.params;
 
   const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
   const bindingSize = bindingSizeInElements * indexElementSize;
@@ -323,13 +323,13 @@ fn(async (t) => {
 
   const desc = {
     size: bufferSize,
-    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST };
-
+    usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+  };
   const indexBuffer = t.createBufferWithState('valid', desc);
 
   const drawCallParam = {
-    indexCount: drawIndexCount };
-
+    indexCount: drawIndexCount
+  };
 
   // Encoder finish will succeed if no index buffer access OOB when calling drawIndexed,
   // and always succeed when calling drawIndexedIndirect.
@@ -441,8 +441,8 @@ fn(async (t) => {
     vertexCount,
     instanceCount,
     firstVertex,
-    firstInstance } =
-  t.params;
+    firstInstance
+  } = t.params;
 
   const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
   const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
@@ -502,12 +502,12 @@ fn(async (t) => {
 
   const vertexBuffer = t.createBufferWithState('valid', {
     size: vertexBufferSize,
-    usage: GPUBufferUsage.VERTEX });
-
+    usage: GPUBufferUsage.VERTEX
+  });
   const instanceBuffer = t.createBufferWithState('valid', {
     size: instanceBufferSize,
-    usage: GPUBufferUsage.VERTEX });
-
+    usage: GPUBufferUsage.VERTEX
+  });
 
   const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
   t,
@@ -535,8 +535,8 @@ fn(async (t) => {
           vertexCount,
           instanceCount,
           firstVertex,
-          firstInstance };
-
+          firstInstance
+        };
 
         callDraw(t, renderEncoder, drawType, drawParam);
       } else {
@@ -544,13 +544,13 @@ fn(async (t) => {
           indexFormat,
           indexCount,
           firstIndex,
-          indexBufferSize } =
-        kDefaultParameterForIndexedDraw;
+          indexBufferSize
+        } = kDefaultParameterForIndexedDraw;
 
         const desc = {
           size: indexBufferSize,
-          usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST };
-
+          usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST
+        };
         const indexBuffer = t.createBufferWithState('valid', desc);
 
         const drawParam = {
@@ -558,8 +558,8 @@ fn(async (t) => {
           instanceCount,
           firstIndex,
           baseVertex: firstVertex,
-          firstInstance };
-
+          firstInstance
+        };
 
         renderEncoder.setIndexBuffer(indexBuffer, indexFormat, 0, indexBufferSize);
         callDrawIndexed(t, renderEncoder, drawType, drawParam);
@@ -603,8 +603,8 @@ fn(async (t) => {
     vertexBoundOffestFactor,
     instanceBoundOffestFactor,
     indexBoundOffestFactor,
-    arrayStrideState } =
-  t.params;
+    arrayStrideState
+  } = t.params;
 
   // Compute the array stride for vertex step mode and instance step mode attribute
   const attributeFormat = 'float32x4';
@@ -666,8 +666,8 @@ fn(async (t) => {
   // Create the shared GPU buffer with both vertetx and index usage
   const sharedBuffer = t.createBufferWithState('valid', {
     size: requiredBufferSize,
-    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX });
-
+    usage: GPUBufferUsage.VERTEX | GPUBufferUsage.INDEX
+  });
 
   const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
   t,
@@ -703,14 +703,14 @@ fn(async (t) => {
       if (drawType === 'draw' || drawType === 'drawIndirect') {
         const drawParam = {
           ...kDefaultParameterForDraw,
-          ...kDefaultParameterForNonIndexedDraw };
-
+          ...kDefaultParameterForNonIndexedDraw
+        };
         callDraw(t, renderEncoder, drawType, drawParam);
       } else {
         const drawParam = {
           ...kDefaultParameterForDraw,
-          ...kDefaultParameterForIndexedDraw };
-
+          ...kDefaultParameterForIndexedDraw
+        };
         callDrawIndexed(t, renderEncoder, drawType, drawParam);
       }
 
@@ -762,8 +762,8 @@ fn(async (t) => {
     format: colorFormat,
     mipLevelCount: 1,
     sampleCount: 1,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
@@ -773,18 +773,18 @@ fn(async (t) => {
             @vertex fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>();
             }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
-        code: `@fragment fn main() {}` }),
-
+        code: `@fragment fn main() {}`
+      }),
       entryPoint: 'main',
-      targets: [{ format: colorFormat, writeMask: 0 }] } });
-
-
+      targets: [{ format: colorFormat, writeMask: 0 }]
+    }
+  });
 
   const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 0, 0]), GPUBufferUsage.INDEX);
   const indirectBuffer = t.makeBufferWithContents(
@@ -802,22 +802,22 @@ fn(async (t) => {
     {
       view: colorTexture.createView(),
       loadOp: 'clear',
-      storeOp: 'store' }],
+      storeOp: 'store'
+    }],
 
-
-    maxDrawCount });
-
+    maxDrawCount
+  });
 
   const firstHalfEncoder = bundleFirstHalf ?
   t.device.createRenderBundleEncoder({
-    colorFormats: [colorFormat] }) :
-
+    colorFormats: [colorFormat]
+  }) :
   renderPassEncoder;
 
   const secondHalfEncoder = bundleSecondHalf ?
   t.device.createRenderBundleEncoder({
-    colorFormats: [colorFormat] }) :
-
+    colorFormats: [colorFormat]
+  }) :
   renderPassEncoder;
 
   firstHalfEncoder.setPipeline(pipeline);

@@ -1135,7 +1135,6 @@ const DivisionIntervalOp = {
       x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
       y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])],
     },
-
     (x, y) => {
       if (y === 0) {
         return F32Interval.any();
@@ -1305,7 +1304,6 @@ const LdexpIntervalOp = {
       x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
       y: [toF32Interval([-126, 128])],
     },
-
     (e1, e2) => {
       // Though the spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, the
       // accuracy is listed as correctly rounded to the true value, so the

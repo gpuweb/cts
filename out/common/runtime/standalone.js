@@ -40,8 +40,8 @@ dataCache.setStore({
       return Promise.reject(response.statusText);
     }
     return await response.text();
-  } });
-
+  }
+});
 
 
 

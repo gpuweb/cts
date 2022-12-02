@@ -42,8 +42,8 @@ export const d = makeCaseCache('fract', {
     -10.0001, // -10.0001 -> ~0.9999
     ...fullF32Range()].
     map(makeCase);
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

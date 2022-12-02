@@ -37,10 +37,10 @@ class BlendingTest extends GPUTest {
             @fragment fn main() -> @location(0) vec4<f32> {
               return params.color;
             }
-            ` }),
-
-        entryPoint: 'main' },
-
+            `
+        }),
+        entryPoint: 'main'
+      },
       vertex: {
         module: this.device.createShaderModule({
           code: `
@@ -53,11 +53,11 @@ class BlendingTest extends GPUTest {
                   vec2<f32>(-1.0, 3.0));
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             }
-            ` }),
-
-        entryPoint: 'main' } });
-
-
+            `
+        }),
+        entryPoint: 'main'
+      }
+    });
   }
 
   createBindGroupForTest(layout, data) {
@@ -67,13 +67,13 @@ class BlendingTest extends GPUTest {
       {
         binding: 0,
         resource: {
-          buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM) } }] });
+          buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM)
+        }
+      }]
 
-
-
-
-  }}
-
+    });
+  }
+}
 
 export const g = makeTestGroup(BlendingTest);
 
@@ -85,8 +85,8 @@ f)
     r: f(col.r, 'r'),
     g: f(col.g, 'g'),
     b: f(col.b, 'b'),
-    a: f(col.a, 'a') };
-
+    a: f(col.a, 'a')
+  };
 }
 
 function computeBlendFactor(
@@ -235,10 +235,10 @@ fn((t) => {
           [t.params.component]: {
             srcFactor: t.params.srcFactor,
             dstFactor: t.params.dstFactor,
-            operation: t.params.operation } } }],
-
-
-
+            operation: t.params.operation
+          }
+        }
+      }],
 
       module: t.device.createShaderModule({
         code: `
@@ -250,30 +250,30 @@ struct Uniform {
 @fragment fn main() -> @location(0) vec4<f32> {
   return u.color;
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     vertex: {
       module: t.device.createShaderModule({
         code: `
 @vertex fn main() -> @builtin(position) vec4<f32> {
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [1, 1, 1],
-    format: textureFormat });
-
+    format: textureFormat
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -282,10 +282,10 @@ struct Uniform {
       view: renderTarget.createView(),
       clearValue: dstColor,
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(pipeline);
   if (blendConstant) {
     renderPass.setBlendConstant(blendConstant);
@@ -300,12 +300,12 @@ struct Uniform {
       resource: {
         buffer: t.makeBufferWithContents(
         new Float32Array([srcColor.r, srcColor.g, srcColor.b, srcColor.a]),
-        GPUBufferUsage.UNIFORM) } }] }));
+        GPUBufferUsage.UNIFORM)
 
+      }
+    }]
 
-
-
-
+  }));
 
   renderPass.draw(1);
   renderPass.end();
@@ -328,11 +328,11 @@ struct Uniform {
 
     new Uint16Array(
     [expectedHigh.r, expectedHigh.g, expectedHigh.b, expectedHigh.a].map(
-    float32ToFloat16Bits))] });
+    float32ToFloat16Bits))]
 
 
 
-
+  });
 
 });
 
@@ -361,39 +361,39 @@ fn(async (t) => {
         format,
         blend: {
           color: { srcFactor: 'one', dstFactor: 'one', operation: 'add' },
-          alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' } } }],
-
-
+          alpha: { srcFactor: 'one', dstFactor: 'one', operation: 'add' }
+        }
+      }],
 
       module: t.device.createShaderModule({
         code: `
 @fragment fn main() -> @location(0) vec4<f32> {
   return vec4<f32>(0.4, 0.4, 0.4, 0.4);
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     vertex: {
       module: t.device.createShaderModule({
         code: `
 @vertex fn main() -> @builtin(position) vec4<f32> {
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [1, 1, 1],
-    format });
-
+    format
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -402,10 +402,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: { r: 0.2, g: 0.2, b: 0.2, a: 0.2 },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(pipeline);
   renderPass.draw(1);
   renderPass.end();
@@ -421,8 +421,8 @@ fn(async (t) => {
   { expTexelView },
   {
     maxDiffULPsForNormFormat: 1,
-    maxDiffULPsForFloatFormat: 1 });
-
+    maxDiffULPsForFloatFormat: 1
+  });
 
   t.expectOK(result);
 });
@@ -437,14 +437,14 @@ fn(async (t) => {
   const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' };
   const testPipeline = t.createRenderPipelineForTest({
     format,
-    blend: { color: blendComponent, alpha: blendComponent } });
-
+    blend: { color: blendComponent, alpha: blendComponent }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [kSize, kSize],
-    format });
-
+    format
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -452,10 +452,10 @@ fn(async (t) => {
     {
       view: renderTarget.createView(),
       loadOp: 'load',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(testPipeline);
   renderPass.setBindGroup(
   0,
@@ -500,14 +500,14 @@ fn(async (t) => {
   const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' };
   const testPipeline = t.createRenderPipelineForTest({
     format,
-    blend: { color: blendComponent, alpha: blendComponent } });
-
+    blend: { color: blendComponent, alpha: blendComponent }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [kSize, kSize],
-    format });
-
+    format
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -515,10 +515,10 @@ fn(async (t) => {
     {
       view: renderTarget.createView(),
       loadOp: 'load',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(testPipeline);
   renderPass.setBlendConstant({ r, g, b, a });
   renderPass.setBindGroup(
@@ -556,14 +556,14 @@ fn(async (t) => {
   const blendComponent = { srcFactor: 'constant', dstFactor: 'one', operation: 'add' };
   const testPipeline = t.createRenderPipelineForTest({
     format,
-    blend: { color: blendComponent, alpha: blendComponent } });
-
+    blend: { color: blendComponent, alpha: blendComponent }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [kSize, kSize],
-    format });
-
+    format
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   {
@@ -572,10 +572,10 @@ fn(async (t) => {
       {
         view: renderTarget.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     renderPass.setPipeline(testPipeline);
     renderPass.setBlendConstant({ r: 1.0, g: 1.0, b: 1.0, a: 1.0 }); // Set to white color.
     renderPass.setBindGroup(
@@ -593,10 +593,10 @@ fn(async (t) => {
       {
         view: renderTarget.createView(),
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     renderPass.setPipeline(testPipeline);
     renderPass.setBindGroup(
     0,
@@ -660,9 +660,9 @@ fn(async (t) => {
   const kSize = 1;
 
   let r = 0,
-  g = 0,
-  b = 0,
-  a = 0;
+    g = 0,
+    b = 0,
+    a = 0;
   if (mask & GPUConst.ColorWrite.RED) {
     r = 1;
   }
@@ -678,14 +678,14 @@ fn(async (t) => {
 
   const testPipeline = t.createRenderPipelineForTest({
     format,
-    writeMask: mask });
-
+    writeMask: mask
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [kSize, kSize],
-    format });
-
+    format
+  });
 
   const kBaseColorData = new Float32Array([32, 64, 128, 192]);
 
@@ -696,10 +696,10 @@ fn(async (t) => {
       {
         view: renderTarget.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     renderPass.setPipeline(testPipeline);
     renderPass.setBindGroup(
     0,
@@ -738,14 +738,14 @@ fn(async (t) => {
   const testPipeline = t.createRenderPipelineForTest({
     format,
     blend,
-    writeMask: GPUColorWrite.RED });
-
+    writeMask: GPUColorWrite.RED
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [kSize, kSize],
-    format });
-
+    format
+  });
 
   const kBaseColorData = new Float32Array([32, 64, 128, 192]);
 
@@ -756,10 +756,10 @@ fn(async (t) => {
       {
         view: renderTarget.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     renderPass.setPipeline(testPipeline);
     renderPass.setBindGroup(
     0,
@@ -813,39 +813,39 @@ fn(async (t) => {
         format,
         blend: {
           color: blendComponent,
-          alpha: blendComponent } }],
-
-
+          alpha: blendComponent
+        }
+      }],
 
       module: t.device.createShaderModule({
         code: `
 @fragment fn main() -> @location(0) vec4<f32> {
   return vec4<f32>(${srcValue}, ${srcValue}, ${srcValue}, ${srcValue});
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     vertex: {
       module: t.device.createShaderModule({
         code: `
 @vertex fn main() -> @builtin(position) vec4<f32> {
     return vec4<f32>(0.0, 0.0, 0.0, 1.0);
 }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const renderTarget = t.device.createTexture({
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     size: [1, 1, 1],
-    format });
-
+    format
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -854,10 +854,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: { r: dstValue, g: dstValue, b: dstValue, a: dstValue },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(pipeline);
   renderPass.draw(1);
   renderPass.end();
@@ -883,8 +883,8 @@ fn(async (t) => {
   { expTexelView },
   {
     maxDiffULPsForNormFormat: 1,
-    maxDiffULPsForFloatFormat: 1 });
-
+    maxDiffULPsForFloatFormat: 1
+  });
 
   t.expectOK(result);
 });

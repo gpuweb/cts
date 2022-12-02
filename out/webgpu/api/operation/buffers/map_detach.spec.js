@@ -28,12 +28,12 @@ combineWithParams([
 { usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ },
 {
   usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
-  mapMode: GPUConst.MapMode.WRITE },
-
+  mapMode: GPUConst.MapMode.WRITE
+},
 {
   usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
-  mapMode: GPUConst.MapMode.READ }]).
-
+  mapMode: GPUConst.MapMode.READ
+}]).
 
 combineWithParams([
 { unmap: true, destroy: false },
@@ -55,8 +55,8 @@ fn(async (t) => {
   const buffer = device.createBuffer({
     size: 4,
     usage,
-    mappedAtCreation });
-
+    mappedAtCreation
+  });
 
   if (mapMode !== undefined) {
     if (mappedAtCreation) {

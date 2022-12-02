@@ -33,8 +33,8 @@ const listingData = {
   { file: ['baz'] },
   { file: ['empty'], readme: 'desc 1z' } // directory with no files
   ],
-  suite2: [{ file: [], readme: 'desc 2a' }, { file: ['foof'] }] };
-
+  suite2: [{ file: [], readme: 'desc 2a' }, { file: ['foof'] }]
+};
 
 const specsData = {
   'suite1/foo.spec.js': {
@@ -47,8 +47,8 @@ const specsData = {
       desc('TODO TODO').
       fn(() => {});
       return g;
-    })() },
-
+    })()
+  },
   'suite1/bar/biz.spec.js': {
     description: 'desc 1f TODO TODO',
     g: makeTestGroupForUnitTesting(UnitTest) // file with no tests
@@ -59,8 +59,8 @@ const specsData = {
       const g = makeTestGroupForUnitTesting(UnitTest);
       g.test('zap').fn(() => {});
       return g;
-    })() },
-
+    })()
+  },
   'suite1/baz.spec.js': {
     description: 'desc 1e',
     g: (() => {
@@ -75,8 +75,8 @@ const specsData = {
 
       fn(() => {});
       return g;
-    })() },
-
+    })()
+  },
   'suite2/foof.spec.js': {
     description: 'desc 2b',
     g: (() => {
@@ -94,9 +94,9 @@ const specsData = {
         t.fail('goodbye');
       });
       return g;
-    })() } };
-
-
+    })()
+  }
+};
 
 class FakeTestFileLoader extends TestFileLoader {
   async listing(suite) {
@@ -106,8 +106,8 @@ class FakeTestFileLoader extends TestFileLoader {
   async import(path) {
     assert(path in specsData, '[test] mock file ' + path + ' does not exist');
     return specsData[path];
-  }}
-
+  }
+}
 
 class LoadingTest extends UnitTest {
   loader = new FakeTestFileLoader();
@@ -129,8 +129,8 @@ class LoadingTest extends UnitTest {
 
   async loadNames(query) {
     return (await this.load(query)).map((c) => c.query.toString());
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(LoadingTest);
 
@@ -309,8 +309,8 @@ g.test('expectations,single_case').fn(async (t) => {
   const zedExpectationsSkipA1B2 = [
   {
     query: new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -343,8 +343,8 @@ g.test('expectations,single_case,none').fn(async (t) => {
   const zedExpectationsSkipA1B0 = [
   {
     query: new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 0 }),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -377,8 +377,8 @@ g.test('expectations,multi_case').fn(async (t) => {
   const zedExpectationsSkipB3 = [
   {
     query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], { b: 3 }),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -411,8 +411,8 @@ g.test('expectations,multi_case_all').fn(async (t) => {
   const zedExpectationsSkipA1 = [
   {
     query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], { a: 1 }),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -445,8 +445,8 @@ g.test('expectations,multi_case_none').fn(async (t) => {
   const zedExpectationsSkipZed = [
   {
     query: new TestQueryMultiCase('suite1', ['baz'], ['zed'], {}),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -480,8 +480,8 @@ g.test('expectations,multi_test').fn(async (t) => {
   const expectationsSkipAllInBaz = [
   {
     query: new TestQueryMultiTest('suite1', ['baz'], []),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -515,8 +515,8 @@ g.test('expectations,multi_test,none').fn(async (t) => {
   const expectationsSkipAllInFoo = [
   {
     query: new TestQueryMultiTest('suite1', ['foo'], []),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -550,8 +550,8 @@ g.test('expectations,multi_file').fn(async (t) => {
   const expectationsSkipAll = [
   {
     query: new TestQueryMultiFile('suite1', []),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -585,8 +585,8 @@ g.test('expectations,catches_failure').fn(async (t) => {
   const expectedFailures = [
   {
     query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
-    expectation: 'fail' }];
-
+    expectation: 'fail'
+  }];
 
 
   await runTestcase(
@@ -620,12 +620,12 @@ g.test('expectations,skip_dominates_failure').fn(async (t) => {
   const expectedFailures = [
   {
     query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
-    expectation: 'fail' },
-
+    expectation: 'fail'
+  },
   {
     query: new TestQueryMultiCase('suite2', ['foof'], ['bluh', 'a'], {}),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -647,12 +647,12 @@ g.test('expectations,skip_inside_failure').fn(async (t) => {
   const expectedFailures = [
   {
     query: new TestQueryMultiFile('suite2', []),
-    expectation: 'fail' },
-
+    expectation: 'fail'
+  },
   {
     query: new TestQueryMultiCase('suite2', ['foof'], ['blah'], {}),
-    expectation: 'skip' }];
-
+    expectation: 'skip'
+  }];
 
 
   await runTestcase(
@@ -694,8 +694,8 @@ includeEmptySubtrees = false)
   const tree = await treePromise;
   const actualIter = tree.iterateCollapsedNodes({
     includeEmptySubtrees,
-    alwaysExpandThroughLevel });
-
+    alwaysExpandThroughLevel
+  });
   const testingTODOs = expectedResult.length > 0 && expectedResult[0] instanceof Array;
   const actual = Array.from(actualIter, ({ query, subtreeCounts }) =>
   testingTODOs ? [query.toString(), subtreeCounts?.nodesWithTODO] : query.toString());

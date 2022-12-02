@@ -71,7 +71,6 @@ g.test('vertex_buffer,device_mismatch')
       size: 16,
       usage: GPUBufferUsage.VERTEX,
     });
-
     t.trackForCleanup(vertexBuffer);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);

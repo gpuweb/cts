@@ -29,7 +29,6 @@ class F extends ValidationTest {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         buffers: [
           {
@@ -42,7 +41,6 @@ class F extends ValidationTest {
           },
         ],
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -50,11 +48,9 @@ class F extends ValidationTest {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'triangle-list' },
     });
   }

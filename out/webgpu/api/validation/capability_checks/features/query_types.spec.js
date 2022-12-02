@@ -66,8 +66,8 @@ fn(async (t) => {
 
   const querySet = t.device.createQuerySet({
     type: featureContainsTimestampQuery ? 'timestamp' : 'occlusion',
-    count: 1 });
-
+    count: 1
+  });
   const encoder = t.createEncoder('non-pass');
 
   t.shouldThrow(featureContainsTimestampQuery ? false : 'TypeError', () => {

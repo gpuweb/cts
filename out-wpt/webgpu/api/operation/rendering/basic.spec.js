@@ -21,7 +21,6 @@ g.test('clear').fn(async t => {
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
-
   const colorAttachmentView = colorAttachment.createView();
 
   const encoder = t.device.createCommandEncoder();
@@ -35,7 +34,6 @@ g.test('clear').fn(async t => {
       },
     ],
   });
-
   pass.end();
   encoder.copyTextureToBuffer(
     { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
@@ -59,7 +57,6 @@ g.test('fullscreen_quad').fn(async t => {
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
   });
-
   const colorAttachmentView = colorAttachment.createView();
 
   const pipeline = t.device.createRenderPipeline({
@@ -78,10 +75,8 @@ g.test('fullscreen_quad').fn(async t => {
           }
           `,
       }),
-
       entryPoint: 'main',
     },
-
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -90,11 +85,9 @@ g.test('fullscreen_quad').fn(async t => {
           }
           `,
       }),
-
       entryPoint: 'main',
       targets: [{ format: 'rgba8unorm' }],
     },
-
     primitive: { topology: 'triangle-list' },
   });
 
@@ -109,7 +102,6 @@ g.test('fullscreen_quad').fn(async t => {
       },
     ],
   });
-
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -171,7 +163,6 @@ g.test('large_draw')
       size: 20,
       usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST,
     });
-
     const writeIndirectParams = (count, instanceCount) => {
       const params = new Uint32Array(5);
       params[0] = count; // Vertex or index count
@@ -190,7 +181,6 @@ g.test('large_draw')
         usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
         mappedAtCreation: true,
       });
-
       t.trackForCleanup(indexBuffer);
       const indexData = new Uint32Array(indexBuffer.getMappedRange());
       for (let i = 0; i < kMaxIndices; ++i) {
@@ -204,7 +194,6 @@ g.test('large_draw')
       size: { width: 3, height: 3, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const colorAttachmentView = colorAttachment.createView();
 
     const bgLayout = t.device.createBindGroupLayout({
@@ -255,10 +244,8 @@ g.test('large_draw')
           }
           `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -267,11 +254,9 @@ g.test('large_draw')
             }
             `,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
 
@@ -340,22 +325,18 @@ g.test('large_draw')
         numInstances: 4,
         vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22, 2 ** 24],
       },
-
       {
         numInstances: 2 ** 8,
         vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22],
       },
-
       {
         numInstances: 2 ** 10,
         vertexCounts: [2 ** 8, 2 ** 10, 2 ** 12, 2 ** 16, 2 ** 18, 2 ** 20],
       },
-
       {
         numInstances: 2 ** 16,
         vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10, 2 ** 12, 2 ** 14],
       },
-
       {
         numInstances: 2 ** 20,
         vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10],

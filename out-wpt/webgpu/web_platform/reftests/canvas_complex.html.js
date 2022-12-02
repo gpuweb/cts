@@ -44,7 +44,6 @@ export function run(format, targets) {
         size: rows * bytesPerRow,
         usage: GPUBufferUsage.COPY_SRC,
       });
-
       let red;
       let green;
       let blue;
@@ -173,7 +172,6 @@ export function run(format, targets) {
           GPUTextureUsage.COPY_DST |
           GPUTextureUsage.COPY_SRC,
       });
-
       t.device.queue.copyExternalImageToTexture({ source: imageBitmap }, { texture: srcTexture }, [
         imageBitmap.width,
         imageBitmap.height,
@@ -244,10 +242,8 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 }
             `,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             // NOTE: "-srgb" cases haven't been tested (there aren't any .html files that use them).
@@ -281,11 +277,9 @@ fn linearMain(@location(0) fragUV: vec2<f32>) -> @location(0) vec4<f32> {
 }
             `,
           }),
-
           entryPoint: isOutputSrgb ? 'srgbMain' : 'linearMain',
           targets: [{ format }],
         },
-
         primitive: {
           topology: 'triangle-list',
         },
@@ -303,7 +297,6 @@ fn linearMain(@location(0) fragUV: vec2<f32>) -> @location(0) vec4<f32> {
             binding: 0,
             resource: sampler,
           },
-
           {
             binding: 1,
             resource: srcTexture.createView(),
@@ -372,10 +365,8 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 }
             `,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -385,11 +376,9 @@ fn main(@location(0) fragColor: vec4<f32>) -> @location(0) vec4<f32> {
 }
             `,
           }),
-
           entryPoint: 'main',
           targets: [{ format }],
         },
-
         primitive: {
           topology: 'triangle-list',
         },
@@ -443,10 +432,8 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 }
             `,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -475,11 +462,9 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
 }
             `,
           }),
-
           entryPoint: 'main',
           targets: [{ format }],
         },
-
         primitive: {
           topology: 'triangle-list',
         },
@@ -533,10 +518,8 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
 }
             `,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -565,11 +548,9 @@ fn main(@builtin(position) fragcoord: vec4<f32>) -> @location(0) vec4<f32> {
 }
             `,
           }),
-
           entryPoint: 'main',
           targets: [{ format }],
         },
-
         primitive: {
           topology: 'triangle-list',
         },
@@ -639,7 +620,6 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 }
           `,
           }),
-
           entryPoint: 'main',
         },
       });
@@ -696,7 +676,6 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
 }
             `,
           }),
-
           entryPoint: 'main',
         },
       });

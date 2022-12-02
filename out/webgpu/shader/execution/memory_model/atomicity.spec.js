@@ -38,8 +38,8 @@ const memoryModelTestParams = {
   permuteSecond: 419,
   memStride: 4,
   aliasedMemory: false,
-  numBehaviors: 4 };
-
+  numBehaviors: 4
+};
 
 const storageMemoryTestCode = `
   let r0 = atomicAdd(&test_locations.value[x_0], 0u);
@@ -76,18 +76,18 @@ paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.InterWorkgroup,
-  _testCode: storageMemoryTestCode },
-
+  _testCode: storageMemoryTestCode
+},
 {
   memType: MemoryType.AtomicStorageClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: storageMemoryTestCode },
-
+  _testCode: storageMemoryTestCode
+},
 {
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
-  _testCode: workgroupMemoryTestCode }]).
-
+  _testCode: workgroupMemoryTestCode
+}]).
 
 fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);

@@ -52,8 +52,8 @@ class ImageCopyTest extends ValidationTest {
     () => this.queue.writeTexture(destination, uploadData, dataLayout, copySize),
     !isSuccess);
 
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(ImageCopyTest);
 
@@ -82,14 +82,14 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: textureSize,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const uploadBufferSize = 32;
   const buffer = t.device.createBuffer({
     size: uploadBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   {
     const success = depthStencilBufferTextureCopySupported('CopyB2T', format, aspect);
@@ -146,8 +146,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: copySize,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const texelAspectSize = depthStencilFormatAspectSize(format, aspect);
   assert(texelAspectSize > 0);
@@ -162,12 +162,12 @@ fn(async (t) => {
 
   const bigEnoughBuffer = t.device.createBuffer({
     size: minimumBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   const smallerBuffer = t.device.createBuffer({
     size: minimumBufferSize - kBufferCopyAlignment,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   if (copyType === 'CopyB2T') {
     t.testCopyBufferToTexture(
@@ -203,8 +203,8 @@ fn(async (t) => {
     enoughUploadData,
     {
       bytesPerRow,
-      rowsPerImage },
-
+      rowsPerImage
+    },
     copySize,
     true);
 
@@ -214,8 +214,8 @@ fn(async (t) => {
     smallerUploadData,
     {
       bytesPerRow,
-      rowsPerImage },
-
+      rowsPerImage
+    },
     copySize,
     false);
 
@@ -255,8 +255,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: textureSize,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const texelAspectSize = depthStencilFormatAspectSize(format, aspect);
   assert(texelAspectSize > 0);
@@ -271,8 +271,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: align(minimumBufferSize + offset, kBufferCopyAlignment),
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const isSuccess = copyType === 'WriteTexture' ? true : offset % 4 === 0;
 
@@ -298,8 +298,8 @@ fn(async (t) => {
     {
       offset,
       bytesPerRow,
-      rowsPerImage },
-
+      rowsPerImage
+    },
     textureSize,
     isSuccess);
 
@@ -334,14 +334,14 @@ fn(async (t) => {
     size: { width: 16, height: 16 },
     sampleCount,
     format: 'bgra8unorm',
-    usage });
-
+    usage
+  });
 
   const uploadBufferSize = 32;
   const buffer = t.device.createBuffer({
     size: uploadBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
@@ -356,12 +356,12 @@ fn(async (t) => {
 
 const kRequiredTextureUsage = {
   CopyT2B: GPUConst.TextureUsage.COPY_SRC,
-  CopyB2T: GPUConst.TextureUsage.COPY_DST };
-
+  CopyB2T: GPUConst.TextureUsage.COPY_DST
+};
 const kRequiredBufferUsage = {
   CopyB2T: GPUConst.BufferUsage.COPY_SRC,
-  CopyT2B: GPUConst.BufferUsage.COPY_DST };
-
+  CopyT2B: GPUConst.BufferUsage.COPY_DST
+};
 
 g.test('texture_buffer_usages').
 desc(
@@ -387,14 +387,14 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 16, height: 16 },
     format: 'rgba8unorm',
-    usage: textureUsage });
-
+    usage: textureUsage
+  });
 
   const uploadBufferSize = 32;
   const buffer = t.device.createBuffer({
     size: uploadBufferSize,
-    usage: bufferUsage });
-
+    usage: bufferUsage
+  });
 
   const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
 
@@ -432,16 +432,16 @@ fn(async (t) => {
   const uploadBufferSize = 32;
   const buffer = (bufMismatched ? t.mismatchedDevice : t.device).createBuffer({
     size: uploadBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   t.trackForCleanup(buffer);
 
   const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
   const texture = (texMismatched ? t.mismatchedDevice : t.device).createTexture({
     size: textureSize,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
   t.trackForCleanup(texture);
 
   const isValid = !bufMismatched && !texMismatched;

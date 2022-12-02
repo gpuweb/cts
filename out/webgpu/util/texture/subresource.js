@@ -34,12 +34,12 @@ export class SubresourceRange {
   {
     this.mipRange = {
       begin: subresources.mipRange.begin,
-      end: endOfRange(subresources.mipRange) };
-
+      end: endOfRange(subresources.mipRange)
+    };
     this.layerRange = {
       begin: subresources.layerRange.begin,
-      end: endOfRange(subresources.layerRange) };
-
+      end: endOfRange(subresources.layerRange)
+    };
   }
 
   /**
@@ -61,8 +61,9 @@ export class SubresourceRange {
     for (let level = this.mipRange.begin; level < this.mipRange.end; ++level) {
       yield {
         level,
-        layers: rangeAsIterator(this.layerRange) };
-
+        layers: rangeAsIterator(this.layerRange)
+      };
     }
-  }}
+  }
+}
 //# sourceMappingURL=subresource.js.map

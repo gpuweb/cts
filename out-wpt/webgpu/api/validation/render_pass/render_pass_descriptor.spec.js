@@ -177,7 +177,6 @@ g.test('attachments,same_size')
       height: 1,
       format: 'depth24plus-stencil8',
     });
-
     const depthStencilTexture2x2 = t.createTexture({
       width: 2,
       height: 2,
@@ -277,7 +276,6 @@ g.test('attachments,layer_count')
       mipLevelCount: MIP_LEVEL_COUNT,
       arrayLayerCount: ARRAY_LAYER_COUNT,
     });
-
     const depthStencilTexture = t.createTexture({
       format: DEPTH_STENCIL_FORMAT,
       width: 32,
@@ -355,7 +353,6 @@ g.test('attachments,mip_level_count')
       mipLevelCount: MIP_LEVEL_COUNT,
       arrayLayerCount: ARRAY_LAYER_COUNT,
     });
-
     const depthStencilTexture = t.createTexture({
       format: DEPTH_STENCIL_FORMAT,
       width: 32,
@@ -446,7 +443,6 @@ g.test('color_attachments,sample_count')
       const descriptor = {
         colorAttachments: [t.getColorAttachment(multisampledColorTexture)],
       };
-
       t.tryRenderPass(true, descriptor);
     }
     {
@@ -679,7 +675,6 @@ g.test('depth_stencil_attachment,sample_counts_mismatch')
         sampleCount: 1,
         format: 'depth24plus-stencil8',
       });
-
       const multisampledColorTexture = t.createTexture({ sampleCount: 4 });
       const descriptor = {
         colorAttachments: [t.getColorAttachment(multisampledColorTexture)],
@@ -816,7 +811,6 @@ g.test('depth_stencil_attachment,depth_clear_value')
     const depthStencilTexture = t.createTexture({
       format: depthLoadOp === undefined ? 'stencil8' : 'depth24plus-stencil8',
     });
-
     const depthStencilAttachment = t.getDepthStencilAttachment(depthStencilTexture);
     depthStencilAttachment.depthClearValue = depthClearValue;
     depthStencilAttachment.depthLoadOp = depthLoadOp;

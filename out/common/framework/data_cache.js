@@ -70,8 +70,8 @@ export class DataCache {
   cache = new Map();
   unavailableFiles = new Set();
   dataStore = null;
-  debugLogger = null;}
-
+  debugLogger = null;
+}
 
 /** The data cache */
 export const dataCache = new DataCache();

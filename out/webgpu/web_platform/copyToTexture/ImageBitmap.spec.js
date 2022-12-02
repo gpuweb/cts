@@ -28,8 +28,8 @@ const kColors = {
   Blue: { R: 0.0, G: 0.0, B: 1.0, A: 1.0 },
   Black: { R: 0.0, G: 0.0, B: 0.0, A: 1.0 },
   White: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 },
-  SemitransparentWhite: { R: 1.0, G: 1.0, B: 1.0, A: 0.6 } };
-
+  SemitransparentWhite: { R: 1.0, G: 1.0, B: 1.0, A: 0.6 }
+};
 const kTestColorsOpaque = [
 kColors.Red,
 kColors.Green,
@@ -45,7 +45,7 @@ function makeTestColorsTexelView({
   width,
   height,
   premultiplied,
-  flipY })
+  flipY
 
 
 
@@ -53,7 +53,7 @@ function makeTestColorsTexelView({
 
 
 
-{
+}) {
   return TexelView.fromTexelsAsColors(format, (coords) => {
     const y = flipY ? height - coords.y - 1 : coords.y;
     const pixelPos = y * width + coords.x;
@@ -64,8 +64,8 @@ function makeTestColorsTexelView({
         R: currentPixel.R * currentPixel.A,
         G: currentPixel.G * currentPixel.A,
         B: currentPixel.B * currentPixel.A,
-        A: currentPixel.A };
-
+        A: currentPixel.A
+      };
     } else {
       return currentPixel;
     }
@@ -124,8 +124,8 @@ fn(async (t) => {
     orientation,
     dstColorFormat,
     dstPremultiplied,
-    srcDoFlipYDuringCopy } =
-  t.params;
+    srcDoFlipYDuringCopy
+  } = t.params;
 
   const testColors = kTestColorsAll;
 
@@ -136,27 +136,27 @@ fn(async (t) => {
     width,
     height,
     flipY: false,
-    premultiplied: false });
-
+    premultiplied: false
+  });
   const imageData = new ImageData(width, height);
   texelViewSource.writeTextureData(imageData.data, {
     bytesPerRow: width * 4,
     rowsPerImage: height,
     subrectOrigin: [0, 0],
-    subrectSize: { width, height } });
-
+    subrectSize: { width, height }
+  });
 
   const imageBitmap = await createImageBitmap(imageData, {
     premultiplyAlpha: alpha,
-    imageOrientation: orientation });
-
+    imageOrientation: orientation
+  });
 
   const dst = t.device.createTexture({
     size: { width, height },
     format: dstColorFormat,
     usage:
-    GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const expFormat = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
   const expectFlipped = srcDoFlipYDuringCopy !== (orientation === 'flipY');
@@ -166,8 +166,8 @@ fn(async (t) => {
     width,
     height,
     flipY: expectFlipped,
-    premultiplied: dstPremultiplied });
-
+    premultiplied: dstPremultiplied
+  });
 
   t.doTestAndCheckResult(
   { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
@@ -175,8 +175,8 @@ fn(async (t) => {
     texture: dst,
     origin: { x: 0, y: 0 },
     colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied },
-
+    premultipliedAlpha: dstPremultiplied
+  },
   texelViewExpected,
   { width, height, depthOrArrayLayers: 1 },
   // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
@@ -232,8 +232,8 @@ fn(async (t) => {
     orientation,
     dstColorFormat,
     dstPremultiplied,
-    srcDoFlipYDuringCopy } =
-  t.params;
+    srcDoFlipYDuringCopy
+  } = t.params;
 
   // CTS sometimes runs on worker threads, where document is not available.
   // In this case, OffscreenCanvas can be used instead of <canvas>.
@@ -266,16 +266,16 @@ fn(async (t) => {
     width,
     height,
     flipY: false,
-    premultiplied: false });
-
+    premultiplied: false
+  });
   // Generate correct expected values
   const imageData = new ImageData(width, height);
   texelViewSource.writeTextureData(imageData.data, {
     bytesPerRow: width * 4,
     rowsPerImage: height,
     subrectOrigin: [0, 0],
-    subrectSize: { width, height } });
-
+    subrectSize: { width, height }
+  });
 
   // Use putImageData to prevent color space conversion.
   imageCanvasContext.putImageData(imageData, 0, 0);
@@ -284,15 +284,15 @@ fn(async (t) => {
   // `createImageBitmap` that takes `ImageBitmapOptions`.
   const imageBitmap = await createImageBitmap(imageCanvas, {
     premultiplyAlpha: 'premultiply',
-    imageOrientation: orientation });
-
+    imageOrientation: orientation
+  });
 
   const dst = t.device.createTexture({
     size: { width, height },
     format: dstColorFormat,
     usage:
-    GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const expFormat = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
   const expectFlipped = srcDoFlipYDuringCopy !== (orientation === 'flipY');
@@ -302,8 +302,8 @@ fn(async (t) => {
     width,
     height,
     flipY: expectFlipped,
-    premultiplied: dstPremultiplied });
-
+    premultiplied: dstPremultiplied
+  });
 
   t.doTestAndCheckResult(
   { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
@@ -311,8 +311,8 @@ fn(async (t) => {
     texture: dst,
     origin: { x: 0, y: 0 },
     colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied },
-
+    premultipliedAlpha: dstPremultiplied
+  },
   texelViewExpected,
   { width, height, depthOrArrayLayers: 1 },
   // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but

@@ -55,18 +55,18 @@ class F extends ValidationTest {
       case GPUMapMode.READ:
         return this.device.createBuffer({
           size,
-          usage: GPUBufferUsage.MAP_READ });
-
+          usage: GPUBufferUsage.MAP_READ
+        });
       case GPUMapMode.WRITE:
         return this.device.createBuffer({
           size,
-          usage: GPUBufferUsage.MAP_WRITE });
-
+          usage: GPUBufferUsage.MAP_WRITE
+        });
       default:
         unreachable();}
 
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -98,8 +98,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: 16,
-    usage });
-
+    usage
+  });
 
   const success = usage === validUsage;
   await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode);
@@ -139,8 +139,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     size: 16,
     usage: validUsage,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
 
   buffer.unmap();
@@ -354,8 +354,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     usage: bufferUsage,
     size: bufferSize,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
 
   const data = buffer.getMappedRange();
   t.expect(data instanceof ArrayBuffer);
@@ -436,8 +436,8 @@ fn(async (t) => {
     const buffer = t.device.createBuffer({
       usage: GPUBufferUsage.MAP_READ,
       size: 16,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     buffer.unmap();
     t.testGetMappedRangeCall(false, buffer);
   }
@@ -483,8 +483,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     size: bufferSize,
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
 
   const data0 = buffer.getMappedRange();
   t.expect(data0 instanceof ArrayBuffer);
@@ -526,8 +526,8 @@ fn(async (t) => {
     const buffer = t.device.createBuffer({
       usage: GPUBufferUsage.MAP_READ,
       size: 16,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     buffer.destroy();
     t.testGetMappedRangeCall(false, buffer);
   }
@@ -586,8 +586,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     size: 16,
     usage: GPUBufferUsage.COPY_DST,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
   const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
   t.testGetMappedRangeCall(success, buffer, offset, size);
 });
@@ -632,8 +632,8 @@ fn((t) => {
   const buffer = t.device.createBuffer({
     size: bufferSize,
     usage: GPUBufferUsage.COPY_DST,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
 
   const actualOffset = offset ?? 0;
   const actualSize = size ?? bufferSize - actualOffset;
@@ -656,8 +656,8 @@ combineWithParams([
   mapOffset: 0,
   mapSize: undefined,
   offset: undefined,
-  size: kSizeAlignment },
-
+  size: kSizeAlignment
+},
 { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: undefined },
 { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: 0, size: 0 },
 {
@@ -665,8 +665,8 @@ combineWithParams([
   mapOffset: 0,
   mapSize: undefined,
   offset: kOffsetAlignment,
-  size: undefined },
-
+  size: undefined
+},
 { bufferSize: 0, mapOffset: 0, mapSize: undefined, offset: kOffsetAlignment, size: 0 },
 
 // Tests for an empty buffer, and explicit mapAsync size.
@@ -683,15 +683,15 @@ combineWithParams([
   mapOffset: undefined,
   mapSize: undefined,
   offset: 0,
-  size: 80 + kSizeAlignment },
-
+  size: 80 + kSizeAlignment
+},
 {
   bufferSize: 80,
   mapOffset: undefined,
   mapSize: undefined,
   offset: kOffsetAlignment,
-  size: 80 },
-
+  size: 80
+},
 
 // Test for a mapAsync call with an implicit size
 { bufferSize: 80, mapOffset: 24, mapSize: undefined, offset: 24, size: 80 - 24 },
@@ -700,15 +700,15 @@ combineWithParams([
   mapOffset: 24,
   mapSize: undefined,
   offset: 0,
-  size: 80 - 24 + kSizeAlignment },
-
+  size: 80 - 24 + kSizeAlignment
+},
 {
   bufferSize: 80,
   mapOffset: 24,
   mapSize: undefined,
   offset: kOffsetAlignment,
-  size: 80 - 24 },
-
+  size: 80 - 24
+},
 
 // Test for a non-empty buffer fully mapped.
 { bufferSize: 80, mapOffset: 0, mapSize: 80, offset: 0, size: 80 },
@@ -817,8 +817,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: kStride * kNumStrides,
-    usage: GPUBufferUsage.MAP_READ });
-
+    usage: GPUBufferUsage.MAP_READ
+  });
   await buffer.mapAsync(GPUMapMode.READ);
 
   // Get a lot of small mapped ranges.
@@ -859,8 +859,8 @@ fn(async (t) => {
     const buffer = t.device.createBuffer({
       usage: GPUBufferUsage.MAP_READ,
       size: 16,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     buffer.unmap();
     buffer.unmap();
   }
@@ -892,8 +892,8 @@ fn(async (t) => {
     const buffer = t.device.createBuffer({
       usage: GPUBufferUsage.MAP_READ,
       size: 16,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     buffer.destroy();
     buffer.unmap();
   }
@@ -945,8 +945,8 @@ fn(async (t) => {
   buffer = t.device.createBuffer({
     size: 256,
     usage: GPUBufferUsage.COPY_DST,
-    mappedAtCreation: true });
-
+    mappedAtCreation: true
+  });
 
   // Write some non-zero data to the buffer.
   const contents = new Uint32Array(buffer.getMappedRange());

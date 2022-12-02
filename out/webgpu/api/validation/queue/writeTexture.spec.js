@@ -46,8 +46,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 16, height: 16 },
     usage,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const data = new Uint8Array(16);
   const size = [1, 1];
 
@@ -71,8 +71,8 @@ fn(async (t) => {
     size: { width: 16, height: 16 },
     sampleCount,
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const data = new Uint8Array(16);
   const size = [1, 1];
@@ -97,8 +97,8 @@ fn(async (t) => {
   const texture = sourceDevice.createTexture({
     size: { width: 16, height: 16 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   t.trackForCleanup(texture);
 
   const data = new Uint8Array(16);

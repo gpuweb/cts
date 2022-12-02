@@ -44,8 +44,8 @@ export const d = makeCaseCache('abs', {
     };
 
     return fullF32Range().map((x) => makeCase(x));
-  } });
-
+  }
+});
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').

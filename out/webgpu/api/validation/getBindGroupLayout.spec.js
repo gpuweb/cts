@@ -20,13 +20,13 @@ fn(async (t) => {
   const { index } = t.params;
 
   const pipelineBindGroupLayouts = t.device.createBindGroupLayout({
-    entries: [] });
-
+    entries: []
+  });
 
   const kBindGroupLayoutsSizeInPipelineLayout = 1;
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: [pipelineBindGroupLayouts] });
-
+    bindGroupLayouts: [pipelineBindGroupLayouts]
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: pipelineLayout,
@@ -36,22 +36,22 @@ fn(async (t) => {
             @vertex
             fn main()-> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }` }),
-
-      entryPoint: 'main' },
-
+            }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] } });
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  });
 
   const shouldError = index >= kBindGroupLayoutsSizeInPipelineLayout;
 
@@ -81,10 +81,10 @@ fn(async (t) => {
             @vertex
             fn main()-> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }` }),
-
-      entryPoint: 'main' },
-
+            }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -93,12 +93,12 @@ fn(async (t) => {
             fn main() -> @location(0) vec4<f32> {
               _ = binding;
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] } });
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  });
 
   const shouldError = index >= kBindGroupLayoutsSizeInPipelineLayout;
 

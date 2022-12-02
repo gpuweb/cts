@@ -26,24 +26,24 @@ desc)
   const stagingBuffer = device.createBuffer({
     mappedAtCreation: true,
     size: bytesPerRow * height * depthOrArrayLayers,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
 
   // Write the texels into the staging buffer.
   texelView.writeTextureData(new Uint8Array(stagingBuffer.getMappedRange()), {
     bytesPerRow,
     rowsPerImage: height,
     subrectOrigin: [0, 0, 0],
-    subrectSize: [width, height, depthOrArrayLayers] });
-
+    subrectSize: [width, height, depthOrArrayLayers]
+  });
   stagingBuffer.unmap();
 
   // Create the texture.
   const texture = device.createTexture({
     ...desc,
     format: texelView.format,
-    usage: desc.usage | GPUTextureUsage.COPY_DST });
-
+    usage: desc.usage | GPUTextureUsage.COPY_DST
+  });
 
   // Copy from the staging buffer into the texture.
   const commandEncoder = device.createCommandEncoder();

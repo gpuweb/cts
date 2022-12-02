@@ -49,8 +49,8 @@ fn(async (t) => {
   t.expectValidationError(() => {
     t.device.createRenderBundleEncoder({
       colorFormats: Array(colorFormatCount).fill(colorFormat),
-      depthStencilFormat });
-
+      depthStencilFormat
+    });
   }, shouldError);
 });
 
@@ -84,8 +84,8 @@ fn(async (t) => {
     case 'color':{
         t.expectValidationError(() => {
           t.device.createRenderBundleEncoder({
-            colorFormats: [format] });
-
+            colorFormats: [format]
+          });
         }, !colorRenderable);
 
         break;
@@ -94,8 +94,8 @@ fn(async (t) => {
         t.expectValidationError(() => {
           t.device.createRenderBundleEncoder({
             colorFormats: [],
-            depthStencilFormat: format });
-
+            depthStencilFormat: format
+          });
         }, !depthStencil);
 
         break;
@@ -140,8 +140,8 @@ fn(async (t) => {
       colorFormats: [],
       depthStencilFormat,
       depthReadOnly,
-      stencilReadOnly });
-
+      stencilReadOnly
+    });
   }, shouldError);
 });
 
@@ -164,7 +164,7 @@ fn(async (t) => {
   t.device.createRenderBundleEncoder({
     colorFormats: ['bgra8unorm'],
     depthReadOnly,
-    stencilReadOnly });
-
+    stencilReadOnly
+  });
 });
 //# sourceMappingURL=createRenderBundleEncoder.spec.js.map

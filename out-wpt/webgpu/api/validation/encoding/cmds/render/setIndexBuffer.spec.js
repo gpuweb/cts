@@ -45,7 +45,6 @@ g.test('index_buffer,device_mismatch')
       size: 16,
       usage: GPUBufferUsage.INDEX,
     });
-
     t.trackForCleanup(indexBuffer);
 
     const { encoder, validateFinish } = t.createEncoder(encoderType);

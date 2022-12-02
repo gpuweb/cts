@@ -80,68 +80,68 @@ paramsSimple([
 {
   name: 'BothSE', // SE = Side Effects
   _body: 'return mul(&a, 10) - mul(&a, 10);',
-  _result: 20 - 200 },
-
+  _result: 20 - 200
+},
 {
   name: 'LeftSE', //
   _body: 'return mul(&a, 10) - a;',
-  _result: 20 - 20 },
-
+  _result: 20 - 20
+},
 {
   name: 'RightSE', //
   _body: 'return a - mul(&a, 10);',
-  _result: 2 - 20 },
-
+  _result: 2 - 20
+},
 {
   name: 'ThreeSE',
   _body: 'return mul(&a, 10) - mul(&a, 10) - mul(&a, 10);',
-  _result: 20 - 200 - 2000 },
-
+  _result: 20 - 200 - 2000
+},
 {
   name: 'LeftmostSE',
   _body: 'return mul3_ret0(&a, &b, &c, 10) - a - b - c;',
-  _result: 0 - 20 - 30 - 40 },
-
+  _result: 0 - 20 - 30 - 40
+},
 {
   name: 'RightmostSE', //
   _body: 'return a - b - c - mul3_ret0(&a, &b, &c, 10);',
-  _result: 2 - 3 - 4 - 0 },
-
+  _result: 2 - 3 - 4 - 0
+},
 {
   name: 'MiddleSE', //
   _body: 'return a - b - mul3_ret0(&a, &b, &c, 10) - c;',
-  _result: 2 - 3 - 0 - 40 },
-
+  _result: 2 - 3 - 0 - 40
+},
 {
   name: 'LiteralAndSEAndVar', //
   _body: 'return 1 - mul(&a, 10) - a;',
-  _result: 1 - 20 - 20 },
-
+  _result: 1 - 20 - 20
+},
 {
   name: 'VarAndSEAndLiteral', //
   _body: 'return a - mul(&a, 10) - 1;',
-  _result: 2 - 20 - 1 },
-
+  _result: 2 - 20 - 1
+},
 {
   name: 'SEAndVarAndLiteral', //
   _body: 'return mul(&a, 10) - a - 1;',
-  _result: 20 - 20 - 1 },
-
+  _result: 20 - 20 - 1
+},
 {
   name: 'VarAndLiteralAndSE', //
   _body: 'return a - 1 - mul(&a, 10);',
-  _result: 2 - 1 - 20 },
-
+  _result: 2 - 1 - 20
+},
 {
   name: 'MemberAccessAndSE',
   _body: 'return vec4_zero.x + set_vec4_x(&vec4_zero, 42);',
-  _result: 0 },
-
+  _result: 0
+},
 {
   name: 'SEAndMemberAccess',
   _body: 'return set_vec4_x(&vec4_zero, 42) + vec4_zero.x;',
-  _result: 42 }]).
-
+  _result: 42
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -154,59 +154,59 @@ paramsSimple([
   _body:
   'let r = (add(&a, 1) == 3) && (add(&a, 1) == 4);' + //
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'LeftSE',
   _body:
   'let r = (add(&a, 1) == 3) && (a == 3);' + //
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'RightSE',
   _body:
   'let r = (a == 2) && (add(&a, 1) == 3);' + //
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'LeftmostSE',
   _body:
   'let r = (mul3_ret0(&a, &b, &c, 10) == 0) && (a == 20) && (b == 30) && (c == 40);' +
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'RightmostSE',
   _body:
   'let r = (a == 2) && (b == 3) && (c == 4) && (mul3_ret0(&a, &b, &c, 10) == 0);' +
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'MiddleSE',
   _body:
   'let r = (a == 2) && (b == 3) && (mul3_ret0(&a, &b, &c, 10) == 0) && (c == 40);' +
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'ShortCircuit_And_LhsOnly',
   _body:
   // rhs should not execute
   'let t = (a != 2) && (mul(&a, 10) == 20);' + //
   'return a;',
-  _result: 2 },
-
+  _result: 2
+},
 {
   name: 'ShortCircuit_And_LhsAndRhs',
   _body:
   // rhs should execute
   'let t = (a == 2) && (mul(&a, 10) == 20);' + //
   'return a;',
-  _result: 20 },
-
+  _result: 20
+},
 {
   name: 'ShortCircuit_Or_LhsOnly',
   _body:
@@ -214,8 +214,8 @@ paramsSimple([
   'let t = (a == 2) || (mul(&a, 10) == 20);' + //
   'let r = (a == 2);' +
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'ShortCircuit_Or_LhsAndRhs',
   _body:
@@ -223,24 +223,24 @@ paramsSimple([
   'let t = (a != 2) || (mul(&a, 10) == 20);' + //
   'let r = (a == 20);' +
   'return i32(r);',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'NoShortCircuit_And',
   _body:
   // rhs should execute
   'let t = (a != 2) & (mul(&a, 10) == 20);' + //
   'return a;',
-  _result: 20 },
-
+  _result: 20
+},
 {
   name: 'NoShortCircuit_Or',
   _body:
   // rhs should execute
   'let t = (a == 2) | (mul(&a, 10) == 20);' + //
   'return a;',
-  _result: 20 }]).
-
+  _result: 20
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -252,23 +252,23 @@ paramsSimple([
 {
   name: 'ArithAndLogical',
   _body: 'return mul(&a, 10) - i32(mul(&a, 10) == 200 && mul(&a, 10) == 2000);',
-  _result: 20 - 1 },
-
+  _result: 20 - 1
+},
 {
   name: 'LogicalAndArith',
   _body: 'return i32(mul(&a, 10) == 20 && mul(&a, 10) == 200) - mul(&a, 10);',
-  _result: 1 - 2000 },
-
+  _result: 1 - 2000
+},
 {
   name: 'ArithAndLogical_ShortCircuit',
   _body: 'return mul(&a, 10) - i32(mul(&a, 10) != 200 && mul(&a, 10) == 2000);',
-  _result: 20 - 0 },
-
+  _result: 20 - 0
+},
 {
   name: 'LogicalAndArith_ShortCircuit',
   _body: 'return i32(mul(&a, 10) != 20 && mul(&a, 10) == 200) - mul(&a, 10);',
-  _result: 0 - 200 }]).
-
+  _result: 0 - 200
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -279,18 +279,18 @@ paramsSimple([
 {
   name: 'OneSE', //
   _body: 'return sub_mul3(mul(&a, 2), 2, a, 3, 3, 4);',
-  _result: 4 * 2 - 4 * 3 - 3 * 4 },
-
+  _result: 4 * 2 - 4 * 3 - 3 * 4
+},
 {
   name: 'AllSE',
   _body: 'return sub_mul3(mul(&a, 2), 2, mul(&a, 2), 3, mul(&a, 2), 4);',
-  _result: 4 * 2 - 8 * 3 - 16 * 4 },
-
+  _result: 4 * 2 - 8 * 3 - 16 * 4
+},
 {
   name: 'MiddleNotSE',
   _body: 'return sub_mul3(mul(&a, 2), 2, a, 3, mul(&a, 2), 4);',
-  _result: 4 * 2 - 4 * 3 - 8 * 4 }]).
-
+  _result: 4 * 2 - 4 * 3 - 8 * 4
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -301,18 +301,18 @@ paramsSimple([
 {
   name: 'LeftSE', //
   _body: 'return arr2D[mul(&a, 2)][a];',
-  _result: 4 * 10 + 4 },
-
+  _result: 4 * 10 + 4
+},
 {
   name: 'RightSE', //
   _body: 'return arr2D[a][mul(&a, 2)];',
-  _result: 2 * 10 + 4 },
-
+  _result: 2 * 10 + 4
+},
 {
   name: 'BothSE',
   _body: 'return arr2D[mul(&a, 2)][mul(&a, 2)];',
-  _result: 4 * 10 + 8 }]).
-
+  _result: 4 * 10 + 8
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -325,23 +325,23 @@ paramsSimple([
   _body:
   'arr1D_zero[mul(&a, 2)] = mul(&a, 2);' + //
   'return arr1D_zero[8];',
-  _result: 4 },
-
+  _result: 4
+},
 {
   name: 'ToArray2D',
   _body:
   'arr2D_zero[mul(&a, 2)][mul(&a, 2)] = mul(&a, 2);' + //
   'return arr2D_zero[8][16];',
-  _result: 4 },
-
+  _result: 4
+},
 {
   name: 'ToArrayFromArray',
   _body:
   'arr2D_zero[4][8] = 123;' +
   'arr1D_zero[mul(&a, 2)] = arr2D_zero[mul(&a, 2)][mul(&a, 2)];' +
   'return arr1D_zero[16];',
-  _result: 123 },
-
+  _result: 123
+},
 {
   name: 'ToArrayIndexedByArrayIndexedBySE',
   _body:
@@ -350,30 +350,30 @@ paramsSimple([
   'arr2[8] = 3;' +
   'arr1[arr2[mul(&a, 2)]] = mul(&a, 2);' +
   'return arr1[3];',
-  _result: 4 },
-
+  _result: 4
+},
 {
   name: 'ToVec_BothSE',
   _body:
   'a = 0;' +
   'vec4_zero[add(&a, 1)] = add(&a, 1);' + //
   'return vec4_zero[2];',
-  _result: 1 },
-
+  _result: 1
+},
 {
   name: 'ToVec_LeftSE',
   _body:
   'vec4_zero[add(&a, 1)] = a;' + //
   'return vec4_zero[3];',
-  _result: 2 },
-
+  _result: 2
+},
 {
   name: 'ToVec_RightSE',
   _body:
   'vec4_zero[a] = add(&a, 1);' + //
   'return vec4_zero[3];',
-  _result: 3 }]).
-
+  _result: 3
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -386,22 +386,22 @@ paramsSimple([
   _body:
   'let r = S(mul(&a, 2), mul(&a, 2), mul(&a, 2));' + //
   'return sub_mul3(r.x, 2, r.y, 3, r.z, 4);',
-  _result: 4 * 2 - 8 * 3 - 16 * 4 },
-
+  _result: 4 * 2 - 8 * 3 - 16 * 4
+},
 {
   name: 'Array1D',
   _body:
   'let r = array<i32, 3>(mul(&a, 2), mul(&a, 2), mul(&a, 2));' + //
   'return sub_mul3(r[0], 2, r[1], 3, r[2], 4);',
-  _result: 4 * 2 - 8 * 3 - 16 * 4 },
-
+  _result: 4 * 2 - 8 * 3 - 16 * 4
+},
 {
   name: 'Array2D',
   _body:
   'let r = array<array<i32, 2>, 2>(array<i32, 2>(mul(&a, 2), mul(&a, 2)), array<i32, 2>(mul(&a, 2), mul(&a, 2)));' +
   'return sub_mul4(r[0][0], 2, r[0][1], 3, r[1][0], 4, r[1][1], 5);',
-  _result: 4 * 2 - 8 * 3 - 16 * 4 - 32 * 5 }]).
-
+  _result: 4 * 2 - 8 * 3 - 16 * 4 - 32 * 5
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -413,13 +413,13 @@ paramsSimple([
 {
   name: 'Vec',
   _body: 'return vec3(mul(&a, 2)).x - vec3(mul(&a, 3)).x;',
-  _result: 4 - 12 },
-
+  _result: 4 - 12
+},
 {
   name: 'Struct',
   _body: 'return make_S(mul(&a, 2)).x - make_S(mul(&a, 3)).x;',
-  _result: 4 - 12 }]).
-
+  _result: 4 - 12
+}]).
 
 fn((t) => run(t, t.params._body, t.params._result));
 
@@ -444,19 +444,19 @@ fn main() {
   const outputBufferSize = 4; // result : i32
   const outputBuffer = t.device.createBuffer({
     size: outputBufferSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  });
 
   const module = t.device.createShaderModule({ code: source });
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module, entryPoint: 'main' } });
-
+    compute: { module, entryPoint: 'main' }
+  });
 
   const group = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer: outputBuffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer: outputBuffer } }]
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
@@ -479,7 +479,7 @@ fn main() {
 
   t.expectGPUBufferValuesPassCheck(outputBuffer, checkExpectation, {
     type: Uint8Array,
-    typedLength: outputBufferSize });
-
+    typedLength: outputBufferSize
+  });
 }
 //# sourceMappingURL=evaluation_order.spec.js.map

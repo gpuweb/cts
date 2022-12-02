@@ -40,10 +40,8 @@ export const kBit = {
         quarter: 0x3f49_0fdb,
         sixth: 0x3f06_0a92,
       },
-
       e: 0x402d_f854,
     },
-
     negative: {
       max: 0x8080_0000,
       min: 0xff7f_ffff,
@@ -59,31 +57,26 @@ export const kBit = {
         sixth: 0xbf06_0a92,
       },
     },
-
     subnormal: {
       positive: {
         min: 0x0000_0001,
         max: 0x007f_ffff,
       },
-
       negative: {
         max: 0x8000_0001,
         min: 0x807f_ffff,
       },
     },
-
     nan: {
       negative: {
         s: 0xff80_0001,
         q: 0xffc0_0001,
       },
-
       positive: {
         s: 0x7f80_0001,
         q: 0x7fc0_0001,
       },
     },
-
     infinity: {
       positive: 0x7f80_0000,
       negative: 0xff80_0000,
@@ -97,37 +90,31 @@ export const kBit = {
       max: 0x7bff,
       zero: 0x0000,
     },
-
     negative: {
       max: 0x8400,
       min: 0xfbff,
       zero: 0x8000,
     },
-
     subnormal: {
       positive: {
         min: 0x0001,
         max: 0x03ff,
       },
-
       negative: {
         max: 0x8001,
         min: 0x83ff,
       },
     },
-
     nan: {
       negative: {
         s: 0xfc01,
         q: 0xfe01,
       },
-
       positive: {
         s: 0x7c01,
         q: 0x7e01,
       },
     },
-
     infinity: {
       positive: 0x7c00,
       negative: 0xfc00,
@@ -302,7 +289,6 @@ export const kValue = {
       min: 0,
       max: 2147483647,
     },
-
     negative: {
       min: -2147483648,
       max: 0,
@@ -330,10 +316,8 @@ export const kValue = {
         quarter: hexToF32(kBit.f32.positive.pi.quarter),
         sixth: hexToF32(kBit.f32.positive.pi.sixth),
       },
-
       e: hexToF32(kBit.f32.positive.e),
     },
-
     negative: {
       max: hexToF32(kBit.f32.negative.max),
       min: hexToF32(kBit.f32.negative.min),
@@ -348,19 +332,16 @@ export const kValue = {
         sixth: hexToF32(kBit.f32.negative.pi.sixth),
       },
     },
-
     subnormal: {
       positive: {
         min: hexToF32(kBit.f32.subnormal.positive.min),
         max: hexToF32(kBit.f32.subnormal.positive.max),
       },
-
       negative: {
         max: hexToF32(kBit.f32.subnormal.negative.max),
         min: hexToF32(kBit.f32.subnormal.negative.min),
       },
     },
-
     infinity: {
       positive: hexToF32(kBit.f32.infinity.positive),
       negative: hexToF32(kBit.f32.infinity.negative),
@@ -373,7 +354,6 @@ export const kValue = {
       min: 0,
       max: 32767,
     },
-
     negative: {
       min: -32768,
       max: 0,
@@ -393,25 +373,21 @@ export const kValue = {
       max: hexToF16(kBit.f16.positive.max),
       zero: hexToF16(kBit.f16.positive.zero),
     },
-
     negative: {
       max: hexToF16(kBit.f16.negative.max),
       min: hexToF16(kBit.f16.negative.min),
       zero: hexToF16(kBit.f16.negative.zero),
     },
-
     subnormal: {
       positive: {
         min: hexToF16(kBit.f16.subnormal.positive.min),
         max: hexToF16(kBit.f16.subnormal.positive.max),
       },
-
       negative: {
         max: hexToF16(kBit.f16.subnormal.negative.max),
         min: hexToF16(kBit.f16.subnormal.negative.min),
       },
     },
-
     infinity: {
       positive: hexToF16(kBit.f16.infinity.positive),
       negative: hexToF16(kBit.f16.infinity.negative),
@@ -486,7 +462,6 @@ export const kValue = {
     toMinus31: Math.pow(2, -31),
     toMinus32: Math.pow(2, -32),
   },
-
   negPowTwo: {
     to0: -Math.pow(2, 0),
     to1: -Math.pow(2, 1),
@@ -562,7 +537,6 @@ export const kValue = {
       min: 0,
       max: 127,
     },
-
     negative: {
       min: -128,
       max: 0,

@@ -33,10 +33,10 @@ import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
 import { SubresourceRange } from '../../../util/texture/subresource.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
-export let UninitializeMethod;(function (UninitializeMethod) {UninitializeMethod["Creation"] = "Creation";UninitializeMethod["StoreOpClear"] = "StoreOpClear";})(UninitializeMethod || (UninitializeMethod = {}));
+export let UninitializeMethod;
 
-
-
+// The texture was rendered to with GPUStoreOp "clear"
+(function (UninitializeMethod) {UninitializeMethod["Creation"] = "Creation";UninitializeMethod["StoreOpClear"] = "StoreOpClear";})(UninitializeMethod || (UninitializeMethod = {}));
 const kUninitializeMethods = Object.keys(UninitializeMethod);
 
 export let ReadMethod;
@@ -46,7 +46,7 @@ export let ReadMethod;
 
 
 
-
+// Read the texture as a storage texture
 
 
 // Test with these mip level counts
@@ -81,25 +81,25 @@ const kUninitializedLayerRangesToTest = {
 // the data for each value may have a different representation. These enums are converted to a
 // representation such that their values can be compared. ex.) An integer is needed to upload to an
 // unsigned normalized format, but its value is read as a float in the shader.
-export let InitializedState;(function (InitializedState) {InitializedState[InitializedState["Canary"] = 0] = "Canary";InitializedState[InitializedState["Zero"] = 1] = "Zero";})(InitializedState || (InitializedState = {}));
+export let InitializedState;
 
-
-
+// We check that uninitialized subresources are in this state when read back.
+(function (InitializedState) {InitializedState[InitializedState["Canary"] = 0] = "Canary";InitializedState[InitializedState["Zero"] = 1] = "Zero";})(InitializedState || (InitializedState = {}));
 
 const initializedStateAsFloat = {
   [InitializedState.Zero]: 0,
-  [InitializedState.Canary]: 1 };
-
+  [InitializedState.Canary]: 1
+};
 
 const initializedStateAsUint = {
   [InitializedState.Zero]: 0,
-  [InitializedState.Canary]: 1 };
-
+  [InitializedState.Canary]: 1
+};
 
 const initializedStateAsSint = {
   [InitializedState.Zero]: 0,
-  [InitializedState.Canary]: -1 };
-
+  [InitializedState.Canary]: -1
+};
 
 function initializedStateAsColor(
 state,
@@ -118,13 +118,13 @@ format)
 
 const initializedStateAsDepth = {
   [InitializedState.Zero]: 0,
-  [InitializedState.Canary]: 0.8 };
-
+  [InitializedState.Canary]: 0.8
+};
 
 const initializedStateAsStencil = {
   [InitializedState.Zero]: 0,
-  [InitializedState.Canary]: 42 };
-
+  [InitializedState.Canary]: 42
+};
 
 function getRequiredTextureUsage(
 format,
@@ -196,14 +196,14 @@ export class TextureZeroInitTest extends GPUTest {
         B,
         A,
         Depth: initializedStateAsDepth[state],
-        Stencil: initializedStateAsStencil[state] };
-
+        Stencil: initializedStateAsStencil[state]
+      };
     };
 
     this.stateToTexelComponents = {
       [InitializedState.Zero]: stateToTexelComponents(InitializedState.Zero),
-      [InitializedState.Canary]: stateToTexelComponents(InitializedState.Canary) };
-
+      [InitializedState.Canary]: stateToTexelComponents(InitializedState.Canary)
+    };
   }
 
   get textureWidth() {
@@ -261,8 +261,8 @@ export class TextureZeroInitTest extends GPUTest {
         if (!uninitialized[level][layer]) {
           yield new SubresourceRange({
             mipRange: { begin: level, count: 1 },
-            layerRange: { begin: layer, count: 1 } });
-
+            layerRange: { begin: layer, count: 1 }
+          });
         }
       }
     }
@@ -274,8 +274,8 @@ export class TextureZeroInitTest extends GPUTest {
   {
     const viewDescriptor = {
       dimension: '2d',
-      aspect };
-
+      aspect
+    };
 
     if (subresourceRange === undefined) {
       return viewDescriptor;
@@ -287,8 +287,8 @@ export class TextureZeroInitTest extends GPUTest {
         baseMipLevel: level,
         mipLevelCount: 1,
         baseArrayLayer: layer,
-        arrayLayerCount: 1 };
-
+        arrayLayerCount: 1
+      };
     }
   }
 
@@ -312,15 +312,15 @@ export class TextureZeroInitTest extends GPUTest {
             view: texture.createView(viewDescriptor),
             storeOp: 'store',
             clearValue: initializedStateAsColor(state, this.p.format),
-            loadOp: 'clear' }] }).
+            loadOp: 'clear'
+          }]
 
-
-
+        }).
         end();
       } else {
         const depthStencilAttachment = {
-          view: texture.createView(viewDescriptor) };
-
+          view: texture.createView(viewDescriptor)
+        };
         if (kTextureFormatInfo[this.p.format].depth) {
           depthStencilAttachment.depthClearValue = initializedStateAsDepth[state];
           depthStencilAttachment.depthLoadOp = 'clear';
@@ -334,8 +334,8 @@ export class TextureZeroInitTest extends GPUTest {
         commandEncoder.
         beginRenderPass({
           colorAttachments: [],
-          depthStencilAttachment }).
-
+          depthStencilAttachment
+        }).
         end();
       }
     }
@@ -384,8 +384,8 @@ export class TextureZeroInitTest extends GPUTest {
       {
         buffer,
         bytesPerRow,
-        rowsPerImage },
-
+        rowsPerImage
+      },
       { texture, mipLevel: level, origin: { x: 0, y: 0, z: layer } },
       { width, height, depthOrArrayLayers: depth });
 
@@ -421,15 +421,15 @@ export class TextureZeroInitTest extends GPUTest {
           {
             view: texture.createView(desc),
             storeOp: 'discard',
-            loadOp: 'load' }] }).
+            loadOp: 'load'
+          }]
 
-
-
+        }).
         end();
       } else {
         const depthStencilAttachment = {
-          view: texture.createView(desc) };
-
+          view: texture.createView(desc)
+        };
         if (kTextureFormatInfo[this.p.format].depth) {
           depthStencilAttachment.depthLoadOp = 'load';
           depthStencilAttachment.depthStoreOp = 'discard';
@@ -441,16 +441,16 @@ export class TextureZeroInitTest extends GPUTest {
         commandEncoder.
         beginRenderPass({
           colorAttachments: [],
-          depthStencilAttachment }).
-
+          depthStencilAttachment
+        }).
         end();
       }
     }
 
     commandEncoder.popDebugGroup();
     this.queue.submit([commandEncoder.finish()]);
-  }}
-
+  }
+}
 
 const kTestParams = kUnitCaseParamsBuilder.
 combine('dimension', kTextureDimensions).
@@ -567,8 +567,8 @@ const checkContentsImpl = {
   DepthTest: checkContentsByDepthTest,
   StencilTest: checkContentsByStencilTest,
   ColorBlending: (t) => t.skip('Not implemented'),
-  Storage: (t) => t.skip('Not implemented') };
-
+  Storage: (t) => t.skip('Not implemented')
+};
 
 export const g = makeTestGroup(TextureZeroInitTest);
 
@@ -591,8 +591,8 @@ fn(async (t) => {
     dimension: t.params.dimension,
     usage,
     mipLevelCount: t.params.mipLevelCount,
-    sampleCount: t.params.sampleCount });
-
+    sampleCount: t.params.sampleCount
+  });
   t.trackForCleanup(texture);
 
   if (t.params.canaryOnCreation) {

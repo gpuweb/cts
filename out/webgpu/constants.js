@@ -13,8 +13,8 @@ const BufferUsage = {
   UNIFORM: 0x0040,
   STORAGE: 0x0080,
   INDIRECT: 0x0100,
-  QUERY_RESOLVE: 0x0200 };
-
+  QUERY_RESOLVE: 0x0200
+};
 checkType(BufferUsage);
 
 const TextureUsage = {
@@ -24,8 +24,8 @@ const TextureUsage = {
   SAMPLED: 0x04,
   STORAGE_BINDING: 0x08,
   STORAGE: 0x08,
-  RENDER_ATTACHMENT: 0x10 };
-
+  RENDER_ATTACHMENT: 0x10
+};
 checkType(TextureUsage);
 
 const ColorWrite = {
@@ -33,21 +33,21 @@ const ColorWrite = {
   GREEN: 0x2,
   BLUE: 0x4,
   ALPHA: 0x8,
-  ALL: 0xf };
-
+  ALL: 0xf
+};
 checkType(ColorWrite);
 
 const ShaderStage = {
   VERTEX: 0x1,
   FRAGMENT: 0x2,
-  COMPUTE: 0x4 };
-
+  COMPUTE: 0x4
+};
 checkType(ShaderStage);
 
 const MapMode = {
   READ: 0x1,
-  WRITE: 0x2 };
-
+  WRITE: 0x2
+};
 checkType(MapMode);
 
 export const GPUConst = {
@@ -55,8 +55,8 @@ export const GPUConst = {
   TextureUsage,
   ColorWrite,
   ShaderStage,
-  MapMode };
-
+  MapMode
+};
 
 export const kMaxUnsignedLongValue = 4294967295;
 export const kMaxUnsignedLongLongValue = Number.MAX_SAFE_INTEGER;

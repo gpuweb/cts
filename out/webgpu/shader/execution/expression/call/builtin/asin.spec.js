@@ -39,8 +39,8 @@ export const d = makeCaseCache('asin', {
     ...linearRange(-1, 1, 100), // asin is defined on [-1, 1]
     ...sourceFilteredF32Range('storage', -1, 1)].
     map(makeCase);
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

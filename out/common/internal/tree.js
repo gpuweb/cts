@@ -107,7 +107,7 @@ export class TestTree {
   iterateCollapsedNodes({
     includeIntermediateNodes = false,
     includeEmptySubtrees = false,
-    alwaysExpandThroughLevel })
+    alwaysExpandThroughLevel
 
 
 
@@ -115,13 +115,13 @@ export class TestTree {
 
 
 
-  {
+  }) {
     const expandThroughLevel = Math.max(this.forQuery.level, alwaysExpandThroughLevel);
     return TestTree.iterateSubtreeNodes(this.root, {
       includeIntermediateNodes,
       includeEmptySubtrees,
-      expandThroughLevel });
-
+      expandThroughLevel
+    });
   }
 
   iterateLeaves() {
@@ -220,8 +220,8 @@ export class TestTree {
       }
     }
     return s;
-  }}
-
+  }
+}
 
 // MAINTENANCE_TODO: Consider having subqueriesToExpand actually impact the depth-order of params
 // in the tree.
@@ -378,8 +378,8 @@ isCollapsible)
     readableRelativeName: suite + kBigSeparator,
     query,
     children: new Map(),
-    collapsible: isCollapsible(query) };
-
+    collapsible: isCollapsible(query)
+  };
 }
 
 function addSubtreeForDirPath(
@@ -397,8 +397,8 @@ isCollapsible)
       return {
         readableRelativeName: part + kPathSeparator + kWildcard,
         query,
-        collapsible: isCollapsible(query) };
-
+        collapsible: isCollapsible(query)
+      };
     });
   }
   return tree;
@@ -419,8 +419,8 @@ isCollapsible)
     return {
       readableRelativeName: file[file.length - 1] + kBigSeparator + kWildcard,
       query,
-      collapsible: isCollapsible(query) };
-
+      collapsible: isCollapsible(query)
+    };
   });
   return subtree;
 }
@@ -445,8 +445,8 @@ isCollapsible)
       return {
         readableRelativeName: part + kPathSeparator + kWildcard,
         query,
-        collapsible: isCollapsible(query) };
-
+        collapsible: isCollapsible(query)
+      };
     });
   }
   // This goes from that -> suite:a,b:c,d:*
@@ -463,8 +463,8 @@ isCollapsible)
       kWildcard,
       query,
       testCreationStack,
-      collapsible: isCollapsible(query) };
-
+      collapsible: isCollapsible(query)
+    };
   });
 }
 
@@ -493,8 +493,8 @@ checkCollapsible)
       return {
         readableRelativeName: name + kParamSeparator + kWildcard,
         query: subquery,
-        collapsible: checkCollapsible(subquery) };
-
+        collapsible: checkCollapsible(subquery)
+      };
     });
   }
 
@@ -531,8 +531,8 @@ function insertLeaf(parent, query, t) {
     readableRelativeName: readableNameForCase(query),
     query,
     run: (rec, expectations) => t.run(rec, query, expectations || []),
-    isUnimplemented: t.isUnimplemented };
-
+    isUnimplemented: t.isUnimplemented
+  };
 
   // This is a leaf (e.g. s:f:t:x=1;* -> s:f:t:x=1). The key is always ''.
   const key = '';

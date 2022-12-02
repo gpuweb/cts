@@ -29,7 +29,6 @@ Note, the createTexture tests cover these validation cases where this feature is
       sampleCount,
       usage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
     };
-
     t.device.createTexture(descriptor);
   });
 
@@ -50,7 +49,6 @@ iff rg11b10ufloat-renderable feature is enabled.
       sampleCount: 1,
       usage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
     });
-
     const encoder = t.device.createCommandEncoder();
     encoder.beginRenderPass({
       colorAttachments: [
@@ -97,19 +95,15 @@ in descriptor.fragment.targets iff rg11b10ufloat-renderable feature is enabled.
         module: t.device.createShaderModule({
           code: t.getNoOpShaderCode('VERTEX'),
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: t.getNoOpShaderCode('FRAGMENT'),
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rg11b10ufloat', writeMask: 0 }],
       },
-
       primitive: { topology: 'triangle-list' },
     });
   });

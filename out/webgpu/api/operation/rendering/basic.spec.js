@@ -12,14 +12,14 @@ export const g = makeTestGroup(GPUTest);
 g.test('clear').fn(async (t) => {
   const dst = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const colorAttachment = t.device.createTexture({
     format: 'rgba8unorm',
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const colorAttachmentView = colorAttachment.createView();
 
   const encoder = t.device.createCommandEncoder();
@@ -29,10 +29,10 @@ g.test('clear').fn(async (t) => {
       view: colorAttachmentView,
       clearValue: { r: 0.0, g: 1.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.end();
   encoder.copyTextureToBuffer(
   { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
@@ -47,14 +47,14 @@ g.test('clear').fn(async (t) => {
 g.test('fullscreen_quad').fn(async (t) => {
   const dst = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const colorAttachment = t.device.createTexture({
     format: 'rgba8unorm',
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const colorAttachmentView = colorAttachment.createView();
 
   const pipeline = t.device.createRenderPipeline({
@@ -71,23 +71,23 @@ g.test('fullscreen_quad').fn(async (t) => {
                 vec2<f32>(-1.0, 1.0));
             return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
           @fragment fn main() -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
           }
-          ` }),
-
+          `
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format: 'rgba8unorm' }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
@@ -96,10 +96,10 @@ g.test('fullscreen_quad').fn(async (t) => {
       view: colorAttachmentView,
       storeOp: 'store',
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-      loadOp: 'clear' }] });
+      loadOp: 'clear'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -148,18 +148,18 @@ fn(async (t) => {
   const kBytesPerRow = 256;
   const dst = t.device.createBuffer({
     size: 3 * kBytesPerRow,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   const paramsBuffer = t.device.createBuffer({
     size: 8,
-    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+  });
 
   const indirectBuffer = t.device.createBuffer({
     size: 20,
-    usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.INDIRECT | GPUBufferUsage.COPY_DST
+  });
   const writeIndirectParams = (count, instanceCount) => {
     const params = new Uint32Array(5);
     params[0] = count; // Vertex or index count
@@ -176,8 +176,8 @@ fn(async (t) => {
     indexBuffer = t.device.createBuffer({
       size: kMaxIndices * Uint32Array.BYTES_PER_ELEMENT,
       usage: GPUBufferUsage.INDEX | GPUBufferUsage.COPY_DST,
-      mappedAtCreation: true });
-
+      mappedAtCreation: true
+    });
     t.trackForCleanup(indexBuffer);
     const indexData = new Uint32Array(indexBuffer.getMappedRange());
     for (let i = 0; i < kMaxIndices; ++i) {
@@ -189,8 +189,8 @@ fn(async (t) => {
   const colorAttachment = t.device.createTexture({
     format: 'rgba8unorm',
     size: { width: 3, height: 3, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const colorAttachmentView = colorAttachment.createView();
 
   const bgLayout = t.device.createBindGroupLayout({
@@ -198,20 +198,20 @@ fn(async (t) => {
     {
       binding: 0,
       visibility: GPUShaderStage.VERTEX,
-      buffer: {} }] });
+      buffer: {}
+    }]
 
-
-
+  });
 
   const bindGroup = t.device.createBindGroup({
     layout: bgLayout,
     entries: [
     {
       binding: 0,
-      resource: { buffer: paramsBuffer } }] });
+      resource: { buffer: paramsBuffer }
+    }]
 
-
-
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: t.device.createPipelineLayout({ bindGroupLayouts: [bgLayout] }),
@@ -239,23 +239,23 @@ fn(async (t) => {
             let y = -selectValue(i, params.numInstances);
             return vec4<f32>(x, y, 0.0, 1.0);
           }
-          ` }),
-
-      entryPoint: 'main' },
-
+          `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(1.0, 1.0, 0.0, 1.0);
             }
-            ` }),
-
+            `
+      }),
       entryPoint: 'main',
-      targets: [{ format: 'rgba8unorm' }] },
-
-    primitive: { topology: 'point-list' } });
-
+      targets: [{ format: 'rgba8unorm' }]
+    },
+    primitive: { topology: 'point-list' }
+  });
 
   const runPipeline = (numVertices, numInstances) => {
     const encoder = t.device.createCommandEncoder();
@@ -265,10 +265,10 @@ fn(async (t) => {
         view: colorAttachmentView,
         storeOp: 'store',
         clearValue: { r: 0.0, g: 0.0, b: 1.0, a: 1.0 },
-        loadOp: 'clear' }] });
+        loadOp: 'clear'
+      }]
 
-
-
+    });
 
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
@@ -307,8 +307,8 @@ fn(async (t) => {
       t.expectGPUBufferValuesPassCheck(dst, (data) => checkElementsEqual(data, allYellow), {
         srcByteOffset: row * 256,
         type: Uint8Array,
-        typedLength: 12 });
-
+        typedLength: 12
+      });
     }
   };
 
@@ -320,24 +320,24 @@ fn(async (t) => {
   const counts = [
   {
     numInstances: 4,
-    vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22, 2 ** 24] },
-
+    vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22, 2 ** 24]
+  },
   {
     numInstances: 2 ** 8,
-    vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22] },
-
+    vertexCounts: [2 ** 10, 2 ** 16, 2 ** 18, 2 ** 20, 2 ** 22]
+  },
   {
     numInstances: 2 ** 10,
-    vertexCounts: [2 ** 8, 2 ** 10, 2 ** 12, 2 ** 16, 2 ** 18, 2 ** 20] },
-
+    vertexCounts: [2 ** 8, 2 ** 10, 2 ** 12, 2 ** 16, 2 ** 18, 2 ** 20]
+  },
   {
     numInstances: 2 ** 16,
-    vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10, 2 ** 12, 2 ** 14] },
-
+    vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10, 2 ** 12, 2 ** 14]
+  },
   {
     numInstances: 2 ** 20,
-    vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10] }];
-
+    vertexCounts: [2 ** 4, 2 ** 8, 2 ** 10]
+  }];
 
   for (const { numInstances, vertexCounts } of counts) {
     for (const numVertices of vertexCounts) {

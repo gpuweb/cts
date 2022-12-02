@@ -41,8 +41,8 @@ export const d = makeCaseCache('step', {
       // [0, 1] case
       return {
         input: [f32(edge), f32(x)],
-        expected: anyOf(zeroInterval, oneInterval) };
-
+        expected: anyOf(zeroInterval, oneInterval)
+      };
     };
 
     const range = fullF32Range();
@@ -54,8 +54,8 @@ export const d = makeCaseCache('step', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

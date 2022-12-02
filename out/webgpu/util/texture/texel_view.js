@@ -30,12 +30,12 @@ export class TexelView {
   {
     bytes,
     ulpFromZero,
-    color })
+    color
 
 
 
 
-
+  })
   {
     this.format = format;
     this.bytes = bytes;
@@ -54,13 +54,13 @@ export class TexelView {
     bytesPerRow,
     rowsPerImage,
     subrectOrigin,
-    subrectSize })
+    subrectSize
 
 
 
 
 
-
+  })
   {
     const origin = reifyOrigin3D(subrectOrigin);
     const size = reifyExtent3D(subrectSize);
@@ -100,8 +100,8 @@ export class TexelView {
     return new TexelView(format, {
       bytes: generator,
       ulpFromZero: (coords) => repr.bitsToULPFromZero(repr.unpackBits(generator(coords))),
-      color: (coords) => repr.bitsToNumber(repr.unpackBits(generator(coords))) });
-
+      color: (coords) => repr.bitsToNumber(repr.unpackBits(generator(coords)))
+    });
   }
 
   /** Produces a TexelView from a generator of numeric "color" values for each texel. */
@@ -123,8 +123,8 @@ export class TexelView {
     return new TexelView(format, {
       bytes: (coords) => new Uint8Array(repr.pack(repr.encode(generator(coords)))),
       ulpFromZero: (coords) => repr.bitsToULPFromZero(repr.numberToBits(generator(coords))),
-      color: generator });
-
+      color: generator
+    });
   }
 
   /** Writes the contents of a TexelView as "linear image data", i.e. the `writeTexture` format. */
@@ -134,13 +134,13 @@ export class TexelView {
     bytesPerRow,
     rowsPerImage,
     subrectOrigin: subrectOrigin_,
-    subrectSize: subrectSize_ })
+    subrectSize: subrectSize_
 
 
 
 
 
-
+  })
   {
     const subrectOrigin = reifyOrigin3D(subrectOrigin_);
     const subrectSize = reifyExtent3D(subrectSize_);
@@ -156,5 +156,6 @@ export class TexelView {
         }
       }
     }
-  }}
+  }
+}
 //# sourceMappingURL=texel_view.js.map

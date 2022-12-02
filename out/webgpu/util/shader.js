@@ -14,17 +14,17 @@ export const kDefaultFragmentShaderCode = `
 const kPlainTypeInfo = {
   i32: {
     suffix: '',
-    fractionDigits: 0 },
-
+    fractionDigits: 0
+  },
   u32: {
     suffix: 'u',
-    fractionDigits: 0 },
-
+    fractionDigits: 0
+  },
   f32: {
     suffix: '',
-    fractionDigits: 4 } };
-
-
+    fractionDigits: 4
+  }
+};
 
 /**
  *

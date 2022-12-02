@@ -131,10 +131,8 @@ TODO: check the contents of the depth and stencil outputs [2]
                 return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
               }`,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -150,17 +148,14 @@ TODO: check the contents of the depth and stencil outputs [2]
                 return color;
               }`,
           }),
-
           entryPoint: 'main',
           targets: [{ format }],
         },
-
         primitive: {
           topology: t.params.primitiveTopology,
           frontFace: t.params.frontFace,
           cullMode: t.params.cullMode,
         },
-
         depthStencil: depthTexture ? { format: t.params.depthStencilFormat } : undefined,
       })
     );

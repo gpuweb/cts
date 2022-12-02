@@ -43,8 +43,8 @@ export const d = makeCaseCache('mix', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('matching_abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

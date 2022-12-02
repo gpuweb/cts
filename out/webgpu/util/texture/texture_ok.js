@@ -41,8 +41,8 @@ opts)
     maxIntDiff = 0,
     maxFractionalDiff,
     maxDiffULPsForNormFormat,
-    maxDiffULPsForFloatFormat } =
-  opts;
+    maxDiffULPsForFloatFormat
+  } = opts;
 
   assert(maxIntDiff >= 0, 'threshold must be non-negative');
   if (maxFractionalDiff !== undefined) {
@@ -163,13 +163,13 @@ copySize,
 { format })
 {
   const { byteLength, bytesPerRow, rowsPerImage } = getTextureSubCopyLayout(format, copySize, {
-    aspect: source.aspect });
-
+    aspect: source.aspect
+  });
 
   const buffer = t.device.createBuffer({
     usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ,
-    size: byteLength });
-
+    size: byteLength
+  });
   t.trackForCleanup(buffer);
 
   const cmd = t.device.createCommandEncoder();
@@ -267,8 +267,8 @@ texelCompareOptions)
 
   const opts = {
     fillToWidth: 120,
-    numberToString };
-
+    numberToString
+  };
   return `\
  between ${lowerCorner} and ${upperCorner} inclusive:
 ${generatePrettyTable(opts, [
@@ -315,8 +315,8 @@ texelCompareOptions)
     bytesPerRow,
     rowsPerImage,
     subrectOrigin,
-    subrectSize };
-
+    subrectSize
+  };
 
   const actTexelView = TexelView.fromTextureDataByReference(format, data, texelViewConfig);
 
@@ -336,7 +336,7 @@ texelCompareOptions)
   return new ErrorWithExtra(msg, () => ({
     expTexelView,
     // Make a new TexelView with a copy of the data so we can unmap the buffer (debug mode only).
-    actTexelView: TexelView.fromTextureDataByReference(format, data.slice(), texelViewConfig) }));
-
+    actTexelView: TexelView.fromTextureDataByReference(format, data.slice(), texelViewConfig)
+  }));
 }
 //# sourceMappingURL=texture_ok.js.map

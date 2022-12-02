@@ -133,28 +133,24 @@ Tests that whether it's allowed to nest various types of queries:
       end: 'pipeline-statistics',
       _valid: true,
     },
-
     {
       begin: 'pipeline-statistics',
       nest: 'timestamp',
       end: 'pipeline-statistics',
       _valid: true,
     },
-
     {
       begin: 'pipeline-statistics',
       nest: 'pipeline-statistics',
       end: 'pipeline-statistics',
       _valid: false,
     },
-
     {
       begin: 'pipeline-statistics',
       nest: 'occlusion',
       end: 'pipeline-statistics',
       _valid: true,
     },
-
     { begin: 'pipeline-statistics', nest: 'occlusion', end: 'occlusion', _valid: true },
     { begin: 'timestamp', nest: 'occlusion', end: 'occlusion', _valid: true },
     {

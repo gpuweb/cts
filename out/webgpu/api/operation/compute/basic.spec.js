@@ -22,8 +22,8 @@ g.test('memcpy').fn(async (t) => {
 
   const dst = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  });
 
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
@@ -41,19 +41,19 @@ g.test('memcpy').fn(async (t) => {
             dst.value = src.value;
             return;
           }
-        ` }),
-
-      entryPoint: 'main' } });
-
-
+        `
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   const bg = t.device.createBindGroup({
     entries: [
     { binding: 0, resource: { buffer: src, offset: 0, size: 4 } },
     { binding: 1, resource: { buffer: dst, offset: 0, size: 4 } }],
 
-    layout: pipeline.getBindGroupLayout(0) });
-
+    layout: pipeline.getBindGroupLayout(0)
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
@@ -95,8 +95,8 @@ fn(async (t) => {
   const bufferByteSize = Uint32Array.BYTES_PER_ELEMENT * bufferLength;
   const dst = t.device.createBuffer({
     size: bufferByteSize,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.STORAGE
+  });
 
   // Only use one large dimension and workgroup size in the dispatch
   // call to keep the size of the test reasonable.
@@ -135,16 +135,16 @@ fn(async (t) => {
               }
               dst.value[index] = val;
             }
-          ` }),
-
-      entryPoint: 'main' } });
-
-
+          `
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   const bg = t.device.createBindGroup({
     entries: [{ binding: 0, resource: { buffer: dst, offset: 0, size: bufferByteSize } }],
-    layout: pipeline.getBindGroupLayout(0) });
-
+    layout: pipeline.getBindGroupLayout(0)
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
@@ -156,8 +156,8 @@ fn(async (t) => {
 
   t.expectGPUBufferValuesPassCheck(dst, (a) => checkElementsEqualGenerated(a, (i) => val), {
     type: Uint32Array,
-    typedLength: bufferLength });
-
+    typedLength: bufferLength
+  });
 
   dst.destroy();
 });

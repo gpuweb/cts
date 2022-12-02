@@ -46,8 +46,8 @@ export class SubcaseBatchState {
    * Runs after all subcases finish.
    * @internal MAINTENANCE_TODO: Make this not visible to test code?
    */
-  async finalize() {}}
-
+  async finalize() {}
+}
 
 /**
  * A Fixture is a class used to instantiate each test sub/case at run time.
@@ -324,5 +324,6 @@ export class Fixture {
     this.eventualAsyncExpectation(async (niceStack) => {
       this.expectOK(await error, { mode, niceStack });
     });
-  }}
+  }
+}
 //# sourceMappingURL=fixture.js.map

@@ -124,14 +124,12 @@ g.test('linear_memory')
           access: 'read',
           dynamicOffset: false,
         },
-
         {
           storageClass: 'storage',
           storageMode: 'read_write',
           access: 'write',
           dynamicOffset: false,
         },
-
         { storageClass: 'storage', storageMode: 'read', access: 'read', dynamicOffset: true },
         { storageClass: 'storage', storageMode: 'read_write', access: 'read', dynamicOffset: true },
         {
@@ -140,7 +138,6 @@ g.test('linear_memory')
           access: 'write',
           dynamicOffset: true,
         },
-
         { storageClass: 'uniform', access: 'read', dynamicOffset: false },
         { storageClass: 'uniform', access: 'read', dynamicOffset: true },
         { storageClass: 'private', access: 'read' },
@@ -402,7 +399,6 @@ fn runTest() -> u32 {
         t.device.createBindGroupLayout({
           entries: testGroupBGLEntires,
         }),
-
         t.device.createBindGroupLayout({
           entries: [
             {
@@ -412,7 +408,6 @@ fn runTest() -> u32 {
                 type: 'uniform',
               },
             },
-
             {
               binding: 1,
               visibility: GPUShaderStage.COMPUTE,

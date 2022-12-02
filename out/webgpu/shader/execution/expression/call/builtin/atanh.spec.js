@@ -59,8 +59,8 @@ export const d = makeCaseCache('atanh', {
     cases.push(...edgeCases);
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

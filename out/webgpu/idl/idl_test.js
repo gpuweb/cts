@@ -36,5 +36,6 @@ export class IDLTest extends Fixture {
     actKeys.length === expKeys.length,
     () => `Had ${actKeys.length} keys, expected ${expKeys.length}`);
 
-  }}
+  }
+}
 //# sourceMappingURL=idl_test.js.map

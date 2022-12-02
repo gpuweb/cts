@@ -15,8 +15,8 @@ usage)
   const buffer = device.createBuffer({
     mappedAtCreation: true,
     size: align(dataArray.byteLength, 4),
-    usage });
-
+    usage
+  });
   memcpy({ src: dataArray }, { dst: buffer.getMappedRange() });
   buffer.unmap();
   return buffer;

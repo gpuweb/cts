@@ -51,7 +51,6 @@ g.test('depth_compare_func')
           depthClearValue: kMiddleDepthValue,
           _expected: triangleColor,
         },
-
         { depthCompare: 'less-equal', depthClearValue: 0.0, _expected: backgroundColor },
         { depthCompare: 'equal', depthClearValue: 1.0, _expected: backgroundColor },
         { depthCompare: 'equal', depthClearValue: kMiddleDepthValue, _expected: triangleColor },
@@ -62,7 +61,6 @@ g.test('depth_compare_func')
           depthClearValue: kMiddleDepthValue,
           _expected: backgroundColor,
         },
-
         { depthCompare: 'not-equal', depthClearValue: 0.0, _expected: triangleColor },
         { depthCompare: 'greater-equal', depthClearValue: 1.0, _expected: backgroundColor },
         {
@@ -70,7 +68,6 @@ g.test('depth_compare_func')
           depthClearValue: kMiddleDepthValue,
           _expected: triangleColor,
         },
-
         { depthCompare: 'greater-equal', depthClearValue: 0.0, _expected: triangleColor },
         { depthCompare: 'greater', depthClearValue: 1.0, _expected: backgroundColor },
         { depthCompare: 'greater', depthClearValue: kMiddleDepthValue, _expected: backgroundColor },
@@ -92,7 +89,6 @@ g.test('depth_compare_func')
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const colorAttachmentView = colorAttachment.createView();
 
     const depthTexture = t.device.createTexture({
@@ -100,7 +96,6 @@ g.test('depth_compare_func')
       format,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
-
     const depthTextureView = depthTexture.createView();
 
     const pipelineDescriptor = {
@@ -114,10 +109,8 @@ g.test('depth_compare_func')
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -126,11 +119,9 @@ g.test('depth_compare_func')
             }
             `,
         }),
-
         entryPoint: 'main',
         targets: [{ format: colorAttachmentFormat }],
       },
-
       primitive: { topology: 'point-list' },
       depthStencil: {
         depthWriteEnabled: true,
@@ -138,7 +129,6 @@ g.test('depth_compare_func')
         format,
       },
     };
-
     const pipeline = t.device.createRenderPipeline(pipelineDescriptor);
 
     const encoder = t.device.createCommandEncoder();
@@ -148,7 +138,6 @@ g.test('depth_compare_func')
       depthLoadOp: 'clear',
       depthStoreOp: 'store',
     };
-
     if (kTextureFormatInfo[format].stencil) {
       depthStencilAttachment.stencilClearValue = 0;
       depthStencilAttachment.stencilLoadOp = 'clear';
@@ -166,7 +155,6 @@ g.test('depth_compare_func')
 
       depthStencilAttachment,
     });
-
     pass.setPipeline(pipeline);
     pass.draw(1);
     pass.end();
@@ -194,7 +182,6 @@ g.test('reverse_depth')
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const colorAttachmentView = colorAttachment.createView();
 
     const depthBufferFormat = 'depth32float';
@@ -203,7 +190,6 @@ g.test('reverse_depth')
       format: depthBufferFormat,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
-
     const depthTextureView = depthTexture.createView();
 
     const pipelineDescriptor = {
@@ -240,10 +226,8 @@ g.test('reverse_depth')
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -254,11 +238,9 @@ g.test('reverse_depth')
             }
             `,
         }),
-
         entryPoint: 'main',
         targets: [{ format: colorAttachmentFormat }],
       },
-
       primitive: { topology: 'point-list' },
       depthStencil: {
         depthWriteEnabled: true,
@@ -266,7 +248,6 @@ g.test('reverse_depth')
         format: depthBufferFormat,
       },
     };
-
     const pipeline = t.device.createRenderPipeline(pipelineDescriptor);
 
     const encoder = t.device.createCommandEncoder();
@@ -288,7 +269,6 @@ g.test('reverse_depth')
         depthStoreOp: 'store',
       },
     });
-
     pass.setPipeline(pipeline);
     pass.draw(1, 4);
     pass.end();

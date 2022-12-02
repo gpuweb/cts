@@ -36,8 +36,8 @@ export const d = makeCaseCache('exp2', {
     ...biasedRange(kValue.f32.positive.min, 127, 100),
     ...linearRange(128, 1023, 10) // Overflows f32, but not f64
     ].map((x) => makeCase(x));
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -29,7 +29,6 @@ export class BufferResourceUsageTest extends ValidationTest {
         type,
       },
     };
-
     return this.device.createBindGroupLayout({
       entries: [bindGroupLayoutEntry],
     });
@@ -53,7 +52,6 @@ export class BufferResourceUsageTest extends ValidationTest {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
       size: [16, 16, 1],
     });
-
     return encoder.beginRenderPass({
       colorAttachments: [
         {
@@ -86,11 +84,9 @@ export class BufferResourceUsageTest extends ValidationTest {
         module: this.device.createShaderModule({
           code: this.getNoOpShaderCode('VERTEX'),
         }),
-
         entryPoint: 'main',
         buffers: vertexBuffers,
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -99,11 +95,9 @@ export class BufferResourceUsageTest extends ValidationTest {
                   return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'point-list' },
     });
   }
@@ -384,7 +378,6 @@ dispatch calls refer to different usage scopes.`
           const pipelineLayout = t.device.createPipelineLayout({
             bindGroupLayouts: [bindGroupLayout],
           });
-
           const computePipeline = t.createNoOpComputePipeline(pipelineLayout);
           computePassEncoder.setPipeline(computePipeline);
           computePassEncoder.dispatchWorkgroups(1);
@@ -660,7 +653,6 @@ layout visibilities.`
             size: 4,
             usage: GPUBufferUsage.INDEX,
           });
-
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, offset);
           break;
@@ -694,7 +686,6 @@ layout visibilities.`
       const pipelineLayout = t.device.createPipelineLayout({
         bindGroupLayouts: usedBindGroupLayouts,
       });
-
       // To "use" the vertex buffer we need to set the corresponding vertex buffer layout when
       // creating the render pipeline.
       if (usage0 === 'vertex' && usage0AccessibleInDraw) {
@@ -740,7 +731,6 @@ layout visibilities.`
       const pipelineLayout = t.device.createPipelineLayout({
         bindGroupLayouts: usedBindGroupLayouts,
       });
-
       if (usage1 === 'vertex' && usage1AccessibleInDraw) {
         // To "use" the vertex buffer we need to set the corresponding vertex buffer layout when
         // creating the render pipeline.
@@ -765,7 +755,6 @@ layout visibilities.`
               size: 4,
               usage: GPUBufferUsage.INDEX,
             });
-
             renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           }
           renderPassEncoder.drawIndexedIndirect(buffer, offset1);
@@ -815,7 +804,6 @@ different render pass encoders belong to different usage scopes.`
         GPUBufferUsage.INDEX |
         GPUBufferUsage.INDIRECT,
     });
-
     const UseBufferOnRenderPassEncoderInDrawCall = (offset, usage, renderPassEncoder) => {
       switch (usage) {
         case 'uniform':
@@ -825,7 +813,6 @@ different render pass encoders belong to different usage scopes.`
           const pipelineLayout = t.device.createPipelineLayout({
             bindGroupLayouts: [bindGroupLayout],
           });
-
           const pipeline = t.createRenderPipelineForTest(pipelineLayout, 0);
           renderPassEncoder.setPipeline(pipeline);
           const bindGroup = t.createBindGroupForTest(buffer, offset, usage, 'fragment');
@@ -861,7 +848,6 @@ different render pass encoders belong to different usage scopes.`
             size: 4,
             usage: GPUBufferUsage.INDEX,
           });
-
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, offset);
           break;

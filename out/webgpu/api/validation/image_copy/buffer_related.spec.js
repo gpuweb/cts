@@ -35,8 +35,8 @@ fn(async (t) => {
   // A valid buffer.
   const buffer = t.createBufferWithState(state, {
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   // Invalid buffer will fail finish, and destroyed buffer will fail submit
   const submit = state !== 'invalid';
@@ -45,8 +45,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 2, height: 2, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   t.testBuffer(
   buffer,
@@ -71,15 +71,15 @@ fn(async (t) => {
 
   const buffer = sourceDevice.createBuffer({
     size: 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
   t.trackForCleanup(buffer);
 
   const texture = t.device.createTexture({
     size: { width: 2, height: 2, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const success = !mismatched;
 
@@ -118,8 +118,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size: 16,
-    usage });
-
+    usage
+  });
 
   const success =
   method === 'CopyB2T' ?
@@ -129,8 +129,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size: { width: 2, height: 2, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   // Expect success in both finish and submit, or validation error in finish
   t.testBuffer(
@@ -191,15 +191,15 @@ fn(async (t) => {
     format,
     bytesPerRow,
     copyHeightInBlocks,
-    _textureHeightInBlocks } =
-  t.params;
+    _textureHeightInBlocks
+  } = t.params;
 
   const info = kTextureFormatInfo[format];
 
   const buffer = t.device.createBuffer({
     size: 512 * 8 * 16,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
 
   let success = false;
   // writeTexture doesn't require bytesPerRow to be 256-byte aligned.
@@ -214,8 +214,8 @@ fn(async (t) => {
     size,
     dimension,
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+  });
 
   const copySize = [info.blockWidth, copyHeightInBlocks * info.blockHeight, 1];
 
@@ -224,7 +224,7 @@ fn(async (t) => {
     dataSize: 512 * 8 * 16,
     method,
     success,
-    submit: success });
-
+    submit: success
+  });
 });
 //# sourceMappingURL=buffer_related.spec.js.map

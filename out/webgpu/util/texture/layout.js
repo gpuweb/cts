@@ -29,8 +29,8 @@ const kDefaultLayoutOptions = {
   mipLevel: 0,
   bytesPerRow: undefined,
   rowsPerImage: undefined,
-  aspect: 'all' };
-
+  aspect: 'all'
+};
 
 /** The info returned by {@link getTextureSubCopyLayout}. */
 
@@ -89,12 +89,12 @@ copySize,
 {
   bytesPerRow,
   rowsPerImage,
-  aspect = 'all' } =
+  aspect = 'all'
 
 
 
 
-{})
+} = {})
 {
   format = resolvePerAspectFormat(format, aspect);
   const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
@@ -112,8 +112,8 @@ copySize,
   const copySizeBlocks = {
     width: copySize_.width / blockWidth,
     height: copySize_.height / blockHeight,
-    depthOrArrayLayers: copySize_.depthOrArrayLayers };
-
+    depthOrArrayLayers: copySize_.depthOrArrayLayers
+  };
 
   const minBytesPerRow = copySizeBlocks.width * bytesPerBlock;
   const alignedMinBytesPerRow = align(minBytesPerRow, kBytesPerRowAlignment);
@@ -140,8 +140,8 @@ copySize,
     byteLength: align(byteLength, kBufferCopyAlignment),
     minBytesPerRow,
     bytesPerRow,
-    rowsPerImage };
-
+    rowsPerImage
+  };
 }
 
 /**
@@ -215,8 +215,8 @@ options = kDefaultLayoutOptions)
   const buffer = device.createBuffer({
     mappedAtCreation: true,
     size: byteLength,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
   const mapping = buffer.getMappedRange();
 
   assert(texelValue.byteLength === bytesPerBlock);
@@ -226,8 +226,8 @@ options = kDefaultLayoutOptions)
   return {
     buffer,
     bytesPerRow,
-    rowsPerImage };
-
+    rowsPerImage
+  };
 }
 
 
@@ -249,12 +249,12 @@ export function bytesInACompleteRow(copyWidth, format) {
 function validateBytesPerRow({
   bytesPerRow,
   bytesInLastRow,
-  sizeInBlocks })
+  sizeInBlocks
 
 
 
 
-{
+}) {
   // If specified, layout.bytesPerRow must be greater than or equal to bytesInLastRow.
   if (bytesPerRow !== undefined && bytesPerRow < bytesInLastRow) {
     return false;
@@ -272,11 +272,11 @@ function validateBytesPerRow({
 
 function validateRowsPerImage({
   rowsPerImage,
-  sizeInBlocks })
+  sizeInBlocks
 
 
 
-{
+}) {
   // If specified, layout.rowsPerImage must be greater than or equal to heightInBlocks.
   if (rowsPerImage !== undefined && rowsPerImage < sizeInBlocks.height) {
     return false;
@@ -314,8 +314,8 @@ export function dataBytesForCopyOrOverestimate({
   layout,
   format,
   copySize: copySize_,
-  method })
-{
+  method
+}) {
   const copyExtent = reifyExtent3D(copySize_);
 
   const info = kTextureFormatInfo[format];
@@ -324,8 +324,8 @@ export function dataBytesForCopyOrOverestimate({
   const sizeInBlocks = {
     width: copyExtent.width / info.blockWidth,
     height: copyExtent.height / info.blockHeight,
-    depthOrArrayLayers: copyExtent.depthOrArrayLayers };
-
+    depthOrArrayLayers: copyExtent.depthOrArrayLayers
+  };
   const bytesInLastRow = sizeInBlocks.width * info.bytesPerBlock;
 
   let valid = true;

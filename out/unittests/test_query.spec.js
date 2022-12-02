@@ -63,8 +63,8 @@ class F extends UnitTest {
 
   expectQueryParse(s, q) {
     this.expectQueriesEqual(q, parseQuery(s));
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

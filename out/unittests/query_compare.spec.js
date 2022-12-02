@@ -50,8 +50,8 @@ class F extends UnitTest {
         this.expectQ(qs[i], '!', qs[j]);
       }
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

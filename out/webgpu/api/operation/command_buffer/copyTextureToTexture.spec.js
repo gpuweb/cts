@@ -80,8 +80,8 @@ class F extends GPUTest {
       size: srcTextureSize,
       format: srcFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-      mipLevelCount };
-
+      mipLevelCount
+    };
     const srcTexture = this.device.createTexture(srcTextureDesc);
     this.trackForCleanup(srcTexture);
     const dstTextureDesc = {
@@ -89,8 +89,8 @@ class F extends GPUTest {
       size: dstTextureSize,
       format: dstFormat,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-      mipLevelCount };
-
+      mipLevelCount
+    };
     const dstTexture = this.device.createTexture(dstTextureDesc);
     this.trackForCleanup(dstTexture);
 
@@ -117,8 +117,8 @@ class F extends GPUTest {
     initialSrcData,
     {
       bytesPerRow: srcBlocksPerRow * bytesPerBlock,
-      rowsPerImage: srcBlockRowsPerImage },
-
+      rowsPerImage: srcBlockRowsPerImage
+    },
     srcTextureSizeAtLevel);
 
 
@@ -139,13 +139,13 @@ class F extends GPUTest {
     const appliedSrcOffset = {
       x: Math.min(copyBoxOffsets.srcOffset.x * blockWidth, minWidth),
       y: Math.min(copyBoxOffsets.srcOffset.y * blockHeight, minHeight),
-      z: Math.min(copyBoxOffsets.srcOffset.z, minDepth) };
-
+      z: Math.min(copyBoxOffsets.srcOffset.z, minDepth)
+    };
     const appliedDstOffset = {
       x: Math.min(copyBoxOffsets.dstOffset.x * blockWidth, minWidth),
       y: Math.min(copyBoxOffsets.dstOffset.y * blockHeight, minHeight),
-      z: Math.min(copyBoxOffsets.dstOffset.z, minDepth) };
-
+      z: Math.min(copyBoxOffsets.dstOffset.z, minDepth)
+    };
 
     const appliedCopyWidth = Math.max(
     minWidth +
@@ -186,8 +186,8 @@ class F extends GPUTest {
     align(dstBlocksPerRow * bytesPerBlock, 4);
     const dstBufferDesc = {
       size: dstBufferSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST };
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    };
     const dstBuffer = this.device.createBuffer(dstBufferDesc);
     this.trackForCleanup(dstBuffer);
 
@@ -196,8 +196,8 @@ class F extends GPUTest {
     {
       buffer: dstBuffer,
       bytesPerRow: bytesPerDstAlignedBlockRow,
-      rowsPerImage: dstBlockRowsPerImage },
-
+      rowsPerImage: dstBlockRowsPerImage
+    },
     dstTextureSizeAtLevel);
 
     this.device.queue.submit([encoder.finish()]);
@@ -214,13 +214,13 @@ class F extends GPUTest {
     const srcCopyOffsetInBlocks = {
       x: appliedSrcOffset.x / blockWidth,
       y: appliedSrcOffset.y / blockHeight,
-      z: appliedSrcOffset.z };
-
+      z: appliedSrcOffset.z
+    };
     const dstCopyOffsetInBlocks = {
       x: appliedDstOffset.x / blockWidth,
       y: appliedDstOffset.y / blockHeight,
-      z: appliedDstOffset.z };
-
+      z: appliedDstOffset.z
+    };
 
     for (let z = 0; z < appliedCopyDepth; ++z) {
       const srcOffsetZ = srcCopyOffsetInBlocks.z + z;
@@ -262,8 +262,8 @@ class F extends GPUTest {
       texture: sourceTexture,
       mipLevel: srcCopyLevel,
       aspect: 'stencil-only',
-      origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer } },
-
+      origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer }
+    },
     initialStencilData,
     { bytesPerRow: copySize[0], rowsPerImage: copySize[1] },
     copySize);
@@ -284,14 +284,14 @@ class F extends GPUTest {
       layout: { bytesPerRow, rowsPerImage },
       format: 'stencil8',
       copySize,
-      method: 'CopyT2B' }),
-
+      method: 'CopyT2B'
+    }),
     kBufferSizeAlignment);
 
     const outputBuffer = this.device.createBuffer({
       size: outputBufferSize,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
     this.trackForCleanup(outputBuffer);
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
@@ -299,8 +299,8 @@ class F extends GPUTest {
       texture: destinationTexture,
       aspect: 'stencil-only',
       mipLevel: dstCopyLevel,
-      origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer } },
-
+      origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer }
+    },
     { buffer: outputBuffer, bytesPerRow, rowsPerImage },
     copySize);
 
@@ -347,12 +347,12 @@ class F extends GPUTest {
                   vec3<f32>( 1.0,  1.0, 1.0),
                   vec3<f32>( 1.0, -1.0, depthValue));
               return vec4<f32>(pos[VertexIndex], 1.0);
-            }` }),
-
-        entryPoint: 'main' },
-
-      depthStencil };
-
+            }`
+        }),
+        entryPoint: 'main'
+      },
+      depthStencil
+    };
     if (hasColorAttachment) {
       renderPipelineDescriptor.fragment = {
         module: this.device.createShaderModule({
@@ -360,11 +360,11 @@ class F extends GPUTest {
             @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] };
-
+        targets: [{ format: 'rgba8unorm' }]
+      };
     }
     return this.device.createRenderPipeline(renderPipelineDescriptor);
   }
@@ -378,11 +378,11 @@ class F extends GPUTest {
         buffer: {
           type: 'uniform',
           minBindingSize: 4,
-          hasDynamicOffset: true } }] });
+          hasDynamicOffset: true
+        }
+      }]
 
-
-
-
+    });
   }
 
   GetBindGroupForT2TCopyWithDepthTests(
@@ -409,11 +409,11 @@ class F extends GPUTest {
         binding: 0,
         resource: {
           buffer: uniformBuffer,
-          size: 4 } }] });
+          size: 4
+        }
+      }]
 
-
-
-
+    });
   }
 
   /** Initialize the depth aspect of sourceTexture with draw calls */
@@ -430,8 +430,8 @@ class F extends GPUTest {
     const renderPipeline = this.GetRenderPipelineForT2TCopyWithDepthTests(bindGroupLayout, false, {
       format: depthFormat,
       depthWriteEnabled: true,
-      depthCompare: 'always' });
-
+      depthCompare: 'always'
+    });
     const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
 
     const encoder = this.device.createCommandEncoder();
@@ -443,15 +443,15 @@ class F extends GPUTest {
             baseArrayLayer: srcCopyLayer + srcCopyBaseArrayLayer,
             arrayLayerCount: 1,
             baseMipLevel: srcCopyLevel,
-            mipLevelCount: 1 }),
-
+            mipLevelCount: 1
+          }),
           depthClearValue: 0.0,
           depthLoadOp: 'clear',
           depthStoreOp: 'store',
           stencilLoadOp: 'load',
-          stencilStoreOp: 'store' } });
-
-
+          stencilStoreOp: 'store'
+        }
+      });
       renderPass.setBindGroup(0, bindGroup, [srcCopyLayer * kMinDynamicBufferOffsetAlignment]);
       renderPass.setPipeline(renderPipeline);
       renderPass.draw(6);
@@ -473,15 +473,15 @@ class F extends GPUTest {
     const renderPipeline = this.GetRenderPipelineForT2TCopyWithDepthTests(bindGroupLayout, true, {
       format: depthFormat,
       depthWriteEnabled: false,
-      depthCompare: 'equal' });
-
+      depthCompare: 'equal'
+    });
     const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
 
     const outputColorTexture = this.device.createTexture({
       format: 'rgba8unorm',
       size: copySize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+    });
     this.trackForCleanup(outputColorTexture);
     const encoder = this.device.createCommandEncoder();
     for (let dstCopyLayer = 0; dstCopyLayer < copySize[2]; ++dstCopyLayer) {
@@ -492,26 +492,26 @@ class F extends GPUTest {
         {
           view: outputColorTexture.createView({
             baseArrayLayer: dstCopyLayer,
-            arrayLayerCount: 1 }),
-
+            arrayLayerCount: 1
+          }),
           clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           loadOp: 'clear',
-          storeOp: 'store' }],
-
+          storeOp: 'store'
+        }],
 
         depthStencilAttachment: {
           view: destinationTexture.createView({
             baseArrayLayer: dstCopyLayer + dstCopyBaseArrayLayer,
             arrayLayerCount: 1,
             baseMipLevel: dstCopyLevel,
-            mipLevelCount: 1 }),
-
+            mipLevelCount: 1
+          }),
           depthLoadOp: 'load',
           depthStoreOp: 'store',
           stencilLoadOp: 'load',
-          stencilStoreOp: 'store' } });
-
-
+          stencilStoreOp: 'store'
+        }
+      });
       renderPass.setBindGroup(0, bindGroup, [dstCopyLayer * kMinDynamicBufferOffsetAlignment]);
       renderPass.setPipeline(renderPipeline);
       renderPass.draw(6);
@@ -521,56 +521,56 @@ class F extends GPUTest {
 
     this.expectSingleColor(outputColorTexture, 'rgba8unorm', {
       size: copySize,
-      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 } });
-
-  }}
-
+      exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 }
+    });
+  }
+}
 
 const kCopyBoxOffsetsForWholeDepth = [
 // From (0, 0) of src to (0, 0) of dst.
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // From (0, 0) of src to (blockWidth, 0) of dst.
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 1, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // From (0, 0) of src to (0, blockHeight) of dst.
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 1, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // From (blockWidth, 0) of src to (0, 0) of dst.
 {
   srcOffset: { x: 1, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // From (0, blockHeight) of src to (0, 0) of dst.
 {
   srcOffset: { x: 0, y: 1, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // From (blockWidth, 0) of src to (0, 0) of dst, and the copy extent will not cover the last
 // texel block column of both source and destination texture.
 {
   srcOffset: { x: 1, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: -1, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: -1, height: 0, depthOrArrayLayers: 0 }
+},
 // From (0, blockHeight) of src to (0, 0) of dst, and the copy extent will not cover the last
 // texel block row of both source and destination texture.
 {
   srcOffset: { x: 0, y: 1, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: -1, depthOrArrayLayers: 0 } }];
-
+  copyExtent: { width: 0, height: -1, depthOrArrayLayers: 0 }
+}];
 
 
 const kCopyBoxOffsetsFor2DArrayTextures = [
@@ -584,43 +584,43 @@ const kCopyBoxOffsetsFor2DArrayTextures = [
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -2 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -2 }
+},
 // Copy 1 texture slice from the 2nd slice of the source texture to the 2nd slice of the
 // destination texture.
 {
   srcOffset: { x: 0, y: 0, z: 1 },
   dstOffset: { x: 0, y: 0, z: 1 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -3 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -3 }
+},
 // Copy 1 texture slice from the 1st slice of the source texture to the 2nd slice of the
 // destination texture.
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 1 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 }
+},
 // Copy 1 texture slice from the 2nd slice of the source texture to the 1st slice of the
 // destination texture.
 {
   srcOffset: { x: 0, y: 0, z: 1 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 }
+},
 // Copy 2 texture slices from the 1st slice of the source texture to the 1st slice of the
 // destination texture.
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -3 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -3 }
+},
 // Copy 3 texture slices from the 2nd slice of the source texture to the 2nd slice of the
 // destination texture.
 {
   srcOffset: { x: 0, y: 0, z: 1 },
   dstOffset: { x: 0, y: 0, z: 1 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 } }];
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -1 }
+}];
 
 
 export const g = makeTestGroup(F);
@@ -667,20 +667,20 @@ expandWithParams((p) => {
   const params = [
   {
     srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-    dstTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 } },
-
+    dstTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 }
+  },
   {
     srcTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 },
-    dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 } },
-
+    dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 1 }
+  },
   {
     srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-    dstTextureSize: { width: 64, height: 64, depthOrArrayLayers: 1 } },
-
+    dstTextureSize: { width: 64, height: 64, depthOrArrayLayers: 1 }
+  },
   {
     srcTextureSize: { width: 32, height: 32, depthOrArrayLayers: 1 },
-    dstTextureSize: { width: 63, height: 61, depthOrArrayLayers: 1 } }];
-
+    dstTextureSize: { width: 63, height: 61, depthOrArrayLayers: 1 }
+  }];
 
   if (p.dimension === '1d') {
     for (const param of params) {
@@ -712,8 +712,8 @@ fn(async (t) => {
     dstFormat,
     copyBoxOffsets,
     srcCopyLevel,
-    dstCopyLevel } =
-  t.params;
+    dstCopyLevel
+  } = t.params;
 
   t.DoCopyTextureToTextureTest(
   dimension,
@@ -793,8 +793,8 @@ fn(async (t) => {
     dstFormat,
     copyBoxOffsets,
     srcCopyLevel,
-    dstCopyLevel } =
-  t.params;
+    dstCopyLevel
+  } = t.params;
   const srcBlockWidth = kTextureFormatInfo[srcFormat].blockWidth;
   const srcBlockHeight = kTextureFormatInfo[srcFormat].blockHeight;
   const dstBlockWidth = kTextureFormatInfo[dstFormat].blockWidth;
@@ -805,13 +805,13 @@ fn(async (t) => {
   {
     width: textureSizeInBlocks.src.width * srcBlockWidth,
     height: textureSizeInBlocks.src.height * srcBlockHeight,
-    depthOrArrayLayers: 1 },
-
+    depthOrArrayLayers: 1
+  },
   {
     width: textureSizeInBlocks.dst.width * dstBlockWidth,
     height: textureSizeInBlocks.dst.height * dstBlockHeight,
-    depthOrArrayLayers: 1 },
-
+    depthOrArrayLayers: 1
+  },
   srcFormat,
   dstFormat,
   copyBoxOffsets,
@@ -852,16 +852,16 @@ beginSubcases().
 combine('textureSize', [
 {
   srcTextureSize: { width: 64, height: 32, depthOrArrayLayers: 5 },
-  dstTextureSize: { width: 64, height: 32, depthOrArrayLayers: 5 } },
-
+  dstTextureSize: { width: 64, height: 32, depthOrArrayLayers: 5 }
+},
 {
   srcTextureSize: { width: 31, height: 33, depthOrArrayLayers: 5 },
-  dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 5 } },
-
+  dstTextureSize: { width: 31, height: 33, depthOrArrayLayers: 5 }
+},
 {
   srcTextureSize: { width: 31, height: 32, depthOrArrayLayers: 33 },
-  dstTextureSize: { width: 31, height: 32, depthOrArrayLayers: 33 } }]).
-
+  dstTextureSize: { width: 31, height: 32, depthOrArrayLayers: 33 }
+}]).
 
 
 combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
@@ -876,8 +876,8 @@ fn(async (t) => {
     dstFormat,
     copyBoxOffsets,
     srcCopyLevel,
-    dstCopyLevel } =
-  t.params;
+    dstCopyLevel
+  } = t.params;
 
   t.DoCopyTextureToTextureTest(
   dimension,
@@ -948,8 +948,8 @@ fn(async (t) => {
     dstFormat,
     copyBoxOffsets,
     srcCopyLevel,
-    dstCopyLevel } =
-  t.params;
+    dstCopyLevel
+  } = t.params;
   const srcBlockWidth = kTextureFormatInfo[srcFormat].blockWidth;
   const srcBlockHeight = kTextureFormatInfo[srcFormat].blockHeight;
   const dstBlockWidth = kTextureFormatInfo[dstFormat].blockWidth;
@@ -960,13 +960,13 @@ fn(async (t) => {
   {
     width: textureSizeInBlocks.src.width * srcBlockWidth,
     height: textureSizeInBlocks.src.height * srcBlockHeight,
-    depthOrArrayLayers: 5 },
-
+    depthOrArrayLayers: 5
+  },
   {
     width: textureSizeInBlocks.dst.width * dstBlockWidth,
     height: textureSizeInBlocks.dst.height * dstBlockHeight,
-    depthOrArrayLayers: 5 },
-
+    depthOrArrayLayers: 5
+  },
   srcFormat,
   dstFormat,
   copyBoxOffsets,
@@ -997,56 +997,56 @@ combine('copyBoxOffset', [
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 }
+},
 // copyExtent.width === 0 && srcOffset.x === textureWidth
 {
   srcOffset: { x: 64, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 }
+},
 // copyExtent.width === 0 && dstOffset.x === textureWidth
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 64, y: 0, z: 0 },
-  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: -64, height: 0, depthOrArrayLayers: 0 }
+},
 // copyExtent.height === 0
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 }
+},
 // copyExtent.height === 0 && srcOffset.y === textureHeight
 {
   srcOffset: { x: 0, y: 32, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 }
+},
 // copyExtent.height === 0 && dstOffset.y === textureHeight
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 32, z: 0 },
-  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: -32, depthOrArrayLayers: 0 }
+},
 // copyExtent.depthOrArrayLayers === 0
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -5 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: -5 }
+},
 // copyExtent.depthOrArrayLayers === 0 && srcOffset.z === textureDepth
 {
   srcOffset: { x: 0, y: 0, z: 5 },
   dstOffset: { x: 0, y: 0, z: 0 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } },
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+},
 // copyExtent.depthOrArrayLayers === 0 && dstOffset.z === textureDepth
 {
   srcOffset: { x: 0, y: 0, z: 0 },
   dstOffset: { x: 0, y: 0, z: 5 },
-  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 } }]).
-
+  copyExtent: { width: 0, height: 0, depthOrArrayLayers: 0 }
+}]).
 
 unless(
 (p) =>
@@ -1127,8 +1127,8 @@ fn(async (t) => {
     srcCopyLevel,
     dstCopyLevel,
     srcCopyBaseArrayLayer,
-    dstCopyBaseArrayLayer } =
-  t.params;
+    dstCopyBaseArrayLayer
+  } = t.params;
 
   const copySize = [
   srcTextureSize.width >> srcCopyLevel,
@@ -1140,8 +1140,8 @@ fn(async (t) => {
     size: srcTextureSize,
     usage:
     GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    mipLevelCount: srcCopyLevel + 1 });
-
+    mipLevelCount: srcCopyLevel + 1
+  });
   t.trackForCleanup(sourceTexture);
   const destinationTexture = t.device.createTexture({
     format,
@@ -1152,8 +1152,8 @@ fn(async (t) => {
 
     usage:
     GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    mipLevelCount: dstCopyLevel + 1 });
-
+    mipLevelCount: dstCopyLevel + 1
+  });
   t.trackForCleanup(destinationTexture);
 
   let initialStencilData = undefined;
@@ -1176,13 +1176,13 @@ fn(async (t) => {
   {
     texture: sourceTexture,
     mipLevel: srcCopyLevel,
-    origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer } },
-
+    origin: { x: 0, y: 0, z: srcCopyBaseArrayLayer }
+  },
   {
     texture: destinationTexture,
     mipLevel: dstCopyLevel,
-    origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer } },
-
+    origin: { x: 0, y: 0, z: dstCopyBaseArrayLayer }
+  },
   copySize);
 
   t.queue.submit([encoder.finish()]);
@@ -1234,8 +1234,8 @@ fn(async (t) => {
     GPUTextureUsage.COPY_SRC |
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.RENDER_ATTACHMENT,
-    sampleCount: kSampleCount });
-
+    sampleCount: kSampleCount
+  });
   t.trackForCleanup(sourceTexture);
   const destinationTexture = t.device.createTexture({
     format: kColorFormat,
@@ -1244,8 +1244,8 @@ fn(async (t) => {
     GPUTextureUsage.COPY_DST |
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.RENDER_ATTACHMENT,
-    sampleCount: kSampleCount });
-
+    sampleCount: kSampleCount
+  });
   t.trackForCleanup(destinationTexture);
 
   // Initialize sourceTexture with a draw call.
@@ -1262,25 +1262,25 @@ fn(async (t) => {
                   vec2<f32>( 1.0, -1.0)
               );
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-            }` }),
-
-      entryPoint: 'main' },
-
+            }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment
             fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.3, 0.5, 0.8, 1.0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: kColorFormat }] },
-
+      targets: [{ format: kColorFormat }]
+    },
     multisample: {
-      count: kSampleCount } });
-
-
+      count: kSampleCount
+    }
+  });
   const initEncoder = t.device.createCommandEncoder();
   const renderPassForInit = initEncoder.beginRenderPass({
     colorAttachments: [
@@ -1288,10 +1288,10 @@ fn(async (t) => {
       view: sourceTexture.createView(),
       clearValue: [1.0, 0.0, 0.0, 1.0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPassForInit.setPipeline(renderPipelineForInit);
   renderPassForInit.draw(3);
   renderPassForInit.end();
@@ -1301,11 +1301,11 @@ fn(async (t) => {
   const copyEncoder = t.device.createCommandEncoder();
   copyEncoder.copyTextureToTexture(
   {
-    texture: sourceTexture },
-
+    texture: sourceTexture
+  },
   {
-    texture: destinationTexture },
-
+    texture: destinationTexture
+  },
   textureSize);
 
   t.queue.submit([copyEncoder.finish()]);
@@ -1327,10 +1327,10 @@ fn(async (t) => {
               vec2<f32>( 1.0,  1.0),
               vec2<f32>( 1.0, -1.0));
             return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-          }` }),
-
-      entryPoint: 'main' },
-
+          }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -1350,30 +1350,30 @@ fn(async (t) => {
               }
             }
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-          }` }),
-
+          }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: kColorFormat }] } });
-
-
+      targets: [{ format: kColorFormat }]
+    }
+  });
   const bindGroup = t.device.createBindGroup({
     layout: renderPipelineForValidation.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: sourceTexture.createView() },
-
+      resource: sourceTexture.createView()
+    },
     {
       binding: 1,
-      resource: destinationTexture.createView() }] });
+      resource: destinationTexture.createView()
+    }]
 
-
-
+  });
   const expectedOutputTexture = t.device.createTexture({
     format: kColorFormat,
     size: textureSize,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   t.trackForCleanup(expectedOutputTexture);
   const validationEncoder = t.device.createCommandEncoder();
   const renderPassForValidation = validationEncoder.beginRenderPass({
@@ -1382,10 +1382,10 @@ fn(async (t) => {
       view: expectedOutputTexture.createView(),
       clearValue: [1.0, 0.0, 0.0, 1.0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPassForValidation.setPipeline(renderPipelineForValidation);
   renderPassForValidation.setBindGroup(0, bindGroup);
   renderPassForValidation.draw(6);
@@ -1394,8 +1394,8 @@ fn(async (t) => {
 
   t.expectSingleColor(expectedOutputTexture, 'rgba8unorm', {
     size: [textureSize[0], textureSize[1], textureSize[2]],
-    exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 } });
-
+    exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 }
+  });
 });
 
 g.test('copy_multisampled_depth').
@@ -1419,15 +1419,15 @@ fn(async (t) => {
     format: kDepthFormat,
     size: textureSize,
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    sampleCount: kSampleCount });
-
+    sampleCount: kSampleCount
+  });
   t.trackForCleanup(sourceTexture);
   const destinationTexture = t.device.createTexture({
     format: kDepthFormat,
     size: textureSize,
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    sampleCount: kSampleCount });
-
+    sampleCount: kSampleCount
+  });
   t.trackForCleanup(destinationTexture);
 
   const vertexState = {
@@ -1443,10 +1443,10 @@ fn(async (t) => {
                 vec3<f32>( 1.0,  1.0, 1.0),
                 vec3<f32>( 1.0, -1.0, 0.5));
             return vec4<f32>(pos[VertexIndex], 1.0);
-          }` }),
-
-    entryPoint: 'main' };
-
+          }`
+    }),
+    entryPoint: 'main'
+  };
 
   // Initialize the depth aspect of source texture with a draw call
   const renderPipelineForInit = t.device.createRenderPipeline({
@@ -1455,12 +1455,12 @@ fn(async (t) => {
     depthStencil: {
       format: kDepthFormat,
       depthCompare: 'always',
-      depthWriteEnabled: true },
-
+      depthWriteEnabled: true
+    },
     multisample: {
-      count: kSampleCount } });
-
-
+      count: kSampleCount
+    }
+  });
 
   const encoderForInit = t.device.createCommandEncoder();
   const renderPassForInit = encoderForInit.beginRenderPass({
@@ -1469,9 +1469,9 @@ fn(async (t) => {
       view: sourceTexture.createView(),
       depthClearValue: 0.0,
       depthLoadOp: 'clear',
-      depthStoreOp: 'store' } });
-
-
+      depthStoreOp: 'store'
+    }
+  });
   renderPassForInit.setPipeline(renderPipelineForInit);
   renderPassForInit.draw(6);
   renderPassForInit.end();
@@ -1481,11 +1481,11 @@ fn(async (t) => {
   const copyEncoder = t.device.createCommandEncoder();
   copyEncoder.copyTextureToTexture(
   {
-    texture: sourceTexture },
-
+    texture: sourceTexture
+  },
   {
-    texture: destinationTexture },
-
+    texture: destinationTexture
+  },
   textureSize);
 
   t.queue.submit([copyEncoder.finish()]);
@@ -1502,32 +1502,32 @@ fn(async (t) => {
           @fragment
           fn main() -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-          }` }),
-
+          }`
+      }),
       entryPoint: 'main',
-      targets: [{ format: kColorFormat }] },
-
+      targets: [{ format: kColorFormat }]
+    },
     depthStencil: {
       format: kDepthFormat,
       depthCompare: 'equal',
-      depthWriteEnabled: false },
-
+      depthWriteEnabled: false
+    },
     multisample: {
-      count: kSampleCount } });
-
-
+      count: kSampleCount
+    }
+  });
   const multisampledColorTexture = t.device.createTexture({
     format: kColorFormat,
     size: textureSize,
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    sampleCount: kSampleCount });
-
+    sampleCount: kSampleCount
+  });
   t.trackForCleanup(multisampledColorTexture);
   const colorTextureAsResolveTarget = t.device.createTexture({
     format: kColorFormat,
     size: textureSize,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   t.trackForCleanup(colorTextureAsResolveTarget);
 
   const encoderForVerify = t.device.createCommandEncoder();
@@ -1538,15 +1538,15 @@ fn(async (t) => {
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
       loadOp: 'clear',
       storeOp: 'discard',
-      resolveTarget: colorTextureAsResolveTarget.createView() }],
-
+      resolveTarget: colorTextureAsResolveTarget.createView()
+    }],
 
     depthStencilAttachment: {
       view: destinationTexture.createView(),
       depthLoadOp: 'load',
-      depthStoreOp: 'store' } });
-
-
+      depthStoreOp: 'store'
+    }
+  });
   renderPassForVerify.setPipeline(renderPipelineForVerify);
   renderPassForVerify.draw(6);
   renderPassForVerify.end();
@@ -1554,7 +1554,7 @@ fn(async (t) => {
 
   t.expectSingleColor(colorTextureAsResolveTarget, kColorFormat, {
     size: [textureSize[0], textureSize[1], textureSize[2]],
-    exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 } });
-
+    exp: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 }
+  });
 });
 //# sourceMappingURL=copyTextureToTexture.spec.js.map

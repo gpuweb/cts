@@ -26,19 +26,19 @@ fn(async (t) => {
             buffer.data[id.x] = buffer.data[id.x] + 1u;
           }
         }
-      ` });
-
+      `
+  });
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
-    compute: { module, entryPoint: 'main' } });
-
+    compute: { module, entryPoint: 'main' }
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
   pass.setBindGroup(0, bindGroup);
   pass.dispatch(kDispatchSize);
   pass.end();
@@ -66,8 +66,8 @@ fn(async (t) => {
         @fragment fn fmain() -> @location(0) vec4<f32> {
           return vec4<f32>(1.0, 1.0, 0.0, 1.0);
         }
-      ` });
-
+      `
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
@@ -76,24 +76,24 @@ fn(async (t) => {
     fragment: {
       targets: [{ format: 'rgba8unorm' }],
       module,
-      entryPoint: 'fmain' } });
-
-
+      entryPoint: 'fmain'
+    }
+  });
   const uniforms = t.makeBufferWithContents(new Uint32Array([0, 1]), GPUBufferUsage.UNIFORM);
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: { buffer: uniforms } }] });
+      resource: { buffer: uniforms }
+    }]
 
-
-
+  });
   const renderTarget = t.device.createTexture({
     size: [3, 3],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [
@@ -101,10 +101,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.draw(1);
@@ -115,8 +115,8 @@ fn(async (t) => {
   'rgba8unorm',
   { x: 1, y: 1 },
   {
-    exp: new Uint8Array([255, 255, 0, 255]) });
-
+    exp: new Uint8Array([255, 255, 0, 255])
+  });
 
 });
 
@@ -140,8 +140,8 @@ fn(async (t) => {
           }
           return vec4<f32>(1.0, 1.0, 1.0 / f32(counter), 1.0);
         }
-      ` });
-
+      `
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
@@ -150,24 +150,24 @@ fn(async (t) => {
     fragment: {
       targets: [{ format: 'rgba8unorm' }],
       module,
-      entryPoint: 'fmain' } });
-
-
+      entryPoint: 'fmain'
+    }
+  });
   const uniforms = t.makeBufferWithContents(new Uint32Array([0, 1]), GPUBufferUsage.UNIFORM);
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
     {
       binding: 0,
-      resource: { buffer: uniforms } }] });
+      resource: { buffer: uniforms }
+    }]
 
-
-
+  });
   const renderTarget = t.device.createTexture({
     size: [3, 3],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
     colorAttachments: [
@@ -175,10 +175,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
   pass.draw(1);
@@ -189,8 +189,8 @@ fn(async (t) => {
   'rgba8unorm',
   { x: 1, y: 1 },
   {
-    exp: new Uint8Array([255, 255, 0, 255]) });
-
+    exp: new Uint8Array([255, 255, 0, 255])
+  });
 
 });
 //# sourceMappingURL=slow.spec.js.map

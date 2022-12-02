@@ -368,7 +368,6 @@ class ImageCopyTest extends GPUTest {
       size: align(byteLength, 4), // this is necessary because we need to copy and map data from this buffer
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(buffer);
 
     const encoder = this.device.createCommandEncoder();
@@ -496,7 +495,6 @@ class ImageCopyTest extends GPUTest {
       mipLevelCount: mipLevel + 1,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     });
-
     this.trackForCleanup(texture);
 
     const data = dataGenerator.generateView(dataSize);
@@ -576,7 +574,6 @@ class ImageCopyTest extends GPUTest {
       format,
       mipLevelCount: mipLevel + 1,
     });
-
     this.trackForCleanup(srcTexture);
 
     const copySize = [textureSize[0] >> mipLevel, textureSize[1] >> mipLevel, textureSize[2]];
@@ -596,7 +593,6 @@ class ImageCopyTest extends GPUTest {
             bytesPerRow,
             rowsPerImage,
           },
-
           copySize
         );
 
@@ -643,7 +639,6 @@ class ImageCopyTest extends GPUTest {
       format,
       mipLevelCount: mipLevel + 1,
     });
-
     this.trackForCleanup(srcTexture);
 
     // Initialize srcTexture with queue.writeTexture()
@@ -668,7 +663,6 @@ class ImageCopyTest extends GPUTest {
           copySize,
           method: 'CopyT2B',
         }),
-
       kBufferSizeAlignment
     );
 
@@ -676,7 +670,6 @@ class ImageCopyTest extends GPUTest {
       size: outputBufferSize,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     this.trackForCleanup(outputBuffer);
     const encoder = this.device.createCommandEncoder();
     encoder.copyTextureToBuffer(
@@ -699,7 +692,6 @@ class ImageCopyTest extends GPUTest {
             start: baseInitialDataOffset + y * copySize[0],
             length: copySize[0],
           },
-
           { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }
         );
       }
@@ -747,7 +739,6 @@ class ImageCopyTest extends GPUTest {
         },
       ],
     });
-
     const renderPipelineDescriptorBase = {
       layout: this.device.createPipelineLayout({ bindGroupLayouts: [bindGroupLayout] }),
       vertex: {
@@ -765,7 +756,6 @@ class ImageCopyTest extends GPUTest {
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
       },
 
@@ -781,7 +771,6 @@ class ImageCopyTest extends GPUTest {
               return vec4<f32>(f32(1u << param.stencilBitIndex) / 255.0, 0.0, 0.0, 0.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [
           {
@@ -805,7 +794,6 @@ class ImageCopyTest extends GPUTest {
         stencilFront: {
           compare: 'equal',
         },
-
         stencilBack: {
           compare: 'equal',
         },
@@ -850,7 +838,6 @@ class ImageCopyTest extends GPUTest {
       size: outputTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     this.trackForCleanup(outputTexture);
 
     for (
@@ -867,7 +854,6 @@ class ImageCopyTest extends GPUTest {
           arrayLayerCount: 1,
         }),
       };
-
       if (kTextureFormatInfo[stencilTextureFormat].depth) {
         depthStencilAttachment.depthClearValue = 0;
         depthStencilAttachment.depthLoadOp = 'clear';
@@ -909,19 +895,16 @@ class ImageCopyTest extends GPUTest {
         size: copyFromOutputTextureLayout.byteLength,
         usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       });
-
       this.trackForCleanup(outputStagingBuffer);
       encoder.copyTextureToBuffer(
         {
           texture: outputTexture,
         },
-
         {
           buffer: outputStagingBuffer,
           bytesPerRow: copyFromOutputTextureLayout.bytesPerRow,
           rowsPerImage: copyFromOutputTextureLayout.rowsPerImage,
         },
-
         outputTextureSize
       );
 
@@ -959,7 +942,6 @@ class ImageCopyTest extends GPUTest {
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
       format: 'r32float',
     });
-
     this.trackForCleanup(inputTexture);
     this.queue.writeTexture(
       { texture: inputTexture },
@@ -968,7 +950,6 @@ class ImageCopyTest extends GPUTest {
         bytesPerRow: copySize[0] * 4,
         rowsPerImage: copySize[1],
       },
-
       copySize
     );
 
@@ -989,10 +970,8 @@ class ImageCopyTest extends GPUTest {
             return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
           }`,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -1003,15 +982,12 @@ class ImageCopyTest extends GPUTest {
               return depthValue.x;
             }`,
         }),
-
         entryPoint: 'main',
         targets: [],
       },
-
       primitive: {
         topology: 'triangle-list',
       },
-
       depthStencil: {
         format: depthFormat,
         depthWriteEnabled: true,
@@ -1030,7 +1006,6 @@ class ImageCopyTest extends GPUTest {
           mipLevelCount: 1,
         }),
       };
-
       if (kTextureFormatInfo[depthFormat].depth) {
         depthStencilAttachment.depthClearValue = 0.0;
         depthStencilAttachment.depthLoadOp = 'clear';
@@ -1044,7 +1019,6 @@ class ImageCopyTest extends GPUTest {
         colorAttachments: [],
         depthStencilAttachment,
       });
-
       renderPass.setPipeline(renderPipeline);
 
       const bindGroup = this.device.createBindGroup({
@@ -1062,7 +1036,6 @@ class ImageCopyTest extends GPUTest {
           },
         ],
       });
-
       renderPass.setBindGroup(0, bindGroup);
       renderPass.draw(6);
       renderPass.end();
@@ -1114,7 +1087,6 @@ class ImageCopyTest extends GPUTest {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
       mipLevelCount: mipLevel + 1,
     });
-
     this.trackForCleanup(depthTexture);
     this.initializeDepthAspectWithRendering(depthTexture, format, copySize, mipLevel, initialData);
 
@@ -1138,7 +1110,6 @@ class ImageCopyTest extends GPUTest {
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: destinationBufferSize,
     });
-
     this.trackForCleanup(destinationBuffer);
     const copyEncoder = this.device.createCommandEncoder();
     copyEncoder.copyTextureToBuffer(
@@ -1147,14 +1118,12 @@ class ImageCopyTest extends GPUTest {
         mipLevel,
         aspect: 'depth-only',
       },
-
       {
         buffer: destinationBuffer,
         offset,
         bytesPerRow,
         rowsPerImage,
       },
-
       copySize
     );
 
@@ -1172,7 +1141,6 @@ class ImageCopyTest extends GPUTest {
             start: baseInitialDataOffset + y * copySize[0],
             length: copySize[0],
           },
-
           { dst: expectedData, start: baseExpectedOffset + y * bytesPerRow }
         );
       }
@@ -1383,7 +1351,6 @@ works for every format with 2d and 2d-array textures.
       height: 3 * info.blockHeight,
       depthOrArrayLayers: copyDepth,
     };
-
     let textureHeight = 4 * info.blockHeight;
     let rowsPerImage = 3;
     const bytesPerRow = 256;
@@ -1401,7 +1368,6 @@ works for every format with 2d and 2d-array textures.
       copySize,
       method: initMethod,
     });
-
     const dataSize = minDataSize + dataPaddingInBytes;
 
     // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
@@ -1480,13 +1446,11 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
       y: originBlocks[1] * info.blockHeight,
       z: originBlocks[2],
     };
-
     const copySize = {
       width: copySizeBlocks[0] * info.blockWidth,
       height: copySizeBlocks[1] * info.blockHeight,
       depthOrArrayLayers: copySizeBlocks[2],
     };
-
     const textureSize = [
       texSizeBlocks[0] * info.blockWidth,
       texSizeBlocks[1] * info.blockHeight,
@@ -1596,7 +1560,6 @@ TODO: Make a variant for depth-stencil formats.
           _mipSizeInBlocks: { width: 8, height: 6, depthOrArrayLayers: 1 },
           mipLevel: 1,
         },
-
         // origin + copySize = texturePhysicalSizeAtMipLevel for all coordinates, 2d-array texture
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
@@ -1604,7 +1567,6 @@ TODO: Make a variant for depth-stencil formats.
           _mipSizeInBlocks: { width: 8, height: 6, depthOrArrayLayers: 3 },
           mipLevel: 2,
         },
-
         // origin.x + copySize.width = texturePhysicalSizeAtMipLevel.width
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
@@ -1612,7 +1574,6 @@ TODO: Make a variant for depth-stencil formats.
           _mipSizeInBlocks: { width: 8, height: 7, depthOrArrayLayers: 4 },
           mipLevel: 3,
         },
-
         // origin.y + copySize.height = texturePhysicalSizeAtMipLevel.height
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
@@ -1620,7 +1581,6 @@ TODO: Make a variant for depth-stencil formats.
           _mipSizeInBlocks: { width: 9, height: 6, depthOrArrayLayers: 4 },
           mipLevel: 4,
         },
-
         // origin.z + copySize.depthOrArrayLayers = texturePhysicalSizeAtMipLevel.depthOrArrayLayers
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
@@ -1628,7 +1588,6 @@ TODO: Make a variant for depth-stencil formats.
           _mipSizeInBlocks: { width: 9, height: 7, depthOrArrayLayers: 3 },
           mipLevel: 4,
         },
-
         // origin + copySize < texturePhysicalSizeAtMipLevel for all coordinates
         {
           copySizeInBlocks: { width: 5, height: 4, depthOrArrayLayers: 2 },
@@ -1661,7 +1620,6 @@ TODO: Make a variant for depth-stencil formats.
       y: originInBlocks.y * info.blockHeight,
       z: originInBlocks.z,
     };
-
     const copySize = {
       width: copySizeInBlocks.width * info.blockWidth,
       height: copySizeInBlocks.height * info.blockHeight,
@@ -1750,7 +1708,6 @@ g.test('undefined_params')
         // Zero will get turned back into undefined later.
         rowsPerImage: rowsPerImage ?? 0,
       },
-
       copySize: { width: copySize[0], height: copySize[1], depthOrArrayLayers: copySize[2] },
       dataSize: 2000,
       textureSize: _textureSize,
@@ -1938,7 +1895,6 @@ copyTextureToBuffer() with depth aspect.
         copySize,
         method: copyMethod,
       });
-
       const initialDataSize = minDataSize + dataPaddingInBytes;
       await t.DoUploadToStencilTest(
         format,

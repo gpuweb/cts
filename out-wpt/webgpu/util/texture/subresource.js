@@ -22,7 +22,6 @@ export class SubresourceRange {
       begin: subresources.mipRange.begin,
       end: endOfRange(subresources.mipRange),
     };
-
     this.layerRange = {
       begin: subresources.layerRange.begin,
       end: endOfRange(subresources.layerRange),

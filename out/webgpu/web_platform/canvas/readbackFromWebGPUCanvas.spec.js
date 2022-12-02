@@ -45,8 +45,8 @@ const expect = {
   0, 0xff, 0, kPixelValue, // green
   0xff, 0, 0, kPixelValue, // red
   0xff, 0xff, 0, kPixelValue // yellow
-  ]) };
-
+  ])
+};
 
 async function initCanvasContent(
 t,
@@ -62,24 +62,24 @@ canvasType)
     device: t.device,
     format,
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
-    alphaMode });
-
+    alphaMode
+  });
 
   const canvasTexture = ctx.getCurrentTexture();
   const tempTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format,
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const tempTextureView = tempTexture.createView();
   const encoder = t.device.createCommandEncoder();
 
   const clearOnePixel = (origin, color) => {
     const pass = encoder.beginRenderPass({
       colorAttachments: [
-      { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' }] });
+      { view: tempTextureView, clearValue: color, loadOp: 'clear', storeOp: 'store' }]
 
-
+    });
     pass.end();
     encoder.copyTextureToTexture(
     { texture: tempTexture },

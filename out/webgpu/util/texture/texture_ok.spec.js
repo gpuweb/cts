@@ -42,8 +42,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     format,
     size,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
+  });
   t.trackForCleanup(texture);
   t.device.queue.writeTexture({ texture }, new Float32Array([data, data, data, data]), {}, size);
 
@@ -79,8 +79,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     format,
     size,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
+  });
   t.trackForCleanup(texture);
   t.device.queue.writeTexture({ texture }, new Int8Array(data), {}, size);
 
@@ -126,8 +126,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     format,
     size,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC
+  });
   t.trackForCleanup(texture);
   t.device.queue.writeTexture({ texture }, new Int8Array(data), {}, size);
 

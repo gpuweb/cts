@@ -27,8 +27,8 @@ class F extends ValidationTest {
     const bufferDesc = {
       size: 8,
       usage,
-      mappedAtCreation: false };
-
+      mappedAtCreation: false
+    };
 
     const mapMode = usage & GPUBufferUsage.MAP_READ ? GPUMapMode.READ : GPUMapMode.WRITE;
 
@@ -85,8 +85,8 @@ class F extends ValidationTest {
     // Unmap the mappedAtCreation buffer and run the operation. Should succeed.
     mappedBuffer.unmap();
     callback(mappedBuffer);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -112,13 +112,13 @@ desc(
 fn(async (t) => {
   const sourceBuffer = t.device.createBuffer({
     size: 8,
-    usage: GPUBufferUsage.COPY_SRC });
-
+    usage: GPUBufferUsage.COPY_SRC
+  });
 
   const destBuffer = t.device.createBuffer({
     size: 8,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
@@ -149,8 +149,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_DST });
-
+    usage: GPUTextureUsage.COPY_DST
+  });
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
@@ -172,8 +172,8 @@ fn(async (t) => {
   const texture = t.device.createTexture({
     size,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_SRC });
-
+    usage: GPUTextureUsage.COPY_SRC
+  });
 
   await t.runBufferDependencyTest(
   GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
@@ -196,43 +196,43 @@ paramsSubcasesOnly([
 {
   order: ['record', 'map', 'unmap', 'finish', 'submit'],
   mappedAtCreation: false,
-  _shouldError: false },
-
+  _shouldError: false
+},
 {
   order: ['record', 'map', 'finish', 'unmap', 'submit'],
   mappedAtCreation: false,
-  _shouldError: false },
-
+  _shouldError: false
+},
 {
   order: ['record', 'finish', 'map', 'unmap', 'submit'],
   mappedAtCreation: false,
-  _shouldError: false },
-
+  _shouldError: false
+},
 {
   order: ['map', 'record', 'unmap', 'finish', 'submit'],
   mappedAtCreation: false,
-  _shouldError: false },
-
+  _shouldError: false
+},
 {
   order: ['map', 'record', 'finish', 'unmap', 'submit'],
   mappedAtCreation: false,
-  _shouldError: false },
-
+  _shouldError: false
+},
 {
   order: ['map', 'record', 'finish', 'submit', 'unmap'],
   mappedAtCreation: false,
-  _shouldError: true },
-
+  _shouldError: true
+},
 {
   order: ['record', 'map', 'finish', 'submit', 'unmap'],
   mappedAtCreation: false,
-  _shouldError: true },
-
+  _shouldError: true
+},
 {
   order: ['record', 'finish', 'map', 'submit', 'unmap'],
   mappedAtCreation: false,
-  _shouldError: true },
-
+  _shouldError: true
+},
 { order: ['record', 'unmap', 'finish', 'submit'], mappedAtCreation: true, _shouldError: false },
 { order: ['record', 'finish', 'unmap', 'submit'], mappedAtCreation: true, _shouldError: false },
 { order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true }]).
@@ -243,13 +243,13 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     size: 4,
     usage: GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-    mappedAtCreation });
-
+    mappedAtCreation
+  });
 
   const targetBuffer = t.device.createBuffer({
     size: 4,
-    usage: GPUBufferUsage.COPY_DST });
-
+    usage: GPUBufferUsage.COPY_DST
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   let commandBuffer;
@@ -271,8 +271,8 @@ fn(async (t) => {
       t.expectValidationError(() => {
         t.queue.submit([commandBuffer]);
       }, shouldError);
-    } };
-
+    }
+  };
 
   for (const op of order) {
     await steps[op]();

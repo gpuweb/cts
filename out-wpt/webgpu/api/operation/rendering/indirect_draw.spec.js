@@ -181,7 +181,6 @@ Params:
               return vec4<f32>(pos, 0.0, 1.0);
           }`,
         }),
-
         entryPoint: 'main',
         buffers: [
           {
@@ -197,14 +196,12 @@ Params:
           },
         ],
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `@fragment fn main() -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
         }`,
         }),
-
         entryPoint: 'main',
         targets: [
           {
@@ -231,7 +228,6 @@ Params:
         },
       ],
     });
-
     renderPass.setPipeline(pipeline);
     renderPass.setVertexBuffer(0, vertexBuffer, 0);
 

@@ -25,8 +25,8 @@ fn(async (t) => {
   _ = c0;
   _ = c1;
 }
-          ` });
-
+          `
+    });
   }, false);
 
   t.expectValidationError(() => {
@@ -40,8 +40,8 @@ fn(async (t) => {
   _ = c0;
   _ = c1;
 }
-          ` });
-
+          `
+    });
   }, true);
 });
 
@@ -62,8 +62,8 @@ override c0: u32;
   // make sure the overridable constants are not optimized out
   _ = c0;
 }
-          ` });
-
+          `
+    });
   }, true);
 
   t.expectValidationError(() => {
@@ -76,8 +76,8 @@ override c0: u32;
   // make sure the overridable constants are not optimized out
   _ = c0;
 }
-          ` });
-
+          `
+    });
   }, true);
 
   t.expectValidationError(() => {
@@ -90,8 +90,8 @@ override c0: u32;
   // make sure the overridable constants are not optimized out
   _ = c0;
 }
-          ` });
-
+          `
+    });
   }, true);
 });
 //# sourceMappingURL=overrides.spec.js.map

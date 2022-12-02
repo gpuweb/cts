@@ -18,14 +18,14 @@ u.combine('descriptor', [
   usage:
   GPUConst.BufferUsage.STORAGE |
   GPUConst.BufferUsage.COPY_SRC |
-  GPUConst.BufferUsage.UNIFORM },
-
+  GPUConst.BufferUsage.UNIFORM
+},
 { size: 32, usage: GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.COPY_DST },
 {
   size: 32,
   usage: GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE,
-  invalid: true }])).
-
+  invalid: true
+}])).
 
 
 fn(async (t) => {
@@ -46,44 +46,44 @@ u.combine('descriptor', [
 {
   size: { width: 4, height: 4 },
   format: 'rgba8unorm',
-  usage: GPUConst.TextureUsage.TEXTURE_BINDING },
-
+  usage: GPUConst.TextureUsage.TEXTURE_BINDING
+},
 {
   size: { width: 8, height: 8, depthOrArrayLayers: 8 },
   format: 'bgra8unorm',
-  usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.COPY_SRC },
-
+  usage: GPUConst.TextureUsage.RENDER_ATTACHMENT | GPUConst.TextureUsage.COPY_SRC
+},
 {
   size: [4, 4],
   format: 'rgba8unorm',
   usage: GPUConst.TextureUsage.TEXTURE_BINDING,
-  mipLevelCount: 2 },
-
+  mipLevelCount: 2
+},
 {
   size: [16, 16, 16],
   format: 'rgba8unorm',
   usage: GPUConst.TextureUsage.TEXTURE_BINDING,
-  dimension: '3d' },
-
+  dimension: '3d'
+},
 {
   size: [32],
   format: 'rgba8unorm',
   usage: GPUConst.TextureUsage.TEXTURE_BINDING,
-  dimension: '1d' },
-
+  dimension: '1d'
+},
 {
   size: { width: 4, height: 4 },
   format: 'rgba8unorm',
   usage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
-  sampleCount: 4 },
-
+  sampleCount: 4
+},
 {
   size: { width: 4, height: 4 },
   format: 'rgba8unorm',
   usage: GPUConst.TextureUsage.TEXTURE_BINDING,
   sampleCount: 4,
-  invalid: true }])).
-
+  invalid: true
+}])).
 
 
 fn(async (t) => {

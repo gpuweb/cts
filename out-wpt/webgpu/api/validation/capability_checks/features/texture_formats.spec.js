@@ -112,7 +112,6 @@ g.test('texture_view_descriptor')
       size: [formatInfo.blockWidth, formatInfo.blockHeight, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
-
     const testViewDesc = {
       format,
       dimension: '2d',
@@ -122,7 +121,6 @@ g.test('texture_view_descriptor')
       mipLevelCount: 1,
       baseArrayLayer: 0,
     };
-
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
       testTexture.createView(testViewDesc);
     });
@@ -302,10 +300,8 @@ g.test('color_target_state')
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
           }),
-
           entryPoint: 'main',
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -314,7 +310,6 @@ g.test('color_target_state')
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
           }),
-
           entryPoint: 'main',
           targets: [{ format }],
         },
@@ -361,14 +356,11 @@ g.test('depth_stencil_state')
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
           }),
-
           entryPoint: 'main',
         },
-
         depthStencil: {
           format,
         },
-
         fragment: {
           module: t.device.createShaderModule({
             code: `
@@ -377,7 +369,6 @@ g.test('depth_stencil_state')
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
           }),
-
           entryPoint: 'main',
           targets: [{ format: 'rgba8unorm' }],
         },

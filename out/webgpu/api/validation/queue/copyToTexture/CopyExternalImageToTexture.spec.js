@@ -37,8 +37,8 @@ const kDefaultMipLevelCount = 6;
 function computeMipMapSize(width, height, mipLevel) {
   return {
     mipWidth: Math.max(width >> mipLevel, 1),
-    mipHeight: Math.max(height >> mipLevel, 1) };
-
+    mipHeight: Math.max(height >> mipLevel, 1)
+  };
 }
 
 
@@ -59,26 +59,26 @@ function generateCopySizeForSrcOOB({ srcOrigin }) {
   const justFitCopySize = {
     width: kDefaultWidth - srcOrigin.x,
     height: kDefaultHeight - srcOrigin.y,
-    depthOrArrayLayers: 1 };
-
+    depthOrArrayLayers: 1
+  };
 
   return [
   justFitCopySize, // correct size, maybe no-op copy.
   {
     width: justFitCopySize.width + 1,
     height: justFitCopySize.height,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers },
-  // OOB in width
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers
+  }, // OOB in width
   {
     width: justFitCopySize.width,
     height: justFitCopySize.height + 1,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers },
-  // OOB in height
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers
+  }, // OOB in height
   {
     width: justFitCopySize.width,
     height: justFitCopySize.height,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1 }
-  // OOB in depthOrArrayLayers
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1
+  } // OOB in depthOrArrayLayers
   ];
 }
 
@@ -115,26 +115,26 @@ function generateCopySizeForDstOOB({ mipLevel, dstOrigin }) {
   const justFitCopySize = {
     width: dstMipMapSize.mipWidth - dstOrigin.x,
     height: dstMipMapSize.mipHeight - dstOrigin.y,
-    depthOrArrayLayers: kDefaultDepth - dstOrigin.z };
-
+    depthOrArrayLayers: kDefaultDepth - dstOrigin.z
+  };
 
   return [
   justFitCopySize,
   {
     width: justFitCopySize.width + 1,
     height: justFitCopySize.height,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers },
-  // OOB in width
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers
+  }, // OOB in width
   {
     width: justFitCopySize.width,
     height: justFitCopySize.height + 1,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers },
-  // OOB in height
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers
+  }, // OOB in height
   {
     width: justFitCopySize.width,
     height: justFitCopySize.height,
-    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1 }
-  // OOB in depthOrArrayLayers
+    depthOrArrayLayers: justFitCopySize.depthOrArrayLayers + 1
+  } // OOB in depthOrArrayLayers
   ];
 }
 
@@ -198,8 +198,8 @@ class CopyExternalImageToTextureTest extends ValidationTest {
 
       }, !validationScopeSuccess);
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(CopyExternalImageToTextureTest);
 
@@ -230,8 +230,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const ctx = canvas.getContext(contextType);
   if (ctx === null) {
@@ -275,8 +275,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   // MAINTENANCE_TODO: Workaround for @types/offscreencanvas missing an overload of
   // `OffscreenCanvas.getContext` that takes `string` or a union of context types.
@@ -388,8 +388,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   t.runTest(
   { source: externalImage },
@@ -427,8 +427,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   if (closed) imageBitmap.close();
 
@@ -482,8 +482,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   let exceptionName = '';
 
@@ -552,8 +552,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   let exceptionName = '';
   switch (state) {
@@ -641,8 +641,8 @@ fn(async (t) => {
   const texture = sourceDevice.createTexture({
     size: copySize,
     format: 'rgba8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
 
@@ -672,8 +672,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format: 'rgba8unorm',
-    usage });
-
+    usage
+  });
 
   t.runTest(
   { source: imageBitmap },
@@ -707,8 +707,8 @@ fn(async (t) => {
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     sampleCount,
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   t.runTest({ source: imageBitmap }, { texture: dstTexture }, copySize, sampleCount === 1);
 });
@@ -737,8 +737,8 @@ fn(async (t) => {
     size: { width: kDefaultWidth, height: kDefaultHeight, depthOrArrayLayers: kDefaultDepth },
     mipLevelCount: kDefaultMipLevelCount,
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   t.runTest(
   { source: imageBitmap },
@@ -780,8 +780,8 @@ fn(async (t) => {
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     format,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   void t.device.popErrorScope();
 
   const success = kValidTextureFormatsForCopyE2T.includes(format);
@@ -816,12 +816,12 @@ fn(async (t) => {
     size: {
       width: kDefaultWidth + 1,
       height: kDefaultHeight + 1,
-      depthOrArrayLayers: kDefaultDepth },
-
+      depthOrArrayLayers: kDefaultDepth
+    },
     mipLevelCount: kDefaultMipLevelCount,
     format: 'bgra8unorm',
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   let success = true;
 
@@ -867,12 +867,12 @@ fn(async (t) => {
     size: {
       width: kDefaultWidth,
       height: kDefaultHeight,
-      depthOrArrayLayers: kDefaultDepth },
-
+      depthOrArrayLayers: kDefaultDepth
+    },
     format: 'bgra8unorm',
     mipLevelCount: kDefaultMipLevelCount,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   let success = true;
   let hasOperationError = false;
@@ -895,8 +895,8 @@ fn(async (t) => {
   {
     texture: dstTexture,
     mipLevel,
-    origin: dstOrigin },
-
+    origin: dstOrigin
+  },
   copySize,
   success,
   hasOperationError ? 'OperationError' : '');

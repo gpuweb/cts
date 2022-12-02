@@ -19,8 +19,8 @@ fn(async (t) => {
   t.expectValidationError(() => {
     t.device.createSampler({
       lodMinClamp: t.params.lodMinClamp,
-      lodMaxClamp: t.params.lodMaxClamp });
-
+      lodMaxClamp: t.params.lodMaxClamp
+    });
   }, t.params.lodMinClamp > t.params.lodMaxClamp || t.params.lodMinClamp < 0 || t.params.lodMaxClamp < 0);
 });
 
@@ -41,8 +41,8 @@ fn(async (t) => {
     maxAnisotropy = 1,
     minFilter = 'linear',
     magFilter = 'linear',
-    mipmapFilter = 'linear' } =
-  t.params;
+    mipmapFilter = 'linear'
+  } = t.params;
 
 
 
@@ -53,8 +53,8 @@ fn(async (t) => {
       minFilter,
       magFilter,
       mipmapFilter,
-      maxAnisotropy });
-
+      maxAnisotropy
+    });
   }, maxAnisotropy < 1 || maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear'));
 });
 //# sourceMappingURL=createSampler.spec.js.map

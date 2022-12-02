@@ -18,33 +18,33 @@ class F extends ValidationTest {
           code: `
             @vertex fn main() -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }` }),
-
-        entryPoint: 'main' },
-
+            }`
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] },
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
       primitive: {
         topology: 'triangle-strip',
-        stripIndexFormat: 'uint32' } });
-
-
+        stripIndexFormat: 'uint32'
+      }
+    });
   }
 
   beginRenderPass(encoder) {
     const colorAttachment = this.device.createTexture({
       format: 'rgba8unorm',
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    });
 
     return encoder.beginRenderPass({
       colorAttachments: [
@@ -52,10 +52,10 @@ class F extends ValidationTest {
         view: colorAttachment.createView(),
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
   }
 
   drawIndexed(
@@ -83,8 +83,8 @@ class F extends ValidationTest {
         encoder.finish();
       });
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

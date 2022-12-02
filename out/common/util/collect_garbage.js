@@ -27,9 +27,9 @@ export async function attemptGarbageCollection() {
     garbageCollect();
     return;
   } catch (e) {
+
     // ignore any failure
   }
-
   if (w.gc) {
     w.gc();
     return;

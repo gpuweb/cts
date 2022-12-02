@@ -26,8 +26,8 @@ export class ValidationTest extends GPUTest {
       GPUTextureUsage.COPY_DST |
       GPUTextureUsage.TEXTURE_BINDING |
       GPUTextureUsage.STORAGE_BINDING |
-      GPUTextureUsage.RENDER_ATTACHMENT };
-
+      GPUTextureUsage.RENDER_ATTACHMENT
+    };
 
     switch (state) {
       case 'valid':
@@ -52,8 +52,8 @@ export class ValidationTest extends GPUTest {
   {
     descriptor = descriptor ?? {
       size: 4,
-      usage: GPUBufferUsage.VERTEX };
-
+      usage: GPUBufferUsage.VERTEX
+    };
 
     switch (state) {
       case 'valid':
@@ -65,8 +65,8 @@ export class ValidationTest extends GPUTest {
           this.device.pushErrorScope('validation');
           const buffer = this.device.createBuffer({
             ...descriptor,
-            usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC });
-
+            usage: descriptor.usage | GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_SRC
+          });
           void this.device.popErrorScope();
           return buffer;
         }
@@ -146,8 +146,8 @@ export class ValidationTest extends GPUTest {
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage,
-      sampleCount }));
-
+      sampleCount
+    }));
 
   }
 
@@ -157,8 +157,8 @@ export class ValidationTest extends GPUTest {
     this.device.createTexture({
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.STORAGE_BINDING }));
-
+      usage: GPUTextureUsage.STORAGE_BINDING
+    }));
 
   }
 
@@ -169,8 +169,8 @@ export class ValidationTest extends GPUTest {
       size: { width: 16, height: 16, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount }));
-
+      sampleCount
+    }));
 
   }
 
@@ -180,8 +180,8 @@ export class ValidationTest extends GPUTest {
     const texture = this.device.createTexture({
       size: { width: 0, height: 0, depthOrArrayLayers: 0 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.TEXTURE_BINDING });
-
+      usage: GPUTextureUsage.TEXTURE_BINDING
+    });
     void this.device.popErrorScope();
     return texture;
   }
@@ -250,8 +250,8 @@ export class ValidationTest extends GPUTest {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING,
-      sampleCount });
-
+      sampleCount
+    });
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage from mismatched device. */
@@ -259,8 +259,8 @@ export class ValidationTest extends GPUTest {
     return this.getDeviceMismatchedTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
-      usage: GPUTextureUsage.STORAGE_BINDING });
-
+      usage: GPUTextureUsage.STORAGE_BINDING
+    });
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `RENDER_ATTACHMENT` usage from mismatched device. */
@@ -269,8 +269,8 @@ export class ValidationTest extends GPUTest {
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       format: 'rgba8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount });
-
+      sampleCount
+    });
   }
 
   getDeviceMismatchedBindingResource(bindingType) {
@@ -323,19 +323,19 @@ export class ValidationTest extends GPUTest {
       layout,
       vertex: {
         module: this.device.createShaderModule({
-          code: this.getNoOpShaderCode('VERTEX') }),
-
-        entryPoint: 'main' },
-
+          code: this.getNoOpShaderCode('VERTEX')
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         module: this.device.createShaderModule({
-          code: this.getNoOpShaderCode('FRAGMENT') }),
-
+          code: this.getNoOpShaderCode('FRAGMENT')
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }] },
-
-      primitive: { topology: 'triangle-list' } });
-
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }]
+      },
+      primitive: { topology: 'triangle-list' }
+    });
   }
 
   /** Return an invalid GPURenderPipeline. */
@@ -345,11 +345,11 @@ export class ValidationTest extends GPUTest {
       layout: 'auto',
       vertex: {
         module: this.device.createShaderModule({
-          code: '' }),
-
-        entryPoint: '' } });
-
-
+          code: ''
+        }),
+        entryPoint: ''
+      }
+    });
     void this.device.popErrorScope();
     return pipeline;
   }
@@ -362,11 +362,11 @@ export class ValidationTest extends GPUTest {
       layout,
       compute: {
         module: this.device.createShaderModule({
-          code: this.getNoOpShaderCode('COMPUTE') }),
-
-        entryPoint: 'main' } });
-
-
+          code: this.getNoOpShaderCode('COMPUTE')
+        }),
+        entryPoint: 'main'
+      }
+    });
   }
 
   /** Return an invalid GPUComputePipeline. */
@@ -376,11 +376,11 @@ export class ValidationTest extends GPUTest {
       layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
-          code: '' }),
-
-        entryPoint: '' } });
-
-
+          code: ''
+        }),
+        entryPoint: ''
+      }
+    });
     void this.device.popErrorScope();
     return pipeline;
   }
@@ -430,5 +430,6 @@ export class ValidationTest extends GPUTest {
         this.device.createComputePipeline(descriptor);
       }, !_success);
     }
-  }}
+  }
+}
 //# sourceMappingURL=validation_test.js.map

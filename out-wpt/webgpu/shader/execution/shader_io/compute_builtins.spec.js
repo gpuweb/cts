@@ -19,17 +19,14 @@ g.test('inputs')
           groupSize: { x: 1, y: 1, z: 1 },
           numGroups: { x: 1, y: 1, z: 1 },
         },
-
         {
           groupSize: { x: 8, y: 4, z: 2 },
           numGroups: { x: 1, y: 1, z: 1 },
         },
-
         {
           groupSize: { x: 1, y: 1, z: 1 },
           numGroups: { x: 8, y: 4, z: 2 },
         },
-
         {
           groupSize: { x: 3, y: 7, z: 5 },
           numGroups: { x: 13, y: 9, z: 11 },
@@ -140,7 +137,6 @@ g.test('inputs')
         module: t.device.createShaderModule({
           code: wgsl,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -151,7 +147,6 @@ g.test('inputs')
         size,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
-
       t.trackForCleanup(buffer);
 
       bindGroupEntries.push({
@@ -192,7 +187,6 @@ g.test('inputs')
           usage: GPUBufferUsage.INDIRECT,
           mappedAtCreation: true,
         });
-
         t.trackForCleanup(dispatchBuffer);
         const dispatchData = new Uint32Array(dispatchBuffer.getMappedRange());
         dispatchData[0] = t.params.numGroups.x;

@@ -150,7 +150,6 @@ g.test('timestamp_query,device_mismatch')
       type: 'timestamp',
       count: 2,
     });
-
     t.trackForCleanup(querySet);
 
     const encoder = t.createEncoder('non-pass');

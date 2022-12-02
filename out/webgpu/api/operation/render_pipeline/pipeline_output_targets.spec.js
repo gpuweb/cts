@@ -68,17 +68,17 @@ fn(async (t) => {
   t.device.createTexture({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT }));
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  }));
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: kVertexShader }),
-
-      entryPoint: 'main' },
-
+        code: kVertexShader
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput(
@@ -93,16 +93,16 @@ fn(async (t) => {
           writeValues[i].A],
 
           plainType: getPlainTypeInfo(info.sampleType),
-          componentCount })) }),
+          componentCount
+        }))
 
 
-
-
+      }),
       entryPoint: 'main',
-      targets: range(attachmentCount, (i) => i === emptyAttachmentId ? null : { format }) },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: range(attachmentCount, (i) => i === emptyAttachmentId ? null : { format })
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
@@ -113,10 +113,10 @@ fn(async (t) => {
       view: renderTargets[i].createView(),
       storeOp: 'store',
       clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 0.5 },
-      loadOp: 'clear' }) });
+      loadOp: 'clear'
+    })
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -131,13 +131,13 @@ fn(async (t) => {
     { texture: renderTargets[i] },
     [1, 1, 1],
     {
-      expTexelView: TexelView.fromTexelsAsColors(format, (coords) => writeValues[i]) },
-
+      expTexelView: TexelView.fromTexelsAsColors(format, (coords) => writeValues[i])
+    },
     {
       maxIntDiff: 0,
       maxDiffULPsForNormFormat: 1,
-      maxDiffULPsForFloatFormat: 1 });
-
+      maxDiffULPsForFloatFormat: 1
+    });
 
   });
   t.eventualExpectOK(Promise.all(promises));
@@ -169,32 +169,32 @@ fn(async (t) => {
   const renderTarget = t.device.createTexture({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: kVertexShader }),
-
-      entryPoint: 'main' },
-
+        code: kVertexShader
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
         {
           values,
           plainType: getPlainTypeInfo(info.sampleType),
-          componentCount }]) }),
+          componentCount
+        }])
 
-
-
+      }),
       entryPoint: 'main',
-      targets: [{ format }] },
-
-    primitive: { topology: 'triangle-list' } });
-
+      targets: [{ format }]
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
@@ -203,10 +203,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       storeOp: 'store',
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-      loadOp: 'clear' }] });
+      loadOp: 'clear'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -214,8 +214,8 @@ fn(async (t) => {
 
   t.expectSingleColor(renderTarget, format, {
     size: [1, 1, 1],
-    exp: { R: values[0], G: values[1], B: values[2], A: values[3] } });
-
+    exp: { R: values[0], G: values[1], B: values[2], A: values[3] }
+  });
 });
 
 g.test('color,component_count,blend').
@@ -242,80 +242,80 @@ beginSubcases()
   colorSrcFactor: 'one',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0, 0, 0, 0],
   output: [0],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [1, 0, 0, 0],
   output: [0],
   colorSrcFactor: 'one-minus-dst-alpha',
   colorDstFactor: 'dst-alpha',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'one' },
-
+  alphaDstFactor: 'one'
+},
 {
   _result: [0.498, 0, 0, 0],
   output: [0.498],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'one' },
-
+  alphaDstFactor: 'one'
+},
 {
   _result: [0, 1, 0, 0],
   output: [0, 1],
   colorSrcFactor: 'one',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0, 1, 0, 0],
   output: [0, 1],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [1, 0, 0, 0],
   output: [0, 1],
   colorSrcFactor: 'one-minus-dst-alpha',
   colorDstFactor: 'dst-alpha',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'one' },
-
+  alphaDstFactor: 'one'
+},
 {
   _result: [0, 1, 0, 0],
   output: [0, 1, 0],
   colorSrcFactor: 'one',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0, 1, 0, 0],
   output: [0, 1, 0],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [1, 0, 0, 0],
   output: [0, 1, 0],
   colorSrcFactor: 'one-minus-dst-alpha',
   colorDstFactor: 'dst-alpha',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'one' },
-
+  alphaDstFactor: 'one'
+},
 // fragment output has alpha
 {
   _result: [0.502, 1, 0, 0.498],
@@ -323,40 +323,40 @@ beginSubcases()
   colorSrcFactor: 'one',
   colorDstFactor: 'one-minus-src-alpha',
   alphaSrcFactor: 'one',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0.502, 0.498, 0, 0.498],
   output: [0, 1, 0, 0.498],
   colorSrcFactor: 'src-alpha',
   colorDstFactor: 'one-minus-src-alpha',
   alphaSrcFactor: 'one',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0, 1, 0, 0.498],
   output: [0, 1, 0, 0.498],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'one',
-  alphaDstFactor: 'zero' },
-
+  alphaDstFactor: 'zero'
+},
 {
   _result: [0, 1, 0, 0.498],
   output: [0, 1, 0, 0.498],
   colorSrcFactor: 'dst-alpha',
   colorDstFactor: 'zero',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'src' },
-
+  alphaDstFactor: 'src'
+},
 {
   _result: [1, 0, 0, 1],
   output: [0, 1, 0, 0.498],
   colorSrcFactor: 'one-minus-dst-alpha',
   colorDstFactor: 'dst-alpha',
   alphaSrcFactor: 'zero',
-  alphaDstFactor: 'dst-alpha' }]).
-
+  alphaDstFactor: 'dst-alpha'
+}]).
 
 filter((x) => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)).
 
@@ -372,35 +372,35 @@ fn(async (t) => {
     colorSrcFactor,
     colorDstFactor,
     alphaSrcFactor,
-    alphaDstFactor } =
-  t.params;
+    alphaDstFactor
+  } = t.params;
   const componentCount = output.length;
   const info = kTextureFormatInfo[format];
 
   const renderTarget = t.device.createTexture({
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
 
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: kVertexShader }),
-
-      entryPoint: 'main' },
-
+        code: kVertexShader
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
         {
           values: output,
           plainType: getPlainTypeInfo(info.sampleType),
-          componentCount }]) }),
+          componentCount
+        }])
 
-
-
+      }),
       entryPoint: 'main',
       targets: [
       {
@@ -409,19 +409,19 @@ fn(async (t) => {
           color: {
             srcFactor: colorSrcFactor,
             dstFactor: colorDstFactor,
-            operation: 'add' },
-
+            operation: 'add'
+          },
           alpha: {
             srcFactor: alphaSrcFactor,
             dstFactor: alphaDstFactor,
-            operation: 'add' } } }] },
+            operation: 'add'
+          }
+        }
+      }]
 
-
-
-
-
-    primitive: { topology: 'triangle-list' } });
-
+    },
+    primitive: { topology: 'triangle-list' }
+  });
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginRenderPass({
@@ -430,10 +430,10 @@ fn(async (t) => {
       view: renderTarget.createView(),
       storeOp: 'store',
       clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-      loadOp: 'clear' }] });
+      loadOp: 'clear'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.draw(3);
   pass.end();
@@ -441,7 +441,7 @@ fn(async (t) => {
 
   t.expectSingleColor(renderTarget, format, {
     size: [1, 1, 1],
-    exp: { R: _result[0], G: _result[1], B: _result[2], A: _result[3] } });
-
+    exp: { R: _result[0], G: _result[1], B: _result[2], A: _result[3] }
+  });
 });
 //# sourceMappingURL=pipeline_output_targets.spec.js.map

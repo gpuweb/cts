@@ -122,8 +122,8 @@ class F extends GPUTest {
     }
 
     return this.makeBufferWithContents(new Uint32Array(indirectBuffer), GPUBufferUsage.INDIRECT);
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -174,8 +174,8 @@ fn((t) => {
       module: t.device.createShaderModule({
         code: `@vertex fn main(@location(0) pos : vec2<f32>) -> @builtin(position) vec4<f32> {
               return vec4<f32>(pos, 0.0, 1.0);
-          }` }),
-
+          }`
+      }),
       entryPoint: 'main',
       buffers: [
       {
@@ -183,33 +183,33 @@ fn((t) => {
         {
           shaderLocation: 0,
           format: 'float32x2',
-          offset: 0 }],
+          offset: 0
+        }],
 
+        arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT
+      }]
 
-        arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT }] },
-
-
-
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `@fragment fn main() -> @location(0) vec4<f32> {
             return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-        }` }),
-
+        }`
+      }),
       entryPoint: 'main',
       targets: [
       {
-        format: kRenderTargetFormat }] } });
+        format: kRenderTargetFormat
+      }]
 
-
-
-
+    }
+  });
 
   const renderTarget = t.device.createTexture({
     size: [4, 4],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    format: kRenderTargetFormat });
-
+    format: kRenderTargetFormat
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -218,10 +218,10 @@ fn((t) => {
       view: renderTarget.createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPass.setPipeline(pipeline);
   renderPass.setVertexBuffer(0, vertexBuffer, 0);
 

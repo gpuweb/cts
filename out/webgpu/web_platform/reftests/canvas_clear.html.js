@@ -7,8 +7,8 @@
     const ctx = canvas.getContext('webgpu');
     ctx.configure({
       device: t.device,
-      format });
-
+      format
+    });
 
     const colorAttachment = ctx.getCurrentTexture();
     const colorAttachmentView = colorAttachment.createView();
@@ -20,10 +20,10 @@
         view: colorAttachmentView,
         clearValue: { r: 0.4, g: 1.0, b: 0.0, a: 1.0 },
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.end();
     t.device.queue.submit([encoder.finish()]);
   }

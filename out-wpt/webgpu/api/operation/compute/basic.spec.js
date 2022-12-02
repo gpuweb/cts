@@ -44,7 +44,6 @@ g.test('memcpy').fn(async t => {
           }
         `,
       }),
-
       entryPoint: 'main',
     },
   });
@@ -141,7 +140,6 @@ g.test('large_dispatch')
             }
           `,
         }),
-
         entryPoint: 'main',
       },
     });

@@ -75,8 +75,8 @@ fn(async (t) => {
         o.color = vec4<f32>(1.0, 1.0, 1.0, 1.0);
         return o;
       }` :
-    kDefaultFragmentShaderCode });
-
+    kDefaultFragmentShaderCode
+  });
 
   const _success = !hasSampleMaskOutput || !alphaToCoverageEnabled;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);

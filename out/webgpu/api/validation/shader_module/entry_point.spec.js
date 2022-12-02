@@ -54,11 +54,11 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: getShaderWithEntryPoint('compute', shaderModuleEntryPoint) }),
-
-      entryPoint: stageEntryPoint } };
-
-
+        code: getShaderWithEntryPoint('compute', shaderModuleEntryPoint)
+      }),
+      entryPoint: stageEntryPoint
+    }
+  };
   const _success = shaderModuleEntryPoint === stageEntryPoint;
   t.doCreateComputePipelineTest(isAsync, _success, descriptor);
 });
@@ -77,11 +77,11 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: getShaderWithEntryPoint('vertex', shaderModuleEntryPoint) }),
-
-      entryPoint: stageEntryPoint } };
-
-
+        code: getShaderWithEntryPoint('vertex', shaderModuleEntryPoint)
+      }),
+      entryPoint: stageEntryPoint
+    }
+  };
   const _success = shaderModuleEntryPoint === stageEntryPoint;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
@@ -100,18 +100,18 @@ fn(async (t) => {
     layout: 'auto',
     vertex: {
       module: t.device.createShaderModule({
-        code: kDefaultVertexShaderCode }),
-
-      entryPoint: 'main' },
-
+        code: kDefaultVertexShaderCode
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
-        code: getShaderWithEntryPoint('fragment', shaderModuleEntryPoint) }),
-
+        code: getShaderWithEntryPoint('fragment', shaderModuleEntryPoint)
+      }),
       entryPoint: stageEntryPoint,
-      targets: [{ format: 'rgba8unorm' }] } };
-
-
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  };
   const _success = shaderModuleEntryPoint === stageEntryPoint;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });

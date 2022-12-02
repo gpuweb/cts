@@ -40,8 +40,8 @@ export function cmp(expectation) {
     return {
       matched,
       got: `${got}`,
-      expected: `${expectation !== undefined ? u32(expectation) : 'Any'}` };
-
+      expected: `${expectation !== undefined ? u32(expectation) : 'Any'}`
+    };
   };
 }
 

@@ -154,5 +154,6 @@ export class TestCaseRecorder {
     }
 
     this.logs.push(logMessage);
-  }}
+  }
+}
 //# sourceMappingURL=test_case_recorder.js.map

@@ -38,8 +38,8 @@ function compareValue(got, expected) {
       return {
         matched: false,
         got: `${Colors.red(gTy.toString())}(${got})`,
-        expected: `${Colors.red(eTy.toString())}(${expected})` };
-
+        expected: `${Colors.red(eTy.toString())}(${expected})`
+      };
     }
   }
 
@@ -52,8 +52,8 @@ function compareValue(got, expected) {
     return {
       matched,
       got: g.toString(),
-      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()) };
-
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString())
+    };
   }
 
   if (got instanceof Vector) {
@@ -83,8 +83,8 @@ function compareValue(got, expected) {
     return {
       matched,
       got: `${got.type}(${gElements.join(', ')})`,
-      expected: `${expected.type}(${eElements.join(', ')})` };
-
+      expected: `${expected.type}(${eElements.join(', ')})`
+    };
   }
   throw new Error(`unhandled type '${typeof got}`);
 }
@@ -103,8 +103,8 @@ function compareInterval(got, expected) {
       return {
         matched: false,
         got: `${Colors.red(gTy.toString())}(${got})`,
-        expected: `floating point value` };
-
+        expected: `floating point value`
+      };
     }
   }
 
@@ -114,8 +114,8 @@ function compareInterval(got, expected) {
     return {
       matched,
       got: g.toString(),
-      expected: matched ? Colors.green(expected.toString()) : Colors.red(expected.toString()) };
-
+      expected: matched ? Colors.green(expected.toString()) : Colors.red(expected.toString())
+    };
   }
 
   // Vector results are currently not handled
@@ -134,8 +134,8 @@ function compareVector(got, expected) {
     return {
       matched: false,
       got: `${Colors.red((typeof got).toString())}(${got})`,
-      expected: `Vector` };
-
+      expected: `Vector`
+    };
   }
 
   // Check element type
@@ -145,8 +145,8 @@ function compareVector(got, expected) {
       return {
         matched: false,
         got: `${Colors.red(gTy.toString())}(${got})`,
-        expected: `floating point elements` };
-
+        expected: `floating point elements`
+      };
     }
   }
 
@@ -154,8 +154,8 @@ function compareVector(got, expected) {
     return {
       matched: false,
       got: `Vector of ${got.elements.length} elements`,
-      expected: `${expected.length} elements` };
-
+      expected: `${expected.length} elements`
+    };
   }
 
   const results = got.elements.map((_, idx) => {
@@ -171,15 +171,15 @@ function compareVector(got, expected) {
     return {
       matched: false,
       got: `[${got.elements}]`,
-      expected: `[${expected_string}]` };
-
+      expected: `[${expected_string}]`
+    };
   }
 
   return {
     matched: true,
     got: `[${got.elements}]`,
-    expected: `[${Colors.green(expected.toString())}]` };
-
+    expected: `[${Colors.green(expected.toString())}]`
+  };
 }
 
 /**

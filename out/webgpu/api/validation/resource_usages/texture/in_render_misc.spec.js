@@ -14,8 +14,8 @@ class F extends ValidationTest {
   {
     const bindGroupLayoutEntry = {
       binding: 0,
-      visibility };
-
+      visibility
+    };
 
     switch (textureUsage) {
       case 'texture':
@@ -25,16 +25,16 @@ class F extends ValidationTest {
         bindGroupLayoutEntry.storageTexture = {
           access: 'write-only',
           format: 'rgba8unorm',
-          viewDimension: '2d-array' };
-
+          viewDimension: '2d-array'
+        };
         break;
       default:
         unreachable();
         break;}
 
     return this.device.createBindGroupLayout({
-      entries: [bindGroupLayoutEntry] });
-
+      entries: [bindGroupLayoutEntry]
+    });
   }
 
   createBindGroupForTest(
@@ -45,10 +45,10 @@ class F extends ValidationTest {
   {
     return this.device.createBindGroup({
       layout: this.createBindGroupLayoutForTest(textureUsage, sampleType, visibility),
-      entries: [{ binding: 0, resource: textureView }] });
-
-  }}
-
+      entries: [{ binding: 0, resource: textureView }]
+    });
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -79,14 +79,14 @@ fn(async (t) => {
   const texture0 = t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
-    size: [kTextureSize, kTextureSize, kTextureLayers] });
-
+    size: [kTextureSize, kTextureSize, kTextureLayers]
+  });
   // We always bind the first layer of the texture to bindGroup0.
   const textureView0 = texture0.createView({
     dimension: '2d-array',
     baseArrayLayer: 0,
-    arrayLayerCount: 1 });
-
+    arrayLayerCount: 1
+  });
   const bindGroup0 = t.createBindGroupForTest(textureView0, view2Binding, 'float');
 
   // In one renderPassEncoder it is an error to set both bindGroup0 and bindGroup1.
@@ -101,32 +101,32 @@ fn(async (t) => {
   t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
-    size: [kTextureSize, kTextureSize, kTextureLayers] }) :
-
+    size: [kTextureSize, kTextureSize, kTextureLayers]
+  }) :
   texture0;
   const textureView2 = texture2.createView({
     dimension: '2d-array',
     baseArrayLayer: baseLayer2,
-    arrayLayerCount: kTextureLayers - baseLayer2 });
-
+    arrayLayerCount: kTextureLayers - baseLayer2
+  });
   // There should be no conflict between bindGroup0 and validBindGroup2.
   const validBindGroup2 = t.createBindGroupForTest(textureView2, view2Binding, 'float');
 
   const colorTexture = t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    size: [kTextureSize, kTextureSize, 1] });
-
+    size: [kTextureSize, kTextureSize, 1]
+  });
   const encoder = t.device.createCommandEncoder();
   const renderPassEncoder = encoder.beginRenderPass({
     colorAttachments: [
     {
       view: colorTexture.createView(),
       loadOp: 'load',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   renderPassEncoder.setBindGroup(0, bindGroup0);
   renderPassEncoder.setBindGroup(1, bindGroup1);
   renderPassEncoder.setBindGroup(1, validBindGroup2);
@@ -154,14 +154,14 @@ fn(async (t) => {
   const depthStencilTexture = t.device.createTexture({
     format: 'depth24plus-stencil8',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
-    size: [kTextureSize, kTextureSize, 1] });
-
+    size: [kTextureSize, kTextureSize, 1]
+  });
 
   const conflictedToNonReadOnlyAttachmentBindGroup = t.createBindGroupForTest(
   depthStencilTexture.createView({
     dimension: '2d-array',
-    aspect: bindAspect }),
-
+    aspect: bindAspect
+  }),
   'texture',
   bindAspect === 'depth-only' ? 'depth' : 'uint');
 
@@ -169,12 +169,12 @@ fn(async (t) => {
   const colorTexture = t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
-    size: [kTextureSize, kTextureSize, 1] });
-
+    size: [kTextureSize, kTextureSize, 1]
+  });
   const validBindGroup = t.createBindGroupForTest(
   colorTexture.createView({
-    dimension: '2d-array' }),
-
+    dimension: '2d-array'
+  }),
   'texture',
   'float');
 
@@ -185,9 +185,9 @@ fn(async (t) => {
     depthStencilAttachment: {
       view: depthStencilTexture.createView(),
       depthReadOnly: depthStencilReadOnly,
-      stencilReadOnly: depthStencilReadOnly } });
-
-
+      stencilReadOnly: depthStencilReadOnly
+    }
+  });
   renderPassEncoder.setBindGroup(0, conflictedToNonReadOnlyAttachmentBindGroup);
   renderPassEncoder.setBindGroup(0, validBindGroup);
   renderPassEncoder.end();
@@ -211,14 +211,14 @@ fn(async (t) => {
   const texture0 = t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
-    size: [kTextureSize, kTextureSize, kTextureLayers] });
-
+    size: [kTextureSize, kTextureSize, kTextureLayers]
+  });
   // We always bind the first layer of the texture to bindGroup0.
   const textureView0 = texture0.createView({
     dimension: '2d-array',
     baseArrayLayer: 0,
-    arrayLayerCount: 1 });
-
+    arrayLayerCount: 1
+  });
   const visibility = inRenderPass ? GPUShaderStage.FRAGMENT : GPUShaderStage.COMPUTE;
   // bindGroup0 is used by the pipelines, and bindGroup1 is not used by the pipelines.
   const textureUsage0 = inRenderPass ? 'texture' : 'storage';
@@ -230,20 +230,20 @@ fn(async (t) => {
   const colorTexture = t.device.createTexture({
     format: 'rgba8unorm',
     usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    size: [kTextureSize, kTextureSize, 1] });
-
+    size: [kTextureSize, kTextureSize, 1]
+  });
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: [t.createBindGroupLayoutForTest(textureUsage0, 'float', visibility)] });
-
+    bindGroupLayouts: [t.createBindGroupLayoutForTest(textureUsage0, 'float', visibility)]
+  });
   if (inRenderPass) {
     const renderPipeline = t.device.createRenderPipeline({
       layout: pipelineLayout,
       vertex: {
         module: t.device.createShaderModule({
-          code: t.getNoOpShaderCode('VERTEX') }),
-
-        entryPoint: 'main' },
-
+          code: t.getNoOpShaderCode('VERTEX')
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -251,22 +251,22 @@ fn(async (t) => {
               @fragment fn main()
                 -> @location(0) vec4<f32> {
                   return textureLoad(texture0, vec2<i32>(), 0, 0);
-              }` }),
-
+              }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] } });
-
-
+        targets: [{ format: 'rgba8unorm' }]
+      }
+    });
 
     const renderPassEncoder = encoder.beginRenderPass({
       colorAttachments: [
       {
         view: colorTexture.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     renderPassEncoder.setBindGroup(0, bindGroup0);
     renderPassEncoder.setBindGroup(1, bindGroup1);
     renderPassEncoder.setPipeline(renderPipeline);
@@ -282,11 +282,11 @@ fn(async (t) => {
             @compute @workgroup_size(1)
             fn main() {
               textureStore(texture0, vec2<i32>(), 0, vec4<f32>());
-            }` }),
-
-        entryPoint: 'main' } });
-
-
+            }`
+        }),
+        entryPoint: 'main'
+      }
+    });
     const computePassEncoder = encoder.beginComputePass();
     computePassEncoder.setBindGroup(0, bindGroup0);
     computePassEncoder.setBindGroup(1, bindGroup1);
@@ -354,8 +354,8 @@ fn(async (t) => {
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.STORAGE_BINDING |
     GPUTextureUsage.RENDER_ATTACHMENT,
-    size: [kTextureSize, kTextureSize, 1] });
-
+    size: [kTextureSize, kTextureSize, 1]
+  });
 
   const UseTextureOnCommandEncoder = (
   texture,
@@ -366,23 +366,23 @@ fn(async (t) => {
       case 'copy-src':{
           const buffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.COPY_DST });
-
+            usage: GPUBufferUsage.COPY_DST
+          });
           encoder.copyTextureToBuffer({ texture }, { buffer }, [1, 1, 1]);
           break;
         }
       case 'copy-dst':{
           const buffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.COPY_SRC });
-
+            usage: GPUBufferUsage.COPY_SRC
+          });
           encoder.copyBufferToTexture({ buffer }, { texture }, [1, 1, 1]);
           break;
         }
       case 'color-attachment':{
           const renderPassEncoder = encoder.beginRenderPass({
-            colorAttachments: [{ view: texture.createView(), loadOp: 'load', storeOp: 'store' }] });
-
+            colorAttachments: [{ view: texture.createView(), loadOp: 'load', storeOp: 'store' }]
+          });
           renderPassEncoder.end();
           break;
         }
@@ -391,17 +391,17 @@ fn(async (t) => {
           const colorTexture = t.device.createTexture({
             format: 'rgba8unorm',
             usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            size: [kTextureSize, kTextureSize, 1] });
-
+            size: [kTextureSize, kTextureSize, 1]
+          });
           const renderPassEncoder = encoder.beginRenderPass({
             colorAttachments: [
-            { view: colorTexture.createView(), loadOp: 'load', storeOp: 'store' }] });
+            { view: colorTexture.createView(), loadOp: 'load', storeOp: 'store' }]
 
-
+          });
           const bindGroup = t.createBindGroupForTest(
           texture.createView({
-            dimension: '2d-array' }),
-
+            dimension: '2d-array'
+          }),
           usage,
           'float');
 

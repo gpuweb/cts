@@ -96,10 +96,8 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             }
             `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -114,11 +112,9 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
             }
             `,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: { topology: 'triangle-list' },
     });
   }
@@ -142,7 +138,6 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
-
     const colorAttachmentView = colorAttachment.createView();
 
     const encoder = this.device.createCommandEncoder();
@@ -156,7 +151,6 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
         },
       ],
     });
-
     pass.setPipeline(this.pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.draw(6);
@@ -220,13 +214,11 @@ g.test('anisotropic_filter_checkerboard')
         bytesPerRow,
         rowsPerImage,
       },
-
       {
         texture,
         mipLevel: 0,
         origin: [0, 0, 0],
       },
-
       [textureSize, textureSize, 1]
     );
 
@@ -243,7 +235,6 @@ g.test('anisotropic_filter_checkerboard')
         mipmapFilter: 'linear',
         maxAnisotropy,
       });
-
       const result = await t.readGPUBufferRangeTyped(
         t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
         { type: Uint8Array, typedLength: byteLength }
@@ -288,7 +279,6 @@ g.test('anisotropic_filter_mipmap_color')
 
       _generateWarningOnly: false,
     },
-
     {
       maxAnisotropy: 4,
       _results: [

@@ -755,9 +755,9 @@ export const kVectorSparseTestValues = {
   idx % 4 === 0 ? f : idx,
   idx % 4 === 1 ? f : -idx,
   idx % 4 === 2 ? f : idx,
-  idx % 4 === 3 ? f : -idx]) };
+  idx % 4 === 3 ? f : -idx])
 
-
+};
 
 /**
  * @returns the result matrix in Array<Array<number>> type.

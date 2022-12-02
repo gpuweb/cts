@@ -131,8 +131,8 @@ export class TestGroup
     for (const test of this.tests) {
       test.validate();
     }
-  }}
-
+  }
+}
 
 
 
@@ -385,8 +385,8 @@ class TestBuilder {
         }
       }
     }
-  }}
-
+  }
+}
 
 class RunCaseSpecific {
 
@@ -541,8 +541,8 @@ class RunCaseSpecific {
                   };
                 }
                 return prop;
-              } });
-
+              }
+            });
 
             subRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
 
@@ -622,5 +622,6 @@ class RunCaseSpecific {
     } finally {
       rec.finish();
     }
-  }}
+  }
+}
 //# sourceMappingURL=test_group.js.map

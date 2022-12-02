@@ -28,12 +28,12 @@ fn(async (t) => {
   const kUsages = GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT;
   const buffer = t.createBufferWithState('valid', {
     size: kBufferSize,
-    usage: kUsages });
-
+    usage: kUsages
+  });
   const anotherBuffer = t.createBufferWithState('valid', {
     size: kBufferSize,
-    usage: kUsages });
-
+    usage: kUsages
+  });
 
   const bindGroupLayouts = [
   t.createBindGroupLayoutForTest(usage0, 'compute')];
@@ -103,12 +103,12 @@ fn(async (t) => {
   GPUBufferUsage.INDEX;
   const buffer = t.createBufferWithState('valid', {
     size: kBufferSize,
-    usage: kUsages });
-
+    usage: kUsages
+  });
   const anotherBuffer = t.createBufferWithState('valid', {
     size: kBufferSize,
-    usage: kUsages });
-
+    usage: kUsages
+  });
 
   const encoder = t.device.createCommandEncoder();
   const renderPassEncoder = t.beginSimpleRenderPass(encoder);
@@ -171,8 +171,8 @@ fn(async (t) => {
 
   // Add draw call
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts });
-
+    bindGroupLayouts
+  });
   const renderPipeline = t.createRenderPipelineForTest(pipelineLayout, vertexBufferCount);
   renderPassEncoder.setPipeline(renderPipeline);
   switch (usage1) {
@@ -180,8 +180,8 @@ fn(async (t) => {
         if (usage0 !== 'index') {
           const indexBuffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.INDEX });
-
+            usage: GPUBufferUsage.INDEX
+          });
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
         }
         renderPassEncoder.drawIndexedIndirect(buffer, 0);
@@ -292,8 +292,8 @@ fn(async (t) => {
   GPUBufferUsage.INDEX;
   const buffer = t.createBufferWithState('valid', {
     size: kBufferSize,
-    usage: kUsages });
-
+    usage: kUsages
+  });
 
   const UseBufferOnCommandEncoder = (
   usage,
@@ -312,16 +312,16 @@ fn(async (t) => {
       case 'copy-src':{
           const destinationBuffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.COPY_DST });
-
+            usage: GPUBufferUsage.COPY_DST
+          });
           encoder.copyBufferToBuffer(buffer, 0, destinationBuffer, 0, 4);
           break;
         }
       case 'copy-dst':{
           const sourceBuffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.COPY_SRC });
-
+            usage: GPUBufferUsage.COPY_SRC
+          });
           encoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
           break;
         }
@@ -388,8 +388,8 @@ fn(async (t) => {
           renderPassEncoder.setPipeline(renderPipeline);
           const indexBuffer = t.createBufferWithState('valid', {
             size: 4,
-            usage: GPUBufferUsage.INDEX });
-
+            usage: GPUBufferUsage.INDEX
+          });
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, 0);
           renderPassEncoder.end();

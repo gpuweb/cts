@@ -103,7 +103,6 @@ export function getVideoColorSpaceInit(colorSpaceName) {
         matrix: 'smpte170m',
         fullRange: false,
       };
-
     case 'REC709':
       return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
     case 'REC2020':
@@ -144,7 +143,6 @@ export async function getVideoFrameFromVideoElement(
     colorSpace,
     layout: frameLayout,
   };
-
   return new VideoFrame(buffer, frameInit);
 }
 

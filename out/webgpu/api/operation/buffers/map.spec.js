@@ -55,11 +55,11 @@ bufferSize,
 range,
 {
   mapAsyncRegionLeft,
-  mapAsyncRegionRight })
+  mapAsyncRegionRight
 
 
 
-
+})
 {
   const regionLeft = mapAsyncRegionLeft === 'minimal' ? range[0] : 0;
   const regionRight = mapAsyncRegionRight === 'minimal' ? range[0] + range[1] : bufferSize;
@@ -87,8 +87,8 @@ fn(async (t) => {
 
   const buffer = t.device.createBuffer({
     size,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+  });
 
   const mapRegion = getRegionForMap(size, [rangeOffset, rangeSize], t.params);
   await buffer.mapAsync(GPUMapMode.WRITE, ...mapRegion);
@@ -126,8 +126,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     mappedAtCreation,
     size,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+  });
 
   // If the buffer is not mappedAtCreation map it now.
   if (!mappedAtCreation) {
@@ -189,8 +189,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     mappedAtCreation: true,
     size,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
   const init = buffer.getMappedRange(...range);
 
   assert(init.byteLength === rangeSize);
@@ -268,8 +268,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     mappedAtCreation: true,
     size,
-    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ });
-
+    usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
+  });
   const init = buffer.getMappedRange(...range);
 
   // Copy the expected values into the mapped range.
@@ -309,8 +309,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     mappedAtCreation: true,
     size,
-    usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0) });
-
+    usage: GPUBufferUsage.COPY_SRC | (mappable ? GPUBufferUsage.MAP_WRITE : 0)
+  });
   const arrayBuffer = buffer.getMappedRange(...range);
   t.checkMapWrite(buffer, range[0] ?? 0, arrayBuffer, rangeSize);
 });
@@ -336,8 +336,8 @@ fn(async (t) => {
   const buffer = t.device.createBuffer({
     mappedAtCreation,
     size,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE });
-
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
+  });
 
   // If the buffer is not mappedAtCreation map it now.
   if (!mappedAtCreation) {

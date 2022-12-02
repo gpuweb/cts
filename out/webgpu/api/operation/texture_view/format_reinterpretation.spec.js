@@ -60,10 +60,10 @@ multisample)
                                         vec2<f32>( 1.0, -1.0),
                                         vec2<f32>( 1.0,  1.0));
             return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
-          }` }),
-
-      entryPoint: 'main' },
-
+          }`
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module:
       multisample.sample > 1 ?
@@ -76,22 +76,22 @@ multisample)
                 result = result + textureLoad(src, vec2<i32>(coord.xy), i);
               }
               return result * ${1 / multisample.sample};
-            }` }) :
-
+            }`
+      }) :
       device.createShaderModule({
         code: `
             @group(0) @binding(0) var src: texture_2d<f32>;
             @fragment fn main(@builtin(position) coord: vec4<f32>) -> @location(0) vec4<f32> {
               return textureLoad(src, vec2<i32>(coord.xy), 0);
-            }` }),
-
+            }`
+      }),
       entryPoint: 'main',
-      targets: [{ format }] },
-
+      targets: [{ format }]
+    },
     multisample: {
-      count: multisample.render } });
-
-
+      count: multisample.render
+    }
+  });
 }
 
 g.test('texture_binding').
@@ -114,8 +114,8 @@ fn(async (t) => {
   const texture = t.makeTextureWithContents(inputTexelView, {
     size: [kTextureSize, kTextureSize],
     usage: GPUTextureUsage.TEXTURE_BINDING,
-    viewFormats: [viewFormat] });
-
+    viewFormats: [viewFormat]
+  });
 
   // Reinterpret the texture as the view format.
   // Make a texel view of the format that also reinterprets the data.
@@ -135,19 +135,19 @@ fn(async (t) => {
           ) {
             var coord = vec2<i32>(global_id.xy);
             textureStore(dst, coord, textureLoad(src, coord, 0));
-          }` }),
-
-      entryPoint: 'main' } });
-
-
+          }`
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   // Create an rgba8unorm output texture.
   const outputTexture = t.trackForCleanup(
   t.device.createTexture({
     format: 'rgba8unorm',
     size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC }));
-
+    usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC
+  }));
 
 
   // Execute a compute pass to load data from the reinterpreted view and
@@ -162,14 +162,14 @@ fn(async (t) => {
     entries: [
     {
       binding: 0,
-      resource: reinterpretedView },
-
+      resource: reinterpretedView
+    },
     {
       binding: 1,
-      resource: outputTexture.createView() }] }));
+      resource: outputTexture.createView()
+    }]
 
-
-
+  }));
 
   pass.dispatchWorkgroups(kTextureSize, kTextureSize);
   pass.end();
@@ -181,9 +181,9 @@ fn(async (t) => {
   [kTextureSize, kTextureSize],
   {
     expTexelView: TexelView.fromTexelsAsColors('rgba8unorm', reinterpretedTexelView.color, {
-      clampToFormatRange: true }) },
-
-
+      clampToFormatRange: true
+    })
+  },
   { maxDiffULPsForNormFormat: 1 });
 
   t.expectOK(result);
@@ -221,8 +221,8 @@ fn(async (t) => {
     GPUTextureUsage.RENDER_ATTACHMENT | (
     sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
     viewFormats: [viewFormat],
-    sampleCount }));
-
+    sampleCount
+  }));
 
 
   const resolveTexture =
@@ -233,8 +233,8 @@ fn(async (t) => {
     format,
     size: [kTextureSize, kTextureSize],
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    viewFormats: [viewFormat] }));
-
+    viewFormats: [viewFormat]
+  }));
 
 
   // Create the sample source with the contents of the input texel view.
@@ -242,8 +242,8 @@ fn(async (t) => {
   // number of bits of precision.
   const sampleSource = t.makeTextureWithContents(inputTexelView, {
     size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.TEXTURE_BINDING
+  });
 
   // Reinterpret the renderTexture as |viewFormat|.
   const reinterpretedRenderView = renderTexture.createView({ format: viewFormat });
@@ -253,8 +253,8 @@ fn(async (t) => {
   // Create a pipeline to blit a src texture to the render attachment.
   const pipeline = makeBlitPipeline(t.device, viewFormat, {
     sample: 1,
-    render: sampleCount });
-
+    render: sampleCount
+  });
 
   // Execute a render pass to sample |sampleSource| into |texture| viewed as |viewFormat|.
   const commandEncoder = t.device.createCommandEncoder();
@@ -264,10 +264,10 @@ fn(async (t) => {
       view: reinterpretedRenderView,
       resolveTarget: reinterpretedResolveView,
       loadOp: 'load',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
   pass.setPipeline(pipeline);
   pass.setBindGroup(
   0,
@@ -276,10 +276,10 @@ fn(async (t) => {
     entries: [
     {
       binding: 0,
-      resource: sampleSource.createView() }] }));
+      resource: sampleSource.createView()
+    }]
 
-
-
+  }));
 
   pass.draw(6);
   pass.end();
@@ -291,8 +291,8 @@ fn(async (t) => {
   t.device.createTexture({
     format,
     size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT })) :
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  })) :
 
   renderTexture;
 
@@ -306,10 +306,10 @@ fn(async (t) => {
       {
         view: singleSampleRenderTexture.createView(),
         loadOp: 'load',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.setPipeline(pipeline);
     pass.setBindGroup(
     0,
@@ -318,10 +318,10 @@ fn(async (t) => {
       entries: [
       {
         binding: 0,
-        resource: renderTexture.createView() }] }));
+        resource: renderTexture.createView()
+      }]
 
-
-
+    }));
 
     pass.draw(6);
     pass.end();
@@ -332,8 +332,8 @@ fn(async (t) => {
 
   // Check the rendered contents.
   const renderViewTexels = TexelView.fromTexelsAsColors(viewFormat, inputTexelView.color, {
-    clampToFormatRange: true });
-
+    clampToFormatRange: true
+  });
   t.expectOK(
   await textureContentIsOKByT2B(
   t,
@@ -347,8 +347,8 @@ fn(async (t) => {
   // Check the resolved contents.
   if (resolveTexture) {
     const resolveView = TexelView.fromTexelsAsColors(viewFormat, renderViewTexels.color, {
-      clampToFormatRange: true });
-
+      clampToFormatRange: true
+    });
 
     const result = await textureContentIsOKByT2B(
     t,

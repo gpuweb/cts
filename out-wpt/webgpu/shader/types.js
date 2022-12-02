@@ -20,7 +20,6 @@ export const kScalarTypeInfo = {
   },
   bool: { layout: undefined, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
 };
-
 /** List of all plain scalar types. */
 export const kScalarTypes = keysOf(kScalarTypeInfo);
 
@@ -30,7 +29,6 @@ export const kVectorContainerTypeInfo = {
   vec3: { layout: { alignment: 16, size: 12 }, arrayLength: 3, innerLength: 0 },
   vec4: { layout: { alignment: 16, size: 16 }, arrayLength: 4, innerLength: 0 },
 };
-
 /** List of all vecN<> container types. */
 export const kVectorContainerTypes = keysOf(kVectorContainerTypeInfo);
 
@@ -46,7 +44,6 @@ export const kMatrixContainerTypeInfo = {
   mat3x4: { layout: { alignment: 16, size: 48 }, arrayLength: 3, innerLength: 4 },
   mat4x4: { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 4 },
 };
-
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 

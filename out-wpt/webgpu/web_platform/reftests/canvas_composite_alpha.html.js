@@ -47,7 +47,6 @@ export function run(format, alphaMode, writeCanvasMethod) {
         dstFactor: 'one-minus-src-alpha',
         operation: 'add',
       },
-
       alpha: {
         srcFactor: 'one',
         dstFactor: 'one-minus-src-alpha',
@@ -96,10 +95,8 @@ return output;
 }
         `,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -109,7 +106,6 @@ return fragColor;
 }
         `,
         }),
-
         entryPoint: 'main',
         targets: [
           {
@@ -118,7 +114,6 @@ return fragColor;
           },
         ],
       },
-
       primitive: {
         topology: 'triangle-list',
       },
@@ -135,7 +130,6 @@ return fragColor;
           format,
           usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
         });
-
         break;
     }
 
@@ -167,11 +161,9 @@ return fragColor;
           {
             texture: renderTarget,
           },
-
           {
             texture: ctx.getCurrentTexture(),
           },
-
           [ctx.canvas.width, ctx.canvas.height]
         );
 

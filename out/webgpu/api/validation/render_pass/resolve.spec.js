@@ -44,8 +44,8 @@ paramsSimple([
   resolveTargetViewBaseMipLevel: 1,
   resolveTargetHeight: 4,
   resolveTargetWidth: 4,
-  _valid: true },
-
+  _valid: true
+},
 // a validation error should be created when resolveTarget is invalid.
 { resolveTargetInvalid: true, _valid: false },
 // a validation error should be created when mip count > 1
@@ -55,8 +55,8 @@ paramsSimple([
   resolveTargetViewMipCount: 2,
   resolveTargetHeight: 4,
   resolveTargetWidth: 4,
-  _valid: false },
-
+  _valid: false
+},
 // non-zero resolve target base array layer should be valid.
 { resolveTargetViewBaseArrayLayer: 1, _valid: true },
 // a validation error should be created when array layer count > 1
@@ -92,8 +92,8 @@ fn(async (t) => {
     colorAttachmentWidth = 2,
     resolveTargetHeight = 2,
     resolveTargetWidth = 2,
-    _valid } =
-  t.params;
+    _valid
+  } = t.params;
 
   // Run the test in a nested loop such that the configured color attachment with resolve target
   // is tested while occupying each individual colorAttachment slot.
@@ -113,11 +113,11 @@ fn(async (t) => {
           size: {
             width: colorAttachmentWidth,
             height: colorAttachmentHeight,
-            depthOrArrayLayers: 1 },
-
+            depthOrArrayLayers: 1
+          },
           sampleCount: colorAttachmentSamples,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+        });
 
         const resolveTarget = t.device.createTexture({
           format: resolveTargetFormat,
@@ -125,12 +125,12 @@ fn(async (t) => {
             width: resolveTargetWidth,
             height: resolveTargetHeight,
             depthOrArrayLayers:
-            resolveTargetViewBaseArrayLayer + resolveTargetViewArrayLayerCount },
-
+            resolveTargetViewBaseArrayLayer + resolveTargetViewArrayLayerCount
+          },
           sampleCount: resolveTargetSamples,
           mipLevelCount: resolveTargetViewBaseMipLevel + resolveTargetViewMipCount,
-          usage: resolveTargetUsage });
-
+          usage: resolveTargetUsage
+        });
 
         renderPassColorAttachmentDescriptors.push({
           view: resolveSourceColorAttachment.createView(),
@@ -143,9 +143,9 @@ fn(async (t) => {
             mipLevelCount: resolveTargetViewMipCount,
             arrayLayerCount: resolveTargetViewArrayLayerCount,
             baseMipLevel: resolveTargetViewBaseMipLevel,
-            baseArrayLayer: resolveTargetViewBaseArrayLayer }) });
-
-
+            baseArrayLayer: resolveTargetViewBaseArrayLayer
+          })
+        });
       } else {
         // Create a basic texture to fill other color attachment slots. This texture's dimensions
         // and sample count must match the resolve source color attachment to be valid.
@@ -154,35 +154,35 @@ fn(async (t) => {
           size: {
             width: colorAttachmentWidth,
             height: colorAttachmentHeight,
-            depthOrArrayLayers: 1 },
-
+            depthOrArrayLayers: 1
+          },
           sampleCount: colorAttachmentSamples,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+        });
 
         const resolveTarget = t.device.createTexture({
           format: otherAttachmentFormat,
           size: {
             width: colorAttachmentWidth,
             height: colorAttachmentHeight,
-            depthOrArrayLayers: 1 },
-
+            depthOrArrayLayers: 1
+          },
           sampleCount: 1,
-          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+          usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+        });
 
         renderPassColorAttachmentDescriptors.push({
           view: colorAttachment.createView(),
           loadOp: 'load',
           storeOp: 'discard',
-          resolveTarget: resolveTarget.createView() });
-
+          resolveTarget: resolveTarget.createView()
+        });
       }
     }
     const encoder = t.device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
-      colorAttachments: renderPassColorAttachmentDescriptors });
-
+      colorAttachments: renderPassColorAttachmentDescriptors
+    });
     pass.end();
 
     t.expectValidationError(() => {

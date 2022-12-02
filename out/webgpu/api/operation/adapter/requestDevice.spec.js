@@ -207,8 +207,8 @@ fn(async (t) => {
 
   const value = adapter.limits[limit] * mul + add;
   const requiredLimits = {
-    [limit]: clamp(value, { min: 0, max: kLimitInfo[limit].maximumValue }) };
-
+    [limit]: clamp(value, { min: 0, max: kLimitInfo[limit].maximumValue })
+  };
 
   t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
 });
@@ -250,8 +250,8 @@ fn(async (t) => {
 
   const value = kLimitInfo[limit].default * mul + add;
   const requiredLimits = {
-    [limit]: clamp(value, { min: 0, max: kLimitInfo[limit].maximumValue }) };
-
+    [limit]: clamp(value, { min: 0, max: kLimitInfo[limit].maximumValue })
+  };
 
   let success;
   switch (kLimitInfo[limit].class) {

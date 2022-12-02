@@ -22,8 +22,8 @@ fn((t) => {
     type: t.params.type,
     stage: t.params.stage,
     io: t.params.io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   t.expectCompileResult(t.params.name === 'position', code);
 });
@@ -81,8 +81,8 @@ fn((t) => {
     type: t.params.type,
     stage: t.params.stage,
     io: t.params.io,
-    use_struct: t.params.use_struct });
-
+    use_struct: t.params.use_struct
+  });
 
   t.expectCompileResult(t.params.attr === '', code);
 });

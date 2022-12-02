@@ -3354,8 +3354,8 @@ paramsSubcasesOnly(
 fn((t) => {
   const expected = {
     fract: toF32Interval(t.params.fract),
-    whole: toF32Interval(t.params.whole) };
-
+    whole: toF32Interval(t.params.whole)
+  };
 
   const got = modfInterval(t.params.input);
   t.expect(

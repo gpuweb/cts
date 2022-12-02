@@ -35,8 +35,8 @@ class DrawTest extends GPUTest {
       indirect: opts.indirect,
       vertexBufferOffset: opts.vertexBufferOffset,
       indexBufferOffset: opts.indexBufferOffset ?? 0,
-      baseVertex: opts.baseVertex ?? 0 };
-
+      baseVertex: opts.baseVertex ?? 0
+    };
 
     const renderTargetSize = [72, 36];
 
@@ -62,8 +62,8 @@ class DrawTest extends GPUTest {
     const renderTarget = this.device.createTexture({
       size: renderTargetSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-      format: 'rgba8unorm' });
-
+      format: 'rgba8unorm'
+    });
 
     const vertexModule = this.device.createShaderModule({
       code: `
@@ -87,8 +87,8 @@ struct Inputs {
   y = -2.0 * y + 1.0;
   return vec4<f32>(x, y, 0.0, 1.0);
 }
-` });
-
+`
+    });
 
     const fragmentModule = this.device.createShaderModule({
       code: `
@@ -102,8 +102,8 @@ struct Output {
   output.value = 1u;
   return vec4<f32>(0.0, 1.0, 0.0, 1.0);
 }
-` });
-
+`
+    });
 
     const pipeline = this.device.createRenderPipeline({
       layout: 'auto',
@@ -116,28 +116,28 @@ struct Output {
           {
             shaderLocation: 0,
             format: 'float32x2',
-            offset: 0 }],
+            offset: 0
+          }],
 
+          arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT
+        }]
 
-          arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT }] },
-
-
-
+      },
       fragment: {
         module: fragmentModule,
         entryPoint: 'frag_main',
         targets: [
         {
-          format: 'rgba8unorm' }] } });
+          format: 'rgba8unorm'
+        }]
 
-
-
-
+      }
+    });
 
     const resultBuffer = this.device.createBuffer({
       size: Uint32Array.BYTES_PER_ELEMENT,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
 
     const resultBindGroup = this.device.createBindGroup({
       layout: pipeline.getBindGroupLayout(0),
@@ -145,11 +145,11 @@ struct Output {
       {
         binding: 0,
         resource: {
-          buffer: resultBuffer } }] });
+          buffer: resultBuffer
+        }
+      }]
 
-
-
-
+    });
 
     const commandEncoder = this.device.createCommandEncoder();
     const renderPass = commandEncoder.beginRenderPass({
@@ -158,10 +158,10 @@ struct Output {
         view: renderTarget.createView(),
         clearValue: [0, 0, 0, 0],
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
 
     renderPass.setPipeline(pipeline);
     renderPass.setBindGroup(0, resultBindGroup);
@@ -302,16 +302,16 @@ struct Output {
         'rgba8unorm',
         {
           x: (1 / 3 + primitiveId) * tileSizeX,
-          y: (2 / 3 + instanceId) * tileSizeY },
-
+          y: (2 / 3 + instanceId) * tileSizeY
+        },
         {
-          exp: expectedColor });
-
+          exp: expectedColor
+        });
 
       }
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(DrawTest);
 
@@ -365,8 +365,8 @@ fn(async (t) => {
     indirect: t.params.indirect,
     vertexBufferOffset: t.params.vertex_buffer_offset,
     indexBufferOffset: t.params.index_buffer_offset,
-    baseVertex: t.params.base_vertex });
-
+    baseVertex: t.params.base_vertex
+  });
 });
 
 g.test('default_arguments').
@@ -403,8 +403,8 @@ fn(async (t) => {
     indirect: false, // indirect
     vertexBufferOffset: kVertexBufferOffset,
     indexBufferOffset: kIndexBufferOffset,
-    baseVertex: t.params.base_vertex });
-
+    baseVertex: t.params.base_vertex
+  });
 });
 
 g.test('vertex_attributes,basic').
@@ -485,8 +485,8 @@ fn((t) => {
       const attribute = {
         format: t.params.vertex_format,
         shaderLocation,
-        offset };
-
+        offset
+      };
       attributes.push(attribute);
 
       offset += ExpectedDataConstructor.BYTES_PER_ELEMENT;
@@ -503,8 +503,8 @@ fn((t) => {
     bufferLayouts.push({
       attributes,
       arrayStride: offset,
-      stepMode });
-
+      stepMode
+    });
 
     const data = new ExpectedDataConstructor(vertexBufferValues);
     vertexBufferData.push(data);
@@ -622,11 +622,11 @@ ${accumulateVariableAssignmentsInVertexShader}
   output.Position = vec4<f32>(0.0, 0.0, 0.5, 1.0);
   return output;
 }
-          ` }),
-
+          `
+      }),
       entryPoint: 'main',
-      buffers: bufferLayouts },
-
+      buffers: bufferLayouts
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -652,25 +652,25 @@ ${interStageScalarShaderLocations.
         join('\n')}
 ${accumulateVariableAssignmentsInFragmentShader}
 }
-          ` }),
-
+          `
+      }),
       entryPoint: 'main',
       targets: [
       {
         format: 'rgba8unorm',
-        writeMask: 0 }] },
+        writeMask: 0
+      }]
 
-
-
+    },
     primitive: {
-      topology: 'point-list' } });
-
-
+      topology: 'point-list'
+    }
+  });
 
   const resultBuffer = t.device.createBuffer({
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    size: vertexCount * instanceCount * vertexInputShaderLocations.length * 4 });
-
+    size: vertexCount * instanceCount * vertexInputShaderLocations.length * 4
+  });
 
   const resultBindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -678,11 +678,11 @@ ${accumulateVariableAssignmentsInFragmentShader}
     {
       binding: 0,
       resource: {
-        buffer: resultBuffer } }] });
+        buffer: resultBuffer
+      }
+    }]
 
-
-
-
+  });
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPass = commandEncoder.beginRenderPass({
@@ -694,15 +694,15 @@ ${accumulateVariableAssignmentsInFragmentShader}
       createTexture({
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
         size: [1],
-        format: 'rgba8unorm' }).
-
+        format: 'rgba8unorm'
+      }).
       createView(),
       clearValue: [0, 0, 0, 0],
       loadOp: 'clear',
-      storeOp: 'store' }] });
+      storeOp: 'store'
+    }]
 
-
-
+  });
 
   renderPass.setPipeline(pipeline);
   renderPass.setBindGroup(0, resultBindGroup);

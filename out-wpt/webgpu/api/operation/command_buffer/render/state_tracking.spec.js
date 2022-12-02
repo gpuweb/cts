@@ -33,7 +33,6 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
           return outputs;
         }`,
         }),
-
         entryPoint: 'main',
         buffers: [
           {
@@ -44,7 +43,6 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
                 offset: 0,
                 shaderLocation: 0,
               },
-
               {
                 format: 'unorm8x4',
                 offset: 4,
@@ -54,7 +52,6 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
           },
         ],
       },
-
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -66,11 +63,9 @@ class VertexAndIndexStateTrackingTest extends GPUTest {
           return input.color;
         }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: 'rgba8unorm' }],
       },
-
       primitive: {
         topology: 'point-list',
       },
@@ -104,7 +99,6 @@ g.test('set_index_buffer_without_changing_buffer')
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
     });
-
     t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, -0.4];
@@ -154,7 +148,6 @@ g.test('set_index_buffer_without_changing_buffer')
         },
       ],
     });
-
     renderPass.setPipeline(renderPipeline);
     renderPass.setVertexBuffer(0, vertexBuffer);
 
@@ -219,7 +212,6 @@ g.test('set_vertex_buffer_without_changing_buffer')
       size: t.kVertexAttributeSize * kVertexAttributesCount,
       mappedAtCreation: true,
     });
-
     t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     for (let i = 0; i < kPositions.length; ++i) {
@@ -251,7 +243,6 @@ g.test('set_vertex_buffer_without_changing_buffer')
         },
       ],
     });
-
     renderPass.setPipeline(renderPipeline);
 
     // Change 'size' in setVertexBuffer()
@@ -324,7 +315,6 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,
     });
-
     t.trackForCleanup(vertexBuffer);
     // Note that kPositions[1], kColors[1], kPositions[5] and kColors[5] are not used.
     const vertexAttributes = vertexBuffer.getMappedRange();
@@ -418,7 +408,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
         return input.color;
       }`,
       }),
-
       entryPoint: 'main',
       targets: [{ format: 'rgba8unorm' }],
     };
@@ -446,7 +435,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
           return outputs;
         }`,
         }),
-
         entryPoint: 'main',
         buffers: [
           {
@@ -459,7 +447,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
               },
             ],
           },
-
           {
             arrayStride: kAttributeStride,
             attributes: [
@@ -472,7 +459,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
           },
         ],
       },
-
       fragment: fragmentState,
       primitive: {
         topology: 'point-list',
@@ -502,7 +488,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
           return outputs;
         }`,
         }),
-
         entryPoint: 'main',
         buffers: [
           {
@@ -517,7 +502,6 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
           },
         ],
       },
-
       fragment: fragmentState,
       primitive: {
         topology: 'point-list',
@@ -593,7 +577,6 @@ g.test('set_index_buffer_before_non_indexed_draw')
       size: t.kVertexAttributeSize * kPositions.length,
       mappedAtCreation: true,
     });
-
     t.trackForCleanup(vertexBuffer);
     const vertexAttributes = vertexBuffer.getMappedRange();
     for (let i = 0; i < kPositions.length; ++i) {

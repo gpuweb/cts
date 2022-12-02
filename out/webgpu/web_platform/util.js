@@ -114,8 +114,8 @@ export function getVideoColorSpaceInit(colorSpaceName) {
         primaries: 'smpte170m',
         transfer: 'smpte170m',
         matrix: 'smpte170m',
-        fullRange: false };
-
+        fullRange: false
+      };
     case 'REC709':
       return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
     case 'REC2020':
@@ -153,8 +153,8 @@ colorSpace = getVideoColorSpaceInit('REC709'))
     codedWidth: videoFrame.codedWidth,
     codedHeight: videoFrame.codedHeight,
     colorSpace,
-    layout: frameLayout };
-
+    layout: frameLayout
+  };
   return new VideoFrame(buffer, frameInit);
 }
 

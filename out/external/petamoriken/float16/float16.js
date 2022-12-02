@@ -44,27 +44,27 @@ const {
   has: ReflectHas,
   ownKeys: ReflectOwnKeys,
   set: ReflectSet,
-  setPrototypeOf: ReflectSetPrototypeOf } =
-Reflect;
+  setPrototypeOf: ReflectSetPrototypeOf
+} = Reflect;
 const NativeProxy = Proxy;
 const {
   MAX_SAFE_INTEGER: MAX_SAFE_INTEGER,
   isFinite: NumberIsFinite,
-  isNaN: NumberIsNaN } =
-Number;
+  isNaN: NumberIsNaN
+} = Number;
 const {
   iterator: SymbolIterator,
   species: SymbolSpecies,
   toStringTag: SymbolToStringTag,
-  for: SymbolFor } =
-Symbol;
+  for: SymbolFor
+} = Symbol;
 const NativeObject = Object;
 const {
   create: ObjectCreate,
   defineProperty: ObjectDefineProperty,
   freeze: ObjectFreeze,
-  is: ObjectIs } =
-NativeObject;
+  is: ObjectIs
+} = NativeObject;
 const ObjectPrototype = NativeObject.prototype;
 const ObjectPrototype__lookupGetter__ = ObjectPrototype.__lookupGetter__ ?
 uncurryThis(ObjectPrototype.__lookupGetter__) :
@@ -181,14 +181,14 @@ const SafeIteratorPrototype = ObjectCreate(null, {
     value: function next() {
       const arrayIterator = WeakMapPrototypeGet(arrayIterators, this);
       return ArrayIteratorPrototypeNext(arrayIterator);
-    } },
-
+    }
+  },
   [SymbolIterator]: {
     value: function values() {
       return this;
-    } } });
-
-
+    }
+  }
+});
 function safeIfNeeded(array) {
   if (array[SymbolIterator] === NativeArrayPrototypeSymbolIterator) {
     return array;
@@ -205,9 +205,9 @@ const DummyArrayIteratorPrototype = ObjectCreate(IteratorPrototype, {
       return GeneratorPrototypeNext(generator);
     },
     writable: true,
-    configurable: true } });
-
-
+    configurable: true
+  }
+});
 for (const key of ReflectOwnKeys(ArrayIteratorPrototype)) {
   if (key === "next") {
     continue;
@@ -565,8 +565,8 @@ const handler = ObjectFreeze({
       return ReflectDefineProperty(target, key, descriptor);
     }
     return ReflectDefineProperty(target, key, descriptor);
-  } });
-
+  }
+});
 class Float16Array {
   constructor(input, _byteOffset, _length) {
     let float16bitsArray;
@@ -1180,22 +1180,22 @@ class Float16Array {
     if (isFloat16Array(this)) {
       return "Float16Array";
     }
-  }}
-
+  }
+}
 ObjectDefineProperty(Float16Array, "BYTES_PER_ELEMENT", {
-  value: BYTES_PER_ELEMENT });
-
+  value: BYTES_PER_ELEMENT
+});
 ObjectDefineProperty(Float16Array, brand, {});
 ReflectSetPrototypeOf(Float16Array, TypedArray);
 const Float16ArrayPrototype = Float16Array.prototype;
 ObjectDefineProperty(Float16ArrayPrototype, "BYTES_PER_ELEMENT", {
-  value: BYTES_PER_ELEMENT });
-
+  value: BYTES_PER_ELEMENT
+});
 ObjectDefineProperty(Float16ArrayPrototype, SymbolIterator, {
   value: Float16ArrayPrototype.values,
   writable: true,
-  configurable: true });
-
+  configurable: true
+});
 ReflectSetPrototypeOf(Float16ArrayPrototype, TypedArrayPrototype);
 
 function isTypedArray(target) {

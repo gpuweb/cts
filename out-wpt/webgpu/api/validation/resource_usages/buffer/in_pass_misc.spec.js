@@ -31,7 +31,6 @@ do not contribute directly to any usage scope in a compute pass.`
       size: kBufferSize,
       usage: kUsages,
     });
-
     const anotherBuffer = t.createBufferWithState('valid', {
       size: kBufferSize,
       usage: kUsages,
@@ -107,7 +106,6 @@ still contribute directly to the usage scope of the draw call.`
       size: kBufferSize,
       usage: kUsages,
     });
-
     const anotherBuffer = t.createBufferWithState('valid', {
       size: kBufferSize,
       usage: kUsages,
@@ -176,7 +174,6 @@ still contribute directly to the usage scope of the draw call.`
     const pipelineLayout = t.device.createPipelineLayout({
       bindGroupLayouts,
     });
-
     const renderPipeline = t.createRenderPipelineForTest(pipelineLayout, vertexBufferCount);
     renderPassEncoder.setPipeline(renderPipeline);
     switch (usage1) {
@@ -186,7 +183,6 @@ still contribute directly to the usage scope of the draw call.`
             size: 4,
             usage: GPUBufferUsage.INDEX,
           });
-
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
         }
         renderPassEncoder.drawIndexedIndirect(buffer, 0);
@@ -311,7 +307,6 @@ g.test('subresources,buffer_usages_in_copy_and_pass')
             size: 4,
             usage: GPUBufferUsage.COPY_DST,
           });
-
           encoder.copyBufferToBuffer(buffer, 0, destinationBuffer, 0, 4);
           break;
         }
@@ -320,7 +315,6 @@ g.test('subresources,buffer_usages_in_copy_and_pass')
             size: 4,
             usage: GPUBufferUsage.COPY_SRC,
           });
-
           encoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
           break;
         }
@@ -391,7 +385,6 @@ g.test('subresources,buffer_usages_in_copy_and_pass')
             size: 4,
             usage: GPUBufferUsage.INDEX,
           });
-
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, 0);
           renderPassEncoder.end();

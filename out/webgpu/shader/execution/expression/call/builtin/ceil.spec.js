@@ -41,8 +41,8 @@ export const d = makeCaseCache('ceil', {
     -1.9,
     ...fullF32Range()].
     map((x) => makeCase(x));
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

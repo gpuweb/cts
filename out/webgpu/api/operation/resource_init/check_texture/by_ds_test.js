@@ -16,8 +16,8 @@ function makeFullscreenVertexModule(device) {
         vec2<f32>(-1.0,  1.0));
       return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
     }
-    ` });
-
+    `
+  });
 }
 
 function getDepthTestEqualPipeline(
@@ -30,8 +30,8 @@ expected)
     layout: 'auto',
     vertex: {
       entryPoint: 'main',
-      module: makeFullscreenVertexModule(t.device) },
-
+      module: makeFullscreenVertexModule(t.device)
+    },
     fragment: {
       entryPoint: 'main',
       module: t.device.createShaderModule({
@@ -48,17 +48,17 @@ expected)
           output.outSuccess = 1.0;
           return output;
         }
-        ` }),
-
-      targets: [{ format: 'r8unorm' }] },
-
+        `
+      }),
+      targets: [{ format: 'r8unorm' }]
+    },
     depthStencil: {
       format,
-      depthCompare: 'equal' },
-
+      depthCompare: 'equal'
+    },
     primitive: { topology: 'triangle-list' },
-    multisample: { count: sampleCount } });
-
+    multisample: { count: sampleCount }
+  });
 }
 
 function getStencilTestEqualPipeline(
@@ -70,8 +70,8 @@ sampleCount)
     layout: 'auto',
     vertex: {
       entryPoint: 'main',
-      module: makeFullscreenVertexModule(t.device) },
-
+      module: makeFullscreenVertexModule(t.device)
+    },
     fragment: {
       entryPoint: 'main',
       module: t.device.createShaderModule({
@@ -80,18 +80,18 @@ sampleCount)
         fn main() -> @location(0) f32 {
           return 1.0;
         }
-        ` }),
-
-      targets: [{ format: 'r8unorm' }] },
-
+        `
+      }),
+      targets: [{ format: 'r8unorm' }]
+    },
     depthStencil: {
       format,
       stencilFront: { compare: 'equal' },
-      stencilBack: { compare: 'equal' } },
-
+      stencilBack: { compare: 'equal' }
+    },
     primitive: { topology: 'triangle-list' },
-    multisample: { count: sampleCount } });
-
+    multisample: { count: sampleCount }
+  });
 }
 
 const checkContents = (
@@ -120,8 +120,8 @@ subresourceRange) =>
       size: [width, height, 1],
       format: 'r8unorm',
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-      sampleCount: params.sampleCount });
-
+      sampleCount: params.sampleCount
+    });
 
     let resolveTexture = undefined;
     let resolveTarget = undefined;
@@ -129,8 +129,8 @@ subresourceRange) =>
       resolveTexture = t.device.createTexture({
         size: [width, height, 1],
         format: 'r8unorm',
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC });
-
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+      });
       resolveTarget = resolveTexture.createView();
     }
 
@@ -144,17 +144,17 @@ subresourceRange) =>
         resolveTarget,
         clearValue: [0, 0, 0, 0],
         loadOp: 'load',
-        storeOp: 'store' }],
-
+        storeOp: 'store'
+      }],
 
       depthStencilAttachment: {
         view: texture.createView(viewDescriptor),
         depthStoreOp: formatInfo.depth ? 'store' : undefined,
         depthLoadOp: formatInfo.depth ? 'load' : undefined,
         stencilStoreOp: formatInfo.stencil ? 'store' : undefined,
-        stencilLoadOp: formatInfo.stencil ? 'load' : undefined } });
-
-
+        stencilLoadOp: formatInfo.stencil ? 'load' : undefined
+      }
+    });
 
     switch (type) {
       case 'depth':{
@@ -185,8 +185,8 @@ subresourceRange) =>
 
     t.expectSingleColor(resolveTexture || renderTexture, 'r8unorm', {
       size: [width, height, 1],
-      exp: { R: 1 } });
-
+      exp: { R: 1 }
+    });
   }
 };
 

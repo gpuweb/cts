@@ -141,13 +141,11 @@ g.test('targets_blend')
       dstFactor: 'dst-alpha',
       operation: 'add',
     };
-
     const blendComponentToTest = {
       srcFactor,
       dstFactor,
       operation,
     };
-
     const format = 'rgba8unorm';
 
     const descriptor = t.getDescriptor({

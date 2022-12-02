@@ -130,34 +130,34 @@ paramsSubcasesOnly([
   begin: 'occlusion',
   nest: 'pipeline-statistics',
   end: 'pipeline-statistics',
-  _valid: true },
-
+  _valid: true
+},
 {
   begin: 'pipeline-statistics',
   nest: 'timestamp',
   end: 'pipeline-statistics',
-  _valid: true },
-
+  _valid: true
+},
 {
   begin: 'pipeline-statistics',
   nest: 'pipeline-statistics',
   end: 'pipeline-statistics',
-  _valid: false },
-
+  _valid: false
+},
 {
   begin: 'pipeline-statistics',
   nest: 'occlusion',
   end: 'pipeline-statistics',
-  _valid: true },
-
+  _valid: true
+},
 { begin: 'pipeline-statistics', nest: 'occlusion', end: 'occlusion', _valid: true },
 { begin: 'timestamp', nest: 'occlusion', end: 'occlusion', _valid: true },
 {
   begin: 'timestamp',
   nest: 'pipeline-statistics',
   end: 'pipeline-statistics',
-  _valid: true }]).
-
+  _valid: true
+}]).
 
 unimplemented();
 //# sourceMappingURL=begin_end.spec.js.map

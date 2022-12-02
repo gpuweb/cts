@@ -102,8 +102,8 @@ export const d = makeCaseCache('clamp', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 /**
  * Calculates clamp using the min-max formula.

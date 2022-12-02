@@ -12,8 +12,8 @@ class F extends Fixture {
     } else {
       this.expect(result !== undefined && result.message.indexOf(substr) !== -1, result?.message);
     }
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 

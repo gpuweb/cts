@@ -14,14 +14,14 @@
   type,
   stage,
   io,
-  use_struct })
+  use_struct
 
 
 
 
 
 
-{
+}) {
   let code = '';
 
   if (use_struct) {

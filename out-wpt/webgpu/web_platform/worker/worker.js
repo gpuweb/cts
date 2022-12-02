@@ -24,7 +24,6 @@ async function basicTest() {
           }
         `,
       }),
-
       entryPoint: 'main',
     },
   });

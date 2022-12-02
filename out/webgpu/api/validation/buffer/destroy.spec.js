@@ -19,8 +19,8 @@ fn(async (t) => {
   const { usage } = t.params;
   const buf = t.device.createBuffer({
     size: 4,
-    usage });
-
+    usage
+  });
 
   buf.destroy();
 });
@@ -70,12 +70,12 @@ combineWithParams([
 { usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ },
 {
   usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC,
-  mapMode: GPUConst.MapMode.WRITE },
-
+  mapMode: GPUConst.MapMode.WRITE
+},
 {
   usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
-  mapMode: GPUConst.MapMode.READ }]).
-
+  mapMode: GPUConst.MapMode.READ
+}]).
 
 unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)).
 
@@ -84,8 +84,8 @@ fn(async (t) => {
   const buf = t.device.createBuffer({
     size: 4,
     usage,
-    mappedAtCreation });
-
+    mappedAtCreation
+  });
 
   if (mapMode !== undefined) {
     if (mappedAtCreation) {

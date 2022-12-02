@@ -24,8 +24,8 @@ export const d = makeCaseCache('unpack2x16unorm', {
     };
 
     return fullU32Range().map(makeCase);
-  } });
-
+  }
+});
 
 g.test('unpack').
 specURL('https://www.w3.org/TR/WGSL/#unpack-builtin-functions').

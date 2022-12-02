@@ -16,20 +16,20 @@ combine('dispatch', ['direct', 'indirect']).
 combineWithParams([
 {
   groupSize: { x: 1, y: 1, z: 1 },
-  numGroups: { x: 1, y: 1, z: 1 } },
-
+  numGroups: { x: 1, y: 1, z: 1 }
+},
 {
   groupSize: { x: 8, y: 4, z: 2 },
-  numGroups: { x: 1, y: 1, z: 1 } },
-
+  numGroups: { x: 1, y: 1, z: 1 }
+},
 {
   groupSize: { x: 1, y: 1, z: 1 },
-  numGroups: { x: 8, y: 4, z: 2 } },
-
+  numGroups: { x: 8, y: 4, z: 2 }
+},
 {
   groupSize: { x: 3, y: 7, z: 5 },
-  numGroups: { x: 13, y: 9, z: 11 } }]).
-
+  numGroups: { x: 13, y: 9, z: 11 }
+}]).
 
 beginSubcases()).
 
@@ -134,26 +134,26 @@ fn(async (t) => {
     layout: 'auto',
     compute: {
       module: t.device.createShaderModule({
-        code: wgsl }),
-
-      entryPoint: 'main' } });
-
-
+        code: wgsl
+      }),
+      entryPoint: 'main'
+    }
+  });
 
   // Helper to create a `size`-byte buffer with binding number `binding`.
   function createBuffer(size, binding) {
     const buffer = t.device.createBuffer({
       size,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC });
-
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
     t.trackForCleanup(buffer);
 
     bindGroupEntries.push({
       binding,
       resource: {
-        buffer } });
-
-
+        buffer
+      }
+    });
 
     return buffer;
   }
@@ -168,8 +168,8 @@ fn(async (t) => {
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: bindGroupEntries });
-
+    entries: bindGroupEntries
+  });
 
   // Run the shader.
   const encoder = t.device.createCommandEncoder();
@@ -184,8 +184,8 @@ fn(async (t) => {
         const dispatchBuffer = t.device.createBuffer({
           size: 3 * Uint32Array.BYTES_PER_ELEMENT,
           usage: GPUBufferUsage.INDIRECT,
-          mappedAtCreation: true });
-
+          mappedAtCreation: true
+        });
         t.trackForCleanup(dispatchBuffer);
         const dispatchData = new Uint32Array(dispatchBuffer.getMappedRange());
         dispatchData[0] = t.params.numGroups.x;
@@ -272,8 +272,8 @@ fn(async (t) => {
     return {
       x: groupId.x * t.params.groupSize.x + localId.x,
       y: groupId.y * t.params.groupSize.y + localId.y,
-      z: groupId.z * t.params.groupSize.z + localId.z };
-
+      z: groupId.z * t.params.groupSize.z + localId.z
+    };
   };
   t.expectGPUBufferValuesPassCheck(
   globalIdBuffer,

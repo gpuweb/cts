@@ -31,38 +31,39 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
         plainType: getPlainTypeInfo(
         kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType),
 
-        componentCount: 4 }]),
-
+        componentCount: 4
+      }]),
 
       noFragment = false,
-      fragmentConstants = {} } =
-    options;
+      fragmentConstants = {}
+    } = options;
 
     return {
       vertex: {
         module: this.device.createShaderModule({
-          code: kDefaultVertexShaderCode }),
-
-        entryPoint: 'main' },
-
+          code: kDefaultVertexShaderCode
+        }),
+        entryPoint: 'main'
+      },
       fragment: noFragment ?
       undefined :
       {
         module: this.device.createShaderModule({
-          code: fragmentShaderCode }),
-
+          code: fragmentShaderCode
+        }),
         entryPoint: 'main',
         targets,
-        constants: fragmentConstants },
-
+        constants: fragmentConstants
+      },
       layout: this.getPipelineLayout(),
       primitive,
       multisample,
-      depthStencil };
-
+      depthStencil
+    };
   }
 
   getPipelineLayout() {
     return this.device.createPipelineLayout({ bindGroupLayouts: [] });
-  }}
+  }
+}
 //# sourceMappingURL=common.js.map

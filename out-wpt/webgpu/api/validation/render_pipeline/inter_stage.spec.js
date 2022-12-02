@@ -28,7 +28,6 @@ class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTes
         }
         `,
       }),
-
       entryPoint: 'main',
     };
   }
@@ -47,7 +46,6 @@ class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTes
         }
         `,
       }),
-
       entryPoint: 'main',
     };
   }
@@ -75,7 +73,6 @@ g.test('location,mismatch')
         inputs: ['@location(1) __: f32', '@location(0) __: f32'],
         _success: true,
       },
-
       {
         outputs: ['@location(1) __: f32', '@location(0) __: f32'],
         inputs: ['@location(0) __: f32', '@location(1) __: f32'],
@@ -184,7 +181,6 @@ g.test('interpolation_sampling')
         input: '@interpolate(perspective, center)',
         _success: true,
       },
-
       { output: '@interpolate(linear, center)', input: '@interpolate(linear)', _success: true },
       { output: '@interpolate(flat)', input: '@interpolate(flat)' },
       { output: '@interpolate(perspective)', input: '@interpolate(perspective, sample)' },
@@ -193,7 +189,6 @@ g.test('interpolation_sampling')
         output: '@interpolate(perspective, center)',
         input: '@interpolate(perspective, centroid)',
       },
-
       { output: '@interpolate(perspective, centroid)', input: '@interpolate(perspective)' },
     ])
   )

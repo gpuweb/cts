@@ -30,8 +30,8 @@ class ParamsTest extends UnitTest {
 got      ${JSON.stringify(a)}
 expected ${JSON.stringify(e)}`);
 
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(ParamsTest);
 

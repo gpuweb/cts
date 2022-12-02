@@ -36,8 +36,8 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     const byteLength = kRTSize * kBytesPerRow;
     const buffer = this.device.createBuffer({
       size: byteLength,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    });
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
@@ -93,10 +93,10 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
               output.Position = matrix * vec4<f32>(position[VertexIndex], 1.0);
               return output;
             }
-            ` }),
-
-        entryPoint: 'main' },
-
+            `
+        }),
+        entryPoint: 'main'
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
@@ -109,13 +109,13 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
               -> @location(0) vec4<f32> {
                 return textureSample(texture0, sampler0, fragUV);
             }
-            ` }),
-
+            `
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] },
-
-      primitive: { topology: 'triangle-list' } });
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
+      primitive: { topology: 'triangle-list' }
+    });
   }
 
   // return the render target texture object
@@ -128,14 +128,14 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
       { binding: 0, resource: sampler },
       { binding: 1, resource: textureView }],
 
-      layout: this.pipeline.getBindGroupLayout(0) });
-
+      layout: this.pipeline.getBindGroupLayout(0)
+    });
 
     const colorAttachment = this.device.createTexture({
       format: kColorAttachmentFormat,
       size: { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    });
     const colorAttachmentView = colorAttachment.createView();
 
     const encoder = this.device.createCommandEncoder();
@@ -145,10 +145,10 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
         view: colorAttachmentView,
         storeOp: 'store',
         clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-        loadOp: 'clear' }] });
+        loadOp: 'clear'
+      }]
 
-
-
+    });
     pass.setPipeline(this.pipeline);
     pass.setBindGroup(0, bindGroup);
     pass.draw(6);
@@ -156,8 +156,8 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
     this.device.queue.submit([encoder.finish()]);
 
     return colorAttachment;
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(SamplerAnisotropicFilteringSlantedPlaneTest);
 
@@ -178,8 +178,8 @@ fn(async (t) => {
     mipLevelCount: 1,
     size: { width: textureSize, height: textureSize, depthOrArrayLayers: 1 },
     format: kTextureFormat,
-    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+  });
 
   const textureEncoder = t.device.createCommandEncoder();
 
@@ -209,13 +209,13 @@ fn(async (t) => {
   {
     buffer,
     bytesPerRow,
-    rowsPerImage },
-
+    rowsPerImage
+  },
   {
     texture,
     mipLevel: 0,
-    origin: [0, 0, 0] },
-
+    origin: [0, 0, 0]
+  },
   [textureSize, textureSize, 1]);
 
 
@@ -230,8 +230,8 @@ fn(async (t) => {
       magFilter: 'linear',
       minFilter: 'linear',
       mipmapFilter: 'linear',
-      maxAnisotropy });
-
+      maxAnisotropy
+    });
     const result = await t.readGPUBufferRangeTyped(
     t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
     { type: Uint8Array, typedLength: byteLength });
@@ -272,16 +272,16 @@ paramsSimple([
   { coord: { x: xMiddle, y: 2 }, expected: colors[2] },
   { coord: { x: xMiddle, y: 6 }, expected: [colors[0], colors[1]] }],
 
-  _generateWarningOnly: false },
-
+  _generateWarningOnly: false
+},
 {
   maxAnisotropy: 4,
   _results: [
   { coord: { x: xMiddle, y: 2 }, expected: [colors[0], colors[1]] },
   { coord: { x: xMiddle, y: 6 }, expected: colors[0] }],
 
-  _generateWarningOnly: true }]).
-
+  _generateWarningOnly: true
+}]).
 
 fn(async (t) => {
   const texture = t.createTexture2DWithMipmaps(colors);
@@ -292,8 +292,8 @@ fn(async (t) => {
     magFilter: 'linear',
     minFilter: 'linear',
     mipmapFilter: 'linear',
-    maxAnisotropy: t.params.maxAnisotropy });
-
+    maxAnisotropy: t.params.maxAnisotropy
+  });
 
   const colorAttachment = t.drawSlantedPlane(textureView, sampler);
 
@@ -302,8 +302,8 @@ fn(async (t) => {
       // equal exactly one color
       t.expectSinglePixelIn2DTexture(colorAttachment, kColorAttachmentFormat, entry.coord, {
         exp: entry.expected,
-        generateWarningOnly: t.params._generateWarningOnly });
-
+        generateWarningOnly: t.params._generateWarningOnly
+      });
     } else {
       // a lerp between two colors
       t.expectSinglePixelBetweenTwoValuesIn2DTexture(
@@ -312,8 +312,8 @@ fn(async (t) => {
       entry.coord,
       {
         exp: entry.expected,
-        generateWarningOnly: t.params._generateWarningOnly });
-
+        generateWarningOnly: t.params._generateWarningOnly
+      });
 
     }
   }

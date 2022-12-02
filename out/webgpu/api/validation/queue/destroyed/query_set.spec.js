@@ -36,8 +36,8 @@ beforeAllSubcases((t) => t.selectDeviceOrSkipTestCase('timestamp-query')).
 fn(async (t) => {
   const querySet = t.createQuerySetWithState(t.params.querySetState, {
     type: 'timestamp',
-    count: 2 });
-
+    count: 2
+  });
 
   const encoder = t.createEncoder('non-pass');
   encoder.encoder.writeTimestamp(querySet, 0);

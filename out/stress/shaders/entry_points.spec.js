@@ -36,25 +36,25 @@ fn(async (t) => {
   const kNumEntryPoints = 200;
 
   const shader = t.device.createShaderModule({
-    code: makeCode(kNumEntryPoints) });
-
+    code: makeCode(kNumEntryPoints)
+  });
 
   const layout = t.device.createBindGroupLayout({
     entries: [
     {
       binding: 0,
       visibility: GPUShaderStage.COMPUTE,
-      buffer: { type: 'storage' } }] });
+      buffer: { type: 'storage' }
+    }]
 
-
-
+  });
   const pipelineLayout = t.device.createPipelineLayout({
-    bindGroupLayouts: [layout] });
-
+    bindGroupLayouts: [layout]
+  });
   const bindGroup = t.device.createBindGroup({
     layout,
-    entries: [{ binding: 0, resource: { buffer } }] });
-
+    entries: [{ binding: 0, resource: { buffer } }]
+  });
 
   const encoder = t.device.createCommandEncoder();
   range(kNumEntryPoints, (i) => {
@@ -62,9 +62,9 @@ fn(async (t) => {
       layout: pipelineLayout,
       compute: {
         module: shader,
-        entryPoint: `computeMain${i}` } });
-
-
+        entryPoint: `computeMain${i}`
+      }
+    });
 
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);

@@ -80,7 +80,6 @@ g.test('pipeline,device_mismatch')
         module: sourceDevice.createShaderModule({
           code: '@compute @workgroup_size(1) fn main() {}',
         }),
-
         entryPoint: 'main',
       },
     });
@@ -200,7 +199,6 @@ g.test('indirect_dispatch_buffer,device_mismatch')
       size: 16,
       usage: GPUBufferUsage.INDIRECT,
     });
-
     t.trackForCleanup(buffer);
 
     const { encoder, validateFinish } = t.createEncoder('compute pass');
@@ -241,7 +239,6 @@ g.test('indirect_dispatch_buffer,usage')
       size: 16,
       usage: bufferUsage,
     });
-
     t.trackForCleanup(buffer);
 
     const success = (GPUBufferUsage.INDIRECT & bufferUsage) !== 0;

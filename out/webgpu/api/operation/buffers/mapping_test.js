@@ -35,5 +35,6 @@ export class MappingTest extends GPUTest {
         break;
       }
     }
-  }}
+  }
+}
 //# sourceMappingURL=mapping_test.js.map

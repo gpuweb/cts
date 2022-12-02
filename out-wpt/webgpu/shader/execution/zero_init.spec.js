@@ -111,7 +111,6 @@ g.test('compute,zero_init')
                   scalarType,
                   isAtomic,
                 };
-
                 if (!isAtomic) {
                   // Vector types
                   for (const vectorType of kVectorContainerTypes) {
@@ -193,7 +192,6 @@ g.test('compute,zero_init')
                       containerType,
                       members,
                     };
-
                     const serializedT = prettyPrint(t);
                     if (seenTypes.has(serializedT)) {
                       // We produced an identical type. shuffle the member indices,
@@ -275,7 +273,6 @@ g.test('compute,zero_init')
                   scalarType: type.scalarType,
                   isAtomic: false,
                 },
-
                 depth + 1
               )}>`;
           }
@@ -323,7 +320,6 @@ g.test('compute,zero_init')
                       scalarType: type.scalarType,
                       isAtomic: false,
                     },
-
                     depth + 1
                   )}
                 }`;
@@ -339,7 +335,6 @@ g.test('compute,zero_init')
                         scalarType: type.scalarType,
                         isAtomic: false,
                       },
-
                       depth + 1
                     )}
                   }
@@ -394,7 +389,6 @@ g.test('compute,zero_init')
         module: t.device.createShaderModule({
           code: wgsl,
         }),
-
         entryPoint: 'main',
       },
     });
@@ -403,14 +397,12 @@ g.test('compute,zero_init')
       size: 4,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
-
     t.trackForCleanup(resultBuffer);
 
     const zeroBuffer = t.device.createBuffer({
       size: 4,
       usage: GPUBufferUsage.UNIFORM,
     });
-
     t.trackForCleanup(zeroBuffer);
 
     const bindGroup = t.device.createBindGroup({
@@ -422,7 +414,6 @@ g.test('compute,zero_init')
             buffer: resultBuffer,
           },
         },
-
         {
           binding: 1,
           resource: {

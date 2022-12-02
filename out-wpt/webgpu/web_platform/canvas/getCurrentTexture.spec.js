@@ -106,7 +106,6 @@ g.test('single_frames')
         },
       ],
     });
-
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
@@ -174,7 +173,6 @@ g.test('multiple_frames')
               },
             ],
           });
-
           pass.end();
           t.device.queue.submit([encoder.finish()]);
         }

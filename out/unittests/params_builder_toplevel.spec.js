@@ -94,8 +94,8 @@ g.test('generator').fn((t0) => {
           yield { x, y };
         }
       }
-    } })).
-
+    }
+  })).
 
   fn((t) => {
     ran.push(t.params);

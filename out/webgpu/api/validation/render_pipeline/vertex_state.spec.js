@@ -24,13 +24,13 @@ attributes,
   testAttribute,
   testAttributeAtStart = true,
   extraAttributeCount = 0,
-  extraAttributeSkippedLocations = [] })
+  extraAttributeSkippedLocations = []
 
 
 
 
 
-
+})
 {
   // Add a bunch of dummy attributes each with a different location such that none of the locations
   // are in extraAttributeSkippedLocations
@@ -67,20 +67,20 @@ class F extends ValidationTest {
       vertex: {
         module: this.device.createShaderModule({ code: vertexShaderCode }),
         entryPoint: 'main',
-        buffers },
-
+        buffers
+      },
       fragment: {
         module: this.device.createShaderModule({
           code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-            }` }),
-
+            }`
+        }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }] },
-
-      primitive: { topology: 'triangle-list' } };
-
+        targets: [{ format: 'rgba8unorm' }]
+      },
+      primitive: { topology: 'triangle-list' }
+    };
     return descriptor;
   }
 
@@ -94,8 +94,8 @@ class F extends ValidationTest {
       code: `
         @fragment fn main() -> @location(0) vec4<f32> {
           return vec4<f32>(0.0, 1.0, 0.0, 1.0);
-        }` });
-
+        }`
+    });
 
     this.expectValidationError(() => {
       this.device.createRenderPipeline({
@@ -103,15 +103,15 @@ class F extends ValidationTest {
         vertex: {
           module: vsModule,
           entryPoint: 'main',
-          buffers },
-
+          buffers
+        },
         fragment: {
           module: fsModule,
           entryPoint: 'main',
-          targets: [{ format: 'rgba8unorm' }] },
-
-        primitive: { topology: 'triangle-list' } });
-
+          targets: [{ format: 'rgba8unorm' }]
+        },
+        primitive: { topology: 'triangle-list' }
+      });
     }, !success);
   }
 
@@ -135,8 +135,8 @@ class F extends ValidationTest {
         return vec4<f32>(0.0, 0.0, 0.0, 0.0);
       }
     `;
-  }}
-
+  }
+}
 
 export const g = makeTestGroup(F);
 
@@ -162,8 +162,8 @@ fn((t) => {
     } else {
       vertexBuffers.push({
         attributes: [{ format: 'float32', offset: 0, shaderLocation: 0 }],
-        arrayStride: 0 });
-
+        arrayStride: 0
+      });
     }
   }
 
@@ -284,16 +284,16 @@ fn((t) => {
     vertexBufferIndex,
     extraAttributeCount,
     testShaderLocation,
-    testAttributeAtStart } =
-  t.params;
+    testAttributeAtStart
+  } = t.params;
 
   const attributes = [];
   addTestAttributes(attributes, {
     testAttribute: { format: 'float32', offset: 0, shaderLocation: testShaderLocation },
     testAttributeAtStart,
     extraAttributeCount,
-    extraAttributeSkippedLocations: [testShaderLocation] });
-
+    extraAttributeSkippedLocations: [testShaderLocation]
+  });
 
   const vertexBuffers = [];
   vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
@@ -327,8 +327,8 @@ fn((t) => {
     testAttributeAtStartB,
     shaderLocationA,
     shaderLocationB,
-    extraAttributeCount } =
-  t.params;
+    extraAttributeCount
+  } = t.params;
 
   // Depending on the params, the vertexBuffer for A and B can be the same or different. To support
   // both cases without code changes we treat `vertexBufferAttributes` as a map from indices to
@@ -344,16 +344,16 @@ fn((t) => {
     testAttribute: { format: 'float32', offset: 0, shaderLocation: shaderLocationA },
     testAttributeAtStart: testAttributeAtStartA,
     extraAttributeCount,
-    extraAttributeSkippedLocations: [shaderLocationA, shaderLocationB] });
-
+    extraAttributeSkippedLocations: [shaderLocationA, shaderLocationB]
+  });
 
   // Add attribute B. Not that attributesB can be the same object as attributesA so they end
   // up in the same vertex buffer.
   const attributesB = vertexBufferAttributes[vertexBufferIndexB];
   addTestAttributes(attributesB, {
     testAttribute: { format: 'float32', offset: 0, shaderLocation: shaderLocationB },
-    testAttributeAtStart: testAttributeAtStartB });
-
+    testAttributeAtStart: testAttributeAtStartB
+  });
 
   // Use the attributes to make the list of vertex buffers. Note that we might be setting the same vertex
   // buffer twice, but that only happens when it is the only vertex buffer.
@@ -382,8 +382,8 @@ fn((t) => {
   const shader = t.generateTestVertexShader([
   {
     type: 'vec4<f32>',
-    location: testLocation }]);
-
+    location: testLocation
+  }]);
 
 
   const vertexBuffers = [
@@ -393,10 +393,10 @@ fn((t) => {
     {
       format: 'float32',
       offset: 0,
-      shaderLocation: testLocation }] }];
+      shaderLocation: testLocation
+    }]
 
-
-
+  }];
 
 
   const success = testLocation < kMaxVertexAttributes;
@@ -421,14 +421,14 @@ fn((t) => {
     vertexBufferIndex,
     extraAttributeCount,
     testAttributeAtStart,
-    testShaderLocation } =
-  t.params;
+    testShaderLocation
+  } = t.params;
   // We have a shader using `testShaderLocation`.
   const shader = t.generateTestVertexShader([
   {
     type: 'vec4<f32>',
-    location: testShaderLocation }]);
-
+    location: testShaderLocation
+  }]);
 
 
   const attributes = [];
@@ -439,15 +439,15 @@ fn((t) => {
   // Using that vertex state is invalid because the vertex state doesn't contain the test location
   addTestAttributes(attributes, {
     extraAttributeCount,
-    extraAttributeSkippedLocations: [testShaderLocation] });
-
+    extraAttributeSkippedLocations: [testShaderLocation]
+  });
   t.testVertexState(false, vertexBuffers, shader);
 
   // Add an attribute for the test location and try again.
   addTestAttributes(attributes, {
     testAttribute: { format: 'float32', shaderLocation: testShaderLocation, offset: 0 },
-    testAttributeAtStart });
-
+    testAttributeAtStart
+  });
   t.testVertexState(true, vertexBuffers, shader);
 });
 
@@ -475,8 +475,8 @@ fn((t) => {
   const shader = t.generateTestVertexShader([
   {
     type: shaderType,
-    location: 0 }]);
-
+    location: 0
+  }]);
 
 
   const requiredBaseType = {
@@ -484,8 +484,8 @@ fn((t) => {
     uint: 'u32',
     snorm: 'f32',
     unorm: 'f32',
-    float: 'f32' }[
-  kVertexFormatInfo[format].type];
+    float: 'f32'
+  }[kVertexFormatInfo[format].type];
 
   const success = requiredBaseType === shaderBaseType;
   t.testVertexState(
@@ -493,8 +493,8 @@ fn((t) => {
   [
   {
     arrayStride: 0,
-    attributes: [{ offset: 0, shaderLocation: 0, format }] }],
-
+    attributes: [{ offset: 0, shaderLocation: 0, format }]
+  }],
 
   shader);
 
@@ -541,16 +541,16 @@ fn((t) => {
     offset,
     vertexBufferIndex,
     extraAttributeCount,
-    testAttributeAtStart } =
-  t.params;
+    testAttributeAtStart
+  } = t.params;
 
   const attributes = [];
   addTestAttributes(attributes, {
     testAttribute: { format, offset, shaderLocation: 0 },
     testAttributeAtStart,
     extraAttributeCount,
-    extraAttributeSkippedLocations: [0] });
-
+    extraAttributeSkippedLocations: [0]
+  });
 
   const vertexBuffers = [];
   vertexBuffers[vertexBufferIndex] = { arrayStride, attributes };
@@ -613,16 +613,16 @@ fn((t) => {
     offset,
     vertexBufferIndex,
     extraAttributeCount,
-    testAttributeAtStart } =
-  t.params;
+    testAttributeAtStart
+  } = t.params;
 
   const attributes = [];
   addTestAttributes(attributes, {
     testAttribute: { format, offset, shaderLocation: 0 },
     testAttributeAtStart,
     extraAttributeCount,
-    extraAttributeSkippedLocations: [0] });
-
+    extraAttributeSkippedLocations: [0]
+  });
 
   const vertexBuffers = [];
   vertexBuffers[vertexBufferIndex] = { arrayStride, attributes };

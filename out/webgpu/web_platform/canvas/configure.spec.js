@@ -37,8 +37,8 @@ fn(async (t) => {
 
   ctx.configure({
     device: t.device,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
 
   const currentTexture = ctx.getCurrentTexture();
   t.expect(currentTexture.format === 'rgba8unorm');
@@ -70,8 +70,8 @@ fn(async (t) => {
   // Calling configure without a device should throw.
   t.shouldThrow(true, () => {
     ctx.configure({
-      format: 'rgba8unorm' });
-
+      format: 'rgba8unorm'
+    });
   });
 
   // Device is not configured, so getCurrentTexture will throw.
@@ -82,8 +82,8 @@ fn(async (t) => {
   // Calling configure with a device should succeed.
   ctx.configure({
     device: t.device,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
 
   // getCurrentTexture will succeed with a valid device.
   ctx.getCurrentTexture();
@@ -97,8 +97,8 @@ fn(async (t) => {
   // Should be able to successfully configure again after unconfiguring.
   ctx.configure({
     device: t.device,
-    format: 'rgba8unorm' });
-
+    format: 'rgba8unorm'
+  });
   ctx.getCurrentTexture();
 });
 
@@ -134,8 +134,8 @@ fn(async (t) => {
   t.expectValidationError(() => {
     ctx.configure({
       device: t.device,
-      format });
-
+      format
+    });
   }, !validFormat);
 
   t.expectValidationError(() => {
@@ -174,8 +174,8 @@ fn(async (t) => {
   ctx.configure({
     device: t.device,
     format: 'rgba8unorm',
-    usage });
-
+    usage
+  });
 
   const currentTexture = ctx.getCurrentTexture();
   t.expect(currentTexture instanceof GPUTexture);
@@ -191,10 +191,10 @@ fn(async (t) => {
         view: currentTexture.createView(),
         clearValue: [1.0, 0.0, 0.0, 1.0],
         loadOp: 'clear',
-        storeOp: 'store' }] });
+        storeOp: 'store'
+      }]
 
-
-
+    });
     pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
@@ -205,20 +205,20 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        texture: {} }] });
+        texture: {}
+      }]
 
-
-
+    });
 
     t.device.createBindGroup({
       layout: bgl,
       entries: [
       {
         binding: 0,
-        resource: currentTexture.createView() }] });
+        resource: currentTexture.createView()
+      }]
 
-
-
+    });
   }
 
   if (usage & GPUConst.TextureUsage.STORAGE_BINDING) {
@@ -227,20 +227,20 @@ fn(async (t) => {
       {
         binding: 0,
         visibility: GPUShaderStage.FRAGMENT,
-        storageTexture: { access: 'write-only', format: currentTexture.format } }] });
+        storageTexture: { access: 'write-only', format: currentTexture.format }
+      }]
 
-
-
+    });
 
     t.device.createBindGroup({
       layout: bgl,
       entries: [
       {
         binding: 0,
-        resource: currentTexture.createView() }] });
+        resource: currentTexture.createView()
+      }]
 
-
-
+    });
   }
 
   if (usage & GPUConst.TextureUsage.COPY_DST) {
@@ -254,8 +254,8 @@ fn(async (t) => {
     const dstTexture = t.device.createTexture({
       format: currentTexture.format,
       usage: GPUTextureUsage.COPY_DST,
-      size });
-
+      size
+    });
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToTexture({ texture: currentTexture }, { texture: dstTexture }, size);
@@ -284,8 +284,8 @@ fn(async (t) => {
   ctx.configure({
     device: t.device,
     format: 'rgba8unorm',
-    alphaMode });
-
+    alphaMode
+  });
 
   const currentTexture = ctx.getCurrentTexture();
   t.expect(currentTexture instanceof GPUTexture);

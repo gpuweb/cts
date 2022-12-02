@@ -48,8 +48,8 @@ combineWithParams([
 {
   depthCompare: 'less-equal',
   depthClearValue: kMiddleDepthValue,
-  _expected: triangleColor },
-
+  _expected: triangleColor
+},
 { depthCompare: 'less-equal', depthClearValue: 0.0, _expected: backgroundColor },
 { depthCompare: 'equal', depthClearValue: 1.0, _expected: backgroundColor },
 { depthCompare: 'equal', depthClearValue: kMiddleDepthValue, _expected: triangleColor },
@@ -58,15 +58,15 @@ combineWithParams([
 {
   depthCompare: 'not-equal',
   depthClearValue: kMiddleDepthValue,
-  _expected: backgroundColor },
-
+  _expected: backgroundColor
+},
 { depthCompare: 'not-equal', depthClearValue: 0.0, _expected: triangleColor },
 { depthCompare: 'greater-equal', depthClearValue: 1.0, _expected: backgroundColor },
 {
   depthCompare: 'greater-equal',
   depthClearValue: kMiddleDepthValue,
-  _expected: triangleColor },
-
+  _expected: triangleColor
+},
 { depthCompare: 'greater-equal', depthClearValue: 0.0, _expected: triangleColor },
 { depthCompare: 'greater', depthClearValue: 1.0, _expected: backgroundColor },
 { depthCompare: 'greater', depthClearValue: kMiddleDepthValue, _expected: backgroundColor },
@@ -86,15 +86,15 @@ fn(async (t) => {
   const colorAttachment = t.device.createTexture({
     format: colorAttachmentFormat,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const colorAttachmentView = colorAttachment.createView();
 
   const depthTexture = t.device.createTexture({
     size: { width: 1, height: 1 },
     format,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+  });
   const depthTextureView = depthTexture.createView();
 
   const pipelineDescriptor = {
@@ -106,28 +106,28 @@ fn(async (t) => {
               @builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
               return vec4<f32>(0.5, 0.5, ${kMiddleDepthValue}, 1.0);
             }
-            ` }),
-
-      entryPoint: 'main' },
-
+            `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
             @fragment fn main() -> @location(0) vec4<f32> {
               return vec4<f32>(1.0, 1.0, 1.0, 1.0);
             }
-            ` }),
-
+            `
+      }),
       entryPoint: 'main',
-      targets: [{ format: colorAttachmentFormat }] },
-
+      targets: [{ format: colorAttachmentFormat }]
+    },
     primitive: { topology: 'point-list' },
     depthStencil: {
       depthWriteEnabled: true,
       depthCompare,
-      format } };
-
-
+      format
+    }
+  };
   const pipeline = t.device.createRenderPipeline(pipelineDescriptor);
 
   const encoder = t.device.createCommandEncoder();
@@ -135,8 +135,8 @@ fn(async (t) => {
     view: depthTextureView,
     depthClearValue,
     depthLoadOp: 'clear',
-    depthStoreOp: 'store' };
-
+    depthStoreOp: 'store'
+  };
   if (kTextureFormatInfo[format].stencil) {
     depthStencilAttachment.stencilClearValue = 0;
     depthStencilAttachment.stencilLoadOp = 'clear';
@@ -148,11 +148,11 @@ fn(async (t) => {
       view: colorAttachmentView,
       storeOp: 'store',
       clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-      loadOp: 'clear' }],
+      loadOp: 'clear'
+    }],
 
-
-    depthStencilAttachment });
-
+    depthStencilAttachment
+  });
   pass.setPipeline(pipeline);
   pass.draw(1);
   pass.end();
@@ -178,16 +178,16 @@ fn(async (t) => {
   const colorAttachment = t.device.createTexture({
     format: colorAttachmentFormat,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT });
-
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
   const colorAttachmentView = colorAttachment.createView();
 
   const depthBufferFormat = 'depth32float';
   const depthTexture = t.device.createTexture({
     size: { width: 1, height: 1 },
     format: depthBufferFormat,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING });
-
+    usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING
+  });
   const depthTextureView = depthTexture.createView();
 
   const pipelineDescriptor = {
@@ -222,10 +222,10 @@ fn(async (t) => {
               output.color = colors[InstanceIndex];
               return output;
             }
-            ` }),
-
-      entryPoint: 'main' },
-
+            `
+      }),
+      entryPoint: 'main'
+    },
     fragment: {
       module: t.device.createShaderModule({
         code: `
@@ -234,18 +234,18 @@ fn(async (t) => {
               ) -> @location(0) vec4<f32> {
               return color;
             }
-            ` }),
-
+            `
+      }),
       entryPoint: 'main',
-      targets: [{ format: colorAttachmentFormat }] },
-
+      targets: [{ format: colorAttachmentFormat }]
+    },
     primitive: { topology: 'point-list' },
     depthStencil: {
       depthWriteEnabled: true,
       depthCompare: t.params.reversed ? 'greater' : 'less',
-      format: depthBufferFormat } };
-
-
+      format: depthBufferFormat
+    }
+  };
   const pipeline = t.device.createRenderPipeline(pipelineDescriptor);
 
   const encoder = t.device.createCommandEncoder();
@@ -255,17 +255,17 @@ fn(async (t) => {
       view: colorAttachmentView,
       storeOp: 'store',
       clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 1.0 },
-      loadOp: 'clear' }],
-
+      loadOp: 'clear'
+    }],
 
     depthStencilAttachment: {
       view: depthTextureView,
 
       depthClearValue: t.params.reversed ? 0.0 : 1.0,
       depthLoadOp: 'clear',
-      depthStoreOp: 'store' } });
-
-
+      depthStoreOp: 'store'
+    }
+  });
   pass.setPipeline(pipeline);
   pass.draw(1, 4);
   pass.end();
@@ -277,9 +277,9 @@ fn(async (t) => {
   { x: 0, y: 0 },
   {
     exp: new Uint8Array(
-    t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff]) });
+    t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff])
 
-
+  });
 
 });
 //# sourceMappingURL=depth.spec.js.map

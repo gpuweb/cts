@@ -39,8 +39,8 @@ export const d = makeCaseCache('smoothstep', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

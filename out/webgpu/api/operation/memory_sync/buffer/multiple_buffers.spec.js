@@ -57,8 +57,8 @@ expandWithParams(function* ({ _context }) {
           readOp,
           readContext: _context[0],
           writeOp,
-          writeContext: _context[1] };
-
+          writeContext: _context[1]
+        };
       }
     }
   }
@@ -122,8 +122,8 @@ expandWithParams(function* ({ _context }) {
           readOp,
           readContext: _context[0],
           writeOp,
-          writeContext: _context[1] };
-
+          writeContext: _context[1]
+        };
       }
     }
   }
@@ -187,8 +187,8 @@ expandWithParams(function* ({ _context }) {
       if (checkOpsValidForContext([firstWriteOp, secondWriteOp], _context)) {
         yield {
           writeOps: [firstWriteOp, secondWriteOp],
-          contexts: _context };
-
+          contexts: _context
+        };
       }
     }
   }
@@ -258,8 +258,8 @@ fn(async (t) => {
     for (let i = 0; i < 2; ++i) {
       const renderEncoder = useBundle[i] ?
       t.device.createRenderBundleEncoder({
-        colorFormats: ['rgba8unorm'] }) :
-
+        colorFormats: ['rgba8unorm']
+      }) :
       passEncoder;
       const pipeline = t.createStorageWriteRenderPipeline(2 * b + i + 1);
       const bindGroup = t.createBindGroup(pipeline, buffer);
@@ -291,8 +291,8 @@ fn(async (t) => {
   const encoder = t.device.createCommandEncoder();
   const passEncoder = t.beginSimpleRenderPass(encoder);
   const renderEncoder = t.device.createRenderBundleEncoder({
-    colorFormats: ['rgba8unorm'] });
-
+    colorFormats: ['rgba8unorm']
+  });
 
   const kBufferCount = 4;
   const buffers = [];

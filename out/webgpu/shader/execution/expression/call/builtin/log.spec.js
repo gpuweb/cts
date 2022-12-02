@@ -34,8 +34,8 @@ export const d = makeCaseCache('log', {
     ...biasedRange(2.0, 2 ** 32, 1000),
     ...fullF32Range()].
     map((x) => makeCase(x));
-  } });
-
+  }
+});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

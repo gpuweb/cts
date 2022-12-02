@@ -88,8 +88,8 @@ export const d = makeCaseCache('modf', {
   },
   f32_vec4_whole: () => {
     return vectorTestValues(4, true).map(makeVectorCaseWhole);
-  } });
-
+  }
+});
 
 g.test('f32_fract').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

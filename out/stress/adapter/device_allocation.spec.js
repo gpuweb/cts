@@ -18,8 +18,8 @@ const kAdapterTypeOptions =
 {
   'low-power': { powerPreference: 'low-power', forceFallbackAdapter: false },
   'high-performance': { powerPreference: 'high-performance', forceFallbackAdapter: false },
-  'fallback': { powerPreference: undefined, forceFallbackAdapter: true } };
-
+  'fallback': { powerPreference: undefined, forceFallbackAdapter: true }
+};
 /** List of all adapter hint types. */
 const kAdapterTypes = keysOf(kAdapterTypeOptions);
 
@@ -58,21 +58,21 @@ async function createDeviceAndComputeCommands(adapter) {
                   buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] +
                     ${pipelineIndex}u;
               }
-            ` }),
-
-        entryPoint: 'main' } });
-
-
+            `
+        }),
+        entryPoint: 'main'
+      }
+    });
     for (let bindgroupIndex = 0; bindgroupIndex < kNumBindgroups; ++bindgroupIndex) {
       const buffer = device.createBuffer({
         size: kBufferSize,
-        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC });
-
+        usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+      });
       device.queue.writeBuffer(buffer, 0, kBufferData, 0, kBufferData.length);
       const bindgroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer } }] });
-
+        entries: [{ binding: 0, resource: { buffer } }]
+      });
 
       const encoder = device.createCommandEncoder();
       const pass = encoder.beginComputePass();
@@ -127,8 +127,8 @@ async function createDeviceAndRenderCommands(adapter) {
           @fragment fn fmain() -> @location(0) vec4<f32> {
             return vec4<f32>(${pipelineIndex}.0 / ${kNumPipelines}.0, 0.0, 0.0, 1.0);
           }
-        ` });
-
+        `
+    });
     const pipeline = device.createRenderPipeline({
       layout: device.createPipelineLayout({
         bindGroupLayouts: [
@@ -137,35 +137,35 @@ async function createDeviceAndRenderCommands(adapter) {
           {
             binding: 0,
             visibility: GPUShaderStage.VERTEX,
-            buffer: { type: 'uniform' } }] })] }),
+            buffer: { type: 'uniform' }
+          }]
 
+        })]
 
-
-
-
+      }),
       vertex: { module, entryPoint: 'vmain', buffers: [] },
       primitive: { topology: 'point-list' },
       fragment: {
         targets: [{ format: 'rgba8unorm' }],
         module,
-        entryPoint: 'fmain' } });
-
-
+        entryPoint: 'fmain'
+      }
+    });
     for (let bindgroupIndex = 0; bindgroupIndex < kNumBindgroups; ++bindgroupIndex) {
       const buffer = device.createBuffer({
         size: kSize * kSize * 4,
-        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-
+        usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+      });
       device.queue.writeBuffer(buffer, 0, kBufferData, 0, kBufferData.length);
       const bindgroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
-        entries: [{ binding: 0, resource: { buffer } }] });
-
+        entries: [{ binding: 0, resource: { buffer } }]
+      });
       const texture = device.createTexture({
         size: [kSize, kSize],
         usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-        format: 'rgba8unorm' });
-
+        format: 'rgba8unorm'
+      });
 
       const encoder = device.createCommandEncoder();
       const pass = encoder.beginRenderPass({
@@ -173,10 +173,10 @@ async function createDeviceAndRenderCommands(adapter) {
         {
           view: texture.createView(),
           loadOp: 'load',
-          storeOp: 'store' }] });
+          storeOp: 'store'
+        }]
 
-
-
+      });
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindgroup);
       pass.draw(kSize * kSize);
@@ -204,8 +204,8 @@ async function createDeviceAndBuffers(adapter) {
   for (let memory = 0; memory < kTotalMemorySize; memory += kMemoryBlockSize) {
     const buffer = device.createBuffer({
       size: kMemoryBlockSize,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
-
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+    });
 
     // Write out to the buffer to make sure that it has backing memory.
     device.queue.writeBuffer(buffer, 0, kMemoryBlockData, 0, kMemoryBlockData.length);

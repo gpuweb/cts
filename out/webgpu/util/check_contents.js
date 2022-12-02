@@ -63,9 +63,9 @@ expected)
   {
     predicatePrinter: [
     { leftHeader: 'between', getValueForCell: (index) => expected[0](index) },
-    { leftHeader: 'and', getValueForCell: (index) => expected[1](index) }] });
+    { leftHeader: 'and', getValueForCell: (index) => expected[1](index) }]
 
-
+  });
 
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
@@ -99,9 +99,9 @@ expected)
   {
     predicatePrinter: [
     { leftHeader: 'between', getValueForCell: (index) => expectedF32[0][index] },
-    { leftHeader: 'and', getValueForCell: (index) => expectedF32[1][index] }] });
+    { leftHeader: 'and', getValueForCell: (index) => expectedF32[1][index] }]
 
-
+  });
 
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expectedF32 })) : undefined;
@@ -121,9 +121,9 @@ expected)
   {
     predicatePrinter: [
     { leftHeader: 'either', getValueForCell: (index) => expected[0][index] },
-    { leftHeader: 'or', getValueForCell: (index) => expected[1][index] }] });
+    { leftHeader: 'or', getValueForCell: (index) => expected[1][index] }]
 
-
+  });
 
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
@@ -154,8 +154,8 @@ actual,
 generator)
 {
   const error = checkElementsPassPredicate(actual, (index, value) => value === generator(index), {
-    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: (index) => generator(index) }] });
-
+    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: (index) => generator(index) }]
+  });
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ generator })) : undefined;
 }
@@ -219,8 +219,8 @@ predicate,
 
   const opts = {
     fillToWidth: 120,
-    numberToString };
-
+    numberToString
+  };
   const msg = `Array had unexpected contents at indices ${failedElementsFirst} through ${failedElementsLast}.
  Starting at index ${printElementsStart}:
 ${generatePrettyTable(opts, [
@@ -229,8 +229,8 @@ ${generatePrettyTable(opts, [
   ...printExpected])
   }`;
   return new ErrorWithExtra(msg, () => ({
-    actual: actual.slice() }));
-
+    actual: actual.slice()
+  }));
 }
 
 // Helper helpers

@@ -17,12 +17,10 @@ const kPlainTypeInfo = {
     suffix: '',
     fractionDigits: 0,
   },
-
   u32: {
     suffix: 'u',
     fractionDigits: 0,
   },
-
   f32: {
     suffix: '',
     fractionDigits: 4,

@@ -74,7 +74,6 @@ g.test('buffer,device_mismatch')
       size: 16,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
     });
-
     t.trackForCleanup(buffer);
 
     const texture = t.device.createTexture({

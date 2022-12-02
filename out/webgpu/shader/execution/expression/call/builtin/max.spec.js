@@ -59,8 +59,8 @@ export const d = makeCaseCache('max', {
     });
 
     return cases;
-  } });
-
+  }
+});
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').

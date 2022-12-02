@@ -105,8 +105,8 @@ if (dataPath !== undefined) {
           }
         });
       });
-    } });
-
+    }
+  });
 }
 if (verbose) {
   dataCache.setDebugLogger(console.log);

@@ -73,13 +73,11 @@ g.test('stencil_clear_value')
       size: kSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
-
     const colorTexture = t.device.createTexture({
       format: colorFormat,
       size: kSize,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
-
     const renderPipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -97,10 +95,8 @@ g.test('stencil_clear_value')
               return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
       },
-
       fragment: {
         module: t.device.createShaderModule({
           code: `
@@ -109,23 +105,19 @@ g.test('stencil_clear_value')
               return vec4<f32>(0.0, 1.0, 0.0, 1.0);
             }`,
         }),
-
         entryPoint: 'main',
         targets: [{ format: colorFormat }],
       },
-
       depthStencil: {
         format: stencilFormat,
         depthCompare: 'always',
         stencilFront: {
           compare: 'equal',
         },
-
         stencilBack: {
           compare: 'equal',
         },
       },
-
       primitive: {
         topology: 'triangle-list',
       },
@@ -151,7 +143,6 @@ g.test('stencil_clear_value')
       stencilStoreOp: 'store',
       stencilClearValue,
     };
-
     if (kTextureFormatInfo[stencilFormat].depth) {
       depthStencilAttachment.depthClearValue = 0;
       depthStencilAttachment.depthLoadOp = 'clear';
@@ -169,7 +160,6 @@ g.test('stencil_clear_value')
 
       depthStencilAttachment,
     });
-
     renderPassEncoder.setPipeline(renderPipeline);
     renderPassEncoder.setStencilReference(stencilReference);
     renderPassEncoder.draw(6);
@@ -179,18 +169,15 @@ g.test('stencil_clear_value')
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
       size: 4,
     });
-
     t.trackForCleanup(destinationBuffer);
     encoder.copyTextureToBuffer(
       {
         texture: stencilTexture,
         aspect: 'stencil-only',
       },
-
       {
         buffer: destinationBuffer,
       },
-
       [1, 1, 1]
     );
 
@@ -200,6 +187,5 @@ g.test('stencil_clear_value')
       size: [1, 1, 1],
       exp: { R: 0, G: 1, B: 0, A: 1 },
     });
-
     t.expectGPUBufferValuesEqual(destinationBuffer, new Uint8Array([expectedStencilValue]));
   });
