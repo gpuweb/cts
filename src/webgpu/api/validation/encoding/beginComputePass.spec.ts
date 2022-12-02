@@ -9,11 +9,9 @@ import { ValidationTest } from '../validation_test.js';
 class F extends ValidationTest {
   tryComputePass(success: boolean, descriptor: GPUComputePassDescriptor): void {
     const encoder = this.device.createCommandEncoder();
-    const computePass = encoder.beginComputePass(descriptor);
-    computePass.end();
 
     this.expectValidationError(() => {
-      encoder.finish();
+      encoder.beginComputePass(descriptor);
     }, !success);
   }
 }

@@ -55,21 +55,19 @@ g.test('store_op_and_read_only')
     const depthAttachmentView = depthAttachment.createView();
 
     const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [],
-      depthStencilAttachment: {
-        view: depthAttachmentView,
-        depthLoadOp: 'load',
-        depthStoreOp,
-        depthReadOnly,
-        stencilLoadOp: 'load',
-        stencilStoreOp,
-        stencilReadOnly,
-      },
-    });
-    pass.end();
 
     t.expectValidationError(() => {
-      encoder.finish();
+      encoder.beginRenderPass({
+        colorAttachments: [],
+        depthStencilAttachment: {
+          view: depthAttachmentView,
+          depthLoadOp: 'load',
+          depthStoreOp,
+          depthReadOnly,
+          stencilLoadOp: 'load',
+          stencilStoreOp,
+          stencilReadOnly,
+        },
+      });
     }, !_valid);
   });

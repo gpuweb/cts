@@ -34,10 +34,12 @@ Tests that set occlusion query set with all types in render pass descriptor:
     const type = t.params.type;
     const querySet = type === undefined ? undefined : createQuerySetWithType(t, type, 1);
 
-    const encoder = t.createEncoder('render pass', { occlusionQuerySet: querySet });
-    encoder.encoder.beginOcclusionQuery(0);
-    encoder.encoder.endOcclusionQuery();
-    encoder.validateFinish(type === 'occlusion');
+    t.expectValidationError(() => {
+      const encoder = t.createEncoder('render pass', { occlusionQuerySet: querySet });
+      encoder.encoder.beginOcclusionQuery(0);
+      encoder.encoder.endOcclusionQuery();
+      encoder.validateFinish(type === 'occlusion');
+    }, type === 'timestamp');
   });
 
 g.test('occlusion_query,invalid_query_set')
@@ -50,10 +52,9 @@ Tests that begin occlusion query with a invalid query set that failed during cre
   .fn(t => {
     const occlusionQuerySet = t.createQuerySetWithState(t.params.querySetState);
 
-    const encoder = t.createEncoder('render pass', { occlusionQuerySet });
-    encoder.encoder.beginOcclusionQuery(0);
-    encoder.encoder.endOcclusionQuery();
-    encoder.validateFinishAndSubmitGivenState(t.params.querySetState);
+    t.expectValidationError(() => {
+      t.createEncoder('render pass', { occlusionQuerySet });
+    }, t.params.querySetState === 'invalid');
   });
 
 g.test('occlusion_query,query_index')

@@ -82,28 +82,28 @@ g.test('color_attachments,device_mismatch')
       ? t.getDeviceMismatchedRenderTexture()
       : t.getRenderTexture();
 
-    const encoder = t.createEncoder('non-pass');
-    const pass = encoder.encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: view0Texture.createView(),
-          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-          loadOp: 'clear',
-          storeOp: 'store',
-          resolveTarget: target0Texture.createView(),
-        },
-        {
-          view: view1Texture.createView(),
-          clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
-          loadOp: 'clear',
-          storeOp: 'store',
-          resolveTarget: target1Texture.createView(),
-        },
-      ],
-    });
-    pass.end();
-
-    encoder.validateFinish(!mismatched);
+    t.expectValidationError(() => {
+      const encoder = t.createEncoder('non-pass');
+      const pass = encoder.encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: view0Texture.createView(),
+            clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+            resolveTarget: target0Texture.createView(),
+          },
+          {
+            view: view1Texture.createView(),
+            clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+            resolveTarget: target1Texture.createView(),
+          },
+        ],
+      });
+      pass.end();
+    }, mismatched);
   });
 
 g.test('depth_stencil_attachment,device_mismatch')
@@ -127,22 +127,22 @@ g.test('depth_stencil_attachment,device_mismatch')
       ? t.getDeviceMismatchedTexture(descriptor)
       : t.device.createTexture(descriptor);
 
-    const encoder = t.createEncoder('non-pass');
-    const pass = encoder.encoder.beginRenderPass({
-      colorAttachments: [],
-      depthStencilAttachment: {
-        view: depthStencilTexture.createView(),
-        depthClearValue: 0,
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store',
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
-      },
-    });
-    pass.end();
-
-    encoder.validateFinish(!mismatched);
+    t.expectValidationError(() => {
+      const encoder = t.createEncoder('non-pass');
+      const pass = encoder.encoder.beginRenderPass({
+        colorAttachments: [],
+        depthStencilAttachment: {
+          view: depthStencilTexture.createView(),
+          depthClearValue: 0,
+          depthLoadOp: 'clear',
+          depthStoreOp: 'store',
+          stencilClearValue: 0,
+          stencilLoadOp: 'clear',
+          stencilStoreOp: 'store',
+        },
+      });
+      pass.end();
+    }, mismatched);
   });
 
 g.test('occlusion_query_set,device_mismatch')
@@ -163,8 +163,9 @@ g.test('occlusion_query_set,device_mismatch')
     });
     t.trackForCleanup(occlusionQuerySet);
 
-    const encoder = t.createEncoder('render pass', { occlusionQuerySet });
-    encoder.validateFinish(!mismatched);
+    t.expectValidationError(() => {
+      t.createEncoder('render pass', { occlusionQuerySet });
+    }, mismatched);
   });
 
 g.test('timestamp_query_set,device_mismatch')
@@ -195,17 +196,17 @@ g.test('timestamp_query_set,device_mismatch')
     });
 
     const encoder = t.createEncoder('non-pass');
-    const pass = encoder.encoder.beginRenderPass({
-      colorAttachments: [
-        {
-          view: colorTexture.createView(),
-          loadOp: 'load',
-          storeOp: 'store',
-        },
-      ],
-      timestampWrites: [timestampWrite],
-    });
-    pass.end();
-
-    encoder.validateFinish(!mismatched);
+    t.expectValidationError(() => {
+      const pass = encoder.encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorTexture.createView(),
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+        timestampWrites: [timestampWrite],
+      });
+      pass.end();
+    }, mismatched);
   });

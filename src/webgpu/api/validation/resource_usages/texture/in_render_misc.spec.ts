@@ -186,6 +186,10 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
         view: depthStencilTexture.createView(),
         depthReadOnly: depthStencilReadOnly,
         stencilReadOnly: depthStencilReadOnly,
+        depthLoadOp: depthStencilReadOnly ? undefined : 'load',
+        depthStoreOp: depthStencilReadOnly ? undefined : 'store',
+        stencilLoadOp: depthStencilReadOnly ? undefined : 'load',
+        stencilStoreOp: depthStencilReadOnly ? undefined : 'store',
       },
     });
     renderPassEncoder.setBindGroup(0, conflictedToNonReadOnlyAttachmentBindGroup);

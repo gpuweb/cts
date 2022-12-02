@@ -204,7 +204,20 @@ g.test('non_pass_commands')
           break;
         case 'beginRenderPass':
           {
-            encoder.beginRenderPass({ colorAttachments: [] });
+            const colorTexture = t.device.createTexture({
+              format: 'rgba8unorm',
+              size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+              usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            });
+            encoder.beginRenderPass({
+              colorAttachments: [
+                {
+                  view: colorTexture.createView(),
+                  loadOp: 'load',
+                  storeOp: 'store',
+                },
+              ],
+            });
           }
           break;
         case 'clearBuffer':

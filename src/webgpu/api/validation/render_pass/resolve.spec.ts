@@ -180,13 +180,11 @@ Test various validation behaviors when a resolveTarget is provided.
         }
       }
       const encoder = t.device.createCommandEncoder();
-      const pass = encoder.beginRenderPass({
-        colorAttachments: renderPassColorAttachmentDescriptors,
-      });
-      pass.end();
 
       t.expectValidationError(() => {
-        encoder.finish();
+        encoder.beginRenderPass({
+          colorAttachments: renderPassColorAttachmentDescriptors,
+        });
       }, !_valid);
     }
   });
