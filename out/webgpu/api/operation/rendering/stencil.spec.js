@@ -17,6 +17,7 @@ const kGreenStencilColor = new Float32Array([0.0, 1.0, 0.0, 1.0]);
 
 
 
+
 class StencilTest extends GPUTest {
   checkStencilCompareFunction(
   compareFunction,
@@ -45,7 +46,7 @@ class StencilTest extends GPUTest {
       stencilBack: baseStencilState
     };
 
-    const state = {
+    const testState = {
       format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
@@ -53,16 +54,15 @@ class StencilTest extends GPUTest {
       stencilBack: stencilState
     };
 
-    const testParams = [{ state, color: kGreenStencilColor }];
-    this.runStencilStateTest(baseState, testParams, stencilRefValue, expectedColor);
+    const testStates = [
+    // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
+    { state: baseState, color: kBaseColor, stencil: 1 },
+    { state: testState, color: kGreenStencilColor, stencil: stencilRefValue }];
+
+    this.runStencilStateTest(testStates, expectedColor);
   }
 
-  runStencilStateTest(
-  baseState,
-  testStates,
-  stencilRefValue,
-  expectedColor)
-  {
+  runStencilStateTest(testStates, expectedColor) {
     const renderTargetFormat = 'rgba8unorm';
     const renderTarget = this.device.createTexture({
       format: renderTargetFormat,
@@ -99,25 +99,12 @@ class StencilTest extends GPUTest {
       depthStencilAttachment
     });
 
-    // Draw the base triangle with stencil reference 1.
-    // This clears the stencil buffer to 1.
-    {
-      const testPipeline = this.createRenderPipelineForTest(baseState);
-      pass.setPipeline(testPipeline);
-      pass.setStencilReference(1);
-      pass.setBindGroup(
-      0,
-      this.createBindGroupForTest(testPipeline.getBindGroupLayout(0), kBaseColor));
-
-      pass.draw(1);
-    }
-
     // Draw a triangle with the given stencil reference and the comparison function.
     // The color will be kGreenStencilColor if the stencil test passes, and kBaseColor if not.
     for (const test of testStates) {
       const testPipeline = this.createRenderPipelineForTest(test.state);
       pass.setPipeline(testPipeline);
-      pass.setStencilReference(stencilRefValue);
+      pass.setStencilReference(test.stencil);
       pass.setBindGroup(
       0,
       this.createBindGroupForTest(testPipeline.getBindGroupLayout(0), test.color));
@@ -260,6 +247,7 @@ fn(async (t) => {
   const { operation, _expectedColor } = t.params;
 
   const depthSpencilFormat = 'depth24plus-stencil8';
+  const stencilRefValue = 2;
 
   const baseStencilState = {
     compare: 'always',
@@ -310,13 +298,88 @@ fn(async (t) => {
   };
 
   const testStates = [
+  // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
+  { state: baseState, color: kBaseColor, stencil: 1 },
   // Always fails because the ref (2) is less than the initial stencil contents (1).
   // Therefore red is never drawn, and the stencil contents may be updated according to
   // `operation`.
-  { state: failState, color: kRedStencilColor },
+  { state: failState, color: kRedStencilColor, stencil: stencilRefValue },
   // Passes iff the ref (2) equals the current stencil contents (1 or 2).
-  { state: passState, color: kGreenStencilColor }];
+  { state: passState, color: kGreenStencilColor, stencil: stencilRefValue }];
 
-  t.runStencilStateTest(baseState, testStates, 2, _expectedColor);
+  t.runStencilStateTest(testStates, _expectedColor);
+});
+
+g.test('stencil_read_write_mask').
+desc(
+`
+  Tests that setting a stencil read/write masks work. Basically, The base triangle sets 3 to the
+  stencil, and then try to draw a triangle with different stencil values.
+    - In case that 'write' mask is 1,
+      * If the stencil of the triangle is 1, it draws because
+        'base stencil(3) & write mask(1) == triangle stencil(1)'.
+      * If the stencil of the triangle is 2, it does not draw because
+        'base stencil(3) & write mask(1) != triangle stencil(2)'.
+
+    - In case that 'read' mask is 2,
+      * If the stencil of the triangle is 1, it does not draw because
+        'base stencil(3) & read mask(2) != triangle stencil(1)'.
+      * If the stencil of the triangle is 2, it draws because
+        'base stencil(3) & read mask(2) == triangle stencil(2)'.
+  `).
+
+params((u) =>
+u //
+.combineWithParams([
+{ maskType: 'write', stencilRefValue: 1, _expectedColor: kRedStencilColor },
+{ maskType: 'write', stencilRefValue: 2, _expectedColor: kBaseColor },
+{ maskType: 'read', stencilRefValue: 1, _expectedColor: kBaseColor },
+{ maskType: 'read', stencilRefValue: 2, _expectedColor: kRedStencilColor }])).
+
+
+fn(async (t) => {
+  const { maskType, stencilRefValue, _expectedColor } = t.params;
+
+  const depthSpencilFormat = 'depth24plus-stencil8';
+
+  const baseStencilState = {
+    compare: 'always',
+    failOp: 'keep',
+    passOp: 'replace'
+  };
+
+  const stencilState = {
+    compare: 'equal',
+    failOp: 'keep',
+    passOp: 'keep'
+  };
+
+  const baseState = {
+    format: depthSpencilFormat,
+    depthWriteEnabled: false,
+    depthCompare: 'always',
+    stencilFront: baseStencilState,
+    stencilBack: baseStencilState,
+    stencilReadMask: 0xff,
+    stencilWriteMask: maskType === 'write' ? 0x1 : 0xff
+  };
+
+  const testState = {
+    format: depthSpencilFormat,
+    depthWriteEnabled: false,
+    depthCompare: 'always',
+    stencilFront: stencilState,
+    stencilBack: stencilState,
+    stencilReadMask: maskType === 'read' ? 0x2 : 0xff,
+    stencilWriteMask: 0xff
+  };
+
+  const testStates = [
+  // Draw the base triangle with stencil reference 3. This clears the stencil buffer to 3.
+  { state: baseState, color: kBaseColor, stencil: 3 },
+  { state: testState, color: kRedStencilColor, stencil: stencilRefValue }];
+
+
+  t.runStencilStateTest(testStates, _expectedColor);
 });
 //# sourceMappingURL=stencil.spec.js.map
