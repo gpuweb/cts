@@ -313,7 +313,7 @@ g.test('stencil_fail_operation')
 g.test('stencil_read_write_mask')
   .desc(
     `
-  Tests that setting a stencil read/write masks work. Basically, The base triangle sets 1 to the
+  Tests that setting a stencil read/write masks work. Basically, The base triangle sets 3 to the
   stencil, and then try to draw a triangle with different stencil values.
     - In case that 'write' mask is 1,
       * If the stencil of the triangle is 1, it draws because
