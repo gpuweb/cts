@@ -52,8 +52,25 @@ Tests that begin occlusion query with a invalid query set that failed during cre
   .fn(t => {
     const occlusionQuerySet = t.createQuerySetWithState(t.params.querySetState);
 
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const colorTextureView = colorTexture.createView();
+
+    const encoder = t.createEncoder('non-pass');
     t.expectValidationError(() => {
-      t.createEncoder('render pass', { occlusionQuerySet });
+      encoder.encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorTextureView,
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+        occlusionQuerySet,
+      });
     }, t.params.querySetState === 'invalid');
   });
 

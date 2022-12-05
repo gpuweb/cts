@@ -185,6 +185,12 @@ g.test('non_pass_commands')
       format: textureFormat,
       usage: GPUTextureUsage.COPY_DST,
     });
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const colorTextureView = colorTexture.createView();
 
     const querySet = t.device.createQuerySet({
       type: command === 'writeTimestamp' ? 'timestamp' : 'occlusion',
@@ -204,15 +210,10 @@ g.test('non_pass_commands')
           break;
         case 'beginRenderPass':
           {
-            const colorTexture = t.device.createTexture({
-              format: 'rgba8unorm',
-              size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-              usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            });
             encoder.beginRenderPass({
               colorAttachments: [
                 {
-                  view: colorTexture.createView(),
+                  view: colorTextureView,
                   loadOp: 'load',
                   storeOp: 'store',
                 },

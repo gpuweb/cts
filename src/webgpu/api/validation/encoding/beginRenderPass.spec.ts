@@ -82,27 +82,32 @@ g.test('color_attachments,device_mismatch')
       ? t.getDeviceMismatchedRenderTexture()
       : t.getRenderTexture();
 
+    const view0TextureView = view0Texture.createView();
+    const target0TextureView = target0Texture.createView();
+
+    const view1TextureView = view1Texture.createView();
+    const target1TextureView = target1Texture.createView();
+
+    const encoder = t.createEncoder('non-pass');
     t.expectValidationError(() => {
-      const encoder = t.createEncoder('non-pass');
-      const pass = encoder.encoder.beginRenderPass({
+      encoder.encoder.beginRenderPass({
         colorAttachments: [
           {
-            view: view0Texture.createView(),
+            view: view0TextureView,
             clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
             loadOp: 'clear',
             storeOp: 'store',
-            resolveTarget: target0Texture.createView(),
+            resolveTarget: target0TextureView,
           },
           {
-            view: view1Texture.createView(),
+            view: view1TextureView,
             clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
             loadOp: 'clear',
             storeOp: 'store',
-            resolveTarget: target1Texture.createView(),
+            resolveTarget: target1TextureView,
           },
         ],
       });
-      pass.end();
     }, mismatched);
   });
 
@@ -126,13 +131,14 @@ g.test('depth_stencil_attachment,device_mismatch')
     const depthStencilTexture = mismatched
       ? t.getDeviceMismatchedTexture(descriptor)
       : t.device.createTexture(descriptor);
+    const depthStencilTextureView = depthStencilTexture.createView();
 
+    const encoder = t.createEncoder('non-pass');
     t.expectValidationError(() => {
-      const encoder = t.createEncoder('non-pass');
-      const pass = encoder.encoder.beginRenderPass({
+      encoder.encoder.beginRenderPass({
         colorAttachments: [],
         depthStencilAttachment: {
-          view: depthStencilTexture.createView(),
+          view: depthStencilTextureView,
           depthClearValue: 0,
           depthLoadOp: 'clear',
           depthStoreOp: 'store',
@@ -141,7 +147,6 @@ g.test('depth_stencil_attachment,device_mismatch')
           stencilStoreOp: 'store',
         },
       });
-      pass.end();
     }, mismatched);
   });
 
@@ -163,8 +168,25 @@ g.test('occlusion_query_set,device_mismatch')
     });
     t.trackForCleanup(occlusionQuerySet);
 
+    const colorTexture = t.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 4, height: 4, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const colorTextureView = colorTexture.createView();
+
+    const encoder = t.createEncoder('non-pass');
     t.expectValidationError(() => {
-      t.createEncoder('render pass', { occlusionQuerySet });
+      encoder.encoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorTextureView,
+            loadOp: 'load',
+            storeOp: 'store',
+          },
+        ],
+        occlusionQuerySet,
+      });
     }, mismatched);
   });
 
@@ -194,19 +216,19 @@ g.test('timestamp_query_set,device_mismatch')
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
+    const colorTextureView = colorTexture.createView();
 
     const encoder = t.createEncoder('non-pass');
     t.expectValidationError(() => {
-      const pass = encoder.encoder.beginRenderPass({
+      encoder.encoder.beginRenderPass({
         colorAttachments: [
           {
-            view: colorTexture.createView(),
+            view: colorTextureView,
             loadOp: 'load',
             storeOp: 'store',
           },
         ],
         timestampWrites: [timestampWrite],
       });
-      pass.end();
     }, mismatched);
   });

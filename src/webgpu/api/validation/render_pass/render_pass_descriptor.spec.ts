@@ -76,22 +76,17 @@ class F extends ValidationTest {
     };
   }
 
-  // tryRenderPass2(success: boolean, descriptor: GPURenderPassDescriptor): void {
-  //   const commandEncoder = this.device.createCommandEncoder();
-  //   const renderPass = commandEncoder.beginRenderPass(descriptor);
-  //   renderPass.end();
-
-  //   this.expectValidationError(() => {
-  //     commandEncoder.finish();
-  //   }, !success);
-  // }
-
   tryRenderPass(success: boolean, descriptor: GPURenderPassDescriptor): void {
     const commandEncoder = this.device.createCommandEncoder();
 
+    let pass: GPURenderPassEncoder;
     this.expectValidationError(() => {
-      commandEncoder.beginRenderPass(descriptor);
+      pass = commandEncoder.beginRenderPass(descriptor);
     }, !success);
+    this.expectValidationError(() => {
+      pass.end();
+    }, !success);
+    commandEncoder.finish();
   }
 }
 

@@ -10,9 +10,14 @@ class F extends ValidationTest {
   tryComputePass(success: boolean, descriptor: GPUComputePassDescriptor): void {
     const encoder = this.device.createCommandEncoder();
 
+    let pass: GPUComputePassEncoder;
     this.expectValidationError(() => {
-      encoder.beginComputePass(descriptor);
+      pass = encoder.beginComputePass(descriptor);
     }, !success);
+    this.expectValidationError(() => {
+      pass.end();
+    }, !success);
+    encoder.finish();
   }
 }
 
