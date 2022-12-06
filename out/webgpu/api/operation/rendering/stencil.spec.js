@@ -19,6 +19,65 @@ const kGreenStencilColor = new Float32Array([0.0, 1.0, 0.0, 1.0]);
 
 
 class StencilTest extends GPUTest {
+  checkStencilOperation(
+  stencilOperation,
+  initialStencil,
+  referenceStencil,
+  expectedStencil)
+  {
+    const depthStencilFormat = 'depth24plus-stencil8';
+
+    const baseStencilState = {
+      compare: 'always',
+      failOp: 'keep',
+      passOp: 'replace'
+    };
+
+    const stencilState = {
+      compare: 'always',
+      failOp: 'keep',
+      passOp: stencilOperation
+    };
+
+    const stencilState2 = {
+      compare: 'equal',
+      failOp: 'keep',
+      passOp: 'keep'
+    };
+
+    const baseState = {
+      format: depthStencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: baseStencilState,
+      stencilBack: baseStencilState
+    };
+
+    const testState = {
+      format: depthStencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: stencilState,
+      stencilBack: stencilState
+    };
+
+    const testState2 = {
+      format: depthStencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: stencilState2,
+      stencilBack: stencilState2
+    };
+
+    const testStates = [
+    // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
+    { state: baseState, color: kBaseColor, stencil: initialStencil },
+    { state: testState, color: kRedStencilColor, stencil: referenceStencil },
+    { state: testState2, color: kGreenStencilColor, stencil: expectedStencil }];
+
+    this.runStencilStateTest(testStates, kGreenStencilColor);
+  }
+
   checkStencilCompareFunction(
   compareFunction,
   stencilRefValue,
@@ -222,7 +281,84 @@ u //
 
 fn(async (t) => {
   const { stencilCompare, stencilRefValue, _expectedColor } = t.params;
+
   t.checkStencilCompareFunction(stencilCompare, stencilRefValue, _expectedColor);
+});
+
+g.test('stencil_passOp_operation').
+desc(
+`
+    Test that each stencil operation works with the given stencil values correctly as expected.
+
+    TODO: Need to test failOp and depthFailOp as well.
+  `).
+
+params((u) =>
+u //
+.combineWithParams([
+{ passOp: 'keep', initialStencil: 1, referenceStencil: 3, expectedStencil: 1 },
+{ passOp: 'zero', initialStencil: 1, referenceStencil: 3, expectedStencil: 0 },
+{ passOp: 'replace', initialStencil: 1, referenceStencil: 3, expectedStencil: 3 },
+{
+  passOp: 'invert',
+  initialStencil: 0xf0,
+  referenceStencil: 3,
+  expectedStencil: 0x0f
+},
+{
+  passOp: 'increment-clamp',
+  initialStencil: 1,
+  referenceStencil: 3,
+  expectedStencil: 2
+},
+{
+  passOp: 'increment-clamp',
+  initialStencil: 0xff,
+  referenceStencil: 3,
+  expectedStencil: 0xff
+},
+{
+  passOp: 'increment-wrap',
+  initialStencil: 1,
+  referenceStencil: 3,
+  expectedStencil: 2
+},
+{
+  passOp: 'increment-wrap',
+  initialStencil: 0xff,
+  referenceStencil: 3,
+  expectedStencil: 0
+},
+{
+  passOp: 'decrement-clamp',
+  initialStencil: 1,
+  referenceStencil: 3,
+  expectedStencil: 0
+},
+{
+  passOp: 'decrement-clamp',
+  initialStencil: 0,
+  referenceStencil: 3,
+  expectedStencil: 0
+},
+{
+  passOp: 'decrement-wrap',
+  initialStencil: 1,
+  referenceStencil: 3,
+  expectedStencil: 0
+},
+{
+  passOp: 'decrement-wrap',
+  initialStencil: 0,
+  referenceStencil: 3,
+  expectedStencil: 0xff
+}])).
+
+
+fn(async (t) => {
+  const { passOp, initialStencil, referenceStencil, expectedStencil } = t.params;
+
+  t.checkStencilOperation(passOp, initialStencil, referenceStencil, expectedStencil);
 });
 
 g.test('stencil_fail_operation').
