@@ -13,7 +13,7 @@ import {
   remainderInterval,
   subtractionInterval,
 } from '../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../util/math.js';
+import { fullF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, makeBinaryToF32IntervalCase, run } from '../expression.js';
 
@@ -27,8 +27,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
     };
 
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   addition_const: () => {
@@ -36,8 +38,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, additionInterval);
     };
 
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   subtraction_non_const: () => {
@@ -45,8 +49,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
     };
 
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   subtraction_const: () => {
@@ -54,8 +60,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, subtractionInterval);
     };
 
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   multiplication_non_const: () => {
@@ -63,8 +71,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
     };
 
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   multiplication_const: () => {
@@ -72,8 +82,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, multiplicationInterval);
     };
 
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   division_non_const: () => {
@@ -81,8 +93,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
     };
 
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   division_const: () => {
@@ -90,8 +104,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, divisionInterval);
     };
 
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   remainder_non_const: () => {
@@ -99,8 +115,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
     };
 
-    return vectorTestValues(2, false).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
   remainder_const: () => {
@@ -108,8 +126,10 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       return makeBinaryToF32IntervalCase(lhs, rhs, remainderInterval);
     };
 
-    return vectorTestValues(2, true).map(v => {
-      return makeCase(v[0], v[1]);
+    return fullF32Range().flatMap(x => {
+      return fullF32Range().map(y => {
+        return makeCase(x, y);
+      });
     });
   },
 });
