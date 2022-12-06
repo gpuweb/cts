@@ -83,9 +83,7 @@ class F extends ValidationTest {
     this.expectValidationError(() => {
       pass = commandEncoder.beginRenderPass(descriptor);
     }, !success);
-    this.expectValidationError(() => {
-      pass.end();
-    }, !success);
+    pass.end();
     this.expectValidationError(() => {
       commandEncoder.finish();
     }, !success);
