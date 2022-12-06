@@ -10,7 +10,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { crossInterval } from '../../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../../util/math.js';
+import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
@@ -29,8 +29,8 @@ export const d = makeCaseCache('cross', {
       return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
     };
 
-    return vectorTestValues(3, false).flatMap(i => {
-      return vectorTestValues(3, false).map(j => {
+    return vectorF32Range(3).flatMap(i => {
+      return vectorF32Range(3).map(j => {
         return makeCase(i, j);
       });
     });

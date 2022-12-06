@@ -18,7 +18,6 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kValue } from '../../../../../util/constants.js';
 import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
 import { maxInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
@@ -51,7 +50,6 @@ export const d = makeCaseCache('max', {
 
     const cases: Array<Case> = [];
     const numeric_range = fullF32Range();
-    numeric_range.push(kValue.f32.infinity.positive, kValue.f32.infinity.negative);
     numeric_range.forEach(lhs => {
       numeric_range.forEach(rhs => {
         cases.push(makeCase(lhs, rhs));

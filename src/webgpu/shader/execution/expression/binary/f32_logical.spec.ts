@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
 import { bool, f32, Scalar, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, vectorTestValues } from '../../../../util/math.js';
+import { flushSubnormalScalarF32, vectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, Case, run } from '../expression.js';
 
@@ -46,7 +46,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) === (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -55,7 +55,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) === (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -64,7 +64,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) !== (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -73,7 +73,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) !== (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -82,7 +82,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) < (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -91,7 +91,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) < (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -100,7 +100,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) <= (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -109,7 +109,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) <= (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -118,7 +118,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) > (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -127,7 +127,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) > (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -136,7 +136,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) >= (rhs.value as number);
     };
 
-    return vectorTestValues(2, false).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -145,7 +145,7 @@ export const d = makeCaseCache('binary/f32_logical', {
       return (lhs.value as number) >= (rhs.value as number);
     };
 
-    return vectorTestValues(2, true).map(v => {
+    return vectorF32Range(2).map(v => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
