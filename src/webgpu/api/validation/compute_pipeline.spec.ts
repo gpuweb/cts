@@ -5,6 +5,7 @@ Note: entry point matching tests are in shader_module/entry_point.spec.ts
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { kValue } from '../../util/constants.js';
 import { TShaderStage, getShaderWithEntryPoint } from '../../util/shader.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -358,6 +359,97 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
               _ = u32(c8);
               _ = u32(c9);
               _ = u32(c10);
+            }`,
+        }),
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('overrides,value,type_error')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for constant values like inf, NaN will results in TypeError.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { constants: { cf: 1 }, _success: true }, // control
+        { constants: { cf: NaN }, _success: false },
+        { constants: { cf: Number.POSITIVE_INFINITY }, _success: false },
+        { constants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
+      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
+  )
+  .fn(async t => {
+    const { isAsync, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto' as const,
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+            override cf: f32 = 0.0;
+            @compute @workgroup_size(1) fn main () {
+              _ = cf;
+            }`,
+        }),
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor, 'TypeError');
+  });
+
+g.test('overrides,value,validation_error')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for unrepresentable constant values in compute stage.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { constants: { cu: kValue.u32.min }, _success: true },
+        { constants: { cu: kValue.u32.min - 1 }, _success: false },
+        { constants: { cu: kValue.u32.max }, _success: true },
+        { constants: { cu: kValue.u32.max + 1 }, _success: false },
+        { constants: { ci: kValue.i32.negative.min }, _success: true },
+        { constants: { ci: kValue.i32.negative.min - 1 }, _success: false },
+        { constants: { ci: kValue.i32.positive.max }, _success: true },
+        { constants: { ci: kValue.i32.positive.max + 1 }, _success: false },
+        { constants: { cf: kValue.f32.negative.min }, _success: true },
+        { constants: { cf: -Number.MAX_VALUE }, _success: false },
+        { constants: { cf: kValue.f32.positive.max }, _success: true },
+        { constants: { cf: Number.MAX_VALUE }, _success: false },
+        // Conversion to boolean can't fail
+        { constants: { cb: Number.MAX_VALUE }, _success: true },
+        { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
+      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
+  )
+  .fn(async t => {
+    const { isAsync, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto' as const,
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+          override cb: bool = false;
+          override cu: u32 = 0u;
+          override ci: i32 = 0;
+          override cf: f32 = 0.0;
+            @compute @workgroup_size(1) fn main () {
+              _ = cb;
+              _ = cu;
+              _ = ci;
+              _ = cf;
             }`,
         }),
         entryPoint: 'main',
