@@ -1,4 +1,4 @@
-import { assert, unreachable } from '../../common/util/util.js';
+import { assert } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit, kValue } from './constants.js';
@@ -639,25 +639,6 @@ export function fullU32Range(count: number = 50): Array<number> {
 
 /** Short list of f32 values of interest to test against */
 const kInterestingF32Values: number[] = [
-  Number.NEGATIVE_INFINITY,
-  kValue.f32.negative.min,
-  -10.0,
-  -1.0,
-  kValue.f32.negative.max,
-  kValue.f32.subnormal.negative.min,
-  kValue.f32.subnormal.negative.max,
-  0.0,
-  kValue.f32.subnormal.positive.min,
-  kValue.f32.subnormal.positive.max,
-  kValue.f32.positive.min,
-  1.0,
-  10.0,
-  kValue.f32.positive.max,
-  Number.POSITIVE_INFINITY,
-];
-
-/** Short list of finite-only f32 values of interest to test against */
-const kInterestingF32ValuesFinite: number[] = [
   kValue.f32.negative.min,
   -10.0,
   -1.0,
@@ -685,73 +666,63 @@ const kInterestingF32ValuesFinite: number[] = [
  * specific values of interest. If there are known values of interest they
  * should be appended to this list in the test generation code.
  */
-export function sparseF32Range(finite_only: boolean): Array<number> {
-  return finite_only ? kInterestingF32ValuesFinite : kInterestingF32Values;
+export function sparseF32Range(): number[] {
+  return kInterestingF32Values;
 }
 
+const kVectorF32Values = {
+  2: kInterestingF32Values.flatMap(f => [
+    [f, 1.0],
+    [1.0, f],
+    [f, -1.0],
+    [-1.0, f],
+  ]),
+  3: kInterestingF32Values.flatMap(f => [
+    [f, 1.0, 2.0],
+    [1.0, f, 2.0],
+    [1.0, 2.0, f],
+    [f, -1.0, -2.0],
+    [-1.0, f, -2.0],
+    [-1.0, -2.0, f],
+  ]),
+  4: kInterestingF32Values.flatMap(f => [
+    [f, 1.0, 2.0, 3.0],
+    [1.0, f, 2.0, 3.0],
+    [1.0, 2.0, f, 3.0],
+    [1.0, 2.0, 3.0, f],
+    [f, -1.0, -2.0, -3.0],
+    [-1.0, f, -2.0, -3.0],
+    [-1.0, -2.0, f, -3.0],
+    [-1.0, -2.0, -3.0, f],
+  ]),
+};
+
 /**
- * Returns set of vectors, indexed by dimension and filtered by source type,
- * that contain interesting float values.
- *
+ * Returns set of vectors, indexed by dimension containing interesting float
+ * values.
  *
  * The tests do not do the simple option for coverage of computing the cartesian
  * product of all of the interesting float values N times for vecN tests,
  * because that creates a huge number of tests for vec3 and vec4, leading to
  * time outs.
- * Instead they insert the interesting f32 values into each location of the
+ *
+ *  Instead they insert the interesting f32 values into each location of the
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorTestValues(dimension: number, finite_only: boolean): number[][] {
-  switch (dimension) {
-    case 2:
-      return sparseF32Range(finite_only).flatMap(f => [
-        [f, 1.0],
-        [1.0, f],
-        [f, -1.0],
-        [-1.0, f],
-      ]);
-    case 3:
-      return sparseF32Range(finite_only).flatMap(f => [
-        [f, 1.0, 2.0],
-        [1.0, f, 2.0],
-        [1.0, 2.0, f],
-        [f, -1.0, -2.0],
-        [-1.0, f, -2.0],
-        [-1.0, -2.0, f],
-      ]);
-    case 4:
-      return sparseF32Range(finite_only).flatMap(f => [
-        [f, 1.0, 2.0, 3.0],
-        [1.0, f, 2.0, 3.0],
-        [1.0, 2.0, f, 3.0],
-        [1.0, 2.0, 3.0, f],
-        [f, -1.0, -2.0, -3.0],
-        [-1.0, f, -2.0, -3.0],
-        [-1.0, -2.0, f, -3.0],
-        [-1.0, -2.0, -3.0, f],
-      ]);
-  }
-  unreachable(`vectorTestValues is only defined for dim 2, 3, and 4`);
+export function vectorF32Range(dim: number): number[][] {
+  assert(dim === 2 || dim === 3 || dim === 4, 'vectorF32Range only accepts dimensions 2, 3, and 4');
+  return kVectorF32Values[dim];
 }
 
-/**
- * Minimal set of vectors, indexed by dimension, that contain interesting float
- * values.
- *
- * This is an even more stripped down version of `vectorTestValues` for when
- * pairs of vectors are being tested.
- * All of the interesting floats from sparseF32 are guaranteed to be tested, but
- * not in every position.
- */
-export const kVectorSparseTestValues = {
-  2: sparseF32Range(false).map((f, idx) => [idx % 2 === 0 ? f : idx, idx % 2 === 1 ? f : -idx]),
-  3: sparseF32Range(false).map((f, idx) => [
+const kSparseVectorF32Values = {
+  2: sparseF32Range().map((f, idx) => [idx % 2 === 0 ? f : idx, idx % 2 === 1 ? f : -idx]),
+  3: sparseF32Range().map((f, idx) => [
     idx % 3 === 0 ? f : idx,
     idx % 3 === 1 ? f : -idx,
     idx % 3 === 2 ? f : idx,
   ]),
-  4: sparseF32Range(false).map((f, idx) => [
+  4: sparseF32Range().map((f, idx) => [
     idx % 4 === 0 ? f : idx,
     idx % 4 === 1 ? f : -idx,
     idx % 4 === 2 ? f : idx,
@@ -759,6 +730,22 @@ export const kVectorSparseTestValues = {
   ]),
 };
 
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting float
+ * values.
+ *
+ * This is an even more stripped down version of `vectorF32Range` for when
+ * pairs of vectors are being tested.
+ * All of the interesting floats from sparseF32 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseVectorF32Range(dim: number): number[][] {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorF32Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorF32Values[dim];
+}
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
