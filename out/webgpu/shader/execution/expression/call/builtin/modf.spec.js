@@ -20,7 +20,7 @@ Returns the result_struct for the given type.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { f32, toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { modfInterval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, quantizeToF32, vectorTestValues } from '../../../../../util/math.js';
+import { fullF32Range, quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -72,22 +72,22 @@ export const d = makeCaseCache('modf', {
     return fullF32Range().map(makeCase);
   },
   f32_vec2_fract: () => {
-    return vectorTestValues(2, true).map(makeVectorCaseFract);
+    return vectorF32Range(2).map(makeVectorCaseFract);
   },
   f32_vec2_whole: () => {
-    return vectorTestValues(2, true).map(makeVectorCaseWhole);
+    return vectorF32Range(2).map(makeVectorCaseWhole);
   },
   f32_vec3_fract: () => {
-    return vectorTestValues(3, true).map(makeVectorCaseFract);
+    return vectorF32Range(3).map(makeVectorCaseFract);
   },
   f32_vec3_whole: () => {
-    return vectorTestValues(3, true).map(makeVectorCaseWhole);
+    return vectorF32Range(3).map(makeVectorCaseWhole);
   },
   f32_vec4_fract: () => {
-    return vectorTestValues(4, true).map(makeVectorCaseFract);
+    return vectorF32Range(4).map(makeVectorCaseFract);
   },
   f32_vec4_whole: () => {
-    return vectorTestValues(4, true).map(makeVectorCaseWhole);
+    return vectorF32Range(4).map(makeVectorCaseWhole);
   }
 });
 

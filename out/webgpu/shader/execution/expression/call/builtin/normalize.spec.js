@@ -10,7 +10,7 @@ Returns a unit vector in the same direction as e.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { normalizeInterval } from '../../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../../util/math.js';
+import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeVectorToVectorIntervalCase, run } from '../../expression.js';
 
@@ -20,13 +20,13 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('normalize', {
   f32_vec2: () => {
-    return vectorTestValues(2, false).map(makeCaseVecF32);
+    return vectorF32Range(2).map(makeCaseVecF32);
   },
   f32_vec3: () => {
-    return vectorTestValues(3, false).map(makeCaseVecF32);
+    return vectorF32Range(3).map(makeCaseVecF32);
   },
   f32_vec4: () => {
-    return vectorTestValues(4, false).map(makeCaseVecF32);
+    return vectorF32Range(4).map(makeCaseVecF32);
   }
 });
 

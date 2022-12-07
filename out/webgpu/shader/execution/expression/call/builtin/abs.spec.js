@@ -34,9 +34,7 @@ export const d = makeCaseCache('abs', {
       return makeUnaryToF32IntervalCase(x, absInterval);
     };
 
-    return [Number.NEGATIVE_INFINITY, ...fullF32Range(), Number.POSITIVE_INFINITY].map((x) =>
-    makeCase(x));
-
+    return fullF32Range().map(makeCase);
   },
   f32_const: () => {
     const makeCase = (x) => {

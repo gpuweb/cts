@@ -18,7 +18,7 @@ import {
   u32,
   vec4,
 } from '../../../../../util/conversion.js';
-import { quantizeToF32, vectorTestValues } from '../../../../../util/math.js';
+import { quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -49,7 +49,7 @@ g.test('pack')
       return n / kValue.f32.positive.max;
     };
 
-    const cases = vectorTestValues(4, t.params.inputSource === 'const').flatMap(v => {
+    const cases = vectorF32Range(4).flatMap(v => {
       return [makeCase(v), makeCase(v.map(normalizeF32))];
     });
 

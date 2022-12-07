@@ -29,7 +29,6 @@ export const d = makeCaseCache('atan', {
 
     return [
       // Known values
-      Number.NEGATIVE_INFINITY,
       -Math.sqrt(3),
       -1,
       -1 / Math.sqrt(3),
@@ -37,7 +36,6 @@ export const d = makeCaseCache('atan', {
       1,
       1 / Math.sqrt(3),
       Math.sqrt(3),
-      Number.POSITIVE_INFINITY,
 
       ...fullF32Range(),
     ].map(x => makeCase(x));

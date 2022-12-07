@@ -11,7 +11,7 @@ Returns the dot product of e1 and e2.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
-import { vectorTestValues } from '../../../../../util/math.js';
+import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
 
@@ -25,8 +25,8 @@ export const d = makeCaseCache('dot', {
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    return vectorTestValues(2, false).flatMap((i) => {
-      return vectorTestValues(2, false).map((j) => {
+    return vectorF32Range(2).flatMap((i) => {
+      return vectorF32Range(2).map((j) => {
         return makeCase(i, j);
       });
     });
@@ -36,8 +36,8 @@ export const d = makeCaseCache('dot', {
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    return vectorTestValues(3, false).flatMap((i) => {
-      return vectorTestValues(3, false).map((j) => {
+    return vectorF32Range(3).flatMap((i) => {
+      return vectorF32Range(3).map((j) => {
         return makeCase(i, j);
       });
     });
@@ -47,8 +47,8 @@ export const d = makeCaseCache('dot', {
       return makeVectorPairToF32IntervalCase(x, y, dotInterval);
     };
 
-    return vectorTestValues(4, false).flatMap((i) => {
-      return vectorTestValues(4, false).map((j) => {
+    return vectorF32Range(4).flatMap((i) => {
+      return vectorF32Range(4).map((j) => {
         return makeCase(i, j);
       });
     });

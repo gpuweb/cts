@@ -14,11 +14,7 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
 import { refractInterval } from '../../../../../util/f32_interval.js';
-import {
-kVectorSparseTestValues,
-quantizeToF32,
-sparseF32Range } from
-'../../../../../util/math.js';
+import { sparseVectorF32Range, quantizeToF32, sparseF32Range } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -52,9 +48,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[2].flatMap((i) => {
-    return kVectorSparseTestValues[2].flatMap((j) => {
-      return sparseF32Range(t.params.inputSource === 'const').map((k) => {
+  const cases = sparseVectorF32Range(2).flatMap((i) => {
+    return sparseVectorF32Range(2).flatMap((j) => {
+      return sparseF32Range().map((k) => {
         return makeCaseF32(i, j, k);
       });
     });
@@ -75,9 +71,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[3].flatMap((i) => {
-    return kVectorSparseTestValues[3].flatMap((j) => {
-      return sparseF32Range(t.params.inputSource === 'const').map((k) => {
+  const cases = sparseVectorF32Range(3).flatMap((i) => {
+    return sparseVectorF32Range(3).flatMap((j) => {
+      return sparseF32Range().map((k) => {
         return makeCaseF32(i, j, k);
       });
     });
@@ -98,9 +94,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = kVectorSparseTestValues[4].flatMap((i) => {
-    return kVectorSparseTestValues[4].flatMap((j) => {
-      return sparseF32Range(t.params.inputSource === 'const').map((k) => {
+  const cases = sparseVectorF32Range(4).flatMap((i) => {
+    return sparseVectorF32Range(4).flatMap((j) => {
+      return sparseF32Range().map((k) => {
         return makeCaseF32(i, j, k);
       });
     });

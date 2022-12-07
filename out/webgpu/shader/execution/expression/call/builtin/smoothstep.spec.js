@@ -28,7 +28,7 @@ export const d = makeCaseCache('smoothstep', {
     };
 
     // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range(false);
+    const values = sparseF32Range();
     const cases = [];
     values.forEach((x) => {
       values.forEach((y) => {

@@ -29,7 +29,7 @@ export const d = makeCaseCache('atan2', {
     // Using sparse, since there a N^2 cases being generated, but including extra values around 0, since that is where
     // there is a discontinuity that implementations tend to behave badly at.
     const numeric_range = [
-    ...sparseF32Range(true),
+    ...sparseF32Range(),
     ...linearRange(kValue.f32.negative.max, kValue.f32.positive.min, 10)];
 
     const cases = [];

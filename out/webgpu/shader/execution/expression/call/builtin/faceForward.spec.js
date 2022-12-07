@@ -11,7 +11,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
 import { faceForwardIntervals } from '../../../../../util/f32_interval.js';
-import { kVectorSparseTestValues, quantizeToF32 } from '../../../../../util/math.js';
+import { quantizeToF32, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -21,24 +21,18 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('faceForward', {
   f32_vec2: () => {
-    return kVectorSparseTestValues[2].flatMap((i) =>
-    kVectorSparseTestValues[2].flatMap((j) =>
-    kVectorSparseTestValues[2].map((k) => makeCase(i, j, k))));
-
+    return sparseVectorF32Range(2).flatMap((i) =>
+    sparseVectorF32Range(2).flatMap((j) => sparseVectorF32Range(2).map((k) => makeCase(i, j, k))));
 
   },
   f32_vec3: () => {
-    return kVectorSparseTestValues[3].flatMap((i) =>
-    kVectorSparseTestValues[3].flatMap((j) =>
-    kVectorSparseTestValues[3].map((k) => makeCase(i, j, k))));
-
+    return sparseVectorF32Range(3).flatMap((i) =>
+    sparseVectorF32Range(3).flatMap((j) => sparseVectorF32Range(3).map((k) => makeCase(i, j, k))));
 
   },
   f32_vec4: () => {
-    return kVectorSparseTestValues[4].flatMap((i) =>
-    kVectorSparseTestValues[4].flatMap((j) =>
-    kVectorSparseTestValues[4].map((k) => makeCase(i, j, k))));
-
+    return sparseVectorF32Range(4).flatMap((i) =>
+    sparseVectorF32Range(4).flatMap((j) => sparseVectorF32Range(4).map((k) => makeCase(i, j, k))));
 
   }
 });
