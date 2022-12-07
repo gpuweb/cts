@@ -16,9 +16,8 @@ import { fullF32Range, sparseVectorF32Range } from '../../../../../util/math.js'
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
-  Case,
-  makeBinaryToF32IntervalCase,
-  makeVectorPairToF32IntervalCase,
+  generateBinaryToF32IntervalCases,
+  generateVectorPairToF32IntervalCases,
   run,
 } from '../../expression.js';
 
@@ -28,32 +27,30 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('distance', {
   f32: () => {
-    const makeCase = (x: number, y: number): Case => {
-      return makeBinaryToF32IntervalCase(x, y, distanceInterval);
-    };
-    return fullF32Range().flatMap(i => fullF32Range().map(j => makeCase(i, j)));
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), distanceInterval);
   },
   f32_vec2: () => {
-    return sparseVectorF32Range(2).flatMap(i =>
-      sparseVectorF32Range(2).map(j => makeCaseVecF32(i, j))
+    return generateVectorPairToF32IntervalCases(
+      sparseVectorF32Range(2),
+      sparseVectorF32Range(2),
+      distanceInterval
     );
   },
   f32_vec3: () => {
-    return sparseVectorF32Range(3).flatMap(i =>
-      sparseVectorF32Range(3).map(j => makeCaseVecF32(i, j))
+    return generateVectorPairToF32IntervalCases(
+      sparseVectorF32Range(3),
+      sparseVectorF32Range(3),
+      distanceInterval
     );
   },
   f32_vec4: () => {
-    return sparseVectorF32Range(4).flatMap(i =>
-      sparseVectorF32Range(4).map(j => makeCaseVecF32(i, j))
+    return generateVectorPairToF32IntervalCases(
+      sparseVectorF32Range(4),
+      sparseVectorF32Range(4),
+      distanceInterval
     );
   },
 });
-
-/** @returns a `distance` Case for a pair of vectors of f32s input */
-const makeCaseVecF32 = (x: number[], y: number[]): Case => {
-  return makeVectorPairToF32IntervalCase(x, y, distanceInterval);
-};
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
