@@ -66,19 +66,21 @@ export const d = makeCaseCache('clamp', {
 
     return generateIntegerTestCases(test_values);
   },
-  f32_non_const: () => {
-    return generateTernaryToF32IntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      sparseF32Range(),
-      ...clampIntervals
-    );
-  },
   f32_const: () => {
     return generateTernaryToF32IntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
+      true,
+      ...clampIntervals
+    );
+  },
+  f32_non_const: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      false,
       ...clampIntervals
     );
   },

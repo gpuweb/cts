@@ -39,6 +39,7 @@ export const d = makeCaseCache('fract', {
         -10.0001, // -10.0001 -> ~0.9999
         ...fullF32Range(),
       ],
+      false,
       fractInterval
     );
   },

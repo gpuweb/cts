@@ -19,14 +19,23 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('normalize', {
-  f32_vec2: () => {
-    return generateVectorToVectorCases(vectorF32Range(2), normalizeInterval);
+  f32_vec2_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(2), true, normalizeInterval);
   },
-  f32_vec3: () => {
-    return generateVectorToVectorCases(vectorF32Range(3), normalizeInterval);
+  f32_vec2_non_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(2), false, normalizeInterval);
   },
-  f32_vec4: () => {
-    return generateVectorToVectorCases(vectorF32Range(4), normalizeInterval);
+  f32_vec3_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(3), true, normalizeInterval);
+  },
+  f32_vec3_non_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(3), false, normalizeInterval);
+  },
+  f32_vec4_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(4), true, normalizeInterval);
+  },
+  f32_vec4_non_const: () => {
+    return generateVectorToVectorCases(vectorF32Range(4), false, normalizeInterval);
   },
 });
 
@@ -43,7 +52,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
     await run(t, builtin('normalize'), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
   });
 
@@ -52,7 +63,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
     await run(t, builtin('normalize'), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
   });
 
@@ -61,7 +74,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
     await run(t, builtin('normalize'), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
   });
 

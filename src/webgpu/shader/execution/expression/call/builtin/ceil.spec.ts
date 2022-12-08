@@ -38,6 +38,7 @@ export const d = makeCaseCache('ceil', {
         -1.9,
         ...fullF32Range(),
       ],
+      false,
       ceilInterval
     );
   },

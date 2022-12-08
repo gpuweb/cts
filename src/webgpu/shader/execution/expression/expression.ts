@@ -566,26 +566,39 @@ function packScalarsToVector(
  * @returns a Case for the param and unary interval generator provided
  * The Case will use use an interval comparator for matching results.
  * @param param the param to pass in
- * @param ops callbacks that implement generating an acceptance interval for an unary operation
+ * @param check_intervals should intervals be checked if they are f32 finite
+ * @param ops callbacks that implement generating an acceptance interval for an
+ *            unary operation
  */
-function makeUnaryToF32IntervalCase(param: number, ...ops: PointToInterval[]): Case {
+function makeUnaryToF32IntervalCase(
+  param: number,
+  check_intervals: boolean,
+  ...ops: PointToInterval[]
+): Case | undefined {
   param = quantizeToF32(param);
 
   const intervals = ops.map(o => o(param));
+  if (check_intervals && intervals.some(i => !i.isFinite())) {
+    return undefined;
+  }
   return { input: [f32(param)], expected: anyOf(...intervals) };
 }
 
 /**
  * @returns an array of Cases for operations over a range of inputs
  * @param params array of inputs to try
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for an
  *            unary operation
  */
 export function generateUnaryToF32IntervalCases(
   params: number[],
+  check_intervals: boolean,
   ...ops: PointToInterval[]
 ): Case[] {
-  return params.map(e => makeUnaryToF32IntervalCase(e, ...ops));
+  return params
+    .map(e => makeUnaryToF32IntervalCase(e, check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
@@ -593,18 +606,23 @@ export function generateUnaryToF32IntervalCases(
  * The Case will use use an interval comparator for matching results.
  * @param param0 the first param or left hand side to pass in
  * @param param1 the second param or rhs hand side to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            binary operation
  */
 function makeBinaryToF32IntervalCase(
   param0: number,
   param1: number,
+  check_intervals: boolean,
   ...ops: BinaryToInterval[]
-): Case {
+): Case | undefined {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
 
   const intervals = ops.map(o => o(param0, param1));
+  if (check_intervals && intervals.some(i => !i.isFinite())) {
+    return undefined;
+  }
   return { input: [f32(param0), f32(param1)], expected: anyOf(...intervals) };
 }
 
@@ -612,17 +630,19 @@ function makeBinaryToF32IntervalCase(
  * @returns an array of Cases for operations over a range of inputs
  * @param param0s array of inputs to try for the first param
  * @param param1s array of inputs to try for the second param
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            binary operation
  */
 export function generateBinaryToF32IntervalCases(
   param0s: number[],
   param1s: number[],
+  check_intervals: boolean,
   ...ops: BinaryToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s).map(e =>
-    makeBinaryToF32IntervalCase(e[0], e[1], ...ops)
-  );
+  return cartesianProduct(param0s, param1s)
+    .map(e => makeBinaryToF32IntervalCase(e[0], e[1], check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
@@ -631,6 +651,7 @@ export function generateBinaryToF32IntervalCases(
  * @param param0 the first param to pass in
  * @param param1 the second param to pass in
  * @param param2 the third param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            ternary operation.
  */
@@ -638,13 +659,17 @@ function makeTernaryToF32IntervalCase(
   param0: number,
   param1: number,
   param2: number,
+  check_intervals: boolean,
   ...ops: TernaryToInterval[]
-): Case {
+): Case | undefined {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
 
   const intervals = ops.map(o => o(param0, param1, param2));
+  if (check_intervals && intervals.some(i => !i.isFinite())) {
+    return undefined;
+  }
   return {
     input: [f32(param0), f32(param1), f32(param2)],
     expected: anyOf(...intervals),
@@ -656,6 +681,7 @@ function makeTernaryToF32IntervalCase(
  * @param param0s array of inputs to try for the first param
  * @param param1s array of inputs to try for the second param
  * @param param2s array of inputs to try for the third param
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            ternary operation.
  */
@@ -663,24 +689,33 @@ export function generateTernaryToF32IntervalCases(
   param0s: number[],
   param1s: number[],
   param2s: number[],
+  check_intervals: boolean,
   ...ops: TernaryToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s, param2s).map(e =>
-    makeTernaryToF32IntervalCase(e[0], e[1], e[2], ...ops)
-  );
+  return cartesianProduct(param0s, param1s, param2s)
+    .map(e => makeTernaryToF32IntervalCase(e[0], e[1], e[2], check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
  * @returns a Case for the param and vector interval generator provided
  * @param param the param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            vector.
  */
-function makeVectorToF32IntervalCase(param: number[], ...ops: VectorToInterval[]): Case {
+function makeVectorToF32IntervalCase(
+  param: number[],
+  check_intervals: boolean,
+  ...ops: VectorToInterval[]
+): Case | undefined {
   param = param.map(quantizeToF32);
   const param_f32 = param.map(f32);
 
   const intervals = ops.map(o => o(param));
+  if (check_intervals && intervals.some(i => !i.isFinite())) {
+    return undefined;
+  }
   return {
     input: [new Vector(param_f32)],
     expected: anyOf(...intervals),
@@ -690,34 +725,43 @@ function makeVectorToF32IntervalCase(param: number[], ...ops: VectorToInterval[]
 /**
  * @returns an array of Cases for operations over a range of inputs
  * @param params array of inputs to try
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            vector.
- **/
+ */
 export function generateVectorToF32IntervalCases(
   params: number[][],
+  check_intervals: boolean,
   ...ops: VectorToInterval[]
 ): Case[] {
-  return params.map(e => makeVectorToF32IntervalCase(e, ...ops));
+  return params
+    .map(e => makeVectorToF32IntervalCase(e, check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
  * @returns a Case for the params and vector pair interval generator provided
  * @param param0 the first param to pass in
  * @param param1 the second param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
 function makeVectorPairToF32IntervalCase(
   param0: number[],
   param1: number[],
+  check_intervals: boolean,
   ...ops: VectorPairToInterval[]
-): Case {
+): Case | undefined {
   param0 = param0.map(quantizeToF32);
   param1 = param1.map(quantizeToF32);
   const param0_f32 = param0.map(f32);
   const param1_f32 = param1.map(f32);
 
   const intervals = ops.map(o => o(param0, param1));
+  if (check_intervals && intervals.some(i => !i.isFinite())) {
+    return undefined;
+  }
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
     expected: anyOf(...intervals),
@@ -728,30 +772,40 @@ function makeVectorPairToF32IntervalCase(
  * @returns an array of Cases for operations over a range of inputs
  * @param param0s array of inputs to try for the first input
  * @param param1s array of inputs to try for the second input
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
 export function generateVectorPairToF32IntervalCases(
   param0s: number[][],
   param1s: number[][],
+  check_intervals: boolean,
   ...ops: VectorPairToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s).map(e =>
-    makeVectorPairToF32IntervalCase(e[0], e[1], ...ops)
-  );
+  return cartesianProduct(param0s, param1s)
+    .map(e => makeVectorPairToF32IntervalCase(e[0], e[1], check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
  * @returns a Case for the param and vector of intervals generator provided
  * @param param the param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a vector.
  */
-function makeVectorToVectorCase(param: number[], ...ops: VectorToVector[]): Case {
+function makeVectorToVectorCase(
+  param: number[],
+  check_intervals: boolean,
+  ...ops: VectorToVector[]
+): Case | undefined {
   param = param.map(quantizeToF32);
   const param_f32 = param.map(f32);
 
   const vectors = ops.map(o => o(param));
+  if (check_intervals && vectors.some(v => !v.every(e => e.isFinite()))) {
+    return undefined;
+  }
   return {
     input: [new Vector(param_f32)],
     expected: anyOf(...vectors),
@@ -761,31 +815,43 @@ function makeVectorToVectorCase(param: number[], ...ops: VectorToVector[]): Case
 /**
  * @returns an array of Cases for operations over a range of inputs
  * @param params array of inputs to try
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a vector.
  */
-export function generateVectorToVectorCases(params: number[][], ...ops: VectorToVector[]): Case[] {
-  return params.map(e => makeVectorToVectorCase(e, ...ops));
+export function generateVectorToVectorCases(
+  params: number[][],
+  check_intervals: boolean,
+  ...ops: VectorToVector[]
+): Case[] {
+  return params
+    .map(e => makeVectorToVectorCase(e, check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
  * @returns a Case for the params and vector of intervals generator provided
  * @param param0 the first param to pass in
  * @param param1 the second param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a pair of vectors.
  */
 function makeVectorPairToVectorCase(
   param0: number[],
   param1: number[],
+  check_intervals: boolean,
   ...ops: VectorPairToVector[]
-): Case {
+): Case | undefined {
   param0 = param0.map(quantizeToF32);
   param1 = param1.map(quantizeToF32);
   const param0_f32 = param0.map(f32);
   const param1_f32 = param1.map(f32);
 
   const vectors = ops.map(o => o(param0, param1));
+  if (check_intervals && vectors.some(v => !v.every(e => e.isFinite()))) {
+    return undefined;
+  }
   return {
     input: [new Vector(param0_f32), new Vector(param1_f32)],
     expected: anyOf(...vectors),
@@ -796,31 +862,41 @@ function makeVectorPairToVectorCase(
  * @returns an array of Cases for operations over a range of inputs
  * @param param0s array of inputs to try for the first input
  * @param param1s array of inputs to try for the second input
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a pair of vectors.
  */
 export function generateVectorPairToVectorCases(
   param0s: number[][],
   param1s: number[][],
+  check_intervals: boolean,
   ...ops: VectorPairToVector[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s).map(e =>
-    makeVectorPairToVectorCase(e[0], e[1], ...ops)
-  );
+  return cartesianProduct(param0s, param1s)
+    .map(e => makeVectorPairToVectorCase(e[0], e[1], check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
 
 /**
  * @returns a Case for the param and vector of intervals generator provided
  * The input is treated as an unsigned int.
  * @param param the param to pass in
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance
  *            interval for an unsigned int.
  */
-function makeU32ToVectorCase(param: number, ...ops: PointToVector[]): Case {
+function makeU32ToVectorCase(
+  param: number,
+  check_intervals: boolean,
+  ...ops: PointToVector[]
+): Case | undefined {
   param = Math.trunc(param);
   const param_u32 = u32(param);
 
   const vectors = ops.map(o => o(param));
+  if (check_intervals && vectors.some(v => !v.every(e => e.isFinite()))) {
+    return undefined;
+  }
   return {
     input: param_u32,
     expected: anyOf(...vectors),
@@ -829,10 +905,18 @@ function makeU32ToVectorCase(param: number, ...ops: PointToVector[]): Case {
 
 /**
  * @returns an array of Cases for operations over a range of inputs
+ * The input is treated as an unsigned int.
  * @param params array of inputs to try
+ * @param check_intervals should intervals be checked if they are f32 finite
  * @param ops callbacks that implement generating an acceptance
  *            interval for an unsigned int.
  */
-export function generateU32ToVectorCases(params: number[], ...ops: PointToVector[]): Case[] {
-  return params.map(e => makeU32ToVectorCase(e, ...ops));
+export function generateU32ToVectorCases(
+  params: number[],
+  check_intervals: boolean,
+  ...ops: PointToVector[]
+): Case[] {
+  return params
+    .map(e => makeU32ToVectorCase(e, check_intervals, ...ops))
+    .filter((c): c is Case => c !== undefined);
 }
