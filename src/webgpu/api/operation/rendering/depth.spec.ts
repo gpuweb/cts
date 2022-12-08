@@ -154,7 +154,28 @@ g.test('depth_bias')
   )
   .unimplemented();
 
-g.test('depth_disabled').desc(`Tests render results with depth test disabled`).unimplemented();
+g.test('depth_disabled')
+  .desc('Tests render results with depth test disabled.')
+  .fn(async t => {
+    const depthSpencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const state = { format: depthSpencilFormat };
+
+    const testStates = [
+      { state, color: kBaseColor, depth: 0.0 },
+      { state, color: kRedStencilColor, depth: 0.5 },
+      { state, color: kGreenStencilColor, depth: 1.0 },
+    ];
+
+    // Test that for all combinations and ensure the last triangle drawn is the one visible
+    // regardless of depth testing.
+    for (let last = 0; last < 3; ++last) {
+      const i = (last + 1) % 3;
+      const j = (last + 2) % 3;
+
+      t.runDepthStateTest([testStates[i], testStates[j], testStates[last]], testStates[last].color);
+      t.runDepthStateTest([testStates[j], testStates[i], testStates[last]], testStates[last].color);
+    }
+  });
 
 g.test('depth_write_disabled')
   .desc(
