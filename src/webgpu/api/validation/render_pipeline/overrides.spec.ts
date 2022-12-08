@@ -248,7 +248,7 @@ Tests calling createRenderPipeline(Async) validation for invalid constant values
         { fragmentConstants: { cf: NaN }, _success: false },
         { fragmentConstants: { cf: Number.POSITIVE_INFINITY }, _success: false },
         { fragmentConstants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
-      ] as { fragmentConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
+      ] as const)
   )
   .fn(async t => {
     const { isAsync, fragmentConstants, _success } = t.params;
@@ -272,6 +272,8 @@ g.test('value,validation_error,vertex')
   .desc(
     `
 Tests calling createRenderPipeline(Async) validation for unrepresentable constant values in vertex stage.
+
+TODO(#2060): test with last_f64_castable.
 `
   )
   .params(u =>
@@ -287,9 +289,9 @@ Tests calling createRenderPipeline(Async) validation for unrepresentable constan
         { vertexConstants: { ci: kValue.i32.positive.max }, _success: true },
         { vertexConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { vertexConstants: { cf: kValue.f32.negative.min }, _success: true },
-        { vertexConstants: { cf: -Number.MAX_VALUE }, _success: false },
+        { vertexConstants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
         { vertexConstants: { cf: kValue.f32.positive.max }, _success: true },
-        { vertexConstants: { cf: Number.MAX_VALUE }, _success: false },
+        { vertexConstants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
         // Conversion to boolean can't fail
         { vertexConstants: { cb: Number.MAX_VALUE }, _success: true },
         { vertexConstants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -307,13 +309,13 @@ Tests calling createRenderPipeline(Async) validation for unrepresentable constan
           override cu: u32 = 0u;
           override ci: i32 = 0;
           override cf: f32 = 0.0;
-            @vertex fn main() -> @builtin(position) vec4<f32> {
-              _ = cb;
-              _ = cu;
-              _ = ci;
-              _ = cf;
-              return vec4<f32>(0.0, 0.0, 0.0, 1.0);
-            }`,
+          @vertex fn main() -> @builtin(position) vec4<f32> {
+            _ = cb;
+            _ = cu;
+            _ = ci;
+            _ = cf;
+            return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+          }`,
         }),
         entryPoint: 'main',
         constants: vertexConstants,
@@ -334,6 +336,8 @@ g.test('value,validation_error,fragment')
   .desc(
     `
 Tests calling createRenderPipeline(Async) validation for unrepresentable constant values in fragment stage.
+
+TODO(#2060): test with last_f64_castable.
 `
   )
   .params(u =>
@@ -349,9 +353,9 @@ Tests calling createRenderPipeline(Async) validation for unrepresentable constan
         { fragmentConstants: { ci: kValue.i32.positive.max }, _success: true },
         { fragmentConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { fragmentConstants: { cf: kValue.f32.negative.min }, _success: true },
-        { fragmentConstants: { cf: -Number.MAX_VALUE }, _success: false },
+        { fragmentConstants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
         { fragmentConstants: { cf: kValue.f32.positive.max }, _success: true },
-        { fragmentConstants: { cf: Number.MAX_VALUE }, _success: false },
+        { fragmentConstants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
         // Conversion to boolean can't fail
         { fragmentConstants: { cb: Number.MAX_VALUE }, _success: true },
         { fragmentConstants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -372,6 +376,105 @@ Tests calling createRenderPipeline(Async) validation for unrepresentable constan
             _ = cu;
             _ = ci;
             _ = cf;
+            return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+        }
+          `,
+      fragmentConstants,
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('value,validation_error,f16,vertex')
+  .desc(
+    `
+Tests calling createRenderPipeline(Async) validation for unrepresentable f16 constant values in vertex stage.
+
+TODO(#2060): test with last_f64_castable.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { vertexConstants: { cf16: kValue.f16.negative.min }, _success: true },
+        { vertexConstants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
+        { vertexConstants: { cf16: kValue.f16.positive.max }, _success: true },
+        { vertexConstants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+      ] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const { isAsync, vertexConstants, _success } = t.params;
+
+    t.doCreateRenderPipelineTest(isAsync, _success, {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+          enable f16;
+          
+          override cf16: f16 = 0.0h;
+          @vertex fn main() -> @builtin(position) vec4<f32> {
+            _ = cf16;
+            return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+          }`,
+        }),
+        entryPoint: 'main',
+        constants: vertexConstants,
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `@fragment fn main() -> @location(0) vec4<f32> {
+              return vec4<f32>(0.0, 1.0, 0.0, 1.0);
+            }`,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
+  });
+
+g.test('value,validation_error,f16,fragment')
+  .desc(
+    `
+Tests calling createRenderPipeline(Async) validation for unrepresentable f16 constant values in fragment stage.
+
+TODO(#2060): test with last_f64_castable.
+`
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { fragmentConstants: { cf16: kValue.f16.negative.min }, _success: true },
+        {
+          fragmentConstants: { cf16: kValue.f16.negative.first_f64_not_castable },
+          _success: false,
+        },
+        { fragmentConstants: { cf16: kValue.f16.positive.max }, _success: true },
+        {
+          fragmentConstants: { cf16: kValue.f16.positive.first_f64_not_castable },
+          _success: false,
+        },
+      ] as const)
+  )
+  .fn(async t => {
+    const { isAsync, fragmentConstants, _success } = t.params;
+
+    const descriptor = t.getDescriptor({
+      fragmentShaderCode: `
+        enable f16;
+        
+        override cf16: f16 = 0.0h;
+        @fragment fn main()
+            -> @location(0) vec4<f32> {
+            _ = cf16;
             return vec4<f32>(1.0, 1.0, 1.0, 1.0);
         }
           `,

@@ -383,7 +383,7 @@ Tests calling createComputePipeline(Async) validation for constant values like i
         { constants: { cf: NaN }, _success: false },
         { constants: { cf: Number.POSITIVE_INFINITY }, _success: false },
         { constants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
-      ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
+      ] as const)
   )
   .fn(async t => {
     const { isAsync, constants, _success } = t.params;
@@ -410,6 +410,8 @@ g.test('overrides,value,validation_error')
   .desc(
     `
 Tests calling createComputePipeline(Async) validation for unrepresentable constant values in compute stage.
+
+TODO(#2060): test with last_f64_castable.
 `
   )
   .params(u =>
@@ -425,9 +427,9 @@ Tests calling createComputePipeline(Async) validation for unrepresentable consta
         { constants: { ci: kValue.i32.positive.max }, _success: true },
         { constants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { constants: { cf: kValue.f32.negative.min }, _success: true },
-        { constants: { cf: -Number.MAX_VALUE }, _success: false },
+        { constants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
         { constants: { cf: kValue.f32.positive.max }, _success: true },
-        { constants: { cf: Number.MAX_VALUE }, _success: false },
+        { constants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
         // Conversion to boolean can't fail
         { constants: { cb: Number.MAX_VALUE }, _success: true },
         { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -445,12 +447,56 @@ Tests calling createComputePipeline(Async) validation for unrepresentable consta
           override cu: u32 = 0u;
           override ci: i32 = 0;
           override cf: f32 = 0.0;
-            @compute @workgroup_size(1) fn main () {
-              _ = cb;
-              _ = cu;
-              _ = ci;
-              _ = cf;
-            }`,
+          @compute @workgroup_size(1) fn main () {
+            _ = cb;
+            _ = cu;
+            _ = ci;
+            _ = cf;
+          }`,
+        }),
+        entryPoint: 'main',
+        constants,
+      },
+    };
+
+    t.doCreateComputePipelineTest(isAsync, _success, descriptor);
+  });
+
+g.test('overrides,value,validation_error,f16')
+  .desc(
+    `
+Tests calling createComputePipeline(Async) validation for unrepresentable f16 constant values in compute stage.
+
+TODO(#2060): test with last_f64_castable.
+`
+  )
+  .params(u =>
+    u //
+      .combine('isAsync', [true, false])
+      .combineWithParams([
+        { constants: { cf16: kValue.f16.negative.min }, _success: true },
+        { constants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f16.positive.max }, _success: true },
+        { constants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+      ] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const { isAsync, constants, _success } = t.params;
+
+    const descriptor = {
+      layout: 'auto' as const,
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+          enable f16;
+
+          override cf16: f16 = 0.0h;
+          @compute @workgroup_size(1) fn main () {
+            _ = cf16;
+          }`,
         }),
         entryPoint: 'main',
         constants,
