@@ -400,18 +400,18 @@ export const kValue = {
       min: hexToF16(kBit.f16.positive.min),
       max: hexToF16(kBit.f16.positive.max),
       zero: hexToF16(kBit.f16.positive.zero),
-      first_f64_not_castable: hexToF16(kBit.f16.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f16
+      first_f64_not_castable: hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
       last_f64_castable: hexToF64(
-        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 127) - BigInt(1)
+        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: hexToF16(kBit.f16.negative.max),
       min: hexToF16(kBit.f16.negative.min),
       zero: hexToF16(kBit.f16.negative.zero),
-      first_f64_not_castable: -(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f16
+      first_f64_not_castable: -(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
       last_f64_castable: -hexToF64(
-        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 127) - BigInt(1)
+        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {

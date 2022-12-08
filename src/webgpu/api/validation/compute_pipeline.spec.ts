@@ -478,6 +478,10 @@ TODO(#2060): test with last_f64_castable.
         { constants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
         { constants: { cf16: kValue.f16.positive.max }, _success: true },
         { constants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f32.negative.min }, _success: false },
+        { constants: { cf16: kValue.f32.positive.max }, _success: false },
+        { constants: { cf16: kValue.f32.negative.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f32.positive.first_f64_not_castable }, _success: false },
       ] as const)
   )
   .beforeAllSubcases(t => {
