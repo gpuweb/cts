@@ -3,13 +3,150 @@ Test related to depth buffer, depth op, compare func, etc.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { TypedArrayBufferView } from '../../../../common/util/util.js';
 import { kDepthStencilFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 const backgroundColor = [0x00, 0x00, 0x00, 0xff];
 const triangleColor = [0xff, 0xff, 0xff, 0xff];
 
-export const g = makeTestGroup(GPUTest);
+const kBaseColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
+const kRedStencilColor = new Float32Array([1.0, 0.0, 0.0, 1.0]);
+const kGreenStencilColor = new Float32Array([0.0, 1.0, 0.0, 1.0]);
+
+type TestStates = {
+  state: GPUDepthStencilState;
+  color: Float32Array;
+  depth: number;
+};
+
+class DepthTest extends GPUTest {
+  runDepthStateTest(testStates: TestStates[], expectedColor: Float32Array) {
+    const renderTargetFormat = 'rgba8unorm';
+
+    const renderTarget = this.device.createTexture({
+      format: renderTargetFormat,
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const depthTexture = this.device.createTexture({
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      format: depthStencilFormat,
+      sampleCount: 1,
+      mipLevelCount: 1,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_DST,
+    });
+
+    const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
+      view: depthTexture.createView(),
+      depthLoadOp: 'load',
+      depthStoreOp: 'store',
+      stencilLoadOp: 'load',
+      stencilStoreOp: 'store',
+    };
+
+    const encoder = this.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: renderTarget.createView(),
+          storeOp: 'store',
+          loadOp: 'load',
+        },
+      ],
+      depthStencilAttachment,
+    });
+
+    // Draw a triangle with the given depth state, color, and depth.
+    for (const test of testStates) {
+      const testPipeline = this.createRenderPipelineForTest(test.state, test.depth);
+      pass.setPipeline(testPipeline);
+      pass.setBindGroup(
+        0,
+        this.createBindGroupForTest(testPipeline.getBindGroupLayout(0), test.color)
+      );
+      pass.draw(1);
+    }
+
+    pass.end();
+    this.device.queue.submit([encoder.finish()]);
+
+    const expColor = {
+      R: expectedColor[0],
+      G: expectedColor[1],
+      B: expectedColor[2],
+      A: expectedColor[3],
+    };
+    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
+
+    const result = textureContentIsOKByT2B(
+      this,
+      { texture: renderTarget },
+      [1, 1],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    this.eventualExpectOK(result);
+    this.trackForCleanup(renderTarget);
+  }
+
+  createRenderPipelineForTest(
+    depthStencil: GPUDepthStencilState,
+    depth: number
+  ): GPURenderPipeline {
+    return this.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: this.device.createShaderModule({
+          code: `
+            @vertex
+            fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
+                return vec4<f32>(0.0, 0.0, ${depth}, 1.0);
+            }
+            `,
+        }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        targets: [{ format: 'rgba8unorm' }],
+        module: this.device.createShaderModule({
+          code: `
+            struct Params {
+              color : vec4<f32>
+            }
+            @group(0) @binding(0) var<uniform> params : Params;
+
+            @fragment fn main() -> @location(0) vec4<f32> {
+                return vec4<f32>(params.color);
+            }`,
+        }),
+        entryPoint: 'main',
+      },
+      primitive: { topology: 'point-list' },
+      depthStencil,
+    });
+  }
+
+  createBindGroupForTest(layout: GPUBindGroupLayout, data: TypedArrayBufferView): GPUBindGroup {
+    return this.device.createBindGroup({
+      layout,
+      entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer: this.makeBufferWithContents(data, GPUBufferUsage.UNIFORM),
+          },
+        },
+      ],
+    });
+  }
+}
+
+export const g = makeTestGroup(DepthTest);
 
 g.test('depth_bias')
   .desc(
@@ -20,8 +157,71 @@ g.test('depth_bias')
 g.test('depth_disabled').desc(`Tests render results with depth test disabled`).unimplemented();
 
 g.test('depth_write_disabled')
-  .desc(`Tests render results with depth write disabled`)
-  .unimplemented();
+  .desc(
+    `
+  Test that disabling depth writes works and leaves the depth buffer unchanged.
+  `
+  )
+  .params(u =>
+    u //
+      .combineWithParams([
+        { lastDepth: 0.0, _expectedColor: kRedStencilColor },
+        { lastDepth: 1.0, _expectedColor: kGreenStencilColor },
+      ])
+  )
+  .fn(async t => {
+    const { lastDepth, _expectedColor } = t.params;
+
+    const depthSpencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+
+    const stencilState = {
+      compare: 'always',
+      failOp: 'keep',
+      depthFailOp: 'keep',
+      passOp: 'keep',
+    } as const;
+
+    const baseState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: true,
+      depthCompare: 'always',
+      stencilFront: stencilState,
+      stencilBack: stencilState,
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    } as const;
+
+    const depthWriteState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'always',
+      stencilFront: stencilState,
+      stencilBack: stencilState,
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    } as const;
+
+    const checkState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: false,
+      depthCompare: 'equal',
+      stencilFront: stencilState,
+      stencilBack: stencilState,
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    } as const;
+
+    const testStates = [
+      // Draw a base triangle with depth write enabled.
+      { state: baseState, color: kBaseColor, depth: 1.0 },
+      // Draw a second triangle without depth write enabled.
+      { state: depthWriteState, color: kRedStencilColor, depth: 0.0 },
+      // Draw a third triangle which should occlude the second even though it is behind it.
+      { state: checkState, color: kGreenStencilColor, depth: lastDepth },
+    ];
+
+    t.runDepthStateTest(testStates, _expectedColor);
+  });
 
 // Use a depth value that's not exactly 0.5 because it is exactly between two depth16unorm value and
 // can get rounded either way (and a different way between shaders and clearDepthValue).
