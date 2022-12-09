@@ -467,7 +467,8 @@ g.test('overrides,value,validation_error,f16')
     `
 Tests calling createComputePipeline(Async) validation for unrepresentable f16 constant values in compute stage.
 
-TODO(#2060): test with last_f64_castable.
+TODO(#2060): Tighten the cases around the valid/invalid boundary once we have WGSL spec
+clarity on whether values like f16.positive.last_f64_castable would be valid. See issue.
 `
   )
   .params(u =>
