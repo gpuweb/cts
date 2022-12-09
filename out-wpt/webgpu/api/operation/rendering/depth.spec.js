@@ -233,12 +233,57 @@ g.test('depth_write_disabled')
     };
 
     const testStates = [
-      // Draw a base triangle with depth write enabled.
+      // Draw a base point with depth write enabled.
       { state: baseState, color: kBaseColor, depth: 1.0 },
-      // Draw a second triangle without depth write enabled.
+      // Draw a second point without depth write enabled.
       { state: depthWriteState, color: kRedStencilColor, depth: 0.0 },
-      // Draw a third triangle which should occlude the second even though it is behind it.
+      // Draw a third point which should occlude the second even though it is behind it.
       { state: checkState, color: kGreenStencilColor, depth: lastDepth },
+    ];
+
+    t.runDepthStateTest(testStates, _expectedColor);
+  });
+
+g.test('depth_test_fail')
+  .desc(
+    `
+  Test that render results on depth test failure cases with 'less' depthCompare operation and
+  depthWriteEnabled is true.
+  `
+  )
+  .params(u =>
+    u //
+      .combineWithParams([
+        { secondDepth: 1.0, lastDepth: 2.0, _expectedColor: kBaseColor }, // fail -> fail.
+        { secondDepth: 0.0, lastDepth: 2.0, _expectedColor: kRedStencilColor }, // pass -> fail.
+        { secondDepth: 2.0, lastDepth: 0.9, _expectedColor: kGreenStencilColor }, // fail -> pass.
+      ])
+  )
+  .fn(async t => {
+    const { secondDepth, lastDepth, _expectedColor } = t.params;
+
+    const depthSpencilFormat = 'depth24plus-stencil8';
+
+    const baseState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: true,
+      depthCompare: 'always',
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    };
+
+    const depthTestState = {
+      format: depthSpencilFormat,
+      depthWriteEnabled: true,
+      depthCompare: 'less',
+      stencilReadMask: 0xff,
+      stencilWriteMask: 0xff,
+    };
+
+    const testStates = [
+      { state: baseState, color: kBaseColor, depth: 1.0 },
+      { state: depthTestState, color: kRedStencilColor, depth: secondDepth },
+      { state: depthTestState, color: kGreenStencilColor, depth: lastDepth },
     ];
 
     t.runDepthStateTest(testStates, _expectedColor);

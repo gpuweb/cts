@@ -389,7 +389,7 @@ g.test('stencil_passOp_operation')
     t.checkStencilOperation(passOp, initialStencil, referenceStencil, expectedStencil);
   });
 
-g.test('stencil_fail_operation')
+g.test('stencil_test_fail')
   .desc(
     `
   Test that the stencil operation is executed on stencil fail. Triangle with stencil reference 2
