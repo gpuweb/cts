@@ -175,18 +175,23 @@ g.test('depth_disabled')
 g.test('depth_write_disabled')
   .desc(
     `
-  Test that disabling depth writes works and leaves the depth buffer unchanged.
+  Test that depthWriteEnabled behaves as expected.
+  If enabled, a depth value of 0.0 is written.
+  If disabled, it's not written, so it keeps the previous value of 1.0.
+  Use a depthCompare: 'equal' check at the end to check the value.
   `
   )
   .params(u =>
     u //
       .combineWithParams([
-        { lastDepth: 0.0, _expectedColor: kRedStencilColor },
-        { lastDepth: 1.0, _expectedColor: kGreenStencilColor },
+        { depthWriteEnabled: false, lastDepth: 0.0, _expectedColor: kRedStencilColor },
+        { depthWriteEnabled: true, lastDepth: 0.0, _expectedColor: kGreenStencilColor },
+        { depthWriteEnabled: false, lastDepth: 1.0, _expectedColor: kGreenStencilColor },
+        { depthWriteEnabled: true, lastDepth: 1.0, _expectedColor: kRedStencilColor },
       ])
   )
   .fn(async t => {
-    const { lastDepth, _expectedColor } = t.params;
+    const { depthWriteEnabled, lastDepth, _expectedColor } = t.params;
 
     const depthSpencilFormat = 'depth24plus-stencil8';
 
@@ -209,7 +214,7 @@ g.test('depth_write_disabled')
 
     const depthWriteState = {
       format: depthSpencilFormat,
-      depthWriteEnabled: false,
+      depthWriteEnabled,
       depthCompare: 'always',
       stencilFront: stencilState,
       stencilBack: stencilState,
