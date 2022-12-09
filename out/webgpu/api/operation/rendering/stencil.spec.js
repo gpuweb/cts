@@ -121,7 +121,11 @@ class StencilTest extends GPUTest {
     this.runStencilStateTest(testStates, expectedColor);
   }
 
-  runStencilStateTest(testStates, expectedColor) {
+  runStencilStateTest(
+  testStates,
+  expectedColor,
+  isSingleEncoderMultiplePass = false)
+  {
     const renderTargetFormat = 'rgba8unorm';
     const renderTarget = this.device.createTexture({
       format: renderTargetFormat,
@@ -147,7 +151,7 @@ class StencilTest extends GPUTest {
     };
 
     const encoder = this.device.createCommandEncoder();
-    const pass = encoder.beginRenderPass({
+    let pass = encoder.beginRenderPass({
       colorAttachments: [
       {
         view: renderTarget.createView(),
@@ -158,20 +162,44 @@ class StencilTest extends GPUTest {
       depthStencilAttachment
     });
 
+    if (isSingleEncoderMultiplePass) {
+      pass.end();
+    }
+
     // Draw a triangle with the given stencil reference and the comparison function.
     // The color will be kGreenStencilColor if the stencil test passes, and kBaseColor if not.
     for (const test of testStates) {
+      if (isSingleEncoderMultiplePass) {
+        pass = encoder.beginRenderPass({
+          colorAttachments: [
+          {
+            view: renderTarget.createView(),
+            storeOp: 'store',
+            loadOp: 'load'
+          }],
+
+          depthStencilAttachment
+        });
+      }
       const testPipeline = this.createRenderPipelineForTest(test.state);
       pass.setPipeline(testPipeline);
-      pass.setStencilReference(test.stencil);
+      if (test.stencil !== undefined) {
+        pass.setStencilReference(test.stencil);
+      }
       pass.setBindGroup(
       0,
       this.createBindGroupForTest(testPipeline.getBindGroupLayout(0), test.color));
 
       pass.draw(1);
+
+      if (isSingleEncoderMultiplePass) {
+        pass.end();
+      }
     }
 
-    pass.end();
+    if (!isSingleEncoderMultiplePass) {
+      pass.end();
+    }
     this.device.queue.submit([encoder.finish()]);
 
     const expColor = {
@@ -517,5 +545,44 @@ fn(async (t) => {
 
 
   t.runStencilStateTest(testStates, _expectedColor);
+});
+
+g.test('stencil_reference_initialized').
+desc('Test that stencil reference is initialized as zero for new render pass.').
+fn(async (t) => {
+  const depthSpencilFormat = 'depth24plus-stencil8';
+
+  const baseStencilState = {
+    compare: 'always',
+    passOp: 'replace'
+  };
+
+  const testStencilState = {
+    compare: 'equal',
+    passOp: 'keep'
+  };
+
+  const baseState = {
+    format: depthSpencilFormat,
+    stencilFront: baseStencilState,
+    stencilBack: baseStencilState
+  };
+
+  const testState = {
+    format: depthSpencilFormat,
+    stencilFront: testStencilState,
+    stencilBack: testStencilState
+  };
+
+  // First pass sets the stencil to 0x1, the second pass sets the stencil to its default
+  // value, and the third pass tests if the stencil is zero.
+  const testStates = [
+  { state: baseState, color: kBaseColor, stencil: 0x1 },
+  { state: baseState, color: kRedStencilColor, stencil: undefined },
+  { state: testState, color: kGreenStencilColor, stencil: 0x0 }];
+
+
+  // The third draw should pass the stencil test since the second pass set it to default zero.
+  t.runStencilStateTest(testStates, kGreenStencilColor, true);
 });
 //# sourceMappingURL=stencil.spec.js.map
