@@ -263,6 +263,26 @@ export const kBit = {
 };
 
 /**
+ * Converts a 64-bit hex value to a 64-bit float value
+ *
+ * Using a locally defined function here to avoid compile time dependency
+ * issues.
+ * */
+function hexToF64(hex) {
+  return new Float64Array(new BigInt64Array([hex]).buffer)[0];
+}
+
+/**
+ * Converts a 64-bit float value to a 64-bit hex value
+ *
+ * Using a locally defined function here to avoid compile time dependency
+ * issues.
+ * */
+function f64ToHex(number) {
+  return new BigUint64Array(new Float64Array([number]).buffer)[0];
+}
+
+/**
  * Converts a 32-bit hex value to a 32-bit float value
  *
  * Using a locally defined function here to avoid compile time dependency
@@ -317,6 +337,11 @@ export const kValue = {
         sixth: hexToF32(kBit.f32.positive.pi.sixth),
       },
       e: hexToF32(kBit.f32.positive.e),
+      first_f64_not_castable: hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
+      last_f64_castable: hexToF64(
+        f64ToHex(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      ),
+      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: hexToF32(kBit.f32.negative.max),
@@ -331,6 +356,11 @@ export const kValue = {
         quarter: hexToF32(kBit.f32.negative.pi.quarter),
         sixth: hexToF32(kBit.f32.negative.pi.sixth),
       },
+      first_f64_not_castable: -(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
+      last_f64_castable: -hexToF64(
+        f64ToHex(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      ),
+      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
       positive: {
@@ -372,11 +402,21 @@ export const kValue = {
       min: hexToF16(kBit.f16.positive.min),
       max: hexToF16(kBit.f16.positive.max),
       zero: hexToF16(kBit.f16.positive.zero),
+      first_f64_not_castable: hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
+      last_f64_castable: hexToF64(
+        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      ),
+      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: hexToF16(kBit.f16.negative.max),
       min: hexToF16(kBit.f16.negative.min),
       zero: hexToF16(kBit.f16.negative.zero),
+      first_f64_not_castable: -(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
+      last_f64_castable: -hexToF64(
+        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      ),
+      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
       positive: {

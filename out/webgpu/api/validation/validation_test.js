@@ -398,18 +398,25 @@ export class ValidationTest extends GPUTest {
   doCreateRenderPipelineTest(
   isAsync,
   _success,
-  descriptor)
+  descriptor,
+  errorTypeName = 'OperationError')
   {
     if (isAsync) {
       if (_success) {
         this.shouldResolve(this.device.createRenderPipelineAsync(descriptor));
       } else {
-        this.shouldReject('OperationError', this.device.createRenderPipelineAsync(descriptor));
+        this.shouldReject(errorTypeName, this.device.createRenderPipelineAsync(descriptor));
       }
     } else {
-      this.expectValidationError(() => {
-        this.device.createRenderPipeline(descriptor);
-      }, !_success);
+      if (errorTypeName === 'OperationError') {
+        this.expectValidationError(() => {
+          this.device.createRenderPipeline(descriptor);
+        }, !_success);
+      } else {
+        this.shouldThrow(_success ? false : errorTypeName, () => {
+          this.device.createRenderPipeline(descriptor);
+        });
+      }
     }
   }
 
@@ -417,18 +424,25 @@ export class ValidationTest extends GPUTest {
   doCreateComputePipelineTest(
   isAsync,
   _success,
-  descriptor)
+  descriptor,
+  errorTypeName = 'OperationError')
   {
     if (isAsync) {
       if (_success) {
         this.shouldResolve(this.device.createComputePipelineAsync(descriptor));
       } else {
-        this.shouldReject('OperationError', this.device.createComputePipelineAsync(descriptor));
+        this.shouldReject(errorTypeName, this.device.createComputePipelineAsync(descriptor));
       }
     } else {
-      this.expectValidationError(() => {
-        this.device.createComputePipeline(descriptor);
-      }, !_success);
+      if (errorTypeName === 'OperationError') {
+        this.expectValidationError(() => {
+          this.device.createComputePipeline(descriptor);
+        }, !_success);
+      } else {
+        this.shouldThrow(_success ? false : errorTypeName, () => {
+          this.device.createComputePipeline(descriptor);
+        });
+      }
     }
   }
 }
