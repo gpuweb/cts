@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { atan2Interval } from '../../../../../util/f32_interval.js';
 import { linearRange, sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeBinaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateBinaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,24 +22,13 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('atan2', {
   f32: () => {
-    const makeCase = (y, x) => {
-      return makeBinaryToF32IntervalCase(y, x, atan2Interval);
-    };
-
     // Using sparse, since there a N^2 cases being generated, but including extra values around 0, since that is where
     // there is a discontinuity that implementations tend to behave badly at.
     const numeric_range = [
     ...sparseF32Range(),
     ...linearRange(kValue.f32.negative.max, kValue.f32.positive.min, 10)];
 
-    const cases = [];
-    numeric_range.forEach((y) => {
-      numeric_range.forEach((x) => {
-        cases.push(makeCase(y, x));
-      });
-    });
-
-    return cases;
+    return generateBinaryToF32IntervalCases(numeric_range, numeric_range, atan2Interval);
   }
 });
 

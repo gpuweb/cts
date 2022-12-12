@@ -15,9 +15,8 @@ import { fullF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
-  Case,
-  makeUnaryToF32IntervalCase,
-  makeVectorToF32IntervalCase,
+  generateUnaryToF32IntervalCases,
+  generateVectorToF32IntervalCases,
   run,
 } from '../../expression.js';
 
@@ -27,26 +26,18 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('length', {
   f32: () => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, lengthInterval);
-    };
-    return fullF32Range().map(makeCase);
+    return generateUnaryToF32IntervalCases(fullF32Range(), lengthInterval);
   },
   f32_vec2: () => {
-    return vectorF32Range(2).map(makeCaseVecF32);
+    return generateVectorToF32IntervalCases(vectorF32Range(2), lengthInterval);
   },
   f32_vec3: () => {
-    return vectorF32Range(3).map(makeCaseVecF32);
+    return generateVectorToF32IntervalCases(vectorF32Range(3), lengthInterval);
   },
   f32_vec4: () => {
-    return vectorF32Range(4).map(makeCaseVecF32);
+    return generateVectorToF32IntervalCases(vectorF32Range(4), lengthInterval);
   },
 });
-
-/** @returns a `length` Case for a vector of f32s input */
-const makeCaseVecF32 = (x: number[]): Case => {
-  return makeVectorToF32IntervalCase(x, lengthInterval);
-};
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')

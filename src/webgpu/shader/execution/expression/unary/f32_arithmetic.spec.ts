@@ -8,7 +8,7 @@ import { TypeF32 } from '../../../../util/conversion.js';
 import { negationInterval } from '../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../expression.js';
 
 import { unary } from './unary.js';
 
@@ -16,12 +16,9 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unary/f32_arithmetic', {
   negation: () => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, negationInterval);
-    };
-
-    return fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }).map(x =>
-      makeCase(x)
+    return generateUnaryToF32IntervalCases(
+      fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
+      negationInterval
     );
   },
 });

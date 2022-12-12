@@ -16,7 +16,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { asinhInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -24,11 +24,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('asinh', {
   f32: () => {
-    const makeCase = (n) => {
-      return makeUnaryToF32IntervalCase(n, asinhInterval);
-    };
-
-    return [...fullF32Range()].map(makeCase);
+    return generateUnaryToF32IntervalCases(fullF32Range(), asinhInterval);
   }
 });
 

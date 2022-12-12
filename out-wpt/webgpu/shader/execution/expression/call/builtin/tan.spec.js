@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { tanInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,15 +22,15 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('tan', {
   f32: () => {
-    const makeCase = n => {
-      return makeUnaryToF32IntervalCase(n, tanInterval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        // Defined accuracy range
+        ...linearRange(-Math.PI, Math.PI, 100),
+        ...fullF32Range(),
+      ],
 
-    return [
-      // Defined accuracy range
-      ...linearRange(-Math.PI, Math.PI, 100),
-      ...fullF32Range(),
-    ].map(makeCase);
+      tanInterval
+    );
   },
 });
 

@@ -12,12 +12,7 @@ import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { crossInterval } from '../../../../../util/f32_interval.js';
 import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import {
-allInputSources,
-
-makeVectorPairToVectorIntervalCase,
-run } from
-'../../expression.js';
+import { allInputSources, generateVectorPairToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -25,15 +20,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('cross', {
   f32: () => {
-    const makeCase = (x, y) => {
-      return makeVectorPairToVectorIntervalCase(x, y, crossInterval);
-    };
-
-    return vectorF32Range(3).flatMap((i) => {
-      return vectorF32Range(3).map((j) => {
-        return makeCase(i, j);
-      });
-    });
+    return generateVectorPairToVectorCases(vectorF32Range(3), vectorF32Range(3), crossInterval);
   }
 });
 

@@ -17,7 +17,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanhInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange, sourceFilteredF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -25,40 +25,35 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('atanh', {
   f32_const: () => {
-    const makeCase = (n: number): Case => {
-      return makeUnaryToF32IntervalCase(n, atanhInterval);
-    };
-
-    return [
-      ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
-      ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
-      ...sourceFilteredF32Range(
-        'const',
-        kValue.f32.negative.less_than_one,
-        kValue.f32.positive.less_than_one
-      ),
-    ].map(makeCase);
+    return generateUnaryToF32IntervalCases(
+      [
+        ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
+        ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
+        ...sourceFilteredF32Range(
+          'const',
+          kValue.f32.negative.less_than_one,
+          kValue.f32.positive.less_than_one
+        ),
+      ],
+      atanhInterval
+    );
   },
   f32_non_const: () => {
-    const makeCase = (n: number): Case => {
-      return makeUnaryToF32IntervalCase(n, atanhInterval);
-    };
-
-    const cases = [
-      ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
-      ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
-      ...sourceFilteredF32Range(
-        'storage',
-        kValue.f32.negative.less_than_one,
-        kValue.f32.positive.less_than_one
-      ),
-    ].map(makeCase);
-
-    // Handle the edge case of -1 and 1 when not doing const-eval
-    const edgeCases = [-1, 1].map(makeCase);
-    cases.push(...edgeCases);
-
-    return cases;
+    return generateUnaryToF32IntervalCases(
+      [
+        ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
+        ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
+        ...sourceFilteredF32Range(
+          'storage',
+          kValue.f32.negative.less_than_one,
+          kValue.f32.positive.less_than_one
+        ),
+        // Handle the edge case of -1 and 1 when not doing const-eval
+        -1,
+        1,
+      ],
+      atanhInterval
+    );
   },
 });
 

@@ -13,7 +13,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { acosInterval } from '../../../../../util/f32_interval.js';
 import { sourceFilteredF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,24 +21,22 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('acos', {
   f32_const: () => {
-    const makeCase = (n) => {
-      return makeUnaryToF32IntervalCase(n, acosInterval);
-    };
-
-    return [
+    return generateUnaryToF32IntervalCases(
+    [
     ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-    ...sourceFilteredF32Range('const', -1, 1)].
-    map(makeCase);
+    ...sourceFilteredF32Range('const', -1, 1)],
+
+    acosInterval);
+
   },
   f32_non_const: () => {
-    const makeCase = (n) => {
-      return makeUnaryToF32IntervalCase(n, acosInterval);
-    };
-
-    return [
+    return generateUnaryToF32IntervalCases(
+    [
     ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-    ...sourceFilteredF32Range('storage', -1, 1)].
-    map(makeCase);
+    ...sourceFilteredF32Range('const', -1, 1)],
+
+    acosInterval);
+
   }
 });
 

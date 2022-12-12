@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { powInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeBinaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateBinaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,19 +22,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('pow', {
   f32: () => {
-    const makeCase = (x, y) => {
-      return makeBinaryToF32IntervalCase(x, y, powInterval);
-    };
-
-    const cases = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach(x => {
-      numeric_range.forEach(y => {
-        cases.push(makeCase(x, y));
-      });
-    });
-
-    return cases;
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), powInterval);
   },
 });
 

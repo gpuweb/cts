@@ -16,7 +16,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { roundInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -24,11 +24,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('round', {
   f32: () => {
-    const makeCase = (n) => {
-      return makeUnaryToF32IntervalCase(n, roundInterval);
-    };
-
-    return fullF32Range().map(makeCase);
+    return generateUnaryToF32IntervalCases(fullF32Range(), roundInterval);
   }
 });
 

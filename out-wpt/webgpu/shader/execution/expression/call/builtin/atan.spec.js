@@ -15,7 +15,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -23,40 +23,40 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('atan', {
   f32_non_const: () => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, atanInterval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        // Known values
+        -Math.sqrt(3),
+        -1,
+        -1 / Math.sqrt(3),
+        0,
+        1,
+        1 / Math.sqrt(3),
+        Math.sqrt(3),
 
-    return [
-      // Known values
-      -Math.sqrt(3),
-      -1,
-      -1 / Math.sqrt(3),
-      0,
-      1,
-      1 / Math.sqrt(3),
-      Math.sqrt(3),
+        ...fullF32Range(),
+      ],
 
-      ...fullF32Range(),
-    ].map(x => makeCase(x));
+      atanInterval
+    );
   },
   f32_const: () => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, atanInterval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        // Known values
+        -Math.sqrt(3),
+        -1,
+        -1 / Math.sqrt(3),
+        0,
+        1,
+        1 / Math.sqrt(3),
+        Math.sqrt(3),
 
-    return [
-      // Known values
-      -Math.sqrt(3),
-      -1,
-      -1 / Math.sqrt(3),
-      0,
-      1,
-      1 / Math.sqrt(3),
-      Math.sqrt(3),
+        ...fullF32Range(),
+      ],
 
-      ...fullF32Range(),
-    ].map(x => makeCase(x));
+      atanInterval
+    );
   },
 });
 

@@ -21,7 +21,7 @@ import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/convers
 import { minInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeBinaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateBinaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -29,19 +29,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('min', {
   f32: () => {
-    const makeCase = (x, y) => {
-      return makeBinaryToF32IntervalCase(x, y, minInterval);
-    };
-
-    const cases = [];
-    const numeric_range = fullF32Range();
-    numeric_range.forEach((lhs) => {
-      numeric_range.forEach((rhs) => {
-        cases.push(makeCase(lhs, rhs));
-      });
-    });
-
-    return cases;
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), minInterval);
   }
 });
 

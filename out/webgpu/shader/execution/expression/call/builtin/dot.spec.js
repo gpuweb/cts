@@ -13,7 +13,7 @@ import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
 import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeVectorPairToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateVectorPairToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,37 +21,13 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('dot', {
   f32_vec2: () => {
-    const makeCase = (x, y) => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorF32Range(2).flatMap((i) => {
-      return vectorF32Range(2).map((j) => {
-        return makeCase(i, j);
-      });
-    });
+    return generateVectorPairToF32IntervalCases(vectorF32Range(2), vectorF32Range(2), dotInterval);
   },
   f32_vec3: () => {
-    const makeCase = (x, y) => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorF32Range(3).flatMap((i) => {
-      return vectorF32Range(3).map((j) => {
-        return makeCase(i, j);
-      });
-    });
+    return generateVectorPairToF32IntervalCases(vectorF32Range(3), vectorF32Range(3), dotInterval);
   },
   f32_vec4: () => {
-    const makeCase = (x, y) => {
-      return makeVectorPairToF32IntervalCase(x, y, dotInterval);
-    };
-
-    return vectorF32Range(4).flatMap((i) => {
-      return vectorF32Range(4).map((j) => {
-        return makeCase(i, j);
-      });
-    });
+    return generateVectorPairToF32IntervalCases(vectorF32Range(4), vectorF32Range(4), dotInterval);
   }
 });
 

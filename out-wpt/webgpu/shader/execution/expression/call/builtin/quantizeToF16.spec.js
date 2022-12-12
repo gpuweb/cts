@@ -16,7 +16,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { quantizeToF16Interval } from '../../../../../util/f32_interval.js';
 import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -24,44 +24,38 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('quantizeToF16', {
   f32_const: () => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, quantizeToF16Interval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        kValue.f16.negative.min,
+        kValue.f16.negative.max,
+        kValue.f16.subnormal.negative.min,
+        kValue.f16.subnormal.negative.max,
+        kValue.f16.subnormal.positive.min,
+        kValue.f16.subnormal.positive.max,
+        kValue.f16.positive.min,
+        kValue.f16.positive.max,
+        ...fullF16Range(),
+      ],
 
-    const cases = [
-      kValue.f16.negative.min,
-      kValue.f16.negative.max,
-      kValue.f16.subnormal.negative.min,
-      kValue.f16.subnormal.negative.max,
-      kValue.f16.subnormal.positive.min,
-      kValue.f16.subnormal.positive.max,
-      kValue.f16.positive.min,
-      kValue.f16.positive.max,
-    ].map(makeCase);
-
-    cases.push(...fullF16Range().map(makeCase));
-
-    return cases;
+      quantizeToF16Interval
+    );
   },
   f32_non_const: () => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, quantizeToF16Interval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        kValue.f16.negative.min,
+        kValue.f16.negative.max,
+        kValue.f16.subnormal.negative.min,
+        kValue.f16.subnormal.negative.max,
+        kValue.f16.subnormal.positive.min,
+        kValue.f16.subnormal.positive.max,
+        kValue.f16.positive.min,
+        kValue.f16.positive.max,
+        ...fullF32Range(),
+      ],
 
-    const cases = [
-      kValue.f16.negative.min,
-      kValue.f16.negative.max,
-      kValue.f16.subnormal.negative.min,
-      kValue.f16.subnormal.negative.max,
-      kValue.f16.subnormal.positive.min,
-      kValue.f16.subnormal.positive.max,
-      kValue.f16.positive.min,
-      kValue.f16.positive.max,
-    ].map(makeCase);
-
-    cases.push(...fullF32Range().map(makeCase));
-
-    return cases;
+      quantizeToF16Interval
+    );
   },
 });
 

@@ -13,12 +13,7 @@ import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { reflectInterval } from '../../../../../util/f32_interval.js';
 import { sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import {
-allInputSources,
-
-makeVectorPairToVectorIntervalCase,
-run } from
-'../../expression.js';
+import { allInputSources, generateVectorPairToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -26,26 +21,27 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('reflect', {
   f32_vec2: () => {
-    return sparseVectorF32Range(2).flatMap((i) =>
-    sparseVectorF32Range(2).map((j) => makeCaseVecF32(i, j)));
+    return generateVectorPairToVectorCases(
+    sparseVectorF32Range(2),
+    sparseVectorF32Range(2),
+    reflectInterval);
 
   },
   f32_vec3: () => {
-    return sparseVectorF32Range(3).flatMap((i) =>
-    sparseVectorF32Range(3).map((j) => makeCaseVecF32(i, j)));
+    return generateVectorPairToVectorCases(
+    sparseVectorF32Range(3),
+    sparseVectorF32Range(3),
+    reflectInterval);
 
   },
   f32_vec4: () => {
-    return sparseVectorF32Range(4).flatMap((i) =>
-    sparseVectorF32Range(4).map((j) => makeCaseVecF32(i, j)));
+    return generateVectorPairToVectorCases(
+    sparseVectorF32Range(4),
+    sparseVectorF32Range(4),
+    reflectInterval);
 
   }
 });
-
-/** @returns a `reflect` Case for a pair of vectors of f32s input */
-const makeCaseVecF32 = (x, y) => {
-  return makeVectorPairToVectorIntervalCase(x, y, reflectInterval);
-};
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

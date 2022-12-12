@@ -14,7 +14,7 @@ import {
   u32,
 } from '../../../util/conversion.js';
 import { F32Interval } from '../../../util/f32_interval.js';
-import { quantizeToF32 } from '../../../util/math.js';
+import { cartesianProduct, quantizeToF32 } from '../../../util/math.js';
 
 /** Is this expectation actually a Comparator */
 function isComparator(e) {
@@ -511,12 +511,12 @@ function packScalarsToVector(parameterTypes, returnType, cases, vectorWidth) {
 }
 
 /**
- * Generates a Case for the param and unary interval generator provided.
+ * @returns a Case for the param and unary interval generator provided
  * The Case will use use an interval comparator for matching results.
- * @param param the param to pass into the unary operation
- * @param ops callbacks that implement generating an acceptance interval for a unary operation
+ * @param param the param to pass in
+ * @param ops callbacks that implement generating an acceptance interval for an unary operation
  */
-export function makeUnaryToF32IntervalCase(param, ...ops) {
+function makeUnaryToF32IntervalCase(param, ...ops) {
   param = quantizeToF32(param);
 
   const intervals = ops.map(o => o(param));
@@ -524,13 +524,24 @@ export function makeUnaryToF32IntervalCase(param, ...ops) {
 }
 
 /**
- * Generates a Case for the params and binary interval generator provided.
- * The Case will use use an interval comparator for matching results.
- * @param param0 the first param or left hand side to pass into the binary operation
- * @param param1 the second param or rhs hand side to pass into the binary operation
- * @param ops callbacks that implement generating an acceptance interval for a binary operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance interval for an
+ *            unary operation
  */
-export function makeBinaryToF32IntervalCase(param0, param1, ...ops) {
+export function generateUnaryToF32IntervalCases(params, ...ops) {
+  return params.map(e => makeUnaryToF32IntervalCase(e, ...ops));
+}
+
+/**
+ * @returns a Case for the params and binary interval generator provided
+ * The Case will use use an interval comparator for matching results.
+ * @param param0 the first param or left hand side to pass in
+ * @param param1 the second param or rhs hand side to pass in
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            binary operation
+ */
+function makeBinaryToF32IntervalCase(param0, param1, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
 
@@ -539,15 +550,28 @@ export function makeBinaryToF32IntervalCase(param0, param1, ...ops) {
 }
 
 /**
- * Generates a Case for the params and ternary interval generator provided.
- * The Case will use use an interval comparator for matching results.
- * @param param0 the first param to pass into the ternary operation
- * @param param1 the second param to pass into the ternary operation
- * @param param2 the third param to pass into the ternary operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
  * @param ops callbacks that implement generating an acceptance interval for a
- *           ternary operation.
+ *            binary operation
  */
-export function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
+export function generateBinaryToF32IntervalCases(param0s, param1s, ...ops) {
+  return cartesianProduct(param0s, param1s).map(e =>
+    makeBinaryToF32IntervalCase(e[0], e[1], ...ops)
+  );
+}
+
+/**
+ * @returns a Case for the params and ternary interval generator provided
+ * The Case will use use an interval comparator for matching results.
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
+ * @param param2 the third param to pass in
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            ternary operation.
+ */
+function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
   param2 = quantizeToF32(param2);
@@ -560,12 +584,26 @@ export function makeTernaryToF32IntervalCase(param0, param1, param2, ...ops) {
 }
 
 /**
- * Generates a Case for the param and vector interval generator provided.
- * @param param the param to pass into the operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param param2s array of inputs to try for the third param
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            ternary operation.
+ */
+export function generateTernaryToF32IntervalCases(param0s, param1s, param2s, ...ops) {
+  return cartesianProduct(param0s, param1s, param2s).map(e =>
+    makeTernaryToF32IntervalCase(e[0], e[1], e[2], ...ops)
+  );
+}
+
+/**
+ * @returns a Case for the param and vector interval generator provided
+ * @param param the param to pass in
  * @param ops callbacks that implement generating an acceptance interval for a
  *            vector.
  */
-export function makeVectorToF32IntervalCase(param, ...ops) {
+function makeVectorToF32IntervalCase(param, ...ops) {
   param = param.map(quantizeToF32);
   const param_f32 = param.map(f32);
 
@@ -577,13 +615,23 @@ export function makeVectorToF32IntervalCase(param, ...ops) {
 }
 
 /**
- * Generates a Case for the params and vector pair interval generator provided.
- * @param param0 the first param to pass into the operation
- * @param param1 the second param to pass into the operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            vector.
+ **/
+export function generateVectorToF32IntervalCases(params, ...ops) {
+  return params.map(e => makeVectorToF32IntervalCase(e, ...ops));
+}
+
+/**
+ * @returns a Case for the params and vector pair interval generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
-export function makeVectorPairToF32IntervalCase(param0, param1, ...ops) {
+function makeVectorPairToF32IntervalCase(param0, param1, ...ops) {
   param0 = param0.map(quantizeToF32);
   param1 = param1.map(quantizeToF32);
   const param0_f32 = param0.map(f32);
@@ -597,12 +645,25 @@ export function makeVectorPairToF32IntervalCase(param0, param1, ...ops) {
 }
 
 /**
- * Generates a Case for the param and vector of intervals generator provided.
- * @param param the param to pass into the operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            pair of vectors.
+ */
+export function generateVectorPairToF32IntervalCases(param0s, param1s, ...ops) {
+  return cartesianProduct(param0s, param1s).map(e =>
+    makeVectorPairToF32IntervalCase(e[0], e[1], ...ops)
+  );
+}
+
+/**
+ * @returns a Case for the param and vector of intervals generator provided
+ * @param param the param to pass in
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a vector.
  */
-export function makeVectorToVectorIntervalCase(param, ...ops) {
+function makeVectorToVectorCase(param, ...ops) {
   param = param.map(quantizeToF32);
   const param_f32 = param.map(f32);
 
@@ -614,13 +675,23 @@ export function makeVectorToVectorIntervalCase(param, ...ops) {
 }
 
 /**
- * Generates a Case for the params and vector of intervals generator provided.
- * @param param0 the first param to pass into the operation
- * @param param1 the second param to pass into the operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a vector.
+ */
+export function generateVectorToVectorCases(params, ...ops) {
+  return params.map(e => makeVectorToVectorCase(e, ...ops));
+}
+
+/**
+ * @returns a Case for the params and vector of intervals generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a pair of vectors.
  */
-export function makeVectorPairToVectorIntervalCase(param0, param1, ...ops) {
+function makeVectorPairToVectorCase(param0, param1, ...ops) {
   param0 = param0.map(quantizeToF32);
   param1 = param1.map(quantizeToF32);
   const param0_f32 = param0.map(f32);
@@ -634,13 +705,26 @@ export function makeVectorPairToVectorIntervalCase(param0, param1, ...ops) {
 }
 
 /**
- * Generates a Case for the param and vector of intervals generator provided.
- * The input is treated as an unsigned int.
- * @param param the param to pass into the operation
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
  * @param ops callbacks that implement generating an vector of acceptance
- *            intervals for a vector.
+ *            intervals for a pair of vectors.
  */
-export function makeU32ToVectorIntervalCase(param, ...ops) {
+export function generateVectorPairToVectorCases(param0s, param1s, ...ops) {
+  return cartesianProduct(param0s, param1s).map(e =>
+    makeVectorPairToVectorCase(e[0], e[1], ...ops)
+  );
+}
+
+/**
+ * @returns a Case for the param and vector of intervals generator provided
+ * The input is treated as an unsigned int.
+ * @param param the param to pass in
+ * @param ops callbacks that implement generating an acceptance
+ *            interval for an unsigned int.
+ */
+function makeU32ToVectorCase(param, ...ops) {
   param = Math.trunc(param);
   const param_u32 = u32(param);
 
@@ -649,4 +733,14 @@ export function makeU32ToVectorIntervalCase(param, ...ops) {
     input: param_u32,
     expected: anyOf(...vectors),
   };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance
+ *            interval for an unsigned int.
+ */
+export function generateU32ToVectorCases(params, ...ops) {
+  return params.map(e => makeU32ToVectorCase(e, ...ops));
 }

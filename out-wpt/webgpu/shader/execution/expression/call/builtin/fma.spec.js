@@ -13,11 +13,23 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { fmaInterval } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
-import { allInputSources, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { makeCaseCache } from '../../case_cache.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+export const d = makeCaseCache('fma', {
+  f32: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      fmaInterval
+    );
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -30,17 +42,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range();
-    const cases = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeTernaryToF32IntervalCase(x, y, z, fmaInterval));
-        });
-      });
-    });
-
+    const cases = await d.get('f32');
     await run(t, builtin('fma'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

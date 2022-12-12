@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { ceilInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,11 +22,8 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('ceil', {
   f32: () => {
-    const makeCase = (x) => {
-      return makeUnaryToF32IntervalCase(x, ceilInterval);
-    };
-
-    return [
+    return generateUnaryToF32IntervalCases(
+    [
     // Small positive numbers
     0.1,
     0.9,
@@ -39,8 +36,10 @@ export const d = makeCaseCache('ceil', {
     -1.0,
     -1.1,
     -1.9,
-    ...fullF32Range()].
-    map((x) => makeCase(x));
+    ...fullF32Range()],
+
+    ceilInterval);
+
   }
 });
 

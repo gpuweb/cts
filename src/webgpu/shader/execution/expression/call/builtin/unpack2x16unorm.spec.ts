@@ -11,7 +11,7 @@ import { TypeF32, TypeU32, TypeVec } from '../../../../../util/conversion.js';
 import { unpack2x16unormInterval } from '../../../../../util/f32_interval.js';
 import { fullU32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeU32ToVectorIntervalCase, run } from '../../expression.js';
+import { allInputSources, generateU32ToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -19,11 +19,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unpack2x16unorm', {
   u32: () => {
-    const makeCase = (n: number): Case => {
-      return makeU32ToVectorIntervalCase(n, unpack2x16unormInterval);
-    };
-
-    return fullU32Range().map(makeCase);
+    return generateU32ToVectorCases(fullU32Range(), unpack2x16unormInterval);
   },
 });
 

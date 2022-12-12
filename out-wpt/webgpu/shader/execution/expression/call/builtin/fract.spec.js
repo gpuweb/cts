@@ -15,7 +15,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { fractInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -23,26 +23,26 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('fract', {
   f32: () => {
-    const makeCase = x => {
-      return makeUnaryToF32IntervalCase(x, fractInterval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        0.5, // 0.5 -> 0.5
+        0.9, // ~0.9 -> ~0.9
+        1, // 1 -> 0
+        2, // 2 -> 0
+        1.11, // ~1.11 -> ~0.11
+        10.0001, // ~10.0001 -> ~0.0001
+        -0.1, // ~-0.1 -> ~0.9
+        -0.5, // -0.5 -> 0.5
+        -0.9, // ~-0.9 -> ~0.1
+        -1, // -1 -> 0
+        -2, // -2 -> 0
+        -1.11, // ~-1.11 -> ~0.89
+        -10.0001, // -10.0001 -> ~0.9999
+        ...fullF32Range(),
+      ],
 
-    return [
-      0.5, // 0.5 -> 0.5
-      0.9, // ~0.9 -> ~0.9
-      1, // 1 -> 0
-      2, // 2 -> 0
-      1.11, // ~1.11 -> ~0.11
-      10.0001, // ~10.0001 -> ~0.0001
-      -0.1, // ~-0.1 -> ~0.9
-      -0.5, // -0.5 -> 0.5
-      -0.9, // ~-0.9 -> ~0.1
-      -1, // -1 -> 0
-      -2, // -2 -> 0
-      -1.11, // ~-1.11 -> ~0.89
-      -10.0001, // -10.0001 -> ~0.9999
-      ...fullF32Range(),
-    ].map(makeCase);
+      fractInterval
+    );
   },
 });
 

@@ -21,7 +21,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { mixIntervals } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -29,21 +29,12 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('mix', {
   f32: () => {
-    const makeCase = (x, y, z) => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...mixIntervals);
-    };
-
-    const values = sparseF32Range();
-    const cases = [];
-    values.forEach(x => {
-      values.forEach(y => {
-        values.forEach(z => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      ...mixIntervals
+    );
   },
 });
 

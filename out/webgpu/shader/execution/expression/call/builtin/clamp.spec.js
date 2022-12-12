@@ -29,7 +29,7 @@ u32Bits } from
 import { clampIntervals } from '../../../../../util/f32_interval.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeTernaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -67,41 +67,20 @@ export const d = makeCaseCache('clamp', {
     return generateIntegerTestCases(test_values);
   },
   f32_non_const: () => {
-    const makeCase = (x, y, z) => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
-    };
+    return generateTernaryToF32IntervalCases(
+    sparseF32Range(),
+    sparseF32Range(),
+    sparseF32Range(),
+    ...clampIntervals);
 
-    // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range();
-    const cases = [];
-    values.forEach((x) => {
-      values.forEach((y) => {
-        values.forEach((z) => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
   },
-
   f32_const: () => {
-    const makeCase = (x, y, z) => {
-      return makeTernaryToF32IntervalCase(x, y, z, ...clampIntervals);
-    };
+    return generateTernaryToF32IntervalCases(
+    sparseF32Range(),
+    sparseF32Range(),
+    sparseF32Range(),
+    ...clampIntervals);
 
-    // Using sparseF32Range since this will generate N^3 test cases
-    const values = sparseF32Range();
-    const cases = [];
-    values.forEach((x) => {
-      values.forEach((y) => {
-        values.forEach((z) => {
-          cases.push(makeCase(x, y, z));
-        });
-      });
-    });
-
-    return cases;
   }
 });
 

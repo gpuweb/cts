@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { sinInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,16 +22,16 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('sin', {
   f32: () => {
-    const makeCase = n => {
-      return makeUnaryToF32IntervalCase(n, sinInterval);
-    };
+    return generateUnaryToF32IntervalCases(
+      [
+        // Well defined accuracy range
+        ...linearRange(-Math.PI, Math.PI, 1000),
 
-    return [
-      // Well defined accuracy range
-      ...linearRange(-Math.PI, Math.PI, 1000),
+        ...fullF32Range(),
+      ],
 
-      ...fullF32Range(),
-    ].map(makeCase);
+      sinInterval
+    );
   },
 });
 
