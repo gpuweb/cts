@@ -13,7 +13,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { saturateInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,16 +21,14 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('saturate', {
   f32: () => {
-    const makeCase = (n: number): Case => {
-      return makeUnaryToF32IntervalCase(n, saturateInterval);
-    };
-
-    return [
-      // Non-clamped values
-      ...linearRange(0.0, 1.0, 100),
-
-      ...fullF32Range(),
-    ].map(makeCase);
+    return generateUnaryToF32IntervalCases(
+      [
+        // Non-clamped values
+        ...linearRange(0.0, 1.0, 100),
+        ...fullF32Range(),
+      ],
+      saturateInterval
+    );
   },
 });
 

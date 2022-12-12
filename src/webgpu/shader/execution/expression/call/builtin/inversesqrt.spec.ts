@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { inverseSqrtInterval } from '../../../../../util/f32_interval.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,16 +22,15 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('inverseSqrt', {
   f32: () => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, inverseSqrtInterval);
-    };
-
-    return [
-      // 0 < x <= 1 linearly spread
-      ...linearRange(kValue.f32.positive.min, 1, 100),
-      // 1 <= x < 2^32, biased towards 1
-      ...biasedRange(1, 2 ** 32, 1000),
-    ].map(x => makeCase(x));
+    return generateUnaryToF32IntervalCases(
+      [
+        // 0 < x <= 1 linearly spread
+        ...linearRange(kValue.f32.positive.min, 1, 100),
+        // 1 <= x < 2^32, biased towards 1
+        ...biasedRange(1, 2 ** 32, 1000),
+      ],
+      inverseSqrtInterval
+    );
   },
 });
 

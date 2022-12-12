@@ -22,7 +22,7 @@ import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util
 import { absInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -30,18 +30,10 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('abs', {
   f32_non_const: () => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, absInterval);
-    };
-
-    return fullF32Range().map(makeCase);
+    return generateUnaryToF32IntervalCases(fullF32Range(), absInterval);
   },
   f32_const: () => {
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, absInterval);
-    };
-
-    return fullF32Range().map(x => makeCase(x));
+    return generateUnaryToF32IntervalCases(fullF32Range(), absInterval);
   },
 });
 

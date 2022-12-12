@@ -12,7 +12,7 @@ import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { normalizeInterval } from '../../../../../util/f32_interval.js';
 import { vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeVectorToVectorIntervalCase, run } from '../../expression.js';
+import { allInputSources, generateVectorToVectorCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -20,20 +20,15 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('normalize', {
   f32_vec2: () => {
-    return vectorF32Range(2).map(makeCaseVecF32);
+    return generateVectorToVectorCases(vectorF32Range(2), normalizeInterval);
   },
   f32_vec3: () => {
-    return vectorF32Range(3).map(makeCaseVecF32);
+    return generateVectorToVectorCases(vectorF32Range(3), normalizeInterval);
   },
   f32_vec4: () => {
-    return vectorF32Range(4).map(makeCaseVecF32);
+    return generateVectorToVectorCases(vectorF32Range(4), normalizeInterval);
   },
 });
-
-/** @returns a `normalize` Case for a vector of f32s input */
-const makeCaseVecF32 = (x: number[]): Case => {
-  return makeVectorToVectorIntervalCase(x, normalizeInterval);
-};
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

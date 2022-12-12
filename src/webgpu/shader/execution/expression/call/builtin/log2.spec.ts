@@ -14,7 +14,7 @@ import { TypeF32 } from '../../../../../util/conversion.js';
 import { log2Interval } from '../../../../../util/f32_interval.js';
 import { biasedRange, fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, makeUnaryToF32IntervalCase, run } from '../../expression.js';
+import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,18 +22,16 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('log2', {
   f32: () => {
-    // [1]: Need to decide what the ground-truth is.
-    const makeCase = (x: number): Case => {
-      return makeUnaryToF32IntervalCase(x, log2Interval);
-    };
-
-    return [
-      // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
-      ...linearRange(kValue.f32.positive.min, 0.5, 20),
-      ...linearRange(0.5, 2.0, 20),
-      ...biasedRange(2.0, 2 ** 32, 1000),
-      ...fullF32Range(),
-    ].map(x => makeCase(x));
+    return generateUnaryToF32IntervalCases(
+      [
+        // log2's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
+        ...linearRange(kValue.f32.positive.min, 0.5, 20),
+        ...linearRange(0.5, 2.0, 20),
+        ...biasedRange(2.0, 2 ** 32, 1000),
+        ...fullF32Range(),
+      ],
+      log2Interval
+    );
   },
 });
 
