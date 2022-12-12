@@ -563,10 +563,10 @@ function packScalarsToVector(
 }
 
 /**
- * Builds a Case for the param and unary interval generator provided.
+ * @returns a Case for the param and unary interval generator provided
  * The Case will use use an interval comparator for matching results.
- * @param param the param to pass into the unary operation
- * @param ops callbacks that implement generating an acceptance interval for a unary operation
+ * @param param the param to pass in
+ * @param ops callbacks that implement generating an acceptance interval for an unary operation
  */
 function makeUnaryToF32IntervalCase(param: number, ...ops: PointToInterval[]): Case {
   param = quantizeToF32(param);
@@ -576,10 +576,11 @@ function makeUnaryToF32IntervalCase(param: number, ...ops: PointToInterval[]): C
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param params array of inputs to try
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance interval for an
+ *            unary operation
+ */
 export function generateUnaryToF32IntervalCases(
   params: number[],
   ...ops: PointToInterval[]
@@ -588,11 +589,12 @@ export function generateUnaryToF32IntervalCases(
 }
 
 /**
- * Builds a Case for the params and binary interval generator provided.
+ * @returns a Case for the params and binary interval generator provided
  * The Case will use use an interval comparator for matching results.
- * @param param0 the first param or left hand side to pass into the binary operation
- * @param param1 the second param or rhs hand side to pass into the binary operation
- * @param ops callbacks that implement generating an acceptance interval for a binary operation
+ * @param param0 the first param or left hand side to pass in
+ * @param param1 the second param or rhs hand side to pass in
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            binary operation
  */
 function makeBinaryToF32IntervalCase(
   param0: number,
@@ -607,11 +609,12 @@ function makeBinaryToF32IntervalCase(
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param param0s array of inputs to try for the first param
- *  @param param1s array of inputs to try for the second param
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            binary operation
+ */
 export function generateBinaryToF32IntervalCases(
   param0s: number[],
   param1s: number[],
@@ -623,13 +626,13 @@ export function generateBinaryToF32IntervalCases(
 }
 
 /**
- * Builds a Case for the params and ternary interval generator provided.
+ * @returns a Case for the params and ternary interval generator provided
  * The Case will use use an interval comparator for matching results.
- * @param param0 the first param to pass into the ternary operation
- * @param param1 the second param to pass into the ternary operation
- * @param param2 the third param to pass into the ternary operation
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
+ * @param param2 the third param to pass in
  * @param ops callbacks that implement generating an acceptance interval for a
- *           ternary operation.
+ *            ternary operation.
  */
 function makeTernaryToF32IntervalCase(
   param0: number,
@@ -649,12 +652,13 @@ function makeTernaryToF32IntervalCase(
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param param0s array of inputs to try for the first param
- *  @param param1s array of inputs to try for the second param
- *  @param param2s array of inputs to try for the second param
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param param2s array of inputs to try for the third param
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            ternary operation.
+ */
 export function generateTernaryToF32IntervalCases(
   param0s: number[],
   param1s: number[],
@@ -667,8 +671,8 @@ export function generateTernaryToF32IntervalCases(
 }
 
 /**
- * Builds a Case for the param and vector interval generator provided.
- * @param param the param to pass into the operation
+ * @returns a Case for the param and vector interval generator provided
+ * @param param the param to pass in
  * @param ops callbacks that implement generating an acceptance interval for a
  *            vector.
  */
@@ -684,9 +688,10 @@ function makeVectorToF32IntervalCase(param: number[], ...ops: VectorToInterval[]
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param params array of inputs to try
- *  @param ops accuracy interval generators to use in the tests
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            vector.
  **/
 export function generateVectorToF32IntervalCases(
   params: number[][],
@@ -696,9 +701,9 @@ export function generateVectorToF32IntervalCases(
 }
 
 /**
- * Builds a Case for the params and vector pair interval generator provided.
- * @param param0 the first param to pass into the operation
- * @param param1 the second param to pass into the operation
+ * @returns a Case for the params and vector pair interval generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
  * @param ops callbacks that implement generating an acceptance interval for a
  *            pair of vectors.
  */
@@ -720,11 +725,12 @@ function makeVectorPairToF32IntervalCase(
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param param0s array of inputs to try for the first input
- *  @param param1s array of inputs to try for the second input
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            pair of vectors.
+ */
 export function generateVectorPairToF32IntervalCases(
   param0s: number[][],
   param1s: number[][],
@@ -736,8 +742,8 @@ export function generateVectorPairToF32IntervalCases(
 }
 
 /**
- * Builds a Case for the param and vector of intervals generator provided.
- * @param param the param to pass into the operation
+ * @returns a Case for the param and vector of intervals generator provided
+ * @param param the param to pass in
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a vector.
  */
@@ -753,18 +759,19 @@ function makeVectorToVectorCase(param: number[], ...ops: VectorToVector[]): Case
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param params array of inputs to try
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a vector.
+ */
 export function generateVectorToVectorCases(params: number[][], ...ops: VectorToVector[]): Case[] {
   return params.map(e => makeVectorToVectorCase(e, ...ops));
 }
 
 /**
- * Builds a Case for the params and vector of intervals generator provided.
- * @param param0 the first param to pass into the operation
- * @param param1 the second param to pass into the operation
+ * @returns a Case for the params and vector of intervals generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
  * @param ops callbacks that implement generating an vector of acceptance
  *            intervals for a pair of vectors.
  */
@@ -786,11 +793,12 @@ function makeVectorPairToVectorCase(
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param param0s array of inputs to try for the first input
- *  @param param1s array of inputs to try for the second input
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
+ * @param ops callbacks that implement generating an vector of acceptance
+ *            intervals for a pair of vectors.
+ */
 export function generateVectorPairToVectorCases(
   param0s: number[][],
   param1s: number[][],
@@ -802,11 +810,11 @@ export function generateVectorPairToVectorCases(
 }
 
 /**
- * Builds a Case for the param and vector of intervals generator provided.
+ * @returns a Case for the param and vector of intervals generator provided
  * The input is treated as an unsigned int.
- * @param param the param to pass into the operation
- * @param ops callbacks that implement generating an vector of acceptance
- *            intervals for a vector.
+ * @param param the param to pass in
+ * @param ops callbacks that implement generating an acceptance
+ *            interval for an unsigned int.
  */
 function makeU32ToVectorCase(param: number, ...ops: PointToVector[]): Case {
   param = Math.trunc(param);
@@ -820,10 +828,11 @@ function makeU32ToVectorCase(param: number, ...ops: PointToVector[]): Case {
 }
 
 /**
- *  @returns an array of Cases for a given operation over a range of inputs
- *  @param params array of inputs to try
- *  @param ops accuracy interval generators to use in the tests
- **/
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param ops callbacks that implement generating an acceptance
+ *            interval for an unsigned int.
+ */
 export function generateU32ToVectorCases(params: number[], ...ops: PointToVector[]): Case[] {
   return params.map(e => makeU32ToVectorCase(e, ...ops));
 }
