@@ -30,10 +30,10 @@ const inputs = [
 
 export const d = makeCaseCache('acosh', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, true, ...acoshIntervals);
+    return generateUnaryToF32IntervalCases(inputs, 'f32', ...acoshIntervals);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, false, ...acoshIntervals);
+    return generateUnaryToF32IntervalCases(inputs, 'none', ...acoshIntervals);
   },
 });
 

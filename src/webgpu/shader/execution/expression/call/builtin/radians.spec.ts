@@ -22,7 +22,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('radians', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), false, radiansInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'none', radiansInterval);
   },
 });
 

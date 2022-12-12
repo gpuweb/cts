@@ -27,13 +27,18 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('distance', {
   f32_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), true, distanceInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32',
+      distanceInterval
+    );
   },
   f32_non_const: () => {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       distanceInterval
     );
   },
@@ -41,7 +46,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      true,
+      'f32',
       distanceInterval
     );
   },
@@ -49,7 +54,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      false,
+      'none',
       distanceInterval
     );
   },
@@ -57,7 +62,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      true,
+      'f32',
       distanceInterval
     );
   },
@@ -65,7 +70,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      false,
+      'none',
       distanceInterval
     );
   },
@@ -73,7 +78,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      true,
+      'f32',
       distanceInterval
     );
   },
@@ -81,7 +86,7 @@ export const d = makeCaseCache('distance', {
     return generateVectorPairToF32IntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      false,
+      'none',
       distanceInterval
     );
   },

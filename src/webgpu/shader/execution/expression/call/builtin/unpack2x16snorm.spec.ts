@@ -19,10 +19,10 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unpack2x16snorm', {
   u32_const: () => {
-    return generateU32ToVectorCases(fullU32Range(), true, unpack2x16snormInterval);
+    return generateU32ToVectorCases(fullU32Range(), 'f32', unpack2x16snormInterval);
   },
   u32_non_const: () => {
-    return generateU32ToVectorCases(fullU32Range(), false, unpack2x16snormInterval);
+    return generateU32ToVectorCases(fullU32Range(), 'none', unpack2x16snormInterval);
   },
 });
 

@@ -25,7 +25,7 @@ export const d = makeCaseCache('fma', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      true,
+      'f32',
       fmaInterval
     );
   },
@@ -34,7 +34,7 @@ export const d = makeCaseCache('fma', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      false,
+      'none',
       fmaInterval
     );
   },

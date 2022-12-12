@@ -32,7 +32,7 @@ export const d = makeCaseCache('mix', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      true,
+      'f32',
       ...mixIntervals
     );
   },
@@ -41,7 +41,7 @@ export const d = makeCaseCache('mix', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      false,
+      'none',
       ...mixIntervals
     );
   },

@@ -21,10 +21,10 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('pow', {
   f32_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), true, powInterval);
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), 'f32', powInterval);
   },
   f32_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), false, powInterval);
+    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), 'none', powInterval);
   },
 });
 

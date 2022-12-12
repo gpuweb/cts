@@ -35,10 +35,10 @@ const inputs = [
 
 export const d = makeCaseCache('atan', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, true, atanInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'f32', atanInterval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, false, atanInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'none', atanInterval);
   },
 });
 

@@ -22,13 +22,18 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/f32_arithmetic', {
   addition_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), true, additionInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32',
+      additionInterval
+    );
   },
   addition_non_const: () => {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       additionInterval
     );
   },
@@ -36,7 +41,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      true,
+      'f32',
       subtractionInterval
     );
   },
@@ -44,7 +49,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       subtractionInterval
     );
   },
@@ -52,7 +57,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      true,
+      'f32',
       multiplicationInterval
     );
   },
@@ -60,18 +65,23 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       multiplicationInterval
     );
   },
   division_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), true, divisionInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32',
+      divisionInterval
+    );
   },
   division_non_const: () => {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       divisionInterval
     );
   },
@@ -79,7 +89,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      true,
+      'f32',
       remainderInterval
     );
   },
@@ -87,7 +97,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
       fullF32Range(),
       fullF32Range(),
-      false,
+      'none',
       remainderInterval
     );
   },

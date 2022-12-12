@@ -24,7 +24,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      true,
+      'f32',
       reflectInterval
     );
   },
@@ -32,7 +32,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      false,
+      'none',
       reflectInterval
     );
   },
@@ -40,7 +40,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      true,
+      'f32',
       reflectInterval
     );
   },
@@ -48,7 +48,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      false,
+      'none',
       reflectInterval
     );
   },
@@ -56,7 +56,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      true,
+      'f32',
       reflectInterval
     );
   },
@@ -64,7 +64,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      false,
+      'none',
       reflectInterval
     );
   },

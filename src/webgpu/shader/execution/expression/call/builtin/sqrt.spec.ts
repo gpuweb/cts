@@ -20,11 +20,11 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('sqrt', {
-  f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), false, sqrtInterval);
-  },
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), true, sqrtInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'f32', sqrtInterval);
+  },
+  f32_non_const: () => {
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'none', sqrtInterval);
   },
 });
 

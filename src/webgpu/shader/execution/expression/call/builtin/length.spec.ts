@@ -26,25 +26,25 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('length', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), false, lengthInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'none', lengthInterval);
   },
   f32_vec2_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(2), true, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(2), 'f32', lengthInterval);
   },
   f32_vec2_non_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(2), false, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(2), 'none', lengthInterval);
   },
   f32_vec3_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(3), true, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(3), 'f32', lengthInterval);
   },
   f32_vec3_non_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(3), false, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(3), 'none', lengthInterval);
   },
   f32_vec4_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(4), true, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(4), 'f32', lengthInterval);
   },
   f32_vec4_non_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(4), false, lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(4), 'none', lengthInterval);
   },
 });
 

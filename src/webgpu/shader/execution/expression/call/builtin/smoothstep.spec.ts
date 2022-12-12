@@ -27,7 +27,7 @@ export const d = makeCaseCache('smoothstep', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      true,
+      'f32',
       smoothStepInterval
     );
   },
@@ -36,7 +36,7 @@ export const d = makeCaseCache('smoothstep', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      false,
+      'none',
       smoothStepInterval
     );
   },
