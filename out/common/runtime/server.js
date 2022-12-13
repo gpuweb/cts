@@ -22,6 +22,7 @@ function usage(rc) {
   console.log(`  tools/run_${sys.type} [OPTIONS...]`);
   console.log('Options:');
   console.log('  --colors             Enable ANSI colors in output.');
+  console.log('  --coverage           Add coverage data to each result.');
   console.log('  --data               Path to the data cache directory.');
   console.log('  --verbose            Print result/log of every test as it runs.');
   console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
@@ -44,6 +45,23 @@ function usage(rc) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
   console.log('Must be run from repository root');
   usage(1);
@@ -51,6 +69,7 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
 
 Colors.enabled = false;
 
+let emitCoverage = false;
 let verbose = false;
 let gpuProviderModule = undefined;
 let dataPath = undefined;
@@ -61,6 +80,8 @@ for (let i = 0; i < sys.args.length; ++i) {
   if (a.startsWith('-')) {
     if (a === '--colors') {
       Colors.enabled = true;
+    } else if (a === '--coverage') {
+      emitCoverage = true;
     } else if (a === '--data') {
       dataPath = sys.args[++i];
     } else if (a === '--gpu-provider') {
@@ -78,8 +99,21 @@ for (let i = 0; i < sys.args.length; ++i) {
   }
 }
 
+let codeCoverage = undefined;
+
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule.create(gpuProviderFlags));
+
+  if (emitCoverage) {
+    codeCoverage = gpuProviderModule.coverage;
+    if (codeCoverage === undefined) {
+      console.error(
+      `--coverage specified, but the GPUProviderModule does not support code coverage.
+Did you remember to build with code coverage instrumentation enabled?`);
+
+      sys.exit(1);
+    }
+  }
 }
 
 if (dataPath !== undefined) {
@@ -142,13 +176,17 @@ if (verbose) {
       try {
         const testcase = (await testcases).get(name);
         if (testcase) {
+          if (codeCoverage !== undefined) {
+            codeCoverage.begin();
+          }
           const result = await runTestcase(testcase);
+          const coverageData = codeCoverage !== undefined ? codeCoverage.end() : undefined;
           let message = '';
           if (result.logs !== undefined) {
             message = result.logs.map((log) => prettyPrintLog(log)).join('\n');
           }
           const status = result.status;
-          const res = { status, message };
+          const res = { status, message, coverageData };
           response.statusCode = 200;
           response.end(JSON.stringify(res));
         } else {
