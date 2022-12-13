@@ -120,6 +120,11 @@ paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
 fn(async (t) => {
   const { mapMode } = t.params;
   const buffer = t.createMappableBuffer(mapMode, 16);
+
+  // Start mapping the buffer, we are going to destroy it before it resolves so it will reject
+  // the mapping promise with an AbortError.
+  t.shouldReject('AbortError', buffer.mapAsync(mapMode));
+
   buffer.destroy();
   await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
 });
