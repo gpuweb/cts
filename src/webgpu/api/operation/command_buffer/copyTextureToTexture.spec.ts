@@ -1,7 +1,7 @@
 export const description = `copyTextureToTexture operation tests`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, memcpy } from '../../../../common/util/util.js';
+import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
   kRegularTextureFormats,
@@ -17,6 +17,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
+import { checkElementsBetween } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
 import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
@@ -202,11 +203,10 @@ class F extends GPUTest {
     );
     this.device.queue.submit([encoder.finish()]);
 
-    // Fill expectedDataWithPadding with the expected data of dstTexture. The other values in
-    // expectedDataWithPadding are kept 0 to check if the texels untouched by the copy are 0
+    // Fill expectedUint8DataWithPadding with the expected data of dstTexture. The other values in
+    // expectedUint8DataWithPadding are kept 0 to check if the texels untouched by the copy are 0
     // (their previous values).
-    const expectedDataWithPadding = new ArrayBuffer(dstBufferSize);
-    const expectedUint8DataWithPadding = new Uint8Array(expectedDataWithPadding);
+    const expectedUint8DataWithPadding = new Uint8Array(dstBufferSize);
     const expectedUint8Data = new Uint8Array(initialSrcData);
 
     const appliedCopyBlocksPerRow = appliedCopyWidth / blockWidth;
@@ -246,8 +246,40 @@ class F extends GPUTest {
       }
     }
 
+    // Use a tolerance of 1 for 8-byte snorm formats.
+    // MAINTENANCE_TODO: Use textureContentIsOKByT2B with TexelView and tolerance.
+    let tolerance = 0;
+    if (srcFormat.includes('snorm')) {
+      switch (srcFormat) {
+        case 'r8snorm':
+        case 'rg8snorm':
+        case 'rgba8snorm':
+          tolerance = 1;
+          break;
+        case 'bc4-r-snorm':
+        case 'bc5-rg-snorm':
+        case 'eac-r11snorm':
+        case 'eac-rg11snorm':
+          break;
+        default:
+          unreachable();
+      }
+    }
+
     // Verify the content of the whole subresource of dstTexture at dstCopyLevel (in dstBuffer) is expected.
-    this.expectGPUBufferValuesEqual(dstBuffer, expectedUint8DataWithPadding);
+    this.expectGPUBufferValuesPassCheck(
+      dstBuffer,
+      vals =>
+        checkElementsBetween(vals, [
+          i => expectedUint8DataWithPadding[i],
+          i => expectedUint8DataWithPadding[i] + tolerance,
+        ]),
+      {
+        srcByteOffset: 0,
+        type: Uint8Array,
+        typedLength: expectedUint8DataWithPadding.length,
+      }
+    );
   }
 
   InitializeStencilAspect(
