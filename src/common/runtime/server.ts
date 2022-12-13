@@ -8,7 +8,7 @@ import { dataCache } from '../framework/data_cache.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
-import { LiveTestCaseResult } from '../internal/logging/result.js';
+import { LiveTestCaseResult, Status } from '../internal/logging/result.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { TestQueryWithExpectation } from '../internal/query/query.js';
 import { TestTreeLeaf } from '../internal/tree.js';
@@ -22,6 +22,7 @@ function usage(rc: number): never {
   console.log(`  tools/run_${sys.type} [OPTIONS...]`);
   console.log('Options:');
   console.log('  --colors             Enable ANSI colors in output.');
+  console.log('  --coverage           Add coverage data to each result.');
   console.log('  --data               Path to the data cache directory.');
   console.log('  --verbose            Print result/log of every test as it runs.');
   console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
@@ -36,12 +37,29 @@ function usage(rc: number): never {
 }
 
 interface RunResult {
-  status: string;
+  // The result of the test
+  status: Status;
+  // Any additional messages printed
   message: string;
+  // Code coverage data, if the server was started with `--coverage`
+  // This data is opaque (implementation defined).
+  coverageData?: string;
 }
 
+// The interface that exposes creation of the GPU, and optional interface to code coverage.
 interface GPUProviderModule {
+  // @returns a GPU with the given flags
   create(flags: string[]): GPU;
+  // An optional interface to a CodeCoverageProvider
+  coverage?: CodeCoverageProvider;
+}
+
+interface CodeCoverageProvider {
+  // Starts collecting code coverage
+  begin(): void;
+  // Ends collecting of code coverage, returning the coverage data.
+  // This data is opaque (implementation defined).
+  end(): string;
 }
 
 if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
@@ -51,6 +69,7 @@ if (!sys.existsSync('src/common/runtime/cmdline.ts')) {
 
 Colors.enabled = false;
 
+let emitCoverage = false;
 let verbose = false;
 let gpuProviderModule: GPUProviderModule | undefined = undefined;
 let dataPath: string | undefined = undefined;
@@ -61,6 +80,8 @@ for (let i = 0; i < sys.args.length; ++i) {
   if (a.startsWith('-')) {
     if (a === '--colors') {
       Colors.enabled = true;
+    } else if (a === '--coverage') {
+      emitCoverage = true;
     } else if (a === '--data') {
       dataPath = sys.args[++i];
     } else if (a === '--gpu-provider') {
@@ -78,8 +99,21 @@ for (let i = 0; i < sys.args.length; ++i) {
   }
 }
 
+let codeCoverage: CodeCoverageProvider | undefined = undefined;
+
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule!.create(gpuProviderFlags));
+
+  if (emitCoverage) {
+    codeCoverage = gpuProviderModule.coverage;
+    if (codeCoverage === undefined) {
+      console.error(
+        `--coverage specified, but the GPUProviderModule does not support code coverage.
+Did you remember to build with code coverage instrumentation enabled?`
+      );
+      sys.exit(1);
+    }
+  }
 }
 
 if (dataPath !== undefined) {
@@ -142,13 +176,17 @@ if (verbose) {
         try {
           const testcase = (await testcases).get(name);
           if (testcase) {
+            if (codeCoverage !== undefined) {
+              codeCoverage.begin();
+            }
             const result = await runTestcase(testcase);
+            const coverageData = codeCoverage !== undefined ? codeCoverage.end() : undefined;
             let message = '';
             if (result.logs !== undefined) {
               message = result.logs.map(log => prettyPrintLog(log)).join('\n');
             }
             const status = result.status;
-            const res: RunResult = { status, message };
+            const res: RunResult = { status, message, coverageData };
             response.statusCode = 200;
             response.end(JSON.stringify(res));
           } else {
