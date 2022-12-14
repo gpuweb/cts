@@ -58,7 +58,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'])
+      .combine('T', ['f32-only', 'i32', 'u32'])
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
       .combine('C_value', [-1, 0, 1, 2, 3, 4])
@@ -88,7 +88,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'])
+      .combine('T', ['f32-only', 'i32', 'u32'])
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
       .combine('C_value', [-1, 0, 1, 2, 3, 4])
@@ -125,7 +125,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'])
+      .combine('T', ['f32-only', 'i32', 'u32'])
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'])
       .combine('C_value', [-1, 0, 1, 2, 3, 4])
@@ -160,7 +160,7 @@ Parameters:
   .paramsSubcasesOnly(
     u =>
       u
-        .combine('T', ['f32', 'i32', 'u32'])
+        .combine('T', ['f32-only', 'i32', 'u32'])
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
         .combine('C', ['i32', 'u32'])
         .combine('C_value', [-1, 0, 1, 2, 3, 4])

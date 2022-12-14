@@ -24,16 +24,17 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('acosh', {
-  f32: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
-        ...fullF32Range(),
-      ],
+const inputs = [
+  ...biasedRange(1, 2, 100), // x near 1 can be problematic to implement
+  ...fullF32Range(),
+];
 
-      ...acoshIntervals
-    );
+export const d = makeCaseCache('acosh', {
+  f32_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', ...acoshIntervals);
+  },
+  f32_non_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', ...acoshIntervals);
   },
 });
 
@@ -48,7 +49,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('acosh'), [TypeF32], TypeF32, t.params, cases);
   });
 

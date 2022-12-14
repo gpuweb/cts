@@ -20,21 +20,23 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('exp2', {
-  f32: () => {
-    // floor(log2(max f32 value)) = 127, so exp2(127) will be within range of a f32, but exp2(128) will not
-    // floor(ln(max f64 value)) = 1023, so exp2(1023) can be handled by the testing framework, but exp2(1024) will misbehave
-    return generateUnaryToF32IntervalCases(
-    [
-    0, // Returns 1 by definition
-    -128, // Returns subnormal value
-    kValue.f32.negative.min, // Closest to returning 0 as possible
-    ...biasedRange(kValue.f32.negative.max, -127, 100),
-    ...biasedRange(kValue.f32.positive.min, 127, 100),
-    ...linearRange(128, 1023, 10) // Overflows f32, but not f64
-    ],
-    exp2Interval);
+// floor(log2(max f32 value)) = 127, so exp2(127) will be within range of a f32, but exp2(128) will not
+// floor(ln(max f64 value)) = 1023, so exp2(1023) can be handled by the testing framework, but exp2(1024) will misbehave
+const inputs = [
+0, // Returns 1 by definition
+-128, // Returns subnormal value
+kValue.f32.negative.min, // Closest to returning 0 as possible
+...biasedRange(kValue.f32.negative.max, -127, 100),
+...biasedRange(kValue.f32.positive.min, 127, 100),
+...linearRange(128, 1023, 10) // Overflows f32, but not f64
+];
 
+export const d = makeCaseCache('exp2', {
+  f32_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', exp2Interval);
+  },
+  f32_non_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', exp2Interval);
   }
 });
 
@@ -53,7 +55,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const cases = await d.get('f32');
+  const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
   await run(t, builtin('exp2'), [TypeF32], TypeF32, t.params, cases);
 });
 

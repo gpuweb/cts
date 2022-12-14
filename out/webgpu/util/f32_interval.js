@@ -1399,7 +1399,11 @@ export function exp2Interval(x) {
  * Thus a bespoke implementation is used instead of
  * defining a Op and running that through the framework.
  */
-export function faceForwardIntervals(x, y, z) {
+export function faceForwardIntervals(
+x,
+y,
+z)
+{
   const x_vec = toF32Vector(x);
   // Running vector through runPointToIntervalOpComponentWise to make sure that flushing/rounding is handled, since
   // toF32Vector does not perform those operations.
@@ -1407,10 +1411,23 @@ export function faceForwardIntervals(x, y, z) {
   const negative_x = runPointToIntervalOpComponentWise(x_vec, NegationIntervalOp);
 
   const dot_interval = dotInterval(z, y);
-  const results = new Array();
 
-  // Because the result of dot can be an interval, it might span across 0, thus it is possible that both -x and x are
-  // valid responses.
+  const results = [];
+
+  if (!dot_interval.isFinite()) {
+    // dot calculation went out of bounds
+    // Inserting undefine in the result, so that the test running framework is aware
+    // of this potential OOB.
+    // For const-eval tests, it means that the test case should be skipped,
+    // since the shader will fail to compile.
+    // For non-const-eval the undefined should be stripped out of the possible
+    // results.
+
+    results.push(undefined);
+  }
+
+  // Because the result of dot can be an interval, it might span across 0, thus
+  // it is possible that both -x and x are valid responses.
   if (dot_interval.begin < 0 || dot_interval.end < 0) {
     results.push(positive_x);
   }
@@ -1420,7 +1437,7 @@ export function faceForwardIntervals(x, y, z) {
   }
 
   assert(
-  results.length > 0,
+  results.length > 0 || results.every((r) => r === undefined),
   `faceForwardInterval selected neither positive x or negative x for the result, this shouldn't be possible`);
 
   return results;

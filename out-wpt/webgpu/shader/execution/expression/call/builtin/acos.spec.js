@@ -12,7 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { acosInterval } from '../../../../../util/f32_interval.js';
-import { sourceFilteredF32Range, linearRange } from '../../../../../util/math.js';
+import { linearRange, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
@@ -20,26 +20,17 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+const inputs = [
+  ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
+  ...fullF32Range(),
+];
+
 export const d = makeCaseCache('acos', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-        ...sourceFilteredF32Range('const', -1, 1),
-      ],
-
-      acosInterval
-    );
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', acosInterval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        ...linearRange(-1, 1, 100), // acos is defined on [-1, 1]
-        ...sourceFilteredF32Range('const', -1, 1),
-      ],
-
-      acosInterval
-    );
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', acosInterval);
   },
 });
 

@@ -29,6 +29,7 @@ export const d = makeCaseCache('saturate', {
         ...fullF32Range(),
       ],
 
+      'unfiltered',
       saturateInterval
     );
   },

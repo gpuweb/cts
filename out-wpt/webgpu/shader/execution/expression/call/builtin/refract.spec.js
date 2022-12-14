@@ -16,14 +16,25 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
 import { refractInterval } from '../../../../../util/f32_interval.js';
 import { sparseVectorF32Range, quantizeToF32, sparseF32Range } from '../../../../../util/math.js';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/** @returns a `reflect` Case for a pair of vectors of f32s and a f32 input */
-const makeCaseF32 = (i, s, r) => {
+// Using a bespoke implementation of make*Case and generate*Cases here
+// since refract is the only builtin with the API signature
+// (vec, vec, scalar) -> vec
+
+/**
+ * @returns a Case for `refract`
+ * @param i the `i` param for the case
+ * @param s the `s` param for the case
+ * @param r the `r` param for the case
+ * @param check what interval checking to apply
+ * */
+function makeCaseF32(i, s, r, check) {
   i = i.map(quantizeToF32);
   s = s.map(quantizeToF32);
   r = quantizeToF32(r);
@@ -32,11 +43,87 @@ const makeCaseF32 = (i, s, r) => {
   const s_f32 = s.map(f32);
   const r_f32 = f32(r);
 
+  const vectors = refractInterval(i, s, r);
+  if (check === 'f32-only' && vectors.some(e => !e.isFinite())) {
+    return undefined;
+  }
+
   return {
     input: [new Vector(i_f32), new Vector(s_f32), r_f32],
     expected: refractInterval(i, s, r),
   };
-};
+}
+
+/**
+ * @returns an array of Cases for `refract`
+ * @param param_is array of inputs to try for the `i` param
+ * @param param_ss array of inputs to try for the `s` param
+ * @param param_rs array of inputs to try for the `r` param
+ * @param check what interval checking to apply
+ */
+function generateCasesF32(param_is, param_ss, param_rs, check) {
+  // Cannot use `cartesianProduct` here due to heterogeneous param types
+  return param_is
+    .flatMap(i => {
+      return param_ss.flatMap(s => {
+        return param_rs.map(r => {
+          return makeCaseF32(i, s, r, check);
+        });
+      });
+    })
+    .filter(c => c !== undefined);
+}
+
+export const d = makeCaseCache('refract', {
+  f32_vec2_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(2),
+      sparseVectorF32Range(2),
+      sparseF32Range(),
+      'f32-only'
+    );
+  },
+  f32_vec2_non_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(2),
+      sparseVectorF32Range(2),
+      sparseF32Range(),
+      'unfiltered'
+    );
+  },
+  f32_vec3_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(3),
+      sparseVectorF32Range(3),
+      sparseF32Range(),
+      'f32-only'
+    );
+  },
+  f32_vec3_non_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(3),
+      sparseVectorF32Range(3),
+      sparseF32Range(),
+      'unfiltered'
+    );
+  },
+  f32_vec4_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(4),
+      sparseVectorF32Range(4),
+      sparseF32Range(),
+      'f32-only'
+    );
+  },
+  f32_vec4_non_const: () => {
+    return generateCasesF32(
+      sparseVectorF32Range(4),
+      sparseVectorF32Range(4),
+      sparseF32Range(),
+      'unfiltered'
+    );
+  },
+});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -49,13 +136,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = sparseVectorF32Range(2).flatMap(i => {
-      return sparseVectorF32Range(2).flatMap(j => {
-        return sparseF32Range().map(k => {
-          return makeCaseF32(i, j, k);
-        });
-      });
-    });
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
 
     await run(
       t,
@@ -72,13 +155,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = sparseVectorF32Range(3).flatMap(i => {
-      return sparseVectorF32Range(3).flatMap(j => {
-        return sparseF32Range().map(k => {
-          return makeCaseF32(i, j, k);
-        });
-      });
-    });
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
 
     await run(
       t,
@@ -95,13 +174,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = sparseVectorF32Range(4).flatMap(i => {
-      return sparseVectorF32Range(4).flatMap(j => {
-        return sparseF32Range().map(k => {
-          return makeCaseF32(i, j, k);
-        });
-      });
-    });
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
 
     await run(
       t,

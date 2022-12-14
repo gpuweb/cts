@@ -26,27 +26,67 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('distance', {
-  f32: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), distanceInterval);
-  },
-  f32_vec2: () => {
-    return generateVectorPairToF32IntervalCases(
-    sparseVectorF32Range(2),
-    sparseVectorF32Range(2),
+  f32_const: () => {
+    return generateBinaryToF32IntervalCases(
+    fullF32Range(),
+    fullF32Range(),
+    'f32-only',
     distanceInterval);
 
   },
-  f32_vec3: () => {
-    return generateVectorPairToF32IntervalCases(
-    sparseVectorF32Range(3),
-    sparseVectorF32Range(3),
+  f32_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+    fullF32Range(),
+    fullF32Range(),
+    'unfiltered',
     distanceInterval);
 
   },
-  f32_vec4: () => {
+  f32_vec2_const: () => {
+    return generateVectorPairToF32IntervalCases(
+    sparseVectorF32Range(2),
+    sparseVectorF32Range(2),
+    'f32-only',
+    distanceInterval);
+
+  },
+  f32_vec2_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+    sparseVectorF32Range(2),
+    sparseVectorF32Range(2),
+    'unfiltered',
+    distanceInterval);
+
+  },
+  f32_vec3_const: () => {
+    return generateVectorPairToF32IntervalCases(
+    sparseVectorF32Range(3),
+    sparseVectorF32Range(3),
+    'f32-only',
+    distanceInterval);
+
+  },
+  f32_vec3_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+    sparseVectorF32Range(3),
+    sparseVectorF32Range(3),
+    'unfiltered',
+    distanceInterval);
+
+  },
+  f32_vec4_const: () => {
     return generateVectorPairToF32IntervalCases(
     sparseVectorF32Range(4),
     sparseVectorF32Range(4),
+    'f32-only',
+    distanceInterval);
+
+  },
+  f32_vec4_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+    sparseVectorF32Range(4),
+    sparseVectorF32Range(4),
+    'unfiltered',
     distanceInterval);
 
   }
@@ -65,7 +105,7 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = await d.get('f32');
+  const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
   await run(t, builtin('distance'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
@@ -74,7 +114,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = await d.get('f32_vec2');
+  const cases = await d.get(
+  t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const');
+
   await run(
   t,
   builtin('distance'),
@@ -90,7 +132,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = await d.get('f32_vec3');
+  const cases = await d.get(
+  t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const');
+
   await run(
   t,
   builtin('distance'),
@@ -106,7 +150,9 @@ specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
 desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
-  const cases = await d.get('f32_vec4');
+  const cases = await d.get(
+  t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const');
+
   await run(
   t,
   builtin('distance'),

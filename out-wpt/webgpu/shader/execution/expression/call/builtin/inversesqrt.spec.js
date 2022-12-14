@@ -31,6 +31,7 @@ export const d = makeCaseCache('inverseSqrt', {
         ...biasedRange(1, 2 ** 32, 1000),
       ],
 
+      'unfiltered',
       inverseSqrtInterval
     );
   },

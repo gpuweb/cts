@@ -21,14 +21,53 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('dot', {
-  f32_vec2: () => {
-    return generateVectorPairToF32IntervalCases(vectorF32Range(2), vectorF32Range(2), dotInterval);
+  f32_vec2_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(2),
+      vectorF32Range(2),
+      'f32-only',
+      dotInterval
+    );
   },
-  f32_vec3: () => {
-    return generateVectorPairToF32IntervalCases(vectorF32Range(3), vectorF32Range(3), dotInterval);
+  f32_vec2_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(2),
+      vectorF32Range(2),
+      'unfiltered',
+      dotInterval
+    );
   },
-  f32_vec4: () => {
-    return generateVectorPairToF32IntervalCases(vectorF32Range(4), vectorF32Range(4), dotInterval);
+  f32_vec3_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(3),
+      vectorF32Range(3),
+      'f32-only',
+      dotInterval
+    );
+  },
+  f32_vec3_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(3),
+      vectorF32Range(3),
+      'unfiltered',
+      dotInterval
+    );
+  },
+  f32_vec4_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(4),
+      vectorF32Range(4),
+      'f32-only',
+      dotInterval
+    );
+  },
+  f32_vec4_non_const: () => {
+    return generateVectorPairToF32IntervalCases(
+      vectorF32Range(4),
+      vectorF32Range(4),
+      'unfiltered',
+      dotInterval
+    );
   },
 });
 
@@ -61,7 +100,10 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
+
     await run(
       t,
       builtin('dot'),
@@ -77,7 +119,10 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
+
     await run(
       t,
       builtin('dot'),
@@ -93,7 +138,10 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
+
     await run(
       t,
       builtin('dot'),

@@ -29,11 +29,8 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('abs', {
-  f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), absInterval);
-  },
-  f32_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), absInterval);
+  f32: () => {
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', absInterval);
   }
 });
 
@@ -157,7 +154,7 @@ params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
 fn(async (t) => {
-  const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
+  const cases = await d.get('f32');
   await run(t, builtin('abs'), [TypeF32], TypeF32, t.params, cases);
 });
 

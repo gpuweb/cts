@@ -38,7 +38,7 @@ Parameters
         'texture_cube_array`',
       ])
       .beginSubcases()
-      .combine('sampled_type', ['f32', 'i32', 'u32'])
+      .combine('sampled_type', ['f32-only', 'i32', 'u32'])
   )
   .unimplemented();
 

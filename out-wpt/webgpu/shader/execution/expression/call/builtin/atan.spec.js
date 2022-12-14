@@ -21,42 +21,25 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+const inputs = [
+  // Known values
+  -Math.sqrt(3),
+  -1,
+  -1 / Math.sqrt(3),
+  0,
+  1,
+  1 / Math.sqrt(3),
+  Math.sqrt(3),
+
+  ...fullF32Range(),
+];
+
 export const d = makeCaseCache('atan', {
-  f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        // Known values
-        -Math.sqrt(3),
-        -1,
-        -1 / Math.sqrt(3),
-        0,
-        1,
-        1 / Math.sqrt(3),
-        Math.sqrt(3),
-
-        ...fullF32Range(),
-      ],
-
-      atanInterval
-    );
-  },
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        // Known values
-        -Math.sqrt(3),
-        -1,
-        -1 / Math.sqrt(3),
-        0,
-        1,
-        1 / Math.sqrt(3),
-        Math.sqrt(3),
-
-        ...fullF32Range(),
-      ],
-
-      atanInterval
-    );
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', atanInterval);
+  },
+  f32_non_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', atanInterval);
   },
 });
 

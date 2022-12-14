@@ -15,7 +15,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { atanhInterval } from '../../../../../util/f32_interval.js';
-import { biasedRange, sourceFilteredF32Range } from '../../../../../util/math.js';
+import { biasedRange, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
 
@@ -23,37 +23,20 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+const inputs = [
+...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
+-1,
+...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
+1,
+...fullF32Range()];
+
+
 export const d = makeCaseCache('atanh', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(
-    [
-    ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
-    ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
-    ...sourceFilteredF32Range(
-    'const',
-    kValue.f32.negative.less_than_one,
-    kValue.f32.positive.less_than_one)],
-
-
-    atanhInterval);
-
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', atanhInterval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(
-    [
-    ...biasedRange(kValue.f32.negative.less_than_one, -0.9, 20), // discontinuity at x = -1
-    ...biasedRange(kValue.f32.positive.less_than_one, 0.9, 20), // discontinuity at x = 1
-    ...sourceFilteredF32Range(
-    'storage',
-    kValue.f32.negative.less_than_one,
-    kValue.f32.positive.less_than_one),
-
-    // Handle the edge case of -1 and 1 when not doing const-eval
-    -1,
-    1],
-
-    atanhInterval);
-
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', atanhInterval);
   }
 });
 

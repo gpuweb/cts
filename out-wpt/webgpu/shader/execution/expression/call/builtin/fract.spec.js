@@ -41,6 +41,7 @@ export const d = makeCaseCache('fract', {
         ...fullF32Range(),
       ],
 
+      'unfiltered',
       fractInterval
     );
   },

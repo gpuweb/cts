@@ -20,18 +20,20 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
+const inputs = [
+  ...linearRange(kValue.f32.positive.min, 0.5, 20),
+  ...linearRange(0.5, 2.0, 20),
+  ...biasedRange(2.0, 2 ** 32, 1000),
+  ...fullF32Range(),
+];
+
 export const d = makeCaseCache('log', {
-  f32: () => {
-    return generateUnaryToF32IntervalCases(
-      [
-        // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
-        ...linearRange(kValue.f32.positive.min, 0.5, 20),
-        ...linearRange(0.5, 2.0, 20),
-        ...biasedRange(2.0, 2 ** 32, 1000),
-        ...fullF32Range(),
-      ],
-      logInterval
-    );
+  f32_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', logInterval);
+  },
+  f32_non_const: () => {
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', logInterval);
   },
 });
 
@@ -56,7 +58,7 @@ TODO(#792): Decide what the ground-truth is for these tests. [1]
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('log'), [TypeF32], TypeF32, t.params, cases);
   });
 

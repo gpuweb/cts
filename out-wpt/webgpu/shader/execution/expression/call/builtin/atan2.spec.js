@@ -30,7 +30,12 @@ export const d = makeCaseCache('atan2', {
       ...linearRange(kValue.f32.negative.max, kValue.f32.positive.min, 10),
     ];
 
-    return generateBinaryToF32IntervalCases(numeric_range, numeric_range, atan2Interval);
+    return generateBinaryToF32IntervalCases(
+      numeric_range,
+      numeric_range,
+      'unfiltered',
+      atan2Interval
+    );
   },
 });
 

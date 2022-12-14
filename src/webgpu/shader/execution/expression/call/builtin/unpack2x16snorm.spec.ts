@@ -18,8 +18,11 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unpack2x16snorm', {
-  u32: () => {
-    return generateU32ToVectorCases(fullU32Range(), unpack2x16snormInterval);
+  u32_const: () => {
+    return generateU32ToVectorCases(fullU32Range(), 'f32-only', unpack2x16snormInterval);
+  },
+  u32_non_const: () => {
+    return generateU32ToVectorCases(fullU32Range(), 'unfiltered', unpack2x16snormInterval);
   },
 });
 
@@ -32,6 +35,6 @@ g.test('unpack')
   )
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('u32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'u32_const' : 'u32_non_const');
     await run(t, builtin('unpack2x16snorm'), [TypeU32], TypeVec(2, TypeF32), t.params, cases);
   });

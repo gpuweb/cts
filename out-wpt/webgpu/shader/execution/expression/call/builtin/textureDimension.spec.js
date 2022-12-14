@@ -52,7 +52,7 @@ Parameters:
         'texture_multisampled_2d',
       ])
       .beginSubcases()
-      .combine('sampled_type', ['f32', 'i32', 'u32'])
+      .combine('sampled_type', ['f32-only', 'i32', 'u32'])
       .combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])
   )
   .unimplemented();

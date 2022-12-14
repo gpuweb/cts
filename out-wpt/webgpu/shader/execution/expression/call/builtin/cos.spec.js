@@ -30,6 +30,7 @@ export const d = makeCaseCache('cos', {
         ...fullF32Range(),
       ],
 
+      'unfiltered',
       cosInterval
     );
   },

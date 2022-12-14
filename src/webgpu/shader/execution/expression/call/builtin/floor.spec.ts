@@ -37,6 +37,7 @@ export const d = makeCaseCache('floor', {
         -1.9,
         ...fullF32Range(),
       ],
+      'unfiltered',
       floorInterval
     );
   },

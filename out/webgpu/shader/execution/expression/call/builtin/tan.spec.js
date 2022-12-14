@@ -27,6 +27,7 @@ export const d = makeCaseCache('tan', {
     ...linearRange(-Math.PI, Math.PI, 100),
     ...fullF32Range()],
 
+    'unfiltered',
     tanInterval);
 
   }

@@ -30,7 +30,12 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('min', {
   f32: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), minInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      minInterval
+    );
   },
 });
 

@@ -26,10 +26,10 @@ export const d = makeCaseCache('sin', {
       [
         // Well defined accuracy range
         ...linearRange(-Math.PI, Math.PI, 1000),
-
         ...fullF32Range(),
       ],
 
+      'unfiltered',
       sinInterval
     );
   },

@@ -23,11 +23,21 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('smoothstep', {
-  f32: () => {
+  f32_const: () => {
     return generateTernaryToF32IntervalCases(
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
+      'f32-only',
+      smoothStepInterval
+    );
+  },
+  f32_non_const: () => {
+    return generateTernaryToF32IntervalCases(
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      'unfiltered',
       smoothStepInterval
     );
   },
@@ -44,7 +54,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
   .fn(async t => {
-    const cases = await d.get('f32');
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(t, builtin('smoothstep'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 

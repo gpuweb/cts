@@ -20,8 +20,21 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('cross', {
-  f32: () => {
-    return generateVectorPairToVectorCases(vectorF32Range(3), vectorF32Range(3), crossInterval);
+  f32_const: () => {
+    return generateVectorPairToVectorCases(
+      vectorF32Range(3),
+      vectorF32Range(3),
+      'f32-only',
+      crossInterval
+    );
+  },
+  f32_non_const: () => {
+    return generateVectorPairToVectorCases(
+      vectorF32Range(3),
+      vectorF32Range(3),
+      'unfiltered',
+      crossInterval
+    );
   },
 });
 
@@ -36,8 +49,7 @@ g.test('f32')
   .desc(`f32 tests`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32');
-
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
     await run(
       t,
       builtin('cross'),
