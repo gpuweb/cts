@@ -3191,7 +3191,7 @@ g.test('reflectInterval')
 
 interface FaceForwardCase {
   input: [number[], number[], number[]];
-  expected: IntervalBounds[][];
+  expected: (IntervalBounds[] | undefined)[];
 }
 
 g.test('faceForwardIntervals')
@@ -3245,11 +3245,15 @@ g.test('faceForwardIntervals')
 
       // subnormals, also dot(y, z) spans 0
       { input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected:  [[[0.0, kValue.f32.subnormal.positive.max], [0.0]], [[kValue.f32.subnormal.negative.min, 0], [0.0]]] },
+
+      // dot going OOB returns [undefined, x, -x]
+      { input: [[1.0, 1.0], [kValue.f32.positive.max, kValue.f32.positive.max], [kValue.f32.positive.max, kValue.f32.positive.max]], expected: [undefined, [[1], [1]], [[-1], [-1]]] },
+
     ]
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = t.params.expected.map(toF32Vector);
+    const expected = t.params.expected.map(e => (e !== undefined ? toF32Vector(e) : undefined));
 
     const got = faceForwardIntervals(x, y, z);
     t.expect(

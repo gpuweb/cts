@@ -22,7 +22,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('trunc', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), truncInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', truncInterval);
   },
 });
 

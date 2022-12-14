@@ -26,7 +26,7 @@ Parameters
     u
       .combine('texture_type', ['texture_2d_array', 'texture_cube_array'] as const)
       .beginSubcases()
-      .combine('sampled_type', ['f32', 'i32', 'u32'] as const)
+      .combine('sampled_type', ['f32-only', 'i32', 'u32'] as const)
   )
   .unimplemented();
 

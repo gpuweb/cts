@@ -26,16 +26,25 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('length', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), lengthInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', lengthInterval);
   },
-  f32_vec2: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(2), lengthInterval);
+  f32_vec2_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(2), 'f32-only', lengthInterval);
   },
-  f32_vec3: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(3), lengthInterval);
+  f32_vec2_non_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(2), 'unfiltered', lengthInterval);
   },
-  f32_vec4: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(4), lengthInterval);
+  f32_vec3_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(3), 'f32-only', lengthInterval);
+  },
+  f32_vec3_non_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(3), 'unfiltered', lengthInterval);
+  },
+  f32_vec4_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(4), 'f32-only', lengthInterval);
+  },
+  f32_vec4_non_const: () => {
+    return generateVectorToF32IntervalCases(vectorF32Range(4), 'unfiltered', lengthInterval);
   },
 });
 
@@ -61,7 +70,9 @@ g.test('f32_vec2')
   .desc(`f32 tests using vec2s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec2');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+    );
     await run(t, builtin('length'), [TypeVec(2, TypeF32)], TypeF32, t.params, cases);
   });
 
@@ -70,7 +81,9 @@ g.test('f32_vec3')
   .desc(`f32 tests using vec3s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec3');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+    );
     await run(t, builtin('length'), [TypeVec(3, TypeF32)], TypeF32, t.params, cases);
   });
 
@@ -79,7 +92,9 @@ g.test('f32_vec4')
   .desc(`f32 tests using vec4s`)
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get('f32_vec4');
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+    );
     await run(t, builtin('length'), [TypeVec(4, TypeF32)], TypeF32, t.params, cases);
   });
 

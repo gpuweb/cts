@@ -21,35 +21,85 @@ import { binary } from './binary.js';
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/f32_arithmetic', {
-  addition_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), additionInterval);
-  },
   addition_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), additionInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32-only',
+      additionInterval
+    );
   },
-  subtraction_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), subtractionInterval);
+  addition_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      additionInterval
+    );
   },
   subtraction_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), subtractionInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32-only',
+      subtractionInterval
+    );
   },
-  multiplication_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), multiplicationInterval);
+  subtraction_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      subtractionInterval
+    );
   },
   multiplication_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), multiplicationInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32-only',
+      multiplicationInterval
+    );
   },
-  division_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), divisionInterval);
+  multiplication_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      multiplicationInterval
+    );
   },
   division_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), divisionInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32-only',
+      divisionInterval
+    );
   },
-  remainder_non_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), remainderInterval);
+  division_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      divisionInterval
+    );
   },
   remainder_const: () => {
-    return generateBinaryToF32IntervalCases(fullF32Range(), fullF32Range(), remainderInterval);
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'f32-only',
+      remainderInterval
+    );
+  },
+  remainder_non_const: () => {
+    return generateBinaryToF32IntervalCases(
+      fullF32Range(),
+      fullF32Range(),
+      'unfiltered',
+      remainderInterval
+    );
   },
 });
 

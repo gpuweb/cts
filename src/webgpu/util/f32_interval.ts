@@ -157,7 +157,7 @@ const kGreaterThanZeroInterval = toF32Interval([
 ]);
 
 /** Representation of a vec2/3/4 of floating point intervals as an array of F32Intervals */
-type F32Vector =
+export type F32Vector =
   | [F32Interval, F32Interval]
   | [F32Interval, F32Interval, F32Interval]
   | [F32Interval, F32Interval, F32Interval, F32Interval];
@@ -1399,7 +1399,11 @@ export function exp2Interval(x: number | F32Interval): F32Interval {
  * Thus a bespoke implementation is used instead of
  * defining a Op and running that through the framework.
  */
-export function faceForwardIntervals(x: number[], y: number[], z: number[]): F32Vector[] {
+export function faceForwardIntervals(
+  x: number[],
+  y: number[],
+  z: number[]
+): (F32Vector | undefined)[] {
   const x_vec = toF32Vector(x);
   // Running vector through runPointToIntervalOpComponentWise to make sure that flushing/rounding is handled, since
   // toF32Vector does not perform those operations.
@@ -1407,10 +1411,23 @@ export function faceForwardIntervals(x: number[], y: number[], z: number[]): F32
   const negative_x = runPointToIntervalOpComponentWise(x_vec, NegationIntervalOp);
 
   const dot_interval = dotInterval(z, y);
-  const results = new Array<F32Vector>();
 
-  // Because the result of dot can be an interval, it might span across 0, thus it is possible that both -x and x are
-  // valid responses.
+  const results: (F32Vector | undefined)[] = [];
+
+  if (!dot_interval.isFinite()) {
+    // dot calculation went out of bounds
+    // Inserting undefine in the result, so that the test running framework is aware
+    // of this potential OOB.
+    // For const-eval tests, it means that the test case should be skipped,
+    // since the shader will fail to compile.
+    // For non-const-eval the undefined should be stripped out of the possible
+    // results.
+
+    results.push(undefined);
+  }
+
+  // Because the result of dot can be an interval, it might span across 0, thus
+  // it is possible that both -x and x are valid responses.
   if (dot_interval.begin < 0 || dot_interval.end < 0) {
     results.push(positive_x);
   }
@@ -1420,7 +1437,7 @@ export function faceForwardIntervals(x: number[], y: number[], z: number[]): F32
   }
 
   assert(
-    results.length > 0,
+    results.length > 0 || results.every(r => r === undefined),
     `faceForwardInterval selected neither positive x or negative x for the result, this shouldn't be possible`
   );
   return results;
