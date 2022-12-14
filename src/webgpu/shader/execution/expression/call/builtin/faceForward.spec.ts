@@ -13,7 +13,7 @@ import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js
 import { F32Vector, faceForwardIntervals } from '../../../../../util/f32_interval.js';
 import { cartesianProduct, quantizeToF32, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, IntervalCheck, run } from '../../expression.js';
+import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -38,7 +38,7 @@ function makeCaseF32(
   x: number[],
   y: number[],
   z: number[],
-  check: IntervalCheck
+  check: IntervalFilter
 ): Case | undefined {
   x = x.map(quantizeToF32);
   y = y.map(quantizeToF32);
@@ -49,7 +49,7 @@ function makeCaseF32(
   const z_f32 = z.map(f32);
 
   const results = faceForwardIntervals(x, y, z);
-  if (check === 'f32' && results.some(r => r === undefined)) {
+  if (check === 'f32-only' && results.some(r => r === undefined)) {
     return undefined;
   }
 
@@ -75,7 +75,7 @@ function generateCasesF32(
   xs: number[][],
   ys: number[][],
   zs: number[][],
-  check: IntervalCheck
+  check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types
   return cartesianProduct(xs, ys, zs)
@@ -89,7 +89,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec2_non_const: () => {
@@ -97,7 +97,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      'none'
+      'unfiltered'
     );
   },
   f32_vec3_const: () => {
@@ -105,7 +105,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec3_non_const: () => {
@@ -113,7 +113,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      'none'
+      'unfiltered'
     );
   },
   f32_vec4_const: () => {
@@ -121,7 +121,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec4_non_const: () => {
@@ -129,7 +129,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      'none'
+      'unfiltered'
     );
   },
 });

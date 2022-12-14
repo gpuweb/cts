@@ -24,7 +24,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('asinh', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'none', asinhInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', asinhInterval);
   },
 });
 

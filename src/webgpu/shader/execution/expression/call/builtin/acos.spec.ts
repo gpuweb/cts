@@ -26,10 +26,10 @@ const inputs = [
 
 export const d = makeCaseCache('acos', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'f32', acosInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'f32-only', acosInterval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'none', acosInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', acosInterval);
   },
 });
 

@@ -35,7 +35,7 @@ export const d = makeCaseCache('quantizeToF16', {
         kValue.f16.positive.max,
         ...fullF16Range(),
       ],
-      'f32',
+      'f32-only',
       quantizeToF16Interval
     );
   },
@@ -52,7 +52,7 @@ export const d = makeCaseCache('quantizeToF16', {
         kValue.f16.positive.max,
         ...fullF32Range(),
       ],
-      'none',
+      'unfiltered',
       quantizeToF16Interval
     );
   },

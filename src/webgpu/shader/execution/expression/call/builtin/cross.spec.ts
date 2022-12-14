@@ -23,7 +23,7 @@ export const d = makeCaseCache('cross', {
     return generateVectorPairToVectorCases(
       vectorF32Range(3),
       vectorF32Range(3),
-      'f32',
+      'f32-only',
       crossInterval
     );
   },
@@ -31,7 +31,7 @@ export const d = makeCaseCache('cross', {
     return generateVectorPairToVectorCases(
       vectorF32Range(3),
       vectorF32Range(3),
-      'none',
+      'unfiltered',
       crossInterval
     );
   },

@@ -20,22 +20,22 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('normalize', {
   f32_vec2_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(2), 'f32', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(2), 'f32-only', normalizeInterval);
   },
   f32_vec2_non_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(2), 'none', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(2), 'unfiltered', normalizeInterval);
   },
   f32_vec3_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(3), 'f32', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(3), 'f32-only', normalizeInterval);
   },
   f32_vec3_non_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(3), 'none', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(3), 'unfiltered', normalizeInterval);
   },
   f32_vec4_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(4), 'f32', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(4), 'f32-only', normalizeInterval);
   },
   f32_vec4_non_const: () => {
-    return generateVectorToVectorCases(vectorF32Range(4), 'none', normalizeInterval);
+    return generateVectorToVectorCases(vectorF32Range(4), 'unfiltered', normalizeInterval);
   },
 });
 

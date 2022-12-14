@@ -28,7 +28,7 @@ export const d = makeCaseCache('cos', {
         ...linearRange(-Math.PI, Math.PI, 1000),
         ...fullF32Range(),
       ],
-      'none',
+      'unfiltered',
       cosInterval
     );
   },

@@ -18,7 +18,7 @@ export const d = makeCaseCache('unary/f32_arithmetic', {
   negation: () => {
     return generateUnaryToF32IntervalCases(
       fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
-      'none',
+      'unfiltered',
       negationInterval
     );
   },

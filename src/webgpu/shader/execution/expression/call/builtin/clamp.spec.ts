@@ -71,7 +71,7 @@ export const d = makeCaseCache('clamp', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      'f32',
+      'f32-only',
       ...clampIntervals
     );
   },
@@ -80,7 +80,7 @@ export const d = makeCaseCache('clamp', {
       sparseF32Range(),
       sparseF32Range(),
       sparseF32Range(),
-      'none',
+      'unfiltered',
       ...clampIntervals
     );
   },

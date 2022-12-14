@@ -16,7 +16,7 @@ import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js
 import { refractInterval } from '../../../../../util/f32_interval.js';
 import { sparseVectorF32Range, quantizeToF32, sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, Case, IntervalCheck, run } from '../../expression.js';
+import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -33,7 +33,7 @@ export const g = makeTestGroup(GPUTest);
  * @param r the `r` param for the case
  * @param check what interval checking to apply
  * */
-function makeCaseF32(i: number[], s: number[], r: number, check: IntervalCheck): Case | undefined {
+function makeCaseF32(i: number[], s: number[], r: number, check: IntervalFilter): Case | undefined {
   i = i.map(quantizeToF32);
   s = s.map(quantizeToF32);
   r = quantizeToF32(r);
@@ -43,7 +43,7 @@ function makeCaseF32(i: number[], s: number[], r: number, check: IntervalCheck):
   const r_f32 = f32(r);
 
   const vectors = refractInterval(i, s, r);
-  if (check === 'f32' && vectors.some(e => !e.isFinite())) {
+  if (check === 'f32-only' && vectors.some(e => !e.isFinite())) {
     return undefined;
   }
 
@@ -64,7 +64,7 @@ function generateCasesF32(
   param_is: number[][],
   param_ss: number[][],
   param_rs: number[],
-  check: IntervalCheck
+  check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types
   return param_is
@@ -84,7 +84,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseF32Range(),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec2_non_const: () => {
@@ -92,7 +92,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseF32Range(),
-      'none'
+      'unfiltered'
     );
   },
   f32_vec3_const: () => {
@@ -100,7 +100,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseF32Range(),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec3_non_const: () => {
@@ -108,7 +108,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseF32Range(),
-      'none'
+      'unfiltered'
     );
   },
   f32_vec4_const: () => {
@@ -116,7 +116,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseF32Range(),
-      'f32'
+      'f32-only'
     );
   },
   f32_vec4_non_const: () => {
@@ -124,7 +124,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseF32Range(),
-      'none'
+      'unfiltered'
     );
   },
 });

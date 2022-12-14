@@ -29,7 +29,7 @@ export const d = makeCaseCache('inverseSqrt', {
         // 1 <= x < 2^32, biased towards 1
         ...biasedRange(1, 2 ** 32, 1000),
       ],
-      'none',
+      'unfiltered',
       inverseSqrtInterval
     );
   },

@@ -24,7 +24,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(2),
       vectorF32Range(2),
-      'f32',
+      'f32-only',
       dotInterval
     );
   },
@@ -32,7 +32,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(2),
       vectorF32Range(2),
-      'none',
+      'unfiltered',
       dotInterval
     );
   },
@@ -40,7 +40,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(3),
       vectorF32Range(3),
-      'f32',
+      'f32-only',
       dotInterval
     );
   },
@@ -48,7 +48,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(3),
       vectorF32Range(3),
-      'none',
+      'unfiltered',
       dotInterval
     );
   },
@@ -56,7 +56,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(4),
       vectorF32Range(4),
-      'f32',
+      'f32-only',
       dotInterval
     );
   },
@@ -64,7 +64,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
       vectorF32Range(4),
       vectorF32Range(4),
-      'none',
+      'unfiltered',
       dotInterval
     );
   },

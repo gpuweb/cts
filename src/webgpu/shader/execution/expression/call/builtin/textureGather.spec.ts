@@ -57,7 +57,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'] as const)
+      .combine('T', ['f32-only', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -87,7 +87,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'] as const)
+      .combine('T', ['f32-only', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -124,7 +124,7 @@ Parameters:
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('T', ['f32', 'i32', 'u32'] as const)
+      .combine('T', ['f32-only', 'i32', 'u32'] as const)
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
       .combine('C', ['i32', 'u32'] as const)
       .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
@@ -157,7 +157,7 @@ Parameters:
   .paramsSubcasesOnly(
     u =>
       u
-        .combine('T', ['f32', 'i32', 'u32'] as const)
+        .combine('T', ['f32-only', 'i32', 'u32'] as const)
         .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'])
         .combine('C', ['i32', 'u32'] as const)
         .combine('C_value', [-1, 0, 1, 2, 3, 4] as const)
