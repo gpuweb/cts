@@ -17,7 +17,7 @@ import {
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
-import { checkElementsBetween } from '../../../util/check_contents.js';
+import { checkElementsEqual, checkElementsEqualEither } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
 import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
@@ -246,15 +246,22 @@ class F extends GPUTest {
       }
     }
 
-    // Use a tolerance of 1 for 8-byte snorm formats.
-    // MAINTENANCE_TODO: Use textureContentIsOKByT2B with TexelView and tolerance.
-    let tolerance = 0;
+    let alternateExpectedData = expectedUint8DataWithPadding;
+    // For 8-byte snorm formats, allow an alternative encoding of -1.
+    // MAINTENANCE_TODO: Use textureContentIsOKByT2B with TexelView.
     if (srcFormat.includes('snorm')) {
       switch (srcFormat) {
         case 'r8snorm':
         case 'rg8snorm':
         case 'rgba8snorm':
-          tolerance = 1;
+          alternateExpectedData = alternateExpectedData.slice();
+          for (let i = 0; i < alternateExpectedData.length; ++i) {
+            if (alternateExpectedData[i] === 128) {
+              alternateExpectedData[i] = 129;
+            } else if (alternateExpectedData[i] === 129) {
+              alternateExpectedData[i] = 128;
+            }
+          }
           break;
         case 'bc4-r-snorm':
         case 'bc5-rg-snorm':
@@ -269,11 +276,10 @@ class F extends GPUTest {
     // Verify the content of the whole subresource of dstTexture at dstCopyLevel (in dstBuffer) is expected.
     this.expectGPUBufferValuesPassCheck(
       dstBuffer,
-      vals =>
-        checkElementsBetween(vals, [
-          i => expectedUint8DataWithPadding[i],
-          i => expectedUint8DataWithPadding[i] + tolerance,
-        ]),
+      alternateExpectedData === expectedUint8DataWithPadding
+        ? vals => checkElementsEqual(vals, expectedUint8DataWithPadding)
+        : vals =>
+            checkElementsEqualEither(vals, [expectedUint8DataWithPadding, alternateExpectedData]),
       {
         srcByteOffset: 0,
         type: Uint8Array,
