@@ -721,20 +721,6 @@ export class Scalar {
         case 'bool':
           return `${this.value}`;
       }
-    } else if (this.value === Number.POSITIVE_INFINITY) {
-      switch (this.type.kind) {
-        case 'f32':
-          return `(1.f/0.f)`;
-        case 'f16':
-          return `(1.h/0.h)`;
-      }
-    } else if (this.value === Number.NEGATIVE_INFINITY) {
-      switch (this.type.kind) {
-        case 'f32':
-          return `(-1.f/0.f)`;
-        case 'f16':
-          return `(-1.h/0.h)`;
-      }
     }
     throw new Error(
       `scalar of value ${this.value} and type ${this.type} has no WGSL representation`
