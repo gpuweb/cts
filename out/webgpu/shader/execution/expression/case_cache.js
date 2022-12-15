@@ -79,8 +79,15 @@ export function serializeExpectation(e) {
   }
   if (e instanceof Function) {
     const comp = e;
-    if (comp.kind !== undefined && comp.data !== undefined) {
-      return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
+    if (comp !== undefined) {
+      // if blocks used to refine the type of comp.kind, otherwise it is
+      // actually the union of the string values
+      if (comp.kind === 'anyOf') {
+        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
+      }
+      if (comp.kind === 'skipUndefined') {
+        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
+      }
     }
     throw 'cannot serialize comparator';
   }

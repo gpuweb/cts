@@ -7,7 +7,12 @@ import {
 deserializeExpectation,
 serializeExpectation } from
 '../webgpu/shader/execution/expression/case_cache.js';
-import { anyOf, deserializeComparator } from '../webgpu/util/compare.js';
+import {
+anyOf,
+deserializeComparator,
+
+skipUndefined } from
+'../webgpu/util/compare.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
 bool,
@@ -210,6 +215,32 @@ g.test('anyOf').fn((t) => {
     for (const c of [
     {
       comparator: anyOf(i32(123)),
+      testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)]
+    }])
+    {
+      const serialized = c.comparator;
+      const deserialized = deserializeComparator(serialized);
+      for (const val of c.testCases) {
+        const got = deserialized(val);
+        const expect = c.comparator(val);
+        t.expect(
+        got.matched === expect.matched,
+        `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`);
+
+      }
+    }
+  });
+});
+
+g.test('skipUndefined').fn((t) => {
+  enableBuildingDataCache(() => {
+    for (const c of [
+    {
+      comparator: skipUndefined(i32(123)),
+      testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)]
+    },
+    {
+      comparator: skipUndefined(undefined),
       testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)]
     }])
     {
