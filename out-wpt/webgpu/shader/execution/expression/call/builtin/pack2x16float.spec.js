@@ -20,16 +20,18 @@ import {
   vec2,
 } from '../../../../../util/conversion.js';
 import { cartesianProduct, fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-// unpack2x16float has somewhat unusual behaviour, specifically around how it is
+// pack2x16float has somewhat unusual behaviour, specifically around how it is
 // supposed to behave when values go OOB and when they are considered to have
 // gone OOB, so has its own bespoke implementation.
+//
+// The use of a custom Comparator prevents easy serialization in the case cache,
+// https://github.com/gpuweb/cts/issues/2077
 
 /**
  * @returns a custom comparator for a possible result from pack2x16float
@@ -52,7 +54,7 @@ function cmp(expectation) {
 }
 
 /**
- * @returns a Case for `unpack2x16float`
+ * @returns a Case for `pack2x16float`
  * @param param0 first param for the case
  * @param param1 second param for the case
  * @param filter_undefined should inputs that cause an undefined expectation be
@@ -71,7 +73,7 @@ function makeCase(param0, param1, filter_undefined) {
 }
 
 /**
- * @returns an array of Cases for `unpack2x16float`
+ * @returns an array of Cases for `pack2x16float`
  * @param param0s array of inputs to try for the first param
  * @param param1s array of inputs to try for the second param
  * @param filter_undefined should inputs that cause an undefined expectation be
@@ -83,15 +85,6 @@ function generateCases(param0s, param1s, filter_undefined) {
     .filter(c => c !== undefined);
 }
 
-export const d = makeCaseCache('unpack2x16float', {
-  f32_const: () => {
-    return generateCases(fullF32Range(), fullF32Range(), true);
-  },
-  f32_non_const: () => {
-    return generateCases(fullF32Range(), fullF32Range(), false);
-  },
-});
-
 g.test('pack')
   .specURL('https://www.w3.org/TR/WGSL/#pack-builtin-functions')
   .desc(
@@ -101,6 +94,9 @@ g.test('pack')
   )
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
-    const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
+    const cases =
+      t.params.inputSource === 'const'
+        ? generateCases(fullF32Range(), fullF32Range(), true)
+        : generateCases(fullF32Range(), fullF32Range(), false);
     await run(t, builtin('pack2x16float'), [TypeVec(2, TypeF32)], TypeU32, t.params, cases);
   });
