@@ -79,7 +79,7 @@ export function serializeExpectation(e: Expectation): SerializedExpectation {
   }
   if (e instanceof Function) {
     const comp = (e as unknown) as SerializedComparator;
-    if (comp.kind !== undefined && comp.data !== undefined) {
+    if (comp !== undefined) {
       // if blocks used to refine the type of comp.kind, otherwise it is
       // actually the union of the string values
       if (comp.kind === 'anyOf') {

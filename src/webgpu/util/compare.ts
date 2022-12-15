@@ -242,7 +242,9 @@ export function skipUndefined(
     // comparator kind and serialized expectations to the comparator, so it can
     // be serialized.
     comparator.kind = 'skipUndefined';
-    comparator.data = expectation === undefined ? [] : [serializeExpectation(expectation)];
+    if (expectation !== undefined) {
+      comparator.data = serializeExpectation(expectation);
+    }
   }
   return comparator;
 }
@@ -256,7 +258,7 @@ type SerializedComparatorAnyOf = {
 /** SerializedComparatorSkipUndefined is the serialized type of an `skipUndefined` comparator. */
 type SerializedComparatorSkipUndefined = {
   kind: 'skipUndefined';
-  data: [] | [SerializedExpectation];
+  data?: SerializedExpectation;
 };
 
 /** SerializedComparator is a union of all the possible serialized comparator types. */
@@ -273,10 +275,7 @@ export function deserializeComparator(data: SerializedComparator): Comparator {
       return anyOf(...data.data.map(e => deserializeExpectation(e)));
     }
     case 'skipUndefined': {
-      if (data.data.length === 0) {
-        return skipUndefined(undefined);
-      }
-      return skipUndefined(deserializeExpectation(data.data[0]));
+      return skipUndefined(data.data !== undefined ? deserializeExpectation(data.data) : undefined);
     }
   }
   throw `unhandled comparator kind`;
