@@ -32,6 +32,15 @@ export function setGPUProvider(provider: GPUProvider) {
 
 let impl: GPU | undefined = undefined;
 
+let defaultRequestAdapterOptions: GPURequestAdapterOptions | undefined;
+
+export function setDefaultRequestAdapterOptions(options: GPURequestAdapterOptions) {
+  if (impl) {
+    throw new Error('must call setDefaultRequestAdapterOptions before getGPU');
+  }
+  defaultRequestAdapterOptions = { ...options };
+}
+
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
  * Throws an exception if not found.
@@ -42,6 +51,24 @@ export function getGPU(): GPU {
   }
 
   impl = gpuProvider();
+
+  if (defaultRequestAdapterOptions) {
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    const oldFn = impl.requestAdapter;
+    impl.requestAdapter = function (
+      options?: GPURequestAdapterOptions
+    ): Promise<GPUAdapter | null> {
+      const promise = oldFn.call(this, { ...defaultRequestAdapterOptions, ...(options || {}) });
+      void promise.then(async adapter => {
+        if (adapter) {
+          const info = await adapter.requestAdapterInfo();
+          // eslint-disable-next-line no-console
+          console.log(info);
+        }
+      });
+      return promise;
+    };
+  }
 
   return impl;
 }
