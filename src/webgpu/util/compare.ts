@@ -226,14 +226,41 @@ export function anyOf(
   return comparator;
 }
 
+/** @returns a Comparator that skips the test if the expectation is undefined */
+export function skipUndefined(
+  expectation: Expectation | undefined
+): Comparator | (Comparator & SerializedComparator) {
+  const comparator = (got: Value) => {
+    if (expectation !== undefined) {
+      return toComparator(expectation)(got);
+    }
+    return { matched: true, got: got.toString(), expected: `Treating 'undefined' as Any` };
+  };
+
+  if (getIsBuildingDataCache()) {
+    // If there's an active DataCache, and it supports storing, then append the
+    // comparator kind and serialized expectations to the comparator, so it can
+    // be serialized.
+    comparator.kind = 'skipUndefined';
+    comparator.data = expectation === undefined ? [] : [serializeExpectation(expectation)];
+  }
+  return comparator;
+}
+
 /** SerializedComparatorAnyOf is the serialized type of an `anyOf` comparator. */
 type SerializedComparatorAnyOf = {
   kind: 'anyOf';
   data: SerializedExpectation[];
 };
 
+/** SerializedComparatorSkipUndefined is the serialized type of an `skipUndefined` comparator. */
+type SerializedComparatorSkipUndefined = {
+  kind: 'skipUndefined';
+  data: [] | [SerializedExpectation];
+};
+
 /** SerializedComparator is a union of all the possible serialized comparator types. */
-export type SerializedComparator = SerializedComparatorAnyOf;
+export type SerializedComparator = SerializedComparatorAnyOf | SerializedComparatorSkipUndefined;
 
 /**
  * Deserializes a comparator from a SerializedComparator.
@@ -245,6 +272,12 @@ export function deserializeComparator(data: SerializedComparator): Comparator {
     case 'anyOf': {
       return anyOf(...data.data.map(e => deserializeExpectation(e)));
     }
+    case 'skipUndefined': {
+      if (data.data.length === 0) {
+        return skipUndefined(undefined);
+      }
+      return skipUndefined(deserializeExpectation(data.data[0]));
+    }
   }
-  throw `unhandled comparator kind: ${data.kind}`;
+  throw `unhandled comparator kind`;
 }
