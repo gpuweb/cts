@@ -403,6 +403,14 @@ export const listing = [
       "api",
       "operation",
       "rendering",
+      "depth_bias"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "rendering",
       "depth_clip_clamp"
     ]
   },

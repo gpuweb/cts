@@ -148,12 +148,6 @@ class DepthTest extends GPUTest {
 
 export const g = makeTestGroup(DepthTest);
 
-g.test('depth_bias').
-desc(
-`Tests render results with different depth bias values: positive, negative, infinity, slope, clamp, etc.`).
-
-unimplemented();
-
 g.test('depth_disabled').
 desc('Tests render results with depth test disabled.').
 fn(async (t) => {
