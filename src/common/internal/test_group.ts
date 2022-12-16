@@ -525,6 +525,7 @@ class RunCaseSpecific implements RunCase {
             // Make a recorder that will defer all calls until `allPreviousSubcasesFinalizedPromise`
             // resolves. Waiting on `allPreviousSubcasesFinalizedPromise` ensures that
             // logs from all the previous subcases have been flushed before flushing new logs.
+            const subcasePrefix = 'subcase: ' + stringifyPublicParams(subParams);
             const subRec = new Proxy(rec, {
               get: (target, k: keyof TestCaseRecorder) => {
                 const prop = TestCaseRecorder.prototype[k];
@@ -532,6 +533,13 @@ class RunCaseSpecific implements RunCase {
                   testHeartbeatCallback();
                   return function (...args: Parameters<typeof prop>) {
                     void allPreviousSubcasesFinalizedPromise.then(() => {
+                      // Prepend the subcase name to all error messages.
+                      for (const arg of args) {
+                        if (arg instanceof Error) {
+                          arg.message = subcasePrefix + '\n' + arg.message;
+                        }
+                      }
+
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       const rv = (prop as any).apply(target, args);
                       // Because this proxy executes functions in a deferred manner,
@@ -543,8 +551,6 @@ class RunCaseSpecific implements RunCase {
                 return prop;
               },
             });
-
-            subRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
 
             const params = mergeParams(this.params, subParams);
             const subcaseQuery = new TestQuerySingleCase(
@@ -573,6 +579,9 @@ class RunCaseSpecific implements RunCase {
               /* throwSkip */ true,
               getExpectedStatus(subcaseQuery)
             )
+              .then(() => {
+                subRec.info(new Error('OK'));
+              })
               .catch(ex => {
                 if (ex instanceof SkipTestCase) {
                   // Convert SkipTestCase to info messages
