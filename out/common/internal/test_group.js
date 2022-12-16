@@ -525,6 +525,7 @@ class RunCaseSpecific {
             // Make a recorder that will defer all calls until `allPreviousSubcasesFinalizedPromise`
             // resolves. Waiting on `allPreviousSubcasesFinalizedPromise` ensures that
             // logs from all the previous subcases have been flushed before flushing new logs.
+            const subcasePrefix = 'subcase: ' + stringifyPublicParams(subParams);
             const subRec = new Proxy(rec, {
               get: (target, k) => {
                 const prop = TestCaseRecorder.prototype[k];
@@ -532,6 +533,13 @@ class RunCaseSpecific {
                   testHeartbeatCallback();
                   return function (...args) {
                     void allPreviousSubcasesFinalizedPromise.then(() => {
+                      // Prepend the subcase name to all error messages.
+                      for (const arg of args) {
+                        if (arg instanceof Error) {
+                          arg.message = subcasePrefix + '\n' + arg.message;
+                        }
+                      }
+
 
                       const rv = prop.apply(target, args);
                       // Because this proxy executes functions in a deferred manner,
@@ -543,8 +551,6 @@ class RunCaseSpecific {
                 return prop;
               }
             });
-
-            subRec.info(new Error('subcase: ' + stringifyPublicParams(subParams)));
 
             const params = mergeParams(this.params, subParams);
             const subcaseQuery = new TestQuerySingleCase(
@@ -573,6 +579,9 @@ class RunCaseSpecific {
             /* throwSkip */true,
             getExpectedStatus(subcaseQuery)).
 
+            then(() => {
+              subRec.info(new Error('OK'));
+            }).
             catch((ex) => {
               if (ex instanceof SkipTestCase) {
                 // Convert SkipTestCase to info messages
