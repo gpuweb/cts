@@ -53,7 +53,7 @@ const kInvalidShaderSources = [
   {
     valid: false,
     name: 'carriage-return',
-    _errorLine: 4,
+    _errorLine: 5,
     _code:
       `
       @vertex fn main() -> @builtin(position) vec4<f32> {` +
