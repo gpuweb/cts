@@ -20,7 +20,7 @@ const kGreenStencilColor = new Float32Array([0.0, 1.0, 0.0, 1.0]);
 
 class StencilTest extends GPUTest {
   checkStencilOperation(
-  stencilOperation,
+  testStencilState,
   initialStencil,
   referenceStencil,
   expectedStencil)
@@ -34,12 +34,6 @@ class StencilTest extends GPUTest {
     };
 
     const stencilState = {
-      compare: 'always',
-      failOp: 'keep',
-      passOp: stencilOperation
-    };
-
-    const stencilState2 = {
       compare: 'equal',
       failOp: 'keep',
       passOp: 'keep'
@@ -57,16 +51,16 @@ class StencilTest extends GPUTest {
       format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
-      stencilFront: stencilState,
-      stencilBack: stencilState
+      stencilFront: testStencilState,
+      stencilBack: testStencilState
     };
 
     const testState2 = {
       format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
-      stencilFront: stencilState2,
-      stencilBack: stencilState2
+      stencilFront: stencilState,
+      stencilBack: stencilState
     };
 
     const testStates = [
@@ -316,9 +310,14 @@ fn(async (t) => {
 g.test('stencil_passOp_operation').
 desc(
 `
-    Test that each stencil operation works with the given stencil values correctly as expected.
+  Test that the stencil operation is executed on stencil pass. A triangle is drawn with the 'always'
+  comparison function, so it should pass. Then, test that each pass stencil operation works with the
+  given stencil values correctly as expected. For example,
+    - If the pass operation is 'keep', it keeps the initial stencil value.
+    - If the pass operation is 'replace', it replaces the initial stencil value with the reference
+      stencil value.
 
-    TODO: Need to test failOp and depthFailOp as well.
+    TODO: Need to test depthFailOp as well.
   `).
 
 params((u) =>
@@ -386,92 +385,59 @@ u //
 fn(async (t) => {
   const { passOp, initialStencil, referenceStencil, expectedStencil } = t.params;
 
-  t.checkStencilOperation(passOp, initialStencil, referenceStencil, expectedStencil);
+  const stencilState = {
+    compare: 'always',
+    failOp: 'keep',
+    passOp
+  };
+
+  t.checkStencilOperation(stencilState, initialStencil, referenceStencil, expectedStencil);
 });
 
-g.test('stencil_test_fail').
+g.test('stencil_failOp_operation').
 desc(
 `
-  Test that the stencil operation is executed on stencil fail. Triangle with stencil reference 2
-  fails the 'less' comparison function because the base stencil reference is 1.
-    - If the fail operation is 'keep', it keeps the base color.
-    - If the fail operation is 'replace', it replaces the base color with the last stencil color.
-
-  TODO: Need to test the other stencil operations?
+  Test that the stencil operation is executed on stencil fail. A triangle is drawn with the 'never'
+  comparison function, so it should fail. Then, test that each fail stencil operation works with the
+  given stencil values correctly as expected. For example,
+    - If the fail operation is 'keep', it keeps the initial stencil value.
+    - If the fail operation is 'replace', it replaces the initial stencil value with the reference
+      stencil value.
   `).
 
 params((u) =>
 u //
 .combineWithParams([
-{ operation: 'keep', _expectedColor: kBaseColor },
-{ operation: 'replace', _expectedColor: kGreenStencilColor }])).
+{ failOp: 'keep', initialStencil: 1, expectedStencil: 1 },
+{ failOp: 'zero', initialStencil: 1, expectedStencil: 0 },
+{ failOp: 'replace', initialStencil: 1, expectedStencil: 3 },
+{ failOp: 'invert', initialStencil: 0xf0, expectedStencil: 0x0f },
+{ failOp: 'increment-clamp', initialStencil: 1, expectedStencil: 2 },
+{ failOp: 'increment-clamp', initialStencil: 0xff, expectedStencil: 0xff },
+{ failOp: 'increment-wrap', initialStencil: 1, expectedStencil: 2 },
+{ failOp: 'increment-wrap', initialStencil: 0xff, expectedStencil: 0 },
+{ failOp: 'decrement-clamp', initialStencil: 1, expectedStencil: 0 },
+{ failOp: 'decrement-clamp', initialStencil: 0, expectedStencil: 0 },
+{ failOp: 'decrement-wrap', initialStencil: 2, expectedStencil: 1 },
+{ failOp: 'decrement-wrap', initialStencil: 1, expectedStencil: 0 },
+{ failOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff }])).
 
 
 fn(async (t) => {
-  const { operation, _expectedColor } = t.params;
+  const { failOp, initialStencil, expectedStencil } = t.params;
 
-  const depthSpencilFormat = 'depth24plus-stencil8';
-  const stencilRefValue = 2;
-
-  const baseStencilState = {
-    compare: 'always',
-    failOp: 'keep',
-    passOp: 'replace'
-  };
-
-  const failedStencilState = {
-    compare: 'less',
-    failOp: operation,
-    passOp: 'keep'
-  };
+  const kReferenceStencil = 3;
 
   const stencilState = {
-    compare: 'equal',
-    failOp: 'keep',
+    compare: 'never',
+    failOp,
     passOp: 'keep'
   };
 
-  const baseState = {
-    format: depthSpencilFormat,
-    depthWriteEnabled: false,
-    depthCompare: 'always',
-    stencilFront: baseStencilState,
-    stencilBack: baseStencilState,
-    stencilReadMask: 0xff,
-    stencilWriteMask: 0xff
-  };
-
-  const failState = {
-    format: depthSpencilFormat,
-    depthWriteEnabled: false,
-    depthCompare: 'always',
-    stencilFront: failedStencilState,
-    stencilBack: failedStencilState,
-    stencilReadMask: 0xff,
-    stencilWriteMask: 0xff
-  };
-
-  const passState = {
-    format: depthSpencilFormat,
-    depthWriteEnabled: false,
-    depthCompare: 'always',
-    stencilFront: stencilState,
-    stencilBack: stencilState,
-    stencilReadMask: 0xff,
-    stencilWriteMask: 0xff
-  };
-
-  const testStates = [
   // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
-  { state: baseState, color: kBaseColor, stencil: 1 },
-  // Always fails because the ref (2) is less than the initial stencil contents (1).
-  // Therefore red is never drawn, and the stencil contents may be updated according to
-  // `operation`.
-  { state: failState, color: kRedStencilColor, stencil: stencilRefValue },
-  // Passes iff the ref (2) equals the current stencil contents (1 or 2).
-  { state: passState, color: kGreenStencilColor, stencil: stencilRefValue }];
-
-  t.runStencilStateTest(testStates, _expectedColor);
+  // Always fails because the comparison never passes. Therefore red is never drawn, and the
+  // stencil contents may be updated according to `operation`.
+  t.checkStencilOperation(stencilState, initialStencil, kReferenceStencil, expectedStencil);
 });
 
 g.test('stencil_read_write_mask').
