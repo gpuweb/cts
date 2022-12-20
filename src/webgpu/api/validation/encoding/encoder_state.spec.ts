@@ -17,21 +17,28 @@ TODO:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { objectEquals } from '../../../../common/util/util.js';
+import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
+  private static attachmentTexture: GPUTexture | null = null;
+  private static attachmentTextureView: GPUTextureView | null = null;
+
   beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
-    const attachmentTexture = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    this.trackForCleanup(attachmentTexture);
+    if (!F.attachmentTexture) {
+      F.attachmentTexture = this.device.createTexture({
+        format: 'rgba8unorm',
+        size: { width: 16, height: 16, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+      this.trackForCleanup(F.attachmentTexture);
+      F.attachmentTextureView = F.attachmentTexture.createView();
+    }
+    assert(F.attachmentTextureView !== null);
     return commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: attachmentTexture.createView(),
+          view: F.attachmentTextureView,
           clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store',
@@ -90,10 +97,13 @@ g.test('pass_end_invalid_order')
 g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
   .paramsSubcasesOnly(u =>
-    u.combine('passType', ['compute', 'render']).combine('IsEncoderFinished', [false, true])
+    u
+      .combine('passType', ['compute', 'render'])
+      .combine('IsEncoderFinished', [false, true])
+      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'copyBufferToBuffer'])
   )
   .fn(async t => {
-    const { passType, IsEncoderFinished } = t.params;
+    const { passType, IsEncoderFinished, callCmd } = t.params;
 
     const encoder = t.device.createCommandEncoder();
 
@@ -110,14 +120,30 @@ g.test('call_after_successful_finish')
       usage: GPUBufferUsage.COPY_DST,
     });
 
+    const callFn = () => {
+      switch (callCmd) {
+        case 'beginComputePass':
+          encoder.beginComputePass();
+          break;
+        case 'beginRenderPass':
+          t.beginRenderPass(encoder);
+          break;
+        case 'copyBufferToBuffer':
+          encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+          break;
+        default:
+          unreachable();
+      }
+    };
+
     if (IsEncoderFinished) {
       encoder.finish();
       t.expectValidationError(() => {
-        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+        callFn();
       }, IsEncoderFinished);
     } else {
       t.expectValidationError(() => {
-        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+        callFn();
       }, IsEncoderFinished);
       encoder.finish();
     }
