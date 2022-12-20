@@ -397,7 +397,7 @@ g.test('stencil_depthFailOp_operation')
   .desc(
     `
   Test that the stencil operation is executed on depthCompare fail. A triangle is drawn with the
-  'never' depthCompare. so it should fail. Then, test that each 'depthFailOp' stencil operation
+  'never' depthCompare, so it should fail the depth test. Then, test that each 'depthFailOp' stencil operation
   works with the given stencil values correctly as expected. For example,
     - If the depthFailOp operation is 'keep', it keeps the initial stencil value.
     - If the depthFailOp operation is 'replace', it replaces the initial stencil value with the
