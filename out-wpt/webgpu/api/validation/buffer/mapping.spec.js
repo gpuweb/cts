@@ -11,7 +11,7 @@ import { GPUConst } from '../../../constants.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
-  async testMapAsyncCall(success, rejectName, buffer, mode, offset, size) {
+  async testMapAsyncCall(success, earlyRejection, rejectName, buffer, mode, offset, size) {
     if (success) {
       const p = buffer.mapAsync(mode, offset, size);
       await p;
@@ -20,12 +20,26 @@ class F extends ValidationTest {
       this.expectValidationError(() => {
         p = buffer.mapAsync(mode, offset, size);
       });
+      let caught = false;
+      let rejectedEarly = false;
+      // If mapAsync rejected early, microtask A will run before B.
+      // If not, B will run before A.
+      p.catch(() => {
+        // Microtask A
+        caught = true;
+      });
+      queueMicrotask(() => {
+        // Microtask B
+        rejectedEarly = caught;
+      });
       try {
+        // This await will always complete after microtasks A and B are both done.
         await p;
         assert(rejectName === null, 'mapAsync unexpectedly passed');
       } catch (ex) {
         assert(ex instanceof Error, 'mapAsync rejected with non-error');
         assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
+        assert(earlyRejection === rejectedEarly, 'mapAsync rejected at an unexpected timing');
       }
     }
   }
@@ -96,7 +110,7 @@ g.test('mapAsync,usage')
     });
 
     const success = usage === validUsage;
-    await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode);
   });
 
 g.test('mapAsync,invalidBuffer')
@@ -105,7 +119,7 @@ g.test('mapAsync,invalidBuffer')
   .fn(async t => {
     const { mapMode } = t.params;
     const buffer = t.getErrorBuffer();
-    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
   });
 
 g.test('mapAsync,state,destroyed')
@@ -120,7 +134,7 @@ g.test('mapAsync,state,destroyed')
     t.shouldReject('AbortError', buffer.mapAsync(mapMode));
 
     buffer.destroy();
-    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
   });
 
 g.test('mapAsync,state,mappedAtCreation')
@@ -140,10 +154,10 @@ g.test('mapAsync,state,mappedAtCreation')
       usage: validUsage,
       mappedAtCreation: true,
     });
-    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
 
     buffer.unmap();
-    await t.testMapAsyncCall(true, null, buffer, mapMode);
+    await t.testMapAsyncCall(true, false, null, buffer, mapMode);
   });
 
 g.test('mapAsync,state,mapped')
@@ -156,11 +170,11 @@ g.test('mapAsync,state,mapped')
     const { mapMode } = t.params;
 
     const buffer = t.createMappableBuffer(mapMode, 16);
-    await t.testMapAsyncCall(true, null, buffer, mapMode);
-    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(true, false, null, buffer, mapMode);
+    await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
 
     buffer.unmap();
-    await t.testMapAsyncCall(true, null, buffer, mapMode);
+    await t.testMapAsyncCall(true, false, null, buffer, mapMode);
   });
 
 g.test('mapAsync,state,mappingPending')
@@ -187,7 +201,7 @@ g.test('mapAsync,state,mappingPending')
 
     // Unmap the first mapping. It should now be possible to successfully call mapAsync
     buffer.unmap();
-    await t.testMapAsyncCall(true, null, buffer, mapMode);
+    await t.testMapAsyncCall(true, false, null, buffer, mapMode);
   });
 
 g.test('mapAsync,sizeUnspecifiedOOB')
@@ -218,7 +232,7 @@ g.test('mapAsync,sizeUnspecifiedOOB')
     const buffer = t.createMappableBuffer(mapMode, bufferSize);
 
     const success = offset <= bufferSize;
-    await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset);
+    await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset);
   });
 
 g.test('mapAsync,offsetAndSizeAlignment')
@@ -234,7 +248,7 @@ g.test('mapAsync,offsetAndSizeAlignment')
     const buffer = t.createMappableBuffer(mapMode, 16);
 
     const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
-    await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset, size);
+    await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset, size);
   });
 
 g.test('mapAsync,offsetAndSizeOOB')
@@ -276,7 +290,7 @@ g.test('mapAsync,offsetAndSizeOOB')
     const buffer = t.createMappableBuffer(mapMode, bufferSize);
 
     const success = offset + size <= bufferSize;
-    await t.testMapAsyncCall(success, 'OperationError', buffer, mapMode, offset, size);
+    await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset, size);
   });
 
 g.test('mapAsync,earlyRejection')
@@ -290,26 +304,9 @@ g.test('mapAsync,earlyRejection')
     const offset1 = 0;
 
     const buffer = t.createMappableBuffer(mapMode, bufferSize);
-
     const p1 = buffer.mapAsync(mapMode, offset1, mapSize); // succeeds
-    let success = false;
-    {
-      let caught = false;
-      // should be already rejected
-      const p2 = buffer.mapAsync(mapMode, offset2, mapSize);
-      // queues a microtask catching the rejection
-      p2.catch(() => {
-        caught = true;
-      });
-      // queues a second microtask to capture the state immediately after the catch.
-      // Test fails if p2 isn't rejected before the second microtask is fired or
-      // p1 is resolved.
-      queueMicrotask(() => {
-        success = caught;
-      });
-    }
+    await t.testMapAsyncCall(false, true, 'OperationError', buffer, mapMode, offset2, mapSize);
     await p1; // ensure the original map still succeeds
-    assert(success);
   });
 
 g.test('getMappedRange,state,mapped')
@@ -404,7 +401,7 @@ g.test('getMappedRange,state,mappedAgain')
     await buffer.mapAsync(mapMode);
 
     // call mapAsync again on already mapped buffer should fail
-    await t.testMapAsyncCall(false, 'OperationError', buffer, mapMode);
+    await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
 
     // getMapppedRange should still success
     t.testGetMappedRangeCall(true, buffer);
