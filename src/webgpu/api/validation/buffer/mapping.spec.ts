@@ -29,18 +29,18 @@ class F extends ValidationTest {
       });
       let caught = false;
       let rejectedEarly = false;
-      // First microtask
+      // If mapAsync rejected early, microtask A will run before B.
+      // If not, B will run before A.
       p!.catch(() => {
+        // Microtask A
         caught = true;
       });
-      // Second microtask.
-      // The first microtask should be called before the second and
-      // third ones for early rejection.
       queueMicrotask(() => {
+        // Microtask B
         rejectedEarly = caught;
       });
       try {
-        // Third microtask
+        // This await will always complete after microtasks A and B are both done.
         await p!;
         assert(rejectName === null, 'mapAsync unexpectedly passed');
       } catch (ex) {
