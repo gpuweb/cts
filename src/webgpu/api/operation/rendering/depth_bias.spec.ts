@@ -1,5 +1,5 @@
 export const description = `
-Tests render results with different depth bias values like 'positive', 'negative', 'infinity',
+Tests render results with different depth bias values like 'positive', 'negative',
 'slope', 'clamp', etc.
 `;
 
@@ -11,7 +11,6 @@ import {
   kTextureFormatInfo,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { kValue } from '../../../util/constants.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
@@ -264,7 +263,7 @@ export const g = makeTestGroup(DepthBiasTest);
 g.test('depth_bias')
   .desc(
     `
-  Tests that a square with different depth bias values like 'positive', 'negative', 'infinity',
+  Tests that a square with different depth bias values like 'positive', 'negative',
   'slope', 'clamp', etc. is drawn as expected.
   `
   )
@@ -317,20 +316,6 @@ g.test('depth_bias')
           quadAngle: QuadAngle.TiltedX,
           bias: 0,
           biasSlopeScale: -0.5,
-          biasClamp: 0,
-          _expectedDepth: 0,
-        },
-        {
-          quadAngle: QuadAngle.TiltedX,
-          bias: 0,
-          biasSlopeScale: kValue.f32.infinity.positive,
-          biasClamp: 0,
-          _expectedDepth: 1,
-        },
-        {
-          quadAngle: QuadAngle.TiltedX,
-          bias: 0,
-          biasSlopeScale: kValue.f32.infinity.negative,
           biasClamp: 0,
           _expectedDepth: 0,
         },
