@@ -343,8 +343,12 @@ g.test('depth_bias')
 g.test('depth_bias_24bit_format')
   .desc(
     `
-  Tests that a square with different depth bias values like 'positive', 'negative', 'infinity',
+  Tests that a square with different depth bias values like 'positive', 'negative',
   'slope', 'clamp', etc. is drawn as expected with 24 bit depth format.
+
+  TODO: Enhance these tests by reading back the depth (emulating the copy using texture sampling)
+  and checking the result directly, like the non-24-bit depth tests, instead of just relying on
+  whether the depth test passes or fails.
   `
   )
   .params(u =>
