@@ -4,9 +4,16 @@ Test related to stencil states, stencil op, compare func, etc.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { TypedArrayBufferView } from '../../../../common/util/util.js';
+import {
+  DepthStencilFormat,
+  kDepthStencilFormats,
+  kTextureFormatInfo,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
+
+const kStencilFormats = kDepthStencilFormats.filter(format => kTextureFormatInfo[format].stencil);
 
 const kBaseColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 const kRedStencilColor = new Float32Array([1.0, 0.0, 0.0, 1.0]);
@@ -20,13 +27,12 @@ type TestStates = {
 
 class StencilTest extends GPUTest {
   checkStencilOperation(
+    depthStencilFormat: DepthStencilFormat,
     testStencilState: GPUStencilFaceState,
     initialStencil: number,
     expectedStencil: number,
     depthCompare: GPUCompareFunction = 'always'
   ) {
-    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
-
     const kReferenceStencil = 3;
 
     const baseStencilState = {
@@ -71,16 +77,15 @@ class StencilTest extends GPUTest {
       { state: testState, color: kRedStencilColor, stencil: kReferenceStencil },
       { state: testState2, color: kGreenStencilColor, stencil: expectedStencil },
     ];
-    this.runStencilStateTest(testStates, kGreenStencilColor);
+    this.runStencilStateTest(depthStencilFormat, testStates, kGreenStencilColor);
   }
 
   checkStencilCompareFunction(
+    depthStencilFormat: DepthStencilFormat,
     compareFunction: GPUCompareFunction,
     stencilRefValue: number,
     expectedColor: Float32Array
   ) {
-    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
-
     const baseStencilState = {
       compare: 'always',
       failOp: 'keep',
@@ -114,10 +119,11 @@ class StencilTest extends GPUTest {
       { state: baseState, color: kBaseColor, stencil: 1 },
       { state: testState, color: kGreenStencilColor, stencil: stencilRefValue },
     ];
-    this.runStencilStateTest(testStates, expectedColor);
+    this.runStencilStateTest(depthStencilFormat, testStates, expectedColor);
   }
 
   runStencilStateTest(
+    depthStencilFormat: DepthStencilFormat,
     testStates: TestStates[],
     expectedColor: Float32Array,
     isSingleEncoderMultiplePass: boolean = false
@@ -129,7 +135,6 @@ class StencilTest extends GPUTest {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
     const depthTexture = this.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: depthStencilFormat,
@@ -276,6 +281,7 @@ g.test('stencil_compare_func')
   )
   .params(u =>
     u //
+      .combine('format', kStencilFormats)
       .combineWithParams([
         { stencilCompare: 'always', stencilRefValue: 0, _expectedColor: kGreenStencilColor },
         { stencilCompare: 'always', stencilRefValue: 1, _expectedColor: kGreenStencilColor },
@@ -303,10 +309,13 @@ g.test('stencil_compare_func')
         { stencilCompare: 'not-equal', stencilRefValue: 2, _expectedColor: kGreenStencilColor },
       ] as const)
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const { stencilCompare, stencilRefValue, _expectedColor } = t.params;
+    const { format, stencilCompare, stencilRefValue, _expectedColor } = t.params;
 
-    t.checkStencilCompareFunction(stencilCompare, stencilRefValue, _expectedColor);
+    t.checkStencilCompareFunction(format, stencilCompare, stencilRefValue, _expectedColor);
   });
 
 g.test('stencil_passOp_operation')
@@ -322,6 +331,7 @@ g.test('stencil_passOp_operation')
   )
   .params(u =>
     u //
+      .combine('format', kStencilFormats)
       .combineWithParams([
         { passOp: 'keep', initialStencil: 1, expectedStencil: 1 },
         { passOp: 'zero', initialStencil: 1, expectedStencil: 0 },
@@ -337,8 +347,11 @@ g.test('stencil_passOp_operation')
         { passOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff },
       ] as const)
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const { passOp, initialStencil, expectedStencil } = t.params;
+    const { format, passOp, initialStencil, expectedStencil } = t.params;
 
     const stencilState = {
       compare: 'always',
@@ -346,7 +359,7 @@ g.test('stencil_passOp_operation')
       passOp,
     } as const;
 
-    t.checkStencilOperation(stencilState, initialStencil, expectedStencil);
+    t.checkStencilOperation(format, stencilState, initialStencil, expectedStencil);
   });
 
 g.test('stencil_failOp_operation')
@@ -362,6 +375,7 @@ g.test('stencil_failOp_operation')
   )
   .params(u =>
     u //
+      .combine('format', kStencilFormats)
       .combineWithParams([
         { failOp: 'keep', initialStencil: 1, expectedStencil: 1 },
         { failOp: 'zero', initialStencil: 1, expectedStencil: 0 },
@@ -378,8 +392,11 @@ g.test('stencil_failOp_operation')
         { failOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff },
       ] as const)
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const { failOp, initialStencil, expectedStencil } = t.params;
+    const { format, failOp, initialStencil, expectedStencil } = t.params;
 
     const stencilState = {
       compare: 'never',
@@ -390,7 +407,7 @@ g.test('stencil_failOp_operation')
     // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
     // Always fails because the comparison never passes. Therefore red is never drawn, and the
     // stencil contents may be updated according to `operation`.
-    t.checkStencilOperation(stencilState, initialStencil, expectedStencil);
+    t.checkStencilOperation(format, stencilState, initialStencil, expectedStencil);
   });
 
 g.test('stencil_depthFailOp_operation')
@@ -406,6 +423,13 @@ g.test('stencil_depthFailOp_operation')
   )
   .params(u =>
     u //
+      .combine(
+        'format',
+        kDepthStencilFormats.filter(format => {
+          const info = kTextureFormatInfo[format];
+          return info.depth && info.stencil;
+        })
+      )
       .combineWithParams([
         { depthFailOp: 'keep', initialStencil: 1, expectedStencil: 1 },
         { depthFailOp: 'zero', initialStencil: 1, expectedStencil: 0 },
@@ -422,8 +446,11 @@ g.test('stencil_depthFailOp_operation')
         { depthFailOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff },
       ] as const)
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const { depthFailOp, initialStencil, expectedStencil } = t.params;
+    const { format, depthFailOp, initialStencil, expectedStencil } = t.params;
 
     const stencilState = {
       compare: 'always',
@@ -434,7 +461,7 @@ g.test('stencil_depthFailOp_operation')
 
     // Call checkStencilOperation function with enabling the depthTest to test that the depthFailOp
     // stencil operation works as expected.
-    t.checkStencilOperation(stencilState, initialStencil, expectedStencil, 'never');
+    t.checkStencilOperation(format, stencilState, initialStencil, expectedStencil, 'never');
   });
 
 g.test('stencil_read_write_mask')
@@ -457,6 +484,7 @@ g.test('stencil_read_write_mask')
   )
   .params(u =>
     u //
+      .combine('format', kStencilFormats)
       .combineWithParams([
         { maskType: 'write', stencilRefValue: 1, _expectedColor: kRedStencilColor },
         { maskType: 'write', stencilRefValue: 2, _expectedColor: kBaseColor },
@@ -464,10 +492,11 @@ g.test('stencil_read_write_mask')
         { maskType: 'read', stencilRefValue: 2, _expectedColor: kRedStencilColor },
       ])
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const { maskType, stencilRefValue, _expectedColor } = t.params;
-
-    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const { format, maskType, stencilRefValue, _expectedColor } = t.params;
 
     const baseStencilState = {
       compare: 'always',
@@ -482,7 +511,7 @@ g.test('stencil_read_write_mask')
     } as const;
 
     const baseState = {
-      format: depthStencilFormat,
+      format,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: baseStencilState,
@@ -492,7 +521,7 @@ g.test('stencil_read_write_mask')
     } as const;
 
     const testState = {
-      format: depthStencilFormat,
+      format,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: stencilState,
@@ -507,13 +536,17 @@ g.test('stencil_read_write_mask')
       { state: testState, color: kRedStencilColor, stencil: stencilRefValue },
     ];
 
-    t.runStencilStateTest(testStates, _expectedColor);
+    t.runStencilStateTest(format, testStates, _expectedColor);
   });
 
 g.test('stencil_reference_initialized')
   .desc('Test that stencil reference is initialized as zero for new render pass.')
+  .params(u => u.combine('format', kStencilFormats))
+  .beforeAllSubcases(t => {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  })
   .fn(async t => {
-    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const { format } = t.params;
 
     const baseStencilState = {
       compare: 'always',
@@ -526,13 +559,13 @@ g.test('stencil_reference_initialized')
     } as const;
 
     const baseState = {
-      format: depthStencilFormat,
+      format,
       stencilFront: baseStencilState,
       stencilBack: baseStencilState,
     } as const;
 
     const testState = {
-      format: depthStencilFormat,
+      format,
       stencilFront: testStencilState,
       stencilBack: testStencilState,
     } as const;
@@ -546,5 +579,5 @@ g.test('stencil_reference_initialized')
     ];
 
     // The third draw should pass the stencil test since the second pass set it to default zero.
-    t.runStencilStateTest(testStates, kGreenStencilColor, true);
+    t.runStencilStateTest(format, testStates, kGreenStencilColor, true);
   });
