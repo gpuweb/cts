@@ -353,6 +353,7 @@ g.test('depth_bias_24bit_format')
   )
   .params(u =>
     u //
+      .combine('format', ['depth24plus', 'depth24plus-stencil8'] as const)
       .combineWithParams([
         {
           quadAngle: QuadAngle.Flat,
@@ -378,5 +379,6 @@ g.test('depth_bias_24bit_format')
       ] as const)
   )
   .fn(async t => {
-    t.runDepthBiasTestFor24BitFormat('depth24plus-stencil8', t.params);
+    const { format } = t.params;
+    t.runDepthBiasTestFor24BitFormat(format, t.params);
   });
