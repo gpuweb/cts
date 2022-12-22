@@ -467,7 +467,7 @@ g.test('stencil_read_write_mask')
   .fn(async t => {
     const { maskType, stencilRefValue, _expectedColor } = t.params;
 
-    const depthSpencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
 
     const baseStencilState = {
       compare: 'always',
@@ -482,7 +482,7 @@ g.test('stencil_read_write_mask')
     } as const;
 
     const baseState = {
-      format: depthSpencilFormat,
+      format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: baseStencilState,
@@ -492,7 +492,7 @@ g.test('stencil_read_write_mask')
     } as const;
 
     const testState = {
-      format: depthSpencilFormat,
+      format: depthStencilFormat,
       depthWriteEnabled: false,
       depthCompare: 'always',
       stencilFront: stencilState,
@@ -513,7 +513,7 @@ g.test('stencil_read_write_mask')
 g.test('stencil_reference_initialized')
   .desc('Test that stencil reference is initialized as zero for new render pass.')
   .fn(async t => {
-    const depthSpencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
+    const depthStencilFormat: GPUTextureFormat = 'depth24plus-stencil8';
 
     const baseStencilState = {
       compare: 'always',
@@ -526,13 +526,13 @@ g.test('stencil_reference_initialized')
     } as const;
 
     const baseState = {
-      format: depthSpencilFormat,
+      format: depthStencilFormat,
       stencilFront: baseStencilState,
       stencilBack: baseStencilState,
     } as const;
 
     const testState = {
-      format: depthSpencilFormat,
+      format: depthStencilFormat,
       stencilFront: testStencilState,
       stencilBack: testStencilState,
     } as const;
