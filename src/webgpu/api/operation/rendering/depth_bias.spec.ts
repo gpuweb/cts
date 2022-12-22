@@ -5,7 +5,11 @@ Tests render results with different depth bias values like 'positive', 'negative
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
-import { DepthStencilFormat, EncodableTextureFormat } from '../../../capability_info.js';
+import {
+  DepthStencilFormat,
+  EncodableTextureFormat,
+  kTextureFormatInfo,
+} from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { kValue } from '../../../util/constants.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
@@ -35,16 +39,17 @@ class DepthBiasTest extends GPUTest {
       bias,
       biasSlopeScale,
       biasClamp,
-      depthStencilLoadOp,
+      initialDepth,
     }: {
       quadAngle: QuadAngle;
       bias: number;
       biasSlopeScale: number;
       biasClamp: number;
-      depthStencilLoadOp: GPULoadOp;
+      initialDepth: number;
     }
   ): { renderTarget: GPUTexture; depthTexture: GPUTexture } {
     const renderTargetFormat = 'rgba8unorm';
+    const depthFormatInfo = kTextureFormatInfo[depthFormat];
 
     let vertexShaderCode: string;
     switch (quadAngle) {
@@ -100,11 +105,11 @@ class DepthBiasTest extends GPUTest {
 
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: depthTexture.createView(),
-      depthLoadOp: depthStencilLoadOp,
-      depthStoreOp: 'store',
-      stencilLoadOp: depthStencilLoadOp,
-      stencilStoreOp: 'store',
-      depthClearValue: depthStencilLoadOp === 'clear' ? 0.4 : undefined,
+      depthLoadOp: depthFormatInfo.depth ? 'clear' : undefined,
+      depthStoreOp: depthFormatInfo.depth ? 'store' : undefined,
+      stencilLoadOp: depthFormatInfo.stencil ? 'clear' : undefined,
+      stencilStoreOp: depthFormatInfo.stencil ? 'store' : undefined,
+      depthClearValue: initialDepth,
     };
 
     const encoder = this.device.createCommandEncoder();
@@ -164,7 +169,7 @@ class DepthBiasTest extends GPUTest {
       bias,
       biasSlopeScale,
       biasClamp,
-      depthStencilLoadOp: 'load',
+      initialDepth: 0,
     });
 
     const expColor = { Depth: expectedDepth };
@@ -203,7 +208,7 @@ class DepthBiasTest extends GPUTest {
       bias,
       biasSlopeScale,
       biasClamp,
-      depthStencilLoadOp: 'clear',
+      initialDepth: 0.4,
     });
 
     const renderTargetFormat = 'rgba8unorm';
