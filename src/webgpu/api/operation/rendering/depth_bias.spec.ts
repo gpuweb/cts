@@ -28,23 +28,24 @@ enum QuadAngle {
 const kPointTwoFiveBiasForPointTwoFiveZOnFloat = 8388608;
 
 class DepthBiasTest extends GPUTest {
-  runDepthBiasTest(
-    depthFormat: EncodableTextureFormat & DepthStencilFormat,
+  runDepthBiasTestInternal(
+    depthFormat: DepthStencilFormat,
     {
       quadAngle,
       bias,
       biasSlopeScale,
       biasClamp,
-      expectedDepth,
+      depthStencilLoadOp,
     }: {
       quadAngle: QuadAngle;
       bias: number;
       biasSlopeScale: number;
       biasClamp: number;
-      expectedDepth: number;
+      depthStencilLoadOp: GPULoadOp;
     }
-  ) {
+  ): { renderTarget: GPUTexture; depthTexture: GPUTexture } {
     const renderTargetFormat = 'rgba8unorm';
+
     let vertexShaderCode: string;
     switch (quadAngle) {
       case QuadAngle.Flat:
@@ -99,10 +100,11 @@ class DepthBiasTest extends GPUTest {
 
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: depthTexture.createView(),
-      depthLoadOp: 'load',
+      depthLoadOp: depthStencilLoadOp,
       depthStoreOp: 'store',
-      stencilLoadOp: 'load',
+      stencilLoadOp: depthStencilLoadOp,
       stencilStoreOp: 'store',
+      depthClearValue: depthStencilLoadOp === 'clear' ? 0.4 : undefined,
     };
 
     const encoder = this.device.createCommandEncoder();
@@ -138,6 +140,33 @@ class DepthBiasTest extends GPUTest {
     pass.end();
     this.device.queue.submit([encoder.finish()]);
 
+    return { renderTarget, depthTexture };
+  }
+
+  runDepthBiasTest(
+    depthFormat: EncodableTextureFormat & DepthStencilFormat,
+    {
+      quadAngle,
+      bias,
+      biasSlopeScale,
+      biasClamp,
+      expectedDepth,
+    }: {
+      quadAngle: QuadAngle;
+      bias: number;
+      biasSlopeScale: number;
+      biasClamp: number;
+      expectedDepth: number;
+    }
+  ) {
+    const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
+      quadAngle,
+      bias,
+      biasSlopeScale,
+      biasClamp,
+      depthStencilLoadOp: 'load',
+    });
+
     const expColor = { Depth: expectedDepth };
     const expTexelView = TexelView.fromTexelsAsColors(depthFormat, coords => expColor);
 
@@ -150,6 +179,52 @@ class DepthBiasTest extends GPUTest {
     );
     this.eventualExpectOK(result);
     this.trackForCleanup(renderTarget);
+    this.trackForCleanup(depthTexture);
+  }
+
+  runDepthBiasTestFor24BitFormat(
+    depthFormat: DepthStencilFormat,
+    {
+      quadAngle,
+      bias,
+      biasSlopeScale,
+      biasClamp,
+      expectedColor,
+    }: {
+      quadAngle: QuadAngle;
+      bias: number;
+      biasSlopeScale: number;
+      biasClamp: number;
+      expectedColor: Float32Array;
+    }
+  ) {
+    const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
+      quadAngle,
+      bias,
+      biasSlopeScale,
+      biasClamp,
+      depthStencilLoadOp: 'clear',
+    });
+
+    const renderTargetFormat = 'rgba8unorm';
+    const expColor = {
+      R: expectedColor[0],
+      G: expectedColor[1],
+      B: expectedColor[2],
+      A: expectedColor[3],
+    };
+    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
+
+    const result = textureContentIsOKByT2B(
+      this,
+      { texture: renderTarget },
+      [1, 1],
+      { expTexelView },
+      { maxDiffULPsForNormFormat: 1 }
+    );
+    this.eventualExpectOK(result);
+    this.trackForCleanup(renderTarget);
+    this.trackForCleanup(depthTexture);
   }
 
   createRenderPipelineForTest(
@@ -186,8 +261,6 @@ g.test('depth_bias')
     `
   Tests that a square with different depth bias values like 'positive', 'negative', 'infinity',
   'slope', 'clamp', etc. is drawn as expected.
-
-  TODO: Need to test 'depth24plus-stencil8' format?
   `
   )
   .params(u =>
@@ -260,4 +333,41 @@ g.test('depth_bias')
   )
   .fn(async t => {
     t.runDepthBiasTest('depth32float', t.params);
+  });
+
+g.test('depth_bias_24bit_format')
+  .desc(
+    `
+  Tests that a square with different depth bias values like 'positive', 'negative', 'infinity',
+  'slope', 'clamp', etc. is drawn as expected with 24 bit depth format.
+  `
+  )
+  .params(u =>
+    u //
+      .combineWithParams([
+        {
+          quadAngle: QuadAngle.Flat,
+          bias: 0.25 * (1 << 25),
+          biasSlopeScale: 0,
+          biasClamp: 0,
+          expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
+        },
+        {
+          quadAngle: QuadAngle.TiltedX,
+          bias: 0.25 * (1 << 25),
+          biasSlopeScale: 1,
+          biasClamp: 0,
+          expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
+        },
+        {
+          quadAngle: QuadAngle.Flat,
+          bias: 0.25 * (1 << 25),
+          biasSlopeScale: 0,
+          biasClamp: 0.1,
+          expectedColor: new Float32Array([0.0, 0.0, 0.0, 0.0]),
+        },
+      ] as const)
+  )
+  .fn(async t => {
+    t.runDepthBiasTestFor24BitFormat('depth24plus-stencil8', t.params);
   });
