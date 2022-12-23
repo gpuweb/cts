@@ -17,6 +17,66 @@
     <link rel="stylesheet" href="third_party/normalize.min.css" />
     <script src="third_party/jquery/jquery-3.3.1.min.js"></script>
     <style>
+      :root {
+        color-scheme: light dark;
+
+        --fg-color: #000;
+        --bg-color: #fff;
+        --border-color: #888;
+
+        --results-fg-color: gray;
+        --node-description-fg-color: #gray;
+        --node-hover-bg-color: rgba(0, 0, 0, 0.1);
+
+        --testcaselogbtn-bg-color: #eee;
+        --subtree-border-color: #ddd;
+        --subtree-hover-left-border-color: #000;
+        --multicase-border-color: #55f;
+        --testcase-border-color: #bbf;
+        --testcase-bg-color: #bbb;
+
+        --testcase-data-status-fail-bg-color: #fdd;
+        --testcase-data-status-warn-bg-color: #ffb;
+        --testcase-data-status-pass-bg-color: #cfc;
+        --testcase-data-status-skip-bg-color: #eee;
+
+        --testcase-logs-bg-color: #white;
+        --testcase-log-odd-bg-color: #fff;
+        --testcase-log-even-bg-color: #f8f8f8;
+        --testcase-log-text-fg-color: #666;
+        --testcase-log-text-first-line-fg-color: #000;
+        --button-image-filter: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --fg-color: #fff;
+          --bg-color: #000;
+          --border-color: #888;
+
+          --results-fg-color: #aaa;
+          --node-description-fg-color: #aaa;
+          --node-hover-bg-color: rgba(255, 255, 255, 0.1);
+
+          --testcaselogbtn-bg-color: #666;
+          --subtree-border-color: #444;
+          --subtree-hover-left-border-color: #FFF;
+          --multicase-border-color: #338;
+          --testcase-border-color: #55a;
+          --testcase-bg-color: #888;
+
+          --testcase-data-status-fail-bg-color: #400;
+          --testcase-data-status-warn-bg-color: #660;
+          --testcase-data-status-pass-bg-color: #040;
+          --testcase-data-status-skip-bg-color: #444;
+
+          --testcase-logs-bg-color: #black;
+          --testcase-log-odd-bg-color: #000;
+          --testcase-log-even-bg-color: #080808;
+          --testcase-log-text-fg-color: #aaa;
+          --testcase-log-text-first-line-fg-color: #fff;
+          --button-image-filter: invert(100%);
+        }        
+      }
       body {
         font-family: monospace;
         min-width: 400px;
@@ -30,6 +90,10 @@
         font-family: 'Poppins', sans-serif;
         height: 1.2em;
         vertical-align: middle;
+      }
+      input[type=button],
+      button {
+        cursor: pointer;
       }
       .logo {
         height: 1.2em;
@@ -45,7 +109,7 @@
       }
 
       #resultsVis {
-        border-right: 1px solid gray;
+        border-right: 1px solid var(--results-fg-color);
       }
 
       /* tree nodes */
@@ -56,21 +120,37 @@
         padding: 0px 2px 0px 1px;
       }
       .nodeheader:hover {
-        background: rgba(0, 0, 0, 0.1);
+        background: var(--node-hover-bg-color);
       }
       .subtreerun,
       .leafrun,
       .nodelink,
       .collapsebtn,
       .testcaselogbtn {
-        display: inline-block;
+        display: inline-flex;
         flex-shrink: 0;
         flex-grow: 0;
+        justify-content: center;
+        align-items: center;
+        text-decoration: none;
         vertical-align: top;
-        background-color: #eee;
+        color: var(--fg-color);
+        background-color: var(--testcaselogbtn-bg-color);
         background-repeat: no-repeat;
         background-position: center;
-        border: 1px solid #888;
+        border: 1px solid var(--border-color);
+      }
+      .subtreerun::before,
+      .leafrun::before,
+      .nodelink::before,
+      .collapsebtn::before,
+      .testcaselogbtn::before {
+        content: "";
+        width: 100%;
+        height: 100%;
+        background-repeat: no-repeat;
+        background-position: center;
+        filter: var(--button-image-filter);
       }
       @media (pointer: fine) {
         .subtreerun,
@@ -96,13 +176,13 @@
           height: 36px;
         }
       }
-      .subtreerun {
+      .subtreerun::before {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJAQMAAADaX5RTAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAAB5JREFUCNdjOMDAsIGBoYeBoZmBoaEBRPaARQ4wAABTfwX/l/WQvgAAAABJRU5ErkJggg==);
       }
-      .leafrun {
+      .leafrun::before {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAAANklEQVQoU2NkYGD4zwABjFAagwJJwBTBJDEUY1OEoRifIrhiYhSBHYvuJnSHM5LtJry+wxlOAGPTCQmAB/WwAAAAAElFTkSuQmCC);
       }
-      .nodelink {
+      .nodelink::before {
         background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+P+BoUGAYesFhj4BhvsFDPYNDHwMCMTAAACqJwbp3VgbrAAAAABJRU5ErkJggg==);
       }
       .nodetitle {
@@ -123,7 +203,7 @@
       }
       .nodedescription {
         margin: 0 0 0 1em;
-        color: gray;
+        color: var(--node-description-fg-color);
         white-space: pre-wrap;
         font-size: 80%;
       }
@@ -135,20 +215,20 @@
         padding: 3px 0 0 3px;
         border-width: 1px 0 0;
         border-style: solid;
-        border-color: #ddd;
+        border-color: var(--subtree-border-color);
       }
       .subtree::before {
         float: right;
         margin-right: 3px;
       }
       .subtree[data-status='fail'], .subtree[data-status='passfail'] {
-        background: linear-gradient(90deg, #fdd, #fdd 16px, #fff 16px);
+        background: linear-gradient(90deg, var(--testcase-data-status-fail-bg-color), var(--testcase-data-status-fail-bg-color) 16px, var(--bg-color) 16px);
       }
       .subtree[data-status='fail']::before {
         content: "⛔"
       }
       .subtree[data-status='pass'] {
-        background: linear-gradient(90deg, #cfc, #cfc 16px, #fff 16px);
+        background: linear-gradient(90deg, var(--testcase-data-status-pass-bg-color), var(--testcase-data-status-pass-bg-color) 16px, var(--bg-color) 16px);
       }
       .subtree[data-status='pass']::before {
         content: "✔"
@@ -157,17 +237,17 @@
         content: "✔/⛔"
       }
       .subtree:hover {
-        border-left-color: #000;
+        border-left-color: var(--subtree-hover-left-border-color);
       }
       .subtree.multifile > .subtreechildren > .subtree.multitest,
       .subtree.multifile > .subtreechildren > .subtree.multicase {
         border-width: 2px 0 0 1px;
-        border-color: #55f;
+        border-color: var(--multicase-border-color);
       }
       .subtree.multitest > .subtreechildren > .subtree.multicase,
       .subtree.multitest > .subtreechildren > .testcase {
         border-width: 2px 0 0 1px;
-        border-color: #bbf;
+        border-color: var(--testcase-border-color);
       }
       .subtreechildren {
         margin-left: 9px;
@@ -179,8 +259,8 @@
         padding: 3px;
         border-width: 1px 0 0 0;
         border-style: solid;
-        border-color: gray;
-        background: #bbb;
+        border-color: var(--border-color);
+        background: var(--testcase-bg-color);
       }
       .testcase:first-child {
         margin-top: 3px;
@@ -190,25 +270,25 @@
         margin-top: -1.1em;
       }
       .testcase[data-status='fail'] {
-        background: #fdd;
+        background: var(--testcase-data-status-fail-bg-color);
       }
       .testcase[data-status='fail']::after {
         content: "⛔"
       }
       .testcase[data-status='warn'] {
-        background: #ffb;
+        background: var(--testcase-data-status-warn-bg-color);
       }
       .testcase[data-status='warn']::after {
         content: "⚠"
       }
       .testcase[data-status='pass'] {
-        background: #cfc;
+        background: var(--testcase-data-status-pass-bg-color);
       }
       .testcase[data-status='pass']::after {
         content: "✔"
       }
       .testcase[data-status='skip'] {
-        background: #eee;
+        background: var(--testcase-data-status-skip-bg-color);
       }
       .testcase .nodequery {
         font-weight: normal;
@@ -224,20 +304,20 @@
         width: calc(100% - 6px);
         border-width: 0 0px 0 1px;
         border-style: solid;
-        border-color: gray;
-        background: white;
+        border-color: var(--border-color);
+        background: var(--testcase-logs-bg-color);
       }
       .testcaselog {
         display: flex;
       }
       .testcaselog:nth-child(odd) {
-        background: #fff;
+        background: var(--testcase-log-odd-bg-color);
       }
       .testcaselog:nth-child(even) {
-        background: #f8f8f8;
+        background: var(--testcase-log-even-bg-color);
       }
-      .testcaselogbtn {
-        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+H+AwUGBwV+BQUGAQX0CiNQQYFABk8ogLgBsYQUt2gNKPwAAAABJRU5ErkJggg==);
+      .testcaselogbtn::before {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMAQMAAABsu86kAAAABlBMVEUAAAAAAAClZ7nPAAAAAXRSTlMAQObYZgAAACRJREFUCNdjYGBg+H+AwUGBwV+BQUGAQX0CiNQQYFABk8ogLgBsYQUt2gNKPwAAAABJRU5ErkJggg==); 
       }
       .testcaselogtext {
         flex: 1 0;
@@ -245,10 +325,10 @@
         white-space: pre-wrap;
         word-break: break-word;
         margin: 0;
-        color: #666;
+        color: var(--testcase-log-text-fg-color)
       }
       .testcaselogtext::first-line {
-        color: #000;
+        color: var(--testcase-log-text-first-line-fg-color);
       }
 
       @media only screen and (max-width: 600px) {
