@@ -4,6 +4,7 @@
 Test related to stencil states, stencil op, compare func, etc.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 
+import { kDepthStencilFormats, kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
@@ -77,10 +78,9 @@ class StencilTest extends GPUTest {
   checkStencilCompareFunction(
   compareFunction,
   stencilRefValue,
-  expectedColor)
+  expectedColor,
+  depthStencilFormat = 'depth24plus-stencil8')
   {
-    const depthStencilFormat = 'depth24plus-stencil8';
-
     const baseStencilState = {
       compare: 'always',
       failOp: 'keep',
@@ -114,13 +114,14 @@ class StencilTest extends GPUTest {
     { state: baseState, color: kBaseColor, stencil: 1 },
     { state: testState, color: kGreenStencilColor, stencil: stencilRefValue }];
 
-    this.runStencilStateTest(testStates, expectedColor);
+    this.runStencilStateTest(testStates, expectedColor, false, depthStencilFormat);
   }
 
   runStencilStateTest(
   testStates,
   expectedColor,
-  isSingleEncoderMultiplePass = false)
+  isSingleEncoderMultiplePass = false,
+  depthStencilFormat = 'depth24plus-stencil8')
   {
     const renderTargetFormat = 'rgba8unorm';
     const renderTarget = this.device.createTexture({
@@ -129,7 +130,6 @@ class StencilTest extends GPUTest {
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
     });
 
-    const depthStencilFormat = 'depth24plus-stencil8';
     const depthTexture = this.device.createTexture({
       size: { width: 1, height: 1, depthOrArrayLayers: 1 },
       format: depthStencilFormat,
@@ -276,7 +276,11 @@ desc(
 
 params((u) =>
 u //
-.combineWithParams([
+.combine(
+'depthStencilFormat',
+kDepthStencilFormats.filter((format) => kTextureFormatInfo[format].stencil)).
+
+combineWithParams([
 { stencilCompare: 'always', stencilRefValue: 0, _expectedColor: kGreenStencilColor },
 { stencilCompare: 'always', stencilRefValue: 1, _expectedColor: kGreenStencilColor },
 { stencilCompare: 'always', stencilRefValue: 2, _expectedColor: kGreenStencilColor },
@@ -303,10 +307,18 @@ u //
 { stencilCompare: 'not-equal', stencilRefValue: 2, _expectedColor: kGreenStencilColor }])).
 
 
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
+}).
 fn(async (t) => {
-  const { stencilCompare, stencilRefValue, _expectedColor } = t.params;
+  const { depthStencilFormat, stencilCompare, stencilRefValue, _expectedColor } = t.params;
 
-  t.checkStencilCompareFunction(stencilCompare, stencilRefValue, _expectedColor);
+  t.checkStencilCompareFunction(
+  stencilCompare,
+  stencilRefValue,
+  _expectedColor,
+  depthStencilFormat);
+
 });
 
 g.test('stencil_passOp_operation').
