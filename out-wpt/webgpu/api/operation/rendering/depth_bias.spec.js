@@ -1,14 +1,13 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `
-Tests render results with different depth bias values like 'positive', 'negative', 'infinity',
+Tests render results with different depth bias values like 'positive', 'negative',
 'slope', 'clamp', etc.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
 import { kTextureFormatInfo } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { kValue } from '../../../util/constants.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 var QuadAngle;
@@ -134,7 +133,7 @@ class DepthBiasTest extends GPUTest {
     return { renderTarget, depthTexture };
   }
 
-  runDepthBiasTest(depthFormat, { quadAngle, bias, biasSlopeScale, biasClamp, expectedDepth }) {
+  runDepthBiasTest(depthFormat, { quadAngle, bias, biasSlopeScale, biasClamp, _expectedDepth }) {
     const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
       quadAngle,
       bias,
@@ -143,7 +142,7 @@ class DepthBiasTest extends GPUTest {
       initialDepth: 0,
     });
 
-    const expColor = { Depth: expectedDepth };
+    const expColor = { Depth: _expectedDepth };
     const expTexelView = TexelView.fromTexelsAsColors(depthFormat, coords => expColor);
 
     const result = textureContentIsOKByT2B(
@@ -161,7 +160,7 @@ class DepthBiasTest extends GPUTest {
 
   runDepthBiasTestFor24BitFormat(
     depthFormat,
-    { quadAngle, bias, biasSlopeScale, biasClamp, expectedColor }
+    { quadAngle, bias, biasSlopeScale, biasClamp, _expectedColor }
   ) {
     const { renderTarget, depthTexture } = this.runDepthBiasTestInternal(depthFormat, {
       quadAngle,
@@ -173,10 +172,10 @@ class DepthBiasTest extends GPUTest {
 
     const renderTargetFormat = 'rgba8unorm';
     const expColor = {
-      R: expectedColor[0],
-      G: expectedColor[1],
-      B: expectedColor[2],
-      A: expectedColor[3],
+      R: _expectedColor[0],
+      G: _expectedColor[1],
+      B: _expectedColor[2],
+      A: _expectedColor[3],
     };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
 
@@ -222,7 +221,7 @@ export const g = makeTestGroup(DepthBiasTest);
 g.test('depth_bias')
   .desc(
     `
-  Tests that a square with different depth bias values like 'positive', 'negative', 'infinity',
+  Tests that a square with different depth bias values like 'positive', 'negative',
   'slope', 'clamp', etc. is drawn as expected.
   `
   )
@@ -234,63 +233,49 @@ g.test('depth_bias')
           bias: kPointTwoFiveBiasForPointTwoFiveZOnFloat,
           biasSlopeScale: 0,
           biasClamp: 0,
-          expectedDepth: 0.5,
+          _expectedDepth: 0.5,
         },
         {
           quadAngle: QuadAngle.Flat,
           bias: kPointTwoFiveBiasForPointTwoFiveZOnFloat,
           biasSlopeScale: 0,
           biasClamp: 0.125,
-          expectedDepth: 0.375,
+          _expectedDepth: 0.375,
         },
         {
           quadAngle: QuadAngle.Flat,
           bias: -kPointTwoFiveBiasForPointTwoFiveZOnFloat,
           biasSlopeScale: 0,
           biasClamp: 0.125,
-          expectedDepth: 0,
+          _expectedDepth: 0,
         },
         {
           quadAngle: QuadAngle.Flat,
           bias: -kPointTwoFiveBiasForPointTwoFiveZOnFloat,
           biasSlopeScale: 0,
           biasClamp: -0.125,
-          expectedDepth: 0.125,
+          _expectedDepth: 0.125,
         },
         {
           quadAngle: QuadAngle.TiltedX,
           bias: 0,
           biasSlopeScale: 0,
           biasClamp: 0,
-          expectedDepth: 0.25,
+          _expectedDepth: 0.25,
         },
         {
           quadAngle: QuadAngle.TiltedX,
           bias: 0,
           biasSlopeScale: 1,
           biasClamp: 0,
-          expectedDepth: 0.75,
+          _expectedDepth: 0.75,
         },
         {
           quadAngle: QuadAngle.TiltedX,
           bias: 0,
           biasSlopeScale: -0.5,
           biasClamp: 0,
-          expectedDepth: 0,
-        },
-        {
-          quadAngle: QuadAngle.TiltedX,
-          bias: 0,
-          biasSlopeScale: kValue.f32.infinity.positive,
-          biasClamp: 0,
-          expectedDepth: 1,
-        },
-        {
-          quadAngle: QuadAngle.TiltedX,
-          bias: 0,
-          biasSlopeScale: kValue.f32.infinity.negative,
-          biasClamp: 0,
-          expectedDepth: 0,
+          _expectedDepth: 0,
         },
       ])
   )
@@ -318,21 +303,21 @@ g.test('depth_bias_24bit_format')
           bias: 0.25 * (1 << 25),
           biasSlopeScale: 0,
           biasClamp: 0,
-          expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
+          _expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
         },
         {
           quadAngle: QuadAngle.TiltedX,
           bias: 0.25 * (1 << 25),
           biasSlopeScale: 1,
           biasClamp: 0,
-          expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
+          _expectedColor: new Float32Array([1.0, 0.0, 0.0, 1.0]),
         },
         {
           quadAngle: QuadAngle.Flat,
           bias: 0.25 * (1 << 25),
           biasSlopeScale: 0,
           biasClamp: 0.1,
-          expectedColor: new Float32Array([0.0, 0.0, 0.0, 0.0]),
+          _expectedColor: new Float32Array([0.0, 0.0, 0.0, 0.0]),
         },
       ])
   )

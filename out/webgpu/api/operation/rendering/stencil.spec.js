@@ -4,10 +4,16 @@
 Test related to stencil states, stencil op, compare func, etc.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 
-import { kDepthStencilFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import {
+
+kDepthStencilFormats,
+kTextureFormatInfo } from
+'../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
+
+const kStencilFormats = kDepthStencilFormats.filter((format) => kTextureFormatInfo[format].stencil);
 
 const kBaseColor = new Float32Array([1.0, 1.0, 1.0, 1.0]);
 const kRedStencilColor = new Float32Array([1.0, 0.0, 0.0, 1.0]);
@@ -21,13 +27,12 @@ const kGreenStencilColor = new Float32Array([0.0, 1.0, 0.0, 1.0]);
 
 class StencilTest extends GPUTest {
   checkStencilOperation(
+  depthStencilFormat,
   testStencilState,
   initialStencil,
-  expectedStencil,
+  _expectedStencil,
   depthCompare = 'always')
   {
-    const depthStencilFormat = 'depth24plus-stencil8';
-
     const kReferenceStencil = 3;
 
     const baseStencilState = {
@@ -70,16 +75,16 @@ class StencilTest extends GPUTest {
     // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
     { state: baseState, color: kBaseColor, stencil: initialStencil },
     { state: testState, color: kRedStencilColor, stencil: kReferenceStencil },
-    { state: testState2, color: kGreenStencilColor, stencil: expectedStencil }];
+    { state: testState2, color: kGreenStencilColor, stencil: _expectedStencil }];
 
-    this.runStencilStateTest(testStates, kGreenStencilColor);
+    this.runStencilStateTest(depthStencilFormat, testStates, kGreenStencilColor);
   }
 
   checkStencilCompareFunction(
+  depthStencilFormat,
   compareFunction,
   stencilRefValue,
-  expectedColor,
-  depthStencilFormat = 'depth24plus-stencil8')
+  expectedColor)
   {
     const baseStencilState = {
       compare: 'always',
@@ -114,14 +119,14 @@ class StencilTest extends GPUTest {
     { state: baseState, color: kBaseColor, stencil: 1 },
     { state: testState, color: kGreenStencilColor, stencil: stencilRefValue }];
 
-    this.runStencilStateTest(testStates, expectedColor, false, depthStencilFormat);
+    this.runStencilStateTest(depthStencilFormat, testStates, expectedColor);
   }
 
   runStencilStateTest(
+  depthStencilFormat,
   testStates,
   expectedColor,
-  isSingleEncoderMultiplePass = false,
-  depthStencilFormat = 'depth24plus-stencil8')
+  isSingleEncoderMultiplePass = false)
   {
     const renderTargetFormat = 'rgba8unorm';
     const renderTarget = this.device.createTexture({
@@ -276,10 +281,7 @@ desc(
 
 params((u) =>
 u //
-.combine(
-'depthStencilFormat',
-kDepthStencilFormats.filter((format) => kTextureFormatInfo[format].stencil)).
-
+.combine('format', kStencilFormats).
 combineWithParams([
 { stencilCompare: 'always', stencilRefValue: 0, _expectedColor: kGreenStencilColor },
 { stencilCompare: 'always', stencilRefValue: 1, _expectedColor: kGreenStencilColor },
@@ -308,17 +310,12 @@ combineWithParams([
 
 
 beforeAllSubcases((t) => {
-  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
 fn(async (t) => {
-  const { depthStencilFormat, stencilCompare, stencilRefValue, _expectedColor } = t.params;
+  const { format, stencilCompare, stencilRefValue, _expectedColor } = t.params;
 
-  t.checkStencilCompareFunction(
-  stencilCompare,
-  stencilRefValue,
-  _expectedColor,
-  depthStencilFormat);
-
+  t.checkStencilCompareFunction(format, stencilCompare, stencilRefValue, _expectedColor);
 });
 
 g.test('stencil_passOp_operation').
@@ -334,23 +331,27 @@ desc(
 
 params((u) =>
 u //
-.combineWithParams([
-{ passOp: 'keep', initialStencil: 1, expectedStencil: 1 },
-{ passOp: 'zero', initialStencil: 1, expectedStencil: 0 },
-{ passOp: 'replace', initialStencil: 1, expectedStencil: 3 },
-{ passOp: 'invert', initialStencil: 0xf0, expectedStencil: 0x0f },
-{ passOp: 'increment-clamp', initialStencil: 1, expectedStencil: 2 },
-{ passOp: 'increment-clamp', initialStencil: 0xff, expectedStencil: 0xff },
-{ passOp: 'increment-wrap', initialStencil: 1, expectedStencil: 2 },
-{ passOp: 'increment-wrap', initialStencil: 0xff, expectedStencil: 0 },
-{ passOp: 'decrement-clamp', initialStencil: 1, expectedStencil: 0 },
-{ passOp: 'decrement-clamp', initialStencil: 0, expectedStencil: 0 },
-{ passOp: 'decrement-wrap', initialStencil: 1, expectedStencil: 0 },
-{ passOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff }])).
+.combine('format', kStencilFormats).
+combineWithParams([
+{ passOp: 'keep', initialStencil: 1, _expectedStencil: 1 },
+{ passOp: 'zero', initialStencil: 1, _expectedStencil: 0 },
+{ passOp: 'replace', initialStencil: 1, _expectedStencil: 3 },
+{ passOp: 'invert', initialStencil: 0xf0, _expectedStencil: 0x0f },
+{ passOp: 'increment-clamp', initialStencil: 1, _expectedStencil: 2 },
+{ passOp: 'increment-clamp', initialStencil: 0xff, _expectedStencil: 0xff },
+{ passOp: 'increment-wrap', initialStencil: 1, _expectedStencil: 2 },
+{ passOp: 'increment-wrap', initialStencil: 0xff, _expectedStencil: 0 },
+{ passOp: 'decrement-clamp', initialStencil: 1, _expectedStencil: 0 },
+{ passOp: 'decrement-clamp', initialStencil: 0, _expectedStencil: 0 },
+{ passOp: 'decrement-wrap', initialStencil: 1, _expectedStencil: 0 },
+{ passOp: 'decrement-wrap', initialStencil: 0, _expectedStencil: 0xff }])).
 
 
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
-  const { passOp, initialStencil, expectedStencil } = t.params;
+  const { format, passOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
     compare: 'always',
@@ -358,7 +359,7 @@ fn(async (t) => {
     passOp
   };
 
-  t.checkStencilOperation(stencilState, initialStencil, expectedStencil);
+  t.checkStencilOperation(format, stencilState, initialStencil, _expectedStencil);
 });
 
 g.test('stencil_failOp_operation').
@@ -374,24 +375,28 @@ desc(
 
 params((u) =>
 u //
-.combineWithParams([
-{ failOp: 'keep', initialStencil: 1, expectedStencil: 1 },
-{ failOp: 'zero', initialStencil: 1, expectedStencil: 0 },
-{ failOp: 'replace', initialStencil: 1, expectedStencil: 3 },
-{ failOp: 'invert', initialStencil: 0xf0, expectedStencil: 0x0f },
-{ failOp: 'increment-clamp', initialStencil: 1, expectedStencil: 2 },
-{ failOp: 'increment-clamp', initialStencil: 0xff, expectedStencil: 0xff },
-{ failOp: 'increment-wrap', initialStencil: 1, expectedStencil: 2 },
-{ failOp: 'increment-wrap', initialStencil: 0xff, expectedStencil: 0 },
-{ failOp: 'decrement-clamp', initialStencil: 1, expectedStencil: 0 },
-{ failOp: 'decrement-clamp', initialStencil: 0, expectedStencil: 0 },
-{ failOp: 'decrement-wrap', initialStencil: 2, expectedStencil: 1 },
-{ failOp: 'decrement-wrap', initialStencil: 1, expectedStencil: 0 },
-{ failOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff }])).
+.combine('format', kStencilFormats).
+combineWithParams([
+{ failOp: 'keep', initialStencil: 1, _expectedStencil: 1 },
+{ failOp: 'zero', initialStencil: 1, _expectedStencil: 0 },
+{ failOp: 'replace', initialStencil: 1, _expectedStencil: 3 },
+{ failOp: 'invert', initialStencil: 0xf0, _expectedStencil: 0x0f },
+{ failOp: 'increment-clamp', initialStencil: 1, _expectedStencil: 2 },
+{ failOp: 'increment-clamp', initialStencil: 0xff, _expectedStencil: 0xff },
+{ failOp: 'increment-wrap', initialStencil: 1, _expectedStencil: 2 },
+{ failOp: 'increment-wrap', initialStencil: 0xff, _expectedStencil: 0 },
+{ failOp: 'decrement-clamp', initialStencil: 1, _expectedStencil: 0 },
+{ failOp: 'decrement-clamp', initialStencil: 0, _expectedStencil: 0 },
+{ failOp: 'decrement-wrap', initialStencil: 2, _expectedStencil: 1 },
+{ failOp: 'decrement-wrap', initialStencil: 1, _expectedStencil: 0 },
+{ failOp: 'decrement-wrap', initialStencil: 0, _expectedStencil: 0xff }])).
 
 
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
-  const { failOp, initialStencil, expectedStencil } = t.params;
+  const { format, failOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
     compare: 'never',
@@ -402,7 +407,7 @@ fn(async (t) => {
   // Draw the base triangle with stencil reference 1. This clears the stencil buffer to 1.
   // Always fails because the comparison never passes. Therefore red is never drawn, and the
   // stencil contents may be updated according to `operation`.
-  t.checkStencilOperation(stencilState, initialStencil, expectedStencil);
+  t.checkStencilOperation(format, stencilState, initialStencil, _expectedStencil);
 });
 
 g.test('stencil_depthFailOp_operation').
@@ -418,24 +423,34 @@ desc(
 
 params((u) =>
 u //
-.combineWithParams([
-{ depthFailOp: 'keep', initialStencil: 1, expectedStencil: 1 },
-{ depthFailOp: 'zero', initialStencil: 1, expectedStencil: 0 },
-{ depthFailOp: 'replace', initialStencil: 1, expectedStencil: 3 },
-{ depthFailOp: 'invert', initialStencil: 0xf0, expectedStencil: 0x0f },
-{ depthFailOp: 'increment-clamp', initialStencil: 1, expectedStencil: 2 },
-{ depthFailOp: 'increment-clamp', initialStencil: 0xff, expectedStencil: 0xff },
-{ depthFailOp: 'increment-wrap', initialStencil: 1, expectedStencil: 2 },
-{ depthFailOp: 'increment-wrap', initialStencil: 0xff, expectedStencil: 0 },
-{ depthFailOp: 'decrement-clamp', initialStencil: 1, expectedStencil: 0 },
-{ depthFailOp: 'decrement-clamp', initialStencil: 0, expectedStencil: 0 },
-{ depthFailOp: 'decrement-wrap', initialStencil: 2, expectedStencil: 1 },
-{ depthFailOp: 'decrement-wrap', initialStencil: 1, expectedStencil: 0 },
-{ depthFailOp: 'decrement-wrap', initialStencil: 0, expectedStencil: 0xff }])).
+.combine(
+'format',
+kDepthStencilFormats.filter((format) => {
+  const info = kTextureFormatInfo[format];
+  return info.depth && info.stencil;
+})).
+
+combineWithParams([
+{ depthFailOp: 'keep', initialStencil: 1, _expectedStencil: 1 },
+{ depthFailOp: 'zero', initialStencil: 1, _expectedStencil: 0 },
+{ depthFailOp: 'replace', initialStencil: 1, _expectedStencil: 3 },
+{ depthFailOp: 'invert', initialStencil: 0xf0, _expectedStencil: 0x0f },
+{ depthFailOp: 'increment-clamp', initialStencil: 1, _expectedStencil: 2 },
+{ depthFailOp: 'increment-clamp', initialStencil: 0xff, _expectedStencil: 0xff },
+{ depthFailOp: 'increment-wrap', initialStencil: 1, _expectedStencil: 2 },
+{ depthFailOp: 'increment-wrap', initialStencil: 0xff, _expectedStencil: 0 },
+{ depthFailOp: 'decrement-clamp', initialStencil: 1, _expectedStencil: 0 },
+{ depthFailOp: 'decrement-clamp', initialStencil: 0, _expectedStencil: 0 },
+{ depthFailOp: 'decrement-wrap', initialStencil: 2, _expectedStencil: 1 },
+{ depthFailOp: 'decrement-wrap', initialStencil: 1, _expectedStencil: 0 },
+{ depthFailOp: 'decrement-wrap', initialStencil: 0, _expectedStencil: 0xff }])).
 
 
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
-  const { depthFailOp, initialStencil, expectedStencil } = t.params;
+  const { format, depthFailOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
     compare: 'always',
@@ -446,7 +461,7 @@ fn(async (t) => {
 
   // Call checkStencilOperation function with enabling the depthTest to test that the depthFailOp
   // stencil operation works as expected.
-  t.checkStencilOperation(stencilState, initialStencil, expectedStencil, 'never');
+  t.checkStencilOperation(format, stencilState, initialStencil, _expectedStencil, 'never');
 });
 
 g.test('stencil_read_write_mask').
@@ -469,17 +484,19 @@ desc(
 
 params((u) =>
 u //
-.combineWithParams([
+.combine('format', kStencilFormats).
+combineWithParams([
 { maskType: 'write', stencilRefValue: 1, _expectedColor: kRedStencilColor },
 { maskType: 'write', stencilRefValue: 2, _expectedColor: kBaseColor },
 { maskType: 'read', stencilRefValue: 1, _expectedColor: kBaseColor },
 { maskType: 'read', stencilRefValue: 2, _expectedColor: kRedStencilColor }])).
 
 
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
-  const { maskType, stencilRefValue, _expectedColor } = t.params;
-
-  const depthSpencilFormat = 'depth24plus-stencil8';
+  const { format, maskType, stencilRefValue, _expectedColor } = t.params;
 
   const baseStencilState = {
     compare: 'always',
@@ -494,7 +511,7 @@ fn(async (t) => {
   };
 
   const baseState = {
-    format: depthSpencilFormat,
+    format,
     depthWriteEnabled: false,
     depthCompare: 'always',
     stencilFront: baseStencilState,
@@ -504,7 +521,7 @@ fn(async (t) => {
   };
 
   const testState = {
-    format: depthSpencilFormat,
+    format,
     depthWriteEnabled: false,
     depthCompare: 'always',
     stencilFront: stencilState,
@@ -519,13 +536,17 @@ fn(async (t) => {
   { state: testState, color: kRedStencilColor, stencil: stencilRefValue }];
 
 
-  t.runStencilStateTest(testStates, _expectedColor);
+  t.runStencilStateTest(format, testStates, _expectedColor);
 });
 
 g.test('stencil_reference_initialized').
 desc('Test that stencil reference is initialized as zero for new render pass.').
+params((u) => u.combine('format', kStencilFormats)).
+beforeAllSubcases((t) => {
+  t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+}).
 fn(async (t) => {
-  const depthSpencilFormat = 'depth24plus-stencil8';
+  const { format } = t.params;
 
   const baseStencilState = {
     compare: 'always',
@@ -538,13 +559,13 @@ fn(async (t) => {
   };
 
   const baseState = {
-    format: depthSpencilFormat,
+    format,
     stencilFront: baseStencilState,
     stencilBack: baseStencilState
   };
 
   const testState = {
-    format: depthSpencilFormat,
+    format,
     stencilFront: testStencilState,
     stencilBack: testStencilState
   };
@@ -558,6 +579,6 @@ fn(async (t) => {
 
 
   // The third draw should pass the stencil test since the second pass set it to default zero.
-  t.runStencilStateTest(testStates, kGreenStencilColor, true);
+  t.runStencilStateTest(format, testStates, kGreenStencilColor, true);
 });
 //# sourceMappingURL=stencil.spec.js.map
