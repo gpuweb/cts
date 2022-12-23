@@ -111,31 +111,41 @@ g.test('call_after_successful_finish')
     const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
     pass.end();
 
-    const callFn = () => {
-      switch (callCmd) {
-        case 'beginComputePass':
-          encoder.beginComputePass();
-          break;
-        case 'beginRenderPass':
-          t.beginRenderPass(encoder);
-          break;
-        case 'insertDebugMarker':
-          encoder.insertDebugMarker('');
-          break;
-        default:
-          unreachable();
-      }
-    };
-
     if (IsEncoderFinished) {
       encoder.finish();
-      t.expectValidationError(() => {
-        callFn();
-      }, IsEncoderFinished);
-    } else {
-      t.expectValidationError(() => {
-        callFn();
-      }, IsEncoderFinished);
+    }
+
+    switch (callCmd) {
+      case 'beginComputePass':
+        {
+          let pass: GPUComputePassEncoder;
+          t.expectValidationError(() => {
+            pass = encoder.beginComputePass();
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            pass.end();
+          }, IsEncoderFinished);
+        }
+        break;
+      case 'beginRenderPass':
+        {
+          let pass: GPURenderPassEncoder;
+          t.expectValidationError(() => {
+            pass = t.beginRenderPass(encoder);
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            pass.end();
+          }, IsEncoderFinished);
+        }
+        break;
+      case 'insertDebugMarker':
+        t.expectValidationError(() => {
+          encoder.insertDebugMarker('');
+        }, IsEncoderFinished);
+        break;
+    }
+
+    if (!IsEncoderFinished) {
       encoder.finish();
     }
   });
