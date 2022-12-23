@@ -98,7 +98,7 @@ g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
   .params(u =>
     u
-      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'copyBufferToBuffer'])
+      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'insertDebugMarker'])
       .beginSubcases()
       .combine('passType', ['compute', 'render'])
       .combine('IsEncoderFinished', [false, true])
@@ -111,16 +111,6 @@ g.test('call_after_successful_finish')
     const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
     pass.end();
 
-    const srcBuffer = t.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.COPY_SRC,
-    });
-
-    const dstBuffer = t.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.COPY_DST,
-    });
-
     const callFn = () => {
       switch (callCmd) {
         case 'beginComputePass':
@@ -129,8 +119,8 @@ g.test('call_after_successful_finish')
         case 'beginRenderPass':
           t.beginRenderPass(encoder);
           break;
-        case 'copyBufferToBuffer':
-          encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
+        case 'insertDebugMarker':
+          encoder.insertDebugMarker('');
           break;
         default:
           unreachable();
