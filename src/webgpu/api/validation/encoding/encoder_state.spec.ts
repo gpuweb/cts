@@ -96,11 +96,12 @@ g.test('pass_end_invalid_order')
 
 g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
-  .paramsSubcasesOnly(u =>
+  .params(u =>
     u
+      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'copyBufferToBuffer'])
+      .beginSubcases()
       .combine('passType', ['compute', 'render'])
       .combine('IsEncoderFinished', [false, true])
-      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'copyBufferToBuffer'])
   )
   .fn(async t => {
     const { passType, IsEncoderFinished, callCmd } = t.params;
