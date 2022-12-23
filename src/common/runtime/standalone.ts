@@ -32,6 +32,15 @@ const worker = optionEnabled('worker') ? new TestWorker(debug) : undefined;
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
+const progressElem = document.getElementById('progress')!;
+const progressTestNameElem = progressElem.querySelector('.progress-test-name')!;
+const stopButtonElem = progressElem.querySelector('button')!;
+let runDepth = 0;
+let stopRequested = false;
+
+stopButtonElem.addEventListener('click', () => {
+  stopRequested = true;
+});
 
 dataCache.setStore({
   load: async (path: string) => {
@@ -119,6 +128,7 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     if (clearRenderedResult) clearRenderedResult();
 
     const result: SubtreeResult = emptySubtreeResult();
+    progressTestNameElem.textContent = name;
 
     haveSomeResults = true;
     const [rec, res] = logger.record(name);
@@ -212,9 +222,28 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
   );
 
   const runMySubtree = async () => {
+    if (runDepth === 0) {
+      stopRequested = false;
+      progressElem.style.display = '';
+    }
+    if (stopRequested) {
+      const result = emptySubtreeResult();
+      result.skip = 1;
+      result.total = 1;
+      return result;
+    }
+
+    ++runDepth;
+
     if (clearRenderedResult) clearRenderedResult();
     subtreeResult = await runSubtree();
     if (updateRenderedResult) updateRenderedResult();
+
+    --runDepth;
+    if (runDepth === 0) {
+      progressElem.style.display = 'none';
+    }
+
     return subtreeResult;
   };
 
