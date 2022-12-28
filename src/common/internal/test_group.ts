@@ -536,8 +536,10 @@ class RunCaseSpecific implements RunCase {
                       // Prepend the subcase name to all error messages.
                       for (const arg of args) {
                         if (arg instanceof Error) {
+                          let stack = subcasePrefix;
+                          if (arg.stack) stack += '\n' + arg.stack;
                           try {
-                            arg.message = subcasePrefix + '\n' + arg.message;
+                            arg.stack = stack;
                           } catch {
                             // Silence exception if the property isn't settable
                             // (e.g. arg.message on DOMException).
