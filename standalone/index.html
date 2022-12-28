@@ -102,6 +102,24 @@
       #info {
         font-family: monospace;
       }
+      #progress {
+        position: fixed;
+        display: flex;
+        width: 100%;
+        left: 0;
+        top: 0;
+        background-color: #000;
+        color: #fff;
+        align-items: center;
+      }
+      #progress .progress-test-name {
+        flex: 1 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        direction: rtl;
+        white-space: nowrap;
+      }
       #resultsJSON {
         font-family: monospace;
         width: 100%;
@@ -356,6 +374,7 @@
 
     <div id="info"></div>
     <div id="resultsVis"></div>
+    <div id="progress" style="display: none;"><button type="button">stop</button><div class="progress-test-name"></div></div>
 
     <p>
       <input type="button" id="copyResultsJSON" value="Copy results as JSON">
