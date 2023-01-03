@@ -15,7 +15,7 @@ import { ImageCopyType } from './util/texture/layout.js';
 // Queries
 
 /** Maximum number of queries in GPUQuerySet, by spec. */
-export const kMaxQueryCount = 8192;
+export const kMaxQueryCount = 4096;
 /** Per-GPUQueryType info. */
 export type QueryTypeInfo = {
   /** Optional feature required to use this GPUQueryType. */
