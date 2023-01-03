@@ -14,7 +14,7 @@ import { GPUConst, kMaxUnsignedLongValue, kMaxUnsignedLongLongValue } from './co
 // Queries
 
 /** Maximum number of queries in GPUQuerySet, by spec. */
-export const kMaxQueryCount = 8192;
+export const kMaxQueryCount = 4096;
 /** Per-GPUQueryType info. */
 
 export const kQueryTypeInfo = {
