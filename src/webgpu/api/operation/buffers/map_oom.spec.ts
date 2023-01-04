@@ -65,7 +65,12 @@ g.test('mapAsync')
 
         // Wait for validation error before unmap to ensure validation check
         // ends before unmap.
-        await promise!;
+        try {
+          await promise!;
+          throw new Error('The promise should be rejected.');
+        } catch {
+          // Should cause an exception because the promise should be rejected.
+        }
       }
 
       // Should throw an OperationError because the buffer is not mapped.
