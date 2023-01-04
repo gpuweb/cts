@@ -21,23 +21,27 @@ import { objectEquals } from '../../../../common/util/util.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
-  beginRenderPass(commandEncoder: GPUCommandEncoder): GPURenderPassEncoder {
-    const attachmentTexture = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    this.trackForCleanup(attachmentTexture);
+  beginRenderPass(commandEncoder: GPUCommandEncoder, view: GPUTextureView): GPURenderPassEncoder {
     return commandEncoder.beginRenderPass({
       colorAttachments: [
         {
-          view: attachmentTexture.createView(),
+          view,
           clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
           loadOp: 'clear',
           storeOp: 'store',
         },
       ],
     });
+  }
+
+  createAttachmentTextureView(): GPUTextureView {
+    const texture = this.device.createTexture({
+      format: 'rgba8unorm',
+      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    this.trackForCleanup(texture);
+    return texture.createView();
   }
 }
 
@@ -63,16 +67,17 @@ g.test('pass_end_invalid_order')
   .fn(async t => {
     const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
 
+    const view = t.createAttachmentTextureView();
     const encoder = t.device.createCommandEncoder();
 
     const firstPass =
-      pass0Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+      pass0Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
     if (firstPassEnd) firstPass.end();
 
     // Begin a second pass before ending the previous pass.
     const secondPass =
-      pass1Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+      pass1Type === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
     const passes = [firstPass, secondPass];
     for (const index of endPasses) {
@@ -89,36 +94,60 @@ g.test('pass_end_invalid_order')
 
 g.test('call_after_successful_finish')
   .desc(`Test that encoding command after a successful finish generates a validation error.`)
-  .paramsSubcasesOnly(u =>
-    u.combine('passType', ['compute', 'render']).combine('IsEncoderFinished', [false, true])
+  .params(u =>
+    u
+      .combine('callCmd', ['beginComputePass', 'beginRenderPass', 'insertDebugMarker'])
+      .beginSubcases()
+      .combine('prePassType', ['compute', 'render', 'no-op'])
+      .combine('IsEncoderFinished', [false, true])
   )
   .fn(async t => {
-    const { passType, IsEncoderFinished } = t.params;
+    const { prePassType, IsEncoderFinished, callCmd } = t.params;
 
+    const view = t.createAttachmentTextureView();
     const encoder = t.device.createCommandEncoder();
 
-    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
-    pass.end();
-
-    const srcBuffer = t.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.COPY_SRC,
-    });
-
-    const dstBuffer = t.device.createBuffer({
-      size: 1024,
-      usage: GPUBufferUsage.COPY_DST,
-    });
+    if (prePassType !== 'no-op') {
+      const pass =
+        prePassType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
+      pass.end();
+    }
 
     if (IsEncoderFinished) {
       encoder.finish();
-      t.expectValidationError(() => {
-        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
-      }, IsEncoderFinished);
-    } else {
-      t.expectValidationError(() => {
-        encoder.copyBufferToBuffer(srcBuffer, 0, dstBuffer, 0, 0);
-      }, IsEncoderFinished);
+    }
+
+    switch (callCmd) {
+      case 'beginComputePass':
+        {
+          let pass: GPUComputePassEncoder;
+          t.expectValidationError(() => {
+            pass = encoder.beginComputePass();
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            pass.end();
+          }, IsEncoderFinished);
+        }
+        break;
+      case 'beginRenderPass':
+        {
+          let pass: GPURenderPassEncoder;
+          t.expectValidationError(() => {
+            pass = t.beginRenderPass(encoder, view);
+          }, IsEncoderFinished);
+          t.expectValidationError(() => {
+            pass.end();
+          }, IsEncoderFinished);
+        }
+        break;
+      case 'insertDebugMarker':
+        t.expectValidationError(() => {
+          encoder.insertDebugMarker('');
+        }, IsEncoderFinished);
+        break;
+    }
+
+    if (!IsEncoderFinished) {
       encoder.finish();
     }
   });
@@ -133,9 +162,11 @@ g.test('pass_end_none')
   .fn(async t => {
     const { passType, endCount } = t.params;
 
+    const view = t.createAttachmentTextureView();
     const encoder = t.device.createCommandEncoder();
 
-    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+    const pass =
+      passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
     for (let i = 0; i < endCount; ++i) {
       pass.end();
@@ -156,9 +187,11 @@ g.test('pass_end_twice')
   .fn(async t => {
     const { passType, endTwice } = t.params;
 
+    const view = t.createAttachmentTextureView();
     const encoder = t.device.createCommandEncoder();
 
-    const pass = passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder);
+    const pass =
+      passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
     pass.end();
     if (endTwice) {
