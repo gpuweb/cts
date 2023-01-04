@@ -152,6 +152,78 @@ function computeBlendOperation(
   }
 }
 
+function calculateExpectedClampValue(
+  srcValue: number,
+  dstValue: number,
+  srcFactor: GPUBlendFactor,
+  dstFactor: GPUBlendFactor
+) {
+  let srcFactorValue;
+  let dstFactorValue;
+
+  switch (srcFactor) {
+    case 'zero':
+      srcFactorValue = 0;
+      break;
+    // The default constant value is 0. So the src factor value of 'one-minus-constant' should be
+    // 1 - 0 = 1.
+    case 'one':
+    case 'one-minus-constant':
+      srcFactorValue = 1;
+      break;
+    case 'src':
+    case 'src-alpha':
+      srcFactorValue = srcValue;
+      break;
+    case 'dst':
+      srcFactorValue = dstValue;
+      break;
+    case 'one-minus-dst':
+      srcFactorValue = 1 - dstValue;
+      break;
+    case 'one-minus-src':
+      srcFactorValue = 1 - srcValue;
+      break;
+    case 'constant': // The default constant value is 0.
+      srcFactorValue = 0;
+      break;
+    default:
+      unreachable();
+  }
+
+  switch (dstFactor) {
+    case 'zero':
+      dstFactorValue = 0;
+      break;
+    // The default constant value is 0. So the dst factor value of 'one-minus-constant' should be
+    // 1 - 0 = 1.
+    case 'one':
+    case 'one-minus-constant':
+      dstFactorValue = 1;
+      break;
+    case 'src':
+    case 'src-alpha':
+      dstFactorValue = srcValue;
+      break;
+    case 'dst':
+      dstFactorValue = dstValue;
+      break;
+    case 'one-minus-dst':
+      dstFactorValue = 1 - dstValue;
+      break;
+    case 'one-minus-src':
+      dstFactorValue = 1 - srcValue;
+      break;
+    case 'constant': // The default constant value is 0.
+      dstFactorValue = 0;
+      break;
+    default:
+      unreachable();
+  }
+
+  return srcValue * srcFactorValue + dstValue * dstFactorValue;
+}
+
 g.test('blending,GPUBlendComponent')
   .desc(
     `Test all combinations of parameters for GPUBlendComponent.
@@ -791,19 +863,36 @@ g.test('blending,clamping')
   Test that clamping occurs at the correct points in the blend process: src value, src factor, dst
   factor, and output.
     - TODO: Need to test snorm formats.
-    - TODO: Need to test src value, srcFactor and dstFactor.
   `
   )
   .params(u =>
     u //
       .combine('format', ['rgba8unorm', 'rg16float'] as const)
+      .combine('srcFactor', kBlendFactors)
+      .combine('dstFactor', kBlendFactors)
+      .filter(t => {
+        return (
+          !(
+            t.srcFactor === 'one-minus-src-alpha' ||
+            t.srcFactor === 'dst-alpha' ||
+            t.srcFactor === 'one-minus-dst-alpha' ||
+            t.srcFactor === 'src-alpha-saturated'
+          ) &&
+          !(
+            t.dstFactor === 'one-minus-src-alpha' ||
+            t.dstFactor === 'dst-alpha' ||
+            t.dstFactor === 'one-minus-dst-alpha' ||
+            t.dstFactor === 'src-alpha-saturated'
+          )
+        );
+      })
       .combine('srcValue', [0.4, 0.6, 0.8, 1.0])
       .combine('dstValue', [0.2, 0.4])
   )
   .fn(async t => {
-    const { format, srcValue, dstValue } = t.params;
+    const { format, srcFactor, dstFactor, srcValue, dstValue } = t.params;
 
-    const blendComponent = { srcFactor: 'one', dstFactor: 'one', operation: 'add' } as const;
+    const blendComponent = { srcFactor, dstFactor, operation: 'add' } as const;
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
@@ -866,10 +955,13 @@ g.test('blending,clamping')
     let expValue: number;
     switch (format) {
       case 'rgba8unorm': // unorm types should clamp if the sum of srcValue and dstValue exceeds 1.
-        expValue = clamp(srcValue + dstValue, { min: 0, max: 1 });
+        expValue = clamp(calculateExpectedClampValue(srcValue, dstValue, srcFactor, dstFactor), {
+          min: 0,
+          max: 1,
+        });
         break;
       case 'rg16float': // float format types doesn't clamp.
-        expValue = srcValue + dstValue;
+        expValue = calculateExpectedClampValue(srcValue, dstValue, srcFactor, dstFactor);
         break;
     }
 
