@@ -8,7 +8,7 @@ import { LiveTestCaseResult } from '../internal/logging/result.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 import { TestQueryLevel } from '../internal/query/query.js';
 import { TestTreeNode, TestSubtree, TestTreeLeaf, TestTree } from '../internal/tree.js';
-import { assert, ErrorWithExtra } from '../util/util.js';
+import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -154,6 +154,8 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
       case 'warn':
         result.warn++;
         break;
+      default:
+        unreachable();
     }
 
     if (updateRenderedResult) updateRenderedResult();

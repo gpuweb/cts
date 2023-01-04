@@ -261,6 +261,37 @@ g.test('subcases').fn(async (t0) => {
   t0.expect(Array.from(result.values()).every((v) => v.status === 'pass'));
 });
 
+g.test('exceptions').
+params((u) =>
+u.
+combine('useSubcases', [false, true]) //
+.combine('useDOMException', [false, true])).
+
+fn(async (t0) => {
+  const { useSubcases, useDOMException } = t0.params;
+  const g = makeTestGroupForUnitTesting(UnitTest);
+
+  const b1 = g.test('a');
+  let b2;
+  if (useSubcases) {
+    b2 = b1.paramsSubcasesOnly((u) => u);
+  } else {
+    b2 = b1.params((u) => u);
+  }
+  b2.fn((t) => {
+    if (useDOMException) {
+      throw new DOMException('Message!', 'Name!');
+    } else {
+      throw new Error('Message!');
+    }
+  });
+
+  const result = await t0.run(g);
+  const values = Array.from(result.values());
+  t0.expect(values.length === 1);
+  t0.expect(values[0].status === 'fail');
+});
+
 g.test('throws').fn(async (t0) => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 

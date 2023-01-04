@@ -8,7 +8,7 @@ import { Logger } from '../internal/logging/logger.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 
 import { TestTree } from '../internal/tree.js';
-import { assert } from '../util/util.js';
+import { assert, unreachable } from '../util/util.js';
 
 import { optionEnabled } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
@@ -153,7 +153,9 @@ function makeCaseHTML(t) {
         break;
       case 'warn':
         result.warn++;
-        break;}
+        break;
+      default:
+        unreachable();}
 
 
     if (updateRenderedResult) updateRenderedResult();
