@@ -390,7 +390,12 @@ g.test('mapAsync,earlyRejection')
   });
 
 g.test('mapAsync,abort_over_invalid_error')
-  .desc('Test that unmap abort error should have precedence over validation error')
+  .desc(
+    `Test that unmap abort error should have precedence over validation error
+TODO
+  - Add other validation error test (eg. offset is not a multiple of 8)
+  `
+  )
   .paramsSubcasesOnly(u =>
     u.combine('mapMode', kMapModeOptions).combine('abortError', [true, false])
   )
