@@ -487,9 +487,7 @@ export function biasedRange(a: number, b: number, num_steps: number): Array<numb
     return [a];
   }
 
-  return Array.from(Array(num_steps).keys()).map(i =>
-    lerp(a, b, Math.pow(lerp(0, 1, i / (num_steps - 1)), c))
-  );
+  return Array.from(Array(num_steps).keys()).map(i => lerp(a, b, Math.pow(i / (num_steps - 1), c)));
 }
 
 /**
