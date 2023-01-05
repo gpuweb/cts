@@ -13,3 +13,10 @@ export function optionEnabled(
   const val = searchParams.get(opt);
   return val !== null && val !== '0';
 }
+
+export function optionString(
+  opt: string,
+  searchParams: URLSearchParams = getWindowURL().searchParams
+): string {
+  return searchParams.get(opt) || '';
+}
