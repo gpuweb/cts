@@ -300,12 +300,9 @@ g.test('shared_shader_module')
         },
       };
 
-      const promise = t.params.isAsync
+      return t.params.isAsync
         ? t.device.createRenderPipelineAsync(descriptor)
-        : Promise.resolve(t.device.createRenderPipeline(descriptor));
-
-      const pipeline = await promise;
-      return pipeline;
+        : t.device.createRenderPipeline(descriptor);
     };
 
     const pipeline0 = await createPipelineFn(
