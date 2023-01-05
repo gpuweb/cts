@@ -23,6 +23,7 @@
         --fg-color: #000;
         --bg-color: #fff;
         --border-color: #888;
+        --emphasis-fg-color: #F00;
 
         --results-fg-color: gray;
         --node-description-fg-color: #gray;
@@ -52,6 +53,7 @@
           --fg-color: #fff;
           --bg-color: #000;
           --border-color: #888;
+          --emphasis-fg-color: #F44;
 
           --results-fg-color: #aaa;
           --node-description-fg-color: #aaa;
@@ -98,6 +100,34 @@
       .logo {
         height: 1.2em;
         float: left;
+      }
+      .important {
+        font-weight: bold;
+        color: var(--emphasis-fg-color);
+      }
+      #options label {
+        display: flex;
+      }
+      table#options {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      #options td {
+        border: 1px solid var(--subtree-border-color);
+        width: 1px; /* to make the columns as small as possible */
+      }
+      #options tr:hover {
+        background: var(--node-hover-bg-color);
+      }
+      #options td:nth-child(1) {
+          text-align: right;
+      }
+      #options td:nth-child(2),
+      #options td:nth-child(3) {
+          padding-left: 0.5em;
+      }
+      #options td:nth-child(3) {
+          width: 100%; /* to make the last column use the space */
       }
       #info {
         font-family: monospace;
@@ -367,6 +397,14 @@
   </head>
   <body>
     <h1><img class="logo" src="webgpu-logo-notext.svg">WebGPU Conformance Test Suite</h1>
+    <details>
+      <summary>options (requires reload!)</summary>
+      <table id="options">
+        <tbody></tbody>
+      </table>
+      <p class="important">Note: The options above only set the url parameters. 
+         You must reload the page for the options to take affect.</p>
+    </details>
     <p>
       <input type=button id=expandall value="Expand All (slow!)">
       <label><input type=checkbox id=autoCloseOnPass> Auto-close each subtree when it passes</label>

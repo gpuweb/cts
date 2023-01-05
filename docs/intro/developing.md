@@ -52,8 +52,8 @@ The following url parameters change how the harness runs:
 - `runnow=1` runs all matching tests on page load.
 - `debug=1` enables verbose debug logging from tests.
 - `worker=1` runs the tests on a Web Worker instead of the main thread.
-- `powerPreference=low-power` runs most tests passing `powerPreference: low-power` to `requestAdapter`
-- `powerPreference=high-performance` runs most tests passing `powerPreference: high-performance` to `requestAdapter`
+- `power_preference=low-power` runs most tests passing `powerPreference: low-power` to `requestAdapter`
+- `power_preference=high-performance` runs most tests passing `powerPreference: high-performance` to `requestAdapter`
 
 ## Editor
 
