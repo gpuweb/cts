@@ -9,6 +9,7 @@ import { Logger } from '../internal/logging/logger.js';
 import { parseQuery } from '../internal/query/parseQuery.js';
 
 import { TestTree } from '../internal/tree.js';
+import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
 import { assert, unreachable } from '../util/util.js';
 
 import { optionEnabled } from './helper/options.js';
@@ -45,6 +46,11 @@ let stopRequested = false;
 stopButtonElem.addEventListener('click', () => {
   stopRequested = true;
 });
+
+const powerPreference = new URLSearchParams(window.location.search).get('powerPreference');
+if (powerPreference) {
+  setDefaultRequestAdapterOptions({ powerPreference: powerPreference });
+}
 
 dataCache.setStore({
   load: async (path) => {
@@ -435,17 +441,15 @@ void (async () => {
 
   // Update the URL bar to match the exact current options.
   {
-    let url = window.location.protocol + '//' + window.location.host + window.location.pathname;
-    url +=
-    '?' +
-    new URLSearchParams([
-    ['runnow', runnow ? '1' : '0'],
-    ['worker', worker ? '1' : '0'],
-    ['debug', debug ? '1' : '0'],
-    ['unroll_const_eval_loops', unrollConstEvalLoops ? '1' : '0']]).
-    toString() +
-    '&' +
-    qs.map((q) => 'q=' + q).join('&');
+    const params = {
+      runnow: runnow ? '1' : '0',
+      worker: worker ? '1' : '0',
+      debug: debug ? '1' : '0',
+      unroll_const_eval_loops: unrollConstEvalLoops ? '1' : '0',
+      ...(powerPreference && { powerPreference })
+    };
+    let url = `${window.location.protocol}//${window.location.host}${window.location.pathname}`;
+    url += `?${new URLSearchParams(params).toString()}&${qs.map((q) => 'q=' + q).join('&')}`;
     window.history.replaceState(null, '', url);
   }
 
