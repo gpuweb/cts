@@ -32,10 +32,10 @@ g.test('mapAsync')
     oomAndSizeParams //
       .beginSubcases()
       .combine('write', [false, true])
-      .combine('abortError', [false, true])
+      .combine('unmapBeforeResolve', [false, true])
   )
   .fn(async t => {
-    const { oom, write, size, abortError } = t.params;
+    const { oom, write, size, unmapBeforeResolve } = t.params;
 
     const buffer = t.expectGPUError(
       'out-of-memory',
@@ -55,7 +55,7 @@ g.test('mapAsync')
     }, oom);
 
     if (oom) {
-      if (abortError) {
+      if (unmapBeforeResolve) {
         // Should reject with abort error because buffer will be unmapped
         // before validation check finishes.
         t.shouldReject('AbortError', promise!);

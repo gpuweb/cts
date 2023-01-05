@@ -397,15 +397,15 @@ TODO
   `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('mapMode', kMapModeOptions).combine('abortError', [true, false])
+    u.combine('mapMode', kMapModeOptions).combine('unmapBeforeResolve', [true, false])
   )
   .fn(async t => {
-    const { mapMode, abortError } = t.params;
+    const { mapMode, unmapBeforeResolve } = t.params;
     const bufferSize = 8;
     const buffer = t.createMappableBuffer(mapMode, bufferSize);
     await buffer.mapAsync(mapMode);
 
-    if (abortError) {
+    if (unmapBeforeResolve) {
       // unmap abort error should have precedence over validation error
       const pending = t.testMapAsyncCall(
         { validationError: true, earlyRejection: false, rejectName: 'AbortError' },
