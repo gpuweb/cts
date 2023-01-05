@@ -16,7 +16,7 @@
 <li><a href="../modules/common_framework_test_config.html">common/framework/test_config</a></li>
 <li><a href="common_framework_test_config.TestConfig.html">TestConfig</a></li></ul>
 <h1>Type alias TestConfig</h1></div>
-<div class="tsd-signature">Test<wbr/>Config<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span>maxSubcasesInFlight<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>noRaceWithRejectOnTimeout<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>testHeartbeatCallback<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
+<div class="tsd-signature">Test<wbr/>Config<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span>maxSubcasesInFlight<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>noRaceWithRejectOnTimeout<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>testHeartbeatCallback<span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol"> =&gt; </span><span class="tsd-signature-type">void</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>unrollConstEvalLoops<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
 <div class="tsd-type-declaration">
 <h4>Type declaration</h4>
 <ul class="tsd-parameters">
@@ -31,9 +31,16 @@
 <ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-type-literal">
 <li class="tsd-signature" id="__type.__type-1.__type-2"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 <li class="tsd-description">
-<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li></ul></div><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4></li></ul></li></ul></li>
+<li class="tsd-parameter">
+<h5>unroll<wbr/>Const<wbr/>Eval<wbr/>Loops<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
+<div class="tsd-comment tsd-typography"><p>Controls the emission of loops in constant-evaluation shaders under
+&#39;webgpu:shader,execution,expression,*&#39;
+FXC is extremely slow to compile shaders with loops unrolled, where as the
+MSL compiler is extremely slow to compile with loops rolled.</p>
+</div></li></ul></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0673bb6/src/common/framework/test_config.ts#L1">src/common/framework/test_config.ts:1</a></li></ul></aside></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/6d3a804/src/common/framework/test_config.ts#L1">src/common/framework/test_config.ts:1</a></li></ul></aside></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">

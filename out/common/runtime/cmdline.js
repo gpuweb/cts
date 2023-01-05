@@ -3,6 +3,7 @@
 **/import * as fs from 'fs';
 
 import { dataCache } from '../framework/data_cache.js';
+import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -16,21 +17,21 @@ import { assert, unreachable } from '../util/util.js';
 import sys from './helper/sys.js';
 
 function usage(rc) {
-  console.log('Usage:');
-  console.log(`  tools/run_${sys.type} [OPTIONS...] QUERIES...`);
-  console.log(`  tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'`);
-  console.log('Options:');
-  console.log('  --colors             Enable ANSI colors in output.');
-  console.log('  --verbose            Print result/log of every test as it runs.');
-  console.log(
-  '  --list               Print all testcase names that match the given query and exit.');
-
-  console.log('  --debug              Include debug messages in logging.');
-  console.log('  --print-json         Print the complete result JSON in the output.');
-  console.log('  --expectations       Path to expectations file.');
-  console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
-  console.log('  --gpu-provider-flag  Flag to set on the gpu-provider as <flag>=<value>');
-  console.log('  --quiet              Suppress summary information in output');
+  console.log(`Usage:
+  tools/run_${sys.type} [OPTIONS...] QUERIES...
+  tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'
+Options:
+  --colors                  Enable ANSI colors in output.
+  --verbose                 Print result/log of every test as it runs.
+  --list                    Print all testcase names that match the given query and exit.
+  --debug                   Include debug messages in logging.
+  --print-json              Print the complete result JSON in the output.
+  --expectations            Path to expectations file.
+  --gpu-provider            Path to node module that provides the GPU implementation.
+  --gpu-provider-flag       Flag to set on the gpu-provider as <flag>=<value>
+  --unroll-const-eval-loops Unrolls loops in constant-evaluation shader execution tests
+  --quiet                   Suppress summary information in output
+`);
   return sys.exit(rc);
 }
 
@@ -80,6 +81,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       gpuProviderFlags.push(sys.args[++i]);
     } else if (a === '--quiet') {
       quiet = true;
+    } else if (a === '--unroll-const-eval-loops') {
+      globalTestConfig.unrollConstEvalLoops = true;
     } else {
       console.log('unrecognized flag: ', a);
       usage(1);

@@ -348,6 +348,12 @@ struct Output {
           return `${toStorage(returnType, expressionBuilder(args))}`;
         });
 
+        const wgslBody = globalTestConfig.unrollConstEvalLoops ?
+        wgslValues.map((_, i) => `outputs[${i}].value = values[${i}];`).join('\n  ') :
+        `for (var i = 0u; i < ${cases.length}; i++) {
+    outputs[i].value = values[i];
+  }`;
+
         // the full WGSL shader source
         const source = `
 ${wgslOutputs}
@@ -358,9 +364,7 @@ const values = array<${wgslStorageType}, ${cases.length}>(
 
 @compute @workgroup_size(1)
 fn main() {
-  for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = values[i];
-  }
+  ${wgslBody}
 }
 `;
 

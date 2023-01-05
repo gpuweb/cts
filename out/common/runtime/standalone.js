@@ -2,6 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ // Implements the standalone test runner (see also: /standalone/index.html).
 import { dataCache } from '../framework/data_cache.js';import { setBaseResourcePath } from '../framework/resources.js';
+import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
 
@@ -22,6 +23,9 @@ let haveSomeResults = false;
 
 const runnow = optionEnabled('runnow');
 const debug = optionEnabled('debug');
+const unrollConstEvalLoops = optionEnabled('unroll_const_eval_loops');
+
+globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
@@ -437,7 +441,8 @@ void (async () => {
     new URLSearchParams([
     ['runnow', runnow ? '1' : '0'],
     ['worker', worker ? '1' : '0'],
-    ['debug', debug ? '1' : '0']]).
+    ['debug', debug ? '1' : '0'],
+    ['unroll_const_eval_loops', unrollConstEvalLoops ? '1' : '0']]).
     toString() +
     '&' +
     qs.map((q) => 'q=' + q).join('&');

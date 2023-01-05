@@ -5,6 +5,7 @@ import * as http from 'http';
 
 
 import { dataCache } from '../framework/data_cache.js';
+import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { prettyPrintLog } from '../internal/logging/log_message.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -18,21 +19,24 @@ import { setGPUProvider } from '../util/navigator_gpu.js';
 import sys from './helper/sys.js';
 
 function usage(rc) {
-  console.log('Usage:');
-  console.log(`  tools/run_${sys.type} [OPTIONS...]`);
-  console.log('Options:');
-  console.log('  --colors             Enable ANSI colors in output.');
-  console.log('  --coverage           Add coverage data to each result.');
-  console.log('  --data               Path to the data cache directory.');
-  console.log('  --verbose            Print result/log of every test as it runs.');
-  console.log('  --gpu-provider       Path to node module that provides the GPU implementation.');
-  console.log('  --gpu-provider-flag  Flag to set on the gpu-provider as <flag>=<value>');
-  console.log(``);
-  console.log(`Provides an HTTP server used for running tests via an HTTP RPC interface`);
-  console.log(`To run a test, perform an HTTP GET or POST at the URL:`);
-  console.log(`  http://localhost:port/run?<test-name>`);
-  console.log(`To shutdown the server perform an HTTP GET or POST at the URL:`);
-  console.log(`  http://localhost:port/terminate`);
+  console.log(`Usage:
+  tools/run_${sys.type} [OPTIONS...]
+Options:
+  --colors                  Enable ANSI colors in output.
+  --coverage                Add coverage data to each result.
+  --data                    Path to the data cache directory.
+  --verbose                 Print result/log of every test as it runs.
+  --gpu-provider            Path to node module that provides the GPU implementation.
+  --gpu-provider-flag       Flag to set on the gpu-provider as <flag>=<value>
+  --unroll-const-eval-loops Unrolls loops in constant-evaluation shader execution tests
+  --u                       Flag to set on the gpu-provider as <flag>=<value>
+
+Provides an HTTP server used for running tests via an HTTP RPC interface
+To run a test, perform an HTTP GET or POST at the URL:
+  http://localhost:port/run?<test-name>
+To shutdown the server perform an HTTP GET or POST at the URL:
+  http://localhost:port/terminate
+`);
   return sys.exit(rc);
 }
 
@@ -89,6 +93,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       gpuProviderModule = require(modulePath);
     } else if (a === '--gpu-provider-flag') {
       gpuProviderFlags.push(sys.args[++i]);
+    } else if (a === '--unroll-const-eval-loops') {
+      globalTestConfig.unrollConstEvalLoops = true;
     } else if (a === '--help') {
       usage(1);
     } else if (a === '--verbose') {
