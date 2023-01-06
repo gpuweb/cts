@@ -11,22 +11,22 @@ import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
   async testMapAsyncCall(
-  success,
-  earlyRejection,
-  rejectName,
+  expectation,
+
+
   buffer,
   mode,
   offset,
   size)
   {
-    if (success) {
+    if (expectation === 'success') {
       const p = buffer.mapAsync(mode, offset, size);
       await p;
     } else {
       let p;
       this.expectValidationError(() => {
         p = buffer.mapAsync(mode, offset, size);
-      });
+      }, expectation.validationError);
       let caught = false;
       let rejectedEarly = false;
       // If mapAsync rejected early, microtask A will run before B.
@@ -42,11 +42,14 @@ class F extends ValidationTest {
       try {
         // This await will always complete after microtasks A and B are both done.
         await p;
-        assert(rejectName === null, 'mapAsync unexpectedly passed');
+        assert(expectation.rejectName === null, 'mapAsync unexpectedly passed');
       } catch (ex) {
         assert(ex instanceof Error, 'mapAsync rejected with non-error');
-        assert(rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
-        assert(earlyRejection === rejectedEarly, 'mapAsync rejected at an unexpected timing');
+        assert(expectation.rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
+        assert(
+        expectation.earlyRejection === rejectedEarly,
+        'mapAsync rejected at an unexpected timing');
+
       }
     }
   }
@@ -116,8 +119,15 @@ fn(async (t) => {
     usage
   });
 
-  const success = usage === validUsage;
-  await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode);
+  const successParam =
+  usage === validUsage ?
+  'success' :
+  {
+    validationError: true,
+    earlyRejection: false,
+    rejectName: 'OperationError'
+  };
+  await t.testMapAsyncCall(successParam, buffer, mapMode);
 });
 
 g.test('mapAsync,invalidBuffer').
@@ -126,7 +136,11 @@ paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
 fn(async (t) => {
   const { mapMode } = t.params;
   const buffer = t.getErrorBuffer();
-  await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
+  await t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 });
 
 g.test('mapAsync,state,destroyed').
@@ -138,10 +152,20 @@ fn(async (t) => {
 
   // Start mapping the buffer, we are going to destroy it before it resolves so it will reject
   // the mapping promise with an AbortError.
-  t.shouldReject('AbortError', buffer.mapAsync(mapMode));
+  const pending = t.testMapAsyncCall(
+  { validationError: false, earlyRejection: false, rejectName: 'AbortError' },
+  buffer,
+  mapMode);
+
 
   buffer.destroy();
-  await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
+  await t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
+
+  await pending;
 });
 
 g.test('mapAsync,state,mappedAtCreation').
@@ -161,10 +185,14 @@ fn(async (t) => {
     usage: validUsage,
     mappedAtCreation: true
   });
-  await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
+  await t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 
   buffer.unmap();
-  await t.testMapAsyncCall(true, false, null, buffer, mapMode);
+  await t.testMapAsyncCall('success', buffer, mapMode);
 });
 
 g.test('mapAsync,state,mapped').
@@ -177,18 +205,21 @@ fn(async (t) => {
   const { mapMode } = t.params;
 
   const buffer = t.createMappableBuffer(mapMode, 16);
-  await t.testMapAsyncCall(true, false, null, buffer, mapMode);
-  await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
+  await t.testMapAsyncCall('success', buffer, mapMode);
+  await t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 
   buffer.unmap();
-  await t.testMapAsyncCall(true, false, null, buffer, mapMode);
+  await t.testMapAsyncCall('success', buffer, mapMode);
 });
 
 g.test('mapAsync,state,mappingPending').
 desc(
 `Test that mapAsync is rejected when called on a buffer that is being mapped,
-    but succeeds after the previous mapping request is cancelled.
-    TODO: Replace shouldReject with testMapAsyncCall to check error timing`).
+    but succeeds after the previous mapping request is cancelled.`).
 
 paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
 fn(async (t) => {
@@ -198,16 +229,28 @@ fn(async (t) => {
 
   // Start mapping the buffer, we are going to unmap it before it resolves so it will reject
   // the mapping promise with an AbortError.
-  t.shouldReject('AbortError', buffer.mapAsync(mapMode));
+  const pending0 = t.testMapAsyncCall(
+  { validationError: false, earlyRejection: false, rejectName: 'AbortError' },
+  buffer,
+  mapMode);
+
 
   // Do the test of mapAsync while [[pending_map]] is non-null. It has to be synchronous so
   // that we can unmap the previous mapping in the same stack frame and testing this one doesn't
   // get canceled, but instead is rejected.
-  t.shouldReject('OperationError', buffer.mapAsync(mapMode));
+  const pending1 = t.testMapAsyncCall(
+  { validationError: false, earlyRejection: true, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 
   // Unmap the first mapping. It should now be possible to successfully call mapAsync
+  // This unmap should cause the first mapAsync rejection.
   buffer.unmap();
-  await t.testMapAsyncCall(true, false, null, buffer, mapMode);
+  await t.testMapAsyncCall('success', buffer, mapMode);
+
+  await pending0;
+  await pending1;
 });
 
 g.test('mapAsync,sizeUnspecifiedOOB').
@@ -237,8 +280,15 @@ fn(async (t) => {
   const { mapMode, bufferSize, offset } = t.params;
   const buffer = t.createMappableBuffer(mapMode, bufferSize);
 
-  const success = offset <= bufferSize;
-  await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset);
+  const successParam =
+  offset <= bufferSize ?
+  'success' :
+  {
+    validationError: true,
+    earlyRejection: false,
+    rejectName: 'OperationError'
+  };
+  await t.testMapAsyncCall(successParam, buffer, mapMode, offset);
 });
 
 g.test('mapAsync,offsetAndSizeAlignment').
@@ -253,8 +303,15 @@ fn(async (t) => {
   const { mapMode, offset, size } = t.params;
   const buffer = t.createMappableBuffer(mapMode, 16);
 
-  const success = offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0;
-  await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset, size);
+  const successParam =
+  offset % kOffsetAlignment === 0 && size % kSizeAlignment === 0 ?
+  'success' :
+  {
+    validationError: true,
+    earlyRejection: false,
+    rejectName: 'OperationError'
+  };
+  await t.testMapAsyncCall(successParam, buffer, mapMode, offset, size);
 });
 
 g.test('mapAsync,offsetAndSizeOOB').
@@ -295,8 +352,15 @@ fn(async (t) => {
   const { mapMode, bufferSize, size, offset } = t.params;
   const buffer = t.createMappableBuffer(mapMode, bufferSize);
 
-  const success = offset + size <= bufferSize;
-  await t.testMapAsyncCall(success, false, 'OperationError', buffer, mapMode, offset, size);
+  const successParam =
+  offset + size <= bufferSize ?
+  'success' :
+  {
+    validationError: true,
+    earlyRejection: false,
+    rejectName: 'OperationError'
+  };
+  await t.testMapAsyncCall(successParam, buffer, mapMode, offset, size);
 });
 
 g.test('mapAsync,earlyRejection').
@@ -311,8 +375,54 @@ fn(async (t) => {
 
   const buffer = t.createMappableBuffer(mapMode, bufferSize);
   const p1 = buffer.mapAsync(mapMode, offset1, mapSize); // succeeds
-  await t.testMapAsyncCall(false, true, 'OperationError', buffer, mapMode, offset2, mapSize);
+  await t.testMapAsyncCall(
+  {
+    validationError: false,
+    earlyRejection: true,
+    rejectName: 'OperationError'
+  },
+  buffer,
+  mapMode,
+  offset2,
+  mapSize);
+
   await p1; // ensure the original map still succeeds
+});
+
+g.test('mapAsync,abort_over_invalid_error').
+desc(
+`Test that unmap abort error should have precedence over validation error
+TODO
+  - Add other validation error test (eg. offset is not a multiple of 8)
+  `).
+
+paramsSubcasesOnly((u) =>
+u.combine('mapMode', kMapModeOptions).combine('unmapBeforeResolve', [true, false])).
+
+fn(async (t) => {
+  const { mapMode, unmapBeforeResolve } = t.params;
+  const bufferSize = 8;
+  const buffer = t.createMappableBuffer(mapMode, bufferSize);
+  await buffer.mapAsync(mapMode);
+
+  if (unmapBeforeResolve) {
+    // unmap abort error should have precedence over validation error
+    const pending = t.testMapAsyncCall(
+    { validationError: true, earlyRejection: false, rejectName: 'AbortError' },
+    buffer,
+    mapMode);
+
+    buffer.unmap();
+    await pending;
+  } else {
+    // map on already mapped buffer should cause validation error
+    await t.testMapAsyncCall(
+    { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+    buffer,
+    mapMode);
+
+    buffer.unmap();
+  }
 });
 
 g.test('getMappedRange,state,mapped').
@@ -328,14 +438,14 @@ fn(async (t) => {
   t.expect(data instanceof ArrayBuffer);
   t.expect(data.byteLength === bufferSize);
 
-  t.expectValidationError(() => {
-    // map on already mapped buffer should be rejected
-    const mapping = buffer.mapAsync(mapMode);
-    t.expect(data.byteLength === bufferSize);
-    t.shouldReject('OperationError', mapping);
-  });
+  // map on already mapped buffer should be rejected
+  const pending = t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
 
   t.expect(data.byteLength === bufferSize);
+  await pending;
 
   buffer.unmap();
 
@@ -363,14 +473,14 @@ fn(async (t) => {
   t.expect(data instanceof ArrayBuffer);
   t.expect(data.byteLength === bufferSize);
 
-  t.expectValidationError(() => {
-    // map on already mapped buffer should be rejected
-    const mapping = buffer.mapAsync(mapMode);
-    t.expect(data.byteLength === bufferSize);
-    t.shouldReject('OperationError', mapping);
-  });
+  // map on already mapped buffer should be rejected
+  const pending = t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
 
   t.expect(data.byteLength === bufferSize);
+  await pending;
 
   buffer.unmap();
 
@@ -407,7 +517,11 @@ fn(async (t) => {
   await buffer.mapAsync(mapMode);
 
   // call mapAsync again on already mapped buffer should fail
-  await t.testMapAsyncCall(false, false, 'OperationError', buffer, mapMode);
+  await t.testMapAsyncCall(
+  { validationError: true, earlyRejection: false, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 
   // getMapppedRange should still success
   t.testGetMappedRangeCall(true, buffer);
@@ -536,10 +650,7 @@ fn(async (t) => {
 });
 
 g.test('getMappedRange,state,mappingPending').
-desc(
-`Test that it is invalid to call getMappedRange in the mappingPending state.
-         TODO: Replace shouldReject with testMapAsyncCall to check error timing`).
-
+desc(`Test that it is invalid to call getMappedRange in the mappingPending state.`).
 paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
 fn(async (t) => {
   const { mapMode } = t.params;
@@ -547,7 +658,11 @@ fn(async (t) => {
 
   /* noawait */const mapping0 = buffer.mapAsync(mapMode);
   // seconding mapping should be rejected
-  t.shouldReject('OperationError', buffer.mapAsync(mapMode));
+  const mapping1 = t.testMapAsyncCall(
+  { validationError: false, earlyRejection: true, rejectName: 'OperationError' },
+  buffer,
+  mapMode);
+
 
   // invalid in mappingPending state
   t.testGetMappedRangeCall(false, buffer);
@@ -556,6 +671,8 @@ fn(async (t) => {
 
   // valid after buffer is mapped
   t.testGetMappedRangeCall(true, buffer);
+
+  await mapping1;
 });
 
 g.test('getMappedRange,offsetAndSizeAlignment,mapped').
@@ -929,14 +1046,17 @@ fn(async (t) => {
 g.test('unmap,state,mappingPending').
 desc("Test it is valid to call unmap on a buffer that's being mapped").
 paramsSubcasesOnly((u) => u.combine('mapMode', kMapModeOptions)).
-fn((t) => {
+fn(async (t) => {
   const { mapMode } = t.params;
   const buffer = t.createMappableBuffer(mapMode, 16);
 
-  const mapping = buffer.mapAsync(mapMode);
-  t.shouldReject('AbortError', mapping);
+  const pending = t.testMapAsyncCall(
+  { validationError: false, earlyRejection: false, rejectName: 'AbortError' },
+  buffer,
+  mapMode);
 
   buffer.unmap();
+  await pending;
 });
 
 g.test('gc_behavior,mappedAtCreation').

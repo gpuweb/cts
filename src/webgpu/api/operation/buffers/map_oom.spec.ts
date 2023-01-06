@@ -32,9 +32,10 @@ g.test('mapAsync')
     oomAndSizeParams //
       .beginSubcases()
       .combine('write', [false, true])
+      .combine('unmapBeforeResolve', [false, true])
   )
   .fn(async t => {
-    const { oom, write, size } = t.params;
+    const { oom, write, size, unmapBeforeResolve } = t.params;
 
     const buffer = t.expectGPUError(
       'out-of-memory',
@@ -45,15 +46,32 @@ g.test('mapAsync')
         }),
       oom
     );
-    const promise = t.expectGPUError(
-      'validation', // Should be a validation error since the buffer is invalid.
-      () => buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ),
-      oom
-    );
+
+    let promise: Promise<void>;
+    // Should be a validation error since the buffer is invalid.
+    // Unmap abort error shouldn't cause a validation error.
+    t.expectValidationError(() => {
+      promise = buffer.mapAsync(write ? GPUMapMode.WRITE : GPUMapMode.READ);
+    }, oom);
 
     if (oom) {
-      // Should also reject in addition to the validation error.
-      t.shouldReject('OperationError', promise);
+      if (unmapBeforeResolve) {
+        // Should reject with abort error because buffer will be unmapped
+        // before validation check finishes.
+        t.shouldReject('AbortError', promise!);
+      } else {
+        // Should also reject in addition to the validation error.
+        t.shouldReject('OperationError', promise!);
+
+        // Wait for validation error before unmap to ensure validation check
+        // ends before unmap.
+        try {
+          await promise!;
+          throw new Error('The promise should be rejected.');
+        } catch {
+          // Should cause an exception because the promise should be rejected.
+        }
+      }
 
       // Should throw an OperationError because the buffer is not mapped.
       // Note: not a RangeError because the state of the buffer is checked first.
@@ -64,7 +82,7 @@ g.test('mapAsync')
       // Should't be a validation error even if the buffer failed to be mapped.
       buffer.unmap();
     } else {
-      await promise;
+      await promise!;
       const arraybuffer = buffer.getMappedRange();
       t.expect(arraybuffer.byteLength === size);
       buffer.unmap();
