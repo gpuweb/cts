@@ -12,6 +12,10 @@ import {
   kAllTextureFormats,
   kCanvasTextureFormats,
   kTextureUsages,
+  filterFormatsByFeature,
+  kFeaturesForFormats,
+  kTextureFormats,
+  viewCompatible,
 } from '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { GPUTest } from '../../gpu_test.js';
@@ -289,4 +293,132 @@ g.test('alpha_mode')
 
     const currentTexture = ctx.getCurrentTexture();
     t.expect(currentTexture instanceof GPUTexture);
+  });
+
+g.test('size_zero_before_configure')
+  .desc(`Ensure a validation error is raised in configure() if the size of the canvas is zero.`)
+  .params(u =>
+    u //
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('zeroDimension', ['width', 'height'] as const)
+  )
+  .fn(t => {
+    const { canvasType, zeroDimension } = t.params;
+    const canvas = createCanvas(t, canvasType, 1, 1);
+    canvas[zeroDimension] = 0;
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
+
+    // Validation error, the canvas size is 0 which doesn't make a valid GPUTextureDescriptor.
+    t.expectValidationError(() => {
+      ctx.configure({
+        device: t.device,
+        format: 'bgra8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+    });
+
+    canvas[zeroDimension] = 1;
+
+    // The size being incorrect doesn't make for an invalid configuration. Now that it is fixed
+    // getting textures from the canvas should work.
+    const currentTexture = ctx.getCurrentTexture();
+
+    // Try rendering to it even!
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: currentTexture.createView(),
+          clearValue: [1.0, 0.0, 0.0, 1.0],
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    });
+    pass.end();
+    t.device.queue.submit([encoder.finish()]);
+  });
+
+g.test('size_zero_after_configure')
+  .desc(
+    `Ensure a validation error is raised after configure() if the size of the canvas becomes zero.`
+  )
+  .params(u =>
+    u //
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('zeroDimension', ['width', 'height'] as const)
+  )
+  .fn(t => {
+    const { canvasType, zeroDimension } = t.params;
+    const canvas = createCanvas(t, canvasType, 1, 1);
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
+
+    ctx.configure({
+      device: t.device,
+      format: 'bgra8unorm',
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
+    canvas[zeroDimension] = 0;
+
+    // The size is incorrect, we should be getting an error texture and a validation error.
+    let currentTexture: GPUTexture;
+    t.expectValidationError(() => {
+      currentTexture = ctx.getCurrentTexture();
+    });
+
+    t.expect(currentTexture![zeroDimension] === 0);
+
+    // Using the texture should produce a validation error.
+    t.expectValidationError(() => {
+      currentTexture.createView();
+    });
+  });
+
+g.test('viewFormats')
+  .desc(
+    `Test the validation that viewFormats are compatible with the format (for all canvas format / view formats)`
+  )
+  .params(u =>
+    u
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('format', kCanvasTextureFormats)
+      .combine('viewFormatFeature', kFeaturesForFormats)
+      .beginSubcases()
+      .expand('viewFormat', ({ viewFormatFeature }) =>
+        filterFormatsByFeature(viewFormatFeature, kTextureFormats)
+      )
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase([t.params.viewFormatFeature]);
+  })
+  .fn(t => {
+    const { canvasType, format, viewFormat } = t.params;
+    const canvas = createCanvas(t, canvasType, 1, 1);
+    const ctx = canvas.getContext('webgpu');
+    assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
+
+    const compatible = viewCompatible(format, viewFormat);
+
+    // Test configure() produces an error if the formats aren't compatible.
+    t.expectValidationError(() => {
+      ctx.configure({
+        device: t.device,
+        format,
+        viewFormats: [viewFormat],
+      });
+    }, !compatible);
+
+    // Likewise for getCurrentTexture().
+    let currentTexture: GPUTexture;
+    t.expectValidationError(() => {
+      currentTexture = ctx.getCurrentTexture();
+    }, !compatible);
+
+    // The returned texture is an error texture.
+    t.expectValidationError(() => {
+      currentTexture.createView();
+    }, !compatible);
   });
