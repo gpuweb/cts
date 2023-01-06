@@ -57,7 +57,9 @@ The following url parameters change how the harness runs:
 
 ### Web Platform Tests (wpt) - Ref Tests
 
-You can execute individual web platform reftests at
+Running ref tests is not possible with this repository alone. It depends on WPT test harness support.
+
+You can however inspect the actual and reference pages for web platform reftests in the standalone runner by navigating to them. For example, by loading:
 
  - `http://localhost:8080/out/webgpu/web_platform/reftests/canvas_clear.https.html`
  - `http://localhost:8080/out/webgpu/web_platform/reftests/ref/canvas_clear-ref.html`
