@@ -55,6 +55,15 @@ The following url parameters change how the harness runs:
 - `powerPreference=low-power` runs most tests passing `powerPreference: low-power` to `requestAdapter`
 - `powerPreference=high-performance` runs most tests passing `powerPreference: high-performance` to `requestAdapter`
 
+### Web Platform Tests (wpt) - Ref Tests
+
+Running ref tests is not possible with this repository alone. It depends on WPT test harness support.
+
+You can however inspect the actual and reference pages for web platform reftests in the standalone runner by navigating to them. For example, by loading:
+
+ - `http://localhost:8080/out/webgpu/web_platform/reftests/canvas_clear.https.html`
+ - `http://localhost:8080/out/webgpu/web_platform/reftests/ref/canvas_clear-ref.html`
+
 ## Editor
 
 Since this project is written in TypeScript, it integrates best with
@@ -63,7 +72,7 @@ This is optional, but highly recommended: it automatically adds `import` lines a
 provides robust completions, cross-references, renames, error highlighting,
 deprecation highlighting, and type/JSDoc popups.
 
-Open the `cts.code-workspace` workspace file to load settings convienient for this project.
+Open the `cts.code-workspace` workspace file to load settings convenient for this project.
 You can make local configuration changes in `.vscode/`, which is untracked by Git.
 
 ## Pull Requests
