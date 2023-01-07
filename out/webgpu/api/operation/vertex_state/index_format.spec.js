@@ -274,6 +274,66 @@ fn((t) => {
   t.expectGPUBufferValuesEqual(result, expectedTextureValues);
 });
 
+g.test('index_format,setIndexBuffer_before_setPipeline').
+desc('Test that setting the index buffer before the pipeline works correctly.').
+params((u) => u.combine('setIndexBufferBeforeSetPipeline', [false, true])).
+fn((t) => {
+  const indexOffset = 12;
+  const indexCount = 7;
+  const expectedShape = kBottomLeftTriangle;
+
+  const indexFormat = 'uint32';
+
+  const indices = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
+  const indexBuffer = t.CreateIndexBuffer(indices, indexFormat);
+
+  const kPrimitiveTopology = 'triangle-strip';
+  const pipeline = t.MakeRenderPipeline(kPrimitiveTopology, indexFormat);
+
+  const colorAttachment = t.device.createTexture({
+    format: kTextureFormat,
+    size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+  });
+
+  const result = t.device.createBuffer({
+    size: byteLength,
+    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+    {
+      view: colorAttachment.createView(),
+      clearValue: [0, 0, 0, 0],
+      loadOp: 'clear',
+      storeOp: 'store'
+    }]
+
+  });
+
+  if (t.params.setIndexBufferBeforeSetPipeline) {
+    pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
+    pass.setPipeline(pipeline);
+  } else {
+    pass.setPipeline(pipeline);
+    pass.setIndexBuffer(indexBuffer, indexFormat, indexOffset);
+  }
+
+  pass.drawIndexed(indexCount);
+  pass.end();
+  encoder.copyTextureToBuffer(
+  { texture: colorAttachment },
+  { buffer: result, bytesPerRow, rowsPerImage },
+  [kWidth, kHeight]);
+
+  t.device.queue.submit([encoder.finish()]);
+
+  const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
+  t.expectGPUBufferValuesEqual(result, expectedTextureValues);
+});
+
 g.test('index_format,setIndexBuffer_different_formats').
 desc(
 `
