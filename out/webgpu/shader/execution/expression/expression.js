@@ -165,7 +165,7 @@ cases)
   const casesPerBatch = function () {
     switch (cfg.inputSource) {
       case 'const':
-        return 64; // Arbitrary limit, to ensure shaders aren't too large
+        return 32; // Arbitrary limit, to ensure shaders aren't too large
       case 'uniform':
         return Math.floor(
         t.device.limits.maxUniformBufferBindingSize / (parameterTypes.length * kValueStride));
