@@ -362,3 +362,134 @@ still present in the mapped buffer.`
     const actual = new Uint8Array(buffer.getMappedRange(...range));
     t.expectOK(checkElementsEqual(actual, new Uint8Array(expected.buffer)));
   });
+
+g.test('mappedAtCreation,mapState')
+  .desc('Test that exposed map state of buffer created with mappedAtCreation has expected values.')
+  .params(u =>
+    u
+      .combine('validationError', [false, true])
+      .combine('afterUnmap', [false, true])
+      .combine('afterDestroy', [false, true])
+      .beginSubcases()
+      .combineWithParams(kSubcases)
+  )
+  .fn(async t => {
+    const { size, range, validationError, afterUnmap, afterDestroy } = t.params;
+
+    let buffer: GPUBuffer;
+    t.expectValidationError(() => {
+      buffer = t.device.createBuffer({
+        mappedAtCreation: true,
+        size,
+        usage: validationError ? 0 : GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+      });
+    }, validationError);
+
+    // mapState must be "mapped" regardless of validation error
+    assert(buffer!.mapState === 'mapped');
+
+    // getMappedRange must not change the map state
+    buffer!.getMappedRange(...range);
+    assert(buffer!.mapState === 'mapped');
+
+    if (afterUnmap) {
+      buffer!.unmap();
+      assert(buffer!.mapState === 'unmapped');
+    }
+
+    if (afterDestroy) {
+      buffer!.destroy();
+      assert(buffer!.mapState === 'unmapped');
+    }
+  });
+
+g.test('mapAsync,mapState')
+  .desc('Test that exposed map state of buffer mapped with mapAsync has expected values.')
+  .params(u =>
+    u
+      .combine('bufferCreationValidationError', [false, true])
+      .combine('mapAsyncValidationError', [false, true])
+      .combine('beforeUnmap', [false, true])
+      .combine('beforeDestroy', [false, true])
+      .combine('afterUnmap', [false, true])
+      .combine('afterDestroy', [false, true])
+      .beginSubcases()
+      .combineWithParams(kSubcases)
+  )
+  .fn(async t => {
+    const {
+      size,
+      range,
+      bufferCreationValidationError,
+      mapAsyncValidationError,
+      beforeUnmap,
+      beforeDestroy,
+      afterUnmap,
+      afterDestroy,
+    } = t.params;
+
+    let buffer: GPUBuffer;
+    t.expectValidationError(() => {
+      buffer = t.device.createBuffer({
+        mappedAtCreation: false,
+        size,
+        usage: bufferCreationValidationError
+          ? 0
+          : GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE,
+      });
+    }, bufferCreationValidationError);
+
+    assert(buffer!.mapState === 'unmapped');
+
+    {
+      const promise = buffer!.mapAsync(mapAsyncValidationError ? 0 : GPUMapMode.WRITE);
+      assert(buffer!.mapState === 'pending');
+
+      try {
+        if (beforeUnmap) {
+          buffer!.unmap();
+          assert(buffer!.mapState === 'unmapped');
+        }
+        if (beforeDestroy) {
+          buffer!.destroy();
+          assert(buffer!.mapState === 'unmapped');
+        }
+
+        await promise;
+        assert(buffer!.mapState === 'mapped');
+
+        // getMappedRange must not change the map state
+        buffer!.getMappedRange(...range);
+        assert(buffer!.mapState === 'mapped');
+      } catch {
+        // unmapped before resolve, destroyed before resolve, or mapAsync validation error
+        // will end up with rejection and 'unmapped'
+        assert(buffer!.mapState === 'unmapped');
+      }
+    }
+
+    // If buffer is already mapped test mapAsync on already mapped buffer
+    if (buffer!.mapState === 'mapped') {
+      // mapAsync on already mapped buffer won't change the map state
+      const promise = buffer!.mapAsync(GPUMapMode.WRITE);
+      assert(buffer!.mapState === 'mapped');
+
+      // mapAsync on already mapped buffer must reject and the map state must keep 'mapped'
+      try {
+        await promise;
+        throw new Error('mapAsync on already mapped buffer must not succeed.');
+      } catch {
+        assert(buffer!.mapState === 'mapped');
+      }
+    }
+
+    if (afterUnmap) {
+      buffer!.unmap();
+      assert(buffer!.mapState === 'unmapped');
+    }
+
+    if (afterDestroy) {
+      buffer!.destroy();
+      assert(buffer!.mapState === 'unmapped');
+    }
+  });
