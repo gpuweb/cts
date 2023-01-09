@@ -110,3 +110,88 @@ g.test('invalid,fragment')
       },
     });
   });
+
+g.test('bad_name,vertex')
+  .desc(`Tests entryPoint correctly matches name in shader`)
+  .params(u =>
+    u.combine('entryPoint', ['vs', 'vs2', 'vs\0extra']).combine('isAsync', [true, false])
+  )
+  .fn(async t => {
+    const { entryPoint, isAsync } = t.params;
+    const success = entryPoint === 'vs';
+
+    t.doCreateRenderPipelineTest(isAsync, success, {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
+            @vertex fn vs() -> @builtin(position) vec4<f32> {
+              return vec4<f32>(0.0, 0.0, 0.0, 1.0);
+            }
+          `,
+        }),
+        entryPoint,
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: kDefaultFragmentShaderCode,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
+  });
+
+g.test('bad_name,fragment')
+  .desc(`Tests entryPoint correctly matches name in shader`)
+  .params(u =>
+    u.combine('entryPoint', ['fs', 'fs2', 'fs\0extra']).combine('isAsync', [true, false])
+  )
+  .fn(async t => {
+    const { entryPoint, isAsync } = t.params;
+    const success = entryPoint === 'fs';
+
+    t.doCreateRenderPipelineTest(isAsync, success, {
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: kDefaultFragmentShaderCode,
+        }),
+        entryPoint,
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
+            @fragment fn fs() -> @location(0) vec4<f32>  {
+              return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+            }
+          `,
+        }),
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm' }],
+      },
+    });
+  });
+
+g.test('bad_name,compute')
+  .desc(`Tests entryPoint correctly matches name in shader`)
+  .params(u =>
+    u.combine('entryPoint', ['cs', 'cs2', 'cs\0extra']).combine('isAsync', [true, false])
+  )
+  .fn(async t => {
+    const { entryPoint, isAsync } = t.params;
+    const success = entryPoint === 'cs';
+
+    t.doCreateComputePipelineTest(isAsync, success, {
+      layout: 'auto',
+      compute: {
+        module: t.device.createShaderModule({
+          code: `
+            @compute @workgroup_size(1, 1, 1) fn cs() {
+            }
+          `,
+        }),
+        entryPoint,
+      },
+    });
+  });
