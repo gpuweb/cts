@@ -329,3 +329,39 @@ g.test('drawTo2DCanvas')
 
     readPixelsFrom2DCanvasAndCompare(t, ctx, expect[t.params.alphaMode]);
   });
+
+g.test('transferToImageBitmap_unconfigured_nonzero_size')
+  .desc(
+    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is not empty`
+  )
+  .fn(t => {
+    const canvas = createCanvas(t, 'offscreen', 2, 3);
+    canvas.getContext('webgpu');
+
+    // Transferring gives an ImageBitmap of the correct size filled with transparent black.
+    const ib = canvas.transferToImageBitmap();
+    t.expect(ib.width === 2);
+    t.expect(ib.height === 3);
+
+    // TODO check the pixels are black somehow
+  });
+
+g.test('transferToImageBitmap_zero_size')
+  .desc(
+    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.`
+  )
+  .params(u => u.combine('configure', [true, false]))
+  .fn(t => {
+    const { configure } = t.params;
+    const canvas = createCanvas(t, 'offscreen', 0, 1);
+    const ctx = canvas.getContext('webgpu')!;
+
+    if (configure) {
+      t.expectValidationError(() => ctx.configure({ device: t.device, format: 'bgra8unorm' }));
+    }
+
+    // Transferring would give an empty ImageBitmap which is not possible, so an Exception is thrown.
+    t.shouldThrow(true, () => {
+      canvas.transferToImageBitmap();
+    });
+  });
