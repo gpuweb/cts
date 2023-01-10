@@ -1105,24 +1105,24 @@ const Atan2IntervalOp: BinaryToIntervalOp = {
       return F32Interval.any();
     }
 
-    // atan2's accuracy is only defined if y is normal
-    if (isSubnormalNumberF32(y)) {
+    // atan2's accuracy is only defined if y is normal and finite
+    if (isSubnormalNumberF32(y) || !isFiniteF32(y)) {
       return F32Interval.any();
     }
 
-    const atan_yx = atanInterval(divisionInterval(y, x));
+    const atan_yx = Math.atan(y / x);
     // x > 0, atan(y/x)
     if (x > 0) {
-      return atan_yx;
+      return ulpInterval(atan_yx, 4096);
     }
 
     // x < 0, y > 0, atan(y/x) + π
     if (y > 0) {
-      return additionInterval(atan_yx, kValue.f32.positive.pi.whole);
+      return ulpInterval(atan_yx + kValue.f32.positive.pi.whole, 4096);
     }
 
     // x < 0, y < 0, atan(y/x) - π
-    return subtractionInterval(atan_yx, kValue.f32.positive.pi.whole);
+    return ulpInterval(atan_yx - kValue.f32.positive.pi.whole, 4096);
   },
   extrema: (y: F32Interval, x: F32Interval): [F32Interval, F32Interval] => {
     // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
