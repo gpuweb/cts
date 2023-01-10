@@ -389,6 +389,31 @@ fn(async (t) => {
   }, !success);
 });
 
+g.test('sample_count,1d_2d_array_3d').
+desc(`Test that you can not create 1d, 2d_array, and 3d multisampled textures`).
+params((u) =>
+u.combineWithParams([
+{ dimension: '2d', size: [4, 4, 1], shouldError: false },
+{ dimension: '1d', size: [4, 1, 1], shouldError: true },
+{ dimension: '2d', size: [4, 4, 4], shouldError: true },
+{ dimension: '2d', size: [4, 4, 6], shouldError: true },
+{ dimension: '3d', size: [4, 4, 4], shouldError: true }])).
+
+
+fn(async (t) => {
+  const { dimension, size, shouldError } = t.params;
+
+  t.expectValidationError(() => {
+    t.device.createTexture({
+      size,
+      dimension,
+      sampleCount: 4,
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
+    });
+  }, shouldError);
+});
+
 g.test('texture_size,default_value_and_smallest_size,uncompressed_format').
 desc(
 `Test default values for height and depthOrArrayLayers for every dimension type and every uncompressed format.
