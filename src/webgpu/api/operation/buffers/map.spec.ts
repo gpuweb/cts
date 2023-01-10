@@ -440,7 +440,10 @@ g.test('mapAsync,mapState')
     t.expect(buffer!.mapState === 'unmapped');
 
     {
-      const promise = buffer!.mapAsync(mapAsyncValidationError ? 0 : GPUMapMode.WRITE);
+      let promise: Promise<void>;
+      t.expectValidationError(() => {
+        promise = buffer!.mapAsync(mapAsyncValidationError ? 0 : GPUMapMode.WRITE);
+      }, bufferCreationValidationError || mapAsyncValidationError);
       t.expect(buffer!.mapState === 'pending');
 
       try {
@@ -453,7 +456,7 @@ g.test('mapAsync,mapState')
           t.expect(buffer!.mapState === 'unmapped');
         }
 
-        await promise;
+        await promise!;
         t.expect(buffer!.mapState === 'mapped');
 
         // getMappedRange must not change the map state
