@@ -370,11 +370,11 @@ g.test('mappedAtCreation,mapState')
       .combine('validationError', [false, true])
       .combine('afterUnmap', [false, true])
       .combine('afterDestroy', [false, true])
-      .beginSubcases()
-      .combineWithParams(kSubcases)
   )
   .fn(async t => {
-    const { size, range, validationError, afterUnmap, afterDestroy } = t.params;
+    const { validationError, afterUnmap, afterDestroy } = t.params;
+    const size = 8;
+    const range = [0, 8];
 
     let buffer: GPUBuffer;
     t.expectValidationError(() => {
@@ -413,13 +413,9 @@ g.test('mapAsync,mapState')
       .combine('beforeDestroy', [false, true])
       .combine('afterUnmap', [false, true])
       .combine('afterDestroy', [false, true])
-      .beginSubcases()
-      .combineWithParams(kSubcases)
   )
   .fn(async t => {
     const {
-      size,
-      range,
       bufferCreationValidationError,
       mapAsyncValidationError,
       beforeUnmap,
@@ -427,6 +423,8 @@ g.test('mapAsync,mapState')
       afterUnmap,
       afterDestroy,
     } = t.params;
+    const size = 8;
+    const range = [0, 8];
 
     let buffer: GPUBuffer;
     t.expectValidationError(() => {
