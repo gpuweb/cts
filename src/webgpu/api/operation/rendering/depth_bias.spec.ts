@@ -5,6 +5,7 @@ Tests render results with different depth bias values like 'positive', 'negative
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
+import { kValue } from '../../../../webgpu/util/constants.js';
 import {
   DepthStencilFormat,
   EncodableTextureFormat,
@@ -297,6 +298,20 @@ g.test('depth_bias')
           biasSlopeScale: 0,
           biasClamp: -0.125,
           _expectedDepth: 0.125,
+        },
+        {
+          quadAngle: QuadAngle.TiltedX,
+          bias: 0,
+          biasSlopeScale: kValue.f32.infinity.positive,
+          biasClamp: 0,
+          _expectedDepth: 1.0,
+        },
+        {
+          quadAngle: QuadAngle.TiltedX,
+          bias: 0,
+          biasSlopeScale: kValue.f32.infinity.negative,
+          biasClamp: 0,
+          _expectedDepth: 0.0,
         },
         {
           quadAngle: QuadAngle.TiltedX,
