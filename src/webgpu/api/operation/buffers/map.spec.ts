@@ -386,20 +386,20 @@ g.test('mappedAtCreation,mapState')
     }, validationError);
 
     // mapState must be "mapped" regardless of validation error
-    assert(buffer!.mapState === 'mapped');
+    t.expect(buffer!.mapState === 'mapped');
 
     // getMappedRange must not change the map state
     buffer!.getMappedRange(...range);
-    assert(buffer!.mapState === 'mapped');
+    t.expect(buffer!.mapState === 'mapped');
 
     if (afterUnmap) {
       buffer!.unmap();
-      assert(buffer!.mapState === 'unmapped');
+      t.expect(buffer!.mapState === 'unmapped');
     }
 
     if (afterDestroy) {
       buffer!.destroy();
-      assert(buffer!.mapState === 'unmapped');
+      t.expect(buffer!.mapState === 'unmapped');
     }
   });
 
@@ -437,32 +437,32 @@ g.test('mapAsync,mapState')
       });
     }, bufferCreationValidationError);
 
-    assert(buffer!.mapState === 'unmapped');
+    t.expect(buffer!.mapState === 'unmapped');
 
     {
       const promise = buffer!.mapAsync(mapAsyncValidationError ? 0 : GPUMapMode.WRITE);
-      assert(buffer!.mapState === 'pending');
+      t.expect(buffer!.mapState === 'pending');
 
       try {
         if (beforeUnmap) {
           buffer!.unmap();
-          assert(buffer!.mapState === 'unmapped');
+          t.expect(buffer!.mapState === 'unmapped');
         }
         if (beforeDestroy) {
           buffer!.destroy();
-          assert(buffer!.mapState === 'unmapped');
+          t.expect(buffer!.mapState === 'unmapped');
         }
 
         await promise;
-        assert(buffer!.mapState === 'mapped');
+        t.expect(buffer!.mapState === 'mapped');
 
         // getMappedRange must not change the map state
         buffer!.getMappedRange(...range);
-        assert(buffer!.mapState === 'mapped');
+        t.expect(buffer!.mapState === 'mapped');
       } catch {
         // unmapped before resolve, destroyed before resolve, or mapAsync validation error
         // will end up with rejection and 'unmapped'
-        assert(buffer!.mapState === 'unmapped');
+        t.expect(buffer!.mapState === 'unmapped');
       }
     }
 
@@ -470,24 +470,24 @@ g.test('mapAsync,mapState')
     if (buffer!.mapState === 'mapped') {
       // mapAsync on already mapped buffer won't change the map state
       const promise = buffer!.mapAsync(GPUMapMode.WRITE);
-      assert(buffer!.mapState === 'mapped');
+      t.expect(buffer!.mapState === 'mapped');
 
       // mapAsync on already mapped buffer must reject and the map state must keep 'mapped'
       try {
         await promise;
-        throw new Error('mapAsync on already mapped buffer must not succeed.');
+        t.fail('mapAsync on already mapped buffer must not succeed.');
       } catch {
-        assert(buffer!.mapState === 'mapped');
+        t.expect(buffer!.mapState === 'mapped');
       }
     }
 
     if (afterUnmap) {
       buffer!.unmap();
-      assert(buffer!.mapState === 'unmapped');
+      t.expect(buffer!.mapState === 'unmapped');
     }
 
     if (afterDestroy) {
       buffer!.destroy();
-      assert(buffer!.mapState === 'unmapped');
+      t.expect(buffer!.mapState === 'unmapped');
     }
   });
