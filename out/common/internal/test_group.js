@@ -539,11 +539,17 @@ class RunCaseSpecific {
                           try {
                             arg.message = subcasePrefix + '\n' + arg.message;
                           } catch {
+                            // If that fails (e.g. on DOMException), try to put it in the stack:
+                            let stack = subcasePrefix;
+                            if (arg.stack) stack += '\n' + arg.stack;
+                            try {
+                              arg.stack = stack;
+                            } catch {
 
-
-                            // Silence exception if the property isn't settable
-                            // (e.g. arg.message on DOMException).
-                          }}}
+                              // If that fails too, just silence it.
+                            }}
+                        }
+                      }
 
 
                       const rv = prop.apply(target, args);
