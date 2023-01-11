@@ -161,14 +161,21 @@ export async function run(
   }
 
   // The size of the input buffer may exceed the maximum buffer binding size,
-  // so chunk the tests up into batches that fit into the limits.
+  // so chunk the tests up into batches that fit into the limits. We also split
+  // the cases into smaller batches to help with shader compilation performance.
   const casesPerBatch = (function () {
     switch (cfg.inputSource) {
       case 'const':
-        return 32; // Arbitrary limit, to ensure shaders aren't too large
+        // Some drivers are slow to optimize shaders with many constant values,
+        // or statements. 32 is an empirically picked number of cases that works
+        // well for most drivers.
+        return 32;
       case 'uniform':
+        // Some drivers are slow to build pipelines with large uniform buffers.
+        // 2k appears to be a sweet-spot when benchmarking.
         return Math.floor(
-          t.device.limits.maxUniformBufferBindingSize / (parameterTypes.length * kValueStride)
+          Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
+            (parameterTypes.length * kValueStride)
         );
       case 'storage_r':
       case 'storage_rw':
