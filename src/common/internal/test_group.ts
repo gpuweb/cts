@@ -539,8 +539,14 @@ class RunCaseSpecific implements RunCase {
                           try {
                             arg.message = subcasePrefix + '\n' + arg.message;
                           } catch {
-                            // Silence exception if the property isn't settable
-                            // (e.g. arg.message on DOMException).
+                            // If that fails (e.g. on DOMException), try to put it in the stack:
+                            let stack = subcasePrefix;
+                            if (arg.stack) stack += '\n' + arg.stack;
+                            try {
+                              arg.stack = stack;
+                            } catch {
+                              // If that fails too, just silence it.
+                            }
                           }
                         }
                       }
