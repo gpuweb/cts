@@ -5,6 +5,7 @@
 /out/
 /out-wpt/
 /out-node/
+/out-wpt-reftest-screenshots/
 .tscache/
 *.tmp.txt
 /docs/tsdoc/
