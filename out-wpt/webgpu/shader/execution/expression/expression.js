@@ -92,6 +92,23 @@ const kValueStride = 16;
 // ExpressionBuilder returns the WGSL used to test an expression.
 
 /**
+ * Searches for an entry with the given key, adding and returning the result of calling
+ * @p create if the entry was not found.
+ * @param map the cache map
+ * @param key the entry's key
+ * @param create the function used to construct a value, if not found in the cache
+ * @returns the value, either fetched from the cache, or newly built.
+ */
+function getOrCreate(map, key, create) {
+  const existing = map.get(key);
+  if (existing !== undefined) {
+    return existing;
+  }
+  const value = create();
+  map.set(key, value);
+  return value;
+}
+/**
  * Runs the list of expression tests, possibly splitting the tests into multiple
  * dispatches to keep the input data within the buffer binding limits.
  * run() will pack the scalar test cases into smaller set of vectorized tests
@@ -120,14 +137,21 @@ export async function run(
   }
 
   // The size of the input buffer may exceed the maximum buffer binding size,
-  // so chunk the tests up into batches that fit into the limits.
+  // so chunk the tests up into batches that fit into the limits. We also split
+  // the cases into smaller batches to help with shader compilation performance.
   const casesPerBatch = (function () {
     switch (cfg.inputSource) {
       case 'const':
-        return 32; // Arbitrary limit, to ensure shaders aren't too large
+        // Some drivers are slow to optimize shaders with many constant values,
+        // or statements. 32 is an empirically picked number of cases that works
+        // well for most drivers.
+        return 32;
       case 'uniform':
+        // Some drivers are slow to build pipelines with large uniform buffers.
+        // 2k appears to be a sweet-spot when benchmarking.
         return Math.floor(
-          t.device.limits.maxUniformBufferBindingSize / (parameterTypes.length * kValueStride)
+          Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
+            (parameterTypes.length * kValueStride)
         );
 
       case 'storage_r':
@@ -137,6 +161,9 @@ export async function run(
         );
     }
   })();
+
+  // A cache to hold built shader pipelines.
+  const pipelineCache = new Map();
 
   // Submit all the cases in batches, each in a separate error scope.
   const checkResults = [];
@@ -151,7 +178,8 @@ export async function run(
       parameterTypes,
       returnType,
       batchCases,
-      cfg.inputSource
+      cfg.inputSource,
+      pipelineCache
     );
 
     checkResults.push(
@@ -179,9 +207,18 @@ export async function run(
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
+ * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
-function submitBatch(t, expressionBuilder, parameterTypes, returnType, cases, inputSource) {
+function submitBatch(
+  t,
+  expressionBuilder,
+  parameterTypes,
+  returnType,
+  cases,
+  inputSource,
+  pipelineCache
+) {
   // Construct a buffer to hold the results of the expression tests
   const outputBufferSize = cases.length * kValueStride;
   const outputBuffer = t.device.createBuffer({
@@ -196,7 +233,8 @@ function submitBatch(t, expressionBuilder, parameterTypes, returnType, cases, in
     returnType,
     cases,
     inputSource,
-    outputBuffer
+    outputBuffer,
+    pipelineCache
   );
 
   const encoder = t.device.createCommandEncoder();
@@ -264,7 +302,9 @@ function ith(v, i) {
 
 /**
  * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
- * batch of test cases.
+ * batch of test cases. If a pre-created pipeline can be found in
+ * @p pipelineCache, then this may be returned instead of creating a new
+ * pipeline.
  * @param t the GPUTest
  * @param expressionBuilder the expression builder function
  * @param parameterTypes the list of expression parameter types
@@ -272,6 +312,7 @@ function ith(v, i) {
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
  * @param outputBuffer the buffer that will hold the output values of the tests
+ * @param pipelineCache the cache of compute pipelines, shared between batches
  */
 function buildPipeline(
   t,
@@ -280,7 +321,8 @@ function buildPipeline(
   returnType,
   cases,
   inputSource,
-  outputBuffer
+  outputBuffer,
+  pipelineCache
 ) {
   // wgsl declaration of output buffer and binding
   const wgslStorageType = storageType(returnType);
@@ -408,21 +450,24 @@ fn main() {
         }
       }
 
+      // build the compute pipeline, if the shader hasn't been compiled already.
+      const pipeline = getOrCreate(pipelineCache, source, () => {
+        // build the shader module
+        const module = t.device.createShaderModule({ code: source });
+
+        // build the pipeline
+        return t.device.createComputePipeline({
+          layout: 'auto',
+          compute: { module, entryPoint: 'main' },
+        });
+      });
+
       // build the input buffer
       const inputBuffer = t.makeBufferWithContents(
         inputData,
         GPUBufferUsage.COPY_SRC |
           (inputSource === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
       );
-
-      // build the shader module
-      const module = t.device.createShaderModule({ code: source });
-
-      // build the pipeline
-      const pipeline = t.device.createComputePipeline({
-        layout: 'auto',
-        compute: { module, entryPoint: 'main' },
-      });
 
       // build the bind group
       const group = t.device.createBindGroup({
