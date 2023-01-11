@@ -132,6 +132,26 @@ export interface ExpressionBuilder {
   (values: Array<string>): string;
 }
 
+// A Pipeline is a map of WGSL shader source to a built pipeline
+type PipelineCache = Map<String, GPUComputePipeline>;
+
+/**
+ * Searches for an entry with the given key, adding and returning the result of calling
+ * @p create if the entry was not found.
+ * @param map the cache map
+ * @param key the entry's key
+ * @param create the function used to construct a value, if not found in the cache
+ * @returns the value, either fetched from the cache, or newly built.
+ */
+function getOrCreate<K, V>(map: Map<K, V>, key: K, create: () => V) {
+  const existing = map.get(key);
+  if (existing !== undefined) {
+    return existing;
+  }
+  const value = create();
+  map.set(key, value);
+  return value;
+}
 /**
  * Runs the list of expression tests, possibly splitting the tests into multiple
  * dispatches to keep the input data within the buffer binding limits.
@@ -185,6 +205,9 @@ export async function run(
     }
   })();
 
+  // A cache to hold built shader pipelines.
+  const pipelineCache = new Map<String, GPUComputePipeline>();
+
   // Submit all the cases in batches, each in a separate error scope.
   const checkResults: Array<Promise<void>> = [];
   for (let i = 0; i < cases.length; i += casesPerBatch) {
@@ -198,7 +221,8 @@ export async function run(
       parameterTypes,
       returnType,
       batchCases,
-      cfg.inputSource
+      cfg.inputSource,
+      pipelineCache
     );
 
     checkResults.push(
@@ -226,6 +250,7 @@ export async function run(
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
+ * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
 function submitBatch(
@@ -234,7 +259,8 @@ function submitBatch(
   parameterTypes: Array<Type>,
   returnType: Type,
   cases: CaseList,
-  inputSource: InputSource
+  inputSource: InputSource,
+  pipelineCache: PipelineCache
 ): () => void {
   // Construct a buffer to hold the results of the expression tests
   const outputBufferSize = cases.length * kValueStride;
@@ -250,7 +276,8 @@ function submitBatch(
     returnType,
     cases,
     inputSource,
-    outputBuffer
+    outputBuffer,
+    pipelineCache
   );
 
   const encoder = t.device.createCommandEncoder();
@@ -318,7 +345,9 @@ function ith<T>(v: T | T[], i: number): T {
 
 /**
  * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
- * batch of test cases.
+ * batch of test cases. If a pre-created pipeline can be found in
+ * @p pipelineCache, then this may be returned instead of creating a new
+ * pipeline.
  * @param t the GPUTest
  * @param expressionBuilder the expression builder function
  * @param parameterTypes the list of expression parameter types
@@ -326,6 +355,7 @@ function ith<T>(v: T | T[], i: number): T {
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
  * @param outputBuffer the buffer that will hold the output values of the tests
+ * @param pipelineCache the cache of compute pipelines, shared between batches
  */
 function buildPipeline(
   t: GPUTest,
@@ -334,7 +364,8 @@ function buildPipeline(
   returnType: Type,
   cases: CaseList,
   inputSource: InputSource,
-  outputBuffer: GPUBuffer
+  outputBuffer: GPUBuffer,
+  pipelineCache: PipelineCache
 ): [GPUComputePipeline, GPUBindGroup] {
   // wgsl declaration of output buffer and binding
   const wgslStorageType = storageType(returnType);
@@ -462,21 +493,24 @@ fn main() {
         }
       }
 
+      // build the compute pipeline, if the shader hasn't been compiled already.
+      const pipeline = getOrCreate(pipelineCache, source, () => {
+        // build the shader module
+        const module = t.device.createShaderModule({ code: source });
+
+        // build the pipeline
+        return t.device.createComputePipeline({
+          layout: 'auto',
+          compute: { module, entryPoint: 'main' },
+        });
+      });
+
       // build the input buffer
       const inputBuffer = t.makeBufferWithContents(
         inputData,
         GPUBufferUsage.COPY_SRC |
           (inputSource === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
       );
-
-      // build the shader module
-      const module = t.device.createShaderModule({ code: source });
-
-      // build the pipeline
-      const pipeline = t.device.createComputePipeline({
-        layout: 'auto',
-        compute: { module, entryPoint: 'main' },
-      });
 
       // build the bind group
       const group = t.device.createBindGroup({
