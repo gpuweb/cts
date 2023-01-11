@@ -1,6 +1,5 @@
 import { assert } from '../../../common/util/util.js';
-
-declare function takeScreenshotDelayed(ms: number): void;
+import { takeScreenshotDelayed } from '../../../common/util/wpt_reftest_wait.js';
 
 interface GPURefTest {
   readonly device: GPUDevice;

@@ -70,7 +70,7 @@
       "warn",
       {
         "name": "setTimeout",
-        "message": "WPT disallows setTimeout; use `framework/util/timeout.js`."
+        "message": "WPT disallows setTimeout; use `common/util/timeout.js`."
       }
     ],
 
