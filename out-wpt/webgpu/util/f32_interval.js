@@ -1159,14 +1159,38 @@ export function divisionInterval(x, y) {
 
 const DotIntervalOp = {
   impl: (x, y) => {
-    // dot(x, y) = sum of x[i] * y[i]
-    const multiplications = runBinaryToIntervalOpComponentWise(
-      toF32Vector(x),
-      toF32Vector(y),
-      MultiplicationIntervalOp
-    );
+    assert(x.length === y.length, 'params to DotIntervalOp.impl need to be of the same length');
+    const positives = [];
+    const negatives = [];
 
-    return multiplications.reduce((previous, current) => additionInterval(previous, current));
+    // dot(x, y) = sum of x[i] * y[i]
+    // Bucketing the multiplications in to positives & negatives, since though the result of summing them is not
+    // dependent on order, the error in the result interval is.
+    // The ordering with the maximum widest acceptance interval will be the one causing the largest magnitude
+    // intermediate result of the additions, which will either be from adding all of the positive terms together or all
+    // of the negative terms.
+    x.forEach((_, i) => {
+      if (x[i] * y[i] < 0) {
+        negatives.push(multiplicationInterval(x[i], y[i]));
+      } else {
+        positives.push(multiplicationInterval(x[i], y[i]));
+      }
+    });
+
+    if (positives.length !== 0 && negatives.length !== 0) {
+      return additionInterval(
+        positives.reduce((prev, cur) => additionInterval(prev, cur)),
+        negatives.reduce((prev, cur) => additionInterval(prev, cur))
+      );
+    } else {
+      if (positives.length !== 0) {
+        return positives.reduce((prev, cur) => additionInterval(prev, cur));
+      }
+      if (negatives.length !== 0) {
+        return negatives.reduce((prev, cur) => additionInterval(prev, cur));
+      }
+      unreachable(`Both 'positives' and 'negatives' buckets are empty in DotIntervalOp.impl`);
+    }
   },
 };
 
