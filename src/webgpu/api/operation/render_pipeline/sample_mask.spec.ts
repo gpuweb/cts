@@ -3,8 +3,10 @@ Tests that the final sample mask is the logical AND of all the relevant masks.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { makeTextureWithContents } from '../../../util/texture.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
 
 const kColors = [
   // Red
@@ -35,30 +37,19 @@ class F extends GPUTest {
     // texel 2 - Blue
     // texel 3 - Yellow
     const kSampleTextureSize = 2;
-    const imageData = new ImageData(
-      // prettier-ignore
-      new Uint8ClampedArray([
-        kColors[0].R, kColors[0].G, kColors[0].B, kColors[0].A,
-        kColors[1].R, kColors[1].G, kColors[1].B, kColors[1].A,
-        kColors[2].R, kColors[2].G, kColors[2].B, kColors[2].A,
-        kColors[3].R, kColors[3].G, kColors[3].B, kColors[3].A,
-      ]),
-      kSampleTextureSize,
-      kSampleTextureSize
-    );
-    const imageBitmap = await createImageBitmap(imageData);
-    const sampleTexture = this.device.createTexture({
-      size: [kSampleTextureSize, kSampleTextureSize, 1],
-      format: 'rgba8unorm',
-      usage:
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    this.device.queue.copyExternalImageToTexture(
-      { source: imageBitmap },
-      { texture: sampleTexture },
-      [imageBitmap.width, imageBitmap.height]
+    const sampleTexture = makeTextureWithContents(
+      this.device,
+      TexelView.fromTexelsAsBytes(format, coord => {
+        const id = coord.x + coord.y * kSampleTextureSize;
+        return new Uint8Array([kColors[id].R, kColors[id].G, kColors[id].B, kColors[id].A]);
+      }),
+      {
+        size: [kSampleTextureSize, kSampleTextureSize, 1],
+        usage:
+          GPUTextureUsage.TEXTURE_BINDING |
+          GPUTextureUsage.COPY_DST |
+          GPUTextureUsage.RENDER_ATTACHMENT,
+      }
     );
 
     const sampler = this.device.createSampler({
@@ -348,15 +339,17 @@ class F extends GPUTest {
       B: 0,
       A: 0,
     };
-    range(4, (id: number) => {
-      const m = rasterizationMask & sampleMask & fragmentShaderOutputMask & (1 << id);
+
+    assert(sampleCount === 4);
+    for (let i = 0; i < 4; i++) {
+      const m = rasterizationMask & sampleMask & fragmentShaderOutputMask & (1 << i);
       // WebGPU only support up to 4 samples, so samples after the first 4 should be ignored.
-      const s = (m & 0xf) === 0 ? kEmptySample : kColors[id % 4];
+      const s = (m & 0xf) === 0 ? kEmptySample : kColors[i];
       expected.R += s.R;
       expected.G += s.G;
       expected.B += s.B;
       expected.A += s.A;
-    });
+    }
 
     this.expectSinglePixelBetweenTwoValuesIn2DTexture(
       texture,
@@ -404,19 +397,49 @@ The test checks which sample is passed by looking at the final color of the 1x1 
 what is expected given by the rasterization mask, sample mask, and fragment shader output mask.
 
 - for sampleCount = { 1, 4 } and various combinations of:
-    - rasterization mask = { 0, 1, 2, 3, 4, 5, 15 }
-    - sample mask = { 0, 1, 2, 3, 15, 30 }
-    - fragment shader output mask (SV_Coverage) = { 0, 1, 2, 3, 15, 30 }
-- [choosing 30 = 2 + 4 + 8 + 16 because the 5th bit should be ignored]
+    - rasterization mask = { 0, 0b0001, 0b0010, 0b0111, 0b1011, 0b1101, 0b1110, 0b1000, 0b1111 }
+    - sample mask = { 0, 0b0001, 0b0010, 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b11110 }
+    - fragment shader output @builtin(sample_mask) = { 0, 0b0001, 0b0010, 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b11110 }
+- [choosing 0b11110 because the 5th bit should be ignored]
 `
   )
   .params(u =>
     u
       .combine('sampleCount', [1, 4] as const)
+      .combine('rasterizationMask', [
+        0,
+        0b0001,
+        0b0010,
+        0b0111,
+        0b1011,
+        0b1101,
+        0b1110,
+        0b1000,
+        0b1111,
+      ] as const)
       .beginSubcases()
-      .combine('rasterizationMask', [0, 1, 2, 3, 4, 5, 8, 15] as const)
-      .combine('sampleMask', [0, 1, 2, 3, 15, 30] as const)
-      .combine('fragmentShaderOutputMask', [0, 1, 2, 3, 15, 30] as const)
+      .combine('sampleMask', [
+        0,
+        0b0001,
+        0b0010,
+        0b0111,
+        0b1011,
+        0b1101,
+        0b1110,
+        0b1111,
+        0b11110,
+      ] as const)
+      .combine('fragmentShaderOutputMask', [
+        0,
+        0b0001,
+        0b0010,
+        0b0111,
+        0b1011,
+        0b1101,
+        0b1110,
+        0b1111,
+        0b11110,
+      ] as const)
   )
   .fn(async t => {
     const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
