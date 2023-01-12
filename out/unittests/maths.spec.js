@@ -16,6 +16,7 @@ uint32ToFloat32 } from
 '../webgpu/util/conversion.js';
 import {
 biasedRange,
+calculatePermutations,
 cartesianProduct,
 correctlyRoundedF32,
 
@@ -958,6 +959,62 @@ fn((test) => {
   test.expect(
   objectEquals(got, expect),
   `cartesianProduct(${JSON.stringify(inputs)}) returned ${JSON.stringify(
+  got)
+  }. Expected ${JSON.stringify(expect)} `);
+
+});
+
+
+
+
+
+
+g.test('calculatePermutations').
+paramsSimple(
+
+[
+{ input: [0, 1], result: [[0, 1],
+  [1, 0]] },
+{ input: [0, 1, 2], result: [[0, 1, 2],
+  [0, 2, 1],
+  [1, 0, 2],
+  [1, 2, 0],
+  [2, 0, 1],
+  [2, 1, 0]] },
+{ input: [0, 1, 2, 3], result: [[0, 1, 2, 3],
+  [0, 1, 3, 2],
+  [0, 2, 1, 3],
+  [0, 2, 3, 1],
+  [0, 3, 1, 2],
+  [0, 3, 2, 1],
+  [1, 0, 2, 3],
+  [1, 0, 3, 2],
+  [1, 2, 0, 3],
+  [1, 2, 3, 0],
+  [1, 3, 0, 2],
+  [1, 3, 2, 0],
+  [2, 0, 1, 3],
+  [2, 0, 3, 1],
+  [2, 1, 0, 3],
+  [2, 1, 3, 0],
+  [2, 3, 0, 1],
+  [2, 3, 1, 0],
+  [3, 0, 1, 2],
+  [3, 0, 2, 1],
+  [3, 1, 0, 2],
+  [3, 1, 2, 0],
+  [3, 2, 0, 1],
+  [3, 2, 1, 0]] }]).
+
+
+fn((test) => {
+  const input = test.params.input;
+  const got = calculatePermutations(input);
+  const expect = test.params.result;
+
+  test.expect(
+  objectEquals(got, expect),
+  `calculatePermutations(${JSON.stringify(input)}) returned ${JSON.stringify(
   got)
   }. Expected ${JSON.stringify(expect)} `);
 

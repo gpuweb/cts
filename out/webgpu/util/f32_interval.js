@@ -4,6 +4,7 @@
 import { kValue } from './constants.js';
 import { reinterpretF32AsU32, reinterpretU32AsF32 } from './conversion.js';
 import {
+calculatePermutations,
 cartesianProduct,
 correctlyRoundedF16,
 correctlyRoundedF32,
@@ -1350,38 +1351,25 @@ export function divisionInterval(x, y) {
 
 const DotIntervalOp = {
   impl: (x, y) => {
-    assert(x.length === y.length, 'params to DotIntervalOp.impl need to be of the same length');
-    const positives = [];
-    const negatives = [];
-
     // dot(x, y) = sum of x[i] * y[i]
-    // Bucketing the multiplications in to positives & negatives, since though the result of summing them is not
-    // dependent on order, the error in the result interval is.
-    // The ordering with the maximum widest acceptance interval will be the one causing the largest magnitude
-    // intermediate result of the additions, which will either be from adding all of the positive terms together or all
-    // of the negative terms.
-    x.forEach((_, i) => {
-      if (x[i] * y[i] < 0) {
-        negatives.push(multiplicationInterval(x[i], y[i]));
-      } else {
-        positives.push(multiplicationInterval(x[i], y[i]));
-      }
-    });
+    const multiplications = runBinaryToIntervalOpComponentWise(
+    toF32Vector(x),
+    toF32Vector(y),
+    MultiplicationIntervalOp);
 
-    if (positives.length !== 0 && negatives.length !== 0) {
-      return additionInterval(
-      positives.reduce((prev, cur) => additionInterval(prev, cur)),
-      negatives.reduce((prev, cur) => additionInterval(prev, cur)));
 
-    } else {
-      if (positives.length !== 0) {
-        return positives.reduce((prev, cur) => additionInterval(prev, cur));
-      }
-      if (negatives.length !== 0) {
-        return negatives.reduce((prev, cur) => additionInterval(prev, cur));
-      }
-      unreachable(`Both 'positives' and 'negatives' buckets are empty in DotIntervalOp.impl`);
+    // vec2 doesn't require permutations, since a + b = b + a for floats
+    if (multiplications.length === 2) {
+      return additionInterval(multiplications[0], multiplications[1]);
     }
+
+    // The spec does not state the ordering of summation, so all of the permutations are calculated and their results
+    // spanned, since addition of more then two floats is not transitive, i.e. a + b + c is not guaranteed to equal
+    // b + a + c
+    const permutations = calculatePermutations(multiplications);
+    return F32Interval.span(
+    ...permutations.map((p) => p.reduce((prev, cur) => additionInterval(prev, cur))));
+
   }
 };
 

@@ -6,13 +6,12 @@ Execution tests for the 'dot' builtin function
 T is AbstractInt, AbstractFloat, i32, u32, f32, or f16
 @const fn dot(e1: vecN<T>,e2: vecN<T>) -> T
 Returns the dot product of e1 and e2.
-
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { dotInterval } from '../../../../../util/f32_interval.js';
-import { vectorF32Range } from '../../../../../util/math.js';
+import { sparseVectorF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, generateVectorPairToF32IntervalCases, run } from '../../expression.js';
 
@@ -20,6 +19,8 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// vec3 and vec4 require calculating all possible permutations, so their runtime is much longer per test, so only using
+// sparse vectors for them
 export const d = makeCaseCache('dot', {
   f32_vec2_const: () => {
     return generateVectorPairToF32IntervalCases(
@@ -39,32 +40,32 @@ export const d = makeCaseCache('dot', {
   },
   f32_vec3_const: () => {
     return generateVectorPairToF32IntervalCases(
-      vectorF32Range(3),
-      vectorF32Range(3),
+      sparseVectorF32Range(3),
+      sparseVectorF32Range(3),
       'f32-only',
       dotInterval
     );
   },
   f32_vec3_non_const: () => {
     return generateVectorPairToF32IntervalCases(
-      vectorF32Range(3),
-      vectorF32Range(3),
+      sparseVectorF32Range(3),
+      sparseVectorF32Range(3),
       'unfiltered',
       dotInterval
     );
   },
   f32_vec4_const: () => {
     return generateVectorPairToF32IntervalCases(
-      vectorF32Range(4),
-      vectorF32Range(4),
+      sparseVectorF32Range(4),
+      sparseVectorF32Range(4),
       'f32-only',
       dotInterval
     );
   },
   f32_vec4_non_const: () => {
     return generateVectorPairToF32IntervalCases(
-      vectorF32Range(4),
-      vectorF32Range(4),
+      sparseVectorF32Range(4),
+      sparseVectorF32Range(4),
       'unfiltered',
       dotInterval
     );
