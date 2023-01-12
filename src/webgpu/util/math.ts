@@ -875,3 +875,35 @@ export function cartesianProduct<T>(...inputs: T[][]): T[][] {
 
   return result;
 }
+
+/** @returns all of the permutations of an array
+ *
+ * Recursively calculates all of the permutations, does not cull duplicate
+ * entries.
+ *
+ * @param input the array to get permutations of
+ */
+export function calculatePermutations<T>(input: T[]): T[][] {
+  if (input.length === 0) {
+    return [];
+  }
+
+  if (input.length === 1) {
+    return [input];
+  }
+
+  if (input.length === 2) {
+    return [input, [input[1], input[0]]];
+  }
+
+  const result: T[][] = [];
+  input.forEach((head, idx) => {
+    const tail = input.slice(0, idx).concat(input.slice(idx + 1));
+    const permutations = calculatePermutations(tail);
+    permutations.forEach(p => {
+      result.push([head, ...p]);
+    });
+  });
+
+  return result;
+}
