@@ -21,8 +21,18 @@ const kColors = [
 
 const kEmptySample = { R: 0, G: 0, B: 0, A: 0 };
 
+// (0.2, 0.4, 0.6, 0.8)
+const kDepthStencilCheckColor = { R: 0x33, G: 0x66, B: 0x99, A: 0xcc };
+
+const kStencilReferenceValue = 255;
+
 // Format of the render target and resolve target
 const format = 'rgba8unorm';
+
+// Format of depth stencil attachment
+const depthStencilFormat = 'depth24plus-stencil8';
+
+const kRenderTargetSize = 1;
 
 class F extends GPUTest {
   async GetResolvedTargetTexture(
@@ -30,7 +40,7 @@ class F extends GPUTest {
     rasterizationMask: number,
     sampleMask: number,
     fragmentShaderOutputMask: number
-  ): Promise<GPUTexture> {
+  ): Promise<{ color: GPUTexture; depthStencil: GPUTexture }> {
     // Create a 2x2 color texture to sample from
     // texel 0 - Red
     // texel 1 - Green
@@ -201,6 +211,16 @@ class F extends GPUTest {
         mask: sampleMask,
         alphaToCoverageEnabled: false,
       },
+      depthStencil: {
+        format: depthStencilFormat,
+        depthWriteEnabled: true,
+        depthCompare: 'always',
+
+        stencilFront: {
+          compare: 'always',
+          passOp: 'replace',
+        },
+      },
     });
 
     const uniformBindGroup = this.device.createBindGroup({
@@ -223,7 +243,6 @@ class F extends GPUTest {
       ],
     });
 
-    const kRenderTargetSize = 1;
     const renderTargetTexture = this.device.createTexture({
       format,
       size: {
@@ -251,6 +270,16 @@ class F extends GPUTest {
             usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
           });
 
+    const depthStencilTexture = this.device.createTexture({
+      size: {
+        width: kRenderTargetSize,
+        height: kRenderTargetSize,
+      },
+      format: depthStencilFormat,
+      sampleCount,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [
         {
@@ -262,11 +291,22 @@ class F extends GPUTest {
           storeOp: 'store',
         },
       ],
+      depthStencilAttachment: {
+        view: depthStencilTexture.createView(),
+        depthClearValue: 1.0,
+        depthLoadOp: 'clear',
+        depthStoreOp: 'store',
+        stencilClearValue: 0,
+        stencilLoadOp: 'clear',
+        stencilStoreOp: 'store',
+      },
     };
+
     const commandEncoder = this.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
     passEncoder.setPipeline(pipeline);
     passEncoder.setBindGroup(0, uniformBindGroup);
+    passEncoder.setStencilReference(kStencilReferenceValue);
 
     if (rasterizationMask === 15) {
       // draw full screen quad
@@ -292,41 +332,15 @@ class F extends GPUTest {
     passEncoder.end();
     this.device.queue.submit([commandEncoder.finish()]);
 
-    const result = sampleCount === 1 ? renderTargetTexture : resolveTargetTexture;
-    assert(result !== null);
-    return result;
+    const colorTexture = sampleCount === 1 ? renderTargetTexture : resolveTargetTexture;
+    assert(colorTexture !== null);
+    return {
+      color: colorTexture,
+      depthStencil: depthStencilTexture,
+    };
   }
 
-  CheckSingleSampledResult(
-    texture: GPUTexture,
-    rasterizationMask: number,
-    sampleMask: number,
-    fragmentShaderOutputMask: number
-  ) {
-    let expected: typeof kColors[number] = kEmptySample;
-
-    if (
-      // rasterization needs to cover the center of the pixel
-      (rasterizationMask & 15) >= 15 &&
-      // There is only one sample
-      (fragmentShaderOutputMask & sampleMask & 1) !== 0
-    ) {
-      // When full screen quad is drawn, Texel 3 is sampled at the pixel center
-      expected = kColors[3];
-    }
-
-    this.expectSingleColor(texture, format, {
-      size: [1, 1, 1],
-      exp: {
-        R: expected.R / 0xff,
-        G: expected.G / 0xff,
-        B: expected.B / 0xff,
-        A: expected.A / 0xff,
-      },
-    });
-  }
-
-  CheckMultiSampledResult(
+  CheckColorAttachmentResult(
     texture: GPUTexture,
     sampleCount: number,
     rasterizationMask: number,
@@ -339,39 +353,342 @@ class F extends GPUTest {
       B: 0,
       A: 0,
     };
-
-    assert(sampleCount === 4);
-    for (let i = 0; i < 4; i++) {
-      const m = rasterizationMask & sampleMask & fragmentShaderOutputMask & (1 << i);
-      // WebGPU only support up to 4 samples, so samples after the first 4 should be ignored.
-      const s = (m & 0xf) === 0 ? kEmptySample : kColors[i];
-      expected.R += s.R;
-      expected.G += s.G;
-      expected.B += s.B;
-      expected.A += s.A;
-    }
-
-    this.expectSinglePixelBetweenTwoValuesIn2DTexture(
-      texture,
-      format,
-      { x: 0, y: 0 },
-      {
-        exp: [
-          new Uint8Array([
-            Math.floor(expected.R / sampleCount),
-            Math.floor(expected.G / sampleCount),
-            Math.floor(expected.B / sampleCount),
-            Math.floor(expected.A / sampleCount),
-          ]),
-          new Uint8Array([
-            Math.ceil(expected.R / sampleCount),
-            Math.ceil(expected.G / sampleCount),
-            Math.ceil(expected.B / sampleCount),
-            Math.ceil(expected.A / sampleCount),
-          ]),
-        ],
+    if (sampleCount === 1) {
+      if (
+        // rasterization needs to cover the center of the pixel
+        (rasterizationMask & 15) >= 15 &&
+        // There is only one sample
+        (fragmentShaderOutputMask & sampleMask & 1) !== 0
+      ) {
+        // When full screen quad is drawn, Texel 3 is sampled at the pixel center
+        expected.R = kColors[3].R;
+        expected.G = kColors[3].G;
+        expected.B = kColors[3].B;
+        expected.A = kColors[3].A;
       }
-    );
+
+      this.expectSingleColor(texture, format, {
+        size: [1, 1, 1],
+        exp: {
+          R: expected.R / 0xff,
+          G: expected.G / 0xff,
+          B: expected.B / 0xff,
+          A: expected.A / 0xff,
+        },
+      });
+    } else {
+      assert(sampleCount === 4);
+      for (let i = 0; i < 4; i++) {
+        const m = rasterizationMask & sampleMask & fragmentShaderOutputMask & (1 << i);
+        // WebGPU only support up to 4 samples, so samples after the first 4 should be ignored.
+        const s = (m & 0xf) === 0 ? kEmptySample : kColors[i];
+        expected.R += s.R;
+        expected.G += s.G;
+        expected.B += s.B;
+        expected.A += s.A;
+      }
+
+      this.expectSinglePixelBetweenTwoValuesIn2DTexture(
+        texture,
+        format,
+        { x: 0, y: 0 },
+        {
+          exp: [
+            new Uint8Array([
+              Math.floor(expected.R / sampleCount),
+              Math.floor(expected.G / sampleCount),
+              Math.floor(expected.B / sampleCount),
+              Math.floor(expected.A / sampleCount),
+            ]),
+            new Uint8Array([
+              Math.ceil(expected.R / sampleCount),
+              Math.ceil(expected.G / sampleCount),
+              Math.ceil(expected.B / sampleCount),
+              Math.ceil(expected.A / sampleCount),
+            ]),
+          ],
+        }
+      );
+    }
+  }
+
+  CheckDepthStencilResult(
+    depthStencilTexture: GPUTexture,
+    sampleCount: number,
+    rasterizationMask: number,
+    sampleMask: number,
+    fragmentShaderOutputMask: number
+  ) {
+    const vertexModule = this.device.createShaderModule({
+      code: `
+        @vertex
+        fn main(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
+          var pos = array<vec2<f32>, 6>(
+              vec2<f32>( 1.0,  1.0),
+              vec2<f32>( 1.0, -1.0),
+              vec2<f32>(-1.0, -1.0),
+              vec2<f32>( 1.0,  1.0),
+              vec2<f32>(-1.0, -1.0),
+              vec2<f32>(-1.0,  1.0)
+            );
+
+          // z = 0.5, 0.0 (depth write value) < z < 1.0 (depth clear value)
+          return vec4<f32>(pos[VertexIndex], 0.5, 1.0);
+        }
+      `,
+    });
+    const fragmentModule = this.device.createShaderModule({
+      code: `
+        @fragment
+        fn main() -> @location(0) vec4<f32> {
+          return vec4<f32>(
+            ${kDepthStencilCheckColor.R / 0xff},
+            ${kDepthStencilCheckColor.G / 0xff},
+            ${kDepthStencilCheckColor.B / 0xff},
+            ${kDepthStencilCheckColor.A / 0xff}
+          );
+        }
+      `,
+    });
+
+    const depthTestPipeline = this.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: vertexModule,
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: fragmentModule,
+        entryPoint: 'main',
+        targets: [{ format }],
+      },
+      primitive: { topology: 'triangle-list' },
+      multisample: {
+        count: sampleCount,
+      },
+      depthStencil: {
+        format: depthStencilFormat,
+        depthWriteEnabled: false,
+        depthCompare: 'less',
+      },
+    });
+    const stencilTestPipeline = this.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: vertexModule,
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: fragmentModule,
+        entryPoint: 'main',
+        targets: [{ format }],
+      },
+      primitive: { topology: 'triangle-list' },
+      multisample: {
+        count: sampleCount,
+      },
+      depthStencil: {
+        format: depthStencilFormat,
+        depthWriteEnabled: false,
+        depthCompare: 'always',
+
+        stencilFront: {
+          compare: 'greater',
+          passOp: 'keep',
+        },
+      },
+    });
+
+    const depthTestRenderTargetTexture = this.device.createTexture({
+      format,
+      size: {
+        width: kRenderTargetSize,
+        height: kRenderTargetSize,
+        depthOrArrayLayers: 1,
+      },
+      sampleCount,
+      mipLevelCount: 1,
+      usage:
+        GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const depthTestResolveTargetTexture =
+      sampleCount === 1
+        ? null
+        : this.device.createTexture({
+            format,
+            size: {
+              width: kRenderTargetSize,
+              height: kRenderTargetSize,
+              depthOrArrayLayers: 1,
+            },
+            sampleCount: 1,
+            mipLevelCount: 1,
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+          });
+    const stencilTestRenderTargetTexture = this.device.createTexture({
+      format,
+      size: {
+        width: kRenderTargetSize,
+        height: kRenderTargetSize,
+        depthOrArrayLayers: 1,
+      },
+      sampleCount,
+      mipLevelCount: 1,
+      usage:
+        GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+    });
+    const stencilTestResolveTargetTexture =
+      sampleCount === 1
+        ? null
+        : this.device.createTexture({
+            format,
+            size: {
+              width: kRenderTargetSize,
+              height: kRenderTargetSize,
+              depthOrArrayLayers: 1,
+            },
+            sampleCount: 1,
+            mipLevelCount: 1,
+            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+          });
+
+    const depthTestRenderPassDescriptor: GPURenderPassDescriptor = {
+      colorAttachments: [
+        {
+          view: depthTestRenderTargetTexture.createView(),
+          resolveTarget: depthTestResolveTargetTexture?.createView(),
+
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+      depthStencilAttachment: {
+        view: depthStencilTexture.createView(),
+        depthLoadOp: 'load',
+        depthStoreOp: 'discard',
+        stencilLoadOp: 'load',
+        stencilStoreOp: 'discard',
+      },
+    };
+    const stencilTestRenderPassDescriptor: GPURenderPassDescriptor = {
+      colorAttachments: [
+        {
+          view: stencilTestRenderTargetTexture.createView(),
+          resolveTarget: stencilTestResolveTargetTexture?.createView(),
+
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+      depthStencilAttachment: {
+        view: depthStencilTexture.createView(),
+        depthLoadOp: 'load',
+        depthStoreOp: 'discard',
+        stencilLoadOp: 'load',
+        stencilStoreOp: 'discard',
+      },
+    };
+
+    const commandEncoder = this.device.createCommandEncoder();
+
+    // Render pass to test value in depth aspect.
+    // The depthTestPass draws only if depth value stays at 1.0 with no new depth value 0.0 written by sample.
+    const depthTestPass = commandEncoder.beginRenderPass(depthTestRenderPassDescriptor);
+    depthTestPass.setPipeline(depthTestPipeline);
+    depthTestPass.draw(6);
+    depthTestPass.end();
+
+    // Render pass to test value in stencil aspect.
+    // The stencilTestPass draws only if stencil value stays at 0 with no new stencil value written by sample.
+    const stencilTestPass = commandEncoder.beginRenderPass(stencilTestRenderPassDescriptor);
+    stencilTestPass.setPipeline(stencilTestPipeline);
+    stencilTestPass.setStencilReference(kStencilReferenceValue - 1);
+    stencilTestPass.draw(6);
+    stencilTestPass.end();
+
+    this.device.queue.submit([commandEncoder.finish()]);
+
+    const depthTestColorTexture =
+      sampleCount === 1 ? depthTestRenderTargetTexture : depthTestResolveTargetTexture;
+    assert(depthTestColorTexture !== null);
+    const stencilTestColorTexture =
+      sampleCount === 1 ? stencilTestRenderTargetTexture : stencilTestResolveTargetTexture;
+    assert(stencilTestColorTexture !== null);
+
+    const expected = { R: 0, G: 0, B: 0, A: 0 };
+    if (sampleCount === 1) {
+      const hasSample =
+        (rasterizationMask & 15) >= 15 && (fragmentShaderOutputMask & sampleMask & 1) !== 0;
+      if (!hasSample) {
+        expected.R = kDepthStencilCheckColor.R / 0xff;
+        expected.G = kDepthStencilCheckColor.G / 0xff;
+        expected.B = kDepthStencilCheckColor.B / 0xff;
+        expected.A = kDepthStencilCheckColor.A / 0xff;
+      }
+      this.expectSingleColor(depthTestColorTexture, format, {
+        size: [1, 1, 1],
+        exp: expected,
+      });
+
+      // Stencil result is only affected by rasterization mask.
+      const stencilExpected =
+        (rasterizationMask & 15) >= 15 ? kEmptySample : kDepthStencilCheckColor;
+      stencilExpected.R /= 0xff;
+      stencilExpected.G /= 0xff;
+      stencilExpected.B /= 0xff;
+      stencilExpected.A /= 0xff;
+      this.expectSingleColor(stencilTestColorTexture, format, {
+        size: [1, 1, 1],
+        exp: stencilExpected,
+      });
+    } else {
+      assert(sampleCount === 4);
+      for (let i = 0; i < 4; i++) {
+        const m = rasterizationMask & sampleMask & fragmentShaderOutputMask & (1 << i);
+        // WebGPU only support up to 4 samples, so samples after the first 4 should be ignored.
+        const s = (m & 0xf) === 0 ? kDepthStencilCheckColor : kEmptySample;
+        expected.R += s.R;
+        expected.G += s.G;
+        expected.B += s.B;
+        expected.A += s.A;
+      }
+
+      this.expectSinglePixelBetweenTwoValuesIn2DTexture(
+        depthTestColorTexture,
+        format,
+        { x: 0, y: 0 },
+        {
+          exp: [
+            new Uint8Array([
+              Math.floor(expected.R / sampleCount),
+              Math.floor(expected.G / sampleCount),
+              Math.floor(expected.B / sampleCount),
+              Math.floor(expected.A / sampleCount),
+            ]),
+            new Uint8Array([
+              Math.ceil(expected.R / sampleCount),
+              Math.ceil(expected.G / sampleCount),
+              Math.ceil(expected.B / sampleCount),
+              Math.ceil(expected.A / sampleCount),
+            ]),
+          ],
+        }
+      );
+
+      // Stencil result is only affected by rasterization mask.
+      const stencilExpected =
+        (rasterizationMask & 15) >= 15 ? kEmptySample : kDepthStencilCheckColor;
+      stencilExpected.R /= 0xff;
+      stencilExpected.G /= 0xff;
+      stencilExpected.B /= 0xff;
+      stencilExpected.A /= 0xff;
+      this.expectSingleColor(stencilTestColorTexture, format, {
+        size: [1, 1, 1],
+        exp: stencilExpected,
+      });
+    }
   }
 }
 
@@ -383,7 +700,6 @@ g.test('final_output')
 Tests that the final sample mask is the logical AND of all the relevant masks -- meaning that the samples
 not included in the final mask are discarded on any attachments including
 - color outputs
-TODO:
 - depth tests
 - stencil operations
 
@@ -444,23 +760,26 @@ what is expected given by the rasterization mask, sample mask, and fragment shad
   .fn(async t => {
     const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
 
-    const texture = await t.GetResolvedTargetTexture(
+    const { color, depthStencil } = await t.GetResolvedTargetTexture(
       sampleCount,
       rasterizationMask,
       sampleMask,
       fragmentShaderOutputMask
     );
 
-    if (sampleCount === 1) {
-      t.CheckSingleSampledResult(texture, rasterizationMask, sampleMask, fragmentShaderOutputMask);
-    } else {
-      assert(sampleCount === 4);
-      t.CheckMultiSampledResult(
-        texture,
-        sampleCount,
-        rasterizationMask,
-        sampleMask,
-        fragmentShaderOutputMask
-      );
-    }
+    t.CheckColorAttachmentResult(
+      color,
+      sampleCount,
+      rasterizationMask,
+      sampleMask,
+      fragmentShaderOutputMask
+    );
+
+    t.CheckDepthStencilResult(
+      depthStencil,
+      sampleCount,
+      rasterizationMask,
+      sampleMask,
+      fragmentShaderOutputMask
+    );
   });
