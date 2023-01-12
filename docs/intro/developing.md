@@ -57,12 +57,36 @@ The following url parameters change how the harness runs:
 
 ### Web Platform Tests (wpt) - Ref Tests
 
-Running ref tests is not possible with this repository alone. It depends on WPT test harness support.
-
-You can however inspect the actual and reference pages for web platform reftests in the standalone runner by navigating to them. For example, by loading:
+You can inspect the actual and reference pages for web platform reftests in the standalone
+runner by navigating to them. For example, by loading:
 
  - `http://localhost:8080/out/webgpu/web_platform/reftests/canvas_clear.https.html`
  - `http://localhost:8080/out/webgpu/web_platform/reftests/ref/canvas_clear-ref.html`
+
+You can also run a minimal ref test runner.
+
+ - open 2 terminals / command lines.
+ - in one, `npm start`
+ - in the other, `node tools/run_wpt_ref_tests <path-to-browser-executable> [name-of-test]`
+
+Without `[name-of-test]` all ref tests will be run. `[name-of-test]` is just a simple check for
+substring so passing in `rgba` will run every test with `rgba` in its filename.
+
+Examples:
+
+MacOS
+
+```
+# Chrome
+node tools/run_wpt_ref_tests /Applications/Google\ Chrome\ Canary.app/Contents/MacOS/Google\ Chrome\ Canary
+```
+
+Windows
+
+```
+# Chrome
+node .\tools\run_wpt_ref_tests "C:\Users\your-user-name\AppData\Local\Google\Chrome SxS\Application\chrome.exe"
+```
 
 ## Editor
 
