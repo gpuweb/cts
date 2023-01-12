@@ -167,9 +167,15 @@ export function sortObjectByKey(v) {
 
 /**
  * Determines whether two JS values are equal, recursing into objects and arrays.
+ * NaN is treated specially, such that `objectEquals(NaN, NaN)`.
  */
 export function objectEquals(x, y) {
-  if (typeof x !== 'object' || typeof y !== 'object') return x === y;
+  if (typeof x !== 'object' || typeof y !== 'object') {
+    if (typeof x === 'number' && typeof y === 'number' && Number.isNaN(x) && Number.isNaN(y)) {
+      return true;
+    }
+    return x === y;
+  }
   if (x === null || y === null) return x === y;
   if (x.constructor !== y.constructor) return false;
   if (x instanceof Function) return x === y;
