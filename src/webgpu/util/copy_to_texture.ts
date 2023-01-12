@@ -117,15 +117,16 @@ export class CopyToTextureUtils extends GPUTest {
     const reifyDstSize = reifyExtent3D(dstSize);
     const reifySubRectSize = reifyExtent3D(subRectSize);
 
+    assert(
+      reifyDstOrigin.x + reifySubRectSize.width <= reifyDstSize.width &&
+        reifyDstOrigin.y + reifySubRectSize.height <= reifyDstSize.height,
+      'subrect is out of bounds'
+    );
+
     const divide = 255.0;
     return TexelView.fromTexelsAsColors(
       format,
       coords => {
-        assert(
-          reifyDstOrigin.x + reifySubRectSize.width <= reifyDstSize.width &&
-            reifyDstOrigin.y + reifySubRectSize.height <= reifyDstSize.height,
-          'subrect is out of bounds'
-        );
         assert(
           coords.x >= reifyDstOrigin.x &&
             coords.y >= reifyDstOrigin.y &&
@@ -135,15 +136,17 @@ export class CopyToTextureUtils extends GPUTest {
           'out of bounds'
         );
         // Map dst coords to get candidate src pixel position in y.
-        let src_y = coords.y - reifyDstOrigin.y + reifySrcOrigin.y;
+        let yInSubRect = coords.y - reifyDstOrigin.y;
 
         // If srcDoFlipYDuringCopy is true, a flipY op has been applied to src during copy.
-        // WebGPU spec requires origin option relative to the top-left corner of the source image, increasing downward consistently.
+        // WebGPU spec requires origin option relative to the top-left corner of the source image,
+        // increasing downward consistently.
         // https://www.w3.org/TR/webgpu/#dom-gpuimagecopyexternalimage-flipy
         // Flip only happens in copy rect contents and src origin always top-left.
         // Get candidate src pixel position in y by mirroring in copy sub rect.
-        if (srcDoFlipYDuringCopy)
-          src_y = reifySubRectSize.height - (src_y - reifySrcOrigin.y) - 1 + reifySrcOrigin.y;
+        if (srcDoFlipYDuringCopy) yInSubRect = reifySubRectSize.height - 1 - yInSubRect;
+
+        let src_y = yInSubRect + reifySrcOrigin.y;
 
         // Test might generate flipped source based on srcPixels, e.g. Create ImageBitmap based on srcPixels but set orientation to 'flipY'
         // Get candidate src pixel position in y by mirroring in source.

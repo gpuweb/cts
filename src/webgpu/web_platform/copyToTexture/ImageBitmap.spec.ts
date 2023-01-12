@@ -547,6 +547,7 @@ g.test('copy_subrect_from_2D_Canvas')
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
+    const flipSrcBeforeCopy = orientation === 'flipY';
     const texelViewExpected = t.getExpectedDstPixelsFromSrcPixels({
       srcPixels: imageData.data,
       srcOrigin,
@@ -555,7 +556,7 @@ g.test('copy_subrect_from_2D_Canvas')
       dstSize,
       subRectSize: copyExtent,
       format: kColorFormat,
-      flipSrcBeforeCopy: false,
+      flipSrcBeforeCopy,
       srcDoFlipYDuringCopy,
       conversion: {
         srcPremultiplied: false,
