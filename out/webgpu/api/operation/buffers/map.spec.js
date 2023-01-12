@@ -471,11 +471,14 @@ fn(async (t) => {
 
   // If buffer is already mapped test mapAsync on already mapped buffer
   if (buffer.mapState === 'mapped') {
-    // mapAsync on already mapped buffer won't change the map state
-    const promise = buffer.mapAsync(GPUMapMode.WRITE);
+    // mapAsync on already mapped buffer must be rejected with a validation error
+    // and the map state must keep 'mapped'
+    let promise;
+    t.expectValidationError(() => {
+      promise = buffer.mapAsync(GPUMapMode.WRITE);
+    }, true);
     t.expect(buffer.mapState === 'mapped');
 
-    // mapAsync on already mapped buffer must reject and the map state must keep 'mapped'
     try {
       await promise;
       t.fail('mapAsync on already mapped buffer must not succeed.');
