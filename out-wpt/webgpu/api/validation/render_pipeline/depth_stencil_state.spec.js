@@ -12,6 +12,7 @@ import {
   kCompareFunctions,
   kStencilOperations,
 } from '../../../capability_info.js';
+import { getFragmentShaderCodeWithOutput } from '../../../util/shader.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
 
@@ -84,6 +85,35 @@ g.test('depth_write')
       depthStencil: { format, depthWriteEnabled },
     });
     t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
+  });
+
+g.test('depth_write,frag_depth')
+  .desc(`Depth aspect must be contained in the format if frag_depth is written in fragment stage.`)
+  .params(u =>
+    u.combine('isAsync', [false, true]).combine('format', [undefined, ...kDepthStencilFormats])
+  )
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    if (format !== undefined) {
+      const info = kTextureFormatInfo[format];
+      t.selectDeviceOrSkipTestCase(info.feature);
+    }
+  })
+  .fn(async t => {
+    const { isAsync, format } = t.params;
+
+    const descriptor = t.getDescriptor({
+      // Keep one color target so that the pipeline is still valid with no depth stencil target.
+      targets: [{ format: 'rgba8unorm' }],
+      depthStencil: format ? { format, depthWriteEnabled: true } : undefined,
+      fragmentShaderCode: getFragmentShaderCodeWithOutput(
+        [{ values: [1, 1, 1, 1], plainType: 'f32', componentCount: 4 }],
+        { value: 0.5 }
+      ),
+    });
+
+    const hasDepth = format ? kTextureFormatInfo[format].depth : false;
+    t.doCreateRenderPipelineTest(isAsync, hasDepth, descriptor);
   });
 
 g.test('stencil_test')

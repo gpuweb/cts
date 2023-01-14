@@ -75,17 +75,28 @@ export function getPlainTypeInfo(sampleType) {
  *     return Outputs(vec4<f32>(1.0, 0.0, 1.0, 1.0), vec4<u32>(1, 2));
  * }
  * ```
+ *
+ * If fragDepth is given there will be an extra @builtin(frag_depth) output with the specified value assigned.
+ *
  * @param outputs the shader outputs for each location attribute
+ * @param fragDepth the shader outputs frag_depth value (optional)
  * @returns the fragment shader string
  */
 export function getFragmentShaderCodeWithOutput(
-outputs)
+outputs,
 
 
 
 
+fragDepth = null)
 {
   if (outputs.length === 0) {
+    if (fragDepth) {
+      return `
+        @fragment fn main() -> @builtin(frag_depth) f32 {
+          return ${fragDepth.value.toFixed(kPlainTypeInfo['f32'].fractionDigits)};
+        }`;
+    }
     return `
         @fragment fn main() {
         }`;
@@ -93,6 +104,11 @@ outputs)
 
   const resultStrings = [];
   let outputStructString = '';
+
+  if (fragDepth) {
+    resultStrings.push(`${fragDepth.value.toFixed(kPlainTypeInfo['f32'].fractionDigits)}`);
+    outputStructString += `@builtin(frag_depth) depth_out: f32,\n`;
+  }
 
   for (let i = 0; i < outputs.length; i++) {
     const o = outputs[i];
