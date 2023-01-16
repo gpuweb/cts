@@ -1,13 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import { chromium, firefox, webkit, Page } from 'playwright-core';
-import { PNG } from 'pngjs';
+import { chromium, firefox, webkit, Page, Browser } from 'playwright-core';
+
+import { ScreenshotManager, readPng, writePng } from './image_utils.js';
 
 declare function wptRefTestPageReady(): boolean;
 declare function wptRefTestGetTimeout(): boolean;
 
-const verbose = false;
+const verbose = !!process.env.VERBOSE;
 const kRefTestsBaseURL = 'http://localhost:8080/out/webgpu/web_platform/reftests';
 const kRefTestsPath = 'src/webgpu/web_platform/reftests';
 const kScreenshotPath = 'out-wpt-reftest-screenshots';
@@ -60,43 +61,66 @@ function readHTMLFile(filename: string): FileInfo {
   };
 }
 
+/**
+ * This is workaround for a bug in Chrome. The bug is when in emulation mode
+ * Chrome lets you set a devicePixelRatio but Chrome still renders in the
+ * actual devicePixelRatio, at least on MacOS.
+ * So, we compute the ratio and then use that.
+ */
+async function getComputedDevicePixelRatio(browser: Browser): Promise<number> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto('data:text/html,<html></html>');
+  await page.waitForLoadState('networkidle');
+  const devicePixelRatio = await page.evaluate(() => {
+    let resolve: (v: number) => void;
+    const promise = new Promise(_resolve => (resolve = _resolve));
+    const observer = new ResizeObserver(entries => {
+      const devicePixelWidth = entries[0].devicePixelContentBoxSize[0].inlineSize;
+      const clientWidth = entries[0].target.clientWidth;
+      const devicePixelRatio = devicePixelWidth / clientWidth;
+      resolve(devicePixelRatio);
+    });
+    observer.observe(document.documentElement);
+    return promise;
+  });
+  await page.close();
+  await context.close();
+  return devicePixelRatio as number;
+}
+
 // Note: If possible, rather then start adding command line options to this tool,
 // see if you can just make it work based off the path.
-function getBrowserInterface(executablePath: string) {
+async function getBrowserInterface(executablePath: string) {
   const lc = executablePath.toLowerCase();
   if (lc.includes('chrom')) {
-    return chromium.launch({
+    const browser = await chromium.launch({
       executablePath,
       headless: false,
       args: ['--enable-unsafe-webgpu'],
     });
+    const devicePixelRatio = await getComputedDevicePixelRatio(browser);
+    const context = await browser.newContext({
+      deviceScaleFactor: devicePixelRatio,
+    });
+    return { browser, context };
   } else if (lc.includes('firefox')) {
-    return firefox.launch({
+    const browser = await firefox.launch({
       executablePath,
       headless: false,
     });
+    const context = await browser.newContext();
+    return { browser, context };
   } else if (lc.includes('safari') || lc.includes('webkit')) {
-    return webkit.launch({
+    const browser = await webkit.launch({
       executablePath,
       headless: false,
     });
+    const context = await browser.newContext();
+    return { browser, context };
   } else {
     throw new Error(`could not guess browser from executable path: ${executablePath}`);
   }
-}
-
-function readPng(filename: string) {
-  const data = fs.readFileSync(filename);
-  return PNG.sync.read(data);
-}
-
-function writePng(filename: string, width: number, height: number, data: Buffer) {
-  const png = new PNG({ colorType: 6, width, height });
-  for (let i = 0; i < data.byteLength; ++i) {
-    png.data[i] = data[i];
-  }
-  const buffer = PNG.sync.write(png);
-  fs.writeFileSync(filename, buffer);
 }
 
 // Parses a fuzzy spec as defined here
@@ -131,7 +155,8 @@ async function compareImages(
   filename1: string,
   filename2: string,
   fuzzy: string,
-  diffName: string
+  diffName: string,
+  startingRow: number = 0
 ) {
   const img1 = readPng(filename1);
   const img2 = readPng(filename2);
@@ -149,7 +174,7 @@ async function compareImages(
   const kWhite = 0xffffffff;
 
   let numDifferent = 0;
-  for (let y = 0; y < height; ++y) {
+  for (let y = startingRow; y < height; ++y) {
     for (let x = 0; x < width; ++x) {
       const offset = y * width + x;
       let bad = false;
@@ -190,12 +215,8 @@ function exists(filename: string) {
   }
 }
 
-async function runPageAndTakeScreenshot(
-  page: Page,
-  url: string,
-  refWait: boolean,
-  screenshotName: string
-) {
+// returns true if the page timed out.
+async function runPage(page: Page, url: string, refWait: boolean) {
   console.log('  loading:', url);
   await page.goto(url);
   await page.waitForLoadState('domcontentloaded');
@@ -206,7 +227,6 @@ async function runPageAndTakeScreenshot(
       return true;
     }
   }
-  await page.screenshot({ path: screenshotName });
   return false;
 }
 
@@ -237,9 +257,11 @@ async function main() {
     return;
   }
 
-  const browser = await getBrowserInterface(executablePath);
-  const context = await browser.newContext();
+  const { browser, context } = await getBrowserInterface(executablePath);
   const page = await context.newPage();
+
+  const screenshotManager = new ScreenshotManager();
+  await screenshotManager.init(page);
 
   if (verbose) {
     page.on('console', async msg => {
@@ -266,7 +288,26 @@ async function main() {
     `,
   });
 
-  const results = [];
+  type Result = {
+    status: string;
+    testName: string;
+    refName: string;
+    testScreenshotName: string;
+    refScreenshotName: string;
+    diffName: string;
+  };
+  const results: Result[] = [];
+  const addResult = (
+    status: string,
+    testName: string,
+    refName: string,
+    testScreenshotName: string = '',
+    refScreenshotName: string = '',
+    diffName: string = ''
+  ) => {
+    results.push({ status, testName, refName, testScreenshotName, refScreenshotName, diffName });
+  };
+
   for (const testName of testNames) {
     console.log('processing:', testName);
     const { refLink, refWait, fuzzy } = readHTMLFile(path.join(kRefTestsPath, testName));
@@ -285,33 +326,96 @@ async function main() {
     const refScreenshotName = path.join(kScreenshotPath, `${testName}-expected.png`);
     const diffName = path.join(kScreenshotPath, `${testName}-diff.png`);
 
-    const timeoutTest = await runPageAndTakeScreenshot(page, testURL, refWait, testScreenshotName);
+    const timeoutTest = await runPage(page, testURL, refWait);
     if (timeoutTest) {
-      console.log('TIMEOUT');
-      results.push(`[ TIMEOUT ] ${testName}`);
+      addResult('TIMEOUT', testName, refLink);
       continue;
     }
+    await screenshotManager.takeScreenshot(page, testScreenshotName);
 
-    const timeoutRef = await runPageAndTakeScreenshot(
-      page,
-      refURL,
-      refFileInfo.refWait,
-      refScreenshotName
-    );
+    const timeoutRef = await runPage(page, refURL, refFileInfo.refWait);
     if (timeoutRef) {
-      console.log('TIMEOUT');
-      results.push(`[ TIMEOUT ] ${refLink}`);
+      addResult('TIMEOUT', testName, refLink);
       continue;
     }
+    await screenshotManager.takeScreenshot(page, refScreenshotName);
 
     const pass = await compareImages(testScreenshotName, refScreenshotName, fuzzy, diffName);
-    results.push(`[ ${pass ? 'PASS   ' : 'FAILURE'} ] ${testName}`);
+    addResult(
+      pass ? 'PASS' : 'FAILURE',
+      testName,
+      refLink,
+      testScreenshotName,
+      refScreenshotName,
+      diffName
+    );
   }
 
-  console.log(`----results----\n${results.join('\n')}`);
+  console.log(
+    `----results----\n${results
+      .map(({ status, testName }) => `[ ${status.padEnd(7)} ] ${testName}`)
+      .join('\n')}`
+  );
+
+  const imgLink = (filename: string, title: string) => {
+    const name = path.basename(filename);
+    return `
+    <div class="screenshot">
+      ${title}
+      <a href="${name}" title="${name}">
+        <img src="${name}" width="256"/>
+      </a>
+    </div>`;
+  };
+
+  const indexName = path.join(kScreenshotPath, 'index.html');
+  fs.writeFileSync(
+    indexName,
+    `<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+    .screenshot {
+      display: inline-block;
+      background: #CCC;
+      margin-right: 5px;
+      padding: 5px;
+    }
+    .screenshot a {
+      display: block;
+    }
+    .screenshot
+    </style>
+  </head>
+  <body>
+  ${results
+    .map(({ status, testName, refName, testScreenshotName, refScreenshotName, diffName }) => {
+      return `
+        <div>
+           <div>[ ${status} ]: ${testName} ref: ${refName}</div>
+           ${
+             status === 'FAILURE'
+               ? `${imgLink(testScreenshotName, 'actual')}
+                  ${imgLink(refScreenshotName, 'ref')}
+                  ${imgLink(diffName, 'diff')}`
+               : ``
+           }
+        </div>
+        <hr>
+      `;
+    })
+    .join('\n')}
+  </body>
+</html>
+  `
+  );
+
+  // the file:// with an absolute path makes it clickable in some terminals
+  console.log(`\nsee: file://${path.resolve(indexName)}\n`);
 
   await page.close();
   await context.close();
+  // I have no idea why it's taking ~30 seconds for playwright to close.
   console.log('-- [ done: waiting for browser to close ] --');
   await browser.close();
 }
