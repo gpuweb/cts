@@ -144,18 +144,7 @@ if (verbose) {
 (async () => {
   Logger.globalDebugMode = verbose;
   const log = new Logger();
-  const testcases = allWebGPUTestcases();
-
-  async function allWebGPUTestcases() {
-    const webgpuQuery = parseQuery('webgpu:*');
-    const loader = new DefaultTestFileLoader();
-    const map = new Map();
-    for (const testcase of await loader.loadCases(webgpuQuery)) {
-      const name = testcase.query.toString();
-      map.set(name, testcase);
-    }
-    return map;
-  }
+  const testcases = new Map();
 
   async function runTestcase(
   testcase,
@@ -174,13 +163,28 @@ if (verbose) {
       return;
     }
 
+    const loadCasesPrefix = '/load?';
     const runPrefix = '/run?';
     const terminatePrefix = '/terminate';
 
-    if (request.url.startsWith(runPrefix)) {
+    if (request.url.startsWith(loadCasesPrefix)) {
+      const query = request.url.substr(loadCasesPrefix.length);
+      try {
+        const webgpuQuery = parseQuery(query);
+        const loader = new DefaultTestFileLoader();
+        for (const testcase of await loader.loadCases(webgpuQuery)) {
+          testcases.set(testcase.query.toString(), testcase);
+        }
+        response.statusCode = 200;
+        response.end();
+      } catch (err) {
+        response.statusCode = 500;
+        response.end(`load failed with error: ${err}\n${err.stack}`);
+      }
+    } else if (request.url.startsWith(runPrefix)) {
       const name = request.url.substr(runPrefix.length);
       try {
-        const testcase = (await testcases).get(name);
+        const testcase = testcases.get(name);
         if (testcase) {
           if (codeCoverage !== undefined) {
             codeCoverage.begin();
