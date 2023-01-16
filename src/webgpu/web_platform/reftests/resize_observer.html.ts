@@ -4,6 +4,8 @@ import { runRefTest } from './gpu_ref_test.js';
 runRefTest(async t => {
   const { patternSize, imageData: patternImageData } = createPatternDataURL();
 
+  document.querySelector('#dpr')!.textContent = `dpr: ${devicePixelRatio}`;
+
   const device = t.device;
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
 
@@ -70,6 +72,7 @@ runRefTest(async t => {
   ) {
     canvas.width = devicePixelWidth;
     canvas.height = devicePixelHeight;
+
     const context = canvas.getContext('webgpu') as GPUCanvasContext;
     context.configure({
       device,
@@ -121,6 +124,9 @@ runRefTest(async t => {
 
   const outerElem = document.querySelector('.outer')!;
 
+  let resolve: (value: unknown) => void;
+  const promise = new Promise(_resolve => (resolve = _resolve));
+
   function setPatternsUsingSizeInfo(entries: ResizeObserverEntry[]) {
     for (const entry of entries) {
       setCanvasPattern(
@@ -129,6 +135,7 @@ runRefTest(async t => {
         entry.devicePixelContentBoxSize[0].blockSize
       );
     }
+    resolve(true);
   }
 
   const observer = new ResizeObserver(setPatternsUsingSizeInfo);
@@ -138,4 +145,6 @@ runRefTest(async t => {
     observer.observe(canvasElem, { box: 'device-pixel-content-box' });
     outerElem.appendChild(canvasElem);
   }
+
+  await promise;
 });
