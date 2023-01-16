@@ -2598,6 +2598,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "semicolon"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "source"
     ]
   },
