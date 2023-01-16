@@ -21,6 +21,18 @@ const kValidLocationTypes = new Set([
   'vec4<f32>',
   'vec4<i32>',
   'vec4<u32>',
+  'vec2h',
+  'vec2f',
+  'vec2i',
+  'vec2u',
+  'vec3h',
+  'vec3f',
+  'vec3i',
+  'vec3u',
+  'vec4h',
+  'vec4f',
+  'vec4i',
+  'vec4u',
   'MyAlias',
 ]);
 
@@ -38,6 +50,24 @@ const kInvalidLocationTypes = new Set([
   'mat4x2<f32>',
   'mat4x3<f32>',
   'mat4x4<f32>',
+  'mat2x2f',
+  'mat2x3f',
+  'mat2x4f',
+  'mat3x2f',
+  'mat3x3f',
+  'mat3x4f',
+  'mat4x2f',
+  'mat4x3f',
+  'mat4x4f',
+  'mat2x2h',
+  'mat2x3h',
+  'mat2x4h',
+  'mat3x2h',
+  'mat3x3h',
+  'mat3x4h',
+  'mat4x2h',
+  'mat4x3h',
+  'mat4x4h',
   'array<f32, 12>',
   'array<i32, 12>',
   'array<u32, 12>',
@@ -101,23 +131,22 @@ g.test('type')
       .beginSubcases()
   )
   .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
+    if (
+      t.params.type === 'f16' ||
+      ((t.params.type.startsWith('mat') || t.params.type.startsWith('vec')) &&
+        t.params.type.endsWith('h'))
+    ) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
-    if (
-      t.params.use_struct &&
-      (t.params.type.startsWith('texture') || t.params.type.startsWith('sampler'))
-    ) {
-      t.skip('texture, and sampler types can not be placed in structs');
-    } else if (!t.params.use_struct && t.params.type.startsWith('atomic')) {
-      t.skip('non-constructable parameters are not allowed');
-    }
-
     let code = '';
 
-    if (t.params.type === 'f16') {
+    if (
+      t.params.type === 'f16' ||
+      ((t.params.type.startsWith('mat') || t.params.type.startsWith('vec')) &&
+        t.params.type.endsWith('h'))
+    ) {
       code += 'enable f16;\n';
     }
 
