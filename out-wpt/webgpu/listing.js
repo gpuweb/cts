@@ -2614,6 +2614,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "static_assert"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "var_and_let"
     ]
   },
@@ -2671,6 +2679,14 @@ export const listing = [
       "validation",
       "shader_io",
       "shareable_types"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "static_assert",
+      "static_assert"
     ]
   },
   {
