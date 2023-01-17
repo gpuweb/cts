@@ -13,6 +13,7 @@ import {
   VectorType,
   f32,
   u32,
+  i32,
 } from '../../../util/conversion.js';
 import {
   BinaryToInterval,
@@ -973,4 +974,32 @@ export function generateU32ToVectorCases(
   return params
     .map(e => makeU32ToVectorCase(e, filter, ...ops))
     .filter((c): c is Case => c !== undefined);
+}
+
+/**
+ * A function that performs a binary operation on x and y, and returns the expected
+ * result, or undefined if the operation is invalid for the given inputs.
+ */
+export interface BinaryToI32Op {
+  (x: number, y: number): number | undefined;
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToI32Cases(
+  params0s: number[],
+  params1s: number[],
+  op: BinaryToI32Op
+) {
+  return cartesianProduct(params0s, params1s).reduce((cases, e) => {
+    const expected = op(e[0], e[1]);
+    if (expected !== undefined) {
+      cases.push({ input: [i32(e[0]), i32(e[1])], expected: i32(expected) });
+    }
+    return cases;
+  }, new Array<Case>());
 }

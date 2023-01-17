@@ -12,7 +12,8 @@ TypeU32,
 Vector,
 VectorType,
 f32,
-u32 } from
+u32,
+i32 } from
 '../../../util/conversion.js';
 import {
 
@@ -973,5 +974,33 @@ filter,
   return params.
   map((e) => makeU32ToVectorCase(e, filter, ...ops)).
   filter((c) => c !== undefined);
+}
+
+/**
+ * A function that performs a binary operation on x and y, and returns the expected
+ * result, or undefined if the operation is invalid for the given inputs.
+ */
+
+
+
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToI32Cases(
+params0s,
+params1s,
+op)
+{
+  return cartesianProduct(params0s, params1s).reduce((cases, e) => {
+    const expected = op(e[0], e[1]);
+    if (expected !== undefined) {
+      cases.push({ input: [i32(e[0]), i32(e[1])], expected: i32(expected) });
+    }
+    return cases;
+  }, new Array());
 }
 //# sourceMappingURL=expression.js.map
