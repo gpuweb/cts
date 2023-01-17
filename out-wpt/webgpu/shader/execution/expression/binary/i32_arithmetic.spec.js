@@ -34,10 +34,10 @@ export const d = makeCaseCache('binary/i32_arithmetic', {
   division_non_const: () => {
     return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), (x, y) => {
       if (y === 0) {
-        return 0;
+        return x;
       }
       if (x === kValue.i32.negative.min && y === -1) {
-        return 0;
+        return x;
       }
       return x / y;
     });

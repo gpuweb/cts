@@ -33,7 +33,7 @@ export const d = makeCaseCache('binary/i32_arithmetic', {
   division_non_const: () => {
     return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), (x, y) => {
       if (y === 0) {
-        return 0;
+        return x;
       }
       return x / y;
     });
