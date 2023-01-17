@@ -2459,6 +2459,15 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "unary",
+      "i32_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "memory_model",
       "atomicity"
     ]
