@@ -1035,4 +1035,28 @@ op)
     return cases;
   }, new Array());
 }
+
+
+
+
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToU32Cases(
+params0s,
+params1s,
+op)
+{
+  return cartesianProduct(params0s, params1s).reduce((cases, e) => {
+    const expected = op(e[0], e[1]);
+    if (expected !== undefined) {
+      cases.push({ input: [u32(e[0]), u32(e[1])], expected: u32(expected) });
+    }
+    return cases;
+  }, new Array());
+}
 //# sourceMappingURL=expression.js.map

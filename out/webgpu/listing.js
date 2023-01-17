@@ -1361,6 +1361,15 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "binary",
+      "u32_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "call",
       "builtin",
       "abs"
