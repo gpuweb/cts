@@ -1806,7 +1806,7 @@ export function refractInterval(i, s, r) {
   const one_minus_dot_squared = subtractionInterval(1, dot_squared);
   const k = subtractionInterval(1.0, multiplicationInterval(r_squared, one_minus_dot_squared));
 
-  if (k.containsZeroOrSubnormals()) {
+  if (!k.isFinite() || k.containsZeroOrSubnormals()) {
     // There is a discontinuity at k == 0, due to sqrt(k) being calculated, so exiting early
     return kAnyVector[toF32Vector(i).length];
   }
