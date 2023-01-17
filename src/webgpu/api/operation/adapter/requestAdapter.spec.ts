@@ -74,7 +74,7 @@ async function testAdapter(adapter: GPUAdapter | null) {
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.dispatch(kNumElements);
+  pass.dispatchWorkgroups(kNumElements);
   pass.end();
 
   encoder.copyBufferToBuffer(buffer, 0, resultBuffer, 0, kBufferSize);

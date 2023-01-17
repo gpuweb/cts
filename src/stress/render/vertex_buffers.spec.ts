@@ -45,7 +45,7 @@ function createHugeVertexBuffer(t: GPUTest, size: number) {
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.dispatch(size);
+  pass.dispatchWorkgroups(size);
   pass.end();
 
   const vertexBuffer = t.device.createBuffer({

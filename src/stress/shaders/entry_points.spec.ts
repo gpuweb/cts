@@ -69,7 +69,7 @@ a shader, in which case this would become a validation test instead.`
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindGroup);
-      pass.dispatch(1);
+      pass.dispatchWorkgroups(1);
       pass.end();
     });
 
