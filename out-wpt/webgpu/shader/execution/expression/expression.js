@@ -594,9 +594,13 @@ function makeUnaryToF32IntervalCase(param, filter, ...ops) {
  *            unary operation
  */
 export function generateUnaryToF32IntervalCases(params, filter, ...ops) {
-  return params
-    .map(e => makeUnaryToF32IntervalCase(e, filter, ...ops))
-    .filter(c => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeUnaryToF32IntervalCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -628,9 +632,13 @@ function makeBinaryToF32IntervalCase(param0, param1, filter, ...ops) {
  *            binary operation
  */
 export function generateBinaryToF32IntervalCases(param0s, param1s, filter, ...ops) {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops))
-    .filter(c => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -668,9 +676,13 @@ function makeTernaryToF32IntervalCase(param0, param1, param2, filter, ...ops) {
  *            ternary operation.
  */
 export function generateTernaryToF32IntervalCases(param0s, param1s, param2s, filter, ...ops) {
-  return cartesianProduct(param0s, param1s, param2s)
-    .map(e => makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops))
-    .filter(c => c !== undefined);
+  return cartesianProduct(param0s, param1s, param2s).reduce((cases, e) => {
+    const c = makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -702,9 +714,13 @@ function makeVectorToF32IntervalCase(param, filter, ...ops) {
  *            vector.
  */
 export function generateVectorToF32IntervalCases(params, filter, ...ops) {
-  return params
-    .map(e => makeVectorToF32IntervalCase(e, filter, ...ops))
-    .filter(c => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeVectorToF32IntervalCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -740,9 +756,13 @@ function makeVectorPairToF32IntervalCase(param0, param1, filter, ...ops) {
  *            pair of vectors.
  */
 export function generateVectorPairToF32IntervalCases(param0s, param1s, filter, ...ops) {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeVectorPairToF32IntervalCase(e[0], e[1], filter, ...ops))
-    .filter(c => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeVectorPairToF32IntervalCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -774,7 +794,13 @@ function makeVectorToVectorCase(param, filter, ...ops) {
  *            intervals for a vector.
  */
 export function generateVectorToVectorCases(params, filter, ...ops) {
-  return params.map(e => makeVectorToVectorCase(e, filter, ...ops)).filter(c => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeVectorToVectorCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -810,9 +836,13 @@ function makeVectorPairToVectorCase(param0, param1, filter, ...ops) {
  *            intervals for a pair of vectors.
  */
 export function generateVectorPairToVectorCases(param0s, param1s, filter, ...ops) {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeVectorPairToVectorCase(e[0], e[1], filter, ...ops))
-    .filter(c => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**
@@ -846,7 +876,13 @@ function makeU32ToVectorCase(param, filter, ...ops) {
  *            interval for an unsigned int.
  */
 export function generateU32ToVectorCases(params, filter, ...ops) {
-  return params.map(e => makeU32ToVectorCase(e, filter, ...ops)).filter(c => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeU32ToVectorCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
 }
 
 /**

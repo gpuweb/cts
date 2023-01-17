@@ -651,9 +651,13 @@ export function generateUnaryToF32IntervalCases(
   filter: IntervalFilter,
   ...ops: PointToInterval[]
 ): Case[] {
-  return params
-    .map(e => makeUnaryToF32IntervalCase(e, filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeUnaryToF32IntervalCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -695,9 +699,13 @@ export function generateBinaryToF32IntervalCases(
   filter: IntervalFilter,
   ...ops: BinaryToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -747,9 +755,13 @@ export function generateTernaryToF32IntervalCases(
   filter: IntervalFilter,
   ...ops: TernaryToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s, param2s)
-    .map(e => makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return cartesianProduct(param0s, param1s, param2s).reduce((cases, e) => {
+    const c = makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -789,9 +801,13 @@ export function generateVectorToF32IntervalCases(
   filter: IntervalFilter,
   ...ops: VectorToInterval[]
 ): Case[] {
-  return params
-    .map(e => makeVectorToF32IntervalCase(e, filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeVectorToF32IntervalCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -837,9 +853,13 @@ export function generateVectorPairToF32IntervalCases(
   filter: IntervalFilter,
   ...ops: VectorPairToInterval[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeVectorPairToF32IntervalCase(e[0], e[1], filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeVectorPairToF32IntervalCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -879,9 +899,13 @@ export function generateVectorToVectorCases(
   filter: IntervalFilter,
   ...ops: VectorToVector[]
 ): Case[] {
-  return params
-    .map(e => makeVectorToVectorCase(e, filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeVectorToVectorCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -927,9 +951,13 @@ export function generateVectorPairToVectorCases(
   filter: IntervalFilter,
   ...ops: VectorPairToVector[]
 ): Case[] {
-  return cartesianProduct(param0s, param1s)
-    .map(e => makeVectorPairToVectorCase(e[0], e[1], filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
@@ -971,9 +999,13 @@ export function generateU32ToVectorCases(
   filter: IntervalFilter,
   ...ops: PointToVector[]
 ): Case[] {
-  return params
-    .map(e => makeU32ToVectorCase(e, filter, ...ops))
-    .filter((c): c is Case => c !== undefined);
+  return params.reduce((cases, e) => {
+    const c = makeU32ToVectorCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
 }
 
 /**
