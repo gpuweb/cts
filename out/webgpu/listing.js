@@ -2686,14 +2686,6 @@ export const listing = [
     "file": [
       "shader",
       "validation",
-      "shader_io",
-      "shareable_types"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
       "static_assert",
       "static_assert"
     ]
