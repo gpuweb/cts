@@ -114,7 +114,7 @@ function readPixelsFrom2DCanvasAndCompare(
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
   expect: Uint8ClampedArray
 ) {
-  const actual = ctx.getImageData(0, 0, 2, 2).data;
+  const actual = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data;
 
   t.expectOK(checkElementsEqual(actual, expect));
 }
@@ -325,7 +325,64 @@ g.test('drawTo2DCanvas')
       t.skip(canvas2DType + ' canvas cannot get 2d context');
       return;
     }
-    ctx.drawImage(canvas, 0, 0);
 
+    ctx.drawImage(canvas, 0, 0);
     readPixelsFrom2DCanvasAndCompare(t, ctx, expect[t.params.alphaMode]);
+  });
+
+g.test('transferToImageBitmap_unconfigured_nonzero_size')
+  .desc(
+    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is not empty`
+  )
+  .fn(t => {
+    const canvas = createCanvas(t, 'offscreen', 2, 3);
+    canvas.getContext('webgpu');
+
+    // Transferring gives an ImageBitmap of the correct size filled with transparent black.
+    const ib = canvas.transferToImageBitmap();
+    t.expect(ib.width === canvas.width);
+    t.expect(ib.height === canvas.height);
+
+    const readbackCanvas = document.createElement('canvas');
+    readbackCanvas.width = canvas.width;
+    readbackCanvas.height = canvas.height;
+    const readbackContext = readbackCanvas.getContext('2d', {
+      alpha: true,
+    });
+    if (readbackContext === null) {
+      t.skip('Cannot get a 2D canvas context');
+      return;
+    }
+
+    // Since there isn't a configuration we expect the ImageBitmap to have the default alphaMode of "opaque".
+    const expected = new Uint8ClampedArray(canvas.width * canvas.height * 4);
+    for (let i = 0; i < expected.byteLength; i += 4) {
+      expected[i + 0] = 0;
+      expected[i + 1] = 0;
+      expected[i + 2] = 0;
+      expected[i + 3] = 255;
+    }
+
+    readbackContext.drawImage(ib, 0, 0);
+    readPixelsFrom2DCanvasAndCompare(t, readbackContext, expected);
+  });
+
+g.test('transferToImageBitmap_zero_size')
+  .desc(
+    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.`
+  )
+  .params(u => u.combine('configure', [true, false]))
+  .fn(t => {
+    const { configure } = t.params;
+    const canvas = createCanvas(t, 'offscreen', 0, 1);
+    const ctx = canvas.getContext('webgpu')!;
+
+    if (configure) {
+      t.expectValidationError(() => ctx.configure({ device: t.device, format: 'bgra8unorm' }));
+    }
+
+    // Transferring would give an empty ImageBitmap which is not possible, so an Exception is thrown.
+    t.shouldThrow(true, () => {
+      canvas.transferToImageBitmap();
+    });
   });
