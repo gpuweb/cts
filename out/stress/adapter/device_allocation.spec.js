@@ -78,7 +78,7 @@ async function createDeviceAndComputeCommands(adapter) {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindgroup);
-      pass.dispatch(
+      pass.dispatchWorkgroups(
       kLimitInfo.maxComputeWorkgroupSizeX.default,
       kLimitInfo.maxComputeWorkgroupSizeY.default);
 

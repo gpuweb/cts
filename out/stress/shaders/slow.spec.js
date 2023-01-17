@@ -40,7 +40,7 @@ fn(async (t) => {
     entries: [{ binding: 0, resource: { buffer } }]
   });
   pass.setBindGroup(0, bindGroup);
-  pass.dispatch(kDispatchSize);
+  pass.dispatchWorkgroups(kDispatchSize);
   pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(buffer, new Uint32Array(new Array(kDispatchSize).fill(1000000)));

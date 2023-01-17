@@ -43,7 +43,7 @@ fn(async (t) => {
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(kNumElements);
+    pass.dispatchWorkgroups(kNumElements);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
@@ -86,7 +86,7 @@ fn(async (t) => {
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(1);
+    pass.dispatchWorkgroups(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
   }
@@ -140,7 +140,7 @@ fn(async (t) => {
 
     });
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(kNumElements);
+    pass.dispatchWorkgroups(kNumElements);
   }
   pass.end();
   t.device.queue.submit([encoder.finish()]);
@@ -185,7 +185,7 @@ fn(async (t) => {
   });
   pass.setBindGroup(0, bindGroup);
   for (let i = 0; i < kNumIterations; ++i) {
-    pass.dispatch(kNumElements);
+    pass.dispatchWorkgroups(kNumElements);
   }
   pass.end();
   t.device.queue.submit([encoder.finish()]);
@@ -231,7 +231,7 @@ fn(async (t) => {
     const pass = encoder.beginComputePass();
     pass.setBindGroup(0, bindGroup);
     pass.setPipeline(pipeline);
-    pass.dispatch(kDimensions[0], kDimensions[1], kDimensions[2]);
+    pass.dispatchWorkgroups(kDimensions[0], kDimensions[1], kDimensions[2]);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
     await t.device.queue.onSubmittedWorkDone();

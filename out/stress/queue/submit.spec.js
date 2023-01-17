@@ -44,7 +44,7 @@ fn(async (t) => {
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(kNumElements);
+    pass.dispatchWorkgroups(kNumElements);
     pass.end();
   }
   t.device.queue.submit([encoder.finish()]);
@@ -90,7 +90,7 @@ fn(async (t) => {
     const pass = encoder.beginComputePass();
     pass.setPipeline(pipeline);
     pass.setBindGroup(0, bindGroup);
-    pass.dispatch(kNumElements);
+    pass.dispatchWorkgroups(kNumElements);
     pass.end();
     buffers.push(encoder.finish());
   }
