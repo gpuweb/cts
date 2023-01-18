@@ -71,7 +71,7 @@ g.test('align_required_alignment')
       //  * 1 -- Invalid, alignment smaller then all the required alignments
       //  * alignment -- Valid, the required alignment
       //  * 32 -- Valid, an alignment larger then the required alignment.
-      .combine('align', [1, 'alignment', 32])
+      .combine('align', [1, 2, 'alignment', 32])
       .combine('type', [
         { name: 'i32', storage: 4, uniform: 4 },
         { name: 'u32', storage: 4, uniform: 4 },
@@ -102,9 +102,7 @@ g.test('align_required_alignment')
         { name: 'mat2x4<f16>', storage: 8, uniform: 8 },
         { name: 'mat3x4<f16>', storage: 8, uniform: 8 },
         { name: 'mat4x4<f16>', storage: 8, uniform: 8 },
-        // The 0 for uniform means we'll skip this case as the `vec2` as an array element is not
-        // valid in uniform address space
-        { name: 'array<vec2<i32>, 2>', storage: 8, uniform: 0 },
+        { name: 'array<vec2<i32>, 2>', storage: 8, uniform: 16 },
         { name: 'array<vec4<i32>, 2>', storage: 8, uniform: 16 },
         { name: 'S', storage: 8, uniform: 16 },
       ])
@@ -116,11 +114,10 @@ g.test('align_required_alignment')
     }
   })
   .fn(t => {
+    // While this would fail validation, it doesn't fail for any reasons related to alignment.
+    // Atomics are not allowed in uniform address space as they have to be read_write.
     if (t.params.address_space === 'uniform' && t.params.type.name.startsWith('atomic')) {
       t.skip('No atomics in uniform address space');
-    }
-    if (t.params.address_space === 'uniform' && t.params.type.uniform === 0) {
-      t.skip('array of vec2 not allowed in uniform due to 16 byte alignment requirement');
     }
 
     let code = '';
@@ -168,5 +165,16 @@ g.test('align_required_alignment')
       return vec4<f32>(.4, .2, .3, .1);
     }`;
 
-    t.expectCompileResult(t.params.align !== 1, code);
+    const fails =
+      // An alignment of 1 is never valid as it is smaller then all required alignments.
+      t.params.align === 1 ||
+      // Except for f16, 2 should also fail as being too small.
+      (t.params.align === 2 && t.params.type.name !== 'f16') ||
+      // An array of `vec2` in uniform will not validate because, while the alignment on the array
+      // itself is fine, the `vec2` element inside the array will have the wrong alignment. Uniform
+      // requires that inner vec2 to have an align 16 which can only be done by specifying `vec4`
+      // instead.
+      (t.params.address_space === 'uniform' && t.params.type.name.startsWith('array<vec2'));
+
+    t.expectCompileResult(!fails, code);
   });
