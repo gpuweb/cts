@@ -14,7 +14,7 @@ import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('binary/i32_arithmetic', {
+export const d = makeCaseCache('binary/u32_arithmetic', {
   addition: () => {
     return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), (x, y) => {
       return x + y;
