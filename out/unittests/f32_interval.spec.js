@@ -680,9 +680,9 @@ paramsSubcasesOnly(
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
-{ input: -1 / 2, expected: [hexToF32(0x40060290), hexToF32(0x40061294)] }, // ~2π/3
+{ input: -1 / 2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] }, // ~2π/3
 { input: 0, expected: kAny },
-{ input: 1 / 2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a95)] }, // ~π/3
+{ input: 1 / 2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] }, // ~π/3
 { input: kValue.f32.positive.max, expected: kAny },
 { input: kValue.f32.infinity.positive, expected: kAny }]).
 
@@ -763,9 +763,9 @@ paramsSubcasesOnly(
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
-{ input: -1 / 2, expected: [hexToF32(0xbf061a99), hexToF32(0xbf05fa8b)] }, // ~-π/6
+{ input: -1 / 2, expected: [hexToF32(0xbf061a96), hexToF32(0xbf05fa8e)] }, // ~-π/6
 { input: 0, expected: kAny },
-{ input: 1 / 2, expected: [hexToF32(0x3f05fa8b), hexToF32(0x3f061a99)] }, // ~π/6
+{ input: 1 / 2, expected: [hexToF32(0x3f05fa8e), hexToF32(0x3f061a96)] }, // ~π/6
 { input: kValue.f32.positive.max, expected: kAny },
 { input: kValue.f32.infinity.positive, expected: kAny }]).
 
@@ -1731,22 +1731,26 @@ paramsSubcasesOnly(
 // The positive x & y quadrant is tested in more detail, and the other quadrants are spot checked that values are
 // pointing in the right direction.
 
+// Some of the intervals appear slightly asymmetric, i.e. [π/4 - 4097 * ULP(π/4), π/4 + 4096 * ULP(π/4)], this is
+// because π/4 is not precisely expressible as a f32, so the higher precision value can be rounded up or down when
+// converting to f32. Thus one option will be 1 ULP off of the constant value being used.
+
 // positive y, positive x
-{ input: [1, hexToF32(0x3fddb3d7)], expected: [hexToF64(0x3fe0bf51, 0xe0000000), hexToF64(0x3fe0c352, 0xa0000000)] }, // x = √3, expected = ~π/6
-{ input: [1, 1], expected: [hexToF64(0x3fe91ffb, 0x20000000), hexToF64(0x3fe923fb, 0xa0000000)] }, // expected = ~π/4
-{ input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0bf52, 0x00000000), hexToF64(0x3ff0c352, 0x60000000)] }, // y = √3, expected = ~π/3
+{ input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULP(kValue.f32.positive.pi.sixth, 4097), plusNULP(kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
+{ input: [1, 1], expected: [minusNULP(kValue.f32.positive.pi.quarter, 4097), plusNULP(kValue.f32.positive.pi.quarter, 4096)] },
+// { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0bf52, 0x00000000), hexToF64(0x3ff0c352, 0x60000000)] },  // y = √3
 { input: [Number.POSITIVE_INFINITY, 1], expected: kAny },
 
 // positive y, negative x
-{ input: [1, -1], expected: [hexToF64(0x4002d8fc, 0x60000000), hexToF64(0x4002d9fc, 0xa0000000)] }, // expected = ~3/4 * π
+{ input: [1, -1], expected: [minusNULP(kValue.f32.positive.pi.three_quarters, 4096), plusNULP(kValue.f32.positive.pi.three_quarters, 4097)] },
 { input: [Number.POSITIVE_INFINITY, -1], expected: kAny },
 
 // negative y, negative x
-{ input: [-1, -1], expected: [hexToF64(0xc002d9fc, 0xa0000000), hexToF64(0xc002d8fc, 0x60000000)] }, // expected = ~-3/4 * π
+{ input: [-1, -1], expected: [minusNULP(kValue.f32.negative.pi.three_quarters, 4097), plusNULP(kValue.f32.negative.pi.three_quarters, 4096)] },
 { input: [Number.NEGATIVE_INFINITY, -1], expected: kAny },
 
 // negative y, positive x
-{ input: [-1, 1], expected: [hexToF64(0xbfe923fb, 0xa0000000), hexToF64(0xbfe91ffb, 0x20000000)] }, // expected = ~-π/4
+{ input: [-1, 1], expected: [minusNULP(kValue.f32.negative.pi.quarter, 4096), plusNULP(kValue.f32.negative.pi.quarter, 4097)] },
 { input: [Number.NEGATIVE_INFINITY, 1], expected: kAny },
 
 // Discontinuity @ origin (0,0)
@@ -1761,7 +1765,11 @@ paramsSubcasesOnly(
 { input: [0, kValue.f32.infinity.negative], expected: kAny },
 { input: [0, 1], expected: kAny },
 { input: [kValue.f32.subnormal.positive.max, 1], expected: kAny },
-{ input: [kValue.f32.subnormal.negative.min, 1], expected: kAny }]).
+{ input: [kValue.f32.subnormal.negative.min, 1], expected: kAny },
+
+// atan(y/x) ~ 0, test that ULP applied to result, not the intermediate atan(y/x) value
+{ input: [hexToF32(0x80800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.negative.pi.whole, 4096), plusNULP(kValue.f32.negative.pi.whole, 4096)] },
+{ input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.positive.pi.whole, 4096), plusNULP(kValue.f32.positive.pi.whole, 4096)] }]).
 
 
 fn((t) => {
