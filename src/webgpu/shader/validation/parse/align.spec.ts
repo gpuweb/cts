@@ -178,3 +178,62 @@ g.test('align_required_alignment')
 
     t.expectCompileResult(!fails, code);
   });
+
+g.test('align_non_struct')
+  .desc('Test that alignment is only allowed on struct members')
+  .params(u =>
+    u.combine('scope', ['private', 'function']).combine('with_align', [true, false]).beginSubcases()
+  )
+  .fn(t => {
+    let code = `struct A {
+      a: i32,
+    }
+    `;
+
+    let val = '';
+    if (t.params.with_align === true) {
+      val += '@align(128) ';
+    }
+    val += `var<${t.params.scope}> b : A;
+    `;
+
+    if (t.params.scope === 'private') {
+      code += val;
+    }
+
+    code += `
+      @fragment
+      fn main() -> @location(0) vec4<f32> {
+    `;
+
+    if (t.params.scope === 'function') {
+      code += val;
+    }
+
+    code += `
+        return vec4<f32>(.4, .2, .3, .1);
+      }`;
+    t.expectCompileResult(!t.params.with_align, code);
+  });
+
+g.test('align_multi')
+  .desc('Tests that align multiple times is an error')
+  .params(u => u.combine('multi', [true, false]))
+  .fn(t => {
+    let code = `struct A {
+      @align(128) `;
+
+    if (t.params.multi === true) {
+      code += '@align(128) ';
+    }
+
+    code += `a : i32,
+      }
+
+      @fragment
+      fn main() -> @location(0) vec4<f32> {
+        return vec4(1., 1., 1., 1.);
+      }`;
+
+    t.expectCompileResult(!t.params.multi, code);
+  });
