@@ -554,7 +554,7 @@ export class ScalarType {
   }
 }
 
-/** ScalarType describes the type of WGSL Vector. */
+/** VectorType describes the type of WGSL Vector. */
 export class VectorType {
   readonly width: number; // Number of elements in the vector
   readonly elementType: ScalarType; // Element type
@@ -600,8 +600,58 @@ export function TypeVec(width: number, elementType: ScalarType): VectorType {
   return ty;
 }
 
-/** Type is a ScalarType or VectorType. */
-export type Type = ScalarType | VectorType;
+/** MatrixType describes the type of WGSL Matrix. */
+export class MatrixType {
+  readonly cols: number; // Number of columns in the Matrix
+  readonly rows: number; // Number of elements per column in the Matrix
+  readonly elementType: ScalarType; // Element type
+
+  constructor(cols: number, rows: number, elementType: ScalarType) {
+    this.cols = cols;
+    this.rows = rows;
+    assert(
+      elementType.kind === 'f32' || elementType.kind === 'f16',
+      "MatrixType can only have elementType of 'f32' or 'f16'"
+    );
+    this.elementType = elementType;
+  }
+
+  /**
+   * @returns a Matrix constructed from the values read from the buffer at the
+   * given byte offset
+   */
+  public read(buf: Uint8Array, offset: number): Matrix {
+    const elements: Array<Array<Scalar>> = [];
+    for (let c = 0; c < this.cols; c++) {
+      for (let r = 0; r < this.cols; r++) {
+        elements[c][r] = this.elementType.read(buf, offset);
+        offset += this.elementType.size;
+      }
+    }
+    return new Matrix(elements);
+  }
+
+  public toString(): string {
+    return `mat${this.cols}x${this.rows}<${this.elementType}>`;
+  }
+}
+
+// Maps a string representation of a Matrix type to Matrix type.
+const matrixTypes = new Map<string, MatrixType>();
+
+export function TypeMat(cols: number, rows: number, elementType: ScalarType): MatrixType {
+  const key = `${elementType.toString()} ${cols} ${rows}`;
+  let ty = matrixTypes.get(key);
+  if (ty !== undefined) {
+    return ty;
+  }
+  ty = new MatrixType(cols, rows, elementType);
+  matrixTypes.set(key, ty);
+  return ty;
+}
+
+/** Type is a ScalarType, VectorType, or MatrixType. */
+export type Type = ScalarType | VectorType | MatrixType;
 
 export const TypeI32 = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
   i32(new Int32Array(buf.buffer, offset)[0])
@@ -668,6 +718,9 @@ export function numElementsOf(ty: Type): number {
   if (ty instanceof VectorType) {
     return ty.width;
   }
+  if (ty instanceof MatrixType) {
+    return ty.cols * ty.rows;
+  }
   throw new Error(`unhandled type ${ty}`);
 }
 
@@ -677,6 +730,9 @@ export function scalarTypeOf(ty: Type): ScalarType {
     return ty;
   }
   if (ty instanceof VectorType) {
+    return ty.elementType;
+  }
+  if (ty instanceof MatrixType) {
     return ty.elementType;
   }
   throw new Error(`unhandled type ${ty}`);
@@ -982,8 +1038,194 @@ export function toVector(v: number[], op: (n: number) => Scalar): Vector {
   unreachable(`input to 'toVector' must contain 2, 3, or 4 elements`);
 }
 
+/**
+ * Class that encapsulates a Matrix value.
+ */
+export class Matrix {
+  readonly elements: Array<Array<Scalar>>;
+  readonly type: MatrixType;
+
+  public constructor(elements: Array<Array<Scalar>>) {
+    const num_cols = elements.length;
+    if (num_cols < 2 || num_cols > 4) {
+      throw new Error(`matrix cols count must be between 2 and 4, got ${num_cols}`);
+    }
+
+    const col_lengths = [...new Set<number>(elements.map(e => e.length))];
+    if (col_lengths.length > 1) {
+      throw new Error(
+        `cannot mix matrix column lengths. Found columns with differing lengths (${col_lengths})`
+      );
+    }
+    const num_rows = col_lengths[0];
+
+    if (num_rows < 2 || num_rows > 4) {
+      throw new Error(`matrix rows count must be between 2 and 4, got ${num_rows}`);
+    }
+
+    const elem_types = [...new Set<ScalarType>(elements.flatMap(c => c.map(r => r.type)))];
+    if (elem_types.length > 1) {
+      throw new Error(
+        `cannot mix matrix element types. Found elements with differing types (${elem_types})`
+      );
+    }
+
+    this.elements = elements;
+    this.type = TypeMat(num_cols, num_rows, elem_types[0]);
+  }
+
+  /**
+   * Copies the matrix value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
+  public copyTo(buffer: Uint8Array, offset: number) {
+    this.elements.forEach((c, i) => {
+      c.forEach((r, j) => {
+        this.elements[i][j].copyTo(buffer, offset);
+        offset = this.type.elementType.size;
+      });
+    });
+  }
+
+  /**
+   * @returns the WGSL representation of this matrix value
+   */
+  public wgsl(): string {
+    const els = this.elements.flatMap(c => c.map(r => r.wgsl())).join(', ');
+    return `mat${this.type.cols}x${this.type.rows}(${els})`;
+  }
+
+  public toString(): string {
+    return `${this.type}(${this.elements.map(c => c.join(', ')).join(', ')})`;
+  }
+}
+
+/** Helper for constructing a new 2x2 matrix with the provided values */
+export function mat2x2(...elements: [Scalar, Scalar, Scalar, Scalar]) {
+  return new Matrix([
+    [elements[0], elements[1]],
+    [elements[2], elements[3]],
+  ]);
+}
+
+/** Helper for constructing a new 2x3 matrix with the provided values */
+export function mat2x3(...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2]],
+    [elements[3], elements[4], elements[5]],
+  ]);
+}
+
+/** Helper for constructing a new 2x4 matrix with the provided values */
+export function mat2x4(
+  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2], elements[3]],
+    [elements[4], elements[5], elements[6], elements[7]],
+  ]);
+}
+
+/** Helper for constructing a new 3x2 matrix with the provided values */
+export function mat3x2(...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]) {
+  return new Matrix([
+    [elements[0], elements[1]],
+    [elements[2], elements[3]],
+    [elements[4], elements[5]],
+  ]);
+}
+
+/** Helper for constructing a new 3x3 matrix with the provided values */
+export function mat3x3(
+  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2]],
+    [elements[3], elements[4], elements[5]],
+    [elements[6], elements[7], elements[8]],
+  ]);
+}
+
+/** Helper for constructing a new 3x4 matrix with the provided values */
+export function mat3x4(
+  ...elements: [
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar,
+    Scalar
+  ]
+) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2], elements[3]],
+    [elements[4], elements[5], elements[6], elements[7]],
+    [elements[8], elements[9], elements[10], elements[11]],
+  ]);
+}
+
+/** Helper for constructing a new 4x2 matrix with the provided values */
+export function mat4x2(
+  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+) {
+  return new Matrix([
+    [elements[0], elements[1]],
+    [elements[2], elements[3]],
+    [elements[4], elements[5]],
+    [elements[6], elements[7]],
+  ]);
+}
+
+/** Helper for constructing a new 4x3 matrix with the provided values */
+export function mat4x3(
+  // prettier-ignore
+  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2]],
+    [elements[3], elements[4], elements[5]],
+    [elements[6], elements[7], elements[8]],
+    [elements[9], elements[10], elements[11]],
+  ]);
+}
+
+/** Helper for constructing a new 4x4 matrix with the provided values */
+export function mat4x4(
+  // prettier-ignore
+  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
+) {
+  return new Matrix([
+    [elements[0], elements[1], elements[2], elements[3]],
+    [elements[4], elements[5], elements[6], elements[7]],
+    [elements[8], elements[9], elements[10], elements[11]],
+    [elements[12], elements[13], elements[14], elements[15]],
+  ]);
+}
+/**
+ * Helper for constructing Matrices from arrays of numbers
+ *
+ * @param m array of array of numbers to be converted, all Array of number must
+ *          be of the same length. All Arrays must have 2, 3, or 4 elements.
+ * @param op function to convert from number to Scalar, e.g. 'f32`
+ */
+export function toMatrix(m: number[][], op: (n: number) => Scalar): Matrix {
+  const elements: Scalar[][] = [];
+  m.forEach(c => {
+    elements.push(c.map(r => op(r)));
+  });
+
+  return new Matrix(elements);
+}
+
 /** Value is a Scalar or Vector value. */
-export type Value = Scalar | Vector;
+export type Value = Scalar | Vector | Matrix;
 
 export type SerializedValueScalar = {
   kind: 'scalar';
@@ -997,7 +1239,13 @@ export type SerializedValueVector = {
   value: boolean[] | number[];
 };
 
-export type SerializedValue = SerializedValueScalar | SerializedValueVector;
+export type SerializedValueMatrix = {
+  kind: 'matrix';
+  type: ScalarKind;
+  value: number[][];
+};
+
+export type SerializedValue = SerializedValueScalar | SerializedValueVector | SerializedValueMatrix;
 
 export function serializeValue(v: Value): SerializedValue {
   const value = (kind: ScalarKind, s: Scalar) => {
@@ -1026,6 +1274,15 @@ export function serializeValue(v: Value): SerializedValue {
       value: v.elements.map(e => value(kind, e)) as boolean[] | number[],
     };
   }
+  if (v instanceof Matrix) {
+    const kind = v.type.elementType.kind;
+    return {
+      kind: 'matrix',
+      type: kind,
+      value: v.elements.map(c => c.map(r => value(kind, r))) as number[][],
+    };
+  }
+
   unreachable(`unhandled value type: ${v}`);
 }
 
@@ -1062,6 +1319,11 @@ export function deserializeValue(data: SerializedValue): Value {
     }
     case 'vector': {
       return new Vector(data.value.map(v => buildScalar(v)));
+    }
+    case 'matrix': {
+      const elements: Scalar[][] = [];
+      data.value.forEach(v => elements.push(v.map(buildScalar)));
+      return new Matrix(elements);
     }
   }
 }

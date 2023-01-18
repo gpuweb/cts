@@ -1,7 +1,7 @@
 export const description = `Unit tests for conversion`;
 
 import { makeTestGroup } from '../common/internal/test_group.js';
-import { objectEquals } from '../common/util/util.js';
+import { assert, objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
   bool,
@@ -16,6 +16,16 @@ import {
   i32,
   kFloat16Format,
   kFloat32Format,
+  mat2x2,
+  mat2x3,
+  mat2x4,
+  mat3x2,
+  mat3x3,
+  mat3x4,
+  mat4x2,
+  mat4x3,
+  mat4x4,
+  Matrix,
   pack2x16float,
   pack2x16snorm,
   pack2x16unorm,
@@ -239,6 +249,98 @@ expect: ${expect}`
     );
   }
 });
+
+g.test('matrixWGSL').fn(t => {
+  const cases: Array<[Matrix, string]> =
+    // prettier-ignore
+    [
+      [mat2x2(f32(0.0), f32(1.0),
+              f32(2.0), f32(3.0)),
+        'mat2x2(0.0f, 1.0f, 2.0f, 3.0f)'],
+      [mat2x3(f32(0.0), f32(1.0), f32(2.0),
+              f32(3.0), f32(4.0), f32(5.0)),
+        'mat2x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f)'],
+      [mat2x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+              f32(4.0), f32(5.0), f32(6.0), f32(7.0)),
+        'mat2x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f)'],
+      [mat3x2(f32(0.0), f32(1.0),
+              f32(2.0), f32(3.0),
+              f32(4.0), f32(5.0)),
+        'mat3x2(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f)'],
+      [mat3x3(f32(0.0), f32(1.0), f32(2.0),
+              f32(3.0), f32(4.0), f32(5.0),
+              f32(6.0), f32(7.0), f32(8.0)),
+        'mat3x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f)'],
+      [mat3x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+              f32(4.0), f32(5.0), f32(6.0), f32(7.0),
+              f32(8.0), f32(9.0), f32(10.0), f32(11.0)),
+        'mat3x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f)'],
+      [mat4x2(f32(0.0), f32(1.0),
+              f32(2.0), f32(3.0),
+              f32(4.0), f32(5.0),
+              f32(6.0), f32(7.0)),
+        'mat4x2(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f)'],
+      [mat4x3(f32(0.0), f32(1.0), f32(2.0),
+              f32(3.0), f32(4.0), f32(5.0),
+              f32(6.0), f32(7.0), f32(8.0),
+              f32(9.0), f32(10.0), f32(11.0)),
+        'mat4x3(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f)'],
+      [mat4x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+              f32(4.0), f32(5.0), f32(6.0), f32(7.0),
+              f32(8.0), f32(9.0), f32(10.0), f32(11.0),
+              f32(12.0), f32(13.0), f32(14.0), f32(15.0)),
+        'mat4x4(0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f)'],
+  ];
+  for (const [value, expect] of cases) {
+    const got = value.wgsl();
+    t.expect(
+      got === expect,
+      `[values: ${value.elements}, type: ${value.type}]
+got:    ${got}
+expect: ${expect}`
+    );
+  }
+});
+
+g.test('constructorMatrix')
+  .params(u =>
+    u
+      .combine('cols', [2, 3, 4] as const)
+      .combine('rows', [2, 3, 4] as const)
+      .combine('type', ['f32'] as const)
+  )
+  .fn(t => {
+    const cols = t.params.cols;
+    const rows = t.params.rows;
+    const type = t.params.type;
+    const scalar_builder = type === 'f32' ? f32 : undefined;
+    assert(scalar_builder !== undefined, `Unexpected type param '${type}' provided`);
+
+    const elements = [...Array(cols).keys()].map(c => {
+      return [...Array(rows).keys()].map(r => scalar_builder(c * cols + r));
+    });
+
+    const got = new Matrix(elements);
+    const got_type = got.type;
+    t.expect(
+      got_type.cols === cols,
+      `expected Matrix to have ${cols} columns, received ${got_type.cols} instead`
+    );
+    t.expect(
+      got_type.rows === rows,
+      `expected Matrix to have ${rows} columns, received ${got_type.rows} instead`
+    );
+    t.expect(
+      got_type.elementType.kind === type,
+      `expected Matrix to have ${type} elements, received ${got_type.elementType.kind} instead`
+    );
+    t.expect(
+      objectEquals(got.elements, elements),
+      `Matrix did not have expected elements (${JSON.stringify(elements)}), instead had (${
+        got.elements
+      })`
+    );
+  });
 
 g.test('pack2x16float')
   .paramsSimple([

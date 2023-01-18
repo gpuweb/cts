@@ -22,6 +22,15 @@ import {
   i16,
   i32,
   i8,
+  mat2x2,
+  mat2x3,
+  mat2x4,
+  mat3x2,
+  mat3x3,
+  mat3x4,
+  mat4x2,
+  mat4x3,
+  mat4x4,
   serializeValue,
   u16,
   u32,
@@ -135,6 +144,43 @@ g.test('value').fn(t => {
     vec2(f32(1), f32(2)),
     vec3(u32(1), u32(2), u32(3)),
     vec4(bool(false), bool(true), bool(false), bool(true)),
+
+    // prettier-ignore
+    mat2x2(f32(0.0), f32(1.0),
+           f32(2.0), f32(3.0)),
+    // prettier-ignore
+    mat2x3(f32(0.0), f32(1.0), f32(2.0),
+           f32(3.0), f32(4.0), f32(5.0)),
+    // prettier-ignore
+    mat2x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+           f32(4.0), f32(5.0), f32(6.0), f32(7.0)),
+    // prettier-ignore
+    mat3x2(f32(0.0), f32(1.0),
+           f32(2.0), f32(3.0),
+           f32(4.0), f32(5.0)),
+    // prettier-ignore
+    mat3x3(f32(0.0), f32(1.0), f32(2.0),
+           f32(3.0), f32(4.0), f32(5.0),
+           f32(6.0), f32(7.0), f32(8.0)),
+    // prettier-ignore
+    mat3x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+           f32(4.0), f32(5.0), f32(6.0), f32(7.0),
+           f32(8.0), f32(9.0), f32(10.0), f32(11.0)),
+    // prettier-ignore
+    mat4x2(f32(0.0), f32(1.0),
+           f32(2.0), f32(3.0),
+           f32(4.0), f32(5.0),
+           f32(6.0), f32(7.0)),
+    // prettier-ignore
+    mat4x3(f32(0.0), f32(1.0), f32(2.0),
+           f32(3.0), f32(4.0), f32(5.0),
+           f32(6.0), f32(7.0), f32(8.0),
+           f32(9.0), f32(10.0), f32(11.0)),
+    // prettier-ignore
+    mat4x4(f32(0.0), f32(1.0), f32(2.0), f32(3.0),
+           f32(4.0), f32(5.0), f32(6.0), f32(7.0),
+           f32(8.0), f32(9.0), f32(10.0), f32(11.0),
+           f32(12.0), f32(13.0), f32(14.0), f32(15.0)),
   ]) {
     const serialized = serializeValue(value);
     const deserialized = deserializeValue(serialized);
