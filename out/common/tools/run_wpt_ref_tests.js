@@ -215,11 +215,25 @@ function exists(filename) {
   }
 }
 
+async function waitForPageRender(page) {
+  await page.evaluate(() => {
+    return new Promise((resolve) => requestAnimationFrame(resolve));
+  });
+}
+
 // returns true if the page timed out.
 async function runPage(page, url, refWait) {
   console.log('  loading:', url);
+  // we need to load about:blank to force the browser to re-render
+  // else the previous page may still be visible if the page we are loading fails
+  await page.goto('about:blank');
+  await page.waitForLoadState('domcontentloaded');
+  await waitForPageRender(page);
+
   await page.goto(url);
   await page.waitForLoadState('domcontentloaded');
+  await waitForPageRender(page);
+
   if (refWait) {
     await page.waitForFunction(() => wptRefTestPageReady());
     const timeout = await page.evaluate(() => wptRefTestGetTimeout());
