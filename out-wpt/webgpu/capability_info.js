@@ -978,7 +978,18 @@ export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
 export const kCanvasTextureFormats = ['bgra8unorm', 'rgba8unorm', 'rgba16float'];
 
 // The alpha mode for canvas context.
-export const kCanvasAlphaModes = ['opaque', 'premultiplied'];
+export const kCanvasAlphaModesInfo = {
+  opaque: {},
+  premultiplied: {},
+};
+export const kCanvasAlphaModes = keysOf(kCanvasAlphaModesInfo);
+
+// The color spaces for canvas context
+export const kCanvasColorSpacesInfo = {
+  srgb: {},
+  'display-p3': {},
+};
+export const kCanvasColorSpaces = keysOf(kCanvasColorSpacesInfo);
 
 /** Per-GPUTextureFormat info. */
 // Exists just for documentation. Otherwise could be inferred by `makeTable`.

@@ -3,11 +3,24 @@
  **/ export const description = `
 Tests for readback from WebGPU Canvas.
 
+This includes testing that colorSpace makes it through from the WebGPU canvas
+to the form of copy (toDataURL, toBlob, ImageBitmap, drawImage)
+
+The color space support is tested by drawing the readback form of the WebGPU
+canvas into a 2D canvas of a different color space via drawImage (A). Another
+2D canvas is created with the same source data and color space as the WebGPU
+canvas and also drawn into another 2D canvas of a different color space (B).
+The contents of A and B should match.
+
 TODO: implement all canvas types, see TODO on kCanvasTypes.
 `;
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
-import { kCanvasAlphaModes, kCanvasTextureFormats } from '../../capability_info.js';
+import {
+  kCanvasAlphaModes,
+  kCanvasColorSpaces,
+  kCanvasTextureFormats,
+} from '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
 import { kAllCanvasTypes, createCanvas, createOnscreenCanvas } from '../../util/create_elements.js';
@@ -67,7 +80,7 @@ const expect = {
   ]),
 };
 
-async function initCanvasContent(t, format, alphaMode, canvasType) {
+async function initWebGPUCanvasContent(t, format, alphaMode, colorSpace, canvasType) {
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
   assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
@@ -77,6 +90,7 @@ async function initCanvasContent(t, format, alphaMode, canvasType) {
     format,
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST,
     alphaMode,
+    colorSpace,
   });
 
   const canvasTexture = ctx.getCurrentTexture();
@@ -110,17 +124,49 @@ async function initCanvasContent(t, format, alphaMode, canvasType) {
   t.device.queue.submit([encoder.finish()]);
   tempTexture.destroy();
 
-  await t.device.queue.onSubmittedWorkDone();
-
   return canvas;
 }
 
-function checkImageResult(t, image, expect) {
+function drawImageSourceIntoCanvas(t, image, colorSpace) {
   const canvas = createOnscreenCanvas(t, 2, 2);
-  const ctx = canvas.getContext('2d');
+  const ctx = canvas.getContext('2d', { colorSpace });
   assert(ctx !== null);
   ctx.drawImage(image, 0, 0);
+  return ctx;
+}
+
+function checkImageResultWithSameColorSpaceCanvas(t, image, sourceColorSpace, expect) {
+  const ctx = drawImageSourceIntoCanvas(t, image, sourceColorSpace);
   readPixelsFrom2DCanvasAndCompare(t, ctx, expect);
+}
+
+function checkImageResultWithDifferentColorSpaceCanvas(t, image, sourceColorSpace, sourceData) {
+  const destinationColorSpace = sourceColorSpace === 'srgb' ? 'display-p3' : 'srgb';
+
+  // draw the WebGPU derived data into a canvas
+  const fromWebGPUCtx = drawImageSourceIntoCanvas(t, image, destinationColorSpace);
+
+  // create a 2D canvas with the same source data in the same color space as the WebGPU
+  // canvas
+  const source2DCanvas = createOnscreenCanvas(t, 2, 2);
+  const source2DCtx = source2DCanvas.getContext('2d', { colorSpace: sourceColorSpace });
+  assert(source2DCtx !== null);
+  const imgData = source2DCtx.getImageData(0, 0, 2, 2);
+  imgData.data.set(sourceData);
+  source2DCtx.putImageData(imgData, 0, 0);
+
+  // draw the source 2D canvas into another 2D canvas with the destination color space and
+  // then pull out the data. This result should be the same as the WebGPU derived data
+  // written to a 2D canvas of the same destination color space.
+  const from2DCtx = drawImageSourceIntoCanvas(t, source2DCanvas, destinationColorSpace);
+  const expect = from2DCtx.getImageData(0, 0, 2, 2).data;
+
+  readPixelsFrom2DCanvasAndCompare(t, fromWebGPUCtx, expect);
+}
+
+function checkImageResult(t, image, sourceColorSpace, expect) {
+  checkImageResultWithSameColorSpaceCanvas(t, image, sourceColorSpace, expect);
+  checkImageResultWithDifferentColorSpaceCanvas(t, image, sourceColorSpace, expect);
 }
 
 function readPixelsFrom2DCanvasAndCompare(t, ctx, expect) {
@@ -135,6 +181,7 @@ g.test('onscreenCanvas,snapshot')
     Ensure snapshot of canvas with WebGPU context is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - colorSpace = {"srgb", "display-p3"}
     - snapshot methods = {convertToBlob, transferToImageBitmap, createImageBitmap}
 
     TODO: Snapshot canvas to jpeg, webp and other mime type and
@@ -145,10 +192,17 @@ g.test('onscreenCanvas,snapshot')
     u //
       .combine('format', kCanvasTextureFormats)
       .combine('alphaMode', kCanvasAlphaModes)
+      .combine('colorSpace', kCanvasColorSpaces)
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
-    const canvas = await initCanvasContent(t, t.params.format, t.params.alphaMode, 'onscreen');
+    const canvas = await initWebGPUCanvasContent(
+      t,
+      t.params.format,
+      t.params.alphaMode,
+      t.params.colorSpace,
+      'onscreen'
+    );
 
     let snapshot;
     switch (t.params.snapshotType) {
@@ -180,7 +234,7 @@ g.test('onscreenCanvas,snapshot')
         unreachable();
     }
 
-    checkImageResult(t, snapshot, expect[t.params.alphaMode]);
+    checkImageResult(t, snapshot, t.params.colorSpace, expect[t.params.alphaMode]);
   });
 
 g.test('offscreenCanvas,snapshot')
@@ -189,6 +243,7 @@ g.test('offscreenCanvas,snapshot')
     Ensure snapshot of offscreenCanvas with WebGPU context is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - colorSpace = {"srgb", "display-p3"}
     - snapshot methods = {convertToBlob, transferToImageBitmap, createImageBitmap}
 
     TODO: Snapshot offscreenCanvas to jpeg, webp and other mime type and
@@ -199,13 +254,15 @@ g.test('offscreenCanvas,snapshot')
     u //
       .combine('format', kCanvasTextureFormats)
       .combine('alphaMode', kCanvasAlphaModes)
+      .combine('colorSpace', kCanvasColorSpaces)
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
-    const offscreenCanvas = await initCanvasContent(
+    const offscreenCanvas = await initWebGPUCanvasContent(
       t,
       t.params.format,
       t.params.alphaMode,
+      t.params.colorSpace,
       'offscreen'
     );
 
@@ -240,7 +297,7 @@ g.test('offscreenCanvas,snapshot')
         unreachable();
     }
 
-    checkImageResult(t, snapshot, expect[t.params.alphaMode]);
+    checkImageResult(t, snapshot, t.params.colorSpace, expect[t.params.alphaMode]);
   });
 
 g.test('onscreenCanvas,uploadToWebGL')
@@ -261,7 +318,7 @@ g.test('onscreenCanvas,uploadToWebGL')
   )
   .fn(async t => {
     const { format, webgl, upload } = t.params;
-    const canvas = await initCanvasContent(t, format, t.params.alphaMode, 'onscreen');
+    const canvas = await initWebGPUCanvasContent(t, format, t.params.alphaMode, 'srgb', 'onscreen');
 
     const expectCanvas = createOnscreenCanvas(t, canvas.width, canvas.height);
     const gl = expectCanvas.getContext(webgl);
@@ -314,6 +371,7 @@ g.test('drawTo2DCanvas')
     Ensure draw WebGPU context canvas to 2d context canvas/offscreenCanvas is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
+    - colorSpace = {"srgb", "display-p3"}
     - WebGPU canvas type = {"onscreen", "offscreen"}
     - 2d canvas type = {"onscreen", "offscreen"}
     `
@@ -322,13 +380,20 @@ g.test('drawTo2DCanvas')
     u //
       .combine('format', kCanvasTextureFormats)
       .combine('alphaMode', kCanvasAlphaModes)
+      .combine('colorSpace', kCanvasColorSpaces)
       .combine('webgpuCanvasType', kAllCanvasTypes)
       .combine('canvas2DType', kAllCanvasTypes)
   )
   .fn(async t => {
-    const { format, webgpuCanvasType, alphaMode, canvas2DType } = t.params;
+    const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;
 
-    const canvas = await initCanvasContent(t, format, alphaMode, webgpuCanvasType);
+    const canvas = await initWebGPUCanvasContent(
+      t,
+      format,
+      alphaMode,
+      colorSpace,
+      webgpuCanvasType
+    );
 
     const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
     const ctx = expectCanvas.getContext('2d');
