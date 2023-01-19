@@ -548,6 +548,10 @@ export class ScalarType {
   public toString(): string {
     return this.kind;
   }
+
+  public getSize(): number {
+    return this.size;
+  }
 }
 
 /** ScalarType describes the type of WGSL Vector. */
@@ -575,6 +579,10 @@ export class VectorType {
 
   public toString(): string {
     return `vec${this.width}<${this.elementType}>`;
+  }
+
+  public getSize(): number {
+    return this.elementType.size * this.width;
   }
 }
 

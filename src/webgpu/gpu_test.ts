@@ -21,6 +21,7 @@ import {
   checkElementsFloat16Between,
 } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
+import { ScalarType } from './util/conversion.js';
 import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
 import { makeTextureWithContents } from './util/texture.js';
@@ -682,6 +683,110 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
         checkElementsBetweenFn: checkElementsFloat16Between,
       }
     );
+  }
+
+  /**
+   * Emulate a texture to buffer copy by using a compute shader
+   * to load texture value of a single pixel and write to a storage buffer.
+   * For sample count == 1, the buffer contains only one value of the sample.
+   * For sample count > 1, the buffer contains (N = 2 ** sampleCount) values sorted
+   * in the order of their sample index [0, 2 ** sampleCount - 1]
+   *
+   * This can be useful when the texture to buffer copy is not available to the texture format
+   * e.g. (depth24plus)
+   *
+   * MAINTENANCE_TODO: extend to read multiple pixels with given origin and size.
+   *
+   * @returns storage buffer containing the copied value from the texture.
+   */
+  copySinglePixelTextureToBufferUsingComputePass(
+    type: ScalarType,
+    numElements: number,
+    textureView: GPUTextureView,
+    sampleCount: number
+  ): GPUBuffer {
+    const textureLoadCode =
+      numElements === 1
+        ? `dst.data[sampleIndex] = textureLoad(src, coord, sampleIndex).x;`
+        : `let o = sampleIndex * ${numElements};
+      let v = textureLoad(src, coord, sampleIndex);
+      dst.data[o] = v.r;
+      dst.data[o + 1] = v.g;
+      dst.data[o + 2] = v.b;
+      dst.data[o + 3] = v.a;
+      `;
+    const computePipeline = this.device.createComputePipeline({
+      layout: 'auto',
+      compute: {
+        module: this.device.createShaderModule({
+          code:
+            sampleCount === 1
+              ? `
+            struct Buffer {
+              data: array<${type.toString()}>,
+            };
+
+            @group(0) @binding(0) var src: texture_2d<${type.toString()}>;
+            @group(0) @binding(1) var<storage, read_write> dst : Buffer;
+
+            @compute @workgroup_size(1) fn main() {
+              var coord = vec2<i32>(0, 0);
+              let sampleIndex = 0;
+              ${textureLoadCode}
+            }
+            `
+              : `
+            struct Buffer {
+              data: array<${type.toString()}>,
+            };
+
+            @group(0) @binding(0) var src: texture_multisampled_2d<${type.toString()}>;
+            @group(0) @binding(1) var<storage, read_write> dst : Buffer;
+
+            @compute @workgroup_size(1) fn main() {
+              var coord = vec2<i32>(0, 0);
+              for (var sampleIndex = 0; sampleIndex < ${sampleCount};
+                sampleIndex = sampleIndex + 1) {
+                ${textureLoadCode}
+              }
+            }
+          `,
+        }),
+        entryPoint: 'main',
+      },
+    });
+
+    const storageBuffer = this.device.createBuffer({
+      size: sampleCount * type.getSize() * numElements,
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
+    });
+    this.trackForCleanup(storageBuffer);
+
+    const uniformBindGroup = this.device.createBindGroup({
+      layout: computePipeline.getBindGroupLayout(0),
+      entries: [
+        {
+          binding: 0,
+          resource: textureView,
+        },
+        {
+          binding: 1,
+          resource: {
+            buffer: storageBuffer,
+          },
+        },
+      ],
+    });
+
+    const encoder = this.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(computePipeline);
+    pass.setBindGroup(0, uniformBindGroup);
+    pass.dispatchWorkgroups(1);
+    pass.end();
+    this.device.queue.submit([encoder.finish()]);
+
+    return storageBuffer;
   }
 
   /**
