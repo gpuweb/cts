@@ -324,8 +324,8 @@ interface BinaryToIntervalOp {
 
 /** Domain for a BinaryToInterval implementation */
 interface BinaryToIntervalDomain {
-  x: F32Interval;
-  // y is an array to support handling domains composed of discrete intervals
+  // Arrays to support discrete valid domain intervals
+  x: F32Interval[];
   y: F32Interval[];
 }
 
@@ -344,11 +344,7 @@ function limitBinaryToIntervalDomain(
   impl: BinaryToInterval
 ): BinaryToInterval {
   return (x: number, y: number): F32Interval => {
-    if (!domain.x.contains(x)) {
-      return F32Interval.any();
-    }
-
-    if (!domain.y.some(d => d.contains(y))) {
+    if (!domain.x.some(d => d.contains(x)) || !domain.y.some(d => d.contains(y))) {
       return F32Interval.any();
     }
 
@@ -1099,31 +1095,32 @@ export function atanInterval(n: number | F32Interval): F32Interval {
 }
 
 const Atan2IntervalOp: BinaryToIntervalOp = {
-  impl: (y: number, x: number): F32Interval => {
-    // y/x is not defined meaningfully here
-    if (x === 0) {
-      return F32Interval.any();
-    }
+  impl: limitBinaryToIntervalDomain(
+    {
+      // For atan2, there params are labelled (y, x), not (x, y), so domain.x is first parameter (y), and domain.y is
+      // the second parameter (x)
+      x: [
+        toF32Interval([kValue.f32.negative.min, kValue.f32.negative.max]),
+        toF32Interval([kValue.f32.positive.min, kValue.f32.positive.max]),
+      ], // first param must be finite and normal
+      y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])], // inherited from division
+    },
+    (y: number, x: number): F32Interval => {
+      const atan_yx = Math.atan(y / x);
+      // x > 0, atan(y/x)
+      if (x > 0) {
+        return ulpInterval(atan_yx, 4096);
+      }
 
-    // atan2's accuracy is only defined if y is normal and finite
-    if (isSubnormalNumberF32(y) || !isFiniteF32(y)) {
-      return F32Interval.any();
-    }
+      // x < 0, y > 0, atan(y/x) + π
+      if (y > 0) {
+        return ulpInterval(atan_yx + kValue.f32.positive.pi.whole, 4096);
+      }
 
-    const atan_yx = Math.atan(y / x);
-    // x > 0, atan(y/x)
-    if (x > 0) {
-      return ulpInterval(atan_yx, 4096);
+      // x < 0, y < 0, atan(y/x) - π
+      return ulpInterval(atan_yx - kValue.f32.positive.pi.whole, 4096);
     }
-
-    // x < 0, y > 0, atan(y/x) + π
-    if (y > 0) {
-      return ulpInterval(atan_yx + kValue.f32.positive.pi.whole, 4096);
-    }
-
-    // x < 0, y < 0, atan(y/x) - π
-    return ulpInterval(atan_yx - kValue.f32.positive.pi.whole, 4096);
-  },
+  ),
   extrema: (y: F32Interval, x: F32Interval): [F32Interval, F32Interval] => {
     // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
     if (y.contains(0)) {
@@ -1325,7 +1322,7 @@ export function distanceInterval(x: number | number[], y: number | number[]): F3
 const DivisionIntervalOp: BinaryToIntervalOp = {
   impl: limitBinaryToIntervalDomain(
     {
-      x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+      x: [toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max])],
       y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])],
     },
     (x: number, y: number): F32Interval => {
@@ -1523,7 +1520,7 @@ const LdexpIntervalOp: BinaryToIntervalOp = {
     // Implementing SPIR-V's more restrictive domain until
     // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
     {
-      x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+      x: [toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max])],
       y: [toF32Interval([-126, 128])],
     },
     (e1: number, e2: number): F32Interval => {
