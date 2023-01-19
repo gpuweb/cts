@@ -1767,9 +1767,15 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.max, 1], expected: kAny },
 { input: [kValue.f32.subnormal.negative.min, 1], expected: kAny },
 
-// atan(y/x) ~ 0, test that ULP applied to result, not the intermediate atan(y/x) value
+// When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
 { input: [hexToF32(0x80800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.negative.pi.whole, 4096), plusNULP(kValue.f32.negative.pi.whole, 4096)] },
-{ input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.positive.pi.whole, 4096), plusNULP(kValue.f32.positive.pi.whole, 4096)] }]).
+{ input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.positive.pi.whole, 4096), plusNULP(kValue.f32.positive.pi.whole, 4096)] },
+
+// Very large |x| values should cause kAny to be returned, due to the restrictions on division
+{ input: [1, kValue.f32.positive.max], expected: kAny },
+{ input: [1, kValue.f32.positive.nearest_max], expected: kAny },
+{ input: [1, kValue.f32.negative.min], expected: kAny },
+{ input: [1, kValue.f32.negative.nearest_min], expected: kAny }]).
 
 
 fn((t) => {

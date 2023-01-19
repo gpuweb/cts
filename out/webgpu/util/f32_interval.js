@@ -344,11 +344,7 @@ domain,
 impl)
 {
   return (x, y) => {
-    if (!domain.x.contains(x)) {
-      return F32Interval.any();
-    }
-
-    if (!domain.y.some((d) => d.contains(y))) {
+    if (!domain.x.some((d) => d.contains(x)) || !domain.y.some((d) => d.contains(y))) {
       return F32Interval.any();
     }
 
@@ -1099,17 +1095,17 @@ export function atanInterval(n) {
 }
 
 const Atan2IntervalOp = {
-  impl: (y, x) => {
-    // y/x is not defined meaningfully here
-    if (x === 0) {
-      return F32Interval.any();
-    }
-
-    // atan2's accuracy is only defined if y is normal and finite
-    if (isSubnormalNumberF32(y) || !isFiniteF32(y)) {
-      return F32Interval.any();
-    }
-
+  impl: limitBinaryToIntervalDomain(
+  {
+    // For atan2, there params are labelled (y, x), not (x, y), so domain.x is first parameter (y), and domain.y is
+    // the second parameter (x)
+    x: [
+    toF32Interval([kValue.f32.negative.min, kValue.f32.negative.max]),
+    toF32Interval([kValue.f32.positive.min, kValue.f32.positive.max])],
+    // first param must be finite and normal
+    y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])] // inherited from division
+  },
+  (y, x) => {
     const atan_yx = Math.atan(y / x);
     // x > 0, atan(y/x)
     if (x > 0) {
@@ -1123,7 +1119,8 @@ const Atan2IntervalOp = {
 
     // x < 0, y < 0, atan(y/x) - π
     return ulpInterval(atan_yx - kValue.f32.positive.pi.whole, 4096);
-  },
+  }),
+
   extrema: (y, x) => {
     // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
     if (y.contains(0)) {
@@ -1325,7 +1322,7 @@ export function distanceInterval(x, y) {
 const DivisionIntervalOp = {
   impl: limitBinaryToIntervalDomain(
   {
-    x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+    x: [toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max])],
     y: [toF32Interval([-(2 ** 126), -(2 ** -126)]), toF32Interval([2 ** -126, 2 ** 126])]
   },
   (x, y) => {
@@ -1523,7 +1520,7 @@ const LdexpIntervalOp = {
   // Implementing SPIR-V's more restrictive domain until
   // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
   {
-    x: toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max]),
+    x: [toF32Interval([kValue.f32.negative.min, kValue.f32.positive.max])],
     y: [toF32Interval([-126, 128])]
   },
   (e1, e2) => {
