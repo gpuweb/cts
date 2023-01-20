@@ -541,12 +541,16 @@ export class ScalarType {
 
   constructor(kind, size, read) {
     this.kind = kind;
-    this.size = size;
+    this._size = size;
     this.read = read;
   }
 
   toString() {
     return this.kind;
+  }
+
+  get size() {
+    return this._size;
   }
 }
 
@@ -575,6 +579,10 @@ export class VectorType {
 
   toString() {
     return `vec${this.width}<${this.elementType}>`;
+  }
+
+  get size() {
+    return this.elementType.size * this.width;
   }
 }
 
