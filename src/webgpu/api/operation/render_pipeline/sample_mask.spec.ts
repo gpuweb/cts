@@ -3,6 +3,7 @@ Tests that the final sample mask is the logical AND of all the relevant masks.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { assert } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { TypeF32, TypeU32 } from '../../../util/conversion.js';
 import { makeTextureWithContents } from '../../../util/texture.js';
@@ -98,13 +99,15 @@ class F extends GPUTest {
           @vertex
           fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
             var pos = array<vec2<f32>, 30>(
-                // full screen quad
-                vec2<f32>( 1.0,  1.0),
-                vec2<f32>( 1.0, -1.0),
-                vec2<f32>(-1.0, -1.0),
-                vec2<f32>( 1.0,  1.0),
-                vec2<f32>(-1.0, -1.0),
-                vec2<f32>(-1.0,  1.0),
+                // center quad
+                // only covers pixel center which is sample point when sampleCount === 1
+                // small enough to avoid covering any multi sample points
+                vec2<f32>( 0.2,  0.2),
+                vec2<f32>( 0.2, -0.2),
+                vec2<f32>(-0.2, -0.2),
+                vec2<f32>( 0.2,  0.2),
+                vec2<f32>(-0.2, -0.2),
+                vec2<f32>(-0.2,  0.2),
 
                 // Sub quads are representing rasterization mask and
                 // are slightly scaled to avoid covering the pixel center
@@ -143,7 +146,7 @@ class F extends GPUTest {
               );
           
             var uv = array<vec2<f32>, 30>(
-                // full screen quad
+                // center quad
                 vec2<f32>(1.0, 0.0),
                 vec2<f32>(1.0, 1.0),
                 vec2<f32>(0.0, 1.0),
@@ -317,10 +320,13 @@ class F extends GPUTest {
     passEncoder.setBindGroup(0, uniformBindGroup);
     passEncoder.setStencilReference(kStencilReferenceValue);
 
-    if (rasterizationMask === 2 ** sampleCount - 1) {
-      // draw full screen quad
-      passEncoder.draw(6);
+    if (sampleCount === 1) {
+      if ((rasterizationMask & 1) !== 0) {
+        // draw center quad
+        passEncoder.draw(6);
+      }
     } else {
+      assert(sampleCount === 4);
       if ((rasterizationMask & 1) !== 0) {
         // draw top-left quad
         passEncoder.draw(6, 1, 6);

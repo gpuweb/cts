@@ -536,12 +536,12 @@ export type ScalarKind =
 /** ScalarType describes the type of WGSL Scalar. */
 export class ScalarType {
   readonly kind: ScalarKind; // The named type
-  readonly size: number; // In bytes
+  readonly _size: number; // In bytes
   readonly read: (buf: Uint8Array, offset: number) => Scalar; // reads a scalar from a buffer
 
   constructor(kind: ScalarKind, size: number, read: (buf: Uint8Array, offset: number) => Scalar) {
     this.kind = kind;
-    this.size = size;
+    this._size = size;
     this.read = read;
   }
 
@@ -549,8 +549,8 @@ export class ScalarType {
     return this.kind;
   }
 
-  public getSize(): number {
-    return this.size;
+  public get size(): number {
+    return this._size;
   }
 }
 
@@ -581,7 +581,7 @@ export class VectorType {
     return `vec${this.width}<${this.elementType}>`;
   }
 
-  public getSize(): number {
+  public get size(): number {
     return this.elementType.size * this.width;
   }
 }

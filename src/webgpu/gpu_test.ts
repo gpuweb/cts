@@ -689,11 +689,11 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    * Emulate a texture to buffer copy by using a compute shader
    * to load texture value of a single pixel and write to a storage buffer.
    * For sample count == 1, the buffer contains only one value of the sample.
-   * For sample count > 1, the buffer contains (N = 2 ** sampleCount) values sorted
-   * in the order of their sample index [0, 2 ** sampleCount - 1]
+   * For sample count > 1, the buffer contains (N = sampleCount) values sorted
+   * in the order of their sample index [0, sampleCount - 1]
    *
    * This can be useful when the texture to buffer copy is not available to the texture format
-   * e.g. (depth24plus)
+   * e.g. (depth24plus), or when the texture is multisampled.
    *
    * MAINTENANCE_TODO: extend to read multiple pixels with given origin and size.
    *
@@ -701,63 +701,46 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    */
   copySinglePixelTextureToBufferUsingComputePass(
     type: ScalarType,
-    numElements: number,
+    componentCount: number,
     textureView: GPUTextureView,
     sampleCount: number
   ): GPUBuffer {
-    const textureLoadCode =
-      numElements === 1
-        ? `dst.data[sampleIndex] = textureLoad(src, coord, sampleIndex).x;`
-        : `let o = sampleIndex * ${numElements};
-      let v = textureLoad(src, coord, sampleIndex);
-      dst.data[o] = v.r;
-      dst.data[o + 1] = v.g;
-      dst.data[o + 2] = v.b;
-      dst.data[o + 3] = v.a;
-      `;
+    const textureSrcCode =
+      sampleCount === 1
+        ? `@group(0) @binding(0) var src: texture_2d<${type}>;`
+        : `@group(0) @binding(0) var src: texture_multisampled_2d<${type}>;`;
+    const code = `
+      struct Buffer {
+        data: array<${type}>,
+      };
+
+      ${textureSrcCode}
+      @group(0) @binding(1) var<storage, read_write> dst : Buffer;
+
+      @compute @workgroup_size(1) fn main() {
+        var coord = vec2<i32>(0, 0);
+        for (var sampleIndex = 0; sampleIndex < ${sampleCount};
+          sampleIndex = sampleIndex + 1) {
+          let o = sampleIndex * ${componentCount};
+          let v = textureLoad(src, coord, sampleIndex);
+          for (var component = 0; component < ${componentCount}; component = component + 1) {
+            dst.data[o + component] = v[component];
+          }
+        }
+      }
+    `;
     const computePipeline = this.device.createComputePipeline({
       layout: 'auto',
       compute: {
         module: this.device.createShaderModule({
-          code:
-            sampleCount === 1
-              ? `
-            struct Buffer {
-              data: array<${type.toString()}>,
-            };
-
-            @group(0) @binding(0) var src: texture_2d<${type.toString()}>;
-            @group(0) @binding(1) var<storage, read_write> dst : Buffer;
-
-            @compute @workgroup_size(1) fn main() {
-              var coord = vec2<i32>(0, 0);
-              let sampleIndex = 0;
-              ${textureLoadCode}
-            }
-            `
-              : `
-            struct Buffer {
-              data: array<${type.toString()}>,
-            };
-
-            @group(0) @binding(0) var src: texture_multisampled_2d<${type.toString()}>;
-            @group(0) @binding(1) var<storage, read_write> dst : Buffer;
-
-            @compute @workgroup_size(1) fn main() {
-              var coord = vec2<i32>(0, 0);
-              for (var sampleIndex = 0; sampleIndex < ${sampleCount};
-                sampleIndex = sampleIndex + 1) {
-                ${textureLoadCode}
-              }
-            }
-          `,
+          code,
         }),
         entryPoint: 'main',
       },
     });
 
     const storageBuffer = this.device.createBuffer({
-      size: sampleCount * type.getSize() * numElements,
+      size: sampleCount * type.size * componentCount,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
     this.trackForCleanup(storageBuffer);
