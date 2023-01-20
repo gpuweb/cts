@@ -4,8 +4,7 @@ Tests that the final sample mask is the logical AND of all the relevant masks.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { GPUTest } from '../../../gpu_test.js';
-import { makeTextureWithContents } from '../../../util/texture.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 
 const kColors = [
@@ -24,7 +23,7 @@ const kEmptySample = { R: 0, G: 0, B: 0, A: 0 };
 // Format of the render target and resolve target
 const format = 'rgba8unorm';
 
-class F extends GPUTest {
+class F extends TextureTestMixin(GPUTest) {
   async GetResolvedTargetTexture(
     sampleCount: number,
     rasterizationMask: number,
@@ -37,8 +36,7 @@ class F extends GPUTest {
     // texel 2 - Blue
     // texel 3 - Yellow
     const kSampleTextureSize = 2;
-    const sampleTexture = makeTextureWithContents(
-      this.device,
+    const sampleTexture = this.createTextureFromTexelView(
       TexelView.fromTexelsAsBytes(format, coord => {
         const id = coord.x + coord.y * kSampleTextureSize;
         return new Uint8Array([kColors[id].R, kColors[id].G, kColors[id].B, kColors[id].A]);
@@ -77,7 +75,7 @@ class F extends GPUTest {
             @builtin(position) Position : vec4<f32>,
             @location(0) @interpolate(perspective, sample) fragUV : vec2<f32>,
           }
-          
+
           @vertex
           fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
             var pos = array<vec2<f32>, 30>(
@@ -124,7 +122,7 @@ class F extends GPUTest {
                 vec2<f32>(0.01, -1.0),
                 vec2<f32>(0.01,  -0.01)
               );
-          
+
             var uv = array<vec2<f32>, 30>(
                 // full screen quad
                 vec2<f32>(1.0, 0.0),
@@ -166,7 +164,7 @@ class F extends GPUTest {
                 vec2<f32>(0.5, 1.0),
                 vec2<f32>(0.5, 0.5)
               );
-          
+
             var output : VertexOutput;
             output.Position = vec4<f32>(pos[VertexIndex], 0.0, 1.0);
             output.fragUV = uv[VertexIndex];
@@ -186,7 +184,7 @@ class F extends GPUTest {
             @builtin(sample_mask) mask : u32,
             @location(0) color : vec4<f32>,
           }
-          
+
           @fragment
           fn main(@location(0) @interpolate(perspective, sample) fragUV: vec2<f32>) -> FragmentOutput {
             return FragmentOutput(fragMask, textureSample(myTexture, mySampler, fragUV));
