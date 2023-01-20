@@ -11,7 +11,7 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { makeTable, valueof } from '../../../common/util/data_tables.js';
-import { GPUTest } from '../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
   getVideoColorSpaceInit,
@@ -70,7 +70,7 @@ const kVideoExpectations = [
   },
 ] as const;
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 function createExternalTextureSamplingTestPipeline(t: GPUTest): GPURenderPipeline {
   const pipeline = t.device.createRenderPipeline({
@@ -221,25 +221,17 @@ for several combinations of video format and color space.
       passEncoder.end();
       t.device.queue.submit([commandEncoder.finish()]);
 
-      // Top left corner should be red. Sample a few pixels away from the edges to avoid compression
+      // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
-      t.expectSinglePixelIn2DTexture(
-        colorAttachment,
-        kFormat,
-        { x: 5, y: 5 },
+      t.expectSinglePixelComparisonsAreOkInTexture(
+        { texture: colorAttachment },
         {
-          exp: t.params._redExpectation,
-        }
-      );
-
-      // Bottom right corner should be green. Sample a few pixels away from the edges to avoid
-      // compression artifacts.
-      t.expectSinglePixelIn2DTexture(
-        colorAttachment,
-        kFormat,
-        { x: kWidth - 5, y: kHeight - 5 },
-        {
-          exp: t.params._greenExpectation,
+          exp: [
+            // Top left corner should be red.
+            { location: { x: 5, y: 5 }, exp: t.params._redExpectation },
+            // Bottom right corner should be green.
+            { location: { x: kWidth - 5, y: kHeight - 5 }, exp: t.params._greenExpectation },
+          ],
         }
       );
 
@@ -414,23 +406,15 @@ compute shader, for several combinations of video format and color space.
       pass.end();
       t.device.queue.submit([encoder.finish()]);
 
-      // Pixel loaded from top left corner should be red.
-      t.expectSinglePixelIn2DTexture(
-        outputTexture,
-        kFormat,
-        { x: 0, y: 0 },
+      t.expectSinglePixelComparisonsAreOkInTexture(
+        { texture: outputTexture },
         {
-          exp: t.params._redExpectation,
-        }
-      );
-
-      // Pixel loaded from Bottom right corner should be green.
-      t.expectSinglePixelIn2DTexture(
-        outputTexture,
-        kFormat,
-        { x: 1, y: 0 },
-        {
-          exp: t.params._greenExpectation,
+          exp: [
+            // Top left corner should be red.
+            { location: { x: 0, y: 0 }, exp: t.params._redExpectation },
+            // Bottom right corner should be green.
+            { location: { x: 1, y: 0 }, exp: t.params._greenExpectation },
+          ],
         }
       );
 

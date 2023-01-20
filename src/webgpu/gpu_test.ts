@@ -22,11 +22,7 @@ import {
   resolvePerAspectFormat,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
-import {
-  checkElementsEqual,
-  checkElementsBetween,
-  checkElementsFloat16Between,
-} from './util/check_contents.js';
+import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
@@ -512,6 +508,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
 
   /**
    * Expect a whole GPUTexture to have the single provided color.
+   * MAINTENANCE_TODO: Remove this and/or replace it with a helper in TextureTestMixin.
    */
   expectSingleColor(
     src: GPUTexture,
@@ -568,7 +565,10 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
     });
   }
 
-  /** Return a GPUBuffer that data are going to be written into. */
+  /**
+   * Return a GPUBuffer that data are going to be written into.
+   * MAINTENANCE_TODO: Remove this once expectSinglePixelBetweenTwoValuesIn2DTexture is removed.
+   */
   private readSinglePixelFrom2DTexture(
     src: GPUTexture,
     format: SizedTextureFormat,
@@ -598,37 +598,10 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
-   * Expect a single pixel of a 2D texture to have a particular byte representation.
-   *
-   * MAINTENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
-   * MAINTENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
-   */
-  expectSinglePixelIn2DTexture(
-    src: GPUTexture,
-    format: SizedTextureFormat,
-    { x, y }: { x: number; y: number },
-    {
-      exp,
-      slice = 0,
-      layout,
-      generateWarningOnly = false,
-    }: {
-      exp: Uint8Array;
-      slice?: number;
-      layout?: TextureLayoutOptions;
-      generateWarningOnly?: boolean;
-    }
-  ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectGPUBufferValuesEqual(buffer, exp, 0, {
-      mode: generateWarningOnly ? 'warn' : 'fail',
-    });
-  }
-
-  /**
    * Take a single pixel of a 2D texture, interpret it using a TypedArray of the `expected` type,
    * and expect each value in that array to be between the corresponding "expected" values
    * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
+   * MAINTENANCE_TODO: Remove this once there is a way to deal with undefined lerp-ed values.
    */
   expectSinglePixelBetweenTwoValuesIn2DTexture(
     src: GPUTexture,
@@ -662,40 +635,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       typedLength,
       mode: generateWarningOnly ? 'warn' : 'fail',
     });
-  }
-
-  /**
-   * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
-   * to interpret incoming values as float16
-   */
-  expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
-    src: GPUTexture,
-    format: SizedTextureFormat,
-    { x, y }: { x: number; y: number },
-    {
-      exp,
-      slice = 0,
-      layout,
-      generateWarningOnly = false,
-    }: {
-      exp: [Uint16Array, Uint16Array];
-      slice?: number;
-      layout?: TextureLayoutOptions;
-      generateWarningOnly?: boolean;
-    }
-  ): void {
-    this.expectSinglePixelBetweenTwoValuesIn2DTexture(
-      src,
-      format,
-      { x, y },
-      {
-        exp,
-        slice,
-        layout,
-        generateWarningOnly,
-        checkElementsBetweenFn: checkElementsFloat16Between,
-      }
-    );
   }
 
   /**
@@ -797,68 +736,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
-  }
-
-  /**
-   * Creates a texture with the contents of a TexelView.
-   */
-  makeTextureWithContents(
-    texelView: TexelView,
-    desc: Omit<GPUTextureDescriptor, 'format'>
-  ): GPUTexture {
-    return this.trackForCleanup(makeTextureWithContents(this.device, texelView, desc));
-  }
-
-  /**
-   * Create a GPUTexture with multiple mip levels, each having the specified contents.
-   */
-  createTexture2DWithMipmaps(mipmapDataArray: TypedArrayBufferView[]): GPUTexture {
-    const format = 'rgba8unorm';
-    const mipLevelCount = mipmapDataArray.length;
-    const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
-    const texture = this.device.createTexture({
-      mipLevelCount,
-      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depthOrArrayLayers: 1 },
-      format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    this.trackForCleanup(texture);
-
-    const textureEncoder = this.device.createCommandEncoder();
-    for (let i = 0; i < mipLevelCount; i++) {
-      const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
-        format,
-        '2d',
-        [textureSizeMipmap0, textureSizeMipmap0, 1],
-        { mipLevel: i }
-      );
-
-      const data: Uint8Array = new Uint8Array(byteLength);
-      const mipLevelData = mipmapDataArray[i];
-      assert(rowsPerImage === mipSize[0]); // format is rgba8unorm and block size should be 1
-      for (let r = 0; r < rowsPerImage; r++) {
-        const o = r * bytesPerRow;
-        for (let c = o, end = o + mipSize[1] * 4; c < end; c += 4) {
-          data[c] = mipLevelData[0];
-          data[c + 1] = mipLevelData[1];
-          data[c + 2] = mipLevelData[2];
-          data[c + 3] = mipLevelData[3];
-        }
-      }
-      const buffer = this.makeBufferWithContents(
-        data,
-        GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-      );
-
-      textureEncoder.copyBufferToTexture(
-        { buffer, bytesPerRow, rowsPerImage },
-        { texture, mipLevel: i, origin: [0, 0, 0] },
-        mipSize
-      );
-    }
-    this.device.queue.submit([textureEncoder.finish()]);
-
-    return texture;
   }
 
   /**

@@ -56,7 +56,8 @@ Test locations are framebuffer coordinates:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { PerPixelComparison } from '../../../util/texture/texture_ok.js';
 
 const kRTSize: number = 56;
 const kColorFormat = 'rgba8unorm';
@@ -92,10 +93,7 @@ class Point2D {
   }
 }
 
-interface TestLocation {
-  location: Point2D;
-  color: Uint8Array;
-}
+type TestLocation = PerPixelComparison<Uint8Array>;
 
 const VertexLocations = [
   new Point2D(8, 24), // v1
@@ -110,7 +108,7 @@ function getPointTestLocations(expectedColor: Uint8Array): TestLocation[] {
   // Test points are always equal to vertex locations.
   const testLocations: TestLocation[] = [];
   for (const location of VertexLocations) {
-    testLocations.push({ location, color: expectedColor });
+    testLocations.push({ location, exp: expectedColor });
   }
   return testLocations;
 }
@@ -121,17 +119,17 @@ function getLineTestLocations(expectedColor: Uint8Array): TestLocation[] {
     {
       // Line {v1, v2}
       location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Line {v3, v4}
       location: Point2D.getMidpoint(VertexLocations[2], VertexLocations[3]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Line {v5, v6}
       location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
-      color: expectedColor,
+      exp: expectedColor,
     },
   ];
 }
@@ -142,12 +140,12 @@ function getPrimitiveRestartLineTestLocations(expectedColor: Uint8Array): TestLo
     {
       // Line {v1, v2}
       location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Line {v5, v6}
       location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
-      color: expectedColor,
+      exp: expectedColor,
     },
   ];
 }
@@ -158,12 +156,12 @@ function getLineStripTestLocations(expectedColor: Uint8Array): TestLocation[] {
     {
       // Line {v2, v3}
       location: Point2D.getMidpoint(VertexLocations[1], VertexLocations[2]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Line {v4, v5}
       location: Point2D.getMidpoint(VertexLocations[3], VertexLocations[4]),
-      color: expectedColor,
+      exp: expectedColor,
     },
   ];
 }
@@ -174,12 +172,12 @@ function getTriangleListTestLocations(expectedColor: Uint8Array): TestLocation[]
     {
       // Triangle {v1, v2, v3}
       location: Point2D.getCentroid(VertexLocations[0], VertexLocations[1], VertexLocations[2]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Triangle {v4, v5, v6}
       location: Point2D.getCentroid(VertexLocations[3], VertexLocations[4], VertexLocations[5]),
-      color: expectedColor,
+      exp: expectedColor,
     },
   ];
 }
@@ -190,12 +188,12 @@ function getTriangleStripTestLocations(expectedColor: Uint8Array): TestLocation[
     {
       // Triangle {v2, v3, v4}
       location: Point2D.getCentroid(VertexLocations[1], VertexLocations[2], VertexLocations[3]),
-      color: expectedColor,
+      exp: expectedColor,
     },
     {
       // Triangle {v3, v4, v5}
       location: Point2D.getCentroid(VertexLocations[2], VertexLocations[3], VertexLocations[4]),
-      color: expectedColor,
+      exp: expectedColor,
     },
   ];
 }
@@ -216,7 +214,7 @@ function getDefaultTestLocations({
       if (i === locations.length - 1) {
         return {
           location: tl.location,
-          color: kInvalidPixelColor,
+          exp: kInvalidPixelColor,
         };
       } else {
         return tl;
@@ -281,7 +279,7 @@ function generateVertexBuffer(vertexLocations: Point2D[]): Float32Array {
 }
 
 const kDefaultDrawCount = 6;
-class PrimitiveTopologyTest extends GPUTest {
+class PrimitiveTopologyTest extends TextureTestMixin(GPUTest) {
   makeAttachmentTexture(): GPUTexture {
     return this.device.createTexture({
       format: kColorFormat,
@@ -412,15 +410,10 @@ class PrimitiveTopologyTest extends GPUTest {
     renderPass.end();
 
     this.device.queue.submit([encoder.finish()]);
-
-    for (const testPixel of testLocations) {
-      this.expectSinglePixelIn2DTexture(
-        colorAttachment,
-        kColorFormat,
-        { x: testPixel.location.x, y: testPixel.location.y },
-        { exp: testPixel.color }
-      );
-    }
+    this.expectSinglePixelComparisonsAreOkInTexture(
+      { texture: colorAttachment },
+      { exp: testLocations }
+    );
   }
 }
 
