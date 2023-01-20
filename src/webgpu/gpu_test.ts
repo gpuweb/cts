@@ -507,7 +507,7 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   // MAINTENANCE_TODO: add an expectContents for textures, which logs data: uris on failure
 
   /**
-   * Expect a whole GPUTexture to have the single provided color.
+   * Expect an entire GPUTexture to have a single color at the given mip level (defaults to 0).
    * MAINTENANCE_TODO: Remove this and/or replace it with a helper in TextureTestMixin.
    */
   expectSingleColor(
@@ -527,6 +527,11 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       layout?: TextureLayoutOptions;
     }
   ): void {
+    assert(
+      slice === 0 || dimension === '2d',
+      'texture slices are only implemented for 2d textures'
+    );
+
     format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
@@ -534,6 +539,11 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       size,
       layout
     );
+    const copySize = [
+      mipSize[0],
+      dimension !== '1d' ? mipSize[1] : 1,
+      dimension === '3d' ? mipSize[2] : 1,
+    ];
 
     const rep = kTexelRepresentationInfo[format as EncodableTextureFormat];
     const expectedTexelData = rep.pack(rep.encode(exp));
@@ -553,13 +563,13 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
         aspect: layout?.aspect,
       },
       { buffer, bytesPerRow, rowsPerImage },
-      mipSize
+      copySize
     );
     this.queue.submit([commandEncoder.finish()]);
 
     this.expectGPUBufferRepeatsSingleValue(buffer, {
       expectedValue: expectedTexelData,
-      numRows: rowsPerImage,
+      numRows: rowsPerImage * copySize[2],
       minBytesPerRow,
       bytesPerRow,
     });
