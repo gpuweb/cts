@@ -326,3 +326,25 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
     });
   }
 }
+
+export type SubcaseBatchStateFromFixture<F> = F extends Fixture<infer S> ? S : never;
+
+/**
+ * FixtureClass encapsulates a constructor for fixture and a corresponding
+ * shared state factory function. An interface version of the type is also
+ * defined for mixin declaration use ONLY. The interface version is necessary
+ * because mixin classes need a constructor with a single any[] rest
+ * parameter.
+ */
+export type FixtureClass<F extends Fixture = Fixture> = {
+  new (sharedState: SubcaseBatchStateFromFixture<F>, log: TestCaseRecorder, params: TestParams): F;
+  MakeSharedState(params: TestParams): SubcaseBatchStateFromFixture<F>;
+};
+export type FixtureClassInterface<F extends Fixture = Fixture> = {
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  new (...args: any[]): F;
+  MakeSharedState(params: TestParams): SubcaseBatchStateFromFixture<F>;
+};
+export type FixtureClassWithMixin<FC, M> = FC extends FixtureClass<infer F>
+  ? FixtureClass<F & M>
+  : never;
