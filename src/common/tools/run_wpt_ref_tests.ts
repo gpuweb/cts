@@ -172,38 +172,45 @@ async function compareImages(
   const diffPixels = new Uint32Array(diffData.buffer);
   const kRed = 0xff0000ff;
   const kWhite = 0xffffffff;
+  const kYellow = 0xff00ffff;
 
-  let numDifferent = 0;
+  let numPixelsDifferent = 0;
+  let anyPixelsOutOfRange = false;
   for (let y = startingRow; y < height; ++y) {
     for (let x = 0; x < width; ++x) {
       const offset = y * width + x;
-      let bad = false;
-      for (let c = 0; c < 4 && !bad; ++c) {
+      let isDifferent = false;
+      let outOfRange = false;
+      for (let c = 0; c < 4 && !outOfRange; ++c) {
         const off = offset * 4 + c;
         const v0 = img1.data[off];
         const v1 = img2.data[off];
-        const diff = Math.abs(v0 - v1);
-        const inRange = diff >= maxDifference[0] && diff <= maxDifference[1];
-        bad = diff > 0 && !inRange;
+        const channelDiff = Math.abs(v0 - v1);
+        outOfRange ||= channelDiff < maxDifference[0] || channelDiff > maxDifference[1];
+        isDifferent ||= channelDiff > 0;
       }
-      numDifferent += bad ? 1 : 0;
-      diffPixels[offset] = bad ? kRed : kWhite;
+      numPixelsDifferent += isDifferent ? 1 : 0;
+      anyPixelsOutOfRange ||= outOfRange;
+      diffPixels[offset] = outOfRange ? kRed : isDifferent ? kYellow : kWhite;
     }
   }
 
-  const same = numDifferent >= totalPixels[0] && numDifferent <= totalPixels[1];
-  if (!same) {
+  const pass =
+    !anyPixelsOutOfRange &&
+    numPixelsDifferent >= totalPixels[0] &&
+    numPixelsDifferent <= totalPixels[1];
+  if (!pass) {
     writePng(diffName, width, height, diffData);
     console.error(
       `FAIL: too many differences in: ${filename1} vs ${filename2}
-       ${numDifferent} differences, expected: ${totalPixels[0]}-${totalPixels[1]} with range: ${maxDifference[0]}-${maxDifference[1]}
+       ${numPixelsDifferent} differences, expected: ${totalPixels[0]}-${totalPixels[1]} with range: ${maxDifference[0]}-${maxDifference[1]}
        wrote difference to: ${diffName};
       `
     );
   } else {
     console.log(`PASS`);
   }
-  return same;
+  return pass;
 }
 
 function exists(filename: string) {
