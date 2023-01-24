@@ -12,6 +12,7 @@ import {
   kFloat16Format,
   kFloat32Format,
   Scalar,
+  u32,
 } from './conversion.js';
 
 /**
@@ -626,6 +627,55 @@ export function fullI32Range(
   ].map(Math.trunc);
 }
 
+/** Short list of u32 values of interest to test against */
+const kInterestingU32Values: number[] = [0, 1, kValue.u32.max / 2, kValue.u32.max];
+
+/** @returns minimal u32 values that cover the entire range of u32 behaviours
+ *
+ * This is used instead of fullU32Range when the number of test cases being
+ * generated is a super linear function of the length of u32 values which is
+ * leading to time outs.
+ */
+export function sparseU32Range(): number[] {
+  return kInterestingU32Values;
+}
+
+const kVectorU32Values = {
+  2: kInterestingU32Values.flatMap(f => [
+    [f, 1],
+    [1, f],
+  ]),
+  3: kInterestingU32Values.flatMap(f => [
+    [f, 1, 2],
+    [1, f, 2],
+    [1, 2, f],
+  ]),
+  4: kInterestingU32Values.flatMap(f => [
+    [f, 1, 2, 3],
+    [1, f, 2, 3],
+    [1, 2, f, 3],
+    [1, 2, 3, f],
+  ]),
+};
+
+/**
+ * Returns set of vectors, indexed by dimension containing interesting u32
+ * values.
+ *
+ * The tests do not do the simple option for coverage of computing the cartesian
+ * product of all of the interesting u32 values N times for vecN tests,
+ * because that creates a huge number of tests for vec3 and vec4, leading to
+ * time outs.
+ *
+ * Instead they insert the interesting u32 values into each location of the
+ * vector to get a spread of testing over the entire range. This reduces the
+ * number of cases being run substantially, but maintains coverage.
+ */
+export function vectorU32Range(dim: number): number[][] {
+  assert(dim === 2 || dim === 3 || dim === 4, 'vectorU32Range only accepts dimensions 2, 3, and 4');
+  return kVectorU32Values[dim];
+}
+
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit unsigned ints
  *
@@ -706,7 +756,7 @@ const kVectorF32Values = {
  * because that creates a huge number of tests for vec3 and vec4, leading to
  * time outs.
  *
- *  Instead they insert the interesting f32 values into each location of the
+ * Instead they insert the interesting f32 values into each location of the
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
@@ -788,6 +838,11 @@ export function quantizeToF32(num: number): number {
 /** @returns the closest 32-bit signed integer value to the input */
 export function quantizeToI32(num: number): number {
   return i32(num).value as number;
+}
+
+/** @returns the closest 32-bit signed integer value to the input */
+export function quantizeToU32(num: number): number {
+  return u32(num).value as number;
 }
 
 /** @returns whether the number is an integer and a power of two */
