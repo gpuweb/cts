@@ -1,9 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import * as child_process from 'child_process';import * as fs from 'fs';
-import * as activeWindow from 'active-win';
-
+**/import * as fs from 'fs';
 import { PNG } from 'pngjs';
+import { screenshot } from 'screenshot-ftw';
 
 
 const waitMS = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,7 +36,7 @@ export class ScreenshotManager {
     let window;
     for (let i = 0; !window && i < 100; ++i) {
       await waitMS(50);
-      const windows = await activeWindow.getOpenWindows({ screenRecordingPermission: true });
+      const windows = await screenshot.getWindows();
       window = windows.find((window) => window.title.includes(title));
     }
     if (!window) {
@@ -54,7 +53,7 @@ export class ScreenshotManager {
       document.title = 'screenshot';
       window.history.replaceState({}, '', '/screenshot');
     });
-    child_process.spawnSync('screencapture', ['-o', '-x', `-l${this.window.id}`, screenshotName]);
+    await screenshot.captureWindowById(screenshotName, this.window.id);
   }
 }
 //# sourceMappingURL=image_utils.js.map

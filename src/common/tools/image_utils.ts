@@ -1,9 +1,8 @@
-import * as child_process from 'child_process';
 import * as fs from 'fs';
 
-import * as activeWindow from 'active-win';
 import { Page } from 'playwright-core';
 import { PNG } from 'pngjs';
+import { screenshot, WindowInfo } from 'screenshot-ftw';
 
 // eslint-disable-next-line ban/ban
 const waitMS = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -23,7 +22,7 @@ export function writePng(filename: string, width: number, height: number, data: 
 }
 
 export class ScreenshotManager {
-  window?: activeWindow.Result;
+  window?: WindowInfo;
 
   async init(page: Page) {
     // set the title to some random number so we can find the window by title
@@ -37,7 +36,7 @@ export class ScreenshotManager {
     let window;
     for (let i = 0; !window && i < 100; ++i) {
       await waitMS(50);
-      const windows = await activeWindow.getOpenWindows({ screenRecordingPermission: true });
+      const windows = await screenshot.getWindows();
       window = windows.find(window => window.title.includes(title));
     }
     if (!window) {
@@ -54,6 +53,6 @@ export class ScreenshotManager {
       document.title = 'screenshot';
       window.history.replaceState({}, '', '/screenshot');
     });
-    child_process.spawnSync('screencapture', ['-o', '-x', `-l${this.window!.id}`, screenshotName]);
+    await screenshot.captureWindowById(screenshotName, this.window!.id);
   }
 }
