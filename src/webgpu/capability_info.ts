@@ -265,8 +265,8 @@ export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
 assert(
   kRenderableColorTextureFormats.every(
     f =>
-    kAllTextureFormatInfo[f].renderTargetComponentAlignment !== undefined &&
-    kAllTextureFormatInfo[f].renderTargetPixelByteCost !== undefined
+      kAllTextureFormatInfo[f].renderTargetComponentAlignment !== undefined &&
+      kAllTextureFormatInfo[f].renderTargetPixelByteCost !== undefined
   )
 );
 
@@ -1092,7 +1092,6 @@ export const kFeatureNameInfo: {
   'timestamp-query': {},
   'indirect-first-instance': {},
   'shader-f16': {},
-  'bgra8unorm-storage': {},
   'rg11b10ufloat-renderable': {},
 };
 /** List of all GPUFeatureName values. */

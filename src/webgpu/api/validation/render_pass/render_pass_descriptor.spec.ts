@@ -153,7 +153,7 @@ g.test('color_attachments,empty')
     });
   });
 
-g.test('color_attachments,out_of_bounds')
+g.test('color_attachments,limits,maxColorAttachments')
   .desc(
     `
   Test that the out of bound of color attachment indexes are handled.
@@ -176,11 +176,11 @@ g.test('color_attachments,out_of_bounds')
     t.tryRenderPass(_success, { colorAttachments });
   });
 
-g.test('color_attachments,bytes_per_sample,aligned')
+g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
   .desc(
     `
     Test that the total bytes per sample of the formats of the color attachments must be no greater
-    than maxColorAttachmentBytesPerPixel when the components are aligned (same format).
+    than maxColorAttachmentBytesPerSample when the components are aligned (same format).
   `
   )
   .params(u =>
@@ -209,11 +209,11 @@ g.test('color_attachments,bytes_per_sample,aligned')
     );
   });
 
-g.test('color_attachments,bytes_per_sample,unaligned')
+g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
   .desc(
     `
     Test that the total bytes per sample of the formats of the color attachments must be no greater
-    than maxColorAttachmentBytesPerPixel when the components are (potentially) unaligned.
+    than maxColorAttachmentBytesPerSample when the components are (potentially) unaligned.
   `
   )
   .params(u =>

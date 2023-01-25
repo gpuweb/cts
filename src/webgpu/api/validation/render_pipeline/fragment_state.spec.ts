@@ -46,7 +46,24 @@ g.test('color_target_exists')
     t.doCreateRenderPipelineTest(isAsync, false, badDescriptor);
   });
 
-g.test('max_color_attachments_limit')
+g.test('targets_format_renderable')
+  .desc(`Tests that color target state format must have RENDER_ATTACHMENT capability.`)
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(async t => {
+    const { isAsync, format } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    const descriptor = t.getDescriptor({ targets: [{ format }] });
+
+    t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
+  });
+
+g.test('limits,maxColorAttachments')
   .desc(
     `Tests that color state targets length must not be larger than device.limits.maxColorAttachments.`
   )
@@ -69,24 +86,7 @@ g.test('max_color_attachments_limit')
     );
   });
 
-g.test('targets_format_renderable')
-  .desc(`Tests that color target state format must have RENDER_ATTACHMENT capability.`)
-  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
-  .beforeAllSubcases(t => {
-    const { format } = t.params;
-    const info = kTextureFormatInfo[format];
-    t.selectDeviceOrSkipTestCase(info.feature);
-  })
-  .fn(async t => {
-    const { isAsync, format } = t.params;
-    const info = kTextureFormatInfo[format];
-
-    const descriptor = t.getDescriptor({ targets: [{ format }] });
-
-    t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
-  });
-
-g.test('targets_formats_bytes_per_sample,aligned')
+g.test('limits,maxColorAttachmentBytesPerSample,aligned')
   .desc(
     `
   Tests that the total color attachment bytes per sample must not be larger than
@@ -121,7 +121,7 @@ g.test('targets_formats_bytes_per_sample,aligned')
     );
   });
 
-g.test('targets_formats_bytes_per_sample,unaligned')
+g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
   .desc(
     `
   Tests that the total color attachment bytes per sample must not be larger than
