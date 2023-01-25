@@ -5,8 +5,10 @@ TODO: review for completeness
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { range } from '../../../../common/util/util.js';
 import {
   kDepthStencilFormats,
+  kMaxColorAttachments,
   kQueryTypes,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
@@ -171,6 +173,85 @@ g.test('color_attachments,out_of_bounds')
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
 
+    t.tryRenderPass(_success, { colorAttachments });
+  });
+
+g.test('color_attachments,bytes_per_sample,aligned')
+  .desc(
+    `
+    Test that the total bytes per sample of the formats of the color attachments must be no greater
+    than maxColorAttachmentBytesPerPixel when the components are aligned (same format).
+  `
+  )
+  .params(u =>
+    u
+      .combine('format', kRenderableColorTextureFormats)
+      .beginSubcases()
+      .combine(
+        'attachmentCount',
+        range(kMaxColorAttachments, i => i + 1)
+      )
+  )
+  .fn(async t => {
+    const { format, attachmentCount } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    const colorAttachments = [];
+    for (let i = 0; i < attachmentCount; i++) {
+      const colorTexture = t.createTexture();
+      colorAttachments.push(t.getColorAttachment(colorTexture));
+    }
+
+    t.tryRenderPass(
+      (info.renderTargetPixelByteCost ?? 0) * attachmentCount <=
+        t.device.limits.maxColorAttachmentBytesPerSample,
+      { colorAttachments }
+    );
+  });
+
+g.test('color_attachments,bytes_per_sample,unaligned')
+  .desc(
+    `
+    Test that the total bytes per sample of the formats of the color attachments must be no greater
+    than maxColorAttachmentBytesPerPixel when the components are (potentially) unaligned.
+  `
+  )
+  .params(u =>
+    u.combineWithParams([
+      // Alignment causes the first 1 byte R8Unorm to become 4 bytes. So even though
+      // 1+4+8+16+1 < 32, the 4 byte alignment requirement of R32Float makes the first R8Unorm
+      // become 4 and 4+4+8+16+1 > 32. Re-ordering this so the R8Unorm's are at the end, however
+      // is allowed: 4+8+16+1+1 < 32.
+      {
+        formats: [
+          'r8unorm',
+          'r32float',
+          'rgba8unorm',
+          'rgba32float',
+          'r8unorm',
+        ] as GPUTextureFormat[],
+        _success: true,
+      },
+      {
+        formats: [
+          'r32float',
+          'rgba8unorm',
+          'rgba32float',
+          'r8unorm',
+          'r8unorm',
+        ] as GPUTextureFormat[],
+        _success: false,
+      },
+    ])
+  )
+  .fn(async t => {
+    const { formats, _success } = t.params;
+
+    const colorAttachments = [];
+    for (const format of formats) {
+      const colorTexture = t.createTexture({ format });
+      colorAttachments.push(t.getColorAttachment(colorTexture));
+    }
     t.tryRenderPass(_success, { colorAttachments });
   });
 

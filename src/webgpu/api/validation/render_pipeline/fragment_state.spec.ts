@@ -10,6 +10,7 @@ import {
   kTextureFormatInfo,
   kBlendFactors,
   kBlendOperations,
+  kMaxColorAttachments,
 } from '../../../capability_info.js';
 import {
   getFragmentShaderCodeWithOutput,
@@ -56,7 +57,7 @@ g.test('max_color_attachments_limit')
     const descriptor = t.getDescriptor({
       targets: range(targetsLength, i => {
         // Set writeMask to 0 for attachments without fragment output
-        return { format: 'rgba8unorm', writeMask: i === 0 ? 0xf : 0 };
+        return { format: 'rgba8uint', writeMask: i === 0 ? 0xf : 0 };
       }),
       fragmentShaderCode: kDefaultFragmentShaderCode,
     });
@@ -83,6 +84,91 @@ g.test('targets_format_renderable')
     const descriptor = t.getDescriptor({ targets: [{ format }] });
 
     t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
+  });
+
+g.test('targets_formats_bytes_per_sample,aligned')
+  .desc(
+    `
+  Tests that the total color attachment bytes per sample must not be larger than
+  maxColorAttachmentBytesPerSample when using the same format for multiple attachments.
+  `
+  )
+  .params(u =>
+    u
+      .combine('format', kRenderableColorTextureFormats)
+      .beginSubcases()
+      .combine(
+        'attachmentCount',
+        range(kMaxColorAttachments, i => i + 1)
+      )
+      .combine('isAsync', [false, true])
+  )
+  .fn(async t => {
+    const { format, attachmentCount, isAsync } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    const descriptor = t.getDescriptor({
+      targets: range(attachmentCount, () => {
+        return { format, writeMask: 0 };
+      }),
+    });
+
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      (info.renderTargetPixelByteCost ?? 0) * attachmentCount <=
+        t.device.limits.maxColorAttachmentBytesPerSample,
+      descriptor
+    );
+  });
+
+g.test('targets_formats_bytes_per_sample,unaligned')
+  .desc(
+    `
+  Tests that the total color attachment bytes per sample must not be larger than
+  maxColorAttachmentBytesPerSample when using various sets of (potentially) unaligned formats.
+  `
+  )
+  .params(u =>
+    u
+      .combineWithParams([
+        // Alignment causes the first 1 byte R8Unorm to become 4 bytes. So even though
+        // 1+4+8+16+1 < 32, the 4 byte alignment requirement of R32Float makes the first R8Unorm
+        // become 4 and 4+4+8+16+1 > 32. Re-ordering this so the R8Unorm's are at the end, however
+        // is allowed: 4+8+16+1+1 < 32.
+        {
+          formats: [
+            'r8unorm',
+            'r32float',
+            'rgba8unorm',
+            'rgba32float',
+            'r8unorm',
+          ] as GPUTextureFormat[],
+          _success: true,
+        },
+        {
+          formats: [
+            'r32float',
+            'rgba8unorm',
+            'rgba32float',
+            'r8unorm',
+            'r8unorm',
+          ] as GPUTextureFormat[],
+          _success: false,
+        },
+      ])
+      .beginSubcases()
+      .combine('isAsync', [false, true])
+  )
+  .fn(async t => {
+    const { formats, _success, isAsync } = t.params;
+
+    const descriptor = t.getDescriptor({
+      targets: formats.map(f => {
+        return { format: f, writeMask: 0 };
+      }),
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
   });
 
 g.test('targets_format_filterable')

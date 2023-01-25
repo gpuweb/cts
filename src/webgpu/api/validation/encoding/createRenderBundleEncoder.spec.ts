@@ -8,6 +8,8 @@ import {
   kDepthStencilFormats,
   kTextureFormatInfo,
   kMaxColorAttachments,
+  kRenderableColorTextureFormats,
+  kLimitInfo,
 } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
@@ -18,14 +20,15 @@ g.test('attachment_state')
     `
     Tests that createRenderBundleEncoder correctly validates the attachment state passed to it.
       - Must be <= kMaxColorAttachments (8) colorFormats
+      - Must have color attachment bytes per sample <= maxColorAttachmentBytesPerSample
       - Must have a depthStencilFormat if no colorFormats are given
     `
   )
   .params(u =>
     u //
       .combine('colorFormatCount', [...Array(kMaxColorAttachments + 2).keys()]) // 0-9
+      .combine('colorFormat', [undefined, ...kRenderableColorTextureFormats])
       .beginSubcases()
-      .combine('colorFormat', [undefined, 'bgra8unorm'])
       .combine('depthStencilFormat', [undefined, 'depth24plus-stencil8'] as const)
       .filter(({ colorFormat, colorFormatCount }) => {
         // Only run the test with 0 colorFormats once.
@@ -40,6 +43,15 @@ g.test('attachment_state')
 
     // Ensure up to kMaxColorAttachments (8) color formats are allowed.
     let shouldError = colorFormatCount > kMaxColorAttachments;
+
+    // Ensure color attachment bytes per sample is less than maxColorAttachmentBytesPerSample.
+    if (
+      colorFormat !== undefined &&
+      (kTextureFormatInfo[colorFormat].renderTargetPixelByteCost ?? 0) * colorFormatCount >
+        kLimitInfo.maxColorAttachmentBytesPerSample.default
+    ) {
+      shouldError = true;
+    }
 
     // Zero color formats are only allowed if a depthStencilFormat is provided.
     if (depthStencilFormat === undefined && colorFormatCount === 0) {
