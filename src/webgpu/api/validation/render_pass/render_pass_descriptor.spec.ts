@@ -201,12 +201,12 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
       const colorTexture = t.createTexture();
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
+    const shouldError =
+      info.renderTargetPixelByteCost === undefined ||
+      info.renderTargetPixelByteCost * attachmentCount >
+        t.device.limits.maxColorAttachmentBytesPerSample;
 
-    t.tryRenderPass(
-      (info.renderTargetPixelByteCost ?? 0) * attachmentCount <=
-        t.device.limits.maxColorAttachmentBytesPerSample,
-      { colorAttachments }
-    );
+    t.tryRenderPass(!shouldError, { colorAttachments });
   });
 
 g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')

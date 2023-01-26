@@ -53,7 +53,7 @@ g.test('color,attachments')
       .beginSubcases()
       .combine('attachmentCount', [2, 3, 4])
       .filter(t => {
-        // We only need to test formats that are have a valid color attachment bytes per sample.
+        // We only need to test formats that have a valid color attachment bytes per sample.
         const pixelByteCost = kTextureFormatInfo[t.format].renderTargetPixelByteCost;
         return (
           pixelByteCost !== undefined &&

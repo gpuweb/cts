@@ -74,7 +74,7 @@ g.test('limits,maxColorAttachments')
     const descriptor = t.getDescriptor({
       targets: range(targetsLength, i => {
         // Set writeMask to 0 for attachments without fragment output
-        return { format: 'rgba8uint', writeMask: i === 0 ? 0xf : 0 };
+        return { format: 'rg8unorm', writeMask: i === 0 ? 0xf : 0 };
       }),
       fragmentShaderCode: kDefaultFragmentShaderCode,
     });
@@ -112,13 +112,12 @@ g.test('limits,maxColorAttachmentBytesPerSample,aligned')
         return { format, writeMask: 0 };
       }),
     });
+    const shouldError =
+      info.renderTargetPixelByteCost === undefined ||
+      info.renderTargetPixelByteCost * attachmentCount >
+        t.device.limits.maxColorAttachmentBytesPerSample;
 
-    t.doCreateRenderPipelineTest(
-      isAsync,
-      (info.renderTargetPixelByteCost ?? 0) * attachmentCount <=
-        t.device.limits.maxColorAttachmentBytesPerSample,
-      descriptor
-    );
+    t.doCreateRenderPipelineTest(isAsync, !shouldError, descriptor);
   });
 
 g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
