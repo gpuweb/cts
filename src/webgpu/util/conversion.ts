@@ -621,12 +621,15 @@ export class MatrixType {
    * given byte offset
    */
   public read(buf: Uint8Array, offset: number): Matrix {
-    const elements: Array<Array<Scalar>> = [];
+    const elements: Scalar[][] = [];
     for (let c = 0; c < this.cols; c++) {
-      for (let r = 0; r < this.cols; r++) {
-        elements[c][r] = this.elementType.read(buf, offset);
+      const col: Scalar[] = [];
+      for (let r = 0; r < this.rows; r++) {
+        const e = this.elementType.read(buf, offset);
+        col.push(e);
         offset += this.elementType.size;
       }
+      elements.push(col);
     }
     return new Matrix(elements);
   }
