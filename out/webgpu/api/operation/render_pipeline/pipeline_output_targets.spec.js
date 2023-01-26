@@ -4,7 +4,11 @@
 - Test pipeline outputs with different color attachment number, formats, component counts, etc.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import {
+kLimitInfo,
+kRenderableColorTextureFormats,
+kTextureFormatInfo } from
+'../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
@@ -48,6 +52,14 @@ u.
 combine('format', kRenderableColorTextureFormats).
 beginSubcases().
 combine('attachmentCount', [2, 3, 4]).
+filter((t) => {
+  // We only need to test formats that have a valid color attachment bytes per sample.
+  const pixelByteCost = kTextureFormatInfo[t.format].renderTargetPixelByteCost;
+  return (
+    pixelByteCost !== undefined &&
+    pixelByteCost * t.attachmentCount <= kLimitInfo.maxColorAttachmentBytesPerSample.default);
+
+}).
 expand('emptyAttachmentId', (p) => range(p.attachmentCount, (i) => i))).
 
 beforeAllSubcases((t) => {

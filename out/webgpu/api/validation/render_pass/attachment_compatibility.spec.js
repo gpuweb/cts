@@ -206,13 +206,13 @@ combine('bundleCount', kColorAttachmentCounts)).
 fn((t) => {
   const { passCount, bundleCount } = t.params;
   const bundleEncoder = t.device.createRenderBundleEncoder({
-    colorFormats: range(bundleCount, () => 'rgba8unorm')
+    colorFormats: range(bundleCount, () => 'rgba8uint')
   });
   const bundle = bundleEncoder.finish();
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
   const pass = encoder.beginRenderPass({
-    colorAttachments: range(passCount, () => t.createColorAttachment('rgba8unorm'))
+    colorAttachments: range(passCount, () => t.createColorAttachment('rgba8uint'))
   });
   pass.executeBundles([bundle]);
   pass.end();
@@ -240,7 +240,7 @@ p.attachmentCount === p.bundleAttachments.length)).
 
 fn((t) => {
   const { passAttachments, bundleAttachments } = t.params;
-  const colorFormats = bundleAttachments.map((i) => i ? 'rgba8unorm' : null);
+  const colorFormats = bundleAttachments.map((i) => i ? 'rgba8uint' : null);
   const bundleEncoder = t.device.createRenderBundleEncoder({
     colorFormats
   });
@@ -248,7 +248,7 @@ fn((t) => {
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder('non-pass');
   const colorAttachments = passAttachments.map((i) =>
-  t.createColorAttachment(i ? 'rgba8unorm' : null));
+  t.createColorAttachment(i ? 'rgba8uint' : null));
 
   const pass = encoder.beginRenderPass({
     colorAttachments
@@ -388,11 +388,11 @@ combine('pipelineCount', kColorAttachmentCounts)).
 fn((t) => {
   const { encoderType, encoderCount, pipelineCount } = t.params;
   const pipeline = t.createRenderPipeline(
-  range(pipelineCount, () => ({ format: 'rgba8unorm', writeMask: 0 })));
+  range(pipelineCount, () => ({ format: 'rgba8uint', writeMask: 0 })));
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
-    attachmentInfo: { colorFormats: range(encoderCount, () => 'rgba8unorm') }
+    attachmentInfo: { colorFormats: range(encoderCount, () => 'rgba8uint') }
   });
   encoder.setPipeline(pipeline);
   validateFinishAndSubmit(encoderCount === pipelineCount, true);
@@ -422,11 +422,11 @@ fn((t) => {
   const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
 
   const colorTargets = pipelineAttachments.map((i) =>
-  i ? { format: 'rgba8unorm', writeMask: 0 } : null);
+  i ? { format: 'rgba8uint', writeMask: 0 } : null);
 
   const pipeline = t.createRenderPipeline(colorTargets);
 
-  const colorFormats = encoderAttachments.map((i) => i ? 'rgba8unorm' : null);
+  const colorFormats = encoderAttachments.map((i) => i ? 'rgba8uint' : null);
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
     attachmentInfo: { colorFormats }
   });

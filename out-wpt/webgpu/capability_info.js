@@ -86,53 +86,55 @@ const kRegularTextureFormatInfo = makeTable(
     'bytesPerBlock',
     'blockWidth',
     'blockHeight',
+    'renderTargetPixelByteCost',
+    'renderTargetComponentAlignment',
     'feature',
     'baseFormat',
   ],
-  [, , , true, false, false, , true, true, , , 1, 1, , undefined],
+  [, , , true, false, false, , true, true, , , 1, 1, undefined, undefined, , undefined],
   {
     // 8-bit formats
-    r8unorm: [true, true, true, , , , false, , , 'float', 1],
+    r8unorm: [true, true, true, , , , false, , , 'float', 1, , , 1, 1],
     r8snorm: [false, false, false, , , , false, , , 'float', 1],
-    r8uint: [true, true, false, , , , false, , , 'uint', 1],
-    r8sint: [true, true, false, , , , false, , , 'sint', 1],
+    r8uint: [true, true, false, , , , false, , , 'uint', 1, , , 1, 1],
+    r8sint: [true, true, false, , , , false, , , 'sint', 1, , , 1, 1],
     // 16-bit formats
-    r16uint: [true, true, false, , , , false, , , 'uint', 2],
-    r16sint: [true, true, false, , , , false, , , 'sint', 2],
-    r16float: [true, true, true, , , , false, , , 'float', 2],
-    rg8unorm: [true, true, true, , , , false, , , 'float', 2],
+    r16uint: [true, true, false, , , , false, , , 'uint', 2, , , 2, 2],
+    r16sint: [true, true, false, , , , false, , , 'sint', 2, , , 2, 2],
+    r16float: [true, true, true, , , , false, , , 'float', 2, , , 2, 2],
+    rg8unorm: [true, true, true, , , , false, , , 'float', 2, , , 2, 1],
     rg8snorm: [false, false, false, , , , false, , , 'float', 2],
-    rg8uint: [true, true, false, , , , false, , , 'uint', 2],
-    rg8sint: [true, true, false, , , , false, , , 'sint', 2],
+    rg8uint: [true, true, false, , , , false, , , 'uint', 2, , , 2, 1],
+    rg8sint: [true, true, false, , , , false, , , 'sint', 2, , , 2, 1],
     // 32-bit formats
-    r32uint: [true, false, false, , , , true, , , 'uint', 4],
-    r32sint: [true, false, false, , , , true, , , 'sint', 4],
-    r32float: [true, true, false, , , , true, , , 'unfilterable-float', 4],
-    rg16uint: [true, true, false, , , , false, , , 'uint', 4],
-    rg16sint: [true, true, false, , , , false, , , 'sint', 4],
-    rg16float: [true, true, true, , , , false, , , 'float', 4],
-    rgba8unorm: [true, true, true, , , , true, , , 'float', 4, , , , 'rgba8unorm'],
-    'rgba8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , , 'rgba8unorm'],
+    r32uint: [true, false, false, , , , true, , , 'uint', 4, , , 4, 4],
+    r32sint: [true, false, false, , , , true, , , 'sint', 4, , , 4, 4],
+    r32float: [true, true, false, , , , true, , , 'unfilterable-float', 4, , , 4, 4],
+    rg16uint: [true, true, false, , , , false, , , 'uint', 4, , , 4, 2],
+    rg16sint: [true, true, false, , , , false, , , 'sint', 4, , , 4, 2],
+    rg16float: [true, true, true, , , , false, , , 'float', 4, , , 4, 2],
+    rgba8unorm: [true, true, true, , , , true, , , 'float', 4, , , 8, 1, , 'rgba8unorm'],
+    'rgba8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , 8, 1, , 'rgba8unorm'],
     rgba8snorm: [false, false, false, , , , true, , , 'float', 4],
-    rgba8uint: [true, true, false, , , , true, , , 'uint', 4],
-    rgba8sint: [true, true, false, , , , true, , , 'sint', 4],
-    bgra8unorm: [true, true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
-    'bgra8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , , 'bgra8unorm'],
+    rgba8uint: [true, true, false, , , , true, , , 'uint', 4, , , 4, 1],
+    rgba8sint: [true, true, false, , , , true, , , 'sint', 4, , , 4, 1],
+    bgra8unorm: [true, true, true, , , , false, , , 'float', 4, , , 8, 1, , 'bgra8unorm'],
+    'bgra8unorm-srgb': [true, true, true, , , , false, , , 'float', 4, , , 8, 1, , 'bgra8unorm'],
     // Packed 32-bit formats
-    rgb10a2unorm: [true, true, true, , , , false, , , 'float', 4],
-    rg11b10ufloat: [false, false, false, , , , false, , , 'float', 4],
+    rgb10a2unorm: [true, true, true, , , , false, , , 'float', 4, , , 8, 4],
+    rg11b10ufloat: [false, false, false, , , , false, , , 'float', 4, , , 8, 4],
     rgb9e5ufloat: [false, false, false, , , , false, , , 'float', 4],
     // 64-bit formats
-    rg32uint: [true, false, false, , , , true, , , 'uint', 8],
-    rg32sint: [true, false, false, , , , true, , , 'sint', 8],
-    rg32float: [true, false, false, , , , true, , , 'unfilterable-float', 8],
-    rgba16uint: [true, true, false, , , , true, , , 'uint', 8],
-    rgba16sint: [true, true, false, , , , true, , , 'sint', 8],
-    rgba16float: [true, true, true, , , , true, , , 'float', 8],
+    rg32uint: [true, false, false, , , , true, , , 'uint', 8, , , 8, 4],
+    rg32sint: [true, false, false, , , , true, , , 'sint', 8, , , 8, 4],
+    rg32float: [true, false, false, , , , true, , , 'unfilterable-float', 8, , , 8, 4],
+    rgba16uint: [true, true, false, , , , true, , , 'uint', 8, , , 8, 2],
+    rgba16sint: [true, true, false, , , , true, , , 'sint', 8, , , 8, 2],
+    rgba16float: [true, true, true, , , , true, , , 'float', 8, , , 8, 2],
     // 128-bit formats
-    rgba32uint: [true, false, false, , , , true, , , 'uint', 16],
-    rgba32sint: [true, false, false, , , , true, , , 'sint', 16],
-    rgba32float: [true, false, false, , , , true, , , 'unfilterable-float', 16],
+    rgba32uint: [true, false, false, , , , true, , , 'uint', 16, , , 16, 4],
+    rgba32sint: [true, false, false, , , , true, , , 'sint', 16, , , 16, 4],
+    rgba32float: [true, false, false, , , , true, , , 'unfilterable-float', 16, , , 16, 4],
   }
 );
 
@@ -150,12 +152,14 @@ const kTexFmtInfoHeader = [
   'bytesPerBlock',
   'blockWidth',
   'blockHeight',
+  'renderTargetPixelByteCost',
+  'renderTargetComponentAlignment',
   'feature',
   'baseFormat',
 ];
 const kSizedDepthStencilFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [true, true, false, false, , , false, , , , , 1, 1, , undefined],
+  [true, true, false, false, , , false, , , , , 1, 1, undefined, undefined, , undefined],
   {
     depth32float: [, , , , true, false, , true, false, 'depth', 4],
     depth16unorm: [, , , , true, false, , true, true, 'depth', 2],
@@ -166,19 +170,19 @@ const kSizedDepthStencilFormatInfo = makeTable(
 // Multi aspect sample type are now set to their first aspect
 const kUnsizedDepthStencilFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [true, true, false, false, , , false, false, false, , undefined, 1, 1, , undefined],
+  [true, true, false, false, , , false, false, false, , undefined, 1, 1, , , , undefined],
   {
     depth24plus: [, , , , true, false, , , , 'depth'],
     'depth24plus-stencil8': [, , , , true, true, , , , 'depth'],
     // MAINTENANCE_TODO: These should really be sized formats; see below MAINTENANCE_TODO about multi-aspect formats.
-    'depth32float-stencil8': [, , , , true, true, , , , 'depth', , , , 'depth32float-stencil8'],
+    'depth32float-stencil8': [, , , , true, true, , , , 'depth', , , , , , 'depth32float-stencil8'],
   }
 );
 
 // Separated compressed formats by type
 const kBCTextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
+  [false, false, false, true, false, false, false, true, true, , , 4, 4, , , , undefined],
   {
     // Block Compression (BC) formats
     'bc1-rgba-unorm': [
@@ -195,6 +199,8 @@ const kBCTextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc1-rgba-unorm',
     ],
@@ -212,6 +218,8 @@ const kBCTextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc1-rgba-unorm',
     ],
@@ -229,6 +237,8 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc2-rgba-unorm',
     ],
@@ -246,6 +256,8 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc2-rgba-unorm',
     ],
@@ -263,6 +275,8 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc3-rgba-unorm',
     ],
@@ -280,15 +294,17 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc3-rgba-unorm',
     ],
-    'bc4-r-unorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
-    'bc4-r-snorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-bc'],
-    'bc5-rg-unorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc5-rg-snorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc6h-rgb-ufloat': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
-    'bc6h-rgb-float': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-bc'],
+    'bc4-r-unorm': [, , , , , , , , , 'float', 8, 4, 4, , , 'texture-compression-bc'],
+    'bc4-r-snorm': [, , , , , , , , , 'float', 8, 4, 4, , , 'texture-compression-bc'],
+    'bc5-rg-unorm': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-bc'],
+    'bc5-rg-snorm': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-bc'],
+    'bc6h-rgb-ufloat': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-bc'],
+    'bc6h-rgb-float': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-bc'],
     'bc7-rgba-unorm': [
       ,
       ,
@@ -303,6 +319,8 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc7-rgba-unorm',
     ],
@@ -320,6 +338,8 @@ const kBCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-bc',
       'bc7-rgba-unorm',
     ],
@@ -327,7 +347,7 @@ const kBCTextureFormatInfo = makeTable(
 );
 const kETC2TextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, false, true, false, false, false, true, true, , , 4, 4, , undefined],
+  [false, false, false, true, false, false, false, true, true, , , 4, 4, , , , undefined],
   {
     // Ericsson Compression (ETC2) formats
     'etc2-rgb8unorm': [
@@ -344,6 +364,8 @@ const kETC2TextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgb8unorm',
     ],
@@ -361,6 +383,8 @@ const kETC2TextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgb8unorm',
     ],
@@ -378,6 +402,8 @@ const kETC2TextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgb8a1unorm',
     ],
@@ -395,6 +421,8 @@ const kETC2TextureFormatInfo = makeTable(
       8,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgb8a1unorm',
     ],
@@ -412,6 +440,8 @@ const kETC2TextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgba8unorm',
     ],
@@ -429,18 +459,20 @@ const kETC2TextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-etc2',
       'etc2-rgba8unorm',
     ],
-    'eac-r11unorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
-    'eac-r11snorm': [, , , , , , , , , 'float', 8, 4, 4, 'texture-compression-etc2'],
-    'eac-rg11unorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
-    'eac-rg11snorm': [, , , , , , , , , 'float', 16, 4, 4, 'texture-compression-etc2'],
+    'eac-r11unorm': [, , , , , , , , , 'float', 8, 4, 4, , , 'texture-compression-etc2'],
+    'eac-r11snorm': [, , , , , , , , , 'float', 8, 4, 4, , , 'texture-compression-etc2'],
+    'eac-rg11unorm': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-etc2'],
+    'eac-rg11snorm': [, , , , , , , , , 'float', 16, 4, 4, , , 'texture-compression-etc2'],
   }
 );
 const kASTCTextureFormatInfo = makeTable(
   kTexFmtInfoHeader,
-  [false, false, false, true, false, false, false, true, true, , , , , , undefined],
+  [false, false, false, true, false, false, false, true, true, , , , , , , , undefined],
   {
     // Adaptable Scalable Compression (ASTC) formats
     'astc-4x4-unorm': [
@@ -457,6 +489,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-astc',
       'astc-4x4-unorm',
     ],
@@ -474,6 +508,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       4,
       4,
+      ,
+      ,
       'texture-compression-astc',
       'astc-4x4-unorm',
     ],
@@ -491,6 +527,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       5,
       4,
+      ,
+      ,
       'texture-compression-astc',
       'astc-5x4-unorm',
     ],
@@ -508,6 +546,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       5,
       4,
+      ,
+      ,
       'texture-compression-astc',
       'astc-5x4-unorm',
     ],
@@ -525,6 +565,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       5,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-5x5-unorm',
     ],
@@ -542,6 +584,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       5,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-5x5-unorm',
     ],
@@ -559,6 +603,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       6,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-6x5-unorm',
     ],
@@ -576,6 +622,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       6,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-6x5-unorm',
     ],
@@ -593,6 +641,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       6,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-6x6-unorm',
     ],
@@ -610,6 +660,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       6,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-6x6-unorm',
     ],
@@ -627,6 +679,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x5-unorm',
     ],
@@ -644,6 +698,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x5-unorm',
     ],
@@ -661,6 +717,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x6-unorm',
     ],
@@ -678,6 +736,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x6-unorm',
     ],
@@ -695,6 +755,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       8,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x8-unorm',
     ],
@@ -712,6 +774,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       8,
       8,
+      ,
+      ,
       'texture-compression-astc',
       'astc-8x8-unorm',
     ],
@@ -729,6 +793,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x5-unorm',
     ],
@@ -746,6 +812,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       5,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x5-unorm',
     ],
@@ -763,6 +831,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x6-unorm',
     ],
@@ -780,6 +850,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       6,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x6-unorm',
     ],
@@ -797,6 +869,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       8,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x8-unorm',
     ],
@@ -814,6 +888,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       8,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x8-unorm',
     ],
@@ -831,6 +907,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       10,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x10-unorm',
     ],
@@ -848,6 +926,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       10,
       10,
+      ,
+      ,
       'texture-compression-astc',
       'astc-10x10-unorm',
     ],
@@ -865,6 +945,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       12,
       10,
+      ,
+      ,
       'texture-compression-astc',
       'astc-12x10-unorm',
     ],
@@ -882,6 +964,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       12,
       10,
+      ,
+      ,
       'texture-compression-astc',
       'astc-12x10-unorm',
     ],
@@ -899,6 +983,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       12,
       12,
+      ,
+      ,
       'texture-compression-astc',
       'astc-12x12-unorm',
     ],
@@ -916,6 +1002,8 @@ const kASTCTextureFormatInfo = makeTable(
       16,
       12,
       12,
+      ,
+      ,
       'texture-compression-astc',
       'astc-12x12-unorm',
     ],
@@ -972,6 +1060,14 @@ export const kAllTextureFormats = keysOf(kAllTextureFormatInfo);
 // CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
   v => kColorTextureFormatInfo[v].renderable
+);
+
+assert(
+  kRenderableColorTextureFormats.every(
+    f =>
+      kAllTextureFormatInfo[f].renderTargetComponentAlignment !== undefined &&
+      kAllTextureFormatInfo[f].renderTargetPixelByteCost !== undefined
+  )
 );
 
 // The formats of GPUTextureFormat for canvas context.
@@ -1616,22 +1712,6 @@ assertTypeTrue();
 export const kIndexFormat = ['uint16', 'uint32'];
 assertTypeTrue();
 
-// Pipeline limits
-
-/** Maximum number of color attachments to a render pass, by spec. */
-export const kMaxColorAttachments = 8;
-/** `maxVertexBuffers` per GPURenderPipeline, by spec. */
-export const kMaxVertexBuffers = 8;
-/** `maxVertexAttributes` per GPURenderPipeline, by spec. */
-export const kMaxVertexAttributes = 16;
-/** `maxVertexBufferArrayStride` in a vertex buffer in a GPURenderPipeline, by spec. */
-export const kMaxVertexBufferArrayStride = 2048;
-
-/** The size of indirect draw parameters in the indirectBuffer of drawIndirect */
-export const kDrawIndirectParametersSize = 4;
-/** The size of indirect drawIndexed parameters in the indirectBuffer of drawIndexedIndirect */
-export const kDrawIndexedIndirectParametersSize = 5;
-
 /** Info for each entry of GPUSupportedLimits */
 export const kLimitInfo = makeTable(
   ['class', 'default', 'maximumValue'],
@@ -1661,6 +1741,9 @@ export const kLimitInfo = makeTable(
     maxVertexBufferArrayStride: [, 2048],
     maxInterStageShaderComponents: [, 60],
 
+    maxColorAttachments: [, 8],
+    maxColorAttachmentBytesPerSample: [, 32],
+
     maxComputeWorkgroupStorageSize: [, 16384],
     maxComputeInvocationsPerWorkgroup: [, 256],
     maxComputeWorkgroupSizeX: [, 256],
@@ -1673,6 +1756,22 @@ export const kLimitInfo = makeTable(
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfo);
 
+// Pipeline limits
+
+/** Maximum number of color attachments to a render pass, by spec. */
+export const kMaxColorAttachments = kLimitInfo.maxColorAttachments.default;
+/** `maxVertexBuffers` per GPURenderPipeline, by spec. */
+export const kMaxVertexBuffers = kLimitInfo.maxVertexBuffers.default;
+/** `maxVertexAttributes` per GPURenderPipeline, by spec. */
+export const kMaxVertexAttributes = kLimitInfo.maxVertexAttributes.default;
+/** `maxVertexBufferArrayStride` in a vertex buffer in a GPURenderPipeline, by spec. */
+export const kMaxVertexBufferArrayStride = kLimitInfo.maxVertexBufferArrayStride.default;
+
+/** The size of indirect draw parameters in the indirectBuffer of drawIndirect */
+export const kDrawIndirectParametersSize = 4;
+/** The size of indirect drawIndexed parameters in the indirectBuffer of drawIndexedIndirect */
+export const kDrawIndexedIndirectParametersSize = 5;
+
 /** Per-GPUFeatureName info. */
 export const kFeatureNameInfo = {
   'depth-clip-control': {},
@@ -1683,7 +1782,6 @@ export const kFeatureNameInfo = {
   'timestamp-query': {},
   'indirect-first-instance': {},
   'shader-f16': {},
-  'bgra8unorm-storage': {},
   'rg11b10ufloat-renderable': {},
 };
 /** List of all GPUFeatureName values. */

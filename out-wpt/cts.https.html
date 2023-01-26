@@ -456,7 +456,10 @@
 <meta name=variant content='webgpu:api,validation,encoding,cmds,setBindGroup:dynamic_offsets_match_expectations_in_pass_encoder:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,setBindGroup:u32array_start_and_length:*'>
 <meta name=variant content='webgpu:api,validation,encoding,cmds,setBindGroup:buffer_dynamic_offsets:*'>
-<meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state:*'>
+<meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachments:*'>
+<meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,aligned:*'>
+<meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned:*'>
+<meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,empty_color_formats:*'>
 <meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:valid_texture_formats:*'>
 <meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly:*'>
 <meta name=variant content='webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly_with_undefined_depth:*'>
@@ -586,7 +589,9 @@
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:attachments,layer_count:*'>
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:attachments,mip_level_count:*'>
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,empty:*'>
-<meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,out_of_bounds:*'>
+<meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,limits,maxColorAttachments:*'>
+<meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,limits,maxColorAttachmentBytesPerSample,aligned:*'>
+<meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned:*'>
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,non_multisampled:*'>
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:color_attachments,sample_count:*'>
 <meta name=variant content='webgpu:api,validation,render_pass,render_pass_descriptor:resolveTarget,sample_count:*'>
@@ -615,8 +620,10 @@
 <meta name=variant content='webgpu:api,validation,render_pipeline,depth_stencil_state:stencil_test:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,depth_stencil_state:stencil_write:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:color_target_exists:*'>
-<meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:max_color_attachments_limit:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:targets_format_renderable:*'>
+<meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachments:*'>
+<meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachmentBytesPerSample,aligned:*'>
+<meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:limits,maxColorAttachmentBytesPerSample,unaligned:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:targets_format_filterable:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:targets_blend:*'>
 <meta name=variant content='webgpu:api,validation,render_pipeline,fragment_state:targets_write_mask:*'>
