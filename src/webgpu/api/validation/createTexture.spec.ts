@@ -57,7 +57,7 @@ g.test('zero_size_and_usage')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, zeroArgument, format } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -112,7 +112,7 @@ g.test('dimension_type_and_format_compatibility')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -149,7 +149,7 @@ g.test('mipLevelCount,format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, mipLevelCount, largestDimension } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -227,7 +227,7 @@ g.test('mipLevelCount,bound_check')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, size, dimension } = t.params;
 
     const descriptor = {
@@ -250,7 +250,7 @@ g.test('mipLevelCount,bound_check')
 
 g.test('mipLevelCount,bound_check,bigger_than_integer_bit_width')
   .desc(`Test mip level count bound check when mipLevelCount is bigger than integer bit width`)
-  .fn(async t => {
+  .fn(t => {
     const descriptor = {
       size: [32, 32],
       mipLevelCount: 100,
@@ -279,7 +279,7 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, sampleCount, format } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
@@ -355,7 +355,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
@@ -400,7 +400,7 @@ g.test('sample_count,1d_2d_array_3d')
       { dimension: '3d', size: [4, 4, 4], shouldError: true },
     ] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { dimension, size, shouldError } = t.params;
 
     t.expectValidationError(() => {
@@ -433,7 +433,7 @@ g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, size } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -474,7 +474,7 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, size, _success } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -509,7 +509,7 @@ g.test('texture_size,1d_texture')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, width, height, depthOrArrayLayers } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -553,7 +553,7 @@ g.test('texture_size,2d_texture,uncompressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, size } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -621,7 +621,7 @@ g.test('texture_size,2d_texture,compressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, size } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -672,7 +672,7 @@ g.test('texture_size,3d_texture,uncompressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, size } = t.params;
 
     const descriptor: GPUTextureDescriptor = {
@@ -743,7 +743,7 @@ g.test('texture_size,3d_texture,compressed_format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, size } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -791,7 +791,7 @@ g.test('texture_usage')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { dimension, format, usage0, usage1 } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -841,7 +841,7 @@ g.test('viewFormats')
     const { formatFeature, viewFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([formatFeature, viewFormatFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, viewFormat } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 

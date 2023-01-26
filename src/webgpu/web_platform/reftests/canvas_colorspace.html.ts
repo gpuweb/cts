@@ -21,7 +21,7 @@ function rgba16floatFromRgba8unorm(rgba8Unorm: Uint8Array) {
 }
 
 export function runColorSpaceTest(format: GPUTextureFormat) {
-  runRefTest(async t => {
+  runRefTest(t => {
     const device = t.device;
 
     // prettier-ignore

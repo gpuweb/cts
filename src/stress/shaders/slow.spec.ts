@@ -9,7 +9,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('compute')
   .desc(`Tests execution of compute passes with very long-running dispatch operations.`)
-  .fn(async t => {
+  .fn(t => {
     const kDispatchSize = 1000;
     const data = new Uint32Array(kDispatchSize);
     const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
@@ -48,7 +48,7 @@ g.test('compute')
 
 g.test('vertex')
   .desc(`Tests execution of render passes with a very long-running vertex stage.`)
-  .fn(async t => {
+  .fn(t => {
     const module = t.device.createShaderModule({
       code: `
         struct Data { counter: u32, increment: u32, };
@@ -122,7 +122,7 @@ g.test('vertex')
 
 g.test('fragment')
   .desc(`Tests execution of render passes with a very long-running fragment stage.`)
-  .fn(async t => {
+  .fn(t => {
     const module = t.device.createShaderModule({
       code: `
         struct Data { counter: u32, increment: u32, };

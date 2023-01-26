@@ -35,7 +35,7 @@ g.test('configured')
     u //
       .combine('canvasType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const canvas = createCanvas(t, t.params.canvasType, 2, 2);
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
@@ -87,7 +87,7 @@ g.test('single_frames')
     u //
       .combine('canvasType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const ctx = t.initCanvasContext(t.params.canvasType);
     const frameTexture = ctx.getCurrentTexture();
 
@@ -137,7 +137,7 @@ g.test('multiple_frames')
       throw new SkipTestCase('transferToImageBitmap not supported');
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { canvasType, clearTexture } = t.params;
 
     return new Promise(resolve => {
@@ -145,7 +145,7 @@ g.test('multiple_frames')
       let prevTexture: GPUTexture | undefined;
       let frameCount = 0;
 
-      async function frameCheck() {
+      function frameCheck() {
         const currentTexture = ctx.getCurrentTexture();
 
         if (prevTexture) {
@@ -209,7 +209,7 @@ g.test('resize')
     u //
       .combine('canvasType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const ctx = t.initCanvasContext(t.params.canvasType);
     let prevTexture = ctx.getCurrentTexture();
 

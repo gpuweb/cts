@@ -37,7 +37,7 @@ g.test('store_op_and_read_only')
     { readonly: undefined, depthReadOnly: true, _valid: false },
     { readonly: undefined, stencilReadOnly: true, _valid: false },
   ] as const)
-  .fn(async t => {
+  .fn(t => {
     const {
       readonly,
       depthStoreOp = 'store',

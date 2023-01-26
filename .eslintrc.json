@@ -50,6 +50,7 @@
     "@typescript-eslint/prefer-as-const": "warn",
     "@typescript-eslint/prefer-for-of": "warn",
     "@typescript-eslint/prefer-namespace-keyword": "warn",
+    "@typescript-eslint/require-await": "warn",
     "@typescript-eslint/restrict-plus-operands": "warn",
     "@typescript-eslint/triple-slash-reference": "warn",
     "@typescript-eslint/unbound-method": "warn",

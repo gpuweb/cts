@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/require-await */
 export const description = `
 Unit tests for TestGroup.
 `;
@@ -334,10 +335,10 @@ g.test('shouldReject').fn(async t0 => {
 
   const g = makeTestGroupForUnitTesting(UnitTest);
 
-  g.test('a').fn(async t => {
+  g.test('a').fn(t => {
     t.shouldReject(
       'Error',
-      (async () => {
+      (() => {
         throw new TypeError();
       })()
     );

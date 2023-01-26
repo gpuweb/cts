@@ -29,7 +29,7 @@ Test that the buffer must be valid and not destroyed.
       .combine('method', ['CopyB2T', 'CopyT2B'] as const)
       .combine('state', kResourceStates)
   )
-  .fn(async t => {
+  .fn(t => {
     const { method, state } = t.params;
 
     // A valid buffer.
@@ -65,7 +65,7 @@ g.test('buffer,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { method, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -113,7 +113,7 @@ TODO update such that it tests
         GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST,
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { method, usage } = t.params;
 
     const buffer = t.device.createBuffer({
@@ -184,7 +184,7 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       method,
       dimension,

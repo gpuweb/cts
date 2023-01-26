@@ -355,7 +355,7 @@ Params:
       t.selectDeviceOrSkipTestCase('indirect-first-instance');
     }
   })
-  .fn(async t => {
+  .fn(t => {
     t.checkTriangleDraw({
       firstIndex: t.params.first,
       count: t.params.count,
@@ -389,7 +389,7 @@ g.test('default_arguments')
         p.mode === 'drawIndexed' ? ([undefined, 9] as const) : [undefined]
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const kVertexCount = 3;
     const kVertexBufferOffset = 32;
     const kIndexBufferOffset = 16;

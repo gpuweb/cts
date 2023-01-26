@@ -172,7 +172,7 @@ g.test('linear_memory')
       .expand('baseType', supportedScalarTypes)
       .expandWithParams(generateTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       storageClass,
       storageMode,
