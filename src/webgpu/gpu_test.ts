@@ -20,6 +20,7 @@ import {
   kTextureFormatInfo,
   kQueryTypeInfo,
   resolvePerAspectFormat,
+  kEncodableTextureFormats,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
@@ -897,7 +898,7 @@ export interface TextureTestMixinType {
    * Creates a mipmapped texture where each mipmap level's (`i`) content is
    * from `texelViews[i]` and tracks it for destruction for the test case.
    */
-  createTextureFromTexelViews(
+  createTextureFromTexelViewsMultipleMipmaps(
     texelViews: TexelView[],
     desc: Omit<GPUTextureDescriptor, 'format'>
   ): GPUTexture;
@@ -908,19 +909,9 @@ export interface TextureTestMixinType {
    */
   expectTexelViewComparisonIsOkInTexture(
     src: GPUImageCopyTexture,
-    {
-      exp,
-      size,
-      comparisonOptions,
-      dimension,
-      slice,
-    }: {
-      exp: TexelView;
-      size: GPUExtent3D;
-      comparisonOptions?: TexelCompareOptions;
-      dimension?: GPUTextureDimension;
-      slice?: number;
-    }
+    exp: TexelView,
+    size: GPUExtent3D,
+    comparisonOptions?: TexelCompareOptions
   ): void;
 
   /**
@@ -929,13 +920,8 @@ export interface TextureTestMixinType {
    */
   expectSinglePixelComparisonsAreOkInTexture<E extends PixelExpectation>(
     src: GPUImageCopyTexture,
-    {
-      exp,
-      comparisonOptions,
-    }: {
-      exp: PerPixelComparison<E>[];
-      comparisonOptions?: TexelCompareOptions;
-    }
+    exp: PerPixelComparison<E>[],
+    comparisonOptions?: TexelCompareOptions
   ): void;
 }
 export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
@@ -951,7 +937,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       return this.trackForCleanup(createTextureFromTexelView(this.device, texelView, desc));
     }
 
-    createTextureFromTexelViews(
+    createTextureFromTexelViewsMultipleMipmaps(
       texelViews: TexelView[],
       desc: Omit<GPUTextureDescriptor, 'format'>
     ): GPUTexture {
@@ -960,18 +946,12 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
 
     expectTexelViewComparisonIsOkInTexture(
       src: GPUImageCopyTexture,
-      {
-        exp,
-        size,
-        comparisonOptions = {
-          maxIntDiff: 0,
-          maxDiffULPsForNormFormat: 1,
-          maxDiffULPsForFloatFormat: 1,
-        },
-      }: {
-        exp: TexelView;
-        size: GPUExtent3D;
-        comparisonOptions?: TexelCompareOptions;
+      exp: TexelView,
+      size: GPUExtent3D,
+      comparisonOptions = {
+        maxIntDiff: 0,
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
       }
     ): void {
       this.eventualExpectOK(
@@ -981,47 +961,43 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
 
     expectSinglePixelComparisonsAreOkInTexture<E extends PixelExpectation>(
       src: GPUImageCopyTexture,
-      {
-        exp,
-        comparisonOptions = {
-          maxIntDiff: 0,
-          maxDiffULPsForNormFormat: 1,
-          maxDiffULPsForFloatFormat: 1,
-        },
-      }: {
-        exp: PerPixelComparison<E>[];
-        comparisonOptions?: TexelCompareOptions;
+      exp: PerPixelComparison<E>[],
+      comparisonOptions = {
+        maxIntDiff: 0,
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
       }
     ): void {
-      assert(exp.length > 0);
+      assert(exp.length > 0, 'must specify at least one pixel comparison');
+      assert(
+        (kEncodableTextureFormats as GPUTextureFormat[]).includes(src.texture.format),
+        `${src.texture.format} is not an encodable format`
+      );
       const lowerCorner = [src.texture.width, src.texture.height, src.texture.depthOrArrayLayers];
       const upperCorner = [0, 0, 0];
-      const expMap = new Map<number, Map<number, Map<number, E>>>();
-      const locs: Required<GPUOrigin3DDict>[] = [];
+      const expMap = new Map<string, E>();
+      const coords: Required<GPUOrigin3DDict>[] = [];
       for (const e of exp) {
-        const loc = reifyOrigin3D(e.location);
-        locs.push(loc);
+        const coord = reifyOrigin3D(e.coord);
+        const coordKey = JSON.stringify(coord);
+        coords.push(coord);
 
         // Compute the minimum sub-rect that enconpasses all the pixel comparisons. The
         // `lowerCorner` will become the origin, and the `upperCorner` will be used to compute the
-        // size. At the same time we create a texel view that
-        lowerCorner[0] = Math.min(lowerCorner[0], loc.x);
-        lowerCorner[1] = Math.min(lowerCorner[1], loc.y);
-        lowerCorner[2] = Math.min(lowerCorner[2], loc.z);
-        upperCorner[0] = Math.max(upperCorner[0], loc.x);
-        upperCorner[1] = Math.max(upperCorner[1], loc.y);
-        upperCorner[2] = Math.max(upperCorner[2], loc.z);
+        // size.
+        lowerCorner[0] = Math.min(lowerCorner[0], coord.x);
+        lowerCorner[1] = Math.min(lowerCorner[1], coord.y);
+        lowerCorner[2] = Math.min(lowerCorner[2], coord.z);
+        upperCorner[0] = Math.max(upperCorner[0], coord.x);
+        upperCorner[1] = Math.max(upperCorner[1], coord.y);
+        upperCorner[2] = Math.max(upperCorner[2], coord.z);
 
         // Build a sparse map of the coordinates to the expected colors for the texel view.
-        const xMap = expMap.get(loc.x) ?? new Map<number, Map<number, E>>();
-        const yMap = xMap.get(loc.y) ?? new Map<number, E>();
         assert(
-          !yMap.has(loc.z),
-          `duplicate pixel expectation at coordinate (${loc.x},${loc.y},${loc.z})`
+          !expMap.has(coordKey),
+          `duplicate pixel expectation at coordinate (${coord.x},${coord.y},${coord.z})`
         );
-        yMap.set(loc.z, e.exp);
-        xMap.set(loc.y, yMap);
-        expMap.set(loc.x, xMap);
+        expMap.set(coordKey, e.exp);
       }
       const size: GPUExtent3D = [
         upperCorner[0] - lowerCorner[0] + 1,
@@ -1032,25 +1008,31 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       if (Symbol.iterator in exp[0].exp) {
         expTexelView = TexelView.fromTexelsAsBytes(
           src.texture.format as EncodableTextureFormat,
-          ({ x, y, z }) => {
-            const res = expMap.get(x)?.get(y)?.get(z);
-            assert(res !== undefined, `invalid coordinate (${x},${y},${z}) in sparse texel view`);
+          coord => {
+            const res = expMap.get(JSON.stringify(coord));
+            assert(
+              res !== undefined,
+              `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+            );
             return res as Uint8Array;
           }
         );
       } else {
         expTexelView = TexelView.fromTexelsAsColors(
           src.texture.format as EncodableTextureFormat,
-          ({ x, y, z }) => {
-            const res = expMap.get(x)?.get(y)?.get(z);
-            assert(res !== undefined, `invalid coordinate (${x},${y},${z}) in sparse texel view`);
+          coord => {
+            const res = expMap.get(JSON.stringify(coord));
+            assert(
+              res !== undefined,
+              `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+            );
             return res as PerTexelComponent<number>;
           }
         );
       }
-      const coords = (function* () {
-        for (const loc of locs) {
-          yield loc;
+      const coordsF = (function* () {
+        for (const coord of coords) {
+          yield coord;
         }
       })();
 
@@ -1061,7 +1043,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
           size,
           { expTexelView },
           comparisonOptions,
-          coords
+          coordsF
         )
       );
     }

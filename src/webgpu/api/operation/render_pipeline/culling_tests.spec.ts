@@ -166,19 +166,14 @@ TODO: check the contents of the depth and stencil outputs [2]
     t.device.queue.submit([encoder.finish()]);
 
     // front facing color is green, non front facing is red, background is blue
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture },
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture }, [
       {
-        exp: [
-          {
-            location: { x: 0, y: 0 },
-            exp: faceColor('ccw', t.params.frontFace, t.params.cullMode),
-          },
-          {
-            location: { x: size - 1, y: size - 1 },
-            exp: faceColor('cw', t.params.frontFace, t.params.cullMode),
-          },
-        ],
-      }
-    );
+        coord: { x: 0, y: 0 },
+        exp: faceColor('ccw', t.params.frontFace, t.params.cullMode),
+      },
+      {
+        coord: { x: size - 1, y: size - 1 },
+        exp: faceColor('cw', t.params.frontFace, t.params.cullMode),
+      },
+    ]);
   });

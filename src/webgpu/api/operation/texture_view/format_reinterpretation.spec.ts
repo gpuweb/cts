@@ -176,12 +176,10 @@ g.test('texture_binding')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsColors('rgba8unorm', reinterpretedTexelView.color, {
-          clampToFormatRange: true,
-        }),
-        size: [kTextureSize, kTextureSize],
-      }
+      TexelView.fromTexelsAsColors('rgba8unorm', reinterpretedTexelView.color, {
+        clampToFormatRange: true,
+      }),
+      [kTextureSize, kTextureSize]
     );
   });
 
@@ -332,11 +330,9 @@ in view format and match in base format.`
     });
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: singleSampleRenderTexture },
-      {
-        exp: renderViewTexels,
-        size: [kTextureSize, kTextureSize],
-        comparisonOptions: { maxDiffULPsForNormFormat: 2 },
-      }
+      renderViewTexels,
+      [kTextureSize, kTextureSize],
+      { maxDiffULPsForNormFormat: 2 }
     );
 
     // Check the resolved contents.
@@ -346,11 +342,9 @@ in view format and match in base format.`
       });
       t.expectTexelViewComparisonIsOkInTexture(
         { texture: resolveTexture },
-        {
-          exp: resolveView,
-          size: [kTextureSize, kTextureSize],
-          comparisonOptions: { maxDiffULPsForNormFormat: 2 },
-        }
+        resolveView,
+        [kTextureSize, kTextureSize],
+        { maxDiffULPsForNormFormat: 2 }
       );
     }
   });

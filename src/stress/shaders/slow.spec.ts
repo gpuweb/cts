@@ -110,17 +110,12 @@ g.test('vertex')
     pass.draw(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: renderTarget },
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
       {
-        exp: [
-          {
-            location: { x: 1, y: 1 },
-            exp: new Uint8Array([255, 255, 0, 255]),
-          },
-        ],
-      }
-    );
+        coord: { x: 1, y: 1 },
+        exp: new Uint8Array([255, 255, 0, 255]),
+      },
+    ]);
   });
 
 g.test('fragment')
@@ -187,15 +182,10 @@ g.test('fragment')
     pass.draw(1);
     pass.end();
     t.device.queue.submit([encoder.finish()]);
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: renderTarget },
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
       {
-        exp: [
-          {
-            location: { x: 1, y: 1 },
-            exp: new Uint8Array([255, 255, 0, 255]),
-          },
-        ],
-      }
-    );
+        coord: { x: 1, y: 1 },
+        exp: new Uint8Array([255, 255, 0, 255]),
+      },
+    ]);
   });

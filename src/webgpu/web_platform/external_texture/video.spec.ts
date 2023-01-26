@@ -223,17 +223,12 @@ for several combinations of video format and color space.
 
       // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
-      t.expectSinglePixelComparisonsAreOkInTexture(
-        { texture: colorAttachment },
-        {
-          exp: [
-            // Top left corner should be red.
-            { location: { x: 5, y: 5 }, exp: t.params._redExpectation },
-            // Bottom right corner should be green.
-            { location: { x: kWidth - 5, y: kHeight - 5 }, exp: t.params._greenExpectation },
-          ],
-        }
-      );
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+        // Top left corner should be red.
+        { coord: { x: 5, y: 5 }, exp: t.params._redExpectation },
+        // Bottom right corner should be green.
+        { coord: { x: kWidth - 5, y: kHeight - 5 }, exp: t.params._greenExpectation },
+      ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();
     });
@@ -406,17 +401,12 @@ compute shader, for several combinations of video format and color space.
       pass.end();
       t.device.queue.submit([encoder.finish()]);
 
-      t.expectSinglePixelComparisonsAreOkInTexture(
-        { texture: outputTexture },
-        {
-          exp: [
-            // Top left corner should be red.
-            { location: { x: 0, y: 0 }, exp: t.params._redExpectation },
-            // Bottom right corner should be green.
-            { location: { x: 1, y: 0 }, exp: t.params._greenExpectation },
-          ],
-        }
-      );
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: outputTexture }, [
+        // Top left corner should be red.
+        { coord: { x: 0, y: 0 }, exp: t.params._redExpectation },
+        // Bottom right corner should be green.
+        { coord: { x: 1, y: 0 }, exp: t.params._greenExpectation },
+      ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();
     });

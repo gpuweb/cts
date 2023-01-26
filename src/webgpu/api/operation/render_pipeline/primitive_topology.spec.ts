@@ -108,7 +108,7 @@ function getPointTestLocations(expectedColor: Uint8Array): TestLocation[] {
   // Test points are always equal to vertex locations.
   const testLocations: TestLocation[] = [];
   for (const location of VertexLocations) {
-    testLocations.push({ location, exp: expectedColor });
+    testLocations.push({ coord: location, exp: expectedColor });
   }
   return testLocations;
 }
@@ -118,17 +118,17 @@ function getLineTestLocations(expectedColor: Uint8Array): TestLocation[] {
   return [
     {
       // Line {v1, v2}
-      location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
+      coord: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
       exp: expectedColor,
     },
     {
       // Line {v3, v4}
-      location: Point2D.getMidpoint(VertexLocations[2], VertexLocations[3]),
+      coord: Point2D.getMidpoint(VertexLocations[2], VertexLocations[3]),
       exp: expectedColor,
     },
     {
       // Line {v5, v6}
-      location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
+      coord: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
       exp: expectedColor,
     },
   ];
@@ -139,12 +139,12 @@ function getPrimitiveRestartLineTestLocations(expectedColor: Uint8Array): TestLo
   return [
     {
       // Line {v1, v2}
-      location: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
+      coord: Point2D.getMidpoint(VertexLocations[0], VertexLocations[1]),
       exp: expectedColor,
     },
     {
       // Line {v5, v6}
-      location: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
+      coord: Point2D.getMidpoint(VertexLocations[4], VertexLocations[5]),
       exp: expectedColor,
     },
   ];
@@ -155,12 +155,12 @@ function getLineStripTestLocations(expectedColor: Uint8Array): TestLocation[] {
   return [
     {
       // Line {v2, v3}
-      location: Point2D.getMidpoint(VertexLocations[1], VertexLocations[2]),
+      coord: Point2D.getMidpoint(VertexLocations[1], VertexLocations[2]),
       exp: expectedColor,
     },
     {
       // Line {v4, v5}
-      location: Point2D.getMidpoint(VertexLocations[3], VertexLocations[4]),
+      coord: Point2D.getMidpoint(VertexLocations[3], VertexLocations[4]),
       exp: expectedColor,
     },
   ];
@@ -171,12 +171,12 @@ function getTriangleListTestLocations(expectedColor: Uint8Array): TestLocation[]
   return [
     {
       // Triangle {v1, v2, v3}
-      location: Point2D.getCentroid(VertexLocations[0], VertexLocations[1], VertexLocations[2]),
+      coord: Point2D.getCentroid(VertexLocations[0], VertexLocations[1], VertexLocations[2]),
       exp: expectedColor,
     },
     {
       // Triangle {v4, v5, v6}
-      location: Point2D.getCentroid(VertexLocations[3], VertexLocations[4], VertexLocations[5]),
+      coord: Point2D.getCentroid(VertexLocations[3], VertexLocations[4], VertexLocations[5]),
       exp: expectedColor,
     },
   ];
@@ -187,12 +187,12 @@ function getTriangleStripTestLocations(expectedColor: Uint8Array): TestLocation[
   return [
     {
       // Triangle {v2, v3, v4}
-      location: Point2D.getCentroid(VertexLocations[1], VertexLocations[2], VertexLocations[3]),
+      coord: Point2D.getCentroid(VertexLocations[1], VertexLocations[2], VertexLocations[3]),
       exp: expectedColor,
     },
     {
       // Triangle {v3, v4, v5}
-      location: Point2D.getCentroid(VertexLocations[2], VertexLocations[3], VertexLocations[4]),
+      coord: Point2D.getCentroid(VertexLocations[2], VertexLocations[3], VertexLocations[4]),
       exp: expectedColor,
     },
   ];
@@ -213,7 +213,7 @@ function getDefaultTestLocations({
     return locations.map((tl, i) => {
       if (i === locations.length - 1) {
         return {
-          location: tl.location,
+          coord: tl.coord,
           exp: kInvalidPixelColor,
         };
       } else {
@@ -410,10 +410,7 @@ class PrimitiveTopologyTest extends TextureTestMixin(GPUTest) {
     renderPass.end();
 
     this.device.queue.submit([encoder.finish()]);
-    this.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: colorAttachment },
-      { exp: testLocations }
-    );
+    this.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, testLocations);
   }
 }
 

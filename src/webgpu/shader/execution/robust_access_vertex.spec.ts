@@ -514,12 +514,9 @@ class F extends TextureTestMixin(GPUTest) {
     this.device.queue.submit([encoder.finish()]);
 
     // Validate we see green on the left pixel, showing that no failure case is detected
-    this.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: colorAttachment },
-      {
-        exp: [{ location: { x: 0, y: 0 }, exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]) }],
-      }
-    );
+    this.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+      { coord: { x: 0, y: 0 }, exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]) },
+    ]);
   }
 }
 

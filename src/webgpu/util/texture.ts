@@ -64,7 +64,7 @@ export function createTextureFromTexelViews(
   device.queue.submit([commandEncoder.finish()]);
 
   // Cleanup the staging buffers.
-  stagingBuffers.map(value => value.destroy());
+  stagingBuffers.forEach(value => value.destroy());
 
   return texture;
 }

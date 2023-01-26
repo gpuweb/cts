@@ -176,10 +176,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
 
     const expColor = { Depth: _expectedDepth };
     const expTexelView = TexelView.fromTexelsAsColors(depthFormat, coords => expColor);
-    this.expectTexelViewComparisonIsOkInTexture(
-      { texture: depthTexture },
-      { exp: expTexelView, size: [1, 1] }
-    );
+    this.expectTexelViewComparisonIsOkInTexture({ texture: depthTexture }, expTexelView, [1, 1]);
   }
 
   runDepthBiasTestFor24BitFormat(
@@ -214,10 +211,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
       A: _expectedColor[3],
     };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
-    this.expectTexelViewComparisonIsOkInTexture(
-      { texture: renderTarget },
-      { exp: expTexelView, size: [1, 1] }
-    );
+    this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
   }
 
   createRenderPipelineForTest(

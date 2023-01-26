@@ -124,10 +124,9 @@ g.test('color,attachments')
       if (i === emptyAttachmentId) {
         continue;
       }
-      t.expectSinglePixelComparisonsAreOkInTexture(
-        { texture: renderTargets[i] },
-        { exp: [{ location: { x: 0, y: 0 }, exp: writeValues[i] }] }
-      );
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTargets[i] }, [
+        { coord: { x: 0, y: 0 }, exp: writeValues[i] },
+      ]);
     }
   });
 

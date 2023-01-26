@@ -174,12 +174,10 @@ g.test('set_index_buffer_without_changing_buffer')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
-          coord.x === 1 ? kColors[kPositions.length - 1] : kColors[coord.x]
-        ),
-        size: outputTextureSize,
-      }
+      TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
+        coord.x === 1 ? kColors[kPositions.length - 1] : kColors[coord.x]
+      ),
+      outputTextureSize
     );
   });
 
@@ -280,10 +278,8 @@ g.test('set_vertex_buffer_without_changing_buffer')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
-        size: outputTextureSize,
-      }
+      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
+      outputTextureSize
     );
   });
 
@@ -367,12 +363,10 @@ g.test('change_pipeline_before_and_after_vertex_buffer')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
-          coord.x === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[coord.x]
-        ),
-        size: outputTextureSize,
-      }
+      TexelView.fromTexelsAsBytes('rgba8unorm', coord =>
+        coord.x === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[coord.x]
+      ),
+      outputTextureSize
     );
   });
 
@@ -547,10 +541,8 @@ g.test('set_vertex_buffer_but_not_used_in_draw')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsBytes('rgba8unorm', coord => kExpectedColors[coord.x]),
-        size: outputTextureSize,
-      }
+      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kExpectedColors[coord.x]),
+      outputTextureSize
     );
   });
 
@@ -626,9 +618,7 @@ g.test('set_index_buffer_before_non_indexed_draw')
 
     t.expectTexelViewComparisonIsOkInTexture(
       { texture: outputTexture },
-      {
-        exp: TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
-        size: outputTextureSize,
-      }
+      TexelView.fromTexelsAsBytes('rgba8unorm', coord => kColors[coord.x]),
+      outputTextureSize
     );
   });

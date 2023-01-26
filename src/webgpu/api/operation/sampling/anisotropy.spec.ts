@@ -286,7 +286,7 @@ g.test('anisotropic_filter_mipmap_color')
     },
   ])
   .fn(async t => {
-    const texture = t.createTextureFromTexelViews(
+    const texture = t.createTextureFromTexelViewsMultipleMipmaps(
       colors.map(value => TexelView.fromTexelsAsBytes(kTextureFormat, coords_ => value)),
       { size: [4, 4, 1], usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING }
     );
@@ -305,7 +305,7 @@ g.test('anisotropic_filter_mipmap_color')
     for (const entry of t.params._results) {
       if (entry.expected instanceof Uint8Array) {
         // equal exactly one color
-        pixelComparisons.push({ location: entry.coord, exp: entry.expected });
+        pixelComparisons.push({ coord: entry.coord, exp: entry.expected });
       } else {
         // a lerp between two colors
         // MAINTENANCE_TODO: Unify comparison to allow for a strict in-between comparison to support
@@ -321,8 +321,5 @@ g.test('anisotropic_filter_mipmap_color')
         );
       }
     }
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: colorAttachment },
-      { exp: pixelComparisons }
-    );
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, pixelComparisons);
   });

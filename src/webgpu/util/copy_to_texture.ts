@@ -183,11 +183,9 @@ export class CopyToTextureUtils extends TextureTestMixin(GPUTest) {
 
     this.expectTexelViewComparisonIsOkInTexture(
       { texture: dstTextureCopyView.texture, origin: dstTextureCopyView.origin },
-      {
-        exp: expTexelView,
-        size: copySize,
-        comparisonOptions: texelCompareOptions,
-      }
+      expTexelView,
+      copySize,
+      texelCompareOptions
     );
     this.trackForCleanup(dstTextureCopyView.texture);
   }

@@ -213,10 +213,7 @@ class StencilTest extends TextureTestMixin(GPUTest) {
       A: expectedColor[3],
     };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
-    this.expectTexelViewComparisonIsOkInTexture(
-      { texture: renderTarget },
-      { exp: expTexelView, size: [1, 1] }
-    );
+    this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
   }
 
   createRenderPipelineForTest(depthStencil: GPUDepthStencilState): GPURenderPipeline {

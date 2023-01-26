@@ -300,15 +300,12 @@ struct Output {
         }
 
         pixelComparisons.push({
-          location: { x: (1 / 3 + primitiveId) * tileSizeX, y: (2 / 3 + instanceId) * tileSizeY },
+          coord: { x: (1 / 3 + primitiveId) * tileSizeX, y: (2 / 3 + instanceId) * tileSizeY },
           exp: expectedColor,
         });
       }
     }
-    this.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: renderTarget },
-      { exp: pixelComparisons }
-    );
+    this.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, pixelComparisons);
   }
 }
 

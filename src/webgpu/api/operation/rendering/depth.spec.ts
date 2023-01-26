@@ -86,10 +86,7 @@ class DepthTest extends TextureTestMixin(GPUTest) {
     };
     const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
 
-    this.expectTexelViewComparisonIsOkInTexture(
-      { texture: renderTarget },
-      { exp: expTexelView, size: [1, 1] }
-    );
+    this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
   }
 
   createRenderPipelineForTest(
@@ -421,17 +418,12 @@ g.test('depth_compare_func')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: colorAttachment },
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
       {
-        exp: [
-          {
-            location: { x: 0, y: 0 },
-            exp: new Uint8Array(_expected),
-          },
-        ],
-      }
-    );
+        coord: { x: 0, y: 0 },
+        exp: new Uint8Array(_expected),
+      },
+    ]);
   });
 
 g.test('reverse_depth')
@@ -539,17 +531,12 @@ g.test('reverse_depth')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: colorAttachment },
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
       {
-        exp: [
-          {
-            location: { x: 0, y: 0 },
-            exp: new Uint8Array(
-              t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff]
-            ),
-          },
-        ],
-      }
-    );
+        coord: { x: 0, y: 0 },
+        exp: new Uint8Array(
+          t.params.reversed ? [0x00, 0xff, 0x00, 0xff] : [0xff, 0x00, 0x00, 0xff]
+        ),
+      },
+    ]);
   });

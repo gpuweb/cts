@@ -234,15 +234,10 @@ Params:
     renderPass.end();
     t.queue.submit([commandEncoder.finish()]);
 
-    t.expectSinglePixelComparisonsAreOkInTexture(
-      { texture: renderTarget },
-      {
-        exp: [
-          // The bottom left area is filled
-          { location: { x: 0, y: 1 }, exp: filled },
-          // The top right area is not filled
-          { location: { x: 1, y: 0 }, exp: notFilled },
-        ],
-      }
-    );
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
+      // The bottom left area is filled
+      { coord: { x: 0, y: 1 }, exp: filled },
+      // The top right area is not filled
+      { coord: { x: 1, y: 0 }, exp: notFilled },
+    ]);
   });

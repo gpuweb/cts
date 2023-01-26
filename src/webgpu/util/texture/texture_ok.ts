@@ -25,7 +25,7 @@ export type TexelCompareOptions = {
 export type PixelExpectation = PerTexelComponent<number> | Uint8Array;
 
 export type PerPixelComparison<E extends PixelExpectation> = {
-  location: GPUOrigin3D;
+  coord: GPUOrigin3D;
   exp: E;
 };
 
