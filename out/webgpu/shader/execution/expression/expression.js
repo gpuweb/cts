@@ -26,7 +26,7 @@ F32Interval } from
 
 
 '../../../util/f32_interval.js';
-import { cartesianProduct, quantizeToF32 } from '../../../util/math.js';
+import { cartesianProduct, quantizeToF32, quantizeToU32 } from '../../../util/math.js';
 
 
 
@@ -1058,5 +1058,81 @@ op)
     }
     return cases;
   }, new Array());
+}
+
+/**
+ * A function that performs a binary operation on x and y, and returns the expected
+ * result.
+ */
+
+
+
+
+/**
+ * @returns a Case for the input params with op applied
+ * @param scalar scalar param
+ * @param vector vector param (2, 3, or 4 elements)
+ * @param op the op to apply to scalar and vector
+ */
+function makeU32VectorBinaryToVectorCase(scalar, vector, op) {
+  scalar = quantizeToU32(scalar);
+  vector = vector.map(quantizeToU32);
+  const result = new Vector(vector.map((v) => u32(op(scalar, v))));
+  return {
+    input: [u32(scalar), new Vector(vector.map(u32))],
+    expected: result
+  };
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param scalars array of scalar params
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param op he op to apply to each pair of scalar and vector
+ */
+export function generateU32VectorBinaryToVectorCases(
+scalars,
+vectors,
+op)
+{
+  return scalars.flatMap((s) => {
+    return vectors.map((v) => {
+      return makeU32VectorBinaryToVectorCase(s, v, op);
+    });
+  });
+}
+
+/**
+ * @returns a Case for the input params with op applied
+ * @param vector vector param (2, 3, or 4 elements)
+ * @param scalar scalar param
+ * @param op the op to apply to vector and scalar
+ */
+function makeVectorU32BinaryToVectorCase(vector, scalar, op) {
+  vector = vector.map(quantizeToU32);
+  scalar = quantizeToU32(scalar);
+  const result = new Vector(vector.map((v) => u32(op(v, scalar))));
+  return {
+    input: [new Vector(vector.map(u32)), u32(scalar)],
+    expected: result
+  };
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param scalars array of scalar params
+ * @param op he op to apply to each pair of vector and scalar
+ */
+export function generateVectorU32BinaryToVectorCases(
+vectors,
+scalars,
+op)
+{
+  return scalars.flatMap((s) => {
+    return vectors.map((v) => {
+      return makeVectorU32BinaryToVectorCase(v, s, op);
+    });
+  });
 }
 //# sourceMappingURL=expression.js.map
