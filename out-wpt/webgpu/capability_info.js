@@ -1737,6 +1737,7 @@ export const kLimitInfo = makeTable(
     minStorageBufferOffsetAlignment: ['alignment', 256],
 
     maxVertexBuffers: [, 8],
+    maxBufferSize: [, 268435456, kMaxUnsignedLongLongValue],
     maxVertexAttributes: [, 16],
     maxVertexBufferArrayStride: [, 2048],
     maxInterStageShaderComponents: [, 60],
