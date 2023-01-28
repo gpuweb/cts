@@ -21,7 +21,7 @@ Note, the createTexture tests cover these validation cases where this feature is
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
   })
-  .fn(async t => {
+  .fn(t => {
     const { sampleCount } = t.params;
     const descriptor = {
       size: [1, 1, 1],
@@ -42,7 +42,7 @@ iff rg11b10ufloat-renderable feature is enabled.
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
   })
-  .fn(async t => {
+  .fn(t => {
     const texture = t.device.createTexture({
       size: [1, 1, 1],
       format: 'rg11b10ufloat',
@@ -72,7 +72,7 @@ format iff rg11b10ufloat-renderable feature is enabled.
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
   })
-  .fn(async t => {
+  .fn(t => {
     t.device.createRenderBundleEncoder({
       colorFormats: ['rg11b10ufloat'],
     });
@@ -88,7 +88,7 @@ in descriptor.fragment.targets iff rg11b10ufloat-renderable feature is enabled.
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
   })
-  .fn(async t => {
+  .fn(t => {
     t.device.createRenderPipeline({
       layout: 'auto',
       vertex: {

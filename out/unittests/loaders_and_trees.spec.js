@@ -99,13 +99,13 @@ const specsData = {
 };
 
 class FakeTestFileLoader extends TestFileLoader {
-  async listing(suite) {
-    return listingData[suite];
+  listing(suite) {
+    return Promise.resolve(listingData[suite]);
   }
 
-  async import(path) {
+  import(path) {
     assert(path in specsData, '[test] mock file ' + path + ' does not exist');
-    return specsData[path];
+    return Promise.resolve(specsData[path]);
   }
 }
 
@@ -134,7 +134,7 @@ class LoadingTest extends UnitTest {
 
 export const g = makeTestGroup(LoadingTest);
 
-g.test('suite').fn(async (t) => {
+g.test('suite').fn((t) => {
   t.shouldReject('Error', t.load('suite1'));
   t.shouldReject('Error', t.load('suite1:'));
 });

@@ -3,6 +3,7 @@
 **/export const description = `
 Unit tests for TestGroup.
 `;
+
 import { makeTestGroup } from '../common/framework/test_group.js';
 import { makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
 import { assert } from '../common/util/util.js';
@@ -334,7 +335,7 @@ g.test('shouldReject').fn(async (t0) => {
 
   const g = makeTestGroupForUnitTesting(UnitTest);
 
-  g.test('a').fn(async (t) => {
+  g.test('a').fn((t) => {
     t.shouldReject(
     'Error',
     (async () => {

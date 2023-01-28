@@ -45,7 +45,7 @@ combineWithParams([
 { dimension: '3d', size: [4, 4, 3] }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { method, textureState, size, dimension } = t.params;
 
   const texture = t.createTextureWithState(textureState, {
@@ -74,7 +74,7 @@ u.combine('method', kImageCopyTypes).combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { method, mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -122,7 +122,7 @@ combine('usage1', kTextureUsages)
 dimension === '1d' || dimension === '3d'))).
 
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, method, size, dimension } = t.params;
 
   const usage = usage0 | usage1;
@@ -162,7 +162,7 @@ u //
 beginSubcases().
 combine('sampleCount', [1, 4])).
 
-fn(async (t) => {
+fn((t) => {
   const { sampleCount, method } = t.params;
 
   const texture = t.device.createTexture({
@@ -209,7 +209,7 @@ combine('mipLevelCount', [1, 3, 5]).
 unless((p) => p.dimension === '1d' && p.mipLevelCount !== 1).
 combine('mipLevel', [0, 1, 3, 4])).
 
-fn(async (t) => {
+fn((t) => {
   const { mipLevelCount, mipLevel, method, size, dimension } = t.params;
 
   const texture = t.device.createTexture({
@@ -269,7 +269,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     method,
     depthOrArrayLayers,
@@ -359,7 +359,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     valueToCoordinate,
     coordinateToTest,
@@ -422,7 +422,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { valueToCoordinate, coordinateToTest, dimension, format, method } = t.params;
   const info = kTextureFormatInfo[format];
   const size = { width: 0, height: 0, depthOrArrayLayers: 0 };
@@ -478,7 +478,7 @@ combine('mipLevel', [0, 2]).
 combine('coordinateToTest', [0, 1, 2]).
 unless((p) => p.dimension === '1d' && (p.coordinateToTest !== 0 || p.mipLevel !== 0))).
 
-fn(async (t) => {
+fn((t) => {
   const {
     originValue,
     copySizeValue,

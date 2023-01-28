@@ -45,7 +45,7 @@ u //
 .combine('layoutEntryCount', [1, 2, 3]).
 combine('bindGroupEntryCount', [1, 2, 3])).
 
-fn(async (t) => {
+fn((t) => {
   const { layoutEntryCount, bindGroupEntryCount } = t.params;
 
   const layoutEntries = [];
@@ -84,7 +84,7 @@ u //
 .combine('layoutBinding', [0, 1, 2]).
 combine('binding', [0, 1, 2])).
 
-fn(async (t) => {
+fn((t) => {
   const { layoutBinding, binding } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -154,7 +154,7 @@ unless(({ entry, usage }) => {
   return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
 })).
 
-fn(async (t) => {
+fn((t) => {
   const { entry, usage } = t.params;
   const info = texBindingTypeInfo(entry);
 
@@ -191,7 +191,7 @@ desc(
     - Tests an incompatible format for every sample type`).
 
 params((u) => u.combine('sampleType', ['float', 'sint', 'uint'])).
-fn(async (t) => {
+fn((t) => {
   const { sampleType } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -281,7 +281,7 @@ p.viewDimension === 'cube' || p.viewDimension === 'cube-array')).
 beginSubcases().
 combine('dimension', kTextureViewDimensions)).
 
-fn(async (t) => {
+fn((t) => {
   const { usage, viewDimension, dimension } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -338,7 +338,7 @@ u //
 beginSubcases().
 combine('sampleCount', [1, 4])).
 
-fn(async (t) => {
+fn((t) => {
   const { multisampled, sampleCount } = t.params;
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
@@ -401,7 +401,7 @@ paramsSubcasesOnly([
 { offset: 0, size: 256 * 5, _success: false }, // size is OOB
 { offset: 1024, size: 1, _success: false } // offset+size is OOB
 ]).
-fn(async (t) => {
+fn((t) => {
   const { offset, size, _success } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -580,7 +580,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const mismatched = t.params.mismatched;
 
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
@@ -637,7 +637,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { entry, resource0Mismatched, resource1Mismatched } = t.params;
 
   const info = bindingTypeInfo(entry);
@@ -695,7 +695,7 @@ u //
 .combine('usage0', kTextureUsages).
 combine('usage1', kTextureUsages)).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1 } = t.params;
 
   const usage = usage0 | usage1;
@@ -740,7 +740,7 @@ u //
 .combine('baseMipLevel', [1, 2]).
 combine('mipLevelCount', [1, 2])).
 
-fn(async (t) => {
+fn((t) => {
   const { baseMipLevel, mipLevelCount } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -783,7 +783,7 @@ u //
 .combine('storageTextureFormat', kStorageTextureFormats).
 combine('resourceFormat', kStorageTextureFormats)).
 
-fn(async (t) => {
+fn((t) => {
   const { storageTextureFormat, resourceFormat } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -834,7 +834,7 @@ unless(
 0)).
 
 
-fn(async (t) => {
+fn((t) => {
   const { type, usage0, usage1 } = t.params;
 
   const usage = usage0 | usage1;
@@ -897,7 +897,7 @@ kLimitInfo.minStorageBufferOffsetAlignment.default + 2])).
 
 
 
-fn(async (t) => {
+fn((t) => {
   const { type, offset } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -960,7 +960,7 @@ kLimitInfo.maxStorageBufferBindingSize.default + 4])).
 
 
 
-fn(async (t) => {
+fn((t) => {
   const { type, bindingSize } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -1024,7 +1024,7 @@ kLimitInfo.minStorageBufferOffsetAlignment.default + 10]).
 
 combine('bindingSize', [undefined, 2, 4, 6])).
 
-fn(async (t) => {
+fn((t) => {
   const { type, offset, bufferSize, bindingSize } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -1066,7 +1066,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
 
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
@@ -1104,7 +1104,7 @@ u //
 beginSubcases().
 combine('compareFunction', [undefined, ...kCompareFunctions])).
 
-fn(async (t) => {
+fn((t) => {
   const { bgType, compareFunction } = t.params;
 
   const bindGroupLayout = t.device.createBindGroupLayout({

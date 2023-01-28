@@ -546,7 +546,7 @@ g.test('uninitialized_texture_is_zero')
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const usage = getRequiredTextureUsage(
       t.params.format,
       t.params.sampleCount,

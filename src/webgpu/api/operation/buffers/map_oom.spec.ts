@@ -101,7 +101,7 @@ g.test('mappedAtCreation')
       .beginSubcases()
       .combine('usage', kBufferUsages)
   )
-  .fn(async t => {
+  .fn(t => {
     const { oom, usage, size } = t.params;
 
     const f = () => t.device.createBuffer({ mappedAtCreation: true, size, usage });

@@ -23,7 +23,7 @@ function rgba16floatFromRgba8unorm(rgba8Unorm) {
 }
 
 export function runColorSpaceTest(format) {
-  runRefTest(async t => {
+  runRefTest(t => {
     const device = t.device;
 
     const kRGBA8UnormData = new Uint8Array([

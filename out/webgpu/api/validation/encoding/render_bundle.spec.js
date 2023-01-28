@@ -14,7 +14,7 @@ desc(
     Test that it is valid to execute an empty list of render bundles
     `).
 
-fn(async (t) => {
+fn((t) => {
   const encoder = t.createEncoder('render pass');
   encoder.encoder.executeBundles([]);
   encoder.validateFinish(true);
@@ -37,7 +37,7 @@ paramsSubcasesOnly([
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { bundle0Mismatched, bundle1Mismatched } = t.params;
 
   const descriptor = {
@@ -95,7 +95,7 @@ u.combineWithParams([
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { bundleFormats, passFormats, _compatible } = t.params;
 
   const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -134,7 +134,7 @@ beforeAllSubcases((t) => {
   const { bundleFormat, passFormat } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase([bundleFormat, passFormat]);
 }).
-fn(async (t) => {
+fn((t) => {
   const { bundleFormat, passFormat } = t.params;
   const compatible = bundleFormat === passFormat;
 
@@ -186,7 +186,7 @@ filter((p) => {
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     depthStencilFormat,
     bundleDepthReadOnly,
@@ -235,7 +235,7 @@ u.combineWithParams([
 { bundleFormat: 1, passFormat: 4 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { bundleSamples, passSamples } = t.params;
 
   const compatible = bundleSamples === passSamples;

@@ -15,7 +15,7 @@ u //
 .combine('lodMinClamp', [-4e-30, -1, 0, 0.5, 1, 10, 4e30]).
 combine('lodMaxClamp', [-4e-30, -1, 0, 0.5, 1, 10, 4e30])).
 
-fn(async (t) => {
+fn((t) => {
   t.expectValidationError(() => {
     t.device.createSampler({
       lodMinClamp: t.params.lodMinClamp,
@@ -36,7 +36,7 @@ combineWithParams([
 { mipmapFilter: 'nearest' }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const {
     maxAnisotropy = 1,
     minFilter = 'linear',

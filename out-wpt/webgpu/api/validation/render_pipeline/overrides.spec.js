@@ -31,7 +31,7 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
         { vertexConstants: { 1: 1, z: 1 }, _success: false }, // pipeline constant id is specified for z
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
     t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -83,7 +83,7 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
         { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for b
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, fragmentConstants, _success } = t.params;
 
     const descriptor = t.getDescriptor({
@@ -118,7 +118,7 @@ Tests calling createRenderPipeline(Async) validation for uninitialized overridab
         { vertexConstants: { x: 1, y: 1, z: 1, w: 1 }, _success: true },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
     t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -165,7 +165,7 @@ Tests calling createRenderPipeline(Async) validation for uninitialized overridab
         { fragmentConstants: { r: 1, g: 1, b: 1, a: 1 }, _success: true },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, fragmentConstants, _success } = t.params;
 
     const descriptor = t.getDescriptor({
@@ -201,7 +201,7 @@ Tests calling createRenderPipeline(Async) validation for invalid constant values
         { vertexConstants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
     t.doCreateRenderPipelineTest(
@@ -251,7 +251,7 @@ Tests calling createRenderPipeline(Async) validation for invalid constant values
         { fragmentConstants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, fragmentConstants, _success } = t.params;
 
     const descriptor = t.getDescriptor({
@@ -298,7 +298,7 @@ TODO(#2060): test with last_f64_castable.
         { vertexConstants: { cb: kValue.i32.negative.min - 1 }, _success: true },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
     t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -362,7 +362,7 @@ TODO(#2060): test with last_f64_castable.
         { fragmentConstants: { cb: kValue.i32.negative.min - 1 }, _success: true },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, fragmentConstants, _success } = t.params;
 
     const descriptor = t.getDescriptor({
@@ -412,7 +412,7 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, vertexConstants, _success } = t.params;
 
     t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -421,7 +421,7 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
         module: t.device.createShaderModule({
           code: `
           enable f16;
-          
+
           override cf16: f16 = 0.0h;
           @vertex fn main() -> @builtin(position) vec4<f32> {
             _ = cf16;
@@ -481,13 +481,13 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
         },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, fragmentConstants, _success } = t.params;
 
     const descriptor = t.getDescriptor({
       fragmentShaderCode: `
         enable f16;
-        
+
         override cf16: f16 = 0.0h;
         @fragment fn main()
             -> @location(0) vec4<f32> {

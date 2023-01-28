@@ -321,7 +321,7 @@ u //
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   t.runDepthBiasTest('depth32float', t.params);
 });
 
@@ -363,7 +363,7 @@ combineWithParams([
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { format } = t.params;
   t.runDepthBiasTestFor24BitFormat(format, t.params);
 });

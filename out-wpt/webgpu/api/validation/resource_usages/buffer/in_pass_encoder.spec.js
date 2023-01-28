@@ -137,7 +137,7 @@ bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`
       .combine('visibility1', ['compute', 'fragment'])
       .combine('hasOverlap', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
 
     const buffer = t.createBufferWithState('valid', {
@@ -216,7 +216,7 @@ referenced by that bind group is "used" in the usage scope. `
       })
       .combine('hasOverlap', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       usage0AccessibleInDispatch,
       usage1AccessibleInDispatch,
@@ -363,7 +363,7 @@ dispatch calls refer to different usage scopes.`
       .combine('inSamePass', [true, false])
       .combine('hasOverlap', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, inSamePass, hasOverlap } = t.params;
 
     const UseBufferOnComputePassEncoder = (computePassEncoder, buffer, usage, offset) => {
@@ -441,7 +441,7 @@ there is no draw call in the render pass.
       .combine('visibility1', ['compute', 'fragment'])
       .unless(t => t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1))
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, hasOverlap, visibility0, visibility1 } = t.params;
 
     const UseBufferOnRenderPassEncoder = (
@@ -570,7 +570,7 @@ layout visibilities.`
       })
       .combine('hasOverlap', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       // Buffer with usage0 will be "used" in the draw call if this value is true.
       usage0AccessibleInDraw,
@@ -793,7 +793,7 @@ different render pass encoders belong to different usage scopes.`
       .combine('inSamePass', [true, false])
       .combine('hasOverlap', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { usage0, usage1, inSamePass, hasOverlap } = t.params;
     const buffer = t.createBufferWithState('valid', {
       size: kBoundBufferSize * 2,

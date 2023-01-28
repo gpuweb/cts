@@ -69,7 +69,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -187,7 +187,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
 
   const pipeline = t.createNoOpComputePipeline();
@@ -226,7 +226,7 @@ GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
 0)).
 
 
-fn(async (t) => {
+fn((t) => {
   const { bufferUsage0, bufferUsage1 } = t.params;
 
   const bufferUsage = bufferUsage0 | bufferUsage1;

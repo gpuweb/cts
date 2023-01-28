@@ -75,7 +75,7 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, aspect } = t.params;
 
   const textureSize = { width: 1, height: 1, depthOrArrayLayers: 1 };
@@ -140,7 +140,7 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, aspect, copyType, copySize } = t.params;
 
   const texture = t.device.createTexture({
@@ -247,7 +247,7 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, aspect, copyType, offset } = t.params;
 
   const textureSize = { width: 4, height: 4, depthOrArrayLayers: 1 };
@@ -322,7 +322,7 @@ u //
 beginSubcases().
 combine('sampleCount', [1, 4])).
 
-fn(async (t) => {
+fn((t) => {
   const { sampleCount, copyType } = t.params;
 
   let usage = GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST;
@@ -381,7 +381,7 @@ combine('bufferUsage', kBufferUsages).
 expand('_bufferUsageValid', (p) => [p.bufferUsage === kRequiredBufferUsage[p.copyType]]).
 filter((p) => p._textureUsageValid || p._bufferUsageValid)).
 
-fn(async (t) => {
+fn((t) => {
   const { copyType, textureUsage, _textureUsageValid, bufferUsage, _bufferUsageValid } = t.params;
 
   const texture = t.device.createTexture({
@@ -426,7 +426,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { copyType, bufMismatched, texMismatched } = t.params;
 
   const uploadBufferSize = 32;

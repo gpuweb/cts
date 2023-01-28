@@ -58,7 +58,7 @@ paramsSubcasesOnly(kIndirectDrawTestParams.combine('mismatched', [true, false]))
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { encoderType, indexed, mismatched } = t.params;
 
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;

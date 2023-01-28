@@ -302,7 +302,7 @@ u //
 beginSubcases().
 combineWithParams(kSubcases)).
 
-fn(async (t) => {
+fn((t) => {
   const { size, range, mappable } = t.params;
   const [, rangeSize] = reifyMapRange(size, range);
 
@@ -371,7 +371,7 @@ combine('validationError', [false, true]).
 combine('afterUnmap', [false, true]).
 combine('afterDestroy', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { validationError, afterUnmap, afterDestroy } = t.params;
   const size = 8;
   const range = [0, 8];

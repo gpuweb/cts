@@ -16,7 +16,7 @@ g.test('shared_with_buffer')
      attributes should be ignored when used as an entry point IO parameter.
     `
   )
-  .fn(async t => {
+  .fn(t => {
     // Set the dispatch parameters such that we get some interesting (non-zero) built-in variables.
     const wgsize = new Uint32Array([8, 4, 2]);
     const numGroups = new Uint32Array([4, 2, 8]);
@@ -115,7 +115,7 @@ g.test('shared_between_stages')
      shader and the input to a fragment shader.
     `
   )
-  .fn(async t => {
+  .fn(t => {
     const size = [31, 31];
     const wgsl = `
       struct Interface {
@@ -230,7 +230,7 @@ g.test('shared_with_non_entry_point_function')
      structures as parameter and return types for entry point functions and regular functions.
     `
   )
-  .fn(async t => {
+  .fn(t => {
     // The test shader defines structures that contain members decorated with built-in variable
     // attributes and user-defined IO. These structures are passed to and returned from regular
     // functions.

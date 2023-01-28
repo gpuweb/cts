@@ -33,7 +33,7 @@ params((u) =>
 u //
 .combine('canvasType', kAllCanvasTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { canvasType } = t.params;
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
@@ -65,7 +65,7 @@ params((u) =>
 u //
 .combine('canvasType', kAllCanvasTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { canvasType } = t.params;
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
@@ -120,7 +120,7 @@ combine('format', kAllTextureFormats)).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { canvasType, format } = t.params;
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
@@ -169,7 +169,7 @@ expand('usage', (p) => {
   return usageSet;
 })).
 
-fn(async (t) => {
+fn((t) => {
   const { canvasType, usage } = t.params;
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
@@ -279,7 +279,7 @@ u //
 beginSubcases().
 combine('alphaMode', ['opaque', 'premultiplied'])).
 
-fn(async (t) => {
+fn((t) => {
   const { canvasType, alphaMode } = t.params;
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');

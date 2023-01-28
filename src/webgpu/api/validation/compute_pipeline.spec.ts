@@ -31,7 +31,7 @@ Call the API with valid compute shader and matching valid entryPoint, making sur
 `
   )
   .params(u => u.combine('isAsync', [true, false]))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync } = t.params;
     t.doCreateComputePipelineTest(isAsync, true, {
       layout: 'auto',
@@ -46,7 +46,7 @@ Tests calling createComputePipeline(Async) with a invalid compute shader, and ch
 `
   )
   .params(u => u.combine('isAsync', [true, false]))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync } = t.params;
     t.doCreateComputePipelineTest(isAsync, false, {
       layout: 'auto',
@@ -69,7 +69,7 @@ and check that the APIs only accept compute shader.
       .combine('isAsync', [true, false])
       .combine('shaderModuleStage', ['compute', 'vertex', 'fragment'] as TShaderStage[])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, shaderModuleStage } = t.params;
     const descriptor = {
       layout: 'auto' as const,
@@ -89,7 +89,7 @@ g.test('shader_module,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, mismatched } = t.params;
 
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
@@ -117,7 +117,7 @@ g.test('pipeline_layout,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -150,7 +150,7 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
       .beginSubcases()
       .combine('countDeltaFromLimit', [0, 1])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, type, _typeSize, countDeltaFromLimit } = t.params;
     const countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / _typeSize);
     const count = countAtLimit + countDeltaFromLimit;
@@ -191,7 +191,7 @@ Tests calling createComputePipeline(Async) validation for compute using <= devic
         [1, 8, 33],
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, size } = t.params;
 
     const descriptor = {
@@ -235,7 +235,7 @@ Tests calling createComputePipeline(Async) validation for compute workgroup_size
         [1, 1, 65],
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, size } = t.params;
 
     const descriptor = {
@@ -283,7 +283,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: { 1000: 0, c2: 0 }, _success: false },
       ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -327,7 +327,7 @@ Tests calling createComputePipeline(Async) validation for uninitialized overrida
         { constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true },
       ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -385,7 +385,7 @@ Tests calling createComputePipeline(Async) validation for constant values like i
         { constants: { cf: Number.NEGATIVE_INFINITY }, _success: false },
       ] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -435,7 +435,7 @@ TODO(#2060): test with last_f64_castable.
         { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
       ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -488,7 +488,7 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, constants, _success } = t.params;
 
     const descriptor = {
@@ -548,7 +548,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
         { constants: { x: 16, y: 1, z: 1 }, _success: true },
       ] as { constants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, type, constants, _success } = t.params;
 
     const descriptor = {
@@ -576,7 +576,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
       .combine('isAsync', [true, false])
       .combine('type', ['u32', 'i32'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, type } = t.params;
 
     const limits = t.device.limits;
@@ -627,7 +627,7 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
     u //
       .combine('isAsync', [true, false])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync } = t.params;
 
     const limits = t.device.limits;

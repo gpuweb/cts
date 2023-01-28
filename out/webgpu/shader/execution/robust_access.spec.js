@@ -172,7 +172,7 @@ beginSubcases().
 expand('baseType', supportedScalarTypes).
 expandWithParams(generateTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const {
     storageClass,
     storageMode,

@@ -741,7 +741,7 @@ combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3]).
 unless((p) => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
 
-fn(async (t) => {
+fn((t) => {
   const {
     dimension,
     srcTextureSize,
@@ -823,7 +823,7 @@ beforeAllSubcases((t) => {
   kTextureFormatInfo[dstFormat].feature]);
 
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     dimension,
     textureSizeInBlocks,
@@ -906,7 +906,7 @@ combine('copyBoxOffsets', kCopyBoxOffsetsFor2DArrayTextures).
 combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     dimension,
     textureSize,
@@ -978,7 +978,7 @@ beforeAllSubcases((t) => {
   kTextureFormatInfo[dstFormat].feature]);
 
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     dimension,
     textureSizeInBlocks,
@@ -1097,7 +1097,7 @@ combine('srcCopyLevel', [0, 3]).
 combine('dstCopyLevel', [0, 3]).
 unless((p) => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))).
 
-fn(async (t) => {
+fn((t) => {
   const { dimension, textureSize, copyBoxOffset, srcCopyLevel, dstCopyLevel } = t.params;
 
   const srcFormat = 'rgba8unorm';
@@ -1158,7 +1158,7 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     format,
     srcTextureSize,
@@ -1260,7 +1260,7 @@ desc(
     texture can only be 1.
   `).
 
-fn(async (t) => {
+fn((t) => {
   const textureSize = [32, 16, 1];
   const kColorFormat = 'rgba8unorm';
   const kSampleCount = 4;
@@ -1448,7 +1448,7 @@ desc(
     texture can only be 1.
   `).
 
-fn(async (t) => {
+fn((t) => {
   const textureSize = [32, 16, 1];
   const kDepthFormat = 'depth24plus';
   const kSampleCount = 4;

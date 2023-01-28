@@ -33,7 +33,7 @@ g.test('texture_descriptor')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
@@ -64,7 +64,7 @@ g.test('texture_descriptor_view_formats')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
@@ -96,7 +96,7 @@ g.test('texture_view_descriptor')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     // If the required feature isn't enabled then the texture will fail to create and we won't be
@@ -148,7 +148,7 @@ g.test('canvas_configuration')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, canvasType, enable_required_feature } = t.params;
 
     const canvas = createCanvas(t, canvasType, 2, 2);
@@ -197,7 +197,7 @@ g.test('canvas_configuration_view_formats')
       t.selectDeviceForTextureFormatOrSkipTestCase(viewFormats);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { viewFormats, canvasType, enable_required_feature } = t.params;
 
     const canvas = createCanvas(t, canvasType, 2, 2);
@@ -245,7 +245,7 @@ g.test('storage_texture_binding_layout')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
@@ -286,7 +286,7 @@ g.test('color_target_state')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
@@ -342,7 +342,7 @@ g.test('depth_stencil_state')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
@@ -399,7 +399,7 @@ g.test('render_bundle_encoder_descriptor_color_format')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
@@ -434,7 +434,7 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
       t.selectDeviceOrSkipTestCase(formatInfo.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, enable_required_feature } = t.params;
 
     t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {

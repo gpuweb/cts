@@ -58,7 +58,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[stencilFormat];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     stencilFormat,
     stencilClearValue,

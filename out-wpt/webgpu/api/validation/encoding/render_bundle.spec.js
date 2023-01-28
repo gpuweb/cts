@@ -15,7 +15,7 @@ g.test('empty_bundle_list')
     Test that it is valid to execute an empty list of render bundles
     `
   )
-  .fn(async t => {
+  .fn(t => {
     const encoder = t.createEncoder('render pass');
     encoder.encoder.executeBundles([]);
     encoder.validateFinish(true);
@@ -38,7 +38,7 @@ g.test('device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { bundle0Mismatched, bundle1Mismatched } = t.params;
 
     const descriptor = {
@@ -96,7 +96,7 @@ g.test('color_formats_mismatch')
       },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { bundleFormats, passFormats, _compatible } = t.params;
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -135,7 +135,7 @@ g.test('depth_stencil_formats_mismatch')
     const { bundleFormat, passFormat } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase([bundleFormat, passFormat]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { bundleFormat, passFormat } = t.params;
     const compatible = bundleFormat === passFormat;
 
@@ -187,7 +187,7 @@ g.test('depth_stencil_readonly_mismatch')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       depthStencilFormat,
       bundleDepthReadOnly,
@@ -236,7 +236,7 @@ g.test('sample_count_mismatch')
       { bundleFormat: 1, passFormat: 4 },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { bundleSamples, passSamples } = t.params;
 
     const compatible = bundleSamples === passSamples;

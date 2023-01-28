@@ -57,7 +57,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, zeroArgument, format } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -112,7 +112,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -149,7 +149,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, mipLevelCount, largestDimension } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -227,7 +227,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, size, dimension } = t.params;
 
   const descriptor = {
@@ -250,7 +250,7 @@ fn(async (t) => {
 
 g.test('mipLevelCount,bound_check,bigger_than_integer_bit_width').
 desc(`Test mip level count bound check when mipLevelCount is bigger than integer bit width`).
-fn(async (t) => {
+fn((t) => {
   const descriptor = {
     size: [32, 32],
     mipLevelCount: 100,
@@ -279,7 +279,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, sampleCount, format } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
@@ -355,7 +355,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, sampleCount, format, mipLevelCount, arrayLayerCount, usage } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
@@ -400,7 +400,7 @@ u.combineWithParams([
 { dimension: '3d', size: [4, 4, 4], shouldError: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { dimension, size, shouldError } = t.params;
 
   t.expectValidationError(() => {
@@ -433,7 +433,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, size } = t.params;
 
   const descriptor = {
@@ -474,7 +474,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, size, _success } = t.params;
 
   const descriptor = {
@@ -509,7 +509,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, width, height, depthOrArrayLayers } = t.params;
 
   const descriptor = {
@@ -553,7 +553,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, size } = t.params;
 
   const descriptor = {
@@ -621,7 +621,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, size } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -672,7 +672,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, size } = t.params;
 
   const descriptor = {
@@ -743,7 +743,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, size } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -791,7 +791,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { dimension, format, usage0, usage1 } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -841,7 +841,7 @@ beforeAllSubcases((t) => {
   const { formatFeature, viewFormatFeature } = t.params;
   t.selectDeviceOrSkipTestCase([formatFeature, viewFormatFeature]);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, viewFormat } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 

@@ -12,7 +12,7 @@ export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 g.test('basic')
   .desc(`Test basic usage of createRenderPipeline.`)
   .params(u => u.combine('isAsync', [false, true]))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync } = t.params;
     const descriptor = t.getDescriptor();
 
@@ -36,7 +36,7 @@ state (and thus has no color state), and can be created with or without depth st
       ] as const)
       .combine('hasColor', [false, true])
   )
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, depthStencilFormat, hasColor } = t.params;
 
     let depthStencilState: GPUDepthStencilState | undefined;
@@ -65,7 +65,7 @@ g.test('pipeline_layout,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, mismatched } = t.params;
 
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;

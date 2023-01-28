@@ -30,7 +30,7 @@ combineWithParams([
 { vertexConstants: { 1: 1, z: 1 }, _success: false } // pipeline constant id is specified for z
 ])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, vertexConstants, _success } = t.params;
 
   t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -82,7 +82,7 @@ combineWithParams([
 { fragmentConstants: { 1: 1, b: 1 }, _success: false } // pipeline constant id is specified for b
 ])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, fragmentConstants, _success } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -117,7 +117,7 @@ combineWithParams([
 { vertexConstants: { x: 1, y: 1, z: 1, w: 1 }, _success: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, vertexConstants, _success } = t.params;
 
   t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -164,7 +164,7 @@ combineWithParams([
 { fragmentConstants: { r: 1, g: 1, b: 1, a: 1 }, _success: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, fragmentConstants, _success } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -200,7 +200,7 @@ combineWithParams([
 { vertexConstants: { cf: Number.NEGATIVE_INFINITY }, _success: false }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, vertexConstants, _success } = t.params;
 
   t.doCreateRenderPipelineTest(
@@ -250,7 +250,7 @@ combineWithParams([
 { fragmentConstants: { cf: Number.NEGATIVE_INFINITY }, _success: false }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, fragmentConstants, _success } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -297,7 +297,7 @@ combineWithParams([
 { vertexConstants: { cb: kValue.i32.negative.min - 1 }, _success: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, vertexConstants, _success } = t.params;
 
   t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -361,7 +361,7 @@ combineWithParams([
 { fragmentConstants: { cb: kValue.i32.negative.min - 1 }, _success: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, fragmentConstants, _success } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -411,7 +411,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, vertexConstants, _success } = t.params;
 
   t.doCreateRenderPipelineTest(isAsync, _success, {
@@ -420,7 +420,7 @@ fn(async (t) => {
       module: t.device.createShaderModule({
         code: `
           enable f16;
-          
+
           override cf16: f16 = 0.0h;
           @vertex fn main() -> @builtin(position) vec4<f32> {
             _ = cf16;
@@ -480,13 +480,13 @@ combineWithParams([
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, fragmentConstants, _success } = t.params;
 
   const descriptor = t.getDescriptor({
     fragmentShaderCode: `
         enable f16;
-        
+
         override cf16: f16 = 0.0h;
         @fragment fn main()
             -> @location(0) vec4<f32> {

@@ -141,6 +141,7 @@ if (verbose) {
   dataCache.setDebugLogger(console.log);
 }
 
+
 (async () => {
   Logger.globalDebugMode = verbose;
   const log = new Logger();

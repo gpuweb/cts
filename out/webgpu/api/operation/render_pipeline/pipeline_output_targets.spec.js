@@ -66,7 +66,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, attachmentCount, emptyAttachmentId } = t.params;
   const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
   const info = kTextureFormatInfo[format];
@@ -170,7 +170,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, componentCount } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -376,7 +376,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     format,
     _result,

@@ -312,7 +312,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, stencilCompare, stencilRefValue, _expectedColor } = t.params;
 
   t.checkStencilCompareFunction(format, stencilCompare, stencilRefValue, _expectedColor);
@@ -350,7 +350,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, passOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
@@ -395,7 +395,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, failOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
@@ -449,7 +449,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, depthFailOp, initialStencil, _expectedStencil } = t.params;
 
   const stencilState = {
@@ -495,7 +495,7 @@ combineWithParams([
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, maskType, stencilRefValue, _expectedColor } = t.params;
 
   const baseStencilState = {
@@ -545,7 +545,7 @@ params((u) => u.combine('format', kStencilFormats)).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format } = t.params;
 
   const baseStencilState = {

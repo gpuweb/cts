@@ -65,7 +65,7 @@ paramsSubcasesOnly([
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
   const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
 
@@ -114,7 +114,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
 
   const descriptor = {
@@ -153,7 +153,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -178,7 +178,7 @@ beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase(['timestamp-query']);
   t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 

@@ -13,7 +13,7 @@ desc(
     Ensure getPreferredCanvasFormat returns one of the valid values.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
   t.expect(preferredFormat === 'bgra8unorm' || preferredFormat === 'rgba8unorm');
 });

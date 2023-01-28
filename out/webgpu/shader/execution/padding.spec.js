@@ -56,7 +56,7 @@ desc(
      then test that data in the padding bytes was preserved.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       struct S {
         a : u32,
@@ -105,7 +105,7 @@ desc(
      then test that data in the padding bytes was preserved.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       struct S {
         a : u32,
@@ -154,7 +154,7 @@ desc(
      then test that data in the padding bytes was preserved.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       // Size of S1 is 48 bytes.
       // Alignment of S1 is 16 bytes.
@@ -302,7 +302,7 @@ desc(
      preserved.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read_write> buffer : array<vec3<u32>, 4>;
 
@@ -353,7 +353,7 @@ desc(
      then test that data in the padding bytes was preserved.
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       struct S {
         a : u32,
@@ -410,7 +410,7 @@ desc(
 `Test padding bytes are preserved when assigning to a variable of type vec3 (without a struct).
     `).
 
-fn(async (t) => {
+fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read_write> buffer : vec3<u32>;
 

@@ -26,7 +26,7 @@ expand('bufferSize', (p) => [
 (p.offset ?? 0) + (p.size ?? 16) + 8])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { offset, size, bufferSize } = t.params;
 
   const bufferData = new Uint8Array(bufferSize);

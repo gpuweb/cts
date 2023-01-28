@@ -494,7 +494,7 @@ g.test('copy_contents_from_2d_context_canvas')
       .combine('width', [1, 2, 4, 15])
       .combine('height', [1, 2, 4, 15])
   )
-  .fn(async t => {
+  .fn(t => {
     const { width, height, canvasType, dstAlphaMode } = t.params;
 
     const { canvas, expectedSourceData } = t.init2DCanvasContent({
@@ -555,7 +555,7 @@ g.test('copy_contents_from_gl_context_canvas')
       .combine('width', [1, 2, 4, 15])
       .combine('height', [1, 2, 4, 15])
   )
-  .fn(async t => {
+  .fn(t => {
     const { width, height, canvasType, contextName, srcPremultiplied, dstAlphaMode } = t.params;
 
     const { canvas, expectedSourceData } = t.initGLCanvasContent({
@@ -624,7 +624,7 @@ g.test('copy_contents_from_gpu_context_canvas')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       width,
       height,
@@ -696,7 +696,7 @@ g.test('color_space_conversion')
       .combine('width', [1, 2, 4, 15, 255, 256])
       .combine('height', [1, 2, 4, 15, 255, 256])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       width,
       height,

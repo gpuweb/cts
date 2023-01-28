@@ -85,7 +85,7 @@ combine('level1', [0, 1]).
 combine('inSamePass', [true, false]).
 unless((t) => t.inSamePass && t.level0 !== t.level1)).
 
-fn(async (t) => {
+fn((t) => {
   const { layer0, level0, layer1, level1, inSamePass } = t.params;
 
   const texture = t.device.createTexture({
@@ -156,7 +156,7 @@ combine('bgUsage', ['texture', 'storage']).
 unless((t) => t.bgUsage === 'storage' && t.bgLevelCount > 1).
 combine('inSamePass', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     colorAttachmentLevel,
     colorAttachmentLayer,
@@ -264,7 +264,7 @@ combine('dsReadOnly', [true, false]).
 combine('bgAspect', ['depth-only', 'stencil-only']).
 combine('inSamePass', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     dsLevel,
     dsLayer,
@@ -396,7 +396,7 @@ t.bgUsage1 === 'storage' && t.bg1Levels.count > 1).
 
 combine('inSamePass', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const { bg0Levels, bg0Layers, bg1Levels, bg1Layers, bgUsage0, bgUsage1, inSamePass } = t.params;
 
   const texture = t.device.createTexture({
@@ -501,7 +501,7 @@ combine('aspect0', ['depth-only', 'stencil-only']).
 combine('aspect1', ['depth-only', 'stencil-only']).
 combine('inSamePass', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     view0Levels,
     view0Layers,

@@ -23,7 +23,7 @@ u.beginSubcases().combine(
 range(kMaxColorAttachments + 1, (i) => i + 1) // 1-9
 )).
 
-fn(async (t) => {
+fn((t) => {
   const { colorFormatCount } = t.params;
   t.expectValidationError(() => {
     t.device.createRenderBundleEncoder({
@@ -49,7 +49,7 @@ combine(
 range(kMaxColorAttachments, (i) => i + 1))).
 
 
-fn(async (t) => {
+fn((t) => {
   const { format, colorFormatCount } = t.params;
   const info = kTextureFormatInfo[format];
   const shouldError =
@@ -100,7 +100,7 @@ u.combineWithParams([
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { formats, _shouldError } = t.params;
 
   t.expectValidationError(() => {
@@ -115,7 +115,7 @@ desc(`Tests that if no colorFormats are given, a depthStencilFormat must be spec
 params((u) =>
 u.beginSubcases().combine('depthStencilFormat', [undefined, 'depth24plus-stencil8'])).
 
-fn(async (t) => {
+fn((t) => {
   const { depthStencilFormat } = t.params;
   t.expectValidationError(() => {
     t.device.createRenderBundleEncoder({
@@ -143,7 +143,7 @@ beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, attachment } = t.params;
 
   const colorRenderable =
@@ -194,7 +194,7 @@ beforeAllSubcases((t) => {
   const { depthStencilFormat } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
 }).
-fn(async (t) => {
+fn((t) => {
   const { depthStencilFormat, depthReadOnly, stencilReadOnly } = t.params;
 
   let shouldError = false;
@@ -229,7 +229,7 @@ u //
 combine('depthReadOnly', [false, true]).
 combine('stencilReadOnly', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { depthReadOnly, stencilReadOnly } = t.params;
 
   t.device.createRenderBundleEncoder({

@@ -49,7 +49,7 @@ and check that the APIs only accept matching entryPoint.
 `
   )
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
     const descriptor = {
       layout: 'auto',
@@ -72,7 +72,7 @@ and check that the APIs only accept matching entryPoint.
 `
   )
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
     const descriptor = {
       layout: 'auto',
@@ -95,7 +95,7 @@ and check that the APIs only accept matching entryPoint.
 `
   )
   .params(u => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases))
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
     const descriptor = {
       layout: 'auto',

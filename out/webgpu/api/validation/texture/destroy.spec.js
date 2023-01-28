@@ -44,7 +44,7 @@ combine('depthStencilTextureState', [
 'destroyedAfterEncode'])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
   const isSubmitSuccess = colorTextureState === 'valid' && depthStencilTextureState === 'valid';

@@ -25,7 +25,7 @@ combine('count', [0, kMaxQueryCount, kMaxQueryCount + 1])).
 beforeAllSubcases((t) => {
   t.selectDeviceForQueryTypeOrSkipTestCase(t.params.type);
 }).
-fn(async (t) => {
+fn((t) => {
   const { type, count } = t.params;
 
   t.expectValidationError(() => {

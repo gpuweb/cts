@@ -25,7 +25,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -49,7 +49,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, depthCompare } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -76,7 +76,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, depthWriteEnabled } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -98,7 +98,7 @@ beforeAllSubcases((t) => {
     t.selectDeviceOrSkipTestCase(info.feature);
   }
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -131,7 +131,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, face, compare } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -169,7 +169,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, faceAndOpType, op } = t.params;
   const info = kTextureFormatInfo[format];
 

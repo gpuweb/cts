@@ -28,7 +28,7 @@ u.combine('descriptor', [
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { descriptor } = t.params;
 
   t.expectValidationError(() => {
@@ -86,7 +86,7 @@ u.combine('descriptor', [
 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { descriptor } = t.params;
 
   let width;
@@ -125,7 +125,7 @@ u.combine('descriptor', [
 { type: 'occlusion', count: 8193, invalid: true }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { descriptor } = t.params;
 
   t.expectValidationError(() => {

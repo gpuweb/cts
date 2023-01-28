@@ -43,7 +43,7 @@ sampleIndex = 0)
 }
 
 class F extends GPUTest {
-  async GetTargetTexture(
+  GetTargetTexture(
   sampleCount,
   rasterizationMask,
   sampleMask,
@@ -95,7 +95,7 @@ class F extends GPUTest {
             @builtin(position) Position : vec4<f32>,
             @location(0) @interpolate(perspective, sample) fragUV : vec2<f32>,
           }
-          
+
           @vertex
           fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
             var pos = array<vec2<f32>, 30>(
@@ -144,7 +144,7 @@ class F extends GPUTest {
                 vec2<f32>(0.01, -1.0),
                 vec2<f32>(0.01,  -0.01)
               );
-          
+
             var uv = array<vec2<f32>, 30>(
                 // center quad
                 vec2<f32>(1.0, 0.0),
@@ -186,7 +186,7 @@ class F extends GPUTest {
                 vec2<f32>(0.5, 1.0),
                 vec2<f32>(0.5, 0.5)
               );
-          
+
             var output : VertexOutput;
             output.Position = vec4<f32>(pos[VertexIndex], ${kDepthWriteValue}, 1.0);
             output.fragUV = uv[VertexIndex];
@@ -206,7 +206,7 @@ class F extends GPUTest {
             @builtin(sample_mask) mask : u32,
             @location(0) color : vec4<f32>,
           }
-          
+
           @fragment
           fn main(@location(0) @interpolate(perspective, sample) fragUV: vec2<f32>) -> FragmentOutput {
             return FragmentOutput(fragMask, textureSample(myTexture, mySampler, fragUV));
@@ -481,10 +481,10 @@ combine('fragmentShaderOutputMask', [
 0b11110])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
 
-  const { color, depthStencil } = await t.GetTargetTexture(
+  const { color, depthStencil } = t.GetTargetTexture(
   sampleCount,
   rasterizationMask,
   sampleMask,

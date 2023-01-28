@@ -80,7 +80,7 @@ const expect = {
   ]),
 };
 
-async function initWebGPUCanvasContent(t, format, alphaMode, colorSpace, canvasType) {
+function initWebGPUCanvasContent(t, format, alphaMode, colorSpace, canvasType) {
   const canvas = createCanvas(t, canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
   assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
@@ -196,7 +196,7 @@ g.test('onscreenCanvas,snapshot')
       .combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
   )
   .fn(async t => {
-    const canvas = await initWebGPUCanvasContent(
+    const canvas = initWebGPUCanvasContent(
       t,
       t.params.format,
       t.params.alphaMode,
@@ -258,7 +258,7 @@ g.test('offscreenCanvas,snapshot')
       .combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
   )
   .fn(async t => {
-    const offscreenCanvas = await initWebGPUCanvasContent(
+    const offscreenCanvas = initWebGPUCanvasContent(
       t,
       t.params.format,
       t.params.alphaMode,
@@ -316,9 +316,9 @@ g.test('onscreenCanvas,uploadToWebGL')
       .combine('webgl', ['webgl', 'webgl2'])
       .combine('upload', ['texImage2D', 'texSubImage2D'])
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, webgl, upload } = t.params;
-    const canvas = await initWebGPUCanvasContent(t, format, t.params.alphaMode, 'srgb', 'onscreen');
+    const canvas = initWebGPUCanvasContent(t, format, t.params.alphaMode, 'srgb', 'onscreen');
 
     const expectCanvas = createOnscreenCanvas(t, canvas.width, canvas.height);
     const gl = expectCanvas.getContext(webgl);
@@ -384,16 +384,10 @@ g.test('drawTo2DCanvas')
       .combine('webgpuCanvasType', kAllCanvasTypes)
       .combine('canvas2DType', kAllCanvasTypes)
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;
 
-    const canvas = await initWebGPUCanvasContent(
-      t,
-      format,
-      alphaMode,
-      colorSpace,
-      webgpuCanvasType
-    );
+    const canvas = initWebGPUCanvasContent(t, format, alphaMode, colorSpace, webgpuCanvasType);
 
     const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
     const ctx = expectCanvas.getContext('2d');

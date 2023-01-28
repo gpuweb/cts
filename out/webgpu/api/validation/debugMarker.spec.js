@@ -40,7 +40,7 @@ u //
 .combine('pushCount', [1, 2, 3]).
 combine('popCount', [1, 2, 3])).
 
-fn(async (t) => {
+fn((t) => {
   const { pushCount, popCount } = t.params;
 
   const encoder = t.device.createCommandEncoder();
@@ -74,7 +74,7 @@ beginSubcases().
 combine('pushCount', [1, 2, 3]).
 combine('popCount', [1, 2, 3])).
 
-fn(async (t) => {
+fn((t) => {
   const { passType, pushCount, popCount } = t.params;
 
   const encoder = t.device.createCommandEncoder();

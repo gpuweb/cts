@@ -727,7 +727,7 @@ g.test('color_textures,non_compressed,non_array')
       .combine('dstCopyLevel', [0, 3])
       .unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       dimension,
       srcTextureSize,
@@ -809,7 +809,7 @@ g.test('color_textures,compressed,non_array')
       kTextureFormatInfo[dstFormat].feature,
     ]);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       dimension,
       textureSizeInBlocks,
@@ -891,7 +891,7 @@ g.test('color_textures,non_compressed,array')
       .combine('srcCopyLevel', [0, 3])
       .combine('dstCopyLevel', [0, 3])
   )
-  .fn(async t => {
+  .fn(t => {
     const {
       dimension,
       textureSize,
@@ -963,7 +963,7 @@ g.test('color_textures,compressed,array')
       kTextureFormatInfo[dstFormat].feature,
     ]);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       dimension,
       textureSizeInBlocks,
@@ -1082,7 +1082,7 @@ g.test('zero_sized')
       .combine('dstCopyLevel', [0, 3])
       .unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))
   )
-  .fn(async t => {
+  .fn(t => {
     const { dimension, textureSize, copyBoxOffset, srcCopyLevel, dstCopyLevel } = t.params;
 
     const srcFormat = 'rgba8unorm';
@@ -1143,7 +1143,7 @@ g.test('copy_depth_stencil')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       format,
       srcTextureSize,
@@ -1248,7 +1248,7 @@ g.test('copy_multisampled_color')
     texture can only be 1.
   `
   )
-  .fn(async t => {
+  .fn(t => {
     const textureSize = [32, 16, 1];
     const kColorFormat = 'rgba8unorm';
     const kSampleCount = 4;
@@ -1437,7 +1437,7 @@ g.test('copy_multisampled_depth')
     texture can only be 1.
   `
   )
-  .fn(async t => {
+  .fn(t => {
     const textureSize = [32, 16, 1];
     const kDepthFormat = 'depth24plus';
     const kSampleCount = 4;

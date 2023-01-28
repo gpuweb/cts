@@ -64,7 +64,7 @@ beginSubcases().
 combine('firstPassEnd', [true, false]).
 combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])).
 
-fn(async (t) => {
+fn((t) => {
   const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
 
   const view = t.createAttachmentTextureView();
@@ -101,7 +101,7 @@ beginSubcases().
 combine('prePassType', ['compute', 'render', 'no-op']).
 combine('IsEncoderFinished', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { prePassType, IsEncoderFinished, callCmd } = t.params;
 
   const view = t.createAttachmentTextureView();
@@ -159,7 +159,7 @@ desc(
   `).
 
 paramsSubcasesOnly((u) => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1])).
-fn(async (t) => {
+fn((t) => {
   const { passType, endCount } = t.params;
 
   const view = t.createAttachmentTextureView();
@@ -184,7 +184,7 @@ u //
 .combine('passType', ['compute', 'render']).
 combine('endTwice', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { passType, endTwice } = t.params;
 
   const view = t.createAttachmentTextureView();

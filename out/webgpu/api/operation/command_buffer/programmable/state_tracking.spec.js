@@ -33,7 +33,7 @@ combine('groupIndices', [
 { a: 1, b: 0, out: 2 }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType, groupIndices } = t.params;
 
   const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
@@ -82,7 +82,7 @@ combine('setOrder', [
 ['out', 'b', 'a']])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType, setOrder } = t.params;
 
   const groupIndices = { a: 0, b: 1, out: 2 };
@@ -131,7 +131,7 @@ combineWithParams([
 { setBefore: ['a', 'b', 'out'], setAfter: [] }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType, setBefore, setAfter } = t.params;
   const groupIndices = { a: 0, b: 1, out: 2 };
   const pipeline = t.createBindingStatePipeline(encoderType, groupIndices);
@@ -177,7 +177,7 @@ params((u) =>
 u //
 .combine('encoderType', kProgrammableEncoderTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType } = t.params;
   const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
 
@@ -213,7 +213,7 @@ params((u) =>
 u //
 .combine('encoderType', kProgrammableEncoderTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType } = t.params;
   const pipeline = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
 
@@ -263,7 +263,7 @@ params((u) =>
 u //
 .combine('encoderType', kProgrammableEncoderTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { encoderType } = t.params;
   const pipelineA = t.createBindingStatePipeline(encoderType, { a: 0, b: 1, out: 2 });
   const pipelineB = t.createBindingStatePipeline(

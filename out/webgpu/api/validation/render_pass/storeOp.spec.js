@@ -37,7 +37,7 @@ paramsSimple([
 { readonly: undefined, depthReadOnly: true, _valid: false },
 { readonly: undefined, stencilReadOnly: true, _valid: false }]).
 
-fn(async (t) => {
+fn((t) => {
   const {
     readonly,
     depthStoreOp = 'store',

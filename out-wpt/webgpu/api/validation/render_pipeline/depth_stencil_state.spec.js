@@ -26,7 +26,7 @@ g.test('format')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -50,7 +50,7 @@ g.test('depth_test')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format, depthCompare } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -77,7 +77,7 @@ g.test('depth_write')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format, depthWriteEnabled } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -99,7 +99,7 @@ g.test('depth_write,frag_depth')
       t.selectDeviceOrSkipTestCase(info.feature);
     }
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format } = t.params;
 
     const descriptor = t.getDescriptor({
@@ -132,7 +132,7 @@ g.test('stencil_test')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format, face, compare } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -170,7 +170,7 @@ g.test('stencil_write')
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { isAsync, format, faceAndOpType, op } = t.params;
     const info = kTextureFormatInfo[format];
 

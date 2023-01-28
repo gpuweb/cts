@@ -138,7 +138,7 @@ g.test('empty')
 Tests that popping an empty error scope stack should reject.
     `
   )
-  .fn(async t => {
+  .fn(t => {
     const promise = t.device.popErrorScope();
     t.shouldReject('OperationError', promise);
   });

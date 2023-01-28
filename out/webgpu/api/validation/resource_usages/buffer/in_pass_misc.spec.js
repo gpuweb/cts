@@ -22,7 +22,7 @@ u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage']).
 combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect'])).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1 } = t.params;
 
   const kUsages = GPUBufferUsage.UNIFORM | GPUBufferUsage.STORAGE | GPUBufferUsage.INDIRECT;
@@ -92,7 +92,7 @@ unless((t) => {
   return t.usage0 === 'index' && t.usage1 === 'indirect';
 })).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1 } = t.params;
 
   const kUsages =
@@ -279,7 +279,7 @@ unless(({ usage0, usage1, pass }) => {
   return false;
 })).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, pass } = t.params;
 
   const kUsages =

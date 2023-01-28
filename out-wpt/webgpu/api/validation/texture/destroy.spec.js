@@ -41,7 +41,7 @@ that was destroyed {before, after} encoding finishes.
         'destroyedAfterEncode',
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 
     const isSubmitSuccess = colorTextureState === 'valid' && depthStencilTextureState === 'valid';

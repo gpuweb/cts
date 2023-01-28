@@ -66,7 +66,7 @@ g.test('color_attachments,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { view0Mismatched, target0Mismatched, view1Mismatched, target1Mismatched } = t.params;
     const mismatched = view0Mismatched || target0Mismatched || view1Mismatched || target1Mismatched;
 
@@ -115,7 +115,7 @@ g.test('depth_stencil_attachment,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
 
     const descriptor = {
@@ -154,7 +154,7 @@ g.test('occlusion_query_set,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
@@ -179,7 +179,7 @@ g.test('timestamp_query_set,device_mismatch')
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 

@@ -36,7 +36,7 @@ paramsSubcasesOnly(kRenderEncodeTypeParams.combine('mismatched', [true, false]))
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { encoderType, mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 

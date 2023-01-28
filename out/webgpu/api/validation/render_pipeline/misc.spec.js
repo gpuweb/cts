@@ -12,7 +12,7 @@ export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 g.test('basic').
 desc(`Test basic usage of createRenderPipeline.`).
 params((u) => u.combine('isAsync', [false, true])).
-fn(async (t) => {
+fn((t) => {
   const { isAsync } = t.params;
   const descriptor = t.getDescriptor();
 
@@ -36,7 +36,7 @@ combine('depthStencilFormat', [
 
 combine('hasColor', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, depthStencilFormat, hasColor } = t.params;
 
   let depthStencilState;
@@ -65,7 +65,7 @@ paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatche
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, mismatched } = t.params;
 
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;

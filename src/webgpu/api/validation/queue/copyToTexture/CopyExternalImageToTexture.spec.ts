@@ -224,7 +224,7 @@ g.test('source_canvas,contexts')
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { contextType, copySize } = t.params;
     const canvas = createOnscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
@@ -269,7 +269,7 @@ g.test('source_offscreenCanvas,contexts')
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { contextType, copySize } = t.params;
     const canvas = createOffscreenCanvas(t, 1, 1);
     const dstTexture = t.device.createTexture({
@@ -471,7 +471,7 @@ g.test('source_canvas,state')
         { width: 1, height: 1, depthOrArrayLayers: 1 },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { state, copySize } = t.params;
     const canvas = createOnscreenCanvas(t, 1, 1);
     if (typeof canvas.transferControlToOffscreen === 'undefined') {

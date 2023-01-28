@@ -15,7 +15,7 @@ paramsSubcasesOnly((u) =>
 u //
 .combine('usage', kBufferUsages)).
 
-fn(async (t) => {
+fn((t) => {
   const { usage } = t.params;
   const buf = t.device.createBuffer({
     size: 4,
@@ -27,7 +27,7 @@ fn(async (t) => {
 
 g.test('error_buffer').
 desc('Test that error buffers may be destroyed without generating validation errors.').
-fn(async (t) => {
+fn((t) => {
   const buf = t.getErrorBuffer();
   buf.destroy();
 });
@@ -47,7 +47,7 @@ combineWithParams([
 { size: 4, usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ }])).
 
 
-fn(async (t) => {
+fn((t) => {
   const buf = t.device.createBuffer(t.params);
 
   buf.destroy();

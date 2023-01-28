@@ -54,7 +54,7 @@ combine('copyDepth', [1, 3]).
 unless((p) => p.dimension === '1d' && p.copyHeightInBlocks !== 1).
 unless((p) => p.copyDepth > p.size[2])).
 
-fn(async (t) => {
+fn((t) => {
   const { rowsPerImage, copyHeightInBlocks, copyDepth, dimension, size, method } = t.params;
 
   const format = 'rgba8unorm';
@@ -99,7 +99,7 @@ combineWithParams([
 { bytesPerRow: 2 ** 31, rowsPerImage: 2 ** 31, depthOrArrayLayers: 16, _success: false } // bytesPerRow * rowsPerImage * (depthOrArrayLayers - 1) overflows.
 ])).
 
-fn(async (t) => {
+fn((t) => {
   const { method, bytesPerRow, rowsPerImage, depthOrArrayLayers, _success } = t.params;
 
   const texture = t.device.createTexture({
@@ -181,7 +181,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     offset,
     bytesPerRowPadding,
@@ -253,7 +253,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { rowsPerImage, format, method } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -295,7 +295,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { format, offset, method } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -399,7 +399,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     method,
     format,
@@ -454,7 +454,7 @@ beginSubcases().
 combine('offsetInBlocks', [0, 1, 2]).
 combine('dataSizeInBlocks', [0, 1, 2])).
 
-fn(async (t) => {
+fn((t) => {
   const { offsetInBlocks, dataSizeInBlocks, method } = t.params;
 
   const format = 'rgba8unorm';

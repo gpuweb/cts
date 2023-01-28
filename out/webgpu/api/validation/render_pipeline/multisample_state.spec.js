@@ -17,7 +17,7 @@ combine('isAsync', [false, true]).
 beginSubcases().
 combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, count } = t.params;
 
   const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled: false } });
@@ -37,7 +37,7 @@ combine('alphaToCoverageEnabled', [false, true]).
 beginSubcases().
 combine('count', [1, 4])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, alphaToCoverageEnabled, count } = t.params;
 
   const descriptor = t.getDescriptor({ multisample: { count, alphaToCoverageEnabled } });
@@ -57,7 +57,7 @@ combine('alphaToCoverageEnabled', [false, true]).
 beginSubcases().
 combine('hasSampleMaskOutput', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
 
   const descriptor = t.getDescriptor({

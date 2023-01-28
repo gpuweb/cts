@@ -23,7 +23,7 @@ g.test('attachment_state,limits,maxColorAttachments')
       range(kMaxColorAttachments + 1, i => i + 1) // 1-9
     )
   )
-  .fn(async t => {
+  .fn(t => {
     const { colorFormatCount } = t.params;
     t.expectValidationError(() => {
       t.device.createRenderBundleEncoder({
@@ -49,7 +49,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,aligned')
         range(kMaxColorAttachments, i => i + 1)
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, colorFormatCount } = t.params;
     const info = kTextureFormatInfo[format];
     const shouldError =
@@ -100,7 +100,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned')
       },
     ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { formats, _shouldError } = t.params;
 
     t.expectValidationError(() => {
@@ -115,7 +115,7 @@ g.test('attachment_state,empty_color_formats')
   .params(u =>
     u.beginSubcases().combine('depthStencilFormat', [undefined, 'depth24plus-stencil8'] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { depthStencilFormat } = t.params;
     t.expectValidationError(() => {
       t.device.createRenderBundleEncoder({
@@ -143,7 +143,7 @@ g.test('valid_texture_formats')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, attachment } = t.params;
 
     const colorRenderable =
@@ -194,7 +194,7 @@ g.test('depth_stencil_readonly')
     const { depthStencilFormat } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(depthStencilFormat);
   })
-  .fn(async t => {
+  .fn(t => {
     const { depthStencilFormat, depthReadOnly, stencilReadOnly } = t.params;
 
     let shouldError = false;
@@ -229,7 +229,7 @@ g.test('depth_stencil_readonly_with_undefined_depth')
       .combine('depthReadOnly', [false, true])
       .combine('stencilReadOnly', [false, true])
   )
-  .fn(async t => {
+  .fn(t => {
     const { depthReadOnly, stencilReadOnly } = t.params;
 
     t.device.createRenderBundleEncoder({

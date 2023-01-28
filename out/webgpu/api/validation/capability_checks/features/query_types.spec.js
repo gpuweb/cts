@@ -32,7 +32,7 @@ beforeAllSubcases((t) => {
 
   t.selectDeviceOrSkipTestCase({ requiredFeatures });
 }).
-fn(async (t) => {
+fn((t) => {
   const { type, featureContainsTimestampQuery } = t.params;
 
   const count = 1;
@@ -61,7 +61,7 @@ beforeAllSubcases((t) => {
 
   t.selectDeviceOrSkipTestCase({ requiredFeatures });
 }).
-fn(async (t) => {
+fn((t) => {
   const { featureContainsTimestampQuery } = t.params;
 
   const querySet = t.device.createQuerySet({

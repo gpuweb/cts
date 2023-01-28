@@ -28,7 +28,7 @@ const values = [0, 1, 0, 1];
 g.test('color_target_exists').
 desc(`Tests creating a complete render pipeline requires at least one color target state.`).
 params((u) => u.combine('isAsync', [false, true])).
-fn(async (t) => {
+fn((t) => {
   const { isAsync } = t.params;
 
   const goodDescriptor = t.getDescriptor({
@@ -54,7 +54,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -68,7 +68,7 @@ desc(
 `Tests that color state targets length must not be larger than device.limits.maxColorAttachments.`).
 
 params((u) => u.combine('isAsync', [false, true]).combine('targetsLength', [8, 9])).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, targetsLength } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -103,7 +103,7 @@ range(kMaxColorAttachments, (i) => i + 1)).
 
 combine('isAsync', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { format, attachmentCount, isAsync } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -158,7 +158,7 @@ combineWithParams([
 beginSubcases().
 combine('isAsync', [false, true])).
 
-fn(async (t) => {
+fn((t) => {
   const { formats, _success, isAsync } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -184,7 +184,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, hasBlend } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -217,7 +217,7 @@ combine('srcFactor', kBlendFactors).
 combine('dstFactor', kBlendFactors).
 combine('operation', kBlendOperations)).
 
-fn(async (t) => {
+fn((t) => {
   const { isAsync, component, srcFactor, dstFactor, operation } = t.params;
 
   const defaultBlendComponent = {
@@ -255,7 +255,7 @@ fn(async (t) => {
 g.test('targets_write_mask').
 desc(`Tests that color target state write mask must be < 16.`).
 params((u) => u.combine('isAsync', [false, true]).combine('writeMask', [0, 0xf, 0x10, 0x80000001])).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, writeMask } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -296,7 +296,7 @@ p.format !== undefined && p.shaderOutput !== undefined ? [0, 0x1, 0x2, 0x4, 0x8]
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const { isAsync, format, writeMask, shaderOutput } = t.params;
 
   const descriptor = t.getDescriptor({
@@ -353,7 +353,7 @@ beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[format];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const sampleType = 'float';
   const {
     isAsync,

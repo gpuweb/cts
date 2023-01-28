@@ -49,7 +49,7 @@ g.test('format')
     const { textureFormatFeature, viewFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([textureFormatFeature, viewFormatFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { textureFormat, viewFormat, useViewFormatList } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
 
@@ -124,7 +124,7 @@ g.test('aspect')
     const { format } = t.params;
     t.selectDeviceForTextureFormatOrSkipTestCase(format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, aspect } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -305,7 +305,7 @@ g.test('cube_faces_square')
         [8, 4, 6],
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { dimension, size } = t.params;
 
     const texture = t.device.createTexture({
@@ -323,7 +323,7 @@ g.test('cube_faces_square')
 g.test('texture_state')
   .desc(`createView should fail if the texture is invalid (but succeed if it is destroyed)`)
   .paramsSubcasesOnly(u => u.combine('state', kResourceStates))
-  .fn(async t => {
+  .fn(t => {
     const { state } = t.params;
     const texture = t.createTextureWithState(state);
 

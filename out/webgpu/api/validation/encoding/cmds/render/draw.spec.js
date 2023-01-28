@@ -217,7 +217,7 @@ p.drawType === 'drawIndexed' || p.drawType === 'drawIndexedIndirect')).
 combine('bufferOffset', [0, 4]).
 combine('boundSize', [0, 1])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     smallIndexBuffer,
     smallVertexBuffer,
@@ -308,7 +308,7 @@ combine('drawType', ['drawIndexed', 'drawIndexedIndirect']).
 beginSubcases().
 combine('indexFormat', ['uint16', 'uint32'])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     indexFormat,
     bindingSizeInElements,
@@ -427,7 +427,7 @@ combine('firstInstance', [0, 10000]).
 filter((p) => p.IStride0 === (p.firstInstance + p.instanceCount === 0)).
 unless((p) => p.vertexCount === 10000 && p.instanceCount === 10000)).
 
-fn(async (t) => {
+fn((t) => {
   const {
     type: drawType,
     VBSize: boundVertexBufferSizeState,
@@ -597,7 +597,7 @@ combine('instanceBoundOffestFactor', [0, 0.5, 1, 1.5, 2]).
 combine('indexBoundOffestFactor', [0, 0.5, 1, 1.5, 2]).
 combine('arrayStrideState', ['zero', 'exact', 'oversize'])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     drawType,
     vertexBoundOffestFactor,
@@ -753,7 +753,7 @@ combine('maxDrawCount', [0, 1, 4, 16]).
 beginSubcases().
 expand('drawCount', (p) => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))).
 
-fn(async (t) => {
+fn((t) => {
   const { bundleFirstHalf, bundleSecondHalf, maxDrawCount, drawCount } = t.params;
 
   const colorFormat = 'rgba8unorm';

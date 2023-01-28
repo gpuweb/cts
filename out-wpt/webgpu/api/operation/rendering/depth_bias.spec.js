@@ -279,7 +279,7 @@ g.test('depth_bias')
         },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     t.runDepthBiasTest('depth32float', t.params);
   });
 
@@ -321,7 +321,7 @@ g.test('depth_bias_24bit_format')
         },
       ])
   )
-  .fn(async t => {
+  .fn(t => {
     const { format } = t.params;
     t.runDepthBiasTestFor24BitFormat(format, t.params);
   });

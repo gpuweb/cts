@@ -365,7 +365,7 @@ desc(
   `).
 
 params((u) => u.combine('type', kBufferBindingTypes)).
-fn(async (t) => {
+fn((t) => {
   const { type } = t.params;
 
   // Create fixed bindGroup
@@ -426,7 +426,7 @@ u //
 .combine('bglType', kSamplerBindingTypes).
 combine('bgType', kSamplerBindingTypes)).
 
-fn(async (t) => {
+fn((t) => {
   const { bglType, bgType } = t.params;
   const bindGroup = t.device.createBindGroup({
     entries: [
@@ -657,7 +657,7 @@ u.
 combine('bindGroupLayoutEntryCount', [3, 4]).
 combine('computeCommand', ['dispatchIndirect', 'dispatch'])).
 
-fn(async (t) => {
+fn((t) => {
   const { bindGroupLayoutEntryCount, computeCommand } = t.params;
 
   const emptyBGLCount = 4;
@@ -719,7 +719,7 @@ combine('renderCommand', [
 'drawIndexedIndirect'])).
 
 
-fn(async (t) => {
+fn((t) => {
   const { bindGroupLayoutEntryCount, renderCommand } = t.params;
 
   const emptyBGLCount = 4;

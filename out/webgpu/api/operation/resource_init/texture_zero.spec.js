@@ -577,7 +577,7 @@ params(kTestParams).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase(kTextureFormatInfo[t.params.format].feature);
 }).
-fn(async (t) => {
+fn((t) => {
   const usage = getRequiredTextureUsage(
   t.params.format,
   t.params.sampleCount,

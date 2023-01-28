@@ -156,7 +156,7 @@ combine('visibility0', ['compute', 'fragment']).
 combine('visibility1', ['compute', 'fragment']).
 combine('hasOverlap', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
 
   const buffer = t.createBufferWithState('valid', {
@@ -235,7 +235,7 @@ filter((t) => {
 }).
 combine('hasOverlap', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     usage0AccessibleInDispatch,
     usage1AccessibleInDispatch,
@@ -381,7 +381,7 @@ beginSubcases().
 combine('inSamePass', [true, false]).
 combine('hasOverlap', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, inSamePass, hasOverlap } = t.params;
 
   const UseBufferOnComputePassEncoder = (
@@ -464,7 +464,7 @@ unless((t) => t.visibility0 === 'compute' && !IsBufferUsageInBindGroup(t.usage0)
 combine('visibility1', ['compute', 'fragment']).
 unless((t) => t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1))).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, hasOverlap, visibility0, visibility1 } = t.params;
 
   const UseBufferOnRenderPassEncoder = (
@@ -593,7 +593,7 @@ filter((t) => {
 }).
 combine('hasOverlap', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     // Buffer with usage0 will be "used" in the draw call if this value is true.
     usage0AccessibleInDraw,
@@ -820,7 +820,7 @@ beginSubcases().
 combine('inSamePass', [true, false]).
 combine('hasOverlap', [true, false])).
 
-fn(async (t) => {
+fn((t) => {
   const { usage0, usage1, inSamePass, hasOverlap } = t.params;
   const buffer = t.createBufferWithState('valid', {
     size: kBoundBufferSize * 2,

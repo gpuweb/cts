@@ -494,7 +494,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15]).
 combine('height', [1, 2, 4, 15])).
 
-fn(async (t) => {
+fn((t) => {
   const { width, height, canvasType, dstAlphaMode } = t.params;
 
   const { canvas, expectedSourceData } = t.init2DCanvasContent({
@@ -555,7 +555,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15]).
 combine('height', [1, 2, 4, 15])).
 
-fn(async (t) => {
+fn((t) => {
   const { width, height, canvasType, contextName, srcPremultiplied, dstAlphaMode } = t.params;
 
   const { canvas, expectedSourceData } = t.initGLCanvasContent({
@@ -624,7 +624,7 @@ combine('height', [1, 2, 4, 15])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     width,
     height,
@@ -696,7 +696,7 @@ beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
 combine('height', [1, 2, 4, 15, 255, 256])).
 
-fn(async (t) => {
+fn((t) => {
   const {
     width,
     height,

@@ -59,7 +59,7 @@ g.test('stencil_clear_value')
     const info = kTextureFormatInfo[stencilFormat];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       stencilFormat,
       stencilClearValue,

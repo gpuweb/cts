@@ -68,7 +68,7 @@ g.test('color,attachments')
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, attachmentCount, emptyAttachmentId } = t.params;
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
@@ -174,7 +174,7 @@ g.test('color,component_count')
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, componentCount } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -380,7 +380,7 @@ The attachment has a load value of [1, 0, 0, 1]
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       format,
       _result,

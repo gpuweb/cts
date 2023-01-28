@@ -31,7 +31,7 @@ export const g = makeTestGroup(F);
 g.test('buffer_state').
 desc(`Test that clearing an invalid or destroyed buffer fails.`).
 params((u) => u.combine('bufferState', kResourceStates)).
-fn(async (t) => {
+fn((t) => {
   const { bufferState } = t.params;
 
   const buffer = t.createBufferWithState(bufferState, {
@@ -60,7 +60,7 @@ paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
-fn(async (t) => {
+fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
   const size = 8;
@@ -86,7 +86,7 @@ paramsSubcasesOnly([
 { offset: 4, size: undefined },
 { offset: undefined, size: 8 }]).
 
-fn(async (t) => {
+fn((t) => {
   const { offset, size } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -108,7 +108,7 @@ paramsSubcasesOnly((u) =>
 u //
 .combine('usage', kBufferUsages)).
 
-fn(async (t) => {
+fn((t) => {
   const { usage } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -143,7 +143,7 @@ paramsSubcasesOnly([
 { size: 20, _isSuccess: false },
 { size: undefined, _isSuccess: true }]).
 
-fn(async (t) => {
+fn((t) => {
   const { size, _isSuccess: isSuccess } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -177,7 +177,7 @@ paramsSubcasesOnly([
 { offset: 20, _isSuccess: false },
 { offset: undefined, _isSuccess: true }]).
 
-fn(async (t) => {
+fn((t) => {
   const { offset, _isSuccess: isSuccess } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -201,7 +201,7 @@ paramsSubcasesOnly([
 { offset: kMaxSafeMultipleOf8, size: 16 },
 { offset: kMaxSafeMultipleOf8, size: kMaxSafeMultipleOf8 }]).
 
-fn(async (t) => {
+fn((t) => {
   const { offset, size } = t.params;
 
   const buffer = t.device.createBuffer({
@@ -229,7 +229,7 @@ paramsSubcasesOnly([
 { offset: 20, size: 16 },
 { offset: 20, size: 12, _isSuccess: true }]).
 
-fn(async (t) => {
+fn((t) => {
   const { offset, size, _isSuccess = false } = t.params;
 
   const buffer = t.device.createBuffer({

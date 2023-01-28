@@ -279,7 +279,7 @@ beforeAllSubcases((t) => {
   const { passFeature, bundleFeature } = t.params;
   t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
 }).
-fn(async (t) => {
+fn((t) => {
   const { passFormat, bundleFormat } = t.params;
 
   const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -460,7 +460,7 @@ beforeAllSubcases((t) => {
   const { encoderFormatFeature, pipelineFormatFeature } = t.params;
   t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
 }).
-fn(async (t) => {
+fn((t) => {
   const { encoderType, encoderFormat, pipelineFormat } = t.params;
 
   const pipeline = t.createRenderPipeline(
@@ -531,7 +531,7 @@ filter((p) => {
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
 }).
-fn(async (t) => {
+fn((t) => {
   const {
     encoderType,
     format,
