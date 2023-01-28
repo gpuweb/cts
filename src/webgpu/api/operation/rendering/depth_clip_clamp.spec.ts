@@ -364,7 +364,7 @@ to be empty.`
       info.feature,
     ]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, unclippedDepth, multisampled } = t.params;
     const info = kTextureFormatInfo[format];
 

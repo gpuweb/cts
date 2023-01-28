@@ -229,7 +229,7 @@ g.test('compute,zero_init')
       })
   )
   .batch(15)
-  .fn(async t => {
+  .fn(t => {
     let moduleScope = `
       struct Output {
         failed : atomic<u32>

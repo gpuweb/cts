@@ -34,7 +34,7 @@ g.test('timestampWrites,same_location')
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(async t => {
+  .fn(t => {
     const { locationA, locationB } = t.params;
 
     const querySet = t.device.createQuerySet({
@@ -82,7 +82,7 @@ g.test('timestampWrites,query_set_type')
       t.params.queryTypeB,
     ]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { queryTypeA, queryTypeB } = t.params;
 
     const timestampWriteA = {
@@ -112,7 +112,7 @@ g.test('timestampWrites,invalid_query_set')
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(async t => {
+  .fn(t => {
     const { querySetState } = t.params;
 
     const querySet = t.createQuerySetWithState(querySetState, {
@@ -139,7 +139,7 @@ g.test('timestampWrites,query_index_count')
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
-  .fn(async t => {
+  .fn(t => {
     const { queryIndex } = t.params;
 
     const querySetCount = 2;
@@ -170,7 +170,7 @@ g.test('timestamp_query_set,device_mismatch')
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
     t.selectMismatchedDeviceOrSkipTestCase('timestamp-query');
   })
-  .fn(async t => {
+  .fn(t => {
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 

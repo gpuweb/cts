@@ -283,7 +283,7 @@ g.test('anisotropic_filter_mipmap_color')
       _generateWarningOnly: true,
     },
   ])
-  .fn(async t => {
+  .fn(t => {
     const texture = t.createTexture2DWithMipmaps(colors);
 
     const textureView = texture.createView();

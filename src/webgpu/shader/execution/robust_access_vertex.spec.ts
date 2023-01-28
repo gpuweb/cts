@@ -551,7 +551,7 @@ g.test('vertex_buffer_access')
         .combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6])
         .unless(p => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
   )
-  .fn(async t => {
+  .fn(t => {
     const p = t.params;
     const typeInfo = typeInfoMap[p.type];
 

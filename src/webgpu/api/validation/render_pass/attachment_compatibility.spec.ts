@@ -279,7 +279,7 @@ g.test('render_pass_and_bundle,depth_format')
     const { passFeature, bundleFeature } = t.params;
     t.selectDeviceOrSkipTestCase([passFeature, bundleFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { passFormat, bundleFormat } = t.params;
 
     const bundleEncoder = t.device.createRenderBundleEncoder({
@@ -460,7 +460,7 @@ Test that the depth attachment format in render passes or bundles match the pipe
     const { encoderFormatFeature, pipelineFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([encoderFormatFeature, pipelineFormatFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
 
     const pipeline = t.createRenderPipeline(
@@ -531,7 +531,7 @@ Test that the depth stencil read only state in render passes or bundles is compa
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       encoderType,
       format,
