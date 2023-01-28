@@ -338,7 +338,7 @@ g.test('shouldReject').fn(async t0 => {
   g.test('a').fn(t => {
     t.shouldReject(
       'Error',
-      (() => {
+      (async () => {
         throw new TypeError();
       })()
     );

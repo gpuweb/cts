@@ -100,16 +100,12 @@ const specsData: { [k: string]: SpecFile } = {
 
 class FakeTestFileLoader extends TestFileLoader {
   listing(suite: string): Promise<TestSuiteListing> {
-    return new Promise(resolve => {
-      resolve(listingData[suite]);
-    });
+    return Promise.resolve(listingData[suite]);
   }
 
   import(path: string): Promise<SpecFile> {
     assert(path in specsData, '[test] mock file ' + path + ' does not exist');
-    return new Promise(resolve => {
-      resolve(specsData[path]);
-    });
+    return Promise.resolve(specsData[path]);
   }
 }
 

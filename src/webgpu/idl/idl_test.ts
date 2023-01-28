@@ -10,10 +10,10 @@ interface UnknownObject {
  * Base fixture for testing the exposed interface is correct (without actually using WebGPU).
  */
 export class IDLTest extends Fixture {
-  // eslint-disable-next-line @typescript-eslint/require-await
-  async init(): Promise<void> {
+  init(): Promise<void> {
     // Ensure the GPU provider is initialized
     getGPU();
+    return Promise.resolve();
   }
 
   /**
