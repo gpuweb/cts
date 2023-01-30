@@ -9,9 +9,9 @@ import { GPUTest } from '../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-type TestFunction = (t: GPUTest, label: string) => Promise<void>;
+type TestFunction = (t: GPUTest, label: string) => Promise<void> | void;
 const kTestFunctions: { [name: string]: TestFunction } = {
-  createBuffer: async (t: GPUTest, label: string) => {
+  createBuffer: (t: GPUTest, label: string) => {
     const buffer = t.device.createBuffer({ size: 16, usage: GPUBufferUsage.COPY_DST, label });
     t.expect(buffer.label === label);
     buffer.destroy();
@@ -29,7 +29,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(device.label === label);
   },
 
-  createTexture: async (t: GPUTest, label: string) => {
+  createTexture: (t: GPUTest, label: string) => {
     const texture = t.device.createTexture({
       label,
       size: [1, 1, 1],
@@ -41,28 +41,28 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(texture.label === label);
   },
 
-  createSampler: async (t: GPUTest, label: string) => {
+  createSampler: (t: GPUTest, label: string) => {
     const sampler = t.device.createSampler({ label });
     t.expect(sampler.label === label);
   },
 
-  createBindGroupLayout: async (t: GPUTest, label: string) => {
+  createBindGroupLayout: (t: GPUTest, label: string) => {
     const bindGroupLayout = t.device.createBindGroupLayout({ label, entries: [] });
     t.expect(bindGroupLayout.label === label);
   },
 
-  createPipelineLayout: async (t: GPUTest, label: string) => {
+  createPipelineLayout: (t: GPUTest, label: string) => {
     const pipelineLayout = t.device.createPipelineLayout({ label, bindGroupLayouts: [] });
     t.expect(pipelineLayout.label === label);
   },
 
-  createBindGroup: async (t: GPUTest, label: string) => {
+  createBindGroup: (t: GPUTest, label: string) => {
     const layout = t.device.createBindGroupLayout({ entries: [] });
     const bindGroup = t.device.createBindGroup({ label, layout, entries: [] });
     t.expect(bindGroup.label === label);
   },
 
-  createShaderModule: async (t: GPUTest, label: string) => {
+  createShaderModule: (t: GPUTest, label: string) => {
     const shaderModule = t.device.createShaderModule({
       label,
       code: `
@@ -74,7 +74,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(shaderModule.label === label);
   },
 
-  createComputePipeline: async (t: GPUTest, label: string) => {
+  createComputePipeline: (t: GPUTest, label: string) => {
     const module = t.device.createShaderModule({
       code: `
         @compute @workgroup_size(1u) fn foo() {}
@@ -91,7 +91,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(computePipeline.label === label);
   },
 
-  createRenderPipeline: async (t: GPUTest, label: string) => {
+  createRenderPipeline: (t: GPUTest, label: string) => {
     const module = t.device.createShaderModule({
       code: `
         @vertex fn foo() -> @builtin(position) vec4f {
@@ -147,12 +147,12 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(renderPipeline.label === label);
   },
 
-  createCommandEncoder: async (t: GPUTest, label: string) => {
+  createCommandEncoder: (t: GPUTest, label: string) => {
     const encoder = t.device.createCommandEncoder({ label });
     t.expect(encoder.label === label);
   },
 
-  createRenderBundleEncoder: async (t: GPUTest, label: string) => {
+  createRenderBundleEncoder: (t: GPUTest, label: string) => {
     const encoder = t.device.createRenderBundleEncoder({
       label,
       colorFormats: ['rgba8unorm'],
@@ -160,7 +160,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(encoder.label === label);
   },
 
-  createQuerySet: async (t: GPUTest, label: string) => {
+  createQuerySet: (t: GPUTest, label: string) => {
     const querySet = t.device.createQuerySet({
       label,
       type: 'occlusion',
@@ -171,7 +171,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(querySet.label === label);
   },
 
-  beginRenderPass: async (t: GPUTest, label: string) => {
+  beginRenderPass: (t: GPUTest, label: string) => {
     const texture = t.device.createTexture({
       label,
       size: [1, 1, 1],
@@ -194,7 +194,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     texture.destroy();
   },
 
-  beginComputePass: async (t: GPUTest, label: string) => {
+  beginComputePass: (t: GPUTest, label: string) => {
     const label2 = `${label}-2`;
     const encoder = t.device.createCommandEncoder();
     encoder.label = label2;
@@ -207,13 +207,13 @@ const kTestFunctions: { [name: string]: TestFunction } = {
     t.expect(encoder.label === label2);
   },
 
-  finish: async (t: GPUTest, label: string) => {
+  finish: (t: GPUTest, label: string) => {
     const encoder = t.device.createCommandEncoder();
     const commandBuffer = encoder.finish({ label });
     t.expect(commandBuffer.label === label);
   },
 
-  createView: async (t: GPUTest, label: string) => {
+  createView: (t: GPUTest, label: string) => {
     const texture = t.device.createTexture({
       size: [1, 1, 1],
       format: 'rgba8unorm',
@@ -244,12 +244,15 @@ g.test('object_has_descriptor_label')
   )
   .fn(async t => {
     const { name, label } = t.params;
-    await kTestFunctions[name](t, label);
+    const result = kTestFunctions[name](t, label);
+    if (result instanceof Promise) {
+      await result;
+    }
   });
 
 g.test('wrappers_do_not_share_labels')
   .desc('test that different wrapper objects for the same GPU object do not share labels')
-  .fn(async t => {
+  .fn(t => {
     const module = t.device.createShaderModule({
       code: `
         @group(0) @binding(0) var<uniform> pos: vec4f;
