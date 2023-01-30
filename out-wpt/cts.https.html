@@ -103,6 +103,7 @@
 <meta name=variant content='webgpu:api,operation,device,lost:lost_on_destroy:*'>
 <meta name=variant content='webgpu:api,operation,device,lost:same_object:*'>
 <meta name=variant content='webgpu:api,operation,labels:object_has_descriptor_label:*'>
+<meta name=variant content='webgpu:api,operation,labels:wrappers_do_not_share_labels:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,multiple_buffers:rw:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,multiple_buffers:wr:*'>
 <meta name=variant content='webgpu:api,operation,memory_sync,buffer,multiple_buffers:ww:*'>
@@ -804,6 +805,10 @@
 <meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:multiplication:*'>
 <meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:division:*'>
 <meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:remainder:*'>
+<meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:addition_scalar_vector:*'>
+<meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:addition_vector_scalar:*'>
+<meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:subtraction_scalar_vector:*'>
+<meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:subtraction_vector_scalar:*'>
 <meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:multiplication_scalar_vector:*'>
 <meta name=variant content='webgpu:shader,execution,expression,binary,u32_arithmetic:multiplication_vector_scalar:*'>
 <meta name=variant content='webgpu:shader,execution,expression,call,builtin,abs:abstract_int:*'>
