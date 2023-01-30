@@ -157,6 +157,104 @@ export const d = makeCaseCache('binary/u32_arithmetic', {
       return Math.imul(x, y);
     });
   },
+
+  division_scalar_vector2_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(2), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+  division_scalar_vector3_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(3), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+  division_scalar_vector4_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(4), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+  division_vector2_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(2), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+  division_vector3_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(3), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+  division_vector4_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(4), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return x;
+      }
+      return x / y;
+    });
+  },
+
+  division_scalar_vector2_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(2), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
+  division_scalar_vector3_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(3), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
+  division_scalar_vector4_const: () => {
+    return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(4), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
+  division_vector2_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(2), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
+  division_vector3_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(3), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
+  division_vector4_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(vectorU32Range(4), sparseU32Range(), (x, y) => {
+      if (y === 0) {
+        return undefined;
+      }
+      return x / y;
+    });
+  },
 });
 
 g.test('addition')
@@ -338,4 +436,40 @@ Expression: x * y
     const vec_type = TypeVec(vec_size, TypeU32);
     const cases = await d.get(`multiplication_vector${vec_size}_scalar`);
     await run(t, binary('*'), [vec_type, TypeU32], vec_type, t.params, cases);
+  });
+
+g.test('division_scalar_vector')
+  .specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr')
+  .desc(
+    `
+Expression: x / y
+`
+  )
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4] as const)
+  )
+  .fn(async t => {
+    const vec_size = t.params.vectorize_rhs;
+    const vec_type = TypeVec(vec_size, TypeU32);
+    const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
+    const cases = await d.get(`division_scalar_vector${vec_size}_${source}`);
+    await run(t, binary('/'), [TypeU32, vec_type], vec_type, t.params, cases);
+  });
+
+g.test('division_vector_scalar')
+  .specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr')
+  .desc(
+    `
+Expression: x / y
+`
+  )
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4] as const)
+  )
+  .fn(async t => {
+    const vec_size = t.params.vectorize_lhs;
+    const vec_type = TypeVec(vec_size, TypeU32);
+    const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
+    const cases = await d.get(`division_vector${vec_size}_scalar_${source}`);
+    await run(t, binary('/'), [vec_type, TypeU32], vec_type, t.params, cases);
   });
