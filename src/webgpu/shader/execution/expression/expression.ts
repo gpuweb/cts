@@ -1036,7 +1036,11 @@ export function generateBinaryToI32Cases(
   }, new Array<Case>());
 }
 
-export interface BinaryToU32Op {
+/**
+ * A function that performs a binary operation on x and y, and returns the expected
+ * result.
+ */
+export interface BinaryOp {
   (x: number, y: number): number | undefined;
 }
 
@@ -1046,11 +1050,7 @@ export interface BinaryToU32Op {
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToU32Cases(
-  params0s: number[],
-  params1s: number[],
-  op: BinaryToU32Op
-) {
+export function generateBinaryToU32Cases(params0s: number[], params1s: number[], op: BinaryOp) {
   return cartesianProduct(params0s, params1s).reduce((cases, e) => {
     const expected = op(e[0], e[1]);
     if (expected !== undefined) {
@@ -1061,26 +1061,25 @@ export function generateBinaryToU32Cases(
 }
 
 /**
- * A function that performs a binary operation on x and y, and returns the expected
- * result.
- */
-export interface BinaryOp {
-  (x: number, y: number): number;
-}
-
-/**
  * @returns a Case for the input params with op applied
  * @param scalar scalar param
  * @param vector vector param (2, 3, or 4 elements)
  * @param op the op to apply to scalar and vector
  */
-function makeU32VectorBinaryToVectorCase(scalar: number, vector: number[], op: BinaryOp): Case {
+function makeU32VectorBinaryToVectorCase(
+  scalar: number,
+  vector: number[],
+  op: BinaryOp
+): Case | undefined {
   scalar = quantizeToU32(scalar);
   vector = vector.map(quantizeToU32);
-  const result = new Vector(vector.map(v => u32(op(scalar, v))));
+  const result = vector.map(v => op(scalar, v));
+  if (result.includes(undefined)) {
+    return undefined;
+  }
   return {
     input: [u32(scalar), new Vector(vector.map(u32))],
-    expected: result,
+    expected: new Vector((result as number[]).map(u32)),
   };
 }
 
@@ -1095,11 +1094,16 @@ export function generateU32VectorBinaryToVectorCases(
   vectors: number[][],
   op: BinaryOp
 ): Case[] {
-  return scalars.flatMap(s => {
-    return vectors.map(v => {
-      return makeU32VectorBinaryToVectorCase(s, v, op);
+  const cases = new Array<Case>();
+  scalars.forEach(s => {
+    vectors.forEach(v => {
+      const c = makeU32VectorBinaryToVectorCase(s, v, op);
+      if (c !== undefined) {
+        cases.push(c);
+      }
     });
   });
+  return cases;
 }
 
 /**
@@ -1108,13 +1112,20 @@ export function generateU32VectorBinaryToVectorCases(
  * @param scalar scalar param
  * @param op the op to apply to vector and scalar
  */
-function makeVectorU32BinaryToVectorCase(vector: number[], scalar: number, op: BinaryOp): Case {
+function makeVectorU32BinaryToVectorCase(
+  vector: number[],
+  scalar: number,
+  op: BinaryOp
+): Case | undefined {
   vector = vector.map(quantizeToU32);
   scalar = quantizeToU32(scalar);
-  const result = new Vector(vector.map(v => u32(op(v, scalar))));
+  const result = vector.map(v => op(v, scalar));
+  if (result.includes(undefined)) {
+    return undefined;
+  }
   return {
     input: [new Vector(vector.map(u32)), u32(scalar)],
-    expected: result,
+    expected: new Vector((result as number[]).map(u32)),
   };
 }
 
@@ -1129,9 +1140,14 @@ export function generateVectorU32BinaryToVectorCases(
   scalars: number[],
   op: BinaryOp
 ): Case[] {
-  return scalars.flatMap(s => {
-    return vectors.map(v => {
-      return makeVectorU32BinaryToVectorCase(v, s, op);
+  const cases = new Array<Case>();
+  scalars.forEach(s => {
+    vectors.forEach(v => {
+      const c = makeVectorU32BinaryToVectorCase(v, s, op);
+      if (c !== undefined) {
+        cases.push(c);
+      }
     });
   });
+  return cases;
 }
