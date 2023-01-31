@@ -103,7 +103,7 @@ g.test('texture_binding')
         ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
       )
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, viewFormat } = t.params;
 
     // Make an input texel view.
@@ -200,7 +200,7 @@ in view format and match in base format.`
       )
       .combine('sampleCount', [1, 4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, viewFormat, sampleCount } = t.params;
 
     // Make an input texel view.

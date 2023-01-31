@@ -336,7 +336,7 @@ g.test('blending,formats')
     u //
       .combine('format', kBlendableFormats)
   )
-  .fn(async t => {
+  .fn(t => {
     const { format } = t.params;
 
     const pipeline = t.device.createRenderPipeline({
@@ -404,7 +404,7 @@ g.test('blending,formats')
 
 g.test('blend_constant,initial')
   .desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`)
-  .fn(async t => {
+  .fn(t => {
     const format = 'rgba8unorm';
     const kSize = 1;
     const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
@@ -460,7 +460,7 @@ g.test('blend_constant,setting')
     { r: 0.5, g: 1.0, b: 0.5, a: 0.0 },
     { r: 0.0, g: 0.0, b: 0.0, a: 0.0 },
   ])
-  .fn(async t => {
+  .fn(t => {
     const { r, g, b, a } = t.params;
 
     const format = 'rgba8unorm';
@@ -514,7 +514,7 @@ g.test('blend_constant,setting')
 
 g.test('blend_constant,not_inherited')
   .desc(`Test that the blending constant is not inherited between render passes.`)
-  .fn(async t => {
+  .fn(t => {
     const format = 'rgba8unorm';
     const kSize = 1;
     const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
@@ -615,7 +615,7 @@ g.test('color_write_mask,channel_work')
     u //
       .combine('mask', kColorWriteCombinations)
   )
-  .fn(async t => {
+  .fn(t => {
     const { mask } = t.params;
 
     const format = 'rgba8unorm';
@@ -687,7 +687,7 @@ g.test('color_write_mask,blending_disabled')
   (which has the same blending result).`
   )
   .params(u => u.combine('disabled', [false, true]))
-  .fn(async t => {
+  .fn(t => {
     const format = 'rgba8unorm';
     const kSize = 1;
 
@@ -754,7 +754,7 @@ g.test('blending,clamping')
       .combine('srcValue', [0.4, 0.6, 0.8, 1.0])
       .combine('dstValue', [0.2, 0.4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { format, srcValue, dstValue } = t.params;
 
     const blendComponent = { srcFactor: 'one', dstFactor: 'one', operation: 'add' } as const;
