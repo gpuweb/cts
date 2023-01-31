@@ -65,7 +65,10 @@ import {
   subtractionInterval,
   tanInterval,
   tanhInterval,
+  toF32Interval,
+  toF32Matrix,
   toF32Vector,
+  transposeInterval,
   truncInterval,
   ulpInterval,
   unpack2x16floatInterval,
@@ -74,7 +77,6 @@ import {
   unpack4x8snormInterval,
   unpack4x8unormInterval,
   modfInterval,
-  toF32Interval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -3414,5 +3416,150 @@ g.test('modfInterval')
     t.expect(
       objectEquals(expected, got),
       `modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+    );
+  });
+
+interface MatrixToMatrixCase {
+  input: number[][];
+  expected: IntervalBounds[][];
+}
+
+g.test('transposeInterval')
+  .paramsSubcasesOnly<MatrixToMatrixCase>([
+    {
+      input: [
+        [1, 2],
+        [3, 4],
+      ],
+      expected: [
+        [[1], [3]],
+        [[2], [4]],
+      ],
+    },
+    {
+      input: [
+        [1, 2],
+        [3, 4],
+        [5, 6],
+      ],
+      expected: [
+        [[1], [3], [5]],
+        [[2], [4], [6]],
+      ],
+    },
+    {
+      input: [
+        [1, 2],
+        [3, 4],
+        [5, 6],
+        [7, 8],
+      ],
+      expected: [
+        [[1], [3], [5], [7]],
+        [[2], [4], [6], [8]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3],
+        [4, 5, 6],
+      ],
+      expected: [
+        [[1], [4]],
+        [[2], [5]],
+        [[3], [6]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      expected: [
+        [[1], [4], [7]],
+        [[2], [5], [8]],
+        [[3], [6], [9]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+        [10, 11, 12],
+      ],
+      expected: [
+        [[1], [4], [7], [10]],
+        [[2], [5], [8], [11]],
+        [[3], [6], [9], [12]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+      ],
+      expected: [
+        [[1], [5]],
+        [[2], [6]],
+        [[3], [7]],
+        [[4], [8]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+      ],
+      expected: [
+        [[1], [5], [9]],
+        [[2], [6], [10]],
+        [[3], [7], [11]],
+        [[4], [8], [12]],
+      ],
+    },
+    {
+      input: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 16],
+      ],
+      expected: [
+        [[1], [5], [9], [13]],
+        [[2], [6], [10], [14]],
+        [[3], [7], [11], [15]],
+        [[4], [8], [12], [16]],
+      ],
+    },
+    {
+      input: [
+        [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min],
+        [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max],
+      ],
+      expected: [
+        [
+          [0, kValue.f32.subnormal.positive.max],
+          [kValue.f32.subnormal.negative.min, 0],
+        ],
+        [
+          [0, kValue.f32.subnormal.positive.min],
+          [kValue.f32.subnormal.negative.max, 0],
+        ],
+      ],
+    },
+  ])
+  .fn(t => {
+    const input = t.params.input;
+    const expected = toF32Matrix(t.params.expected);
+
+    const got = transposeInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `transposeInterval([${JSON.stringify(input)}]) returned '[${JSON.stringify(
+        got
+      )}]'. Expected '[${JSON.stringify(expected)}]'`
     );
   });
