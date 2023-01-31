@@ -220,6 +220,90 @@ export const d = makeCaseCache('binary/u32_arithmetic', {
       u32_divide_const
     );
   },
+  remainder_scalar_vector2_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(2),
+      u32_remainder_non_const
+    );
+  },
+  remainder_scalar_vector3_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(3),
+      u32_remainder_non_const
+    );
+  },
+  remainder_scalar_vector4_non_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(4),
+      u32_remainder_non_const
+    );
+  },
+  remainder_vector2_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(2),
+      sparseU32Range(),
+      u32_remainder_non_const
+    );
+  },
+  remainder_vector3_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(3),
+      sparseU32Range(),
+      u32_remainder_non_const
+    );
+  },
+  remainder_vector4_scalar_non_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(4),
+      sparseU32Range(),
+      u32_remainder_non_const
+    );
+  },
+  remainder_scalar_vector2_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(2),
+      u32_remainder_const
+    );
+  },
+  remainder_scalar_vector3_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(3),
+      u32_remainder_const
+    );
+  },
+  remainder_scalar_vector4_const: () => {
+    return generateU32VectorBinaryToVectorCases(
+      sparseU32Range(),
+      vectorU32Range(4),
+      u32_remainder_const
+    );
+  },
+  remainder_vector2_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(2),
+      sparseU32Range(),
+      u32_remainder_const
+    );
+  },
+  remainder_vector3_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(3),
+      sparseU32Range(),
+      u32_remainder_const
+    );
+  },
+  remainder_vector4_scalar_const: () => {
+    return generateVectorU32BinaryToVectorCases(
+      vectorU32Range(4),
+      sparseU32Range(),
+      u32_remainder_const
+    );
+  },
 });
 
 g.test('addition')
@@ -413,4 +497,36 @@ Expression: x / y
     const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
     const cases = await d.get(`division_vector${vec_size}_scalar_${source}`);
     await run(t, binary('/'), [vec_type, TypeU32], vec_type, t.params, cases);
+  });
+
+g.test('remainder_scalar_vector')
+  .specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr')
+  .desc(
+    `
+Expression: x % y
+`
+  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4]))
+  .fn(async t => {
+    const vec_size = t.params.vectorize_rhs;
+    const vec_type = TypeVec(vec_size, TypeU32);
+    const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
+    const cases = await d.get(`remainder_scalar_vector${vec_size}_${source}`);
+    await run(t, binary('%'), [TypeU32, vec_type], vec_type, t.params, cases);
+  });
+
+g.test('remainder_vector_scalar')
+  .specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr')
+  .desc(
+    `
+Expression: x % y
+`
+  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4]))
+  .fn(async t => {
+    const vec_size = t.params.vectorize_lhs;
+    const vec_type = TypeVec(vec_size, TypeU32);
+    const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
+    const cases = await d.get(`remainder_vector${vec_size}_scalar_${source}`);
+    await run(t, binary('%'), [vec_type, TypeU32], vec_type, t.params, cases);
   });
