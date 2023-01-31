@@ -4,6 +4,8 @@
 SkipTestCase,
 
 UnexpectedPassError } from
+
+
 '../framework/fixture.js';
 import {
 
@@ -50,9 +52,7 @@ import { assert, unreachable } from '../util/util.js';
 
 
 
-export function makeTestGroup(
-fixture)
-{
+export function makeTestGroup(fixture) {
   return new TestGroup(fixture);
 }
 
@@ -79,15 +79,7 @@ fixture)
 
 
 
-
-
-
-
-
-
-
-export class TestGroup
-{
+export class TestGroup {
 
   seen = new Set();
   tests = [];
@@ -133,12 +125,6 @@ export class TestGroup
     }
   }
 }
-
-
-
-
-
-
 
 
 

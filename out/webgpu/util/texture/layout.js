@@ -107,7 +107,8 @@ copySize,
 
   assert(
   copySize_.width % blockWidth === 0 && copySize_.height % blockHeight === 0,
-  'copySize must be a multiple of the block size');
+  () =>
+  `copySize (${copySize_.width},${copySize_.height}) must be a multiple of the block size (${blockWidth},${blockHeight})`);
 
   const copySizeBlocks = {
     width: copySize_.width / blockWidth,

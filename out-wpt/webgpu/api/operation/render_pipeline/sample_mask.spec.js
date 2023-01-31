@@ -15,10 +15,9 @@ Details could be found at: https://github.com/gpuweb/cts/issues/2201
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, range } from '../../../../common/util/util.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { checkElementsPassPredicate, checkElementsEqual } from '../../../util/check_contents.js';
 import { TypeF32, TypeU32 } from '../../../util/conversion.js';
-import { makeTextureWithContents } from '../../../util/texture.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 
 const kColors = [
@@ -223,7 +222,7 @@ fn main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
   return output;
 }`;
 
-class F extends GPUTest {
+class F extends TextureTestMixin(GPUTest) {
   async init() {
     await super.init();
     // Create a 2x2 color texture to sample from
@@ -232,8 +231,7 @@ class F extends GPUTest {
     // texel 2 - Blue
     // texel 3 - Yellow
     const kSampleTextureSize = 2;
-    this.sampleTexture = makeTextureWithContents(
-      this.device,
+    this.sampleTexture = this.createTextureFromTexelView(
       TexelView.fromTexelsAsBytes(format, coord => {
         const id = coord.x + coord.y * kSampleTextureSize;
         return kColors[id];

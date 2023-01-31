@@ -7,7 +7,7 @@ import {
 kDrawIndirectParametersSize,
 kDrawIndexedIndirectParametersSize } from
 '../../../capability_info.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
 const filled = new Uint8Array([0, 255, 0, 255]);
 const notFilled = new Uint8Array([0, 0, 0, 0]);
@@ -125,7 +125,7 @@ class F extends GPUTest {
   }
 }
 
-export const g = makeTestGroup(F);
+export const g = makeTestGroup(TextureTestMixin(F));
 
 g.test('basics').
 desc(
@@ -234,19 +234,11 @@ fn((t) => {
   renderPass.end();
   t.queue.submit([commandEncoder.finish()]);
 
+  t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
   // The bottom left area is filled
-  t.expectSinglePixelIn2DTexture(
-  renderTarget,
-  kRenderTargetFormat,
-  { x: 0, y: 1 },
-  { exp: filled });
-
+  { coord: { x: 0, y: 1 }, exp: filled },
   // The top right area is not filled
-  t.expectSinglePixelIn2DTexture(
-  renderTarget,
-  kRenderTargetFormat,
-  { x: 1, y: 0 },
-  { exp: notFilled });
+  { coord: { x: 1, y: 0 }, exp: notFilled }]);
 
 });
 //# sourceMappingURL=indirect_draw.spec.js.map

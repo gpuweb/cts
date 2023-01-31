@@ -16,11 +16,9 @@ kEncodableTextureFormats,
 kTextureFormatInfo } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
-import { GPUTest } from '../../../gpu_test.js';
-import { float32ToFloat16Bits } from '../../../util/conversion.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { clamp } from '../../../util/math.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
-import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 class BlendingTest extends GPUTest {
   createRenderPipelineForTest(colorTargetState) {
@@ -75,7 +73,7 @@ class BlendingTest extends GPUTest {
   }
 }
 
-export const g = makeTestGroup(BlendingTest);
+export const g = makeTestGroup(TextureTestMixin(BlendingTest));
 
 function mapColor(
 col,
@@ -312,27 +310,15 @@ struct Uniform {
 
   t.device.queue.submit([commandEncoder.finish()]);
 
-  const tolerance = 0.003;
-  const expectedLow = mapColor(expectedColor, (v) => v - tolerance);
-  const expectedHigh = mapColor(expectedColor, (v) => v + tolerance);
-
-  t.expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
-  renderTarget,
-  textureFormat,
-  { x: 0, y: 0 },
+  t.expectSinglePixelComparisonsAreOkInTexture(
+  { texture: renderTarget },
+  [
   {
-    exp: [
-    // Use Uint16Array to store Float16 value bits
-    new Uint16Array(
-    [expectedLow.r, expectedLow.g, expectedLow.b, expectedLow.a].map(float32ToFloat16Bits)),
+    coord: { x: 0, y: 0 },
+    exp: { R: expectedColor.r, G: expectedColor.g, B: expectedColor.b, A: expectedColor.a }
+  }],
 
-    new Uint16Array(
-    [expectedHigh.r, expectedHigh.g, expectedHigh.b, expectedHigh.a].map(
-    float32ToFloat16Bits))]
-
-
-
-  });
+  { maxFractionalDiff: 0.003 });
 
 });
 
@@ -350,7 +336,7 @@ params((u) =>
 u //
 .combine('format', kBlendableFormats)).
 
-fn(async (t) => {
+fn((t) => {
   const { format } = t.params;
 
   const pipeline = t.device.createRenderPipeline({
@@ -413,23 +399,12 @@ fn(async (t) => {
 
   const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
-
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [1, 1, 1],
-  { expTexelView },
-  {
-    maxDiffULPsForNormFormat: 1,
-    maxDiffULPsForFloatFormat: 1
-  });
-
-  t.expectOK(result);
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1, 1]);
 });
 
 g.test('blend_constant,initial').
 desc(`Test that the blend constant is set to [0,0,0,0] at the beginning of a pass.`).
-fn(async (t) => {
+fn((t) => {
   const format = 'rgba8unorm';
   const kSize = 1;
   const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
@@ -472,15 +447,10 @@ fn(async (t) => {
   // a white color buffer data.
   const expColor = { R: 0, G: 0, B: 0, A: 0 };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
+  kSize,
+  kSize]);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [kSize, kSize],
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 1 });
-
-  t.expectOK(result);
 });
 
 g.test('blend_constant,setting').
@@ -490,7 +460,7 @@ paramsSubcasesOnly([
 { r: 0.5, g: 1.0, b: 0.5, a: 0.0 },
 { r: 0.0, g: 0.0, b: 0.0, a: 0.0 }]).
 
-fn(async (t) => {
+fn((t) => {
   const { r, g, b, a } = t.params;
 
   const format = 'rgba8unorm';
@@ -536,19 +506,15 @@ fn(async (t) => {
   const expColor = { R: r, G: g, B: b, A: a };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [kSize, kSize],
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 1 });
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
+  kSize,
+  kSize]);
 
-  t.expectOK(result);
 });
 
 g.test('blend_constant,not_inherited').
 desc(`Test that the blending constant is not inherited between render passes.`).
-fn(async (t) => {
+fn((t) => {
   const format = 'rgba8unorm';
   const kSize = 1;
   const kWhiteColorData = new Float32Array([255, 255, 255, 255]);
@@ -613,14 +579,10 @@ fn(async (t) => {
   const expColor = { R: 0, G: 0, B: 0, A: 0 };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [kSize, kSize],
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 1 });
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
+  kSize,
+  kSize]);
 
-  t.expectOK(result);
 });
 
 const kColorWriteCombinations = [
@@ -653,7 +615,7 @@ params((u) =>
 u //
 .combine('mask', kColorWriteCombinations)).
 
-fn(async (t) => {
+fn((t) => {
   const { mask } = t.params;
 
   const format = 'rgba8unorm';
@@ -713,14 +675,10 @@ fn(async (t) => {
   const expColor = { R: r, G: g, B: b, A: a };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [kSize, kSize],
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 1 });
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
+  kSize,
+  kSize]);
 
-  t.expectOK(result);
 });
 
 g.test('color_write_mask,blending_disabled').
@@ -729,7 +687,7 @@ desc(
   (which has the same blending result).`).
 
 params((u) => u.combine('disabled', [false, true])).
-fn(async (t) => {
+fn((t) => {
   const format = 'rgba8unorm';
   const kSize = 1;
 
@@ -775,14 +733,10 @@ fn(async (t) => {
   const expColor = { R: 1, G: 0, B: 0, A: 0 };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [kSize, kSize],
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 1 });
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [
+  kSize,
+  kSize]);
 
-  t.expectOK(result);
 });
 
 g.test('blending,clamping').
@@ -800,7 +754,7 @@ u //
 combine('srcValue', [0.4, 0.6, 0.8, 1.0]).
 combine('dstValue', [0.2, 0.4])).
 
-fn(async (t) => {
+fn((t) => {
   const { format, srcValue, dstValue } = t.params;
 
   const blendComponent = { srcFactor: 'one', dstFactor: 'one', operation: 'add' };
@@ -876,16 +830,6 @@ fn(async (t) => {
   const expColor = { R: expValue, G: expValue, B: expValue, A: expValue };
   const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
 
-  const result = await textureContentIsOKByT2B(
-  t,
-  { texture: renderTarget },
-  [1, 1, 1],
-  { expTexelView },
-  {
-    maxDiffULPsForNormFormat: 1,
-    maxDiffULPsForFloatFormat: 1
-  });
-
-  t.expectOK(result);
+  t.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1, 1]);
 });
 //# sourceMappingURL=color_target_state.spec.js.map

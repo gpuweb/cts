@@ -3,9 +3,9 @@
 **/export const description = `
 Stress tests covering robustness in the presence of slow shaders.
 `;import { makeTestGroup } from '../../common/framework/test_group.js';
-import { GPUTest } from '../../webgpu/gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../webgpu/gpu_test.js';
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 g.test('compute').
 desc(`Tests execution of compute passes with very long-running dispatch operations.`).
@@ -110,13 +110,11 @@ fn((t) => {
   pass.draw(1);
   pass.end();
   t.device.queue.submit([encoder.finish()]);
-  t.expectSinglePixelIn2DTexture(
-  renderTarget,
-  'rgba8unorm',
-  { x: 1, y: 1 },
+  t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
   {
+    coord: { x: 1, y: 1 },
     exp: new Uint8Array([255, 255, 0, 255])
-  });
+  }]);
 
 });
 
@@ -184,13 +182,11 @@ fn((t) => {
   pass.draw(1);
   pass.end();
   t.device.queue.submit([encoder.finish()]);
-  t.expectSinglePixelIn2DTexture(
-  renderTarget,
-  'rgba8unorm',
-  { x: 1, y: 1 },
+  t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, [
   {
+    coord: { x: 1, y: 1 },
     exp: new Uint8Array([255, 255, 0, 255])
-  });
+  }]);
 
 });
 //# sourceMappingURL=slow.spec.js.map

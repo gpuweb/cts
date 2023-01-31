@@ -8,9 +8,9 @@ Index format tested in api/operation/command_buffer/render/state_tracking.spec.t
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
-class DrawTest extends GPUTest {
+class DrawTest extends TextureTestMixin(GPUTest) {
   checkTriangleDraw(opts) {
     // Set fallbacks when parameters are undefined in order to calculate the expected values.
     const defaulted = {
@@ -276,6 +276,7 @@ struct Output {
     this.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([didDraw ? 1 : 0]));
 
     const baseVertexCount = defaulted.baseVertex ?? 0;
+    const pixelComparisons = [];
     for (let primitiveId = 0; primitiveId < numX; ++primitiveId) {
       for (let instanceId = 0; instanceId < numY; ++instanceId) {
         let expectedColor = didDraw ? green : transparentBlack;
@@ -293,19 +294,13 @@ struct Output {
           expectedColor = transparentBlack;
         }
 
-        this.expectSinglePixelIn2DTexture(
-          renderTarget,
-          'rgba8unorm',
-          {
-            x: (1 / 3 + primitiveId) * tileSizeX,
-            y: (2 / 3 + instanceId) * tileSizeY,
-          },
-          {
-            exp: expectedColor,
-          }
-        );
+        pixelComparisons.push({
+          coord: { x: (1 / 3 + primitiveId) * tileSizeX, y: (2 / 3 + instanceId) * tileSizeY },
+          exp: expectedColor,
+        });
       }
     }
+    this.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, pixelComparisons);
   }
 }
 
