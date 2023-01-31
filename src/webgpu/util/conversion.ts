@@ -1,5 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
-import { assert, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
+import { assert, objectEquals, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
@@ -621,15 +621,12 @@ export class MatrixType {
    * given byte offset
    */
   public read(buf: Uint8Array, offset: number): Matrix {
-    const elements: Scalar[][] = [];
+    const elements: Scalar[][] = new Array(this.cols).fill(new Array<Scalar>(this.rows));
     for (let c = 0; c < this.cols; c++) {
-      const col: Scalar[] = [];
       for (let r = 0; r < this.rows; r++) {
-        const e = this.elementType.read(buf, offset);
-        col.push(e);
+        elements[c][r] = this.elementType.read(buf, offset);
         offset += this.elementType.size;
       }
-      elements.push(col);
     }
     return new Matrix(elements);
   }
@@ -1045,7 +1042,7 @@ export function toVector(v: number[], op: (n: number) => Scalar): Vector {
  * Class that encapsulates a Matrix value.
  */
 export class Matrix {
-  readonly elements: Array<Array<Scalar>>;
+  readonly elements: Scalar[][];
   readonly type: MatrixType;
 
   public constructor(elements: Array<Array<Scalar>>) {
@@ -1054,27 +1051,22 @@ export class Matrix {
       throw new Error(`matrix cols count must be between 2 and 4, got ${num_cols}`);
     }
 
-    const col_lengths = [...new Set<number>(elements.map(e => e.length))];
-    if (col_lengths.length > 1) {
-      throw new Error(
-        `cannot mix matrix column lengths. Found columns with differing lengths (${col_lengths})`
-      );
+    const num_rows = elements[0].length;
+    if (!elements.every(c => c.length === num_rows)) {
+      throw new Error(`cannot mix matrix column lengths`);
     }
-    const num_rows = col_lengths[0];
 
     if (num_rows < 2 || num_rows > 4) {
       throw new Error(`matrix rows count must be between 2 and 4, got ${num_rows}`);
     }
 
-    const elem_types = [...new Set<ScalarType>(elements.flatMap(c => c.map(r => r.type)))];
-    if (elem_types.length > 1) {
-      throw new Error(
-        `cannot mix matrix element types. Found elements with differing types (${elem_types})`
-      );
+    const elem_type = elements[0][0].type;
+    if (!elements.every(c => c.every(r => objectEquals(r.type, elem_type)))) {
+      throw new Error(`cannot mix matrix element types`);
     }
 
     this.elements = elements;
-    this.type = TypeMat(num_cols, num_rows, elem_types[0]);
+    this.type = TypeMat(num_cols, num_rows, elem_type);
   }
 
   /**
@@ -1086,7 +1078,7 @@ export class Matrix {
     this.elements.forEach((c, i) => {
       c.forEach((r, j) => {
         this.elements[i][j].copyTo(buffer, offset);
-        offset = this.type.elementType.size;
+        offset += this.type.elementType.size;
       });
     });
   }
@@ -1104,113 +1096,6 @@ export class Matrix {
   }
 }
 
-/** Helper for constructing a new 2x2 matrix with the provided values */
-export function mat2x2(...elements: [Scalar, Scalar, Scalar, Scalar]) {
-  return new Matrix([
-    [elements[0], elements[1]],
-    [elements[2], elements[3]],
-  ]);
-}
-
-/** Helper for constructing a new 2x3 matrix with the provided values */
-export function mat2x3(...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2]],
-    [elements[3], elements[4], elements[5]],
-  ]);
-}
-
-/** Helper for constructing a new 2x4 matrix with the provided values */
-export function mat2x4(
-  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
-) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2], elements[3]],
-    [elements[4], elements[5], elements[6], elements[7]],
-  ]);
-}
-
-/** Helper for constructing a new 3x2 matrix with the provided values */
-export function mat3x2(...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]) {
-  return new Matrix([
-    [elements[0], elements[1]],
-    [elements[2], elements[3]],
-    [elements[4], elements[5]],
-  ]);
-}
-
-/** Helper for constructing a new 3x3 matrix with the provided values */
-export function mat3x3(
-  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
-) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2]],
-    [elements[3], elements[4], elements[5]],
-    [elements[6], elements[7], elements[8]],
-  ]);
-}
-
-/** Helper for constructing a new 3x4 matrix with the provided values */
-export function mat3x4(
-  ...elements: [
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar,
-    Scalar
-  ]
-) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2], elements[3]],
-    [elements[4], elements[5], elements[6], elements[7]],
-    [elements[8], elements[9], elements[10], elements[11]],
-  ]);
-}
-
-/** Helper for constructing a new 4x2 matrix with the provided values */
-export function mat4x2(
-  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
-) {
-  return new Matrix([
-    [elements[0], elements[1]],
-    [elements[2], elements[3]],
-    [elements[4], elements[5]],
-    [elements[6], elements[7]],
-  ]);
-}
-
-/** Helper for constructing a new 4x3 matrix with the provided values */
-export function mat4x3(
-  // prettier-ignore
-  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
-) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2]],
-    [elements[3], elements[4], elements[5]],
-    [elements[6], elements[7], elements[8]],
-    [elements[9], elements[10], elements[11]],
-  ]);
-}
-
-/** Helper for constructing a new 4x4 matrix with the provided values */
-export function mat4x4(
-  // prettier-ignore
-  ...elements: [Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar, Scalar]
-) {
-  return new Matrix([
-    [elements[0], elements[1], elements[2], elements[3]],
-    [elements[4], elements[5], elements[6], elements[7]],
-    [elements[8], elements[9], elements[10], elements[11]],
-    [elements[12], elements[13], elements[14], elements[15]],
-  ]);
-}
 /**
  * Helper for constructing Matrices from arrays of numbers
  *
@@ -1324,9 +1209,7 @@ export function deserializeValue(data: SerializedValue): Value {
       return new Vector(data.value.map(v => buildScalar(v)));
     }
     case 'matrix': {
-      const elements: Scalar[][] = [];
-      data.value.forEach(v => elements.push(v.map(buildScalar)));
-      return new Matrix(elements);
+      return new Matrix(data.value.map(c => c.map(buildScalar)));
     }
   }
 }

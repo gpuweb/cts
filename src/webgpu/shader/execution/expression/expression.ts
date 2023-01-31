@@ -14,6 +14,7 @@ import {
   f32,
   u32,
   i32,
+  Matrix,
 } from '../../../util/conversion.js';
 import {
   BinaryToInterval,
@@ -36,6 +37,7 @@ function isComparator(e: Expectation): boolean {
     e instanceof F32Interval ||
     e instanceof Scalar ||
     e instanceof Vector ||
+    e instanceof Matrix ||
     e instanceof Array
   );
 }
