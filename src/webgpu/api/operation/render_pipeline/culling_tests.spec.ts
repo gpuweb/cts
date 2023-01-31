@@ -20,7 +20,7 @@ Use 2 triangles with different winding orders:
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kTextureFormatInfo } from '../../../capability_info.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
 function faceIsCulled(face: 'cw' | 'ccw', frontFace: GPUFrontFace, cullMode: GPUCullMode): boolean {
   return cullMode !== 'none' && (frontFace === face) === (cullMode === 'front');
@@ -38,7 +38,7 @@ function faceColor(face: 'cw' | 'ccw', frontFace: GPUFrontFace, cullMode: GPUCul
   }
 }
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 g.test('culling')
   .desc(
@@ -166,20 +166,14 @@ TODO: check the contents of the depth and stencil outputs [2]
     t.device.queue.submit([encoder.finish()]);
 
     // front facing color is green, non front facing is red, background is blue
-    const kCCWTriangleTopLeftColor = faceColor('ccw', t.params.frontFace, t.params.cullMode);
-    t.expectSinglePixelIn2DTexture(
-      texture,
-      format,
-      { x: 0, y: 0 },
-      { exp: kCCWTriangleTopLeftColor }
-    );
-
-    const kCWTriangleBottomRightColor = faceColor('cw', t.params.frontFace, t.params.cullMode);
-    t.expectSinglePixelIn2DTexture(
-      texture,
-      format,
-      { x: size - 1, y: size - 1 },
-      { exp: kCWTriangleBottomRightColor }
-    );
-    // [2]: check the contents of the depth and stencil outputs
+    t.expectSinglePixelComparisonsAreOkInTexture({ texture }, [
+      {
+        coord: { x: 0, y: 0 },
+        exp: faceColor('ccw', t.params.frontFace, t.params.cullMode),
+      },
+      {
+        coord: { x: size - 1, y: size - 1 },
+        exp: faceColor('cw', t.params.frontFace, t.params.cullMode),
+      },
+    ]);
   });

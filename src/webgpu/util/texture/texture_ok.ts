@@ -22,6 +22,13 @@ export type TexelCompareOptions = {
   maxDiffULPsForFloatFormat?: number;
 };
 
+export type PixelExpectation = PerTexelComponent<number> | Uint8Array;
+
+export type PerPixelComparison<E extends PixelExpectation> = {
+  coord: GPUOrigin3D;
+  exp: E;
+};
+
 type TexelViewComparer = {
   /** Given coords, returns whether the two texel views are considered matching at that point. */
   predicate: PerPixelAtLevel<boolean>;
@@ -179,12 +186,26 @@ function createTextureCopyForMapRead(
   return { buffer, bytesPerRow, rowsPerImage };
 }
 
+function* fullSubrectCoordinates(
+  subrectOrigin: Required<GPUOrigin3DDict>,
+  subrectSize: Required<GPUExtent3DDict>
+): Generator<Required<GPUOrigin3DDict>> {
+  for (let z = subrectOrigin.z; z < subrectOrigin.z + subrectSize.depthOrArrayLayers; ++z) {
+    for (let y = subrectOrigin.y; y < subrectOrigin.y + subrectSize.height; ++y) {
+      for (let x = subrectOrigin.x; x < subrectOrigin.x + subrectSize.width; ++x) {
+        yield { x, y, z };
+      }
+    }
+  }
+}
+
 function findFailedPixels(
   format: EncodableTextureFormat,
   subrectOrigin: Required<GPUOrigin3DDict>,
   subrectSize: Required<GPUExtent3DDict>,
   { actTexelView, expTexelView }: { actTexelView: TexelView; expTexelView: TexelView },
-  texelCompareOptions: TexelCompareOptions
+  texelCompareOptions: TexelCompareOptions,
+  coords?: Generator<Required<GPUOrigin3DDict>>
 ) {
   const comparer = makeTexelViewComparer(
     format,
@@ -195,21 +216,16 @@ function findFailedPixels(
   const lowerCorner = [subrectSize.width, subrectSize.height, subrectSize.depthOrArrayLayers];
   const upperCorner = [0, 0, 0];
   const failedPixels: Required<GPUOrigin3DDict>[] = [];
-  for (let z = subrectOrigin.z; z < subrectOrigin.z + subrectSize.depthOrArrayLayers; ++z) {
-    for (let y = subrectOrigin.y; y < subrectOrigin.y + subrectSize.height; ++y) {
-      for (let x = subrectOrigin.x; x < subrectOrigin.x + subrectSize.width; ++x) {
-        const coords = { x, y, z };
-
-        if (!comparer.predicate(coords)) {
-          failedPixels.push(coords);
-          lowerCorner[0] = Math.min(lowerCorner[0], x);
-          lowerCorner[1] = Math.min(lowerCorner[1], y);
-          lowerCorner[2] = Math.min(lowerCorner[2], z);
-          upperCorner[0] = Math.max(upperCorner[0], x);
-          upperCorner[1] = Math.max(upperCorner[1], y);
-          upperCorner[2] = Math.max(upperCorner[2], z);
-        }
-      }
+  for (const coord of coords ?? fullSubrectCoordinates(subrectOrigin, subrectSize)) {
+    const { x, y, z } = coord;
+    if (!comparer.predicate(coord)) {
+      failedPixels.push(coord);
+      lowerCorner[0] = Math.min(lowerCorner[0], x);
+      lowerCorner[1] = Math.min(lowerCorner[1], y);
+      lowerCorner[2] = Math.min(lowerCorner[2], z);
+      upperCorner[0] = Math.max(upperCorner[0], x);
+      upperCorner[1] = Math.max(upperCorner[1], y);
+      upperCorner[2] = Math.max(upperCorner[2], z);
     }
   }
   if (failedPixels.length === 0) {
@@ -295,7 +311,8 @@ export async function textureContentIsOKByT2B(
   source: GPUImageCopyTexture,
   copySize_: GPUExtent3D,
   { expTexelView }: { expTexelView: TexelView },
-  texelCompareOptions: TexelCompareOptions
+  texelCompareOptions: TexelCompareOptions,
+  coords?: Generator<Required<GPUOrigin3DDict>>
 ): Promise<ErrorWithExtra | undefined> {
   const subrectOrigin = reifyOrigin3D(source.origin ?? [0, 0, 0]);
   const subrectSize = reifyExtent3D(copySize_);
@@ -325,7 +342,8 @@ export async function textureContentIsOKByT2B(
     subrectOrigin,
     subrectSize,
     { actTexelView, expTexelView },
-    texelCompareOptions
+    texelCompareOptions,
+    coords
   );
 
   if (failedPixelsMessage === undefined) {
