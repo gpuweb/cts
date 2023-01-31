@@ -819,6 +819,10 @@ export class Scalar {
   }
 }
 
+export interface ScalarBuilder {
+  (value: number): Scalar;
+}
+
 /** Create an f64 from a numeric value, a JS `number`. */
 export function f64(value: number): Scalar {
   const arr = new Float64Array([value]);
