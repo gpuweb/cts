@@ -430,8 +430,6 @@ g.test('storage_texture,formats')
   .desc(
     `
   Test that a validation error is generated if the format doesn't support the storage usage.
-
-  TODO: Test "bgra8unorm" with the "bgra8unorm-storage" feature.
   `
   )
   .params(u => u.combine('format', kAllTextureFormats))
