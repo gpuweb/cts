@@ -502,7 +502,7 @@ textureLoad each sample index from the texture and write to a storage buffer to 
         0b11110,
       ] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
 
     const fragmentMaskUniformBuffer = t.device.createBuffer({
