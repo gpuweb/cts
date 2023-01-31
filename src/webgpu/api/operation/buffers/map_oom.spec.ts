@@ -38,7 +38,7 @@ g.test('mapAsync')
     const { oom, write, size, unmapBeforeResolve } = t.params;
 
     const buffer = t.expectGPUError(
-      'out-of-memory',
+      'validation',
       () =>
         t.device.createBuffer({
           size,
