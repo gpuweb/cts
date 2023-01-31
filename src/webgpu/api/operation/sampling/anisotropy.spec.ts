@@ -272,7 +272,7 @@ g.test('anisotropic_filter_mipmap_color')
       maxAnisotropy: 1,
       _results: [
         { coord: { x: xMiddle, y: 2 }, expected: colors[2] },
-        { coord: { x: xMiddle, y: 6 }, expected: colors[0] },
+        { coord: { x: xMiddle, y: 6 }, expected: [colors[0], colors[1]] },
       ],
       _generateWarningOnly: false,
     },

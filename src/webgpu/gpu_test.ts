@@ -541,6 +541,10 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       size,
       layout
     );
+    // MAINTENANCE_TODO: getTextureCopyLayout does not return the proper size for array textures,
+    // i.e. it will leave the z/depth value as is instead of making it 1 when dealing with 2d
+    // texture arrays. Since we are passing in the dimension, we should update it to return the
+    // corrected size.
     const copySize = [
       mipSize[0],
       dimension !== '1d' ? mipSize[1] : 1,
@@ -1059,7 +1063,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       assert(exp.length > 0, 'must specify at least one pixel comparison');
       assert(
         (kEncodableTextureFormats as GPUTextureFormat[]).includes(src.texture.format),
-        `${src.texture.format} is not an encodable format`
+        () => `${src.texture.format} is not an encodable format`
       );
       const lowerCorner = [src.texture.width, src.texture.height, src.texture.depthOrArrayLayers];
       const upperCorner = [0, 0, 0];
@@ -1083,7 +1087,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
         // Build a sparse map of the coordinates to the expected colors for the texel view.
         assert(
           !expMap.has(coordKey),
-          `duplicate pixel expectation at coordinate (${coord.x},${coord.y},${coord.z})`
+          () => `duplicate pixel expectation at coordinate (${coord.x},${coord.y},${coord.z})`
         );
         expMap.set(coordKey, e.exp);
       }
@@ -1100,7 +1104,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
             const res = expMap.get(JSON.stringify(coord));
             assert(
               res !== undefined,
-              `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+              () => `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
             );
             return res as Uint8Array;
           }
@@ -1112,7 +1116,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
             const res = expMap.get(JSON.stringify(coord));
             assert(
               res !== undefined,
-              `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+              () => `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
             );
             return res as PerTexelComponent<number>;
           }
