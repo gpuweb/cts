@@ -4,7 +4,11 @@ export const description = `
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../capability_info.js';
+import {
+  kLimitInfo,
+  kRenderableColorTextureFormats,
+  kTextureFormatInfo,
+} from '../../../capability_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
@@ -46,13 +50,21 @@ g.test('color,attachments')
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
       .combine('attachmentCount', [2, 3, 4])
+      .filter(t => {
+        // We only need to test formats that have a valid color attachment bytes per sample.
+        const pixelByteCost = kTextureFormatInfo[t.format].renderTargetPixelByteCost;
+        return (
+          pixelByteCost !== undefined &&
+          pixelByteCost * t.attachmentCount <= kLimitInfo.maxColorAttachmentBytesPerSample.default
+        );
+      })
       .expand('emptyAttachmentId', p => range(p.attachmentCount, i => i))
   )
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, attachmentCount, emptyAttachmentId } = t.params;
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
@@ -145,7 +157,7 @@ g.test('color,component_count')
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, componentCount } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -351,7 +363,7 @@ The attachment has a load value of [1, 0, 0, 1]
     const info = kTextureFormatInfo[t.params.format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       format,
       _result,

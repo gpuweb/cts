@@ -141,6 +141,7 @@ if (verbose) {
   dataCache.setDebugLogger(console.log);
 }
 
+// eslint-disable-next-line @typescript-eslint/require-await
 (async () => {
   Logger.globalDebugMode = verbose;
   const log = new Logger();

@@ -82,7 +82,7 @@ g.test('copy_with_invalid_or_destroyed_texture')
       .combine('srcState', kResourceStates)
       .combine('dstState', kResourceStates)
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcState, dstState } = t.params;
 
     const textureDesc: GPUTextureDescriptor = {
@@ -122,7 +122,7 @@ g.test('texture,device_mismatch')
   .beforeAllSubcases(t => {
     t.selectMismatchedDeviceOrSkipTestCase(undefined);
   })
-  .fn(async t => {
+  .fn(t => {
     const { srcMismatched, dstMismatched } = t.params;
 
     const size = { width: 4, height: 4, depthOrArrayLayers: 1 };
@@ -178,7 +178,7 @@ Test copyTextureToTexture must specify mipLevels that are in range.
       .unless(p => p.dimension === '1d' && (p.srcLevelCount !== 1 || p.dstLevelCount !== 1))
   )
 
-  .fn(async t => {
+  .fn(t => {
     const { srcLevelCount, dstLevelCount, srcCopyLevel, dstCopyLevel, dimension } = t.params;
 
     const srcTexture = t.device.createTexture({
@@ -218,7 +218,7 @@ Test that copyTextureToTexture source/destination need COPY_SRC/COPY_DST usages.
       .combine('srcUsage', kTextureUsages)
       .combine('dstUsage', kTextureUsages)
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcUsage, dstUsage } = t.params;
 
     const srcTexture = t.device.createTexture({
@@ -256,7 +256,7 @@ Test that textures in copyTextureToTexture must have the same sample count.
       .combine('srcSampleCount', [1, 4])
       .combine('dstSampleCount', [1, 4])
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcSampleCount, dstSampleCount } = t.params;
 
     const srcTexture = t.device.createTexture({
@@ -308,7 +308,7 @@ TODO: Check the source and destination constraints separately.
       .expand('copyWidth', p => [32 - Math.max(p.srcCopyOrigin.x, p.dstCopyOrigin.x), 16])
       .expand('copyHeight', p => [16 - Math.max(p.srcCopyOrigin.y, p.dstCopyOrigin.y), 8])
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcCopyOrigin, dstCopyOrigin, copyWidth, copyHeight } = t.params;
 
     const kWidth = 32;
@@ -362,7 +362,7 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
     const { srcFormatFeature, dstFormatFeature } = t.params;
     t.selectDeviceOrSkipTestCase([srcFormatFeature, dstFormatFeature]);
   })
-  .fn(async t => {
+  .fn(t => {
     const { srcFormat, dstFormat } = t.params;
     const srcFormatInfo = kTextureFormatInfo[srcFormat];
     const dstFormatInfo = kTextureFormatInfo[dstFormat];
@@ -438,7 +438,7 @@ Note: this is only tested for 2D textures as it is the only dimension compatible
     const { format } = t.params;
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const {
       format,
       copyBoxOffsets,
@@ -534,7 +534,7 @@ Test that copyTextureToTexture copy boxes must be in range of the subresource.
       .combine('dstCopyLevel', [0, 1, 3])
       .unless(p => p.dimension === '1d' && (p.srcCopyLevel !== 0 || p.dstCopyLevel !== 0))
   )
-  .fn(async t => {
+  .fn(t => {
     const { dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
 
     const textureSize = { width: 16, height: 8, depthOrArrayLayers: 3 };
@@ -658,7 +658,7 @@ TODO: Extend to 1D and 3D textures.`
       .combine('dstCopyOriginZ', [0, 2, 4])
       .combine('copyExtentDepth', [1, 2, 3])
   )
-  .fn(async t => {
+  .fn(t => {
     const { srcCopyOriginZ, dstCopyOriginZ, copyExtentDepth } = t.params;
 
     const kArrayLayerCount = 7;
@@ -700,7 +700,7 @@ Test the validations on the member 'aspect' of GPUImageCopyTexture in CopyTextur
     const { format } = t.params;
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, sourceAspect, destinationAspect } = t.params;
 
     const kTextureSize = { width: 16, height: 8, depthOrArrayLayers: 1 };
@@ -779,7 +779,7 @@ TODO: Express the offsets in "block size" so as to be able to test non-4x4 compr
     const { format } = t.params;
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 

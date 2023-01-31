@@ -42,12 +42,12 @@ function hasSample(
 }
 
 class F extends TextureTestMixin(GPUTest) {
-  async GetTargetTexture(
+  GetTargetTexture(
     sampleCount: number,
     rasterizationMask: number,
     sampleMask: number,
     fragmentShaderOutputMask: number
-  ): Promise<{ color: GPUTexture; depthStencil: GPUTexture }> {
+  ): { color: GPUTexture; depthStencil: GPUTexture } {
     // Create a 2x2 color texture to sample from
     // texel 0 - Red
     // texel 1 - Green
@@ -479,10 +479,10 @@ textureLoad each sample index from the texture and write to a storage buffer to 
         0b11110,
       ] as const)
   )
-  .fn(async t => {
+  .fn(t => {
     const { sampleCount, rasterizationMask, sampleMask, fragmentShaderOutputMask } = t.params;
 
-    const { color, depthStencil } = await t.GetTargetTexture(
+    const { color, depthStencil } = t.GetTargetTexture(
       sampleCount,
       rasterizationMask,
       sampleMask,

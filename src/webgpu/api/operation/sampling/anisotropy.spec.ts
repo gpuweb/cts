@@ -285,7 +285,7 @@ g.test('anisotropic_filter_mipmap_color')
       _generateWarningOnly: true,
     },
   ])
-  .fn(async t => {
+  .fn(t => {
     const texture = t.createTextureFromTexelViewsMultipleMipmaps(
       colors.map(value => TexelView.fromTexelsAsBytes(kTextureFormat, coords_ => value)),
       { size: [4, 4, 1], usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING }

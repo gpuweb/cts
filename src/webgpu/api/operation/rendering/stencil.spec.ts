@@ -306,7 +306,7 @@ g.test('stencil_compare_func')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, stencilCompare, stencilRefValue, _expectedColor } = t.params;
 
     t.checkStencilCompareFunction(format, stencilCompare, stencilRefValue, _expectedColor);
@@ -344,7 +344,7 @@ g.test('stencil_passOp_operation')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, passOp, initialStencil, _expectedStencil } = t.params;
 
     const stencilState = {
@@ -389,7 +389,7 @@ g.test('stencil_failOp_operation')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, failOp, initialStencil, _expectedStencil } = t.params;
 
     const stencilState = {
@@ -443,7 +443,7 @@ g.test('stencil_depthFailOp_operation')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, depthFailOp, initialStencil, _expectedStencil } = t.params;
 
     const stencilState = {
@@ -489,7 +489,7 @@ g.test('stencil_read_write_mask')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format, maskType, stencilRefValue, _expectedColor } = t.params;
 
     const baseStencilState = {
@@ -539,7 +539,7 @@ g.test('stencil_reference_initialized')
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
-  .fn(async t => {
+  .fn(t => {
     const { format } = t.params;
 
     const baseStencilState = {

@@ -22,6 +22,7 @@ function usage(rc: number): never {
   tools/run_${sys.type} 'unittests:*' 'webgpu:buffers,*'
 Options:
   --colors                  Enable ANSI colors in output.
+  --coverage                Emit coverage data.
   --verbose                 Print result/log of every test as it runs.
   --list                    Print all testcase names that match the given query and exit.
   --debug                   Include debug messages in logging.
@@ -35,8 +36,20 @@ Options:
   return sys.exit(rc);
 }
 
+// The interface that exposes creation of the GPU, and optional interface to code coverage.
 interface GPUProviderModule {
+  // @returns a GPU with the given flags
   create(flags: string[]): GPU;
+  // An optional interface to a CodeCoverageProvider
+  coverage?: CodeCoverageProvider;
+}
+
+interface CodeCoverageProvider {
+  // Starts collecting code coverage
+  begin(): void;
+  // Ends collecting of code coverage, returning the coverage data.
+  // This data is opaque (implementation defined).
+  end(): string;
 }
 
 type listModes = 'none' | 'cases' | 'unimplemented';
@@ -44,6 +57,7 @@ type listModes = 'none' | 'cases' | 'unimplemented';
 Colors.enabled = false;
 
 let verbose = false;
+let emitCoverage = false;
 let listMode: listModes = 'none';
 let debug = false;
 let printJSON = false;
@@ -59,6 +73,8 @@ for (let i = 0; i < sys.args.length; ++i) {
   if (a.startsWith('-')) {
     if (a === '--colors') {
       Colors.enabled = true;
+    } else if (a === '--coverage') {
+      emitCoverage = true;
     } else if (a === '--verbose') {
       verbose = true;
     } else if (a === '--list') {
@@ -92,8 +108,20 @@ for (let i = 0; i < sys.args.length; ++i) {
   }
 }
 
+let codeCoverage: CodeCoverageProvider | undefined = undefined;
+
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule!.create(gpuProviderFlags));
+  if (emitCoverage) {
+    codeCoverage = gpuProviderModule.coverage;
+    if (codeCoverage === undefined) {
+      console.error(
+        `--coverage specified, but the GPUProviderModule does not support code coverage.
+Did you remember to build with code coverage instrumentation enabled?`
+      );
+      sys.exit(1);
+    }
+  }
 }
 
 if (dataPath !== undefined) {
@@ -139,6 +167,10 @@ if (queries.length === 0) {
 
   let total = 0;
 
+  if (codeCoverage !== undefined) {
+    codeCoverage.begin();
+  }
+
   for (const testcase of testcases) {
     const name = testcase.query.toString();
     switch (listMode) {
@@ -177,6 +209,11 @@ if (queries.length === 0) {
       default:
         unreachable('unrecognized status');
     }
+  }
+
+  if (codeCoverage !== undefined) {
+    const coverage = codeCoverage.end();
+    console.log(`Code-coverage: [[${coverage}]]`);
   }
 
   if (listMode !== 'none') {
