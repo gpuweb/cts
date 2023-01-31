@@ -323,14 +323,6 @@ export const listing = [
       "api",
       "operation",
       "render_pipeline",
-      "alpha_to_coverage"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "operation",
-      "render_pipeline",
       "culling_tests"
     ]
   },
