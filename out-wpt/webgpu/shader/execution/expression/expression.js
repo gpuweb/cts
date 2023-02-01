@@ -13,6 +13,7 @@ import {
   f32,
   u32,
   i32,
+  Matrix,
 } from '../../../util/conversion.js';
 import { F32Interval } from '../../../util/f32_interval.js';
 import { cartesianProduct, quantizeToF32, quantizeToU32 } from '../../../util/math.js';
@@ -23,6 +24,7 @@ function isComparator(e) {
     e instanceof F32Interval ||
     e instanceof Scalar ||
     e instanceof Vector ||
+    e instanceof Matrix ||
     e instanceof Array
   );
 }

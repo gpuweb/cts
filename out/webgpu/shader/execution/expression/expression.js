@@ -13,7 +13,8 @@ Vector,
 VectorType,
 f32,
 u32,
-i32 } from
+i32,
+Matrix } from
 '../../../util/conversion.js';
 import {
 
@@ -36,6 +37,7 @@ function isComparator(e) {
   e instanceof F32Interval ||
   e instanceof Scalar ||
   e instanceof Vector ||
+  e instanceof Matrix ||
   e instanceof Array);
 
 }
