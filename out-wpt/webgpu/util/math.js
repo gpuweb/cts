@@ -592,6 +592,74 @@ export function fullF16Range(counts = { pos_sub: 10, pos_norm: 50 }) {
   return bit_fields.map(hexToF16);
 }
 
+/** Short list of i32 values of interest to test against */
+const kInterestingI32Values = [
+  kValue.i32.negative.max,
+  kValue.i32.negative.max / 2,
+  -1,
+  0,
+  1,
+  kValue.i32.positive.max / 2,
+  kValue.i32.positive.max,
+];
+
+/** @returns minimal i32 values that cover the entire range of i32 behaviours
+ *
+ * This is used instead of fullI32Range when the number of test cases being
+ * generated is a super linear function of the length of i32 values which is
+ * leading to time outs.
+ */
+export function sparseI32Range() {
+  return kInterestingI32Values;
+}
+
+const kVectorI32Values = {
+  2: kInterestingI32Values.flatMap(f => [
+    [f, 1],
+    [1, f],
+    [f, -1],
+    [-1, f],
+  ]),
+
+  3: kInterestingI32Values.flatMap(f => [
+    [f, 1, 2],
+    [1, f, 2],
+    [1, 2, f],
+    [f, -1, -2],
+    [-1, f, -2],
+    [-1, -2, f],
+  ]),
+
+  4: kInterestingI32Values.flatMap(f => [
+    [f, 1, 2, 3],
+    [1, f, 2, 3],
+    [1, 2, f, 3],
+    [1, 2, 3, f],
+    [f, -1, -2, -3],
+    [-1, f, -2, -3],
+    [-1, -2, f, -3],
+    [-1, -2, -3, f],
+  ]),
+};
+
+/**
+ * Returns set of vectors, indexed by dimension containing interesting i32
+ * values.
+ *
+ * The tests do not do the simple option for coverage of computing the cartesian
+ * product of all of the interesting i32 values N times for vecN tests,
+ * because that creates a huge number of tests for vec3 and vec4, leading to
+ * time outs.
+ *
+ * Instead they insert the interesting i32 values into each location of the
+ * vector to get a spread of testing over the entire range. This reduces the
+ * number of cases being run substantially, but maintains coverage.
+ */
+export function vectorI32Range(dim) {
+  assert(dim === 2 || dim === 3 || dim === 4, 'vectorI32Range only accepts dimensions 2, 3, and 4');
+  return kVectorI32Values[dim];
+}
+
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit signed ints
  *
