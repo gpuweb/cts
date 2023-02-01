@@ -29,7 +29,10 @@
         --node-description-fg-color: #gray;
         --node-hover-bg-color: rgba(0, 0, 0, 0.1);
 
-        --testcaselogbtn-bg-color: #eee;
+        --button-bg-color: #eee;
+        --button-hover-bg-color: #ccc;
+        --button-image-filter: none;
+
         --subtree-border-color: #ddd;
         --subtree-hover-left-border-color: #000;
         --multicase-border-color: #55f;
@@ -46,7 +49,6 @@
         --testcase-log-even-bg-color: #f8f8f8;
         --testcase-log-text-fg-color: #666;
         --testcase-log-text-first-line-fg-color: #000;
-        --button-image-filter: none;
       }
       @media (prefers-color-scheme: dark) {
         :root {
@@ -59,7 +61,10 @@
           --node-description-fg-color: #aaa;
           --node-hover-bg-color: rgba(255, 255, 255, 0.1);
 
-          --testcaselogbtn-bg-color: #666;
+          --button-image-filter: invert(100%);
+          --button-bg-color: #666;
+          --button-hover-bg-color: #888;
+
           --subtree-border-color: #444;
           --subtree-hover-left-border-color: #FFF;
           --multicase-border-color: #338;
@@ -76,7 +81,6 @@
           --testcase-log-even-bg-color: #080808;
           --testcase-log-text-fg-color: #aaa;
           --testcase-log-text-first-line-fg-color: #fff;
-          --button-image-filter: invert(100%);
         }        
       }
       body {
@@ -96,6 +100,12 @@
       input[type=button],
       button {
         cursor: pointer;
+        background-color: var(--button-bg-color);
+      }
+      input[type=button]:hover,
+      button:hover,
+      a.nodelink:hover {
+        background-color: var(--button-hover-bg-color);
       }
       .logo {
         height: 1.2em;
@@ -183,7 +193,7 @@
         text-decoration: none;
         vertical-align: top;
         color: var(--fg-color);
-        background-color: var(--testcaselogbtn-bg-color);
+        background-color: var(--button-bg-color);
         background-repeat: no-repeat;
         background-position: center;
         border: 1px solid var(--border-color);
