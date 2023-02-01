@@ -23,6 +23,25 @@ g.test('twice')
     texture.destroy();
   });
 
+g.test('invalid_texture')
+  .desc('Test that invalid textures may be destroyed without generating validation errors.')
+  .fn(async t => {
+    t.device.pushErrorScope('validation');
+
+    const invalidTexture = t.device.createTexture({
+      size: [t.device.limits.maxTextureDimension2D + 1, 1, 1],
+      format: 'rgba8unorm',
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+    });
+
+    // Expect error because it's invalid.
+    const error = await t.device.popErrorScope();
+    t.expect(!!error);
+
+    // This line should not generate an error
+    invalidTexture.destroy();
+  });
+
 g.test('submit_a_destroyed_texture_as_attachment')
   .desc(
     `
