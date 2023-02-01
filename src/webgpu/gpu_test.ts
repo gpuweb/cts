@@ -1074,7 +1074,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
         const coordKey = JSON.stringify(coord);
         coords.push(coord);
 
-        // Compute the minimum sub-rect that enconpasses all the pixel comparisons. The
+        // Compute the minimum sub-rect that encompasses all the pixel comparisons. The
         // `lowerCorner` will become the origin, and the `upperCorner` will be used to compute the
         // size.
         lowerCorner[0] = Math.min(lowerCorner[0], coord.x);

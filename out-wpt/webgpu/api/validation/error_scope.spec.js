@@ -242,7 +242,7 @@ Tests that sibling error scopes need to be balanced.
     }
 
     {
-      // Trying to pop an additional non-exisiting scope should reject.
+      // Trying to pop an additional non-existing scope should reject.
       const promise = t.device.popErrorScope();
       t.shouldReject('OperationError', promise);
     }
@@ -278,7 +278,7 @@ Tests that nested error scopes need to be balanced.
     t.expect(errors.every(e => e === null));
 
     {
-      // Trying to pop an additional non-exisiting scope should reject.
+      // Trying to pop an additional non-existing scope should reject.
       const promise = t.device.popErrorScope();
       t.shouldReject('OperationError', promise);
     }

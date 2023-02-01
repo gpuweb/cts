@@ -13,7 +13,7 @@ The entryPoint assigned in descriptor include:
 
 TODO:
 - Test unicode normalization (gpuweb/gpuweb#1160)
-- Fine-tune test cases to reduce number by removing trivially similiar cases
+- Fine-tune test cases to reduce number by removing trivially similar cases
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kDefaultVertexShaderCode, getShaderWithEntryPoint } from '../../../util/shader.js';

@@ -18,7 +18,7 @@ export const g = makeTestGroup(Fixture);
 g.test('default')
   .desc(
     `
-    Test requesting the device with a variation of default paramters.
+    Test requesting the device with a variation of default parameters.
     - No features listed in default device
     - Default limits`
   )

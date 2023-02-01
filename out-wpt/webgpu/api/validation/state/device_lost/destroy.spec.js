@@ -320,7 +320,7 @@ g.test('createBindGroup')
   .desc(
     `
 Tests creating bind group on destroyed device. Tests valid combinations of:
-  - Various binded resource types
+  - Various bound resource types
   - Various valid binding entries
   - Maximum set of visibility for each binding entry
   `
