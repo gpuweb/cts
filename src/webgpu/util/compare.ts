@@ -7,7 +7,7 @@ import {
 } from '../shader/execution/expression/case_cache.js';
 import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
 
-import { isFloatValue, Scalar, Value, Vector } from './conversion.js';
+import { isFloatValue, Matrix, Scalar, Value, Vector } from './conversion.js';
 import { F32Interval } from './f32_interval.js';
 
 /** Comparison describes the result of a Comparator function. */
@@ -28,6 +28,9 @@ export interface Comparator {
  * @param expected the expected Value
  * @returns the comparison results
  */
+// NOTE: This function does not use objectEquals, since that does not handle FP
+// specific corners cases correctly, i.e. that f64/f32/f16 are all considered
+// the same type for this comparison.
 function compareValue(got: Value, expected: Value): Comparison {
   {
     // Check types
@@ -57,35 +60,47 @@ function compareValue(got: Value, expected: Value): Comparison {
   }
 
   if (got instanceof Vector) {
+    const e = expected as Vector;
     const gLen = got.elements.length;
-    const eLen = (expected as Vector).elements.length;
+    const eLen = e.elements.length;
     let matched = gLen === eLen;
-    const gElements = new Array<string>(gLen);
-    const eElements = new Array<string>(eLen);
-    for (let i = 0; i < Math.max(gLen, eLen); i++) {
-      if (i < gLen && i < eLen) {
-        const g = got.elements[i];
-        const e = (expected as Vector).elements[i];
-        const cmp = compare(g, e);
-        matched = matched && cmp.matched;
-        gElements[i] = cmp.got;
-        eElements[i] = cmp.expected;
-        continue;
-      }
-      matched = false;
-      if (i < gLen) {
-        gElements[i] = got.elements[i].toString();
-      }
-      if (i < eLen) {
-        eElements[i] = (expected as Vector).elements[i].toString();
-      }
+    if (matched) {
+      // Iterating and calling compare instead of just using objectEquals to use the FP specific logic from above
+      matched = got.elements.every((_, i) => {
+        return compare(got.elements[i], e.elements[i]).matched;
+      });
     }
+
     return {
       matched,
-      got: `${got.type}(${gElements.join(', ')})`,
-      expected: `${expected.type}(${eElements.join(', ')})`,
+      got: `${got.toString()}`,
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()),
     };
   }
+
+  if (got instanceof Matrix) {
+    const e = expected as Matrix;
+    const gCols = got.type.cols;
+    const eCols = e.type.cols;
+    const gRows = got.type.rows;
+    const eRows = e.type.rows;
+    let matched = gCols === eCols && gRows === eRows;
+    if (matched) {
+      // Iterating and calling compare instead of just using objectEquals to use the FP specific logic from above
+      matched = got.elements.every((c, i) => {
+        return c.every((_, j) => {
+          return compare(got.elements[i][j], e.elements[i][j]).matched;
+        });
+      });
+    }
+
+    return {
+      matched,
+      got: `${got.toString()}`,
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()),
+    };
+  }
+
   throw new Error(`unhandled type '${typeof got}`);
 }
 
