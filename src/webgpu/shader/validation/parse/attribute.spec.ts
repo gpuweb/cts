@@ -13,6 +13,15 @@ const kPossibleValues = {
   const_func: 'min(4, 8)',
   const: 'a_const',
 };
+const kAttributeUsage = {
+  align: '@align($val)',
+  binding: '@binding($val) @group(0)',
+  group: '@binding(1) @group($val)',
+  id: '@id($val)',
+  location: '@location($val)',
+  size: '@size($val)',
+  workgroup_size: '@workgroup_size($val, $val, $val)',
+};
 const kAllowedUsages = {
   align: ['val', 'expr', 'const', 'const_func'],
   binding: ['val', 'expr', 'const', 'const_func'],
@@ -31,29 +40,18 @@ g.test('expressions')
       .combine('attribute', Object.keys(kAllowedUsages) as Array<keyof typeof kAllowedUsages>)
   )
   .fn(t => {
-    let align = '';
-    let b_and_g = '@binding(0) @group(0)';
-    let id = '@id(2)';
-    let loc = '@location(0)';
-    let size = '';
-    let wg_size = '@workgroup_size(1)';
+    const attributes = {
+      align: '',
+      binding: '@binding(0) @group(0)',
+      group: '@binding(1) @group(1)',
+      id: '@id(2)',
+      location: '@location(0)',
+      size: '',
+      workgroup_size: '@workgroup_size(1)',
+    };
 
     const val = kPossibleValues[t.params.value];
-    if (t.params.attribute === 'align') {
-      align = `@align(${val})`;
-    } else if (t.params.attribute === 'binding') {
-      b_and_g = `@binding(${val}) @group(0)`;
-    } else if (t.params.attribute === 'group') {
-      b_and_g = `@binding(0) @group(${val})`;
-    } else if (t.params.attribute === 'id') {
-      id = `@id(${val})`;
-    } else if (t.params.attribute === 'location') {
-      loc = `@location(${val})`;
-    } else if (t.params.attribute === 'size') {
-      size = `@size(${val})`;
-    } else if (t.params.attribute === 'workgroup_size') {
-      wg_size = `@workgroup_size(${val}, ${val}, ${val})`;
-    }
+    attributes[t.params.attribute] = kAttributeUsage[t.params.attribute].replace(/(\$val)/g, val);
 
     const code = `
 fn a_func() -> i32 {
@@ -63,22 +61,25 @@ fn a_func() -> i32 {
 const a_const = -2 + 10;
 override a_override: i32 = 2;
 
-${id} override my_id: i32 = 4;
+${attributes.id} override my_id: i32 = 4;
 
 struct B {
-  ${align} ${size} a: i32,
+  ${attributes.align} ${attributes.size} a: i32,
 }
 
-${b_and_g}
-var<uniform> uniform_buffer: B;
+${attributes.binding}
+var<uniform> uniform_buffer_1: B;
+
+${attributes.group}
+var<uniform> uniform_buffer_2: B;
 
 @fragment
-fn main() -> ${loc} vec4<f32> {
+fn main() -> ${attributes.location} vec4<f32> {
   return vec4<f32>(.4, .2, .3, .1);
 }
 
 @compute
-${wg_size}
+${attributes.workgroup_size}
 fn compute_main() {}
 `;
 
