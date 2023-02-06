@@ -180,3 +180,90 @@ g.test('align_required_alignment')
 
     t.expectCompileResult(!fails, code);
   });
+
+g.test('placement')
+  .desc('Tests the locations @align is allowed to appear')
+  .params(u =>
+    u
+      .combine('scope', [
+        'private-var',
+        'storage-var',
+        'struct-member',
+        'fn-decl',
+        'fn-param',
+        'fn-var',
+        'fn-return',
+        'while-stmt',
+        undefined,
+      ])
+      .combine('attribute', [
+        {
+          'private-var': false,
+          'storage-var': false,
+          'struct-member': true,
+          'fn-decl': false,
+          'fn-param': false,
+          'fn-var': false,
+          'fn-return': false,
+          'while-stmt': false,
+        },
+      ])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const scope = t.params.scope;
+
+    const attr = '@align(32)';
+    const code = `
+      ${scope === 'private-var' ? attr : ''}
+      var<private> priv_var : i32;
+
+      ${scope === 'storage-var' ? attr : ''}
+      @group(0) @binding(0)
+      var<storage> stor_var : i32;
+
+      struct A {
+        ${scope === 'struct-member' ? attr : ''}
+        a : i32,
+      }
+
+      @vertex
+      ${scope === 'fn-decl' ? attr : ''}
+      fn f(
+        ${scope === 'fn-param' ? attr : ''}
+        @location(0) b : i32,
+      ) -> ${scope === 'fn-return' ? attr : ''} @builtin(position) vec4f {
+        ${scope === 'fn-var' ? attr : ''}
+        var<function> func_v : i32;
+
+        ${scope === 'while-stmt' ? attr : ''}
+        while false {}
+
+        return vec4(1, 1, 1, 1);
+      }
+    `;
+
+    t.expectCompileResult(scope === undefined || t.params.attribute[scope], code);
+  });
+
+g.test('multi_align')
+  .desc('Tests that align multiple times is an error')
+  .params(u => u.combine('multi', [true, false]))
+  .fn(t => {
+    let code = `struct A {
+      @align(128) `;
+
+    if (t.params.multi === true) {
+      code += '@align(128) ';
+    }
+
+    code += `a : i32,
+      }
+
+      @fragment
+      fn main() -> @location(0) vec4<f32> {
+        return vec4(1., 1., 1., 1.);
+      }`;
+
+    t.expectCompileResult(!t.params.multi, code);
+  });
