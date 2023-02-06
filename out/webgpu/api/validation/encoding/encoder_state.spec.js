@@ -52,8 +52,6 @@ desc(
 `
   Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
-
-  TODO: Update this test according to https://github.com/gpuweb/gpuweb/issues/2464
   `).
 
 params((u) =>
@@ -62,7 +60,9 @@ combine('pass0Type', ['compute', 'render']).
 combine('pass1Type', ['compute', 'render']).
 beginSubcases().
 combine('firstPassEnd', [true, false]).
-combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])).
+combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])
+// Don't end the first pass multiple times (that generates a validation error but doesn't invalidate the encoder)
+.unless((p) => p.firstPassEnd && p.endPasses.includes(0))).
 
 fn((t) => {
   const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
