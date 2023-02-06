@@ -231,6 +231,11 @@ referenced by that bind group is "used" in the usage scope. `
         ) {
           return false;
         }
+
+        // Avoid writable storage buffer bindings aliasing.
+        if (t.usage0 === 'storage' && t.usage1 === 'storage') {
+          return false;
+        }
         return true;
       })
       .combine('hasOverlap', [true, false])
@@ -557,6 +562,11 @@ layout visibilities.`
         }
         // As usage1 is accessible in the draw call, the draw call cannot be before usage1.
         if (t.drawBeforeUsage1 && t.usage1AccessibleInDraw) {
+          return false;
+        }
+
+        // Avoid writable storage buffer bindings aliasing.
+        if (t.usage0 === 'storage' && t.usage1 === 'storage') {
           return false;
         }
         return true;
