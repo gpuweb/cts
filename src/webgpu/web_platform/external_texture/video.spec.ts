@@ -3,7 +3,7 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 
 - videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), color spaces
   (bt.601, bt.709, bt.2020)
-- TODO: enhance with more cases with crop, rotation, etc.
+- TODO: add tests for videos with h.264 cropping metadata.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 `;
@@ -32,7 +32,11 @@ const kVideoInfo = /* prettier-ignore */ makeTable(
   'red-green.mp4'             : [    'REC601',  'video/mp4; codecs=avc1.4d400c'],
   'red-green.bt601.vp9.webm'  : [    'REC601',         'video/webm; codecs=vp9'],
   'red-green.bt709.vp9.webm'  : [    'REC709',         'video/webm; codecs=vp9'],
-  'red-green.bt2020.vp9.webm' : [   'REC2020',         'video/webm; codecs=vp9']
+  'red-green.bt2020.vp9.webm' : [   'REC2020',         'video/webm; codecs=vp9'],
+  'red-green-vertical-flip.mp4'    : [    'REC601',         'video/mp4; codecs=avc1.4d400c'],
+  'red-green-rotate-90.mp4'    : [    'REC601',         'video/mp4; codecs=avc1.4d400c'],
+  'red-green-rotate-180.mp4'   : [    'REC601',         'video/mp4; codecs=avc1.4d400c'],
+  'red-green-rotate-270.mp4'   : [    'REC601',         'video/mp4; codecs=avc1.4d400c'],
 } as const);
 type VideoName = keyof typeof kVideoInfo;
 type VideoInfo = valueof<typeof kVideoInfo>;
@@ -67,6 +71,44 @@ const kVideoExpectations = [
     videoName: 'red-green.bt2020.vp9.webm',
     _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
     _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+  },
+] as const;
+
+const kVideoRotationFlipExpectations = [
+  {
+    videoName: 'red-green.mp4',
+    _topLeftExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _topRightExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _bottomLeftExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _bottomRightExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+  },
+  {
+    videoName: 'red-green-vertical-flip.mp4',
+    _topLeftExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Green
+    _topRightExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Green
+    _bottomLeftExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Red
+    _bottomRightExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Red
+  },
+  {
+    videoName: 'red-green-rotate-90.mp4',
+    _topLeftExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _topRightExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _bottomLeftExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _bottomRightExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+  },
+  {
+    videoName: 'red-green-rotate-180.mp4',
+    _topLeftExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _topRightExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _bottomLeftExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _bottomRightExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+  },
+  {
+    videoName: 'red-green-rotate-270.mp4',
+    _topLeftExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _topRightExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
+    _bottomLeftExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]), // Green
+    _bottomRightExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]), // Red
   },
 ] as const;
 
@@ -228,6 +270,73 @@ for several combinations of video format and color space.
         { coord: { x: 5, y: 5 }, exp: t.params._redExpectation },
         // Bottom right corner should be green.
         { coord: { x: kWidth - 5, y: kHeight - 5 }, exp: t.params._greenExpectation },
+      ]);
+
+      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
+    });
+  });
+
+g.test('importExternalTexture,sampleFlipRotate')
+  .desc(
+    `
+Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and sample from
+it for videos with rotation and flip metadata.
+`
+  )
+  .params(u =>
+    u //
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
+      .combineWithParams(kVideoRotationFlipExpectations)
+  )
+  .fn(async t => {
+    const sourceType = t.params.sourceType;
+    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      const source =
+        sourceType === 'VideoFrame'
+          ? await getVideoFrameFromVideoElement(
+              t,
+              videoElement,
+              getVideoColorSpaceInit(videoInfo.colorSpace)
+            )
+          : videoElement;
+
+      const colorAttachment = t.device.createTexture({
+        format: kFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      const pipeline = createExternalTextureSamplingTestPipeline(t);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorAttachment.createView(),
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.draw(6);
+      passEncoder.end();
+      t.device.queue.submit([commandEncoder.finish()]);
+
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+        // Check top left corner.
+        { coord: { x: 3, y: 3 }, exp: t.params._topLeftExpectation },
+        // Check top right corner.
+        { coord: { x: kWidth - 3, y: 3 }, exp: t.params._topRightExpectation },
+        // Check bottom left corner.
+        { coord: { x: 3, y: kHeight - 3 }, exp: t.params._bottomLeftExpectation },
+        // Check bottom right corner.
+        { coord: { x: kWidth - 3, y: kHeight - 3 }, exp: t.params._bottomRightExpectation },
       ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();
