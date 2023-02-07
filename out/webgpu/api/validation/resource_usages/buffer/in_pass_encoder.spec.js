@@ -188,7 +188,11 @@ desc(
 Test that when one buffer is used in one compute pass encoder, its list of internal usages within
 one usage scope can only be a compatible usage list. According to WebGPU SPEC, within one dispatch,
 for each bind group slot that is used by the current GPUComputePipeline's layout, every subresource
-referenced by that bind group is "used" in the usage scope. `).
+referenced by that bind group is "used" in the usage scope.
+
+For both usage === storage, there is writable buffer binding aliasing so we skip this case and will
+have tests covered (https://github.com/gpuweb/cts/issues/2232)
+`).
 
 params((u) =>
 u.
@@ -229,6 +233,11 @@ filter((t) => {
   t.usage1AccessibleInDispatch && (
   t.visibility1 !== 'compute' || t.usage0 === 'indirect'))
   {
+    return false;
+  }
+
+  // Avoid writable storage buffer bindings aliasing.
+  if (t.usage0 === 'storage' && t.usage1 === 'storage') {
     return false;
   }
   return true;
@@ -526,7 +535,11 @@ desc(
 Test that when one buffer is used in one render pass encoder where there is one draw call, its list
 of internal usages within one usage scope (all the commands in the whole render pass) can only be a
 compatible usage list. The usage scope rules are not related to the buffer offset or the bind group
-layout visibilities.`).
+layout visibilities.
+
+For both usage === storage, there is writable buffer binding aliasing so we skip this case and will
+have tests covered (https://github.com/gpuweb/cts/issues/2232)
+`).
 
 params((u) =>
 u.
@@ -557,6 +570,11 @@ filter((t) => {
   }
   // As usage1 is accessible in the draw call, the draw call cannot be before usage1.
   if (t.drawBeforeUsage1 && t.usage1AccessibleInDraw) {
+    return false;
+  }
+
+  // Avoid writable storage buffer bindings aliasing.
+  if (t.usage0 === 'storage' && t.usage1 === 'storage') {
     return false;
   }
   return true;
