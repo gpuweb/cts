@@ -22,12 +22,15 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
         { vertexConstants: {}, _success: true },
         { vertexConstants: { x: 1, y: 1 }, _success: true },
         { vertexConstants: { x: 1, y: 1, 1: 1, 1000: 1 }, _success: true },
+        { vertexConstants: { 'x\0': 1, y: 1 }, _success: false },
         { vertexConstants: { xxx: 1 }, _success: false },
         { vertexConstants: { 1: 1 }, _success: true },
         { vertexConstants: { 2: 1 }, _success: false },
         { vertexConstants: { z: 1 }, _success: false }, // pipeline constant id is specified for z
         { vertexConstants: { w: 1 }, _success: false }, // pipeline constant id is specified for w
         { vertexConstants: { 1: 1, z: 1 }, _success: false }, // pipeline constant id is specified for z
+        { vertexConstants: { 数: 1 }, _success: true }, // test non-ASCII
+        { vertexConstants: { séquençage: 0 }, _success: true }, // test unicode normalization
       ] as { vertexConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(t => {
@@ -40,10 +43,12 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
           code: `
             override x: f32 = 0.0;
             override y: f32 = 0.0;
+            override 数: f32 = 0.0;
+            override sequencage: f32 = 0.0;
             @id(1) override z: f32 = 0.0;
             @id(1000) override w: f32 = 1.0;
             @vertex fn main() -> @builtin(position) vec4<f32> {
-              return vec4<f32>(x, y, z, w);
+              return vec4<f32>(x, y, z, w + 数 + sequencage);
             }`,
         }),
         entryPoint: 'main',
@@ -74,12 +79,15 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
         { fragmentConstants: {}, _success: true },
         { fragmentConstants: { r: 1, g: 1 }, _success: true },
         { fragmentConstants: { r: 1, g: 1, 1: 1, 1000: 1 }, _success: true },
+        { fragmentConstants: { 'r\0': 1 }, _success: false },
         { fragmentConstants: { xxx: 1 }, _success: false },
         { fragmentConstants: { 1: 1 }, _success: true },
         { fragmentConstants: { 2: 1 }, _success: false },
         { fragmentConstants: { b: 1 }, _success: false }, // pipeline constant id is specified for b
         { fragmentConstants: { a: 1 }, _success: false }, // pipeline constant id is specified for a
         { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for b
+        { fragmentConstants: { 数: 1 }, _success: true }, // test non-ASCII
+        { fragmentConstants: { séquençage: 0 }, _success: true }, // test unicode normalization
       ] as { fragmentConstants: Record<string, GPUPipelineConstantValue>; _success: boolean }[])
   )
   .fn(t => {
@@ -89,11 +97,13 @@ Tests calling createRenderPipeline(Async) validation for overridable constants i
       fragmentShaderCode: `
         override r: f32 = 0.0;
         override g: f32 = 0.0;
+        override 数: f32 = 0.0;
+        override sequencage: f32 = 0.0;
         @id(1) override b: f32 = 0.0;
         @id(1000) override a: f32 = 0.0;
         @fragment fn main()
             -> @location(0) vec4<f32> {
-            return vec4<f32>(r, g, b, a);
+            return vec4<f32>(r, g, b, a + 数 + sequencage);
         }`,
       fragmentConstants,
     });
