@@ -973,6 +973,15 @@ export const kShaderStages: readonly GPUShaderStageFlags[] = [
 ];
 /** List of all possible combinations of GPUShaderStage values. */
 export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
+export const kShaderStageCombinationsWithStage: readonly GPUShaderStageFlags[] = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+];
 
 /**
  * List of all possible texture sampleCount values.
