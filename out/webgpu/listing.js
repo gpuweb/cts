@@ -627,6 +627,33 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "capability_checks",
+      "limits",
+      "maxTextureDimension1D"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxTextureDimension2D"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxTextureDimension3D"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "compute_pipeline"
     ]
   },

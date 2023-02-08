@@ -1032,6 +1032,7 @@ export const kLimitInfo = /* prettier-ignore */ makeTable(
   'maxTextureArrayLayers':                     [           ,       256,                          ],
 
   'maxBindGroups':                             [           ,         4,                          ],
+  'maxBindingsPerBindGroup':                   [           ,       640,                          ],
   'maxDynamicUniformBuffersPerPipelineLayout': [           ,         8,                          ],
   'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,                          ],
   'maxSampledTexturesPerShaderStage':          [           ,        16,                          ],
