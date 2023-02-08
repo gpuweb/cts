@@ -1202,6 +1202,8 @@
 <meta name=variant content='webgpu:shader,execution,shader_io,shared_structs:shared_between_stages:*'>
 <meta name=variant content='webgpu:shader,execution,shader_io,shared_structs:shared_with_non_entry_point_function:*'>
 <meta name=variant content='webgpu:shader,execution,zero_init:compute,zero_init:*'>
+<meta name=variant content='webgpu:shader,validation,const_assert,const_assert:constant_expression:*'>
+<meta name=variant content='webgpu:shader,validation,const_assert,const_assert:evaluation_stage:*'>
 <meta name=variant content='webgpu:shader,validation,parse,align:align_parsing:*'>
 <meta name=variant content='webgpu:shader,validation,parse,align:align_required_alignment:*'>
 <meta name=variant content='webgpu:shader,validation,parse,align:placement:*'>
@@ -1214,6 +1216,7 @@
 <meta name=variant content='webgpu:shader,validation,parse,comments:line_comment_eof:*'>
 <meta name=variant content='webgpu:shader,validation,parse,comments:line_comment_terminators:*'>
 <meta name=variant content='webgpu:shader,validation,parse,comments:unterminated_block_comment:*'>
+<meta name=variant content='webgpu:shader,validation,parse,const_assert:parse:*'>
 <meta name=variant content='webgpu:shader,validation,parse,identifiers:identifiers:*'>
 <meta name=variant content='webgpu:shader,validation,parse,identifiers:non_normalized:*'>
 <meta name=variant content='webgpu:shader,validation,parse,literal:bools:*'>
@@ -1247,7 +1250,7 @@
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:after_let_decl:*'>
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:after_discard:*'>
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:after_assignment:*'>
-<meta name=variant content='webgpu:shader,validation,parse,semicolon:after_fn_static_assert:*'>
+<meta name=variant content='webgpu:shader,validation,parse,semicolon:after_fn_const_assert:*'>
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:function_body_single:*'>
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:function_body_multiple:*'>
 <meta name=variant content='webgpu:shader,validation,parse,semicolon:compound_statement_single:*'>
@@ -1273,7 +1276,6 @@
 <meta name=variant content='webgpu:shader,validation,parse,source:valid_source:*'>
 <meta name=variant content='webgpu:shader,validation,parse,source:empty:*'>
 <meta name=variant content='webgpu:shader,validation,parse,source:invalid_source:*'>
-<meta name=variant content='webgpu:shader,validation,parse,static_assert:parse:*'>
 <meta name=variant content='webgpu:shader,validation,parse,var_and_let:initializer_type:*'>
 <meta name=variant content='webgpu:shader,validation,resource_interface,bindings:single_entry_point:*'>
 <meta name=variant content='webgpu:shader,validation,resource_interface,bindings:different_entry_points:*'>
@@ -1301,8 +1303,6 @@
 <meta name=variant content='webgpu:shader,validation,shader_io,locations:type:*'>
 <meta name=variant content='webgpu:shader,validation,shader_io,locations:nesting:*'>
 <meta name=variant content='webgpu:shader,validation,shader_io,locations:duplicates:*'>
-<meta name=variant content='webgpu:shader,validation,static_assert,static_assert:constant_expression:*'>
-<meta name=variant content='webgpu:shader,validation,static_assert,static_assert:evaluation_stage:*'>
 <meta name=variant content='webgpu:util,texture,texel_data:unorm_texel_data_in_shader:*'>
 <meta name=variant content='webgpu:util,texture,texel_data:snorm_texel_data_in_shader:*'>
 <meta name=variant content='webgpu:util,texture,texel_data:uint_texel_data_in_shader:*'>

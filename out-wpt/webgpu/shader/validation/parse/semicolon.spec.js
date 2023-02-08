@@ -119,11 +119,11 @@ g.test('after_assignment')
     t.expectCompileResult(/* pass */ false, `fn f() { var v = 1; v = 2 }`);
   });
 
-g.test('after_fn_static_assert')
+g.test('after_fn_const_assert')
   .desc(`Test that a semicolon must be placed after an function-scope static assert.`)
   .fn(t => {
-    t.expectCompileResult(/* pass */ true, `fn f() { static_assert(true); }`);
-    t.expectCompileResult(/* pass */ false, `fn f() { static_assert(true) }`);
+    t.expectCompileResult(/* pass */ true, `fn f() { const_assert(true); }`);
+    t.expectCompileResult(/* pass */ false, `fn f() { const_assert(true) }`);
   });
 
 g.test('function_body_single')

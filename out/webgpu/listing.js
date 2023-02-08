@@ -2595,6 +2595,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "const_assert",
+      "const_assert"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "parse",
       "align"
     ]
@@ -2636,6 +2644,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "const_assert"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "identifiers"
     ]
   },
@@ -2669,14 +2685,6 @@ export const listing = [
       "validation",
       "parse",
       "source"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
-      "static_assert"
     ]
   },
   {
@@ -2733,14 +2741,6 @@ export const listing = [
       "validation",
       "shader_io",
       "locations"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "static_assert",
-      "static_assert"
     ]
   },
   {

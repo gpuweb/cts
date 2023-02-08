@@ -84,6 +84,7 @@ const kInvalidIdentifiers = new Set([
 'break',
 'case',
 'const',
+'const_assert',
 'continue',
 'continuing',
 'default',

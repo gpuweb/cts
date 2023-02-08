@@ -1,20 +1,19 @@
-/**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ export const description = `Validation tests for static_assert`;
+export const description = `Validation tests for const_assert`;
+
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
 /**
- * Builds a static_assert() statement, which checks that @p expr is equal to @p expect_true.
+ * Builds a const_assert() statement, which checks that @p expr is equal to @p expect_true.
  * @param expect_true true if @p expr should evaluate to true
  * @param expr the constant expression
  * @param scope module-scope or function-scope constant expression
  * @returns the WGSL code
  */
-function buildStaticAssert(expect_true, expr, scope) {
-  const stmt = expect_true ? `static_assert ${expr};` : `static_assert !(${expr});`;
+function buildStaticAssert(expect_true: boolean, expr: string, scope: 'module' | 'function') {
+  const stmt = expect_true ? `const_assert ${expr};` : `const_assert !(${expr});`;
   return scope === 'module' ? stmt : `fn f() { ${stmt} }`;
 }
 
@@ -29,11 +28,11 @@ const kConditionCases = {
 };
 
 g.test('constant_expression')
-  .desc(`Test that static_assert validates the condition expression.`)
+  .desc(`Test that const_assert validates the condition expression.`)
   .params(u =>
     u
-      .combine('case', Object.keys(kConditionCases))
-      .combine('scope', ['module', 'function'])
+      .combine('case', Object.keys(kConditionCases) as Array<keyof typeof kConditionCases>)
+      .combine('scope', ['module', 'function'] as const)
       .beginSubcases()
   )
   .fn(t => {
@@ -48,11 +47,11 @@ const three = 2;
   });
 
 g.test('evaluation_stage')
-  .desc(`Test that the static_assert expression must be a constant expression.`)
+  .desc(`Test that the const_assert expression must be a constant expression.`)
   .params(u =>
     u
-      .combine('scope', ['module', 'function'])
-      .combine('stage', ['constant', 'override', 'runtime'])
+      .combine('scope', ['module', 'function'] as const)
+      .combine('stage', ['constant', 'override', 'runtime'] as const)
       .beginSubcases()
   )
   .fn(t => {
