@@ -629,6 +629,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxBufferSize"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxTextureDimension1D"
     ]
   },
