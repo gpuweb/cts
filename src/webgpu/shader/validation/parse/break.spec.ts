@@ -1,6 +1,7 @@
 export const description = `Validation tests for break`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -70,7 +71,7 @@ const kTests = {
 
 g.test('placement')
   .desc('Test that break placement is validated correctly')
-  .params(u => u.combine('stmt', Object.keys(kTests) as Array<keyof typeof kTests>))
+  .params(u => u.combine('stmt', keysOf(kTests)))
   .fn(t => {
     const code = `
 @vertex
