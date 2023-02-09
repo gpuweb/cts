@@ -78,7 +78,6 @@ const kVideoExpectations = [
     _blueExpectation: new Uint8Array([0, 0, 255, 255]),
     _yellowExpectation: new Uint8Array([255, 255, 0, 255]),
   },
-  // TODO: bt2020 support.
 ] as const;
 
 export const g = makeTestGroup(TextureTestMixin(GPUTest));
@@ -266,7 +265,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'red-green.webmvp8.webm');
+    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'four-colors-vp9-bt601.webm');
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -424,9 +423,9 @@ compute shader, for several combinations of video format and color space.
         // Top-left should be yellow.
         { coord: { x: 0, y: 0 }, exp: t.params._yellowExpectation },
         // Top-right should be red.
-        { coord: { x: 1, y: 0 }, exp: t.params._redExpectation },
+        { coord: { x: 0, y: 1 }, exp: t.params._redExpectation },
         // Bottom-left should be blue.
-        { coord: { x: 0, y: 1 }, exp: t.params._blueExpectation },
+        { coord: { x: 1, y: 0 }, exp: t.params._blueExpectation },
         // Bottom-right should be green.
         { coord: { x: 1, y: 1 }, exp: t.params._greenExpectation },
       ]);
