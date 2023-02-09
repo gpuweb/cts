@@ -1,38 +1,76 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `Validation tests for @builtin`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValidBuiltin = new Set([
-`@builtin(position)`,
-`@builtin(position,)`,
-`@ \n builtin(position)`,
-`@/^ comment ^/builtin/^ comment ^/\n\n(\t/^comment^/position/^comment^/)`]);
-
-const kInvalidBuiltin = new Set([
-`@abuiltin(position)`,
-`@builtin`,
-`@builtin()`,
-`@builtin position`,
-`@builtin position)`,
-`@builtin(position`,
-`@builtin(position, frag_depth)`,
-`@builtin(identifier)`,
-`@builtin(2)`]);
-
+const kTests = {
+  pos: {
+    src: `@builtin(position)`,
+    pass: true
+  },
+  trailing_comma: {
+    src: `@builtin(position,)`,
+    pass: true
+  },
+  newline_in_attr: {
+    src: `@ \n builtin(position)`,
+    pass: true
+  },
+  whitespace_in_attr: {
+    src: `@/* comment */builtin/* comment */\n\n(\t/*comment*/position/*comment*/)`,
+    pass: true
+  },
+  invalid_name: {
+    src: `@abuiltin(position)`,
+    pass: false
+  },
+  no_params: {
+    src: `@builtin`,
+    pass: false
+  },
+  missing_param: {
+    src: `@builtin()`,
+    pass: false
+  },
+  missing_parens: {
+    src: `@builtin position`,
+    pass: false
+  },
+  missing_lparen: {
+    src: `@builtin position)`,
+    pass: false
+  },
+  missing_rparen: {
+    src: `@builtin(position`,
+    pass: false
+  },
+  multiple_params: {
+    src: `@builtin(position, frag_depth)`,
+    pass: false
+  },
+  ident_param: {
+    src: `@builtin(identifier)`,
+    pass: false
+  },
+  number_param: {
+    src: `@builtin(2)`,
+    pass: false
+  }
+};
 
 g.test('parse').
 desc(`Test that @builtin is parsed correctly.`).
-params((u) => u.combine('builtin', new Set([...kValidBuiltin, ...kInvalidBuiltin]))).
+params((u) => u.combine('builtin', keysOf(kTests))).
 fn((t) => {
-  const v = t.params.builtin.replace(/\^/g, '*');
+  const src = kTests[t.params.builtin].src;
   const code = `
 @vertex
-fn main() -> ${v} vec4<f32> {
+fn main() -> ${src} vec4<f32> {
   return vec4<f32>(.4, .2, .3, .1);
 }`;
-  t.expectCompileResult(kValidBuiltin.has(t.params.builtin), code);
+  t.expectCompileResult(kTests[t.params.builtin].pass, code);
 });
 //# sourceMappingURL=builtin.spec.js.map
