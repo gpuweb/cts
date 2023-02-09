@@ -638,6 +638,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxTextureArrayLayers"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxTextureDimension1D"
     ]
   },
