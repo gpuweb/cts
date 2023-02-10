@@ -2,6 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `Validation tests for const_assert`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -32,7 +33,7 @@ g.test('constant_expression')
   .desc(`Test that const_assert validates the condition expression.`)
   .params(u =>
     u
-      .combine('case', Object.keys(kConditionCases))
+      .combine('case', keysOf(kConditionCases))
       .combine('scope', ['module', 'function'])
       .beginSubcases()
   )

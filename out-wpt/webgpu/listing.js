@@ -2678,6 +2678,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "const"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "const_assert"
     ]
   },

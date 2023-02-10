@@ -2,6 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `Validation tests for attributes`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -36,9 +37,7 @@ const kAllowedUsages = {
 g.test('expressions')
   .desc(`Tests attributes which allow expressions`)
   .params(u =>
-    u
-      .combine('value', Object.keys(kPossibleValues))
-      .combine('attribute', Object.keys(kAllowedUsages))
+    u.combine('value', keysOf(kPossibleValues)).combine('attribute', keysOf(kAllowedUsages))
   )
   .fn(t => {
     const attributes = {
