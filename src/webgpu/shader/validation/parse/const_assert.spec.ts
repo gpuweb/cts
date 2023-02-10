@@ -1,6 +1,7 @@
 export const description = `Parser validation tests for const_assert`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -30,7 +31,7 @@ true;`,
 
 g.test('parse')
   .desc(`Tests that the const_assert statement parses correctly.`)
-  .params(u => u.combine('case', Object.keys(kCases) as Array<keyof typeof kCases>).beginSubcases())
+  .params(u => u.combine('case', keysOf(kCases)))
   .fn(t => {
     const c = kCases[t.params.case];
     t.expectCompileResult(c.pass, c.code);
