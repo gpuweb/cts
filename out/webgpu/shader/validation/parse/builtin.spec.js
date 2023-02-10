@@ -73,4 +73,73 @@ fn main() -> ${src} vec4<f32> {
 }`;
   t.expectCompileResult(kTests[t.params.builtin].pass, code);
 });
+
+g.test('placement').
+desc('Tests the locations @builtin is allowed to appear').
+params((u) =>
+u.
+combine('scope', [
+// The fn-param and fn-ret are part of the shader_io/builtins tests
+'private-var',
+'storage-var',
+'struct-member',
+'non-ep-param',
+'non-ep-ret',
+'fn-decl',
+'fn-var',
+'while-stmt',
+undefined]).
+
+combine('attribute', [
+{
+  'private-var': false,
+  'storage-var': false,
+  'struct-member': true,
+  'non-ep-param': false,
+  'non-ep-ret': false,
+  'fn-decl': false,
+  'fn-var': false,
+  'fn-return': false,
+  'while-stmt': false
+}]).
+
+beginSubcases()).
+
+fn((t) => {
+  const scope = t.params.scope;
+
+  const attr = '@builtin(vertex_index)';
+  const code = `
+      ${scope === 'private-var' ? attr : ''}
+      var<private> priv_var : u32;
+
+      ${scope === 'storage-var' ? attr : ''}
+      @group(0) @binding(0)
+      var<storage> stor_var : u32;
+
+      struct A {
+        ${scope === 'struct-member' ? attr : ''}
+        a : u32,
+      }
+
+      fn v(${scope === 'non-ep-param' ? attr : ''} i : u32) ->
+            ${scope === 'non-ep-ret' ? attr : ''} u32 { return 1; }
+
+      @vertex
+      ${scope === 'fn-decl' ? attr : ''}
+      fn f(
+        @location(0) b : u32,
+      ) -> @builtin(position) vec4f {
+        ${scope === 'fn-var' ? attr : ''}
+        var<function> func_v : u32;
+
+        ${scope === 'while-stmt' ? attr : ''}
+        while false {}
+
+        return vec4(1, 1, 1, 1);
+      }
+    `;
+
+  t.expectCompileResult(scope === undefined || t.params.attribute[scope], code);
+});
 //# sourceMappingURL=builtin.spec.js.map
