@@ -177,15 +177,20 @@ fn((t) => {
   }, endCount === 0);
 });
 
-g.test('pass_end_twice').
-desc('Test that ending a {compute,render} pass twice generates a validation error.').
+g.test('pass_end_twice,basic').
+desc(
+'Test that ending a {compute,render} pass twice generates a validation error. The parent encoder (command encoder) can be either locked or open.').
+
 paramsSubcasesOnly((u) =>
 u //
-.combine('passType', ['compute', 'render']).
-combine('endTwice', [false, true])).
+.combine('passType', ['compute', 'render'])
+// Simply end twice, the parent encoder is open at that time. If the second pass end is in the middle of another pass, the parent encoder is locked. It should generate a validation error in either situation.
+.combine('endTwice', [false, true]).
+combine('secondEndInAnotherPass', [false, 'compute', 'render']).
+filter((p) => p.endTwice || !p.secondEndInAnotherPass)).
 
 fn((t) => {
-  const { passType, endTwice } = t.params;
+  const { passType, endTwice, secondEndInAnotherPass } = t.params;
 
   const view = t.createAttachmentTextureView();
   const encoder = t.device.createCommandEncoder();
@@ -194,12 +199,53 @@ fn((t) => {
   passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
 
   pass.end();
+
+  if (secondEndInAnotherPass) {
+    const pass1 =
+    secondEndInAnotherPass === 'compute' ?
+    encoder.beginComputePass() :
+    t.beginRenderPass(encoder, view);
+
+    t.expectValidationError(() => {
+      pass.end();
+    });
+
+    pass1.end();
+  } else {
+    if (endTwice) {
+      t.expectValidationError(() => {
+        pass.end();
+      });
+    }
+  }
+
+  encoder.finish();
+});
+
+g.test('pass_end_twice,render_pass_invalid').
+desc(
+'Test that ending a render pass twice generates a validation error even if the pass is invalid.').
+
+paramsSubcasesOnly((u) => u.combine('endTwice', [false, true])).
+fn((t) => {
+  const { endTwice } = t.params;
+
+  const encoder = t.device.createCommandEncoder();
+  // Pass encoder creation will fail because both color and depth/stencil attachments are empty.
+  const pass = encoder.beginRenderPass({
+    colorAttachments: []
+  });
+
+  pass.end();
+
   if (endTwice) {
     t.expectValidationError(() => {
       pass.end();
     });
   }
 
-  encoder.finish();
+  t.expectValidationError(() => {
+    encoder.finish();
+  });
 });
 //# sourceMappingURL=encoder_state.spec.js.map
