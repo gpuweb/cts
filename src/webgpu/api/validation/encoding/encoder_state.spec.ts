@@ -186,7 +186,7 @@ g.test('pass_end_twice,basic')
       .combine('passType', ['compute', 'render'])
       // Simply end twice, the parent encoder is open at that time. If the second pass end is in the middle of another pass, the parent encoder is locked. It should generate a validation error in either situation.
       .combine('endTwice', [false, true])
-      .combine('secondEndInAnotherPass', [false, true])
+      .combine('secondEndInAnotherPass', [false, 'compute', 'render'])
       .filter(p => p.endTwice || !p.secondEndInAnotherPass)
   )
   .fn(t => {
@@ -202,7 +202,9 @@ g.test('pass_end_twice,basic')
 
     if (secondEndInAnotherPass) {
       const pass1 =
-        passType === 'compute' ? encoder.beginComputePass() : t.beginRenderPass(encoder, view);
+        secondEndInAnotherPass === 'compute'
+          ? encoder.beginComputePass()
+          : t.beginRenderPass(encoder, view);
 
       t.expectValidationError(() => {
         pass.end();
