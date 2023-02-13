@@ -637,6 +637,16 @@ interface MatrixToMatrixOp {
   impl: MatrixToMatrix;
 }
 
+/**
+ * A function that converts a pair of matrices to a matrix of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface MatrixPairToMatrix {
+  (x: Matrix<number>, y: Matrix<number>): F32Matrix;
+}
+
 /** Converts a point to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
@@ -1122,14 +1132,14 @@ function runVectorPairToVectorOp(x: F32Vector, y: F32Vector, op: VectorPairToVec
  * @param op scalar operation to be run component-wise
  * @returns a vector of intervals with the outputs of op.impl
  */
-function runBinaryToIntervalOpComponentWise(
+function runBinaryToIntervalOpVectorComponentWise(
   x: F32Vector,
   y: F32Vector,
   op: BinaryToIntervalOp
 ): F32Vector {
   assert(
     x.length === y.length,
-    `runBinaryToIntervalOpComponentWise requires vectors of the same length`
+    `runBinaryToIntervalOpVectorComponentWise requires vectors of the same length`
   );
   return toF32Vector(
     x.map((i, idx) => {
@@ -1170,6 +1180,43 @@ function runMatrixToMatrixOp(m: F32Matrix, op: MatrixToMatrixOp): F32Matrix {
   return (result as F32Interval[][]).every(c => c.every(r => r.isFinite()))
     ? result
     : kAnyF32Matrix[result_cols][result_rows];
+}
+
+/**
+ * Calculate the Matrix of acceptance intervals by running a scalar operation
+ * component-wise over a pair of matrices.
+ *
+ * An example of this is performing matrix addition.
+ *
+ * @param x first input domain intervals matrix
+ * @param y second input domain intervals matrix
+ * @param op scalar operation to be run component-wise
+ * @returns a matrix of intervals with the outputs of op.impl
+ */
+function runBinaryToIntervalOpMatrixComponentWise(
+  x: F32Matrix,
+  y: F32Matrix,
+  op: BinaryToIntervalOp
+): F32Matrix {
+  assert(
+    x.length === y.length && x[0].length === y[0].length,
+    `runBinaryToIntervalOpMatrixComponentWise requires matrices of the same dimensions`
+  );
+
+  const cols = x.length;
+  const rows = x[0].length;
+  const flat_x = flatten2DArray(x);
+  const flat_y = flatten2DArray(y);
+
+  return toF32Matrix(
+    unflatten2DArray(
+      flat_x.map((i, idx) => {
+        return runBinaryToIntervalOp(i, flat_y[idx], op);
+      }),
+      cols,
+      rows
+    )
+  );
 }
 
 /** Defines a PointToIntervalOp for an interval of the correctly rounded values around the point */
@@ -1308,6 +1355,16 @@ const AdditionIntervalOp: BinaryToIntervalOp = {
 /** Calculate an acceptance interval of x + y */
 export function additionInterval(x: number | F32Interval, y: number | F32Interval): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), AdditionIntervalOp);
+}
+
+/** Calculate an acceptance interval of x + y, when x and y are matrices */
+export function additionMatrixPairInterval(x: Matrix<number>, y: Matrix<number>): F32Matrix {
+  // Matrix-Matrix addition
+  return runBinaryToIntervalOpMatrixComponentWise(
+    toF32Matrix(x),
+    toF32Matrix(y),
+    AdditionIntervalOp
+  );
 }
 
 const AsinIntervalOp: PointToIntervalOp = {
@@ -1552,7 +1609,11 @@ const DistanceIntervalScalarOp: BinaryToIntervalOp = {
 const DistanceIntervalVectorOp: VectorPairToIntervalOp = {
   impl: (x: number[], y: number[]): F32Interval => {
     return lengthInterval(
-      runBinaryToIntervalOpComponentWise(toF32Vector(x), toF32Vector(y), SubtractionIntervalOp)
+      runBinaryToIntervalOpVectorComponentWise(
+        toF32Vector(x),
+        toF32Vector(y),
+        SubtractionIntervalOp
+      )
     );
   },
 };
@@ -1603,7 +1664,7 @@ export function divisionInterval(x: number | F32Interval, y: number | F32Interva
 const DotIntervalOp: VectorPairToIntervalOp = {
   impl: (x: number[], y: number[]): F32Interval => {
     // dot(x, y) = sum of x[i] * y[i]
-    const multiplications = runBinaryToIntervalOpComponentWise(
+    const multiplications = runBinaryToIntervalOpVectorComponentWise(
       toF32Vector(x),
       toF32Vector(y),
       MultiplicationIntervalOp
@@ -2021,7 +2082,7 @@ const ReflectIntervalOp: VectorPairToVectorOp = {
     // y = normal of reflecting surface
     const t = multiplicationInterval(2.0, dotInterval(x, y));
     const rhs = multiplyVectorByScalar(y, t);
-    return runBinaryToIntervalOpComponentWise(toF32Vector(x), rhs, SubtractionIntervalOp);
+    return runBinaryToIntervalOpVectorComponentWise(toF32Vector(x), rhs, SubtractionIntervalOp);
   },
 };
 
@@ -2071,7 +2132,7 @@ export function refractInterval(i: number[], s: number[], r: number): F32Vector 
   const k_sqrt = sqrtInterval(k);
   const t = additionInterval(dot_times_r, k_sqrt); // t = r * dot(i, s) + sqrt(k)
 
-  const result = runBinaryToIntervalOpComponentWise(
+  const result = runBinaryToIntervalOpVectorComponentWise(
     multiplyVectorByScalar(i, r),
     multiplyVectorByScalar(s, t),
     SubtractionIntervalOp
