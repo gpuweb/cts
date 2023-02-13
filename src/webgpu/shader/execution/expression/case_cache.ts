@@ -6,6 +6,7 @@ import {
   serializeValue,
   SerializedValue,
   deserializeValue,
+  Matrix,
 } from '../../../util/conversion.js';
 import {
   deserializeF32Interval,
@@ -13,6 +14,7 @@ import {
   SerializedF32Interval,
   serializeF32Interval,
 } from '../../../util/f32_interval.js';
+import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
 import { Case, CaseList, Expectation } from './expression.js';
 
@@ -27,7 +29,7 @@ type SerializedExpectationValue = {
 };
 
 /**
- * SerializedExpectationValue holds the serialized form of an Expectation when
+ * SerializedExpectationInterval holds the serialized form of an Expectation when
  * the Expectation is an Interval
  * This form can be safely encoded to JSON.
  */
@@ -37,12 +39,25 @@ type SerializedExpectationInterval = {
 };
 
 /**
- * SerializedExpectationValue holds the serialized form of an Expectation when
+ * SerializedExpectationIntervals holds the serialized form of an Expectation when
  * the Expectation is a list of Intervals
  * This form can be safely encoded to JSON.
  */
 type SerializedExpectationIntervals = {
   kind: 'intervals';
+  value: SerializedF32Interval[];
+};
+
+/**
+ * SerializedExpectation2DIntervalArray holds the serialized form of an
+ * Expectation when the Expectation is a 2d array of Intervals. The array is
+ * flattened to a 1D array for storage.
+ * This form can be safely encoded to JSON.
+ */
+type SerializedExpectation2DIntervalArray = {
+  kind: '2d-interval-array';
+  cols: number;
+  rows: number;
   value: SerializedF32Interval[];
 };
 
@@ -64,18 +79,32 @@ export type SerializedExpectation =
   | SerializedExpectationValue
   | SerializedExpectationInterval
   | SerializedExpectationIntervals
+  | SerializedExpectation2DIntervalArray
   | SerializedExpectationComparator;
 
 /** serializeExpectation() converts an Expectation to a SerializedExpectation */
 export function serializeExpectation(e: Expectation): SerializedExpectation {
-  if (e instanceof Scalar || e instanceof Vector) {
+  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     return { kind: 'value', value: serializeValue(e) };
   }
   if (e instanceof F32Interval) {
     return { kind: 'interval', value: serializeF32Interval(e) };
   }
   if (e instanceof Array) {
-    return { kind: 'intervals', value: e.map(i => serializeF32Interval(i)) };
+    if (e[0] instanceof Array) {
+      e = e as F32Interval[][];
+      const cols = e.length;
+      const rows = e[0].length;
+      return {
+        kind: '2d-interval-array',
+        cols,
+        rows,
+        value: flatten2DArray(e).map(serializeF32Interval),
+      };
+    } else {
+      e = e as F32Interval[];
+      return { kind: 'intervals', value: e.map(serializeF32Interval) };
+    }
   }
   if (e instanceof Function) {
     const comp = (e as unknown) as SerializedComparator;
@@ -102,7 +131,9 @@ export function deserializeExpectation(data: SerializedExpectation): Expectation
     case 'interval':
       return deserializeF32Interval(data.value);
     case 'intervals':
-      return data.value.map(i => deserializeF32Interval(i));
+      return data.value.map(deserializeF32Interval);
+    case '2d-interval-array':
+      return unflatten2DArray(data.value.map(deserializeF32Interval), data.cols, data.rows);
     case 'comparator':
       return deserializeComparator(data.value);
   }
