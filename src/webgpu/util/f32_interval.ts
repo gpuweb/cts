@@ -229,7 +229,12 @@ function multiplyVectorByScalar(v: number[], c: number | F32Interval): F32Vector
   return toF32Vector(v.map(x => multiplicationInterval(x, c)));
 }
 
-/** Short hand for an Array or Arrays that contains a column-major matrix */
+/**
+ * Short hand for an Array of Arrays that contains a column-major matrix
+ *
+ * This isn't exported outside of this file to avoid colliding with the Matrix
+ * container for going in/out of a shader that the test runner uses.
+ */
 type Matrix<T> = T[][];
 
 /** Representation of a matCxR of floating point intervals as an array of arrays of F32Intervals. This maps onto the WGSL concept of matrix. Internally  */
