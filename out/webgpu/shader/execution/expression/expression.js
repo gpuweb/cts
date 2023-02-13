@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { globalTestConfig } from '../../../../common/framework/test_config.js';import { assert } from '../../../../common/util/util.js';
+**/import { globalTestConfig } from '../../../../common/framework/test_config.js';import { assert, unreachable } from '../../../../common/util/util.js';
 import { compare, anyOf } from '../../../util/compare.js';
 import {
 ScalarType,
@@ -14,7 +14,8 @@ VectorType,
 f32,
 u32,
 i32,
-Matrix } from
+Matrix,
+MatrixType } from
 
 '../../../util/conversion.js';
 import {
@@ -27,9 +28,11 @@ F32Interval } from
 
 
 
+
 '../../../util/f32_interval.js';
 import {
 cartesianProduct,
+map2DArray,
 
 quantizeToF32,
 quantizeToI32,
@@ -91,6 +94,55 @@ export const allInputSources = ['const', 'uniform', 'storage_r', 'storage_rw'];
 
 
 
+// Helper for returning the stride for a given Type
+function valueStride(ty) {
+  if (ty instanceof MatrixType) {
+    switch (ty.cols) {
+      case 2:
+        switch (ty.rows) {
+          case 2:
+            return 16;
+          case 3:
+            return 32;
+          case 4:
+            return 32;}
+
+        break;
+      case 3:
+        switch (ty.rows) {
+          case 2:
+            return 32;
+          case 3:
+            return 64;
+          case 4:
+            return 64;}
+
+        break;
+      case 4:
+        switch (ty.rows) {
+          case 2:
+            return 32;
+          case 3:
+            return 64;
+          case 4:
+            return 64;}
+
+        break;}
+
+    unreachable(
+    `Attempted to get stride length for a matrix with dimensions (${ty.cols}x${ty.rows}), which isn't currently handled`);
+
+  }
+
+  // Handles scalars and vectors
+  return 16;
+}
+
+// Helper for summing up all of the stride values for an array of Types
+function valueStrides(tys) {
+  return tys.map(valueStride).reduce((sum, c) => sum + c);
+}
+
 // Helper for returning the WGSL storage type for the given Type.
 function storageType(ty) {
   if (ty instanceof ScalarType) {
@@ -133,9 +185,6 @@ function toStorage(ty, expr) {
   }
   return expr;
 }
-
-// Currently all values are packed into buffers of 16 byte strides
-const kValueStride = 16;
 
 // ExpressionBuilder returns the WGSL used to test an expression.
 
@@ -204,13 +253,13 @@ cases)
         // Some drivers are slow to build pipelines with large uniform buffers.
         // 2k appears to be a sweet-spot when benchmarking.
         return Math.floor(
-        Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) / (
-        parameterTypes.length * kValueStride));
+        Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
+        valueStrides(parameterTypes));
 
       case 'storage_r':
       case 'storage_rw':
         return Math.floor(
-        t.device.limits.maxStorageBufferBindingSize / (parameterTypes.length * kValueStride));}
+        t.device.limits.maxStorageBufferBindingSize / valueStrides(parameterTypes));}
 
 
   }();
@@ -273,7 +322,7 @@ inputSource,
 pipelineCache)
 {
   // Construct a buffer to hold the results of the expression tests
-  const outputBufferSize = cases.length * kValueStride;
+  const outputBufferSize = cases.length * valueStride(returnType);
   const outputBuffer = t.device.createBuffer({
     size: outputBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
@@ -308,7 +357,7 @@ pipelineCache)
       // Read the outputs from the output buffer
       const outputs = new Array(cases.length);
       for (let i = 0; i < cases.length; i++) {
-        outputs[i] = returnType.read(outputData, i * kValueStride);
+        outputs[i] = returnType.read(outputData, i * valueStride(returnType));
       }
 
       // The list of expectation failures
@@ -378,10 +427,11 @@ outputBuffer,
 pipelineCache)
 {
   // wgsl declaration of output buffer and binding
+  const wgslValueStride = valueStride(returnType);
   const wgslStorageType = storageType(returnType);
   const wgslOutputs = `
 struct Output {
-  @size(${kValueStride}) value : ${wgslStorageType}
+  @size(${wgslValueStride}) value : ${wgslStorageType}
 };
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
@@ -463,7 +513,7 @@ fn main() {
         const source = `
 struct Input {
 ${parameterTypes.
-        map((ty, i) => `  @size(${kValueStride}) param${i} : ${storageType(ty)},`).
+        map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
         join('\n')}
 };
 
@@ -481,18 +531,18 @@ fn main() {
 `;
 
         // size in bytes of the input buffer
-        const inputSize = cases.length * parameterTypes.length * kValueStride;
+        const inputSize = cases.length * valueStrides(parameterTypes);
 
         // Holds all the parameter values for all cases
         const inputData = new Uint8Array(inputSize);
 
         // Pack all the input parameter values into the inputData buffer
         {
-          const caseStride = kValueStride * parameterTypes.length;
+          const caseStride = valueStrides(parameterTypes);
           for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
             const caseBase = caseIdx * caseStride;
             for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-              const offset = caseBase + paramIdx * kValueStride;
+              const offset = caseBase + paramIdx * valueStride(parameterTypes[paramIdx]);
               const params = cases[caseIdx].input;
               if (params instanceof Array) {
                 params[paramIdx].copyTo(inputData, offset);
@@ -962,6 +1012,53 @@ filter,
 {
   return cartesianProduct(param0s, param1s).reduce((cases, e) => {
     const c = makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
+}
+
+/**
+ * @returns a Case for the param and an array of interval generators provided
+ * @param param the param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
+ */
+function makeMatrixToMatrixCase(
+param,
+filter,
+...ops)
+{
+  param = map2DArray(param, quantizeToF32);
+  const param_f32 = map2DArray(param, f32);
+
+  const results = ops.map((o) => o(param));
+  if (filter === 'f32-only' && results.some((m) => m.some((c) => c.some((r) => !r.isFinite())))) {
+    return undefined;
+  }
+
+  return {
+    input: [new Matrix(param_f32)],
+    expected: anyOf(...results)
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
+ */
+export function generateMatrixToMatrixCases(
+params,
+filter,
+...ops)
+{
+  return params.reduce((cases, e) => {
+    const c = makeMatrixToMatrixCase(e, filter, ...ops);
     if (c !== undefined) {
       cases.push(c);
     }

@@ -2,23 +2,43 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { dataCache } from '../../../../common/framework/data_cache.js';
 import { deserializeComparator } from '../../../util/compare.js';
-import { Scalar, Vector, serializeValue, deserializeValue } from '../../../util/conversion.js';
+import {
+  Scalar,
+  Vector,
+  serializeValue,
+  deserializeValue,
+  Matrix,
+} from '../../../util/conversion.js';
 import {
   deserializeF32Interval,
   F32Interval,
   serializeF32Interval,
 } from '../../../util/f32_interval.js';
+import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
 /** serializeExpectation() converts an Expectation to a SerializedExpectation */
 export function serializeExpectation(e) {
-  if (e instanceof Scalar || e instanceof Vector) {
+  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     return { kind: 'value', value: serializeValue(e) };
   }
   if (e instanceof F32Interval) {
     return { kind: 'interval', value: serializeF32Interval(e) };
   }
   if (e instanceof Array) {
-    return { kind: 'intervals', value: e.map(i => serializeF32Interval(i)) };
+    if (e[0] instanceof Array) {
+      e = e;
+      const cols = e.length;
+      const rows = e[0].length;
+      return {
+        kind: '2d-interval-array',
+        cols,
+        rows,
+        value: flatten2DArray(e).map(serializeF32Interval),
+      };
+    } else {
+      e = e;
+      return { kind: 'intervals', value: e.map(serializeF32Interval) };
+    }
   }
   if (e instanceof Function) {
     const comp = e;
@@ -45,7 +65,9 @@ export function deserializeExpectation(data) {
     case 'interval':
       return deserializeF32Interval(data.value);
     case 'intervals':
-      return data.value.map(i => deserializeF32Interval(i));
+      return data.value.map(deserializeF32Interval);
+    case '2d-interval-array':
+      return unflatten2DArray(data.value.map(deserializeF32Interval), data.cols, data.rows);
     case 'comparator':
       return deserializeComparator(data.value);
   }

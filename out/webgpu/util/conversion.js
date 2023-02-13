@@ -621,10 +621,15 @@ export class MatrixType {
    * given byte offset
    */
   read(buf, offset) {
-    const elements = new Array(this.cols).fill(new Array(this.rows));
+    const elements = [...Array(this.cols)].map((_) => [...Array(this.rows)]);
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
         elements[c][r] = this.elementType.read(buf, offset);
+        offset += this.elementType.size;
+      }
+
+      // vec3 have one padding element, so need to skip in matrices
+      if (this.rows === 3) {
         offset += this.elementType.size;
       }
     }
@@ -1079,12 +1084,17 @@ export class Matrix {
    * @param offset the byte offset within buffer
    */
   copyTo(buffer, offset) {
-    this.elements.forEach((c, i) => {
-      c.forEach((r, j) => {
+    for (let i = 0; i < this.type.cols; i++) {
+      for (let j = 0; j < this.type.rows; j++) {
         this.elements[i][j].copyTo(buffer, offset);
         offset += this.type.elementType.size;
-      });
-    });
+      }
+
+      // vec3 have one padding element, so need to skip in matrices
+      if (this.type.rows === 3) {
+        offset += this.type.elementType.size;
+      }
+    }
   }
 
   /**
@@ -1108,10 +1118,14 @@ export class Matrix {
  * @param op function to convert from number to Scalar, e.g. 'f32`
  */
 export function toMatrix(m, op) {
-  const elements = [];
-  m.forEach((c) => {
-    elements.push(c.map((r) => op(r)));
-  });
+  const cols = m.length;
+  const rows = m[0].length;
+  const elements = [...Array(cols)].map((_) => [...Array(rows)]);
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      elements[i][j] = op(m[i][j]);
+    }
+  }
 
   return new Matrix(elements);
 }

@@ -1,5 +1,6 @@
 import { getIsBuildingDataCache } from '../../common/framework/data_cache.js';
 import { Colors } from '../../common/util/colors.js';
+import { assert } from '../../common/util/util.js';
 import {
   deserializeExpectation,
   SerializedExpectation,
@@ -197,15 +198,99 @@ function compareVector(got: Value, expected: F32Interval[]): Comparison {
   };
 }
 
+// Utility to get arround not being able to nest `` blocks
+function convertArrayToString<T>(m: T[]): string {
+  return `[${m.join(',')}]`;
+}
+
+/**
+ * Tests it a 'got' Value is contained in 'expected' matrix, returning the Comparison information.
+ * @param got the Value obtained from the test, is expected to be a Matrix
+ * @param expected the expected array of array of F32Intervals, representing a column-major matrix
+ * @returns the comparison results
+ */
+function compareMatrix(got: Value, expected: F32Interval[][]): Comparison {
+  // Check got type
+  if (!(got instanceof Matrix)) {
+    return {
+      matched: false,
+      got: `${Colors.red((typeof got).toString())}(${got})`,
+      expected: `Matrix`,
+    };
+  }
+
+  // Check element type
+  {
+    const gTy = got.type.elementType;
+    if (!isFloatValue(got.elements[0][0])) {
+      return {
+        matched: false,
+        got: `${Colors.red(gTy.toString())}(${got})`,
+        expected: `floating point elements`,
+      };
+    }
+  }
+
+  // Check matrix dimensions
+  {
+    const gCols = got.elements.length;
+    const gRows = got.elements[0].length;
+    const eCols = expected.length;
+    const eRows = expected[0].length;
+
+    if (gCols !== eCols || gRows !== eRows) {
+      assert(false);
+      return {
+        matched: false,
+        got: `Matrix of ${gCols}x${gRows} elements`,
+        expected: `Matrix of ${eCols}x${eRows} elements`,
+      };
+    }
+  }
+
+  // Check that got values fall in expected intervals
+  let matched = true;
+  const expected_strings: string[][] = [...Array(got.elements.length)].map(_ => [
+    ...Array(got.elements[0].length),
+  ]);
+
+  got.elements.forEach((c, i) => {
+    c.forEach((r, j) => {
+      const g = r.value as number;
+      if (expected[i][j].contains(g)) {
+        expected_strings[i][j] = Colors.green(`[${expected[i][j]}]`);
+      } else {
+        matched = false;
+        expected_strings[i][j] = Colors.red(`[${expected[i][j]}]`);
+      }
+    });
+  });
+
+  return {
+    matched,
+    got: convertArrayToString(got.elements.map(convertArrayToString)),
+    expected: convertArrayToString(expected_strings.map(convertArrayToString)),
+  };
+}
+
 /**
  * compare() compares 'got' to 'expected', returning the Comparison information.
  * @param got the result obtained from the test
  * @param expected the expected result
  * @returns the comparison results
  */
-export function compare(got: Value, expected: Value | F32Interval | F32Interval[]): Comparison {
+export function compare(
+  got: Value,
+  expected: Value | F32Interval | F32Interval[] | F32Interval[][]
+): Comparison {
   if (expected instanceof Array) {
-    return compareVector(got, expected);
+    if (expected[0] instanceof Array) {
+      expected = expected as F32Interval[][];
+      return compareMatrix(got, expected);
+    } else {
+      expected = expected as F32Interval[];
+      return compareVector(got, expected);
+    }
   }
 
   if (expected instanceof F32Interval) {

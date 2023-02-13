@@ -8,12 +8,14 @@ calculatePermutations,
 cartesianProduct,
 correctlyRoundedF16,
 correctlyRoundedF32,
+flatten2DArray,
 flushSubnormalNumberF32,
 isFiniteF16,
 isFiniteF32,
 isSubnormalNumberF16,
 isSubnormalNumberF32,
-oneULP } from
+oneULP,
+unflatten2DArray } from
 './math.js';
 
 /**
@@ -157,7 +159,9 @@ kValue.f32.subnormal.positive.min,
 kValue.f32.positive.max]);
 
 
-/** Representation of a vec2/3/4 of floating point intervals as an array of F32Intervals */
+/**
+ * Representation of a vec2/3/4 of floating point intervals as an array of F32Intervals.
+ * */
 
 
 
@@ -203,22 +207,19 @@ const kAnyVector = {
  *          elements at the same index in the input vectors
  */
 function spanF32Vector(...vectors) {
+  assert(isF32Vector(vectors[0]), '');
   const vector_length = vectors[0].length;
   assert(
   vectors.every((e) => e.length === vector_length),
   `Vector span is not defined for vectors of differing lengths`);
 
 
-  // The outer map is doing the walk across a single F32Vector to get the indices to use.
-  // The inner map is doing the walk across the of the vector array, collecting the value of each vector at the
-  // index, then spanning them down to a single F32Interval.
-  // The toF32Vector coerces things at the end to be a F32Vector, because the outer .map() will actually return a
-  // F32Interval[]
-  return toF32Vector(
-  vectors[0].map((_, idx) => {
-    return F32Interval.span(...vectors.map((v) => v[idx]));
-  }));
+  const result = new Array(vector_length);
 
+  for (let i = 0; i < vector_length; i++) {
+    result[i] = F32Interval.span(...vectors.map((v) => v[i]));
+  }
+  return toF32Vector(result);
 }
 
 /**
@@ -226,6 +227,178 @@ function spanF32Vector(...vectors) {
  */
 function multiplyVectorByScalar(v, c) {
   return toF32Vector(v.map((x) => multiplicationInterval(x, c)));
+}
+
+/**
+ * Short hand for an Array of Arrays that contains a column-major matrix
+ *
+ * This isn't exported outside of this file to avoid colliding with the Matrix
+ * container for going in/out of a shader that the test runner uses.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/** Coerce F32Interval[] to F32Matrix if possible */
+function isF32Matrix(
+m)
+{
+  if (!(m[0][0] instanceof F32Interval)) {
+    return false;
+  }
+  // At this point m guaranteed to be a F32Interval[][] | F32Vector[]
+  // | F32Matrix.
+
+  // Coercing the type since F32Vector[] and F32Matrix are functionally
+  // equivalent to F32Interval[][] for .length and .every, but they are not
+  // generally compatible, since tuples are not equivalent to arrays, so TS
+  // considers c in .every to be unresolvable, even though our usage is safe.
+  m = m;
+
+  if (m.length > 4 || m.length < 2) {
+    return false;
+  }
+
+  const num_rows = m[0].length;
+  if (num_rows > 4 || num_rows < 2) {
+    return false;
+  }
+
+  return m.every((c) => c.length === num_rows);
+}
+
+/** @returns an F32Matrix representation of an array fo F32Intervals if possible */
+export function toF32Matrix(
+m)
+{
+  if (isF32Matrix(m)) {
+    return m;
+  }
+
+  const result = m.map((c) => c.map(toF32Interval));
+
+  if (isF32Matrix(result)) {
+    return result;
+  }
+  unreachable(`Cannot convert ${m} to F32Matrix`);
+}
+
+/** F32Matrix with all F32Interval.any() elements */
+const kAnyF32Matrix = {
+  2: {
+    2: toF32Matrix([
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()]]),
+
+    3: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()]]),
+
+    4: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()]])
+
+  },
+  3: {
+    2: toF32Matrix([
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()]]),
+
+    3: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()]]),
+
+    4: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()]])
+
+  },
+  4: {
+    2: toF32Matrix([
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any()]]),
+
+    3: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any()]]),
+
+    4: toF32Matrix([
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()],
+    [F32Interval.any(), F32Interval.any(), F32Interval.any(), F32Interval.any()]])
+
+  }
+};
+
+/**
+ * @returns a F32Matrix where each element is the span for corresponding
+ *          elements at the same index in the input matrices
+ */
+function spanF32Matrix(...matrices) {
+  // Coercing the type of matrices, since tuples are not generally compatible
+  // with Arrays, but they are functionally equivalent for the usages in this
+  // function.
+  const ms = matrices;
+  const num_cols = ms[0].length;
+  const num_rows = ms[0][0].length;
+  assert(
+  ms.every((m) => m.length === num_cols && m.every((r) => r.length === num_rows)),
+  `Matrix span is not defined for Matrices of differing dimensions`);
+
+
+  const result = [...Array(num_cols)].map((_) => [...Array(num_rows)]);
+  for (let i = 0; i < num_cols; i++) {
+    for (let j = 0; j < num_rows; j++) {
+      result[i][j] = F32Interval.span(...ms.map((m) => m[i][j]));
+    }
+  }
+
+  return toF32Matrix(result);
 }
 
 /**
@@ -357,6 +530,22 @@ impl)
  * This is the public facing API for builtin implementations that is called
  * from tests.
  */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -674,6 +863,38 @@ op)
   return spanF32Vector(...interval_vectors);
 }
 
+/** Converts a matrix to a matrix of acceptance intervals using a specific
+ * function
+ *
+ * This handles correctly rounding and flushing inputs as needed.
+ * Duplicate inputs are pruned before invoking op.impl.
+ *
+ * @param m param to flush & round then invoke op.impl on
+ * @param op operation defining the function being run
+ * @returns a matrix of spans for each outputs of op.impl
+ */
+function roundAndFlushMatrixToMatrix(m, op) {
+  const num_cols = m.length;
+  const num_rows = m[0].length;
+  assert(
+  m.every((c) => c.every((r) => !Number.isNaN(r))),
+  `flush not defined for NaN`);
+
+
+  const m_flat = flatten2DArray(m);
+  const m_rounded = m_flat.map(correctlyRoundedF32);
+  const m_flushed = m_rounded.map((e) => addFlushedIfNeededF32(e));
+  const m_options = cartesianProduct(...m_flushed);
+  const m_inputs = m_options.map((e) => unflatten2DArray(e, num_cols, num_rows));
+
+  const interval_matrices = new Set();
+  m_inputs.forEach((inner_m) => {
+    interval_matrices.add(op.impl(inner_m));
+  });
+
+  return spanF32Matrix(...interval_matrices);
+}
+
 /** Calculate the acceptance interval for a unary function over an interval
  *
  * If the interval is actually a point, this just decays to
@@ -820,7 +1041,6 @@ op)
  * given intervals
  *
  * @param x input domain intervals vector
- * @param x input domain intervals vector
  * @param op operation defining the function being run
  * @returns a vector of spans over all of the outputs of op.impl
  */
@@ -916,6 +1136,40 @@ op)
     return runBinaryToIntervalOp(i, y[idx], op);
   }));
 
+}
+
+/** Calculate the matrix of acceptance intervals for a pair of matrix function over
+ * given intervals
+ *
+ * @param x input domain intervals matrix
+ * @param x input domain intervals matrix
+ * @param op operation defining the function being run
+ * @returns a matrix of spans over all of the outputs of op.impl
+ */
+function runMatrixToMatrixOp(m, op) {
+  const num_cols = m.length;
+  const num_rows = m[0].length;
+  if (m.some((c) => c.some((r) => !r.isFinite()))) {
+    return kAnyF32Matrix[num_cols][num_rows];
+  }
+
+  const m_flat = flatten2DArray(m);
+  const m_values = cartesianProduct(...m_flat.map((e) => e.bounds()));
+
+  const outputs = new Set();
+  m_values.forEach((inner_m) => {
+    const unflat_m = unflatten2DArray(inner_m, num_cols, num_rows);
+    outputs.add(roundAndFlushMatrixToMatrix(unflat_m, op));
+  });
+
+  const result = spanF32Matrix(...outputs);
+  const result_cols = result.length;
+  const result_rows = result[0].length;
+
+  // F32Matrix has to be coerced to F32Interval[][] to use .every
+  return result.every((c) => c.every((r) => r.isFinite())) ?
+  result :
+  kAnyF32Matrix[result_cols][result_rows];
 }
 
 /** Defines a PointToIntervalOp for an interval of the correctly rounded values around the point */
@@ -2020,6 +2274,26 @@ const TanhIntervalOp = {
 /** Calculate an acceptance interval of tanh(x) */
 export function tanhInterval(n) {
   return runPointToIntervalOp(toF32Interval(n), TanhIntervalOp);
+}
+
+const TransposeIntervalOp = {
+  impl: (m) => {
+    const num_cols = m.length;
+    const num_rows = m[0].length;
+    const result = [...Array(num_rows)].map((_) => [...Array(num_cols)]);
+
+    for (let i = 0; i < num_cols; i++) {
+      for (let j = 0; j < num_rows; j++) {
+        result[j][i] = correctlyRoundedInterval(m[i][j]);
+      }
+    }
+    return toF32Matrix(result);
+  }
+};
+
+/** Calculate an acceptance interval of transpose(m) */
+export function transposeInterval(m) {
+  return runMatrixToMatrixOp(toF32Matrix(m), TransposeIntervalOp);
 }
 
 const TruncIntervalOp = {

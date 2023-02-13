@@ -785,13 +785,13 @@ export function sparseF32Range() {
 }
 
 const kVectorF32Values = {
-  2: kInterestingF32Values.flatMap((f) => [
+  2: sparseF32Range().flatMap((f) => [
   [f, 1.0],
   [1.0, f],
   [f, -1.0],
   [-1.0, f]]),
 
-  3: kInterestingF32Values.flatMap((f) => [
+  3: sparseF32Range().flatMap((f) => [
   [f, 1.0, 2.0],
   [1.0, f, 2.0],
   [1.0, 2.0, f],
@@ -799,7 +799,7 @@ const kVectorF32Values = {
   [-1.0, f, -2.0],
   [-1.0, -2.0, f]]),
 
-  4: kInterestingF32Values.flatMap((f) => [
+  4: sparseF32Range().flatMap((f) => [
   [f, 1.0, 2.0, 3.0],
   [1.0, f, 2.0, 3.0],
   [1.0, 2.0, f, 3.0],
@@ -860,6 +860,130 @@ export function sparseVectorF32Range(dim) {
 
   return kSparseVectorF32Values[dim];
 }
+
+const kSparseMatrixF32Values = {
+  2: {
+    2: kInterestingF32Values.map((f, idx) => [
+    [idx % 4 === 0 ? f : idx, idx % 4 === 1 ? f : -idx],
+    [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx]]),
+
+    3: kInterestingF32Values.map((f, idx) => [
+    [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx, idx % 6 === 2 ? f : idx],
+    [idx % 6 === 3 ? f : -idx, idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx]]),
+
+    4: kInterestingF32Values.map((f, idx) => [
+    [
+    idx % 8 === 0 ? f : idx,
+    idx % 8 === 1 ? f : -idx,
+    idx % 8 === 2 ? f : idx,
+    idx % 8 === 3 ? f : -idx],
+
+    [
+    idx % 8 === 4 ? f : -idx,
+    idx % 8 === 5 ? f : idx,
+    idx % 8 === 6 ? f : -idx,
+    idx % 8 === 7 ? f : idx]])
+
+
+  },
+  3: {
+    2: kInterestingF32Values.map((f, idx) => [
+    [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx],
+    [idx % 6 === 2 ? f : -idx, idx % 6 === 3 ? f : idx],
+    [idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx]]),
+
+    3: kInterestingF32Values.map((f, idx) => [
+    [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
+    [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, -idx % 9 === 5 ? f : -idx],
+    [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx]]),
+
+    4: kInterestingF32Values.map((f, idx) => [
+    [
+    idx % 12 === 0 ? f : idx,
+    idx % 12 === 1 ? f : -idx,
+    idx % 12 === 2 ? f : idx,
+    idx % 12 === 3 ? f : -idx],
+
+    [
+    idx % 12 === 4 ? f : -idx,
+    idx % 12 === 5 ? f : idx,
+    idx % 12 === 6 ? f : -idx,
+    idx % 12 === 7 ? f : idx],
+
+    [
+    idx % 12 === 8 ? f : idx,
+    idx % 12 === 9 ? f : -idx,
+    idx % 12 === 10 ? f : idx,
+    idx % 12 === 11 ? f : -idx]])
+
+
+  },
+  4: {
+    2: kInterestingF32Values.map((f, idx) => [
+    [idx % 8 === 0 ? f : idx, idx % 8 === 1 ? f : -idx],
+    [idx % 8 === 2 ? f : -idx, idx % 8 === 3 ? f : idx],
+    [idx % 8 === 4 ? f : idx, idx % 8 === 5 ? f : -idx],
+    [idx % 8 === 6 ? f : -idx, idx % 8 === 7 ? f : idx]]),
+
+    3: kInterestingF32Values.map((f, idx) => [
+    [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
+    [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, -idx % 12 === 5 ? f : -idx],
+    [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
+    [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, -idx % 12 === 11 ? f : idx]]),
+
+    4: kInterestingF32Values.map((f, idx) => [
+    [
+    idx % 16 === 0 ? f : idx,
+    idx % 16 === 1 ? f : -idx,
+    idx % 16 === 2 ? f : idx,
+    idx % 16 === 3 ? f : idx],
+
+    [
+    idx % 16 === 4 ? f : -idx,
+    idx % 16 === 5 ? f : idx,
+    idx % 16 === 6 ? f : -idx,
+    idx % 16 === 7 ? f : idx],
+
+    [
+    idx % 16 === 8 ? f : idx,
+    idx % 16 === 9 ? f : -idx,
+    idx % 16 === 10 ? f : idx,
+    idx % 16 === 11 ? f : -idx],
+
+    [
+    idx % 16 === 12 ? f : -idx,
+    idx % 16 === 13 ? f : idx,
+    idx % 16 === 14 ? f : -idx,
+    idx % 16 === 15 ? f : idx]])
+
+
+  }
+};
+
+/**
+ * Returns a minimal set of matrices, indexed by dimension containing interesting
+ * float values.
+ *
+ * This is the matrix analogue of `sparseVectorF32Range`, so it is producing a
+ * minimal coverage set of matrices that test all of the interesting f32 values.
+ * There is not a more expansive set of matrices, since matrices are even more
+ * expensive than vectors for increasing runtime with coverage.
+ *
+ * All of the interesting floats from sparseF32 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseMatrixF32Range(c, r) {
+  assert(
+  c === 2 || c === 3 || c === 4,
+  'sparseMatrixF32Range only accepts column counts of 2, 3, and 4');
+
+  assert(
+  r === 2 || r === 3 || r === 4,
+  'sparseMatrixF32Range only accepts row counts of 2, 3, and 4');
+
+  return kSparseMatrixF32Values[c][r];
+}
+
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
@@ -1028,6 +1152,75 @@ export function calculatePermutations(input) {
     });
   });
 
+  return result;
+}
+
+/**
+ * Convert an Array of Arrays to linear array
+ *
+ * Caller is responsible to retaining the dimensions of the array for later
+ * unflattening
+ *
+ * @param m Matrix to convert
+ */
+export function flatten2DArray(m) {
+  const c = m.length;
+  const r = m[0].length;
+  assert(
+  m.every((c) => c.length === r),
+  `Unexpectedly received jagged array to flatten`);
+
+  const result = Array(c * r);
+  for (let i = 0; i < c; i++) {
+    for (let j = 0; j < r; j++) {
+      result[j + i * r] = m[i][j];
+    }
+  }
+  return result;
+}
+
+/**
+ * Convert linear array to an Array of Arrays
+ * @param n an array to convert
+ * @param c number of elements in the array containing arrays
+ * @param r number of elements in the arrays that are contained
+ */
+export function unflatten2DArray(n, c, r) {
+  assert(
+  c > 0 && Number.isInteger(c) && r > 0 && Number.isInteger(r),
+  `columns (${c}) and rows (${r}) need to be positive integers`);
+
+  assert(n.length === c * r, `m.length(${n.length}) should equal c * r (${c * r})`);
+  const result = [...Array(c)].map((_) => [...Array(r)]);
+  for (let i = 0; i < c; i++) {
+    for (let j = 0; j < r; j++) {
+      result[i][j] = n[j + i * r];
+    }
+  }
+  return result;
+}
+
+/**
+ * Performs a map over a matrix and return the result
+ * The shape of the input and output matrices will be the same
+ *
+ * @param m input matrix of type T
+ * @param op operation that converts an element of type T to one of type S
+ * @returns a matrix with elements of type S that are calculated by applying op element by element
+ */
+export function map2DArray(m, op) {
+  const c = m.length;
+  const r = m[0].length;
+  assert(
+  m.every((c) => c.length === r),
+  `Unexpectedly received jagged array to map`);
+
+  const result = [...Array(c)].map((_) => [...Array(r)]);
+  for (let i = 0; i < c; i++) {
+    for (let j = 0; j < r; j++) {
+      result[i][j] = op(m[i][j]);
+    }
+  }
   return result;
 }
 //# sourceMappingURL=math.js.map
