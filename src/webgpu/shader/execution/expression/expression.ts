@@ -1020,11 +1020,11 @@ export function generateVectorPairToVectorCases(
 }
 
 /**
- * @returns a Case for the param and vector of intervals generator provided
+ * @returns a Case for the param and an array of interval generators provided
  * @param param the param to pass in
  * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an vector of acceptance
- *            intervals for a vector.
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
  */
 function makeMatrixToMatrixCase(
   param: number[][],
@@ -1049,8 +1049,8 @@ function makeMatrixToMatrixCase(
  * @returns an array of Cases for operations over a range of inputs
  * @param params array of inputs to try
  * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an vector of acceptance
- *            intervals for a vector.
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
  */
 export function generateMatrixToMatrixCases(
   params: number[][][],

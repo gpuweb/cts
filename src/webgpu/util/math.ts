@@ -865,7 +865,7 @@ const kSparseMatrixF32Values = {
   2: {
     2: kInterestingF32Values.map((f, idx) => [
       [idx % 4 === 0 ? f : idx, idx % 4 === 1 ? f : -idx],
-      [idx % 4 === 2 ? f : -idx, idx % 4 === 4 ? f : idx],
+      [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx],
     ]),
     3: kInterestingF32Values.map((f, idx) => [
       [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx, idx % 6 === 2 ? f : idx],
@@ -929,7 +929,7 @@ const kSparseMatrixF32Values = {
       [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
       [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, -idx % 12 === 5 ? f : -idx],
       [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
-      [idx % 12 === 9 ? f : -idx, idx % 10 === 7 ? f : idx, -idx % 12 === 11 ? f : idx],
+      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, -idx % 12 === 11 ? f : idx],
     ]),
     4: kInterestingF32Values.map((f, idx) => [
       [
@@ -961,7 +961,7 @@ const kSparseMatrixF32Values = {
 };
 
 /**
- * Returns  minimal set of matrices, indexed by dimension containing interesting
+ * Returns a minimal set of matrices, indexed by dimension containing interesting
  * float values.
  *
  * This is the matrix analogue of `sparseVectorF32Range`, so it is producing a
@@ -1200,7 +1200,8 @@ export function unflatten2DArray<T>(n: T[], c: number, r: number): T[][] {
   return result;
 }
 
-/** Perform a map over a matrix and return the result
+/**
+ * Performs a map over a matrix and return the result
  * The shape of the input and output matrices will be the same
  *
  * @param m input matrix of type T
