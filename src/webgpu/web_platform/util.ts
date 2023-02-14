@@ -118,8 +118,6 @@ export function getVideoColorSpaceInit(colorSpaceName: VideoColorSpaceName): Vid
       };
     case 'REC709':
       return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
-    case 'REC2020':
-      return { primaries: 'bt709', transfer: 'iec61966-2-1', matrix: 'rgb', fullRange: true };
     default:
       unreachable();
   }

@@ -37,6 +37,8 @@ const kVideoInfo = /* prettier-ignore */ makeTable(
 type VideoName = keyof typeof kVideoInfo;
 type VideoInfo = valueof<typeof kVideoInfo>;
 
+// The expected color values were calculated based on:
+// https://chromium-review.googlesource.com/c/chromium/src/+/4232318
 const kBt601Red = new Uint8Array([248, 36, 0, 255]);
 const kBt601Green = new Uint8Array([64, 252, 0, 255]);
 const kBt601Blue = new Uint8Array([26, 35, 255, 255]);
@@ -73,10 +75,10 @@ const kVideoExpectations = [
   },
   {
     videoName: 'four-colors-vp9-bt709.webm',
-    _redExpectation: new Uint8Array([255, 0, 0, 255]),
-    _greenExpectation: new Uint8Array([0, 255, 0, 255]),
+    _redExpectation: new Uint8Array([255, 0, 1, 255]),
+    _greenExpectation: new Uint8Array([1, 255, 0, 255]),
     _blueExpectation: new Uint8Array([0, 0, 255, 255]),
-    _yellowExpectation: new Uint8Array([255, 255, 0, 255]),
+    _yellowExpectation: new Uint8Array([255, 255, 1, 255]),
   },
 ] as const;
 
@@ -387,13 +389,13 @@ compute shader, for several combinations of video format and color space.
               @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
               @compute @workgroup_size(1) fn main() {
-                var yellow : vec4<f32> = textureLoad(t, vec2<i32>(80,60));
+                var yellow : vec4<f32> = textureLoad(t, vec2<i32>(80, 60));
                 textureStore(outImage, vec2<i32>(0, 0), yellow);
-                var blue : vec4<f32> = textureLoad(t, vec2<i32>(240,60));
-                textureStore(outImage, vec2<i32>(0, 1), blue);
-                var red : vec4<f32> = textureLoad(t, vec2<i32>(80,180));
-                textureStore(outImage, vec2<i32>(1, 0), red);
-                var green : vec4<f32> = textureLoad(t, vec2<i32>(240,180));
+                var red : vec4<f32> = textureLoad(t, vec2<i32>(240, 60));
+                textureStore(outImage, vec2<i32>(0, 1), red);
+                var blue : vec4<f32> = textureLoad(t, vec2<i32>(80, 180));
+                textureStore(outImage, vec2<i32>(1, 0), blue);
+                var green : vec4<f32> = textureLoad(t, vec2<i32>(240, 180));
                 textureStore(outImage, vec2<i32>(1, 1), green);
                 return;
               }
