@@ -1,12 +1,37 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { Fixture } from '../../../../../common/framework/fixture.js';
-import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
+ **/ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kLimitInfo } from '../../../../capability_info.js';
+import { GPUTestBase } from '../../../../gpu_test.js';
+
+const CreatePipelineTypes = {
+  createRenderPipeline: true,
+  createComputePipeline: true,
+};
+
+export const kCreatePipelineTypes = ['createRenderPipeline', 'createComputePipeline'];
+
+const CreatePipelineAsyncTypes = {
+  createRenderPipelineAsync: true,
+  createComputePipelineAsync: true,
+};
+
+export const kCreatePipelineAsyncTypes = [
+  'createRenderPipelineAsync',
+  'createComputePipelineAsync',
+];
+
+const EncoderTypes = {
+  compute: true,
+  render: true,
+  renderBundle: true,
+};
+
+export const kEncoderTypes = keysOf(EncoderTypes);
 
 export const TestValue = {
   atLimit: true,
@@ -53,7 +78,7 @@ export const kLimitBaseParams = kUnitCaseParamsBuilder
   .beginSubcases()
   .combine('testValueName', kTestValueKeys);
 
-export class LimitTestsImpl extends Fixture {
+export class LimitTestsImpl extends GPUTestBase {
   _device = undefined;
   limit = '';
 
@@ -163,7 +188,7 @@ export class LimitTestsImpl extends Fixture {
    * Calls a function that expects a GPU error if shouldError is true
    */
   // MAINTENANCE_TODO: Remove this duplicated code with GPUTest if possible
-  async expectGPUError(filter, fn, shouldError = true, msg = '') {
+  async expectGPUErrorAsync(filter, fn, shouldError = true, msg = '') {
     const { device } = this;
 
     device.pushErrorScope(filter);
@@ -181,18 +206,35 @@ export class LimitTestsImpl extends Fixture {
     return returnValue;
   }
 
+  /** Expect that the provided promise rejects, with the provided exception name. */
+  async shouldRejectConditionally(expectedName, p, shouldReject, msg) {
+    if (shouldReject) {
+      this.shouldReject(expectedName, p, msg);
+    } else {
+      this.shouldResolve(p, msg);
+    }
+
+    // We need to explicitly wait for the promise because the device may be
+    // destroyed immediately after returning from this function.
+    try {
+      await p;
+    } catch (e) {
+      //
+    }
+  }
+
   /**
    * Calls a function that expects a validation error if shouldError is true
    */
   async expectValidationError(fn, shouldError = true, msg = '') {
-    return this.expectGPUError('validation', fn, shouldError, msg);
+    return this.expectGPUErrorAsync('validation', fn, shouldError, msg);
   }
 
   /**
    * Calls a function that expects to not generate a validation error
    */
   async expectNoValidationError(fn, msg = '') {
-    return this.expectGPUError('validation', fn, false, msg);
+    return this.expectGPUErrorAsync('validation', fn, false, msg);
   }
 
   /**
@@ -222,6 +264,257 @@ export class LimitTestsImpl extends Fixture {
     );
 
     return returnValue;
+  }
+
+  getGroupIndexWGSLForPipelineType(pipelineType, groupIndex) {
+    switch (pipelineType) {
+      case 'createRenderPipeline':
+      case 'createRenderPipelineAsync':
+        return `
+          @group(${groupIndex}) @binding(0) var<uniform> v: f32;
+          @vertex fn main() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+        `;
+      case 'createComputePipeline':
+      case 'createComputePipelineAsync':
+        return `
+          @group(0) @binding(0) var<storage, read_write> d: f32;
+          @group(${groupIndex}) @binding(0) var<uniform> v: f32;
+          @compute @workgroup_size(1) fn main() {
+            d = v;
+          }
+        `;
+        break;
+    }
+  }
+
+  getBindingIndexWGSLForPipelineType(pipelineType, bindingIndex) {
+    switch (pipelineType) {
+      case 'createRenderPipeline':
+      case 'createRenderPipelineAsync':
+        return `
+          @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
+          @vertex fn main() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+        `;
+      case 'createComputePipeline':
+      case 'createComputePipelineAsync':
+        return `
+          @group(0) @binding(0) var<storage, read_write> d: f32;
+          @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
+          @compute @workgroup_size(1) fn main() {
+            d = v;
+          }
+        `;
+        break;
+    }
+  }
+
+  createPipeline(createPipelineType, module) {
+    const { device } = this;
+
+    switch (createPipelineType) {
+      case 'createRenderPipeline':
+        return device.createRenderPipeline({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+        break;
+      case 'createComputePipeline':
+        return device.createComputePipeline({
+          layout: 'auto',
+          compute: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+        break;
+    }
+  }
+
+  createPipelineAsync(createPipelineAsyncType, module) {
+    const { device } = this;
+
+    switch (createPipelineAsyncType) {
+      case 'createRenderPipelineAsync':
+        return device.createRenderPipelineAsync({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+      case 'createComputePipelineAsync':
+        return device.createComputePipelineAsync({
+          layout: 'auto',
+          compute: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+    }
+  }
+
+  /**
+   * Creates an encoder that has GPUBindingCommandsMixin
+   */
+  getGPUBindingCommandsMixin(encoderType) {
+    const { device } = this;
+
+    switch (encoderType) {
+      case 'compute': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const encoder = device.createCommandEncoder();
+        const subEncoder = encoder.beginComputePass();
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {
+            subEncoder.end();
+          },
+          test() {
+            encoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+          },
+        };
+        break;
+      }
+
+      case 'render': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const texture = device.createTexture({
+          size: [1, 1],
+          format: 'rgba8unorm',
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.VERTEX,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const encoder = device.createCommandEncoder();
+        const subEncoder = encoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: texture.createView(),
+              loadOp: 'clear',
+              storeOp: 'store',
+            },
+          ],
+        });
+
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {
+            subEncoder.end();
+          },
+          test() {
+            encoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+            texture.destroy();
+          },
+        };
+        break;
+      }
+
+      case 'renderBundle': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.VERTEX,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const subEncoder = device.createRenderBundleEncoder({
+          colorFormats: ['rgba8unorm'],
+        });
+
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {},
+          test() {
+            subEncoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+          },
+        };
+        break;
+      }
+    }
   }
 }
 
