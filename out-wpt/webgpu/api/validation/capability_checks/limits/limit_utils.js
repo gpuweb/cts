@@ -363,7 +363,7 @@ export class LimitTestsImpl extends GPUTestBase {
   /**
    * Creates an encoder that has GPUBindingCommandsMixin
    */
-  getGPUBindingCommandsMixin(encoderType) {
+  _getGPUBindingCommandsMixin(encoderType) {
     const { device } = this;
 
     switch (encoderType) {
@@ -394,12 +394,12 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         const encoder = device.createCommandEncoder();
-        const subEncoder = encoder.beginComputePass();
+        const mixin = encoder.beginComputePass();
         return {
-          subEncoder,
+          mixin,
           bindGroup,
           prep() {
-            subEncoder.end();
+            mixin.end();
           },
           test() {
             encoder.finish();
@@ -444,7 +444,7 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         const encoder = device.createCommandEncoder();
-        const subEncoder = encoder.beginRenderPass({
+        const mixin = encoder.beginRenderPass({
           colorAttachments: [
             {
               view: texture.createView(),
@@ -455,10 +455,10 @@ export class LimitTestsImpl extends GPUTestBase {
         });
 
         return {
-          subEncoder,
+          mixin,
           bindGroup,
           prep() {
-            subEncoder.end();
+            mixin.end();
           },
           test() {
             encoder.finish();
@@ -497,16 +497,16 @@ export class LimitTestsImpl extends GPUTestBase {
           ],
         });
 
-        const subEncoder = device.createRenderBundleEncoder({
+        const mixin = device.createRenderBundleEncoder({
           colorFormats: ['rgba8unorm'],
         });
 
         return {
-          subEncoder,
+          mixin,
           bindGroup,
           prep() {},
           test() {
-            subEncoder.finish();
+            mixin.finish();
           },
           cleanup() {
             buffer.destroy();
@@ -515,6 +515,20 @@ export class LimitTestsImpl extends GPUTestBase {
         break;
       }
     }
+  }
+
+  /**
+   * Tests a method on GPUBindingCommandsMixin
+   * The function pass will be called with the mixin and a bindGroup
+   */
+  async testGPUBindingCommandsMixin(encoderType, fn, shouldError, msg = '') {
+    const { mixin, bindGroup, prep, test, cleanup } = this._getGPUBindingCommandsMixin(encoderType);
+    fn({ mixin, bindGroup });
+    prep();
+
+    await this.expectValidationError(test, shouldError, msg);
+
+    cleanup();
   }
 }
 

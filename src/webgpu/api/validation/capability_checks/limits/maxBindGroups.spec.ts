@@ -92,22 +92,16 @@ g.test('setBindGroup,at_over')
     await t.testDeviceWithRequestedLimits(
       limitTest,
       testValueName,
-      async ({ device, testValue, actualLimit, shouldError }) => {
+      async ({ testValue, actualLimit, shouldError }) => {
         const lastIndex = testValue - 1;
-
-        const { subEncoder, bindGroup, prep, test, cleanup } = t.getGPUBindingCommandsMixin(
-          encoderType
-        );
-        subEncoder.setBindGroup(lastIndex, bindGroup);
-        prep();
-
-        await t.expectValidationError(
-          test,
+        await t.testGPUBindingCommandsMixin(
+          encoderType,
+          ({ mixin, bindGroup }) => {
+            mixin.setBindGroup(lastIndex, bindGroup);
+          },
           shouldError,
           `shouldError: ${shouldError}, actualLimit: ${actualLimit}, testValue: ${lastIndex}`
         );
-
-        cleanup();
       }
     );
   });
