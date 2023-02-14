@@ -30,6 +30,14 @@ export const kCreatePipelineAsyncTypes = [
   'createComputePipelineAsync',
 ] as CreatePipelineAsyncType[];
 
+const EncoderTypes = {
+  compute: true,
+  render: true,
+  renderBundle: true,
+};
+export type EncoderType = keyof typeof EncoderTypes;
+export const kEncoderTypes = keysOf(EncoderTypes);
+
 export const TestValue = {
   atLimit: true,
   overLimit: true,
@@ -401,6 +409,163 @@ export class LimitTestsImpl extends GPUTestBase {
             entryPoint: 'main',
           },
         });
+    }
+  }
+
+  /**
+   * Creates an encoder that has GPUBindingCommandsMixin
+   */
+  getGPUBindingCommandsMixin(encoderType: EncoderType) {
+    const { device } = this;
+
+    switch (encoderType) {
+      case 'compute': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const encoder = device.createCommandEncoder();
+        const subEncoder = encoder.beginComputePass();
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {
+            subEncoder.end();
+          },
+          test() {
+            encoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+          },
+        };
+        break;
+      }
+
+      case 'render': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const texture = device.createTexture({
+          size: [1, 1],
+          format: 'rgba8unorm',
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.VERTEX,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const encoder = device.createCommandEncoder();
+        const subEncoder = encoder.beginRenderPass({
+          colorAttachments: [
+            {
+              view: texture.createView(),
+              loadOp: 'clear',
+              storeOp: 'store',
+            },
+          ],
+        });
+
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {
+            subEncoder.end();
+          },
+          test() {
+            encoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+            texture.destroy();
+          },
+        };
+        break;
+      }
+
+      case 'renderBundle': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.VERTEX,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const subEncoder = device.createRenderBundleEncoder({
+          colorFormats: ['rgba8unorm'],
+        });
+
+        return {
+          subEncoder,
+          bindGroup,
+          prep() {},
+          test() {
+            subEncoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+          },
+        };
+        break;
+      }
     }
   }
 }
