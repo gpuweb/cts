@@ -1,12 +1,34 @@
-import { Fixture } from '../../../../../common/framework/fixture.js';
 import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kLimitInfo } from '../../../../capability_info.js';
+import { GPUTestBase } from '../../../../gpu_test.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
+
+const CreatePipelineTypes = {
+  createRenderPipeline: true,
+  createComputePipeline: true,
+};
+export type CreatePipelineType = keyof typeof CreatePipelineTypes;
+
+export const kCreatePipelineTypes = [
+  'createRenderPipeline',
+  'createComputePipeline',
+] as CreatePipelineType[];
+
+const CreatePipelineAsyncTypes = {
+  createRenderPipelineAsync: true,
+  createComputePipelineAsync: true,
+};
+export type CreatePipelineAsyncType = keyof typeof CreatePipelineAsyncTypes;
+
+export const kCreatePipelineAsyncTypes = [
+  'createRenderPipelineAsync',
+  'createComputePipelineAsync',
+] as CreatePipelineAsyncType[];
 
 export const TestValue = {
   atLimit: true,
@@ -71,7 +93,7 @@ export const kLimitBaseParams = kUnitCaseParamsBuilder
   .beginSubcases()
   .combine('testValueName', kTestValueKeys);
 
-export class LimitTestsImpl extends Fixture {
+export class LimitTestsImpl extends GPUTestBase {
   _device: GPUDevice | undefined = undefined;
   limit: GPUSupportedLimit = '' as GPUSupportedLimit;
 
@@ -190,7 +212,7 @@ export class LimitTestsImpl extends Fixture {
    * Calls a function that expects a GPU error if shouldError is true
    */
   // MAINTENANCE_TODO: Remove this duplicated code with GPUTest if possible
-  async expectGPUError<R>(
+  async expectGPUErrorAsync<R>(
     filter: GPUErrorFilter,
     fn: () => R,
     shouldError: boolean = true,
@@ -213,18 +235,40 @@ export class LimitTestsImpl extends Fixture {
     return returnValue;
   }
 
+  /** Expect that the provided promise rejects, with the provided exception name. */
+  async shouldRejectConditionally(
+    expectedName: string,
+    p: Promise<unknown>,
+    shouldReject: boolean,
+    msg?: string
+  ): Promise<void> {
+    if (shouldReject) {
+      this.shouldReject(expectedName, p, msg);
+    } else {
+      this.shouldResolve(p, msg);
+    }
+
+    // We need to explicitly wait for the promise because the device may be
+    // destroyed immediately after returning from this function.
+    try {
+      await p;
+    } catch (e) {
+      //
+    }
+  }
+
   /**
    * Calls a function that expects a validation error if shouldError is true
    */
   async expectValidationError<R>(fn: () => R, shouldError: boolean = true, msg = ''): Promise<R> {
-    return this.expectGPUError('validation', fn, shouldError, msg);
+    return this.expectGPUErrorAsync('validation', fn, shouldError, msg);
   }
 
   /**
    * Calls a function that expects to not generate a validation error
    */
   async expectNoValidationError<R>(fn: () => R, msg = ''): Promise<R> {
-    return this.expectGPUError('validation', fn, false, msg);
+    return this.expectGPUErrorAsync('validation', fn, false, msg);
   }
 
   /**
@@ -258,6 +302,106 @@ export class LimitTestsImpl extends Fixture {
     );
 
     return returnValue;
+  }
+
+  getGroupIndexWGSLForPipelineType(
+    pipelineType: CreatePipelineType | CreatePipelineAsyncType,
+    groupIndex: number
+  ) {
+    switch (pipelineType) {
+      case 'createRenderPipeline':
+      case 'createRenderPipelineAsync':
+        return `
+          @group(${groupIndex}) @binding(0) var<uniform> v: f32;
+          @vertex fn main() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+        `;
+      case 'createComputePipeline':
+      case 'createComputePipelineAsync':
+        return `
+          @group(0) @binding(0) var<storage, read_write> d: f32;
+          @group(${groupIndex}) @binding(0) var<uniform> v: f32;
+          @compute @workgroup_size(1) fn main() {
+            d = v;
+          }
+        `;
+        break;
+    }
+  }
+
+  getBindingIndexWGSLForPipelineType(
+    pipelineType: CreatePipelineType | CreatePipelineAsyncType,
+    bindingIndex: number
+  ) {
+    switch (pipelineType) {
+      case 'createRenderPipeline':
+      case 'createRenderPipelineAsync':
+        return `
+          @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
+          @vertex fn main() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+        `;
+      case 'createComputePipeline':
+      case 'createComputePipelineAsync':
+        return `
+          @group(0) @binding(0) var<storage, read_write> d: f32;
+          @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
+          @compute @workgroup_size(1) fn main() {
+            d = v;
+          }
+        `;
+        break;
+    }
+  }
+
+  createPipeline(createPipelineType: CreatePipelineType, module: GPUShaderModule) {
+    const { device } = this;
+
+    switch (createPipelineType) {
+      case 'createRenderPipeline':
+        return device.createRenderPipeline({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+        break;
+      case 'createComputePipeline':
+        return device.createComputePipeline({
+          layout: 'auto',
+          compute: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+        break;
+    }
+  }
+
+  createPipelineAsync(createPipelineAsyncType: CreatePipelineAsyncType, module: GPUShaderModule) {
+    const { device } = this;
+
+    switch (createPipelineAsyncType) {
+      case 'createRenderPipelineAsync':
+        return device.createRenderPipelineAsync({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+      case 'createComputePipelineAsync':
+        return device.createComputePipelineAsync({
+          layout: 'auto',
+          compute: {
+            module,
+            entryPoint: 'main',
+          },
+        });
+    }
   }
 }
 
