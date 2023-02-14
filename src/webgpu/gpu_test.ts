@@ -181,41 +181,19 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
 /**
  * Base fixture for WebGPU tests.
+ *
+ * This class is a Fixture + a getter that returns a GPUDevice
+ * as well as helpers that use that device.
  */
-export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
+export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   public static MakeSharedState(params: TestParams): GPUTestSubcaseBatchState {
     return new GPUTestSubcaseBatchState(params);
   }
 
-  // Should never be undefined in a test. If it is, init() must not have run/finished.
-  private provider: DeviceProvider | undefined;
-  private mismatchedProvider: DeviceProvider | undefined;
-
-  async init() {
-    await super.init();
-
-    this.provider = await this.sharedState.acquireProvider();
-    this.mismatchedProvider = await this.sharedState.acquireMismatchedProvider();
-  }
-
-  /**
-   * GPUDevice for the test to use.
-   */
+  // This must be overridden in derived classes
   get device(): GPUDevice {
-    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
-    return this.provider.device;
-  }
-
-  /**
-   * GPUDevice for tests requiring a second device different from the default one,
-   * e.g. for creating objects for by device_mismatch validation tests.
-   */
-  get mismatchedDevice(): GPUDevice {
-    assert(
-      this.mismatchedProvider !== undefined,
-      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
-    );
-    return this.mismatchedProvider.device;
+    unreachable();
+    return (null as unknown) as GPUDevice;
   }
 
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
@@ -825,14 +803,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
-   * Expects that the device should be lost for a particular reason at the teardown of the test.
-   */
-  expectDeviceLost(reason: GPUDeviceLostReason): void {
-    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
-    this.provider.expectDeviceLost(reason);
-  }
-
-  /**
    * Create a GPUBuffer with the specified contents and usage.
    *
    * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
@@ -969,6 +939,50 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       }
     }
     unreachable();
+  }
+}
+
+/**
+ * Fixture for WebGPU tests that uses a DeviceProvider
+ */
+export class GPUTest extends GPUTestBase {
+  // Should never be undefined in a test. If it is, init() must not have run/finished.
+  private provider: DeviceProvider | undefined;
+  private mismatchedProvider: DeviceProvider | undefined;
+
+  async init() {
+    await super.init();
+
+    this.provider = await this.sharedState.acquireProvider();
+    this.mismatchedProvider = await this.sharedState.acquireMismatchedProvider();
+  }
+
+  /**
+   * GPUDevice for the test to use.
+   */
+  get device(): GPUDevice {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
+    return this.provider.device;
+  }
+
+  /**
+   * GPUDevice for tests requiring a second device different from the default one,
+   * e.g. for creating objects for by device_mismatch validation tests.
+   */
+  get mismatchedDevice(): GPUDevice {
+    assert(
+      this.mismatchedProvider !== undefined,
+      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
+    );
+    return this.mismatchedProvider.device;
+  }
+
+  /**
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   */
+  expectDeviceLost(reason: GPUDeviceLostReason): void {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
+    this.provider.expectDeviceLost(reason);
   }
 }
 
