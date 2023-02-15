@@ -2314,6 +2314,15 @@ export function subtractionInterval(x: number | F32Interval, y: number | F32Inte
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), SubtractionIntervalOp);
 }
 
+/** Calculate an acceptance interval of x - y, when x and y are matrices */
+export function subtractionMatrixInterval(x: Matrix<number>, y: Matrix<number>): F32Matrix {
+  return runBinaryToIntervalOpMatrixComponentWise(
+    toF32Matrix(x),
+    toF32Matrix(y),
+    SubtractionIntervalOp
+  );
+}
+
 const TanIntervalOp: PointToIntervalOp = {
   impl: (n: number): F32Interval => {
     return divisionInterval(sinInterval(n), cosInterval(n));
