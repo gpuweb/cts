@@ -25,6 +25,13 @@ export const kCreatePipelineAsyncTypes = [
   'createComputePipelineAsync',
 ];
 
+const RenderEncoderTypes = {
+  render: true,
+  renderBundle: true,
+};
+
+export const kRenderEncoderTypes = keysOf(RenderEncoderTypes);
+
 const EncoderTypes = {
   compute: true,
   render: true,
@@ -33,12 +40,12 @@ const EncoderTypes = {
 
 export const kEncoderTypes = keysOf(EncoderTypes);
 
-export const TestValue = {
+export const TestValues = {
   atLimit: true,
   overLimit: true,
 };
 
-export const kTestValueKeys = keysOf(TestValue);
+export const kTestValueKeys = keysOf(TestValues);
 
 export function getTestValue(limit, testValue) {
   switch (testValue) {
@@ -49,13 +56,15 @@ export function getTestValue(limit, testValue) {
   }
 }
 
-export const LimitValueTest = {
+export const LimitValueTests = {
   atDefault: true,
   underDefault: true,
+  betweenDefaultAndMaximum: true,
   atMaximum: true,
   overMaximum: true,
 };
-export const kLimitValueTestKeys = keysOf(LimitValueTest);
+
+export const kLimitValueTestKeys = keysOf(LimitValueTests);
 
 function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
   switch (limitValueTest) {
@@ -63,6 +72,8 @@ function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
       return defaultLimit;
     case 'underDefault':
       return defaultLimit - 1;
+    case 'betweenDefaultAndMaximum':
+      return ((defaultLimit + maximumLimit) / 2) | 0;
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
@@ -83,30 +94,20 @@ export class LimitTestsImpl extends GPUTestBase {
   limit = '';
 
   get device() {
-    assert(
-      this._device !== undefined,
-      'device is only valid in testDeviceWithRequestedLimits callback'
-    );
-
+    assert(this._device !== undefined, 'device is only valid in _testThenDestroyDevice callback');
     return this._device;
   }
 
-  async requestDeviceWithLimits(limitValueTest, adapter, requiredLimits) {
-    switch (limitValueTest) {
-      case 'overMaximum':
-        this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
-        return undefined;
-      default:
-        return await adapter.requestDevice({ requiredLimits });
+  async requestDeviceWithLimits(adapter, requiredLimits, shouldReject) {
+    if (shouldReject) {
+      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+      return undefined;
+    } else {
+      return await adapter.requestDevice({ requiredLimits });
     }
   }
 
-  /**
-   * Gets a device with the adapter a requested limit and checks that that limit
-   * is correct or that the device failed to create if the requested limit is
-   * beyond the maximum supported by the device.
-   */
-  async _getDeviceWithRequestedLimit(limitValueTest) {
+  async getAdapterAndLimits() {
     const limit = this.limit;
     const gpu = getGPU();
     const adapter = await gpu.requestAdapter();
@@ -117,37 +118,102 @@ export class LimitTestsImpl extends GPUTestBase {
     assert(!Number.isNaN(defaultLimit));
     assert(!Number.isNaN(maximumLimit));
 
-    const requestedLimit = getLimitValue(defaultLimit, maximumLimit, limitValueTest);
+    return { adapter, defaultLimit, maximumLimit };
+  }
+
+  /**
+   * Gets a device with the adapter a requested limit and checks that that limit
+   * is correct or that the device failed to create if the requested limit is
+   * beyond the maximum supported by the device.
+   */
+  async _getDeviceWithSpecificLimit(adapter, requestedLimit) {
+    const limit = this.limit;
+
+    const defaultLimit = kLimitInfo[limit].default;
+    const maximumLimit = adapter.limits[limit];
+    assert(!Number.isNaN(defaultLimit));
+    assert(!Number.isNaN(maximumLimit));
 
     const requiredLimits = {};
     requiredLimits[limit] = requestedLimit;
+    const shouldReject = requestedLimit > maximumLimit;
 
-    const device = await this.requestDeviceWithLimits(limitValueTest, adapter, requiredLimits);
+    const device = await this.requestDeviceWithLimits(adapter, requiredLimits, shouldReject);
     const actualLimit = device ? device.limits[limit] : 0;
 
-    switch (limitValueTest) {
-      case 'atDefault':
-        this.expect(!!device);
+    if (shouldReject) {
+      this.expect(!device);
+    } else {
+      if (requestedLimit <= defaultLimit) {
         this.expect(actualLimit === defaultLimit);
-        break;
-      case 'underDefault':
-        this.expect(!!device);
-        this.expect(actualLimit === defaultLimit);
-        break;
-      case 'atMaximum':
-        this.expect(!!device);
+      } else {
         this.expect(actualLimit === maximumLimit);
-        break;
-      case 'overMaximum':
-        this.expect(!device);
-        break;
+      }
     }
 
     return device ? { device, defaultLimit, maximumLimit, requestedLimit, actualLimit } : undefined;
   }
 
   /**
-   * Creates a device with the requested limits.
+   * Gets a device with the adapter a requested limit and checks that that limit
+   * is correct or that the device failed to create if the requested limit is
+   * beyond the maximum supported by the device.
+   */
+  async _getDeviceWithRequestedLimit(limitValueTest) {
+    const { adapter, defaultLimit, maximumLimit } = await this.getAdapterAndLimits();
+
+    const requestedLimit = getLimitValue(defaultLimit, maximumLimit, limitValueTest);
+    return this._getDeviceWithSpecificLimit(adapter, requestedLimit);
+  }
+
+  /**
+   * Call the given function and check no WebGPU errors are leaked
+   */
+  async _testThenDestroyDevice(deviceAndLimits, testValue, fn) {
+    assert(!this._device);
+
+    const { device, actualLimit } = deviceAndLimits;
+    this._device = device;
+    const shouldError = testValue > actualLimit;
+
+    device.pushErrorScope('internal');
+    device.pushErrorScope('out-of-memory');
+    device.pushErrorScope('validation');
+
+    await fn({ ...deviceAndLimits, testValue, shouldError });
+
+    const validationError = await device.popErrorScope();
+    const outOfMemoryError = await device.popErrorScope();
+    const internalError = await device.popErrorScope();
+
+    this.expect(!validationError, validationError?.message || '');
+    this.expect(!outOfMemoryError, outOfMemoryError?.message || '');
+    this.expect(!internalError, internalError?.message || '');
+
+    device.destroy();
+    this._device = undefined;
+  }
+
+  /**
+   * Creates a device with a specific limit.
+   * If the limit of over the maximum we expect an exception
+   * If the device is created then we call a test function, checking
+   * that the function does not leak any GPU errors.
+   */
+  async testDeviceWithSpecificLimits(adapter, deviceLimitValue, testValue, fn) {
+    assert(!this._device);
+
+    const deviceAndLimits = await this._getDeviceWithSpecificLimit(adapter, deviceLimitValue);
+    // If we request over the limit requestDevice will throw
+    if (!deviceAndLimits) {
+      return;
+    }
+
+    await this._testThenDestroyDevice(deviceAndLimits, testValue, fn);
+  }
+
+  /**
+   * Creates a device with the limit defined by LimitValueTest.
    * If the limit of over the maximum we expect an exception
    * If the device is created then we call a test function, checking
    * that the function does not leak any GPU errors.
@@ -161,27 +227,12 @@ export class LimitTestsImpl extends GPUTestBase {
       return;
     }
 
-    const { device, actualLimit } = deviceAndLimits;
-    this._device = device;
+    const { actualLimit } = deviceAndLimits;
     const testValue = getTestValue(actualLimit, testValueName);
-    const shouldError = testValueName === 'overLimit';
 
-    device.pushErrorScope('internal');
-    device.pushErrorScope('out-of-memory');
-    device.pushErrorScope('validation');
-
-    await fn({ ...deviceAndLimits, testValueName, testValue, shouldError });
-
-    const validationError = await device.popErrorScope();
-    const outOfMemoryError = await device.popErrorScope();
-    const internalError = await device.popErrorScope();
-
-    this.expect(!validationError, validationError?.message || '');
-    this.expect(!outOfMemoryError, outOfMemoryError?.message || '');
-    this.expect(!internalError, internalError?.message || '');
-
-    device.destroy();
-    this._device = undefined;
+    await this._testThenDestroyDevice(deviceAndLimits, testValue, async inputs => {
+      await fn({ ...inputs, testValueName });
+    });
   }
 
   /**
@@ -361,56 +412,12 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 
   /**
-   * Creates an encoder that has GPUBindingCommandsMixin
+   * Creates an GPURenderCommandsMixin setup with some initial state.
    */
-  _getGPUBindingCommandsMixin(encoderType) {
+  _getGPURenderCommandsMixin(encoderType) {
     const { device } = this;
 
     switch (encoderType) {
-      case 'compute': {
-        const buffer = device.createBuffer({
-          size: 16,
-          usage: GPUBufferUsage.UNIFORM,
-        });
-
-        const layout = device.createBindGroupLayout({
-          entries: [
-            {
-              binding: 0,
-              visibility: GPUShaderStage.COMPUTE,
-              buffer: {},
-            },
-          ],
-        });
-
-        const bindGroup = device.createBindGroup({
-          layout,
-          entries: [
-            {
-              binding: 0,
-              resource: { buffer },
-            },
-          ],
-        });
-
-        const encoder = device.createCommandEncoder();
-        const mixin = encoder.beginComputePass();
-        return {
-          mixin,
-          bindGroup,
-          prep() {
-            mixin.end();
-          },
-          test() {
-            encoder.finish();
-          },
-          cleanup() {
-            buffer.destroy();
-          },
-        };
-        break;
-      }
-
       case 'render': {
         const buffer = device.createBuffer({
           size: 16,
@@ -514,6 +521,77 @@ export class LimitTestsImpl extends GPUTestBase {
         };
         break;
       }
+    }
+  }
+
+  /**
+   * Tests a method on GPURenderCommandsMixin
+   * The function will be called with the mixin.
+   */
+  async testGPURenderCommandsMixin(encoderType, fn, shouldError, msg = '') {
+    const { mixin, prep, test, cleanup } = this._getGPURenderCommandsMixin(encoderType);
+    fn({ mixin });
+    prep();
+
+    await this.expectValidationError(test, shouldError, msg);
+
+    cleanup();
+  }
+
+  /**
+   * Creates GPUBindingCommandsMixin setup with some initial state.
+   */
+  _getGPUBindingCommandsMixin(encoderType) {
+    const { device } = this;
+
+    switch (encoderType) {
+      case 'compute': {
+        const buffer = device.createBuffer({
+          size: 16,
+          usage: GPUBufferUsage.UNIFORM,
+        });
+
+        const layout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              buffer: {},
+            },
+          ],
+        });
+
+        const bindGroup = device.createBindGroup({
+          layout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer },
+            },
+          ],
+        });
+
+        const encoder = device.createCommandEncoder();
+        const mixin = encoder.beginComputePass();
+        return {
+          mixin,
+          bindGroup,
+          prep() {
+            mixin.end();
+          },
+          test() {
+            encoder.finish();
+          },
+          cleanup() {
+            buffer.destroy();
+          },
+        };
+        break;
+      }
+      case 'render':
+        return this._getGPURenderCommandsMixin('render');
+      case 'renderBundle':
+        return this._getGPURenderCommandsMixin('renderBundle');
     }
   }
 

@@ -690,6 +690,33 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "capability_checks",
+      "limits",
+      "maxVertexAttributes"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxVertexBufferArrayStride"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxVertexBuffers"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "compute_pipeline"
     ]
   },
