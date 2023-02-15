@@ -647,6 +647,25 @@ export interface MatrixPairToMatrix {
   (x: Matrix<number>, y: Matrix<number>): F32Matrix;
 }
 
+/**
+ * A function that converts a matrix and a scalar to a matrix of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface MatrixScalarToMatrix {
+  (x: Matrix<number>, y: number): F32Matrix;
+}
+
+/**
+ * A function that converts a scalar and a matrix to a matrix of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface ScalarMatrixToMatrix {
+  (x: number, y: Matrix<number>): F32Matrix;
+}
 /** Converts a point to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
@@ -2002,6 +2021,24 @@ export function multiplicationInterval(
   y: number | F32Interval
 ): F32Interval {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), MultiplicationIntervalOp);
+}
+
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a scalar */
+export function multiplicationMatrixScalarInterval(mat: Matrix<number>, scalar: number): F32Matrix {
+  const cols = mat.length;
+  const rows = mat[0].length;
+  return toF32Matrix(
+    unflatten2DArray(
+      flatten2DArray(mat).map(e => MultiplicationIntervalOp.impl(e, scalar)),
+      cols,
+      rows
+    )
+  );
+}
+
+/** Calculate an acceptance interval of x * y, when x is a scalar and y is a matrix */
+export function multiplicationScalarMatrixInterval(scalar: number, mat: Matrix<number>): F32Matrix {
+  return multiplicationMatrixScalarInterval(mat, scalar);
 }
 
 const NegationIntervalOp: PointToIntervalOp = {
