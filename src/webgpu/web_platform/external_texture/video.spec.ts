@@ -16,6 +16,7 @@ import {
   startPlayingAndWaitForVideo,
   getVideoColorSpaceInit,
   getVideoFrameFromVideoElement,
+  waitForNextFrame,
 } from '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -310,6 +311,15 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
         t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
       }
     });
+    if (sourceType === 'VideoElement') {
+      // Update new video frame.
+      await waitForNextFrame(videoElement, () => {
+        // VideoFrame is updated. GPUExternalTexture imported from HTMLVideoElement should be expired.
+        // Using the GPUExternalTexture should result in an error.
+        const commandBuffer = useExternalTexture();
+        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
+      });
+    }
   });
 
 g.test('importExternalTexture,compute')
