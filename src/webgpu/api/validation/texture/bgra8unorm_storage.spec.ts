@@ -39,8 +39,8 @@ g.test('create_texture')
   .desc(
     `
 Test that it is valid to create bgra8unorm texture with STORAGE usage iff the feature
-bgra8unorm-storage is enabled. Note, the createTexture tests cover these validation cases where this
-feature is not enabled.
+bgra8unorm-storage is enabled. Note, the createTexture test suite covers the validation cases where
+this feature is not enabled, which are skipped here.
 `
   )
   .beforeAllSubcases(t => {
@@ -59,8 +59,8 @@ g.test('create_bind_group_layout')
   .desc(
     `
 Test that it is valid to create GPUBindGroupLayout that uses bgra8unorm as storage texture format
-iff the feature bgra8unorm-storage is enabled. Note, the createBindGroupLayout tests cover these
-validation cases where this feature is not enabled.
+iff the feature bgra8unorm-storage is enabled. Note, the createBindGroupLayout test suite covers the
+validation cases where this feature is not enabled, which are skipped here.
 `
   )
   .beforeAllSubcases(t => {
