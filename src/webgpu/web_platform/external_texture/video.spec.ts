@@ -75,10 +75,10 @@ const kVideoExpectations = [
   },
   {
     videoName: 'four-colors-vp9-bt709.webm',
-    _redExpectation: new Uint8Array([255, 0, 1, 255]),
-    _greenExpectation: new Uint8Array([1, 255, 0, 255]),
+    _redExpectation: new Uint8Array([255, 0, 0, 255]),
+    _greenExpectation: new Uint8Array([0, 255, 0, 255]),
     _blueExpectation: new Uint8Array([0, 0, 255, 255]),
-    _yellowExpectation: new Uint8Array([255, 255, 1, 255]),
+    _yellowExpectation: new Uint8Array([255, 255, 0, 255]),
   },
 ] as const;
 
