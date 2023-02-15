@@ -5,7 +5,7 @@ Execution Tests for the matrix arithmetic binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeMat } from '../../../../util/conversion.js';
-import { additionMatrixPairInterval } from '../../../../util/f32_interval.js';
+import { additionMatrixInterval } from '../../../../util/f32_interval.js';
 import { sparseMatrixF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, generateMatrixPairToMatrixCases, run } from '../expression.js';
@@ -20,7 +20,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_2x2_non_const: () => {
@@ -28,7 +28,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_2x3_const: () => {
@@ -36,7 +36,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_2x3_non_const: () => {
@@ -44,7 +44,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_2x4_const: () => {
@@ -52,7 +52,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_2x4_non_const: () => {
@@ -60,7 +60,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x2_const: () => {
@@ -68,7 +68,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x2_non_const: () => {
@@ -76,7 +76,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x3_const: () => {
@@ -84,7 +84,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x3_non_const: () => {
@@ -92,7 +92,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x4_const: () => {
@@ -100,7 +100,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_3x4_non_const: () => {
@@ -108,7 +108,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x2_const: () => {
@@ -116,7 +116,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x2_non_const: () => {
@@ -124,7 +124,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x3_const: () => {
@@ -132,7 +132,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x3_non_const: () => {
@@ -140,7 +140,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x4_const: () => {
@@ -148,7 +148,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'f32-only',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
   addition_4x4_non_const: () => {
@@ -156,7 +156,7 @@ export const d = makeCaseCache('binary/matrix_arithmetic', {
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'unfiltered',
-      additionMatrixPairInterval
+      additionMatrixInterval
     );
   },
 });

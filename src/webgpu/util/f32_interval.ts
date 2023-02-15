@@ -1358,8 +1358,7 @@ export function additionInterval(x: number | F32Interval, y: number | F32Interva
 }
 
 /** Calculate an acceptance interval of x + y, when x and y are matrices */
-export function additionMatrixPairInterval(x: Matrix<number>, y: Matrix<number>): F32Matrix {
-  // Matrix-Matrix addition
+export function additionMatrixInterval(x: Matrix<number>, y: Matrix<number>): F32Matrix {
   return runBinaryToIntervalOpMatrixComponentWise(
     toF32Matrix(x),
     toF32Matrix(y),

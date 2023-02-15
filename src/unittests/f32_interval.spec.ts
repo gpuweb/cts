@@ -12,7 +12,7 @@ import {
   acoshAlternativeInterval,
   acoshPrimaryInterval,
   additionInterval,
-  additionMatrixPairInterval,
+  additionMatrixInterval,
   asinInterval,
   asinhInterval,
   atanInterval,
@@ -3570,7 +3570,7 @@ interface MatrixPairCase {
   expected: IntervalBounds[][] | number[][];
 }
 
-g.test('additionMatrixMatrixInterval')
+g.test('additionMatrixInterval')
   .paramsSubcasesOnly<MatrixPairCase>([
     // Only testing that different shapes of matrices are handled correctly, to
     // reduce test duplication. This function uses AdditionIntervalOp for
@@ -3753,10 +3753,10 @@ g.test('additionMatrixMatrixInterval')
     const y = t.params.input[1];
     const expected = toF32Matrix(t.params.expected);
 
-    const got = additionMatrixPairInterval(x, y);
+    const got = additionMatrixInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `additionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+      `additionMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
         y
       )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
     );
