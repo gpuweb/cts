@@ -1086,6 +1086,7 @@ export const kDrawIndexedIndirectParametersSize = 5;
 export const kFeatureNameInfo: {
   readonly [k in GPUFeatureName]: {};
 } = /* prettier-ignore */ {
+  'bgra8unorm-storage': {},
   'depth-clip-control': {},
   'depth32float-stencil8': {},
   'texture-compression-bc': {},
