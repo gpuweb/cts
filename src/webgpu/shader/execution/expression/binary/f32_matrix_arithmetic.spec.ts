@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the matrix arithmetic binary expression operations
+Execution Tests for the f32 matrix arithmetic binary expression operations
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -14,7 +14,7 @@ import { binary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('binary/matrix_arithmetic', {
+export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
   addition_2x2_const: () => {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),

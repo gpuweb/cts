@@ -3572,10 +3572,11 @@ interface MatrixPairCase {
 
 g.test('additionMatrixInterval')
   .paramsSubcasesOnly<MatrixPairCase>([
-    // Only testing that different shapes of matrices are handled correctly, to
-    // reduce test duplication. This function uses AdditionIntervalOp for
-    // calculating intervals, so depending on additionInterval's testing to
-    // make sure that things like subnormals are handled as expected.
+    // Only testing that different shapes of matrices are handled correctly
+    // here, to reduce test duplication.
+    // additionMatrixInterval uses AdditionIntervalOp for calculating intervals,
+    // so the testing for additionInterval covers the actual interval
+    // calculations.
     {
       input: [
         [
