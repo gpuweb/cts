@@ -12,6 +12,7 @@ import {
   acoshAlternativeInterval,
   acoshPrimaryInterval,
   additionInterval,
+  additionMatrixInterval,
   asinInterval,
   asinhInterval,
   atanInterval,
@@ -3561,5 +3562,203 @@ g.test('transposeInterval')
       `transposeInterval([${JSON.stringify(input)}]) returned '[${JSON.stringify(
         got
       )}]'. Expected '[${JSON.stringify(expected)}]'`
+    );
+  });
+
+interface MatrixPairCase {
+  input: [number[][], number[][]];
+  expected: IntervalBounds[][] | number[][];
+}
+
+g.test('additionMatrixInterval')
+  .paramsSubcasesOnly<MatrixPairCase>([
+    // Only testing that different shapes of matrices are handled correctly
+    // here, to reduce test duplication.
+    // additionMatrixInterval uses AdditionIntervalOp for calculating intervals,
+    // so the testing for additionInterval covers the actual interval
+    // calculations.
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+        ],
+      ],
+      expected: [
+        [11, 22],
+        [33, 44],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+        ],
+      ],
+      expected: [
+        [11, 22],
+        [33, 44],
+        [55, 66],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+          [7, 8],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+          [70, 80],
+        ],
+      ],
+      expected: [
+        [11, 22],
+        [33, 44],
+        [55, 66],
+        [77, 88],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+        ],
+      ],
+      expected: [
+        [11, 22, 33],
+        [44, 55, 66],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+        ],
+      ],
+      expected: [
+        [11, 22, 33],
+        [44, 55, 66],
+        [77, 88, 99],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+          [10, 11, 12],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+          [1000, 1100, 1200],
+        ],
+      ],
+      expected: [
+        [11, 22, 33],
+        [44, 55, 66],
+        [77, 88, 99],
+        [1010, 1111, 1212],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+        ],
+      ],
+      expected: [
+        [11, 22, 33, 44],
+        [55, 66, 77, 88],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 1000, 1100, 1200],
+        ],
+      ],
+      expected: [
+        [11, 22, 33, 44],
+        [55, 66, 77, 88],
+        [99, 1010, 1111, 1212],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+          [13, 14, 15, 16],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 1000, 1100, 1200],
+          [1300, 1400, 1500, 1600],
+        ],
+      ],
+      expected: [
+        [11, 22, 33, 44],
+        [55, 66, 77, 88],
+        [99, 1010, 1111, 1212],
+        [1313, 1414, 1515, 1616],
+      ],
+    },
+  ])
+  .fn(t => {
+    const x = t.params.input[0];
+    const y = t.params.input[1];
+    const expected = toF32Matrix(t.params.expected);
+
+    const got = additionMatrixInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `additionMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+        y
+      )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
     );
   });

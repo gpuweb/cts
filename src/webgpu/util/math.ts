@@ -1201,7 +1201,7 @@ export function unflatten2DArray<T>(n: T[], c: number, r: number): T[][] {
 }
 
 /**
- * Performs a map over a matrix and return the result
+ * Performs a .map over a matrix and return the result
  * The shape of the input and output matrices will be the same
  *
  * @param m input matrix of type T
