@@ -9,11 +9,9 @@ import {
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
 } from '../../../capability_info.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
-import { TexelView } from '../../../util/texture/texel_view.js';
-import { textureContentIsOKByT2B } from '../../../util/texture/texture_ok.js';
 
 const kVertexShader = `
 @vertex fn main(
@@ -27,7 +25,7 @@ const kVertexShader = `
 }
 `;
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 // Values to write into each attachment
 // We make values different for each attachment index and each channel
@@ -134,25 +132,14 @@ g.test('color,attachments')
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
-    const promises = range(attachmentCount, i => {
+    for (let i = 0; i < attachmentCount; i++) {
       if (i === emptyAttachmentId) {
-        return undefined;
+        continue;
       }
-      return textureContentIsOKByT2B(
-        t,
-        { texture: renderTargets[i] },
-        [1, 1, 1],
-        {
-          expTexelView: TexelView.fromTexelsAsColors(format, coords => writeValues[i]),
-        },
-        {
-          maxIntDiff: 0,
-          maxDiffULPsForNormFormat: 1,
-          maxDiffULPsForFloatFormat: 1,
-        }
-      );
-    });
-    t.eventualExpectOK(Promise.all(promises));
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTargets[i] }, [
+        { coord: { x: 0, y: 0 }, exp: writeValues[i] },
+      ]);
+    }
   });
 
 g.test('color,component_count')

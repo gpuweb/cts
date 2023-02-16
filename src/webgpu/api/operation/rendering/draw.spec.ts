@@ -11,9 +11,10 @@ import {
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
 } from '../../../../common/util/util.js';
-import { GPUTest } from '../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
+import { PerPixelComparison } from '../../../util/texture/texture_ok.js';
 
-class DrawTest extends GPUTest {
+class DrawTest extends TextureTestMixin(GPUTest) {
   checkTriangleDraw(opts: {
     firstIndex: number | undefined;
     count: number;
@@ -280,6 +281,7 @@ struct Output {
     this.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([didDraw ? 1 : 0]));
 
     const baseVertexCount = defaulted.baseVertex ?? 0;
+    const pixelComparisons: PerPixelComparison<Uint8Array>[] = [];
     for (let primitiveId = 0; primitiveId < numX; ++primitiveId) {
       for (let instanceId = 0; instanceId < numY; ++instanceId) {
         let expectedColor = didDraw ? green : transparentBlack;
@@ -297,19 +299,13 @@ struct Output {
           expectedColor = transparentBlack;
         }
 
-        this.expectSinglePixelIn2DTexture(
-          renderTarget,
-          'rgba8unorm',
-          {
-            x: (1 / 3 + primitiveId) * tileSizeX,
-            y: (2 / 3 + instanceId) * tileSizeY,
-          },
-          {
-            exp: expectedColor,
-          }
-        );
+        pixelComparisons.push({
+          coord: { x: (1 / 3 + primitiveId) * tileSizeX, y: (2 / 3 + instanceId) * tileSizeY },
+          exp: expectedColor,
+        });
       }
     }
+    this.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTarget }, pixelComparisons);
   }
 }
 

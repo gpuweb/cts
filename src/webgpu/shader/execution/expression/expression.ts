@@ -1,5 +1,5 @@
 import { globalTestConfig } from '../../../../common/framework/test_config.js';
-import { assert } from '../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, anyOf } from '../../../util/compare.js';
 import {
@@ -14,10 +14,14 @@ import {
   f32,
   u32,
   i32,
+  Matrix,
+  MatrixType,
+  ScalarBuilder,
 } from '../../../util/conversion.js';
 import {
   BinaryToInterval,
   F32Interval,
+  MatrixToMatrix,
   PointToInterval,
   PointToVector,
   TernaryToInterval,
@@ -26,9 +30,16 @@ import {
   VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
-import { cartesianProduct, quantizeToF32, quantizeToU32 } from '../../../util/math.js';
+import {
+  cartesianProduct,
+  map2DArray,
+  QuantizeFunc,
+  quantizeToF32,
+  quantizeToI32,
+  quantizeToU32,
+} from '../../../util/math.js';
 
-export type Expectation = Value | F32Interval | F32Interval[] | Comparator;
+export type Expectation = Value | F32Interval | F32Interval[] | F32Interval[][] | Comparator;
 
 /** Is this expectation actually a Comparator */
 function isComparator(e: Expectation): boolean {
@@ -36,6 +47,7 @@ function isComparator(e: Expectation): boolean {
     e instanceof F32Interval ||
     e instanceof Scalar ||
     e instanceof Vector ||
+    e instanceof Matrix ||
     e instanceof Array
   );
 }
@@ -82,6 +94,55 @@ export type Config = {
   vectorize?: number;
 };
 
+// Helper for returning the stride for a given Type
+function valueStride(ty: Type): number {
+  if (ty instanceof MatrixType) {
+    switch (ty.cols) {
+      case 2:
+        switch (ty.rows) {
+          case 2:
+            return 16;
+          case 3:
+            return 32;
+          case 4:
+            return 32;
+        }
+        break;
+      case 3:
+        switch (ty.rows) {
+          case 2:
+            return 32;
+          case 3:
+            return 64;
+          case 4:
+            return 64;
+        }
+        break;
+      case 4:
+        switch (ty.rows) {
+          case 2:
+            return 32;
+          case 3:
+            return 64;
+          case 4:
+            return 64;
+        }
+        break;
+    }
+    unreachable(
+      `Attempted to get stride length for a matrix with dimensions (${ty.cols}x${ty.rows}), which isn't currently handled`
+    );
+  }
+
+  // Handles scalars and vectors
+  return 16;
+}
+
+// Helper for summing up all of the stride values for an array of Types
+function valueStrides(tys: Type[]): number {
+  return tys.map(valueStride).reduce((sum, c) => sum + c);
+}
+
 // Helper for returning the WGSL storage type for the given Type.
 function storageType(ty: Type): Type {
   if (ty instanceof ScalarType) {
@@ -124,9 +185,6 @@ function toStorage(ty: Type, expr: string): string {
   }
   return expr;
 }
-
-// Currently all values are packed into buffers of 16 byte strides
-const kValueStride = 16;
 
 // ExpressionBuilder returns the WGSL used to test an expression.
 export interface ExpressionBuilder {
@@ -196,12 +254,12 @@ export async function run(
         // 2k appears to be a sweet-spot when benchmarking.
         return Math.floor(
           Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
-            (parameterTypes.length * kValueStride)
+            valueStrides(parameterTypes)
         );
       case 'storage_r':
       case 'storage_rw':
         return Math.floor(
-          t.device.limits.maxStorageBufferBindingSize / (parameterTypes.length * kValueStride)
+          t.device.limits.maxStorageBufferBindingSize / valueStrides(parameterTypes)
         );
     }
   })();
@@ -264,7 +322,7 @@ function submitBatch(
   pipelineCache: PipelineCache
 ): () => void {
   // Construct a buffer to hold the results of the expression tests
-  const outputBufferSize = cases.length * kValueStride;
+  const outputBufferSize = cases.length * valueStride(returnType);
   const outputBuffer = t.device.createBuffer({
     size: outputBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
@@ -299,7 +357,7 @@ function submitBatch(
       // Read the outputs from the output buffer
       const outputs = new Array<Value>(cases.length);
       for (let i = 0; i < cases.length; i++) {
-        outputs[i] = returnType.read(outputData, i * kValueStride);
+        outputs[i] = returnType.read(outputData, i * valueStride(returnType));
       }
 
       // The list of expectation failures
@@ -369,10 +427,11 @@ function buildPipeline(
   pipelineCache: PipelineCache
 ): [GPUComputePipeline, GPUBindGroup] {
   // wgsl declaration of output buffer and binding
+  const wgslValueStride = valueStride(returnType);
   const wgslStorageType = storageType(returnType);
   const wgslOutputs = `
 struct Output {
-  @size(${kValueStride}) value : ${wgslStorageType}
+  @size(${wgslValueStride}) value : ${wgslStorageType}
 };
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
@@ -454,7 +513,7 @@ fn main() {
       const source = `
 struct Input {
 ${parameterTypes
-  .map((ty, i) => `  @size(${kValueStride}) param${i} : ${storageType(ty)},`)
+  .map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`)
   .join('\n')}
 };
 
@@ -472,18 +531,18 @@ fn main() {
 `;
 
       // size in bytes of the input buffer
-      const inputSize = cases.length * parameterTypes.length * kValueStride;
+      const inputSize = cases.length * valueStrides(parameterTypes);
 
       // Holds all the parameter values for all cases
       const inputData = new Uint8Array(inputSize);
 
       // Pack all the input parameter values into the inputData buffer
       {
-        const caseStride = kValueStride * parameterTypes.length;
+        const caseStride = valueStrides(parameterTypes);
         for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
           const caseBase = caseIdx * caseStride;
           for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-            const offset = caseBase + paramIdx * kValueStride;
+            const offset = caseBase + paramIdx * valueStride(parameterTypes[paramIdx]);
             const params = cases[caseIdx].input;
             if (params instanceof Array) {
               params[paramIdx].copyTo(inputData, offset);
@@ -961,6 +1020,53 @@ export function generateVectorPairToVectorCases(
 }
 
 /**
+ * @returns a Case for the param and an array of interval generators provided
+ * @param param the param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
+ */
+function makeMatrixToMatrixCase(
+  param: number[][],
+  filter: IntervalFilter,
+  ...ops: MatrixToMatrix[]
+): Case | undefined {
+  param = map2DArray(param, quantizeToF32);
+  const param_f32 = map2DArray(param, f32);
+
+  const results = ops.map(o => o(param));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+
+  return {
+    input: [new Matrix(param_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a matrix of acceptance
+ *            intervals for a matrix.
+ */
+export function generateMatrixToMatrixCases(
+  params: number[][][],
+  filter: IntervalFilter,
+  ...ops: MatrixToMatrix[]
+): Case[] {
+  return params.reduce((cases, e) => {
+    const c = makeMatrixToMatrixCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
+}
+
+/**
  * @returns a Case for the param and vector of intervals generator provided
  * The input is treated as an unsigned int.
  * @param param the param to pass in
@@ -1010,9 +1116,9 @@ export function generateU32ToVectorCases(
 
 /**
  * A function that performs a binary operation on x and y, and returns the expected
- * result, or undefined if the operation is invalid for the given inputs.
+ * result.
  */
-export interface BinaryToI32Op {
+export interface BinaryOp {
   (x: number, y: number): number | undefined;
 }
 
@@ -1022,11 +1128,7 @@ export interface BinaryToI32Op {
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToI32Cases(
-  params0s: number[],
-  params1s: number[],
-  op: BinaryToI32Op
-) {
+export function generateBinaryToI32Cases(params0s: number[], params1s: number[], op: BinaryOp) {
   return cartesianProduct(params0s, params1s).reduce((cases, e) => {
     const expected = op(e[0], e[1]);
     if (expected !== undefined) {
@@ -1034,14 +1136,6 @@ export function generateBinaryToI32Cases(
     }
     return cases;
   }, new Array<Case>());
-}
-
-/**
- * A function that performs a binary operation on x and y, and returns the expected
- * result.
- */
-export interface BinaryOp {
-  (x: number, y: number): number | undefined;
 }
 
 /**
@@ -1065,21 +1159,25 @@ export function generateBinaryToU32Cases(params0s: number[], params1s: number[],
  * @param scalar scalar param
  * @param vector vector param (2, 3, or 4 elements)
  * @param op the op to apply to scalar and vector
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
  */
-function makeU32VectorBinaryToVectorCase(
+function makeScalarVectorBinaryToVectorCase(
   scalar: number,
   vector: number[],
-  op: BinaryOp
+  op: BinaryOp,
+  quantize: QuantizeFunc,
+  scalarize: ScalarBuilder
 ): Case | undefined {
-  scalar = quantizeToU32(scalar);
-  vector = vector.map(quantizeToU32);
+  scalar = quantize(scalar);
+  vector = vector.map(quantize);
   const result = vector.map(v => op(scalar, v));
   if (result.includes(undefined)) {
     return undefined;
   }
   return {
-    input: [u32(scalar), new Vector(vector.map(u32))],
-    expected: new Vector((result as number[]).map(u32)),
+    input: [scalarize(scalar), new Vector(vector.map(scalarize))],
+    expected: new Vector((result as number[]).map(scalarize)),
   };
 }
 
@@ -1087,17 +1185,21 @@ function makeU32VectorBinaryToVectorCase(
  * @returns array of Case for the input params with op applied
  * @param scalars array of scalar params
  * @param vectors array of vector params (2, 3, or 4 elements)
- * @param op he op to apply to each pair of scalar and vector
+ * @param op the op to apply to each pair of scalar and vector
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
  */
-export function generateU32VectorBinaryToVectorCases(
+function generateScalarVectorBinaryToVectorCases(
   scalars: number[],
   vectors: number[][],
-  op: BinaryOp
+  op: BinaryOp,
+  quantize: QuantizeFunc,
+  scalarize: ScalarBuilder
 ): Case[] {
   const cases = new Array<Case>();
   scalars.forEach(s => {
     vectors.forEach(v => {
-      const c = makeU32VectorBinaryToVectorCase(s, v, op);
+      const c = makeScalarVectorBinaryToVectorCase(s, v, op, quantize, scalarize);
       if (c !== undefined) {
         cases.push(c);
       }
@@ -1111,22 +1213,67 @@ export function generateU32VectorBinaryToVectorCases(
  * @param vector vector param (2, 3, or 4 elements)
  * @param scalar scalar param
  * @param op the op to apply to vector and scalar
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
  */
-function makeVectorU32BinaryToVectorCase(
+function makeVectorScalarBinaryToVectorCase(
   vector: number[],
   scalar: number,
-  op: BinaryOp
+  op: BinaryOp,
+  quantize: QuantizeFunc,
+  scalarize: ScalarBuilder
 ): Case | undefined {
-  vector = vector.map(quantizeToU32);
-  scalar = quantizeToU32(scalar);
+  vector = vector.map(quantize);
+  scalar = quantize(scalar);
   const result = vector.map(v => op(v, scalar));
   if (result.includes(undefined)) {
     return undefined;
   }
   return {
-    input: [new Vector(vector.map(u32)), u32(scalar)],
-    expected: new Vector((result as number[]).map(u32)),
+    input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
+    expected: new Vector((result as number[]).map(scalarize)),
   };
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param scalars array of scalar params
+ * @param op the op to apply to each pair of vector and scalar
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
+ */
+function generateVectorScalarBinaryToVectorCases(
+  vectors: number[][],
+  scalars: number[],
+  op: BinaryOp,
+  quantize: QuantizeFunc,
+  scalarize: ScalarBuilder
+): Case[] {
+  const cases = new Array<Case>();
+  scalars.forEach(s => {
+    vectors.forEach(v => {
+      const c = makeVectorScalarBinaryToVectorCase(v, s, op, quantize, scalarize);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param scalars array of scalar params
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param op he op to apply to each pair of scalar and vector
+ */
+export function generateU32VectorBinaryToVectorCases(
+  scalars: number[],
+  vectors: number[][],
+  op: BinaryOp
+): Case[] {
+  return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToU32, u32);
 }
 
 /**
@@ -1140,14 +1287,33 @@ export function generateVectorU32BinaryToVectorCases(
   scalars: number[],
   op: BinaryOp
 ): Case[] {
-  const cases = new Array<Case>();
-  scalars.forEach(s => {
-    vectors.forEach(v => {
-      const c = makeVectorU32BinaryToVectorCase(v, s, op);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
-  });
-  return cases;
+  return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToU32, u32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param scalars array of scalar params
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param op he op to apply to each pair of scalar and vector
+ */
+export function generateI32VectorBinaryToVectorCases(
+  scalars: number[],
+  vectors: number[][],
+  op: BinaryOp
+): Case[] {
+  return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToI32, i32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param scalars array of scalar params
+ * @param op he op to apply to each pair of vector and scalar
+ */
+export function generateVectorI32BinaryToVectorCases(
+  vectors: number[][],
+  scalars: number[],
+  op: BinaryOp
+): Case[] {
+  return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToI32, i32);
 }

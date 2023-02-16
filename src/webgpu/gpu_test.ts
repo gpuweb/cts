@@ -1,4 +1,11 @@
-import { Fixture, SubcaseBatchState, TestParams } from '../common/framework/fixture.js';
+import {
+  Fixture,
+  FixtureClass,
+  FixtureClassInterface,
+  FixtureClassWithMixin,
+  SubcaseBatchState,
+  TestParams,
+} from '../common/framework/fixture.js';
 import {
   assert,
   range,
@@ -13,18 +20,15 @@ import {
   kTextureFormatInfo,
   kQueryTypeInfo,
   resolvePerAspectFormat,
+  kEncodableTextureFormats,
 } from './capability_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
-import {
-  checkElementsEqual,
-  checkElementsBetween,
-  checkElementsFloat16Between,
-} from './util/check_contents.js';
+import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 import { ScalarType } from './util/conversion.js';
 import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
-import { makeTextureWithContents } from './util/texture.js';
+import { createTextureFromTexelView, createTextureFromTexelViews } from './util/texture.js';
 import {
   getTextureCopyLayout,
   getTextureSubCopyLayout,
@@ -32,6 +36,13 @@ import {
 } from './util/texture/layout.js';
 import { PerTexelComponent, kTexelRepresentationInfo } from './util/texture/texel_data.js';
 import { TexelView } from './util/texture/texel_view.js';
+import {
+  PerPixelComparison,
+  PixelExpectation,
+  TexelCompareOptions,
+  textureContentIsOKByT2B,
+} from './util/texture/texture_ok.js';
+import { reifyOrigin3D } from './util/unions.js';
 
 const devicePool = new DevicePool();
 
@@ -170,41 +181,19 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
 /**
  * Base fixture for WebGPU tests.
+ *
+ * This class is a Fixture + a getter that returns a GPUDevice
+ * as well as helpers that use that device.
  */
-export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
+export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   public static MakeSharedState(params: TestParams): GPUTestSubcaseBatchState {
     return new GPUTestSubcaseBatchState(params);
   }
 
-  // Should never be undefined in a test. If it is, init() must not have run/finished.
-  private provider: DeviceProvider | undefined;
-  private mismatchedProvider: DeviceProvider | undefined;
-
-  async init() {
-    await super.init();
-
-    this.provider = await this.sharedState.acquireProvider();
-    this.mismatchedProvider = await this.sharedState.acquireMismatchedProvider();
-  }
-
-  /**
-   * GPUDevice for the test to use.
-   */
+  // This must be overridden in derived classes
   get device(): GPUDevice {
-    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
-    return this.provider.device;
-  }
-
-  /**
-   * GPUDevice for tests requiring a second device different from the default one,
-   * e.g. for creating objects for by device_mismatch validation tests.
-   */
-  get mismatchedDevice(): GPUDevice {
-    assert(
-      this.mismatchedProvider !== undefined,
-      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
-    );
-    return this.mismatchedProvider.device;
+    unreachable();
+    return (null as unknown) as GPUDevice;
   }
 
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
@@ -498,7 +487,8 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   // MAINTENANCE_TODO: add an expectContents for textures, which logs data: uris on failure
 
   /**
-   * Expect a whole GPUTexture to have the single provided color.
+   * Expect an entire GPUTexture to have a single color at the given mip level (defaults to 0).
+   * MAINTENANCE_TODO: Remove this and/or replace it with a helper in TextureTestMixin.
    */
   expectSingleColor(
     src: GPUTexture,
@@ -517,6 +507,11 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       layout?: TextureLayoutOptions;
     }
   ): void {
+    assert(
+      slice === 0 || dimension === '2d',
+      'texture slices are only implemented for 2d textures'
+    );
+
     format = resolvePerAspectFormat(format, layout?.aspect);
     const { byteLength, minBytesPerRow, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
       format,
@@ -524,6 +519,15 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       size,
       layout
     );
+    // MAINTENANCE_TODO: getTextureCopyLayout does not return the proper size for array textures,
+    // i.e. it will leave the z/depth value as is instead of making it 1 when dealing with 2d
+    // texture arrays. Since we are passing in the dimension, we should update it to return the
+    // corrected size.
+    const copySize = [
+      mipSize[0],
+      dimension !== '1d' ? mipSize[1] : 1,
+      dimension === '3d' ? mipSize[2] : 1,
+    ];
 
     const rep = kTexelRepresentationInfo[format as EncodableTextureFormat];
     const expectedTexelData = rep.pack(rep.encode(exp));
@@ -543,19 +547,22 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
         aspect: layout?.aspect,
       },
       { buffer, bytesPerRow, rowsPerImage },
-      mipSize
+      copySize
     );
     this.queue.submit([commandEncoder.finish()]);
 
     this.expectGPUBufferRepeatsSingleValue(buffer, {
       expectedValue: expectedTexelData,
-      numRows: rowsPerImage,
+      numRows: rowsPerImage * copySize[2],
       minBytesPerRow,
       bytesPerRow,
     });
   }
 
-  /** Return a GPUBuffer that data are going to be written into. */
+  /**
+   * Return a GPUBuffer that data are going to be written into.
+   * MAINTENANCE_TODO: Remove this once expectSinglePixelBetweenTwoValuesIn2DTexture is removed.
+   */
   private readSinglePixelFrom2DTexture(
     src: GPUTexture,
     format: SizedTextureFormat,
@@ -585,37 +592,10 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
-   * Expect a single pixel of a 2D texture to have a particular byte representation.
-   *
-   * MAINTENANCE_TODO: Add check for values of depth/stencil, probably through sampling of shader
-   * MAINTENANCE_TODO: Can refactor this and expectSingleColor to use a similar base expect
-   */
-  expectSinglePixelIn2DTexture(
-    src: GPUTexture,
-    format: SizedTextureFormat,
-    { x, y }: { x: number; y: number },
-    {
-      exp,
-      slice = 0,
-      layout,
-      generateWarningOnly = false,
-    }: {
-      exp: Uint8Array;
-      slice?: number;
-      layout?: TextureLayoutOptions;
-      generateWarningOnly?: boolean;
-    }
-  ): void {
-    const buffer = this.readSinglePixelFrom2DTexture(src, format, { x, y }, { slice, layout });
-    this.expectGPUBufferValuesEqual(buffer, exp, 0, {
-      mode: generateWarningOnly ? 'warn' : 'fail',
-    });
-  }
-
-  /**
    * Take a single pixel of a 2D texture, interpret it using a TypedArray of the `expected` type,
    * and expect each value in that array to be between the corresponding "expected" values
    * (either `a[i] <= actual[i] <= b[i]` or `a[i] >= actual[i] => b[i]`).
+   * MAINTENANCE_TODO: Remove this once there is a way to deal with undefined lerp-ed values.
    */
   expectSinglePixelBetweenTwoValuesIn2DTexture(
     src: GPUTexture,
@@ -649,40 +629,6 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
       typedLength,
       mode: generateWarningOnly ? 'warn' : 'fail',
     });
-  }
-
-  /**
-   * Equivalent to {@link expectSinglePixelBetweenTwoValuesIn2DTexture} but uses a special check func
-   * to interpret incoming values as float16
-   */
-  expectSinglePixelBetweenTwoValuesFloat16In2DTexture(
-    src: GPUTexture,
-    format: SizedTextureFormat,
-    { x, y }: { x: number; y: number },
-    {
-      exp,
-      slice = 0,
-      layout,
-      generateWarningOnly = false,
-    }: {
-      exp: [Uint16Array, Uint16Array];
-      slice?: number;
-      layout?: TextureLayoutOptions;
-      generateWarningOnly?: boolean;
-    }
-  ): void {
-    this.expectSinglePixelBetweenTwoValuesIn2DTexture(
-      src,
-      format,
-      { x, y },
-      {
-        exp,
-        slice,
-        layout,
-        generateWarningOnly,
-        checkElementsBetweenFn: checkElementsFloat16Between,
-      }
-    );
   }
 
   /**
@@ -857,82 +803,12 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /**
-   * Expects that the device should be lost for a particular reason at the teardown of the test.
-   */
-  expectDeviceLost(reason: GPUDeviceLostReason): void {
-    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
-    this.provider.expectDeviceLost(reason);
-  }
-
-  /**
    * Create a GPUBuffer with the specified contents and usage.
    *
    * MAINTENANCE_TODO: Several call sites would be simplified if this took ArrayBuffer as well.
    */
   makeBufferWithContents(dataArray: TypedArrayBufferView, usage: GPUBufferUsageFlags): GPUBuffer {
     return this.trackForCleanup(makeBufferWithContents(this.device, dataArray, usage));
-  }
-
-  /**
-   * Creates a texture with the contents of a TexelView.
-   */
-  makeTextureWithContents(
-    texelView: TexelView,
-    desc: Omit<GPUTextureDescriptor, 'format'>
-  ): GPUTexture {
-    return this.trackForCleanup(makeTextureWithContents(this.device, texelView, desc));
-  }
-
-  /**
-   * Create a GPUTexture with multiple mip levels, each having the specified contents.
-   */
-  createTexture2DWithMipmaps(mipmapDataArray: TypedArrayBufferView[]): GPUTexture {
-    const format = 'rgba8unorm';
-    const mipLevelCount = mipmapDataArray.length;
-    const textureSizeMipmap0 = 1 << (mipLevelCount - 1);
-    const texture = this.device.createTexture({
-      mipLevelCount,
-      size: { width: textureSizeMipmap0, height: textureSizeMipmap0, depthOrArrayLayers: 1 },
-      format,
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
-    });
-    this.trackForCleanup(texture);
-
-    const textureEncoder = this.device.createCommandEncoder();
-    for (let i = 0; i < mipLevelCount; i++) {
-      const { byteLength, bytesPerRow, rowsPerImage, mipSize } = getTextureCopyLayout(
-        format,
-        '2d',
-        [textureSizeMipmap0, textureSizeMipmap0, 1],
-        { mipLevel: i }
-      );
-
-      const data: Uint8Array = new Uint8Array(byteLength);
-      const mipLevelData = mipmapDataArray[i];
-      assert(rowsPerImage === mipSize[0]); // format is rgba8unorm and block size should be 1
-      for (let r = 0; r < rowsPerImage; r++) {
-        const o = r * bytesPerRow;
-        for (let c = o, end = o + mipSize[1] * 4; c < end; c += 4) {
-          data[c] = mipLevelData[0];
-          data[c + 1] = mipLevelData[1];
-          data[c + 2] = mipLevelData[2];
-          data[c + 3] = mipLevelData[3];
-        }
-      }
-      const buffer = this.makeBufferWithContents(
-        data,
-        GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-      );
-
-      textureEncoder.copyBufferToTexture(
-        { buffer, bytesPerRow, rowsPerImage },
-        { texture, mipLevel: i, origin: [0, 0, 0] },
-        mipSize
-      );
-    }
-    this.device.queue.submit([textureEncoder.finish()]);
-
-    return texture;
   }
 
   /**
@@ -1064,4 +940,219 @@ export class GPUTest extends Fixture<GPUTestSubcaseBatchState> {
     }
     unreachable();
   }
+}
+
+/**
+ * Fixture for WebGPU tests that uses a DeviceProvider
+ */
+export class GPUTest extends GPUTestBase {
+  // Should never be undefined in a test. If it is, init() must not have run/finished.
+  private provider: DeviceProvider | undefined;
+  private mismatchedProvider: DeviceProvider | undefined;
+
+  async init() {
+    await super.init();
+
+    this.provider = await this.sharedState.acquireProvider();
+    this.mismatchedProvider = await this.sharedState.acquireMismatchedProvider();
+  }
+
+  /**
+   * GPUDevice for the test to use.
+   */
+  get device(): GPUDevice {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
+    return this.provider.device;
+  }
+
+  /**
+   * GPUDevice for tests requiring a second device different from the default one,
+   * e.g. for creating objects for by device_mismatch validation tests.
+   */
+  get mismatchedDevice(): GPUDevice {
+    assert(
+      this.mismatchedProvider !== undefined,
+      'selectMismatchedDeviceOrSkipTestCase was not called in beforeAllSubcases'
+    );
+    return this.mismatchedProvider.device;
+  }
+
+  /**
+   * Expects that the device should be lost for a particular reason at the teardown of the test.
+   */
+  expectDeviceLost(reason: GPUDeviceLostReason): void {
+    assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
+    this.provider.expectDeviceLost(reason);
+  }
+}
+
+/**
+ * Texture expectation mixin can be applied on top of GPUTest to add texture
+ * related expectation helpers.
+ */
+export interface TextureTestMixinType {
+  /**
+   * Creates a 1 mip level texture with the contents of a TexelView and tracks
+   * it for destruction for the test case.
+   */
+  createTextureFromTexelView(
+    texelView: TexelView,
+    desc: Omit<GPUTextureDescriptor, 'format'>
+  ): GPUTexture;
+
+  /**
+   * Creates a mipmapped texture where each mipmap level's (`i`) content is
+   * from `texelViews[i]` and tracks it for destruction for the test case.
+   */
+  createTextureFromTexelViewsMultipleMipmaps(
+    texelViews: TexelView[],
+    desc: Omit<GPUTextureDescriptor, 'format'>
+  ): GPUTexture;
+
+  /**
+   * Expects that comparing the subrect (defined via `size`) of a GPUTexture
+   * to the expected TexelView passes without error.
+   */
+  expectTexelViewComparisonIsOkInTexture(
+    src: GPUImageCopyTexture,
+    exp: TexelView,
+    size: GPUExtent3D,
+    comparisonOptions?: TexelCompareOptions
+  ): void;
+
+  /**
+   * Expects that a sparse set of pixels in the GPUTexture passes comparison against
+   * their expected colors without error.
+   */
+  expectSinglePixelComparisonsAreOkInTexture<E extends PixelExpectation>(
+    src: GPUImageCopyTexture,
+    exp: PerPixelComparison<E>[],
+    comparisonOptions?: TexelCompareOptions
+  ): void;
+}
+export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
+  Base: F
+): FixtureClassWithMixin<F, TextureTestMixinType> {
+  class TextureExpectations
+    extends (Base as FixtureClassInterface<GPUTest>)
+    implements TextureTestMixinType {
+    createTextureFromTexelView(
+      texelView: TexelView,
+      desc: Omit<GPUTextureDescriptor, 'format'>
+    ): GPUTexture {
+      return this.trackForCleanup(createTextureFromTexelView(this.device, texelView, desc));
+    }
+
+    createTextureFromTexelViewsMultipleMipmaps(
+      texelViews: TexelView[],
+      desc: Omit<GPUTextureDescriptor, 'format'>
+    ): GPUTexture {
+      return this.trackForCleanup(createTextureFromTexelViews(this.device, texelViews, desc));
+    }
+
+    expectTexelViewComparisonIsOkInTexture(
+      src: GPUImageCopyTexture,
+      exp: TexelView,
+      size: GPUExtent3D,
+      comparisonOptions = {
+        maxIntDiff: 0,
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
+      }
+    ): void {
+      this.eventualExpectOK(
+        textureContentIsOKByT2B(this, src, size, { expTexelView: exp }, comparisonOptions)
+      );
+    }
+
+    expectSinglePixelComparisonsAreOkInTexture<E extends PixelExpectation>(
+      src: GPUImageCopyTexture,
+      exp: PerPixelComparison<E>[],
+      comparisonOptions = {
+        maxIntDiff: 0,
+        maxDiffULPsForNormFormat: 1,
+        maxDiffULPsForFloatFormat: 1,
+      }
+    ): void {
+      assert(exp.length > 0, 'must specify at least one pixel comparison');
+      assert(
+        (kEncodableTextureFormats as GPUTextureFormat[]).includes(src.texture.format),
+        () => `${src.texture.format} is not an encodable format`
+      );
+      const lowerCorner = [src.texture.width, src.texture.height, src.texture.depthOrArrayLayers];
+      const upperCorner = [0, 0, 0];
+      const expMap = new Map<string, E>();
+      const coords: Required<GPUOrigin3DDict>[] = [];
+      for (const e of exp) {
+        const coord = reifyOrigin3D(e.coord);
+        const coordKey = JSON.stringify(coord);
+        coords.push(coord);
+
+        // Compute the minimum sub-rect that encompasses all the pixel comparisons. The
+        // `lowerCorner` will become the origin, and the `upperCorner` will be used to compute the
+        // size.
+        lowerCorner[0] = Math.min(lowerCorner[0], coord.x);
+        lowerCorner[1] = Math.min(lowerCorner[1], coord.y);
+        lowerCorner[2] = Math.min(lowerCorner[2], coord.z);
+        upperCorner[0] = Math.max(upperCorner[0], coord.x);
+        upperCorner[1] = Math.max(upperCorner[1], coord.y);
+        upperCorner[2] = Math.max(upperCorner[2], coord.z);
+
+        // Build a sparse map of the coordinates to the expected colors for the texel view.
+        assert(
+          !expMap.has(coordKey),
+          () => `duplicate pixel expectation at coordinate (${coord.x},${coord.y},${coord.z})`
+        );
+        expMap.set(coordKey, e.exp);
+      }
+      const size: GPUExtent3D = [
+        upperCorner[0] - lowerCorner[0] + 1,
+        upperCorner[1] - lowerCorner[1] + 1,
+        upperCorner[2] - lowerCorner[2] + 1,
+      ];
+      let expTexelView: TexelView;
+      if (Symbol.iterator in exp[0].exp) {
+        expTexelView = TexelView.fromTexelsAsBytes(
+          src.texture.format as EncodableTextureFormat,
+          coord => {
+            const res = expMap.get(JSON.stringify(coord));
+            assert(
+              res !== undefined,
+              () => `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+            );
+            return res as Uint8Array;
+          }
+        );
+      } else {
+        expTexelView = TexelView.fromTexelsAsColors(
+          src.texture.format as EncodableTextureFormat,
+          coord => {
+            const res = expMap.get(JSON.stringify(coord));
+            assert(
+              res !== undefined,
+              () => `invalid coordinate (${coord.x},${coord.y},${coord.z}) in sparse texel view`
+            );
+            return res as PerTexelComponent<number>;
+          }
+        );
+      }
+      const coordsF = (function* () {
+        for (const coord of coords) {
+          yield coord;
+        }
+      })();
+
+      this.eventualExpectOK(
+        textureContentIsOKByT2B(
+          this,
+          { ...src, origin: reifyOrigin3D(lowerCorner) },
+          size,
+          { expTexelView },
+          comparisonOptions,
+          coordsF
+        )
+      );
+    }
+  }
+  return (TextureExpectations as unknown) as FixtureClassWithMixin<F, TextureTestMixinType>;
 }

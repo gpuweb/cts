@@ -112,7 +112,7 @@ const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
   'rgba8snorm':            [       false,         false,     false,        ,        ,          ,      true,          ,          ,              'float',               4],
   'rgba8uint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'uint',               4,             ,              ,                           4,                                1],
   'rgba8sint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'sint',               4,             ,              ,                           4,                                1],
-  'bgra8unorm':            [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
+  'bgra8unorm':            [        true,          true,      true,        ,        ,          ,      true,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
   'bgra8unorm-srgb':       [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
   // Packed 32-bit formats
   'rgb10a2unorm':          [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                4],
@@ -1032,6 +1032,7 @@ export const kLimitInfo = /* prettier-ignore */ makeTable(
   'maxTextureArrayLayers':                     [           ,       256,                          ],
 
   'maxBindGroups':                             [           ,         4,                          ],
+  'maxBindingsPerBindGroup':                   [           ,       640,                          ],
   'maxDynamicUniformBuffersPerPipelineLayout': [           ,         8,                          ],
   'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,                          ],
   'maxSampledTexturesPerShaderStage':          [           ,        16,                          ],
@@ -1085,6 +1086,7 @@ export const kDrawIndexedIndirectParametersSize = 5;
 export const kFeatureNameInfo: {
   readonly [k in GPUFeatureName]: {};
 } = /* prettier-ignore */ {
+  'bgra8unorm-storage': {},
   'depth-clip-control': {},
   'depth32float-stencil8': {},
   'texture-compression-bc': {},
