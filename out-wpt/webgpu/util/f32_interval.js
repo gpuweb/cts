@@ -2039,6 +2039,15 @@ export function subtractionInterval(x, y) {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), SubtractionIntervalOp);
 }
 
+/** Calculate an acceptance interval of x - y, when x and y are matrices */
+export function subtractionMatrixInterval(x, y) {
+  return runBinaryToIntervalOpMatrixComponentWise(
+    toF32Matrix(x),
+    toF32Matrix(y),
+    SubtractionIntervalOp
+  );
+}
+
 const TanIntervalOp = {
   impl: n => {
     return divisionInterval(sinInterval(n), cosInterval(n));
