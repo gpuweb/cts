@@ -24,25 +24,7 @@ const kValidIdentifiers = new Set([
   'שָׁלוֹם',
   'गुलाबी',
   'փիրուզ',
-]);
-
-const kInvalidIdentifiers = new Set([
-  '_', // Single underscore is a syntactic token for phony assignment.
-  '__', // Leading double underscore is reserved.
-  '__foo', // Leading double underscore is reserved.
-  '0foo', // Must start with single underscore or a letter.
-  // No punctuation:
-  'foo.bar',
-  'foo-bar',
-  'foo+bar',
-  'foo#bar',
-  'foo!bar',
-  'foo\\bar',
-  'foo/bar',
-  'foo,bar',
-  'foo@bar',
-  'foo::bar',
-  // Type-defining Keywords:
+  // Builtin type identifiers:
   'array',
   'atomic',
   'bool',
@@ -81,6 +63,24 @@ const kInvalidIdentifiers = new Set([
   'vec2',
   'vec3',
   'vec4',
+]);
+
+const kInvalidIdentifiers = new Set([
+  '_', // Single underscore is a syntactic token for phony assignment.
+  '__', // Leading double underscore is reserved.
+  '__foo', // Leading double underscore is reserved.
+  '0foo', // Must start with single underscore or a letter.
+  // No punctuation:
+  'foo.bar',
+  'foo-bar',
+  'foo+bar',
+  'foo#bar',
+  'foo!bar',
+  'foo\\bar',
+  'foo/bar',
+  'foo,bar',
+  'foo@bar',
+  'foo::bar',
   // Other Keywords:
   'bitcast',
   'break',
@@ -268,7 +268,8 @@ g.test('identifiers')
     u.combine('ident', new Set([...kValidIdentifiers, ...kInvalidIdentifiers])).beginSubcases()
   )
   .fn(t => {
-    const code = `var<private> ${t.params.ident} : i32;`;
+    const type = t.params.ident === 'i32' ? 'u32' : 'i32';
+    const code = `var<private> ${t.params.ident} : ${type};`;
     t.expectCompileResult(kValidIdentifiers.has(t.params.ident), code);
   });
 
