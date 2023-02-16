@@ -1344,6 +1344,14 @@ export const listing = [
       "api",
       "validation",
       "texture",
+      "bgra8unorm_storage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "texture",
       "destroy"
     ]
   },
