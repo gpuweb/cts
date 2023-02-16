@@ -1443,6 +1443,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "f32_matrix_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "i32_arithmetic"
     ]
   },

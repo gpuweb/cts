@@ -837,7 +837,7 @@ function makeVectorToVectorCase(param, filter, ...ops) {
   const param_f32 = param.map(f32);
 
   const vectors = ops.map(o => o(param));
-  if (filter === 'f32-only' && vectors.some(v => !v.every(e => e.isFinite()))) {
+  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -878,7 +878,7 @@ function makeVectorPairToVectorCase(param0, param1, filter, ...ops) {
   const param1_f32 = param1.map(f32);
 
   const vectors = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && vectors.some(v => !v.every(e => e.isFinite()))) {
+  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -937,6 +937,48 @@ function makeMatrixToMatrixCase(param, filter, ...ops) {
 export function generateMatrixToMatrixCases(params, filter, ...ops) {
   return params.reduce((cases, e) => {
     const c = makeMatrixToMatrixCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeMatrixPairToMatrixCase(param0, param1, filter, ...ops) {
+  param0 = map2DArray(param0, quantizeToF32);
+  param1 = map2DArray(param1, quantizeToF32);
+  const param0_f32 = map2DArray(param0, f32);
+  const param1_f32 = map2DArray(param1, f32);
+
+  const results = ops.map(o => o(param0, param1));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(param0_f32), new Matrix(param1_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateMatrixPairToMatrixCases(param0s, param1s, filter, ...ops) {
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeMatrixPairToMatrixCase(e[0], e[1], filter, ...ops);
     if (c !== undefined) {
       cases.push(c);
     }
