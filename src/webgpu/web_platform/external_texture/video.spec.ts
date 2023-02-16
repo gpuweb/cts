@@ -10,11 +10,10 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { makeTable, valueof } from '../../../common/util/data_tables.js';
+import { makeTable } from '../../../common/util/data_tables.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
-  getVideoColorSpaceInit,
   getVideoFrameFromVideoElement,
   waitForNextFrame,
 } from '../../web_platform/util.js';
@@ -24,18 +23,17 @@ const kWidth = 16;
 const kFormat = 'rgba8unorm';
 
 const kVideoInfo = /* prettier-ignore */ makeTable(
-                                ['colorSpace',                       'mimeType'] as const,
-                                [   undefined,                        undefined] as const, {
+                                ['mimeType'] as const,
+                                [undefined] as const, {
   // All video names
-  'four-colors-vp8-bt601.webm'  : [    'REC601',         'video/webm; codecs=vp8'],
-  'four-colors-theora-bt601.ogv': [    'REC601',       'video/ogg; codecs=theora'],
-  'four-colors-h264-bt601.mp4'  : [    'REC601',  'video/mp4; codecs=avc1.4d400c'],
-  'four-colors-vp9-bt601.webm'  : [    'REC601',         'video/webm; codecs=vp9'],
-  'four-colors-vp9-bt709.webm'  : [    'REC709',         'video/webm; codecs=vp9'],
-  'four-colors-vp9-bt2020.webm' : [   'REC2020',         'video/webm; codecs=vp9']
+  'four-colors-vp8-bt601.webm'  : ['video/webm; codecs=vp8'],
+  'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
+  'four-colors-h264-bt601.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-vp9-bt601.webm'  : ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt709.webm'  : ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9']
 } as const);
 type VideoName = keyof typeof kVideoInfo;
-type VideoInfo = valueof<typeof kVideoInfo>;
 
 // The expected color values were calculated based on:
 // https://chromium-review.googlesource.com/c/chromium/src/+/4232318
@@ -159,11 +157,11 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
-function getVideoElementAndInfo(
+function getVideoElement(
   t: GPUTest,
   sourceType: 'VideoElement' | 'VideoFrame',
   videoName: VideoName
-): { videoElement: HTMLVideoElement; videoInfo: VideoInfo } {
+): HTMLVideoElement {
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
     t.skip('WebCodec is not supported');
   }
@@ -178,7 +176,7 @@ function getVideoElementAndInfo(
   const videoUrl = getResourcePath(videoName);
   videoElement.src = videoUrl;
 
-  return { videoElement, videoInfo };
+  return videoElement;
 }
 
 g.test('importExternalTexture,sample')
@@ -195,16 +193,12 @@ for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(
-              t,
-              videoElement,
-              getVideoColorSpaceInit(videoInfo.colorSpace)
-            )
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
 
       const colorAttachment = t.device.createTexture({
@@ -267,7 +261,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'four-colors-vp9-bt601.webm');
+    const videoElement = getVideoElement(t, sourceType, 'four-colors-vp9-bt601.webm');
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -356,16 +350,12 @@ compute shader, for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(
-              t,
-              videoElement,
-              getVideoColorSpaceInit(videoInfo.colorSpace)
-            )
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -381,8 +371,7 @@ compute shader, for several combinations of video format and color space.
       const pipeline = t.device.createComputePipeline({
         layout: 'auto',
         compute: {
-          // Shader will load a pixel near the upper left and lower right corners, which are then
-          // stored in storage texture.
+          // Shader loads 4 pixels near each corner, and then store them in a storage texture.
           module: t.device.createShaderModule({
             code: `
               @group(0) @binding(0) var t : texture_external;
