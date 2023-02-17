@@ -110,6 +110,7 @@ g.test('stencil_clear_value')
       depthStencil: {
         format: stencilFormat,
         depthCompare: 'always',
+        depthWriteEnabled: false,
         stencilFront: {
           compare: 'equal',
         },
