@@ -499,14 +499,15 @@ fn main() {
         const caseStride = valueStrides(parameterTypes);
         for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
           const caseBase = caseIdx * caseStride;
+          let offset = caseBase;
           for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-            const offset = caseBase + paramIdx * valueStride(parameterTypes[paramIdx]);
             const params = cases[caseIdx].input;
             if (params instanceof Array) {
               params[paramIdx].copyTo(inputData, offset);
             } else {
               params.copyTo(inputData, offset);
             }
+            offset += valueStride(parameterTypes[paramIdx]);
           }
         }
       }
@@ -984,6 +985,98 @@ export function generateMatrixPairToMatrixCases(param0s, param1s, filter, ...ops
     }
     return cases;
   }, new Array());
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param scalar the scalar to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops) {
+  mat = map2DArray(mat, quantizeToF32);
+  scalar = quantizeToF32(scalar);
+  const mat_f32 = map2DArray(mat, f32);
+  const scalar_f32 = f32(scalar);
+
+  const results = ops.map(o => o(mat, scalar));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(mat_f32), scalar_f32],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param mats array of inputs to try for the matrix input
+ * @param scalars array of inputs to try for the scalar input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateMatrixScalarToMatrixCases(mats, scalars, filter, ...ops) {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases = [];
+  mats.forEach(mat => {
+    scalars.forEach(scalar => {
+      const c = makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param scalar the scalar to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops) {
+  mat = map2DArray(mat, quantizeToF32);
+  scalar = quantizeToF32(scalar);
+  const mat_f32 = map2DArray(mat, f32);
+  const scalar_f32 = f32(scalar);
+
+  const results = ops.map(o => o(scalar, mat));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [scalar_f32, new Matrix(mat_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param scalars array of inputs to try for the scalar input
+ * @param mats array of inputs to try for the matrix input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateScalarMatrixToMatrixCases(scalars, mats, filter, ...ops) {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases = [];
+  mats.forEach(mat => {
+    scalars.forEach(scalar => {
+      const c = makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
 }
 
 /**

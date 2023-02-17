@@ -47,6 +47,7 @@ minInterval,
 mixImpreciseInterval,
 mixPreciseInterval,
 multiplicationInterval,
+multiplicationMatrixScalarInterval,
 negationInterval,
 normalizeInterval,
 powInterval,
@@ -64,6 +65,7 @@ smoothStepInterval,
 sqrtInterval,
 stepInterval,
 subtractionInterval,
+subtractionMatrixInterval,
 tanInterval,
 tanhInterval,
 toF32Interval,
@@ -77,8 +79,7 @@ unpack2x16snormInterval,
 unpack2x16unormInterval,
 unpack4x8snormInterval,
 unpack4x8unormInterval,
-modfInterval,
-subtractionMatrixInterval } from
+modfInterval } from
 '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -3956,4 +3957,151 @@ fn((t) => {
   }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
 
 });
+
+
+
+
+
+
+
+g.test('multiplicationMatrixScalarInterval').
+paramsSubcasesOnly([
+// Only testing that different shapes of matrices are handled correctly
+// here, to reduce test duplication.
+// multiplicationMatrixScalarInterval uses MultiplicationIntervalOp for calculating intervals,
+// so the testing for multiplcationInterval covers the actual interval
+// calculations.
+{
+  matrix: [
+  [1, 2],
+  [3, 4]],
+
+  scalar: 10,
+  expected: [
+  [10, 20],
+  [30, 40]]
+
+},
+{
+  matrix: [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
+
+  scalar: 10,
+  expected: [
+  [10, 20],
+  [30, 40],
+  [50, 60]]
+
+},
+{
+  matrix: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
+
+  scalar: 10,
+  expected: [
+  [10, 20],
+  [30, 40],
+  [50, 60],
+  [70, 80]]
+
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30],
+  [40, 50, 60]]
+
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30],
+  [40, 50, 60],
+  [70, 80, 90]]
+
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30],
+  [40, 50, 60],
+  [70, 80, 90],
+  [100, 110, 120]]
+
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80]]
+
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80],
+  [90, 100, 110, 120]]
+
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  scalar: 10,
+  expected: [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80],
+  [90, 100, 110, 120],
+  [130, 140, 150, 160]]
+
+}]).
+
+fn((t) => {
+  const matrix = t.params.matrix;
+  const scalar = t.params.scalar;
+  const expected = toF32Matrix(t.params.expected);
+
+  const got = multiplicationMatrixScalarInterval(matrix, scalar);
+  t.expect(
+  objectEquals(expected, got),
+  `multiplicationMatrixMatrixInterval([${JSON.stringify(
+  matrix)
+  }], ${scalar}) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+
+});
+
+// There are not explicit tests for multiplicationScalarMatrixInterval since it is just a passthrough to multiplicationMatrixScalarInterval
 //# sourceMappingURL=f32_interval.spec.js.map

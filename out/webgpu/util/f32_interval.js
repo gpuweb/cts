@@ -647,6 +647,25 @@ impl)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /** Converts a point to an acceptance interval, using a specific function
  *
  * This handles correctly rounding and flushing inputs as needed.
@@ -2002,6 +2021,24 @@ x,
 y)
 {
   return runBinaryToIntervalOp(toF32Interval(x), toF32Interval(y), MultiplicationIntervalOp);
+}
+
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a scalar */
+export function multiplicationMatrixScalarInterval(mat, scalar) {
+  const cols = mat.length;
+  const rows = mat[0].length;
+  return toF32Matrix(
+  unflatten2DArray(
+  flatten2DArray(mat).map((e) => MultiplicationIntervalOp.impl(e, scalar)),
+  cols,
+  rows));
+
+
+}
+
+/** Calculate an acceptance interval of x * y, when x is a scalar and y is a matrix */
+export function multiplicationScalarMatrixInterval(scalar, mat) {
+  return multiplicationMatrixScalarInterval(mat, scalar);
 }
 
 const NegationIntervalOp = {
