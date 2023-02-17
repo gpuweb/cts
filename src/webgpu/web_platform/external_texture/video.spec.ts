@@ -35,8 +35,8 @@ const kVideoInfo = /* prettier-ignore */ makeTable(
 } as const);
 type VideoName = keyof typeof kVideoInfo;
 
-// The expected color values were calculated based on:
-// https://chromium-review.googlesource.com/c/chromium/src/+/4232318
+// The process to calculate these expected pixel values can be found:
+// https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
 const kBt601Red = new Uint8Array([248, 36, 0, 255]);
 const kBt601Green = new Uint8Array([64, 252, 0, 255]);
 const kBt601Blue = new Uint8Array([26, 35, 255, 255]);
