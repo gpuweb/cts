@@ -139,6 +139,7 @@ g.test('stencil_clear_value')
 
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: stencilTexture.createView(),
+      depthClearValue: 0,
       stencilLoadOp: 'clear',
       stencilStoreOp: 'store',
       stencilClearValue,
