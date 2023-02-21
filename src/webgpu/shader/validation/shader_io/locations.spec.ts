@@ -158,7 +158,7 @@ g.test('type')
               `;
     }
     if (t.params.type === 'MyAlias') {
-      code += 'type MyAlias = i32;\n';
+      code += 'alias MyAlias = i32;\n';
     }
 
     code += generateShader({
