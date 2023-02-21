@@ -3,7 +3,7 @@
  **/ import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { kValue } from './constants.js';
-import { reinterpretF32AsU32, reinterpretU32AsF32 } from './conversion.js';
+import { f32, reinterpretF32AsU32, reinterpretU32AsF32 } from './conversion.js';
 import {
   calculatePermutations,
   cartesianProduct,
@@ -95,7 +95,7 @@ export class F32Interval {
 
   /** @returns a string representation for logging purposes */
   toString() {
-    return `[${this.bounds()}]`;
+    return `[${this.bounds().map(f32)}]`;
   }
 
   /** @returns a singleton for interval of all possible values
