@@ -46,7 +46,9 @@ import {
   minInterval,
   mixImpreciseInterval,
   mixPreciseInterval,
+  modfInterval,
   multiplicationInterval,
+  multiplicationMatrixMatrixInterval,
   multiplicationMatrixScalarInterval,
   negationInterval,
   normalizeInterval,
@@ -79,7 +81,6 @@ import {
   unpack2x16unormInterval,
   unpack4x8snormInterval,
   unpack4x8unormInterval,
-  modfInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -3567,13 +3568,13 @@ g.test('transposeInterval')
     );
   });
 
-interface MatrixPairCase {
+interface MatrixPairToMatrixCase {
   input: [number[][], number[][]];
   expected: IntervalBounds[][] | number[][];
 }
 
 g.test('additionMatrixInterval')
-  .paramsSubcasesOnly<MatrixPairCase>([
+  .paramsSubcasesOnly<MatrixPairToMatrixCase>([
     // Only testing that different shapes of matrices are handled correctly
     // here, to reduce test duplication.
     // additionMatrixInterval uses AdditionIntervalOp for calculating intervals,
@@ -3766,7 +3767,7 @@ g.test('additionMatrixInterval')
   });
 
 g.test('subtractionMatrixInterval')
-  .paramsSubcasesOnly<MatrixPairCase>([
+  .paramsSubcasesOnly<MatrixPairToMatrixCase>([
     // Only testing that different shapes of matrices are handled correctly
     // here, to reduce test duplication.
     // subtractionMatrixInterval uses SubtractionIntervalOp for calculating intervals,
@@ -3958,14 +3959,512 @@ g.test('subtractionMatrixInterval')
     );
   });
 
-interface MatrixScalarCase {
+g.test('multiplicationMatrixMatrixInterval')
+  .paramsSubcasesOnly<MatrixPairToMatrixCase>([
+    // Only testing that different shapes of matrices are handled correctly
+    // here, to reduce test duplication.
+    // multiplicationMatrixMatrixInterval uses and transposeInterval &
+    // dotInterval for calculating intervals, so the testing for those functions
+    // will cover the actual interval calculations.
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+        ],
+      ],
+      expected: [
+        [70, 100],
+        [150, 220],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+        ],
+      ],
+      expected: [
+        [70, 100],
+        [150, 220],
+        [230, 340],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+          [70, 80],
+        ],
+      ],
+      expected: [
+        [70, 100],
+        [150, 220],
+        [230, 340],
+        [310, 460],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+        ],
+      ],
+      expected: [
+        [90, 120, 150],
+        [190, 260, 330],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+        ],
+      ],
+      expected: [
+        [90, 120, 150],
+        [190, 260, 330],
+        [290, 400, 510],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+          [70, 80],
+        ],
+      ],
+      expected: [
+        [90, 120, 150],
+        [190, 260, 330],
+        [290, 400, 510],
+        [390, 540, 690],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+        ],
+      ],
+      expected: [
+        [110, 140, 170, 200],
+        [230, 300, 370, 440],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+          [70, 80],
+        ],
+      ],
+      expected: [
+        [110, 140, 170, 200],
+        [230, 300, 370, 440],
+        [350, 460, 570, 680],
+        [470, 620, 770, 920],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+        ],
+      ],
+      expected: [
+        [220, 280],
+        [490, 640],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+        ],
+      ],
+      expected: [
+        [220, 280],
+        [490, 640],
+        [760, 1000],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+          [100, 110, 120],
+        ],
+      ],
+      expected: [
+        [220, 280],
+        [490, 640],
+        [760, 1000],
+        [1030, 1360],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+        ],
+      ],
+      expected: [
+        [300, 360, 420],
+        [660, 810, 960],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+        ],
+      ],
+      expected: [
+        [300, 360, 420],
+        [660, 810, 960],
+        [1020, 1260, 1500],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+          [100, 110, 120],
+        ],
+      ],
+      expected: [
+        [300, 360, 420],
+        [660, 810, 960],
+        [1020, 1260, 1500],
+        [1380, 1710, 2040],
+      ],
+    },
+
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+        ],
+      ],
+      expected: [
+        [380, 440, 500, 560],
+        [830, 980, 1130, 1280],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+        ],
+      ],
+      expected: [
+        [380, 440, 500, 560],
+        [830, 980, 1130, 1280],
+        [1280, 1520, 1760, 2000],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+          [100, 110, 120],
+        ],
+      ],
+      expected: [
+        [380, 440, 500, 560],
+        [830, 980, 1130, 1280],
+        [1280, 1520, 1760, 2000],
+        [1730, 2060, 2390, 2720],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+          [7, 8],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+        ],
+      ],
+      expected: [
+        [500, 600],
+        [1140, 1400],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+          [7, 8],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+        ],
+      ],
+      expected: [
+        [500, 600],
+        [1140, 1400],
+        [1780, 2200],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2],
+          [3, 4],
+          [5, 6],
+          [7, 8],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+          [130, 140, 150, 160],
+        ],
+      ],
+      expected: [
+        [500, 600],
+        [1140, 1400],
+        [1780, 2200],
+        [2420, 3000],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+          [10, 11, 12],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+        ],
+      ],
+      expected: [
+        [700, 800, 900],
+        [1580, 1840, 2100],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+          [10, 11, 12],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+        ],
+      ],
+      expected: [
+        [700, 800, 900],
+        [1580, 1840, 2100],
+        [2460, 2880, 3300],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+          [10, 11, 12],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+          [130, 140, 150, 160],
+        ],
+      ],
+      expected: [
+        [700, 800, 900],
+        [1580, 1840, 2100],
+        [2460, 2880, 3300],
+        [3340, 3920, 4500],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+          [13, 14, 15, 16],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+        ],
+      ],
+      expected: [
+        [900, 1000, 1100, 1200],
+        [2020, 2280, 2540, 2800],
+        [3140, 3560, 3980, 4400],
+      ],
+    },
+    {
+      input: [
+        [
+          [1, 2, 3, 4],
+          [5, 6, 7, 8],
+          [9, 10, 11, 12],
+          [13, 14, 15, 16],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 100, 110, 120],
+          [130, 140, 150, 160],
+        ],
+      ],
+      expected: [
+        [900, 1000, 1100, 1200],
+        [2020, 2280, 2540, 2800],
+        [3140, 3560, 3980, 4400],
+        [4260, 4840, 5420, 6000],
+      ],
+    },
+  ])
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = toF32Matrix(t.params.expected);
+    const got = multiplicationMatrixMatrixInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `multiplicationMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+        y
+      )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+    );
+  });
+
+interface MatrixScalarToMatrixCase {
   matrix: number[][];
   scalar: number;
   expected: IntervalBounds[][] | number[][];
 }
 
 g.test('multiplicationMatrixScalarInterval')
-  .paramsSubcasesOnly<MatrixScalarCase>([
+  .paramsSubcasesOnly<MatrixScalarToMatrixCase>([
     // Only testing that different shapes of matrices are handled correctly
     // here, to reduce test duplication.
     // multiplicationMatrixScalarInterval uses MultiplicationIntervalOp for calculating intervals,
@@ -4097,7 +4596,7 @@ g.test('multiplicationMatrixScalarInterval')
     const got = multiplicationMatrixScalarInterval(matrix, scalar);
     t.expect(
       objectEquals(expected, got),
-      `multiplicationMatrixMatrixInterval([${JSON.stringify(
+      `multiplicationMatrixScalarInterval([${JSON.stringify(
         matrix
       )}], ${scalar}) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
     );
