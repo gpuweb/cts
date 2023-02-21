@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { globalTestConfig } from '../../../../common/framework/test_config.js';
-import { assert, unreachable } from '../../../../common/util/util.js';
+import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { compare, anyOf } from '../../../util/compare.js';
 import {
   ScalarType,
@@ -393,6 +393,17 @@ struct Output {
 };
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
+
+  cases.forEach(c => {
+    const inputTypes = c.input instanceof Array ? c.input.map(i => i.type) : [c.input.type];
+    if (!objectEquals(inputTypes, parameterTypes)) {
+      const input_str = `[${inputTypes.join(',')}]`;
+      const param_str = `[${parameterTypes.join(',')}]`;
+      throw new Error(
+        `case input types ${input_str} do not match provided runner parameter types ${param_str}`
+      );
+    }
+  });
 
   switch (inputSource) {
     case 'const': {
