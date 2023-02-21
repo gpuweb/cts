@@ -229,6 +229,13 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
     extraWGSL
   );
 }
+const LimitModes = {
+  defaultLimit: true,
+  maxLimit: true,
+};
+export type LimitMode = keyof typeof LimitModes;
+export const kLimitModes = keysOf(LimitModes);
+export type LimitsRequest = Record<string, LimitMode>;
 
 const LimitModes = {
   defaultLimit: true,
