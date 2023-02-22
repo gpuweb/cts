@@ -31,7 +31,10 @@ const kVideoInfo = /* prettier-ignore */ makeTable(
   'four-colors-h264-bt601.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
   'four-colors-vp9-bt601.webm'  : ['video/webm; codecs=vp9'],
   'four-colors-vp9-bt709.webm'  : ['video/webm; codecs=vp9'],
-  'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9']
+  'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9'],
+  'four-colors-h264-bt601-rotate-90.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-180.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-270.mp4'  : ['video/mp4; codecs=avc1.4d400c']
 } as const);
 type VideoName = keyof typeof kVideoInfo;
 
@@ -77,6 +80,30 @@ const kVideoExpectations = [
     _greenExpectation: new Uint8Array([0, 255, 0, 255]),
     _blueExpectation: new Uint8Array([0, 0, 255, 255]),
     _yellowExpectation: new Uint8Array([255, 255, 0, 255]),
+  },
+] as const;
+
+const kVideoRotationExpectations = [
+  {
+    videoName: 'four-colors-h264-bt601-rotate-90.mp4',
+    _topLeftExpectation: kBt601Red,
+    _topRightExpectation: kBt601Green,
+    _bottomLeftExpectation: kBt601Yellow,
+    _bottomRightExpectation: kBt601Blue,
+  },
+  {
+    videoName: 'four-colors-h264-bt601-rotate-180.mp4',
+    _topLeftExpectation: kBt601Green,
+    _topRightExpectation: kBt601Blue,
+    _bottomLeftExpectation: kBt601Red,
+    _bottomRightExpectation: kBt601Yellow,
+  },
+  {
+    videoName: 'four-colors-h264-bt601-rotate-270.mp4',
+    _topLeftExpectation: kBt601Blue,
+    _topRightExpectation: kBt601Yellow,
+    _bottomLeftExpectation: kBt601Green,
+    _bottomRightExpectation: kBt601Red,
   },
 ] as const;
 
@@ -238,6 +265,67 @@ for several combinations of video format and color space.
         { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._blueExpectation },
         // Bottom-right should be green.
         { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._greenExpectation },
+      ]);
+
+      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
+    });
+  });
+
+g.test('importExternalTexture,sampleWithRotationMetadata')
+  .desc(
+    `
+Tests that when importing an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sampling from
+it will honor rotation metadata.
+`
+  )
+  .params(u =>
+    u //
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
+      .combineWithParams(kVideoRotationExpectations)
+  )
+  .fn(async t => {
+    const sourceType = t.params.sourceType;
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      const source =
+        sourceType === 'VideoFrame'
+          ? await getVideoFrameFromVideoElement(t, videoElement)
+          : videoElement;
+
+      const colorAttachment = t.device.createTexture({
+        format: kFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      const pipeline = createExternalTextureSamplingTestPipeline(t);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorAttachment.createView(),
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.draw(6);
+      passEncoder.end();
+      t.device.queue.submit([commandEncoder.finish()]);
+
+      // For validation, we sample a few pixels away from the edges to avoid compression
+      // artifacts.
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._topLeftExpectation },
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._topRightExpectation },
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._bottomLeftExpectation },
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._bottomRightExpectation },
       ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();
