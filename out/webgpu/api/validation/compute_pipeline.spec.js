@@ -283,7 +283,7 @@ combineWithParams([
 { constants: { 9999: 0 }, _success: false },
 { constants: { 1000: 0, c2: 0 }, _success: false },
 { constants: { 数: 0 }, _success: true },
-{ constants: { séquençage: 0 }, _success: true } // test unicode normalization
+{ constants: { séquençage: 0 }, _success: false } // test unicode is not normalized
 ])).
 
 fn((t) => {
@@ -297,14 +297,14 @@ fn((t) => {
             override c0: bool = true;      // type: bool
             override c1: u32 = 0u;          // default override
             override 数: u32 = 0u;          // non-ASCII
-            override sequencage: u32 = 0u;  // unicode normalization
+            override séquençage: u32 = 0u;  // normalizable unicode (WGSL does not normalize)
             @id(1000) override c2: u32 = 10u;  // default
             @id(1) override c3: u32 = 11u;     // default
             @compute @workgroup_size(1) fn main () {
               // make sure the overridable constants are not optimized out
               _ = u32(c0);
               _ = u32(c1);
-              _ = u32(c2 + sequencage);
+              _ = u32(c2 + séquençage);
               _ = u32(c3 + 数);
             }`
       }),

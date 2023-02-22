@@ -37,7 +37,7 @@ const kEntryPointTestCases = [
 { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: 'main_t12V5' },
 { shaderModuleEntryPoint: 'main_t12V3', stageEntryPoint: '_main_t12V3' },
 { shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'séquençage' },
-{ shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'sequencage' }];
+{ shaderModuleEntryPoint: 'séquençage', stageEntryPoint: 'séquençage' }];
 
 
 g.test('compute').

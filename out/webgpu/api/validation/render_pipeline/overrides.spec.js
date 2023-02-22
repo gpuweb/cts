@@ -30,7 +30,7 @@ combineWithParams([
 { vertexConstants: { w: 1 }, _success: false }, // pipeline constant id is specified for w
 { vertexConstants: { 1: 1, z: 1 }, _success: false }, // pipeline constant id is specified for z
 { vertexConstants: { 数: 1 }, _success: true }, // test non-ASCII
-{ vertexConstants: { séquençage: 0 }, _success: true } // test unicode normalization
+{ vertexConstants: { séquençage: 0 }, _success: false } // test unicode normalization
 ])).
 
 fn((t) => {
@@ -44,11 +44,11 @@ fn((t) => {
             override x: f32 = 0.0;
             override y: f32 = 0.0;
             override 数: f32 = 0.0;
-            override sequencage: f32 = 0.0;
+            override séquençage: f32 = 0.0;
             @id(1) override z: f32 = 0.0;
             @id(1000) override w: f32 = 1.0;
             @vertex fn main() -> @builtin(position) vec4<f32> {
-              return vec4<f32>(x, y, z, w + 数 + sequencage);
+              return vec4<f32>(x, y, z, w + 数 + séquençage);
             }`
       }),
       entryPoint: 'main',
@@ -87,7 +87,7 @@ combineWithParams([
 { fragmentConstants: { a: 1 }, _success: false }, // pipeline constant id is specified for a
 { fragmentConstants: { 1: 1, b: 1 }, _success: false }, // pipeline constant id is specified for b
 { fragmentConstants: { 数: 1 }, _success: true }, // test non-ASCII
-{ fragmentConstants: { séquençage: 0 }, _success: true } // test unicode normalization
+{ fragmentConstants: { séquençage: 0 }, _success: false } // test unicode is not normalized
 ])).
 
 fn((t) => {
