@@ -1,12 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { SkipTestCase } from '../../common/framework/fixture.js';
-import {
-  assert,
-  ErrorWithExtra,
-  raceWithRejectOnTimeout,
-  unreachable,
-} from '../../common/util/util.js';
+import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
 /**
  * Starts playing a video and waits for it to be consumable.
@@ -94,56 +89,37 @@ export function waitForNextFrame(video, callback) {
   return promise;
 }
 
-export function getVideoColorSpaceInit(colorSpaceName) {
-  switch (colorSpaceName) {
-    case 'REC601':
-      return {
-        primaries: 'smpte170m',
-        transfer: 'smpte170m',
-        matrix: 'smpte170m',
-        fullRange: false,
-      };
-    case 'REC709':
-      return { primaries: 'bt709', transfer: 'bt709', matrix: 'bt709', fullRange: false };
-    case 'REC2020':
-      return { primaries: 'bt709', transfer: 'iec61966-2-1', matrix: 'rgb', fullRange: true };
-    default:
-      unreachable();
-  }
-}
-
-export async function getVideoFrameFromVideoElement(
-  test,
-  video,
-  colorSpace = getVideoColorSpaceInit('REC709')
-) {
+export async function getVideoFrameFromVideoElement(test, video) {
   if (video.captureStream === undefined) {
     test.skip('HTMLVideoElement.captureStream is not supported');
   }
 
-  const track = video.captureStream().getVideoTracks()[0];
-  const reader = new MediaStreamTrackProcessor({ track }).readable.getReader();
-  const videoFrame = (await reader.read()).value;
-  assert(videoFrame !== undefined, 'unable to get a VideoFrame from track 0');
-  assert(
-    videoFrame.format !== null && videoFrame.timestamp !== null,
-    'unable to get a valid VideoFrame from track 0'
+  return raceWithRejectOnTimeout(
+    new Promise((resolve, reject) => {
+      const videoTrack = video.captureStream().getVideoTracks()[0];
+      const trackProcessor = new MediaStreamTrackProcessor({
+        track: videoTrack,
+      });
+      const transformer = new TransformStream({
+        transform(videoFrame, controller) {
+          videoTrack.stop();
+          resolve(videoFrame);
+        },
+        flush(controller) {
+          controller.terminate();
+        },
+      });
+      const trackGenerator = new MediaStreamTrackGenerator({
+        kind: 'video',
+      });
+      trackProcessor.readable
+        .pipeThrough(transformer)
+        .pipeTo(trackGenerator.writable)
+        .catch(() => {});
+    }),
+    2000,
+    'Video never became ready'
   );
-
-  // Apply color space info because the VideoFrame generated from captured stream
-  // doesn't have it.
-  const bufferSize = videoFrame.allocationSize();
-  const buffer = new ArrayBuffer(bufferSize);
-  const frameLayout = await videoFrame.copyTo(buffer);
-  const frameInit = {
-    format: videoFrame.format,
-    timestamp: videoFrame.timestamp,
-    codedWidth: videoFrame.codedWidth,
-    codedHeight: videoFrame.codedHeight,
-    colorSpace,
-    layout: frameLayout,
-  };
-  return new VideoFrame(buffer, frameInit);
 }
 
 /**
