@@ -31,11 +31,11 @@ fn((t) => {
   t.device.createTexture(descriptor);
 });
 
-g.test('begin_render_pass').
+g.test('begin_render_pass_single_sampled').
 desc(
 `
 Test that it is valid to begin render pass with rg11b10ufloat texture format
-iff rg11b10ufloat-renderable feature is enabled.
+iff rg11b10ufloat-renderable feature is enabled. Single sampled case.
 `).
 
 beforeAllSubcases((t) => {
@@ -49,7 +49,7 @@ fn((t) => {
     usage: GPUConst.TextureUsage.RENDER_ATTACHMENT
   });
   const encoder = t.device.createCommandEncoder();
-  encoder.beginRenderPass({
+  const pass = encoder.beginRenderPass({
     colorAttachments: [
     {
       view: texture.createView(),
@@ -59,6 +59,47 @@ fn((t) => {
     }]
 
   });
+  pass.end();
+  encoder.finish();
+});
+
+g.test('begin_render_pass_msaa_and_resolve').
+desc(
+`
+Test that it is valid to begin render pass with rg11b10ufloat texture format
+iff rg11b10ufloat-renderable feature is enabled. MSAA and resolve case.
+`).
+
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
+}).
+fn((t) => {
+  const renderTexture = t.device.createTexture({
+    size: [1, 1, 1],
+    format: 'rg11b10ufloat',
+    sampleCount: 4,
+    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT
+  });
+  const resolveTexture = t.device.createTexture({
+    size: [1, 1, 1],
+    format: 'rg11b10ufloat',
+    sampleCount: 1,
+    usage: GPUConst.TextureUsage.RENDER_ATTACHMENT
+  });
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginRenderPass({
+    colorAttachments: [
+    {
+      view: renderTexture.createView(),
+      resolveTarget: resolveTexture.createView(),
+      clearValue: { r: 1.0, g: 0.0, b: 0.0, a: 1.0 },
+      loadOp: 'clear',
+      storeOp: 'store'
+    }]
+
+  });
+  pass.end();
+  encoder.finish();
 });
 
 g.test('begin_render_bundle_encoder').
