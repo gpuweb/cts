@@ -1091,6 +1091,98 @@ export function generateScalarMatrixToMatrixCases(scalars, mats, filter, ...ops)
 }
 
 /**
+ * @returns a Case for the params and the vector of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param vec the vector to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a matrix and a vector.
+ */
+function makeMatrixVectorToVectorCase(mat, vec, filter, ...ops) {
+  mat = map2DArray(mat, quantizeToF32);
+  vec = vec.map(quantizeToF32);
+  const mat_f32 = map2DArray(mat, f32);
+  const vec_f32 = vec.map(f32);
+
+  const results = ops.map(o => o(mat, vec));
+  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(mat_f32), new Vector(vec_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param mats array of inputs to try for the matrix input
+ * @param vecs array of inputs to try for the vector input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a matrix and a vector.
+ */
+export function generateMatrixVectorToVectorCases(mats, vecs, filter, ...ops) {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases = [];
+  mats.forEach(mat => {
+    vecs.forEach(vec => {
+      const c = makeMatrixVectorToVectorCase(mat, vec, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and the vector of intervals generator provided
+ * @param vec the vector to pass in
+ * @param mat the matrix param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a matrix.
+ */
+function makeVectorMatrixToVectorCase(vec, mat, filter, ...ops) {
+  vec = vec.map(quantizeToF32);
+  mat = map2DArray(mat, quantizeToF32);
+  const vec_f32 = vec.map(f32);
+  const mat_f32 = map2DArray(mat, f32);
+
+  const results = ops.map(o => o(vec, mat));
+  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [new Vector(vec_f32), new Matrix(mat_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param vecs array of inputs to try for the vector input
+ * @param mats array of inputs to try for the matrix input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a matrix.
+ */
+export function generateVectorMatrixToVectorCases(vecs, mats, filter, ...ops) {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases = [];
+  vecs.forEach(vec => {
+    mats.forEach(mat => {
+      const c = makeVectorMatrixToVectorCase(vec, mat, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
  * @returns a Case for the param and vector of intervals generator provided
  * The input is treated as an unsigned int.
  * @param param the param to pass in

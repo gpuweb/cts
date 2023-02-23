@@ -658,6 +658,26 @@ export interface MatrixScalarToMatrix {
 }
 
 /**
+ * A function that converts a matrix and a vector to a vector of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface MatrixVectorToVector {
+  (x: Matrix<number>, y: number[]): F32Vector;
+}
+
+/**
+ * A function that converts a vector and a matrix to a vector of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface VectorMatrixToVector {
+  (x: number[], y: Matrix<number>): F32Vector;
+}
+
+/**
  * A function that converts a scalar and a matrix to a matrix of acceptance
  * intervals.
  * This is the public facing API for builtin implementations that is called
@@ -2062,6 +2082,24 @@ export function multiplicationMatrixMatrixInterval(
   });
 
   return result as F32Matrix;
+}
+
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a vector */
+export function multiplicationMatrixVectorInterval(x: Matrix<number>, y: number[]): F32Vector {
+  const cols = x.length;
+  const rows = x[0].length;
+  assert(y.length === cols, `'mat${cols}x${rows} * vec${y.length}' is not defined`);
+
+  return transposeInterval(x).map(e => dotInterval(e, y)) as F32Vector;
+}
+
+/** Calculate an acceptance interval of x * y, when x is a vector and y is a matrix */
+export function multiplicationVectorMatrixInterval(x: number[], y: Matrix<number>): F32Vector {
+  const cols = y.length;
+  const rows = y[0].length;
+  assert(x.length === rows, `'vec${x.length} * mat${cols}x${rows}' is not defined`);
+
+  return y.map(e => dotInterval(x, e)) as F32Vector;
 }
 
 const NegationIntervalOp: PointToIntervalOp = {

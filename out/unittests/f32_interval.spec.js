@@ -50,6 +50,8 @@ modfInterval,
 multiplicationInterval,
 multiplicationMatrixMatrixInterval,
 multiplicationMatrixScalarInterval,
+multiplicationMatrixVectorInterval,
+multiplicationVectorMatrixInterval,
 negationInterval,
 normalizeInterval,
 powInterval,
@@ -4603,4 +4605,223 @@ fn((t) => {
 });
 
 // There are not explicit tests for multiplicationScalarMatrixInterval since it is just a passthrough to multiplicationMatrixScalarInterval
+
+
+
+
+
+
+
+g.test('multiplicationMatrixVectorInterval').
+paramsSubcasesOnly([
+// Only testing that different shapes of matrices are handled correctly
+// here, to reduce test duplication.
+// multiplicationMatrixVectorInterval uses DotIntervalOp &
+// TransposeIntervalOp for calculating intervals, so the testing for
+// dotInterval & transposeInterval covers the actual interval
+// calculations.
+{
+  matrix: [
+  [1, 2],
+  [3, 4]],
+
+  vector: [11, 22],
+  expected: [77, 110]
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6]],
+
+  vector: [11, 22],
+  expected: [99, 132, 165]
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
+
+  vector: [11, 22],
+  expected: [121, 154, 187, 220]
+},
+{
+  matrix: [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
+
+  vector: [11, 22, 33],
+  expected: [242, 308]
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
+
+  vector: [11, 22, 33],
+  expected: [330, 396, 462]
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  vector: [11, 22, 33],
+  expected: [418, 484, 550, 616]
+},
+{
+  matrix: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
+
+  vector: [11, 22, 33, 44],
+  expected: [550, 660]
+},
+{
+  matrix: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
+
+  vector: [11, 22, 33, 44],
+  expected: [770, 880, 990]
+},
+{
+  matrix: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  vector: [11, 22, 33, 44],
+  expected: [990, 1100, 1210, 1320]
+}]).
+
+fn((t) => {
+  const matrix = t.params.matrix;
+  const vector = t.params.vector;
+  const expected = toF32Vector(t.params.expected);
+
+  const got = multiplicationMatrixVectorInterval(matrix, vector);
+  t.expect(
+  objectEquals(expected, got),
+  `multiplicationMatrixVectorInterval([${JSON.stringify(matrix)}], [${JSON.stringify(
+  vector)
+  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+
+});
+
+
+
+
+
+
+
+g.test('multiplicationVectorMatrixInterval').
+paramsSubcasesOnly([
+// Only testing that different shapes of matrices are handled correctly
+// here, to reduce test duplication.
+// multiplicationVectorMatrixInterval uses DotIntervalOp for calculating
+// intervals, so the testing for dotInterval covers the actual interval
+// calculations.
+{
+  vector: [1, 2],
+  matrix: [
+  [11, 22],
+  [33, 44]],
+
+  expected: [55, 121]
+},
+{
+  vector: [1, 2],
+  matrix: [
+  [11, 22],
+  [33, 44],
+  [55, 66]],
+
+  expected: [55, 121, 187]
+},
+{
+  vector: [1, 2],
+  matrix: [
+  [11, 22],
+  [33, 44],
+  [55, 66],
+  [77, 88]],
+
+  expected: [55, 121, 187, 253]
+},
+{
+  vector: [1, 2, 3],
+  matrix: [
+  [11, 22, 33],
+  [44, 55, 66]],
+
+  expected: [154, 352]
+},
+{
+  vector: [1, 2, 3],
+  matrix: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99]],
+
+  expected: [154, 352, 550]
+},
+{
+  vector: [1, 2, 3],
+  matrix: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99],
+  [1010, 1111, 1212]],
+
+  expected: [154, 352, 550, 6868]
+},
+{
+  vector: [1, 2, 3, 4],
+  matrix: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88]],
+
+  expected: [330, 770]
+},
+{
+  vector: [1, 2, 3, 4],
+  matrix: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212]],
+
+  expected: [330, 770, 10300]
+},
+{
+  vector: [1, 2, 3, 4],
+  matrix: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212],
+  [1313, 1414, 1515, 1616]],
+
+  expected: [330, 770, 10300, 15150]
+}]).
+
+fn((t) => {
+  const vector = t.params.vector;
+  const matrix = t.params.matrix;
+  const expected = toF32Vector(t.params.expected);
+
+  const got = multiplicationVectorMatrixInterval(vector, matrix);
+  t.expect(
+  objectEquals(expected, got),
+  `multiplicationVectorMatrixInterval([${JSON.stringify(vector)}], [${JSON.stringify(
+  matrix)
+  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+
+});
 //# sourceMappingURL=f32_interval.spec.js.map

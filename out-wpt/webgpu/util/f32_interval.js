@@ -1770,6 +1770,24 @@ export function multiplicationMatrixMatrixInterval(mat_x, mat_y) {
   return result;
 }
 
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a vector */
+export function multiplicationMatrixVectorInterval(x, y) {
+  const cols = x.length;
+  const rows = x[0].length;
+  assert(y.length === cols, `'mat${cols}x${rows} * vec${y.length}' is not defined`);
+
+  return transposeInterval(x).map(e => dotInterval(e, y));
+}
+
+/** Calculate an acceptance interval of x * y, when x is a vector and y is a matrix */
+export function multiplicationVectorMatrixInterval(x, y) {
+  const cols = y.length;
+  const rows = y[0].length;
+  assert(x.length === rows, `'vec${x.length} * mat${cols}x${rows}' is not defined`);
+
+  return y.map(e => dotInterval(x, e));
+}
+
 const NegationIntervalOp = {
   impl: n => {
     return correctlyRoundedInterval(-n);
