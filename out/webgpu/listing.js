@@ -656,6 +656,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxStorageBufferBindingSize"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxTextureArrayLayers"
     ]
   },
@@ -684,6 +693,15 @@ export const listing = [
       "capability_checks",
       "limits",
       "maxTextureDimension3D"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxUniformBufferBindingSize"
     ]
   },
   {

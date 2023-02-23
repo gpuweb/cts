@@ -147,7 +147,7 @@ export class LimitTestsImpl extends GPUTestBase {
       if (requestedLimit <= defaultLimit) {
         this.expect(actualLimit === defaultLimit);
       } else {
-        this.expect(actualLimit === maximumLimit);
+        this.expect(actualLimit === requestedLimit);
       }
     }
 
