@@ -58,7 +58,7 @@ g.test('createRenderPipelineAsync,at_over')
         const pipelineDescriptor = getPipelineDescriptor(device, lastIndex);
 
         await t.shouldRejectConditionally(
-          'OperationError',
+          'GPUPipelineError',
           device.createRenderPipelineAsync(pipelineDescriptor),
           shouldError
         );

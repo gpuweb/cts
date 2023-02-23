@@ -80,7 +80,7 @@ g.test('createPipelineAsync,at_over')
         const module = device.createShaderModule({ code });
 
         const promise = t.createPipelineAsync(createPipelineAsyncType, module);
-        await t.shouldRejectConditionally('OperationError', promise, shouldError);
+        await t.shouldRejectConditionally('GPUPipelineError', promise, shouldError);
       }
     );
   });

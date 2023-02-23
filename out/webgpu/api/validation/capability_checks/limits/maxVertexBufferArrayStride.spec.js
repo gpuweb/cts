@@ -129,7 +129,7 @@ fn(async (t) => {
   async ({ device, testValue, shouldError }) => {
     const pipelineDescriptor = getPipelineDescriptor(device, testValue);
     await t.shouldRejectConditionally(
-    'OperationError',
+    'GPUPipelineError',
     device.createRenderPipelineAsync(pipelineDescriptor),
     shouldError);
 
