@@ -7,9 +7,10 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeMat } from '../../../../util/conversion.js';
 import {
 additionMatrixInterval,
-subtractionMatrixInterval,
+multiplicationMatrixMatrixInterval,
 multiplicationMatrixScalarInterval,
-multiplicationScalarMatrixInterval } from
+multiplicationScalarMatrixInterval,
+subtractionMatrixInterval } from
 '../../../../util/f32_interval.js';
 import { sparseF32Range, sparseMatrixF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
@@ -170,6 +171,438 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     additionMatrixInterval);
 
   },
+  multiplication_2x2_2x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(2, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x2_2x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(2, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_2x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(2, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_2x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(2, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x2_3x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(3, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x2_3x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(3, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_3x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(3, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_3x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(3, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_2x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(2, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_2x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(2, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x2_4x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(4, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x2_4x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 2),
+    sparseMatrixF32Range(4, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_4x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(4, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_4x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(4, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_4x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(4, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x3_4x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 3),
+    sparseMatrixF32Range(4, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_3x2_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(3, 2),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_2x4_3x2_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(2, 4),
+    sparseMatrixF32Range(3, 2),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_3x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(3, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_3x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(3, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_3x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(3, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_3x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(3, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_2x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(2, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_2x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(2, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_2x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(2, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_2x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(2, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_3x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(3, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_3x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(3, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_4x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(4, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x3_4x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 3),
+    sparseMatrixF32Range(4, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_4x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(4, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_4x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(4, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_4x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(4, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x2_4x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 2),
+    sparseMatrixF32Range(4, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_2x3_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(2, 3),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_3x4_2x3_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(3, 4),
+    sparseMatrixF32Range(2, 3),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_4x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(4, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_4x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(4, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_4x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(4, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_4x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(4, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_2x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(2, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_2x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(2, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_2x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(2, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_2x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(2, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_4x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(4, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_4x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(4, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_3x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(3, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x4_3x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 4),
+    sparseMatrixF32Range(3, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_3x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(3, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_3x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(3, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_3x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(3, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x2_3x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 2),
+    sparseMatrixF32Range(3, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_2x4_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(2, 4),
+    'f32-only',
+    multiplicationMatrixMatrixInterval);
+
+  },
+  multiplication_4x3_2x4_non_const: () => {
+    return generateMatrixPairToMatrixCases(
+    sparseMatrixF32Range(4, 3),
+    sparseMatrixF32Range(2, 4),
+    'unfiltered',
+    multiplicationMatrixMatrixInterval);
+
+  },
   multiplication_2x2_scalar_const: () => {
     return generateMatrixScalarToMatrixCases(
     sparseMatrixF32Range(2, 2),
@@ -314,7 +747,6 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     multiplicationMatrixScalarInterval);
 
   },
-
   multiplication_scalar_2x2_const: () => {
     return generateScalarMatrixToMatrixCases(
     sparseF32Range(),
@@ -632,6 +1064,42 @@ fn(async (t) => {
   binary('+'),
   [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
   TypeMat(cols, rows, TypeF32),
+  t.params,
+  cases);
+
+});
+
+g.test('multiplication_matrix_matrix').
+specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
+desc(
+`
+Expression: x * y, where x is a matrix and y is a matrix
+Accuracy: Correctly rounded
+`).
+
+params((u) =>
+u.
+combine('inputSource', allInputSources).
+combine('common_dim', [2, 3, 4]).
+combine('x_rows', [2, 3, 4]).
+combine('y_cols', [2, 3, 4])).
+
+fn(async (t) => {
+  const x_cols = t.params.common_dim;
+  const x_rows = t.params.x_rows;
+  const y_cols = t.params.y_cols;
+  const y_rows = t.params.common_dim;
+
+  const cases = await d.get(
+  t.params.inputSource === 'const' ?
+  `multiplication_${x_cols}x${x_rows}_${y_cols}x${y_rows}_const` :
+  `multiplication_${x_cols}x${x_rows}_${y_cols}x${y_rows}_non_const`);
+
+  await run(
+  t,
+  binary('*'),
+  [TypeMat(x_cols, x_rows, TypeF32), TypeMat(y_cols, y_rows, TypeF32)],
+  TypeMat(y_cols, x_rows, TypeF32),
   t.params,
   cases);
 

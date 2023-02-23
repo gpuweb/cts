@@ -1750,6 +1750,26 @@ export function multiplicationScalarMatrixInterval(scalar, mat) {
   return multiplicationMatrixScalarInterval(mat, scalar);
 }
 
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
+export function multiplicationMatrixMatrixInterval(mat_x, mat_y) {
+  const x_cols = mat_x.length;
+  const x_rows = mat_x[0].length;
+  const y_cols = mat_y.length;
+  const y_rows = mat_y[0].length;
+  assert(x_cols === y_rows, `'mat${x_cols}x${x_rows} * mat${y_cols}x${y_rows}' is not defined`);
+
+  const x_transposed = transposeInterval(mat_x);
+
+  const result = [...Array(y_cols)].map(_ => [...Array(x_rows)]);
+  mat_y.forEach((y, i) => {
+    x_transposed.forEach((x, j) => {
+      result[i][j] = dotInterval(x, y);
+    });
+  });
+
+  return result;
+}
+
 const NegationIntervalOp = {
   impl: n => {
     return correctlyRoundedInterval(-n);
