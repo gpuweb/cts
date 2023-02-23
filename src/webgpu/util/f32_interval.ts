@@ -1703,7 +1703,7 @@ const DotIntervalOp: VectorPairToIntervalOp = {
   },
 };
 
-export function dotInterval(x: number[], y: number[]): F32Interval {
+export function dotInterval(x: number[] | F32Interval[], y: number[] | F32Interval[]): F32Interval {
   assert(x.length === y.length, `dot not defined for vectors with different lengths`);
   return runVectorPairToIntervalOp(toF32Vector(x), toF32Vector(y), DotIntervalOp);
 }
@@ -2039,6 +2039,29 @@ export function multiplicationMatrixScalarInterval(mat: Matrix<number>, scalar: 
 /** Calculate an acceptance interval of x * y, when x is a scalar and y is a matrix */
 export function multiplicationScalarMatrixInterval(scalar: number, mat: Matrix<number>): F32Matrix {
   return multiplicationMatrixScalarInterval(mat, scalar);
+}
+
+/** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
+export function multiplicationMatrixMatrixInterval(
+  mat_x: Matrix<number>,
+  mat_y: Matrix<number>
+): F32Matrix {
+  const x_cols = mat_x.length;
+  const x_rows = mat_x[0].length;
+  const y_cols = mat_y.length;
+  const y_rows = mat_y[0].length;
+  assert(x_cols === y_rows, `'mat${x_cols}x${x_rows} * mat${y_cols}x${y_rows}' is not defined`);
+
+  const x_transposed = transposeInterval(mat_x);
+
+  const result: Matrix<F32Interval> = [...Array(y_cols)].map(_ => [...Array(x_rows)]);
+  mat_y.forEach((y, i) => {
+    x_transposed.forEach((x, j) => {
+      result[i][j] = dotInterval(x, y);
+    });
+  });
+
+  return result as F32Matrix;
 }
 
 const NegationIntervalOp: PointToIntervalOp = {
