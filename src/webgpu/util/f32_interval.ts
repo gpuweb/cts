@@ -623,6 +623,22 @@ interface VectorPairToVectorOp {
 }
 
 /**
+ * A function that converts a matrix to an acceptance interval.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface MatrixToScalar {
+  (m: Matrix<number>): F32Interval;
+}
+
+/** Operation used to implement a MatrixToMatrix */
+interface MatrixToMatrixOp {
+  // Re-using the *Op interface pattern for symmetry with the other operations.
+  /** @returns a matrix of acceptance intervals for a function on matrix x */
+  impl: MatrixToMatrix;
+}
+
+/**
  * A function that converts a matrix to a matrix of acceptance intervals.
  * This is the public facing API for builtin implementations that is called
  * from tests.
@@ -1268,7 +1284,7 @@ const CorrectlyRoundedIntervalOp: PointToIntervalOp = {
 };
 
 /** @returns an interval of the correctly rounded values around the point */
-export function correctlyRoundedInterval(n: number): F32Interval {
+export function correctlyRoundedInterval(n: number | F32Interval): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), CorrectlyRoundedIntervalOp);
 }
 
@@ -1642,6 +1658,148 @@ const DegreesIntervalOp: PointToIntervalOp = {
 /** Calculate an acceptance interval of degrees(x) */
 export function degreesInterval(n: number): F32Interval {
   return runPointToIntervalOp(toF32Interval(n), DegreesIntervalOp);
+}
+
+/**
+ * Calculate the minor of a NxN matrix.
+ *
+ * The ijth minor of a square matrix, is the N-1xN-1 matrix created by removing
+ * the ith column and jth row from the original matrix.
+ */
+function minorNxN(m: Matrix<number>, col: number, row: number): Matrix<number> {
+  const dim = m.length;
+  assert(m.length === m[0].length, `minorMatrix is only defined for square matrices`);
+  assert(col >= 0 && col < dim, `col ${col} needs be in [0, # of columns '${dim}')`);
+  assert(row >= 0 && row < dim, `row ${row} needs be in [0, # of rows '${dim}')`);
+
+  const result: Matrix<number> = [...Array(dim - 1)].map(_ => [...Array(dim - 1)]);
+
+  const col_indices: number[] = [...Array(dim).keys()].filter(e => e !== col);
+  const row_indices: number[] = [...Array(dim).keys()].filter(e => e !== row);
+
+  col_indices.forEach((c, i) => {
+    row_indices.forEach((r, j) => {
+      result[i][j] = m[c][r];
+    });
+  });
+  return result;
+}
+
+/** Calculate an acceptance interval for determinant(m), where m is a 2x2 matrix */
+function determinant2x2Interval(m: Matrix<number>): F32Interval {
+  assert(
+    m.length === m[0].length && m.length === 2,
+    `determinant2x2Interval called on non-2x2 matrix`
+  );
+  return subtractionInterval(
+    multiplicationInterval(m[0][0], m[1][1]),
+    multiplicationInterval(m[0][1], m[1][0])
+  );
+}
+
+/** Calculate an acceptance interval for determinant(m), where m is a 3x3 matrix */
+function determinant3x3Interval(m: Matrix<number>): F32Interval {
+  assert(
+    m.length === m[0].length && m.length === 3,
+    `determinant3x3Interval called on non-3x3 matrix`
+  );
+
+  // M is a 3x3 matrix
+  // det(M) is A + B + C, where A, B, C are three elements in a row/column times
+  // their own co-factor.
+  // (The co-factor is the determinant of the minor of that position with the
+  // appropriate +/-)
+  // For simplicity sake A, B, C are calculated as the elements of the first
+  // column
+  const A = multiplicationInterval(m[0][0], determinant2x2Interval(minorNxN(m, 0, 0)));
+  const B = multiplicationInterval(
+    m[0][1],
+    multiplicationInterval(-1, determinant2x2Interval(minorNxN(m, 0, 1)))
+  );
+  const C = multiplicationInterval(m[0][2], determinant2x2Interval(minorNxN(m, 0, 2)));
+
+  // Need to calculate permutations, since for fp addition is not transitive,
+  // so A + B + C is not guaranteed to equal B + C + A, etc.
+  const permutations: F32Interval[][] = calculatePermutations([A, B, C]);
+  return F32Interval.span(
+    ...permutations.map(p =>
+      p.reduce((prev: F32Interval, cur: F32Interval) => additionInterval(prev, cur))
+    )
+  );
+}
+
+/** Calculate an acceptance interval for determinant(m), where m is a 4x4 matrix */
+function determinant4x4Interval(m: Matrix<number>): F32Interval {
+  assert(
+    m.length === m[0].length && m.length === 4,
+    `determinant3x3Interval called on non-4x4 matrix`
+  );
+
+  // M is a 4x4 matrix
+  // det(M) is A + B + C + D, where A, B, C, D are four elements in a row/column
+  // times their own co-factor.
+  // (The co-factor is the determinant of the minor of that position with the
+  // appropriate +/-)
+  // For simplicity sake A, B, C, D are calculated as the elements of the
+  // first column
+  const A = multiplicationInterval(m[0][0], determinant3x3Interval(minorNxN(m, 0, 0)));
+  const B = multiplicationInterval(
+    m[0][1],
+    multiplicationInterval(-1, determinant3x3Interval(minorNxN(m, 0, 1)))
+  );
+  const C = multiplicationInterval(m[0][2], determinant3x3Interval(minorNxN(m, 0, 2)));
+  const D = multiplicationInterval(
+    m[0][3],
+    multiplicationInterval(-1, determinant3x3Interval(minorNxN(m, 0, 3)))
+  );
+
+  // Need to calculate permutations, since for fp addition is not transitive,
+  // so A + B + C + D is not guaranteed to equal B + C + A + D, etc.
+  const permutations: F32Interval[][] = calculatePermutations([A, B, C, D]);
+  return F32Interval.span(
+    ...permutations.map(p =>
+      p.reduce((prev: F32Interval, cur: F32Interval) => additionInterval(prev, cur))
+    )
+  );
+}
+
+/**
+ * Calculate an acceptance interval for determinant(x)
+ *
+ * This code calculates 3x3 and 4x4 determinants using the textbook co-factor
+ * method, using the first column for the co-factor selection.
+ *
+ * For matrices composed of integer elements, e, with |e|^4 < 2**21, this
+ * should be fine.
+ *
+ * For e, where e is subnormal or 4*(e^4) might not be precisely expressible as
+ * a f32 values, this approach breaks down, because the rule of all co-factor
+ * definitions of determinant being equal doesn't hold in these cases.
+ *
+ * The general solution for this is to calculate all of the permutations of the
+ * operations in the worked out formula for determinant.
+ * For 3x3 this is tractable, but for 4x4 this works out to ~23! permutations
+ * that need to be calculated.
+ * Thus CTS testing, and the spec definition of accuracy is restricted to the
+ * space that the simple implementation is valid.
+ */
+export function determinantInterval(x: Matrix<number>): F32Interval {
+  const dim = x.length;
+  assert(
+    x[0].length === dim && (dim === 2 || dim === 3 || dim === 4),
+    `determinantInterval only defined for 2x2, 3x3 and 4x4 matrices`
+  );
+  switch (dim) {
+    case 2:
+      return determinant2x2Interval(x);
+    case 3:
+      return determinant3x3Interval(x);
+    case 4:
+      return determinant4x4Interval(x);
+  }
+  unreachable(
+    "determinantInterval called on x, where which has an unexpected dimension of '${dim}'"
+  );
 }
 
 const DistanceIntervalScalarOp: BinaryToIntervalOp = {

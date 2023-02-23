@@ -83,6 +83,7 @@ import {
   unpack2x16unormInterval,
   unpack4x8snormInterval,
   unpack4x8unormInterval,
+  determinantInterval,
 } from '../webgpu/util/f32_interval.js';
 import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
 
@@ -3432,6 +3433,122 @@ g.test('modfInterval')
     t.expect(
       objectEquals(expected, got),
       `modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+    );
+  });
+
+interface MatrixToScalarCase {
+  input: number[][];
+  expected: number | IntervalBounds;
+}
+
+g.test('determinantInterval')
+  .paramsSubcasesOnly<MatrixToScalarCase>([
+    // Exterme values, i.e. subnormals, very large magnitudes, and those lead to
+    // non-precise products, are intentionally not tested, since the accuracy of
+    // determinant is restricted to well behaving inputs. Handling all cases
+    // requires ~23! options to be calculated in the 4x4 case, so is not
+    // feasible.
+    {
+      input: [
+        [1, 2],
+        [3, 4],
+      ],
+      expected: -2,
+    },
+    {
+      input: [
+        [-1, 2],
+        [-3, 4],
+      ],
+      expected: 2,
+    },
+    {
+      input: [
+        [11, 22],
+        [33, 44],
+      ],
+      expected: -242,
+    },
+    {
+      input: [
+        [5, 6],
+        [8, 9],
+      ],
+      expected: -3,
+    },
+    {
+      input: [
+        [4, 6],
+        [7, 9],
+      ],
+      expected: -6,
+    },
+    {
+      input: [
+        [4, 5],
+        [7, 8],
+      ],
+      expected: -3,
+    },
+    {
+      input: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [-1, 2, 3],
+        [-4, 5, 6],
+        [-7, 8, 9],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [11, 22, 33],
+        [44, 55, 66],
+        [77, 88, 99],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [4, 1, -1],
+        [-3, 0, 5],
+        [5, 3, 2],
+      ],
+      expected: -20,
+    },
+    {
+      input: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 16],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [4, 0, 0, 0],
+        [3, 1, -1, 3],
+        [2, -3, 3, 1],
+        [2, 3, 3, 1],
+      ],
+      expected: -240,
+    },
+  ])
+  .fn(t => {
+    const input = t.params.input;
+    const expected = toF32Interval(t.params.expected);
+
+    const got = determinantInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `determinantInterval([${JSON.stringify(input)}]) returned '${got}. Expected '${expected}'`
     );
   });
 
