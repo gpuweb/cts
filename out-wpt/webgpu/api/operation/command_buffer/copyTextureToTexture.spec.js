@@ -456,6 +456,7 @@ class F extends GPUTest {
     });
     const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
 
+    const hasStencil = kTextureFormatInfo[sourceTexture.format].stencil;
     const encoder = this.device.createCommandEncoder();
     for (let srcCopyLayer = 0; srcCopyLayer < copySize[2]; ++srcCopyLayer) {
       const renderPass = encoder.beginRenderPass({
@@ -470,8 +471,8 @@ class F extends GPUTest {
           depthClearValue: 0.0,
           depthLoadOp: 'clear',
           depthStoreOp: 'store',
-          stencilLoadOp: 'load',
-          stencilStoreOp: 'store',
+          stencilLoadOp: hasStencil ? 'load' : undefined,
+          stencilStoreOp: hasStencil ? 'store' : undefined,
         },
       });
       renderPass.setBindGroup(0, bindGroup, [srcCopyLayer * kMinDynamicBufferOffsetAlignment]);
@@ -499,12 +500,15 @@ class F extends GPUTest {
     });
     const bindGroup = this.GetBindGroupForT2TCopyWithDepthTests(bindGroupLayout, copySize[2]);
 
-    const outputColorTexture = this.device.createTexture({
-      format: 'rgba8unorm',
-      size: copySize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
-    });
-    this.trackForCleanup(outputColorTexture);
+    const outputColorTexture = this.trackForCleanup(
+      this.device.createTexture({
+        format: 'rgba8unorm',
+        size: copySize,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
+      })
+    );
+
+    const hasStencil = kTextureFormatInfo[destinationTexture.format].stencil;
     const encoder = this.device.createCommandEncoder();
     for (let dstCopyLayer = 0; dstCopyLayer < copySize[2]; ++dstCopyLayer) {
       // If the depth value is not expected, the color of outputColorTexture will remain Red after
@@ -531,8 +535,8 @@ class F extends GPUTest {
           }),
           depthLoadOp: 'load',
           depthStoreOp: 'store',
-          stencilLoadOp: 'load',
-          stencilStoreOp: 'store',
+          stencilLoadOp: hasStencil ? 'load' : undefined,
+          stencilStoreOp: hasStencil ? 'store' : undefined,
         },
       });
       renderPass.setBindGroup(0, bindGroup, [dstCopyLayer * kMinDynamicBufferOffsetAlignment]);
@@ -1159,27 +1163,30 @@ g.test('copy_depth_stencil')
       srcTextureSize.depthOrArrayLayers - Math.max(srcCopyBaseArrayLayer, dstCopyBaseArrayLayer),
     ];
 
-    const sourceTexture = t.device.createTexture({
-      format,
-      size: srcTextureSize,
-      usage:
-        GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-      mipLevelCount: srcCopyLevel + 1,
-    });
-    t.trackForCleanup(sourceTexture);
-    const destinationTexture = t.device.createTexture({
-      format,
-      size: [
-        copySize[0] << dstCopyLevel,
-        copySize[1] << dstCopyLevel,
-        srcTextureSize.depthOrArrayLayers,
-      ],
+    const sourceTexture = t.trackForCleanup(
+      t.device.createTexture({
+        format,
+        size: srcTextureSize,
+        usage:
+          GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+        mipLevelCount: srcCopyLevel + 1,
+      })
+    );
 
-      usage:
-        GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-      mipLevelCount: dstCopyLevel + 1,
-    });
-    t.trackForCleanup(destinationTexture);
+    const destinationTexture = t.trackForCleanup(
+      t.device.createTexture({
+        format,
+        size: [
+          copySize[0] << dstCopyLevel,
+          copySize[1] << dstCopyLevel,
+          srcTextureSize.depthOrArrayLayers,
+        ],
+
+        usage:
+          GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
+        mipLevelCount: dstCopyLevel + 1,
+      })
+    );
 
     let initialStencilData = undefined;
     if (kTextureFormatInfo[format].stencil) {
