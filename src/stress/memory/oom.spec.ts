@@ -10,13 +10,14 @@ import { exhaustVramUntilUnder64MB } from '../../webgpu/util/memory.js';
 
 export const g = makeTestGroup(GPUTest);
 
-function createBuffer(
+function createBufferWithMapState(
   device: GPUDevice,
   size: number,
-  mappable: boolean,
+  mapState: GPUBufferMapState,
   mode: GPUMapModeFlags,
   mappedAtCreation: boolean
 ) {
+  const mappable = mapState === 'unmapped';
   if (!mappable && !mappedAtCreation) {
     return device.createBuffer({
       size,
@@ -65,7 +66,7 @@ mapAsync on it should reject and produce a validation error. `
   )
   .params(u =>
     u
-      .combine('mappable', [true, false])
+      .combine('mapState', ['mapped', 'unmapped'] as GPUBufferMapState[])
       .combine('mode', [GPUConst.MapMode.READ, GPUConst.MapMode.WRITE])
       .combine('mappedAtCreation', [true, false])
       .combine('unmapBeforeResolve', [true, false])
@@ -74,7 +75,8 @@ mapAsync on it should reject and produce a validation error. `
     // Use a relatively large size to quickly hit OOM.
     const kSize = 512 * 1024 * 1024;
 
-    const { mappable, mode, mappedAtCreation, unmapBeforeResolve } = t.params;
+    const { mapState, mode, mappedAtCreation, unmapBeforeResolve } = t.params;
+    const mappable = mapState === 'unmapped';
     const buffers: GPUBuffer[] = [];
     // Closure to call map and verify results on all of the buffers.
     const finish = async () => {
@@ -99,7 +101,7 @@ mapAsync on it should reject and produce a validation error. `
         try {
           t.device.pushErrorScope('out-of-memory');
           const buffer = t.trackForCleanup(
-            createBuffer(t.device, kSize, mappable, mode, mappedAtCreation)
+            createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
           );
           if (await t.device.popErrorScope()) {
             errorBuffer = buffer;
@@ -114,7 +116,7 @@ mapAsync on it should reject and produce a validation error. `
       } else {
         t.device.pushErrorScope('out-of-memory');
         const buffer = t.trackForCleanup(
-          createBuffer(t.device, kSize, mappable, mode, mappedAtCreation)
+          createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
         );
         if (await t.device.popErrorScope()) {
           errorBuffer = buffer;
