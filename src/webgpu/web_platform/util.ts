@@ -1,6 +1,7 @@
 import { Fixture, SkipTestCase } from '../../common/framework/fixture.js';
 import { getResourcePath } from '../../common/framework/resources.js';
 import { makeTable } from '../../common/util/data_tables.js';
+import { timeout } from '../../common/util/timeout.js';
 import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
 
@@ -95,14 +96,11 @@ export function startPlayingAndWaitForVideo(
  * Fire a `callback` when the script animation reaches a new frame.
  * Returns a promise which resolves after `callback` (which may be async) completes.
  */
-export function waitForNextAnimationFrame(
-  callback: () => unknown | Promise<unknown>
-): Promise<void> {
-  const { promise, callbackAndResolve } = callbackHelper(callback, 'waitForNextFrame timed out');
-
-  window.requestAnimationFrame(() => {
+export function waitForNextTask(callback: () => unknown | Promise<unknown>): Promise<void> {
+  const { promise, callbackAndResolve } = callbackHelper(callback, 'wait for next task timed out');
+  timeout(() => {
     callbackAndResolve();
-  });
+  }, 0);
 
   return promise;
 }

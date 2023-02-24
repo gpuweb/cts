@@ -9,13 +9,13 @@ import {
   startPlayingAndWaitForVideo,
   getVideoFrameFromVideoElement,
   waitForNextFrame,
-  waitForNextAnimationFrame,
+  waitForNextTask,
 } from '../../web_platform/util.js';
 
 import { ValidationTest } from './validation_test.js';
 
 class GPUExternalTextureExpireTest extends ValidationTest {
-  submitCommandBuffer(bindGroup: GPUBindGroup, shouldError: boolean): void {
+  submitCommandBuffer(bindGroup: GPUBindGroup, success: boolean): void {
     const kHeight = 16;
     const kWidth = 16;
     const kFormat = 'rgba8unorm';
@@ -41,7 +41,7 @@ class GPUExternalTextureExpireTest extends ValidationTest {
     passEncoder.setBindGroup(0, bindGroup);
     passEncoder.end();
     const commandBuffer = commandEncoder.finish();
-    this.expectValidationError(() => this.device.queue.submit([commandBuffer]), shouldError);
+    this.expectValidationError(() => this.device.queue.submit([commandBuffer]), !success);
   }
 
   getDefaultVideoElementAndCheck(): HTMLVideoElement {
@@ -96,7 +96,7 @@ g.test('import_multiple_times_in_same_task_scope')
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
 
       // Import again in the same task scope should return same object.
       const shouldBeTheSameExternalTexture = t.device.importExternalTexture({
@@ -105,7 +105,7 @@ g.test('import_multiple_times_in_same_task_scope')
       });
       assert(externalTexture === shouldBeTheSameExternalTexture);
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
   });
 
@@ -132,29 +132,29 @@ g.test('import_and_use_in_different_microtask')
           ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
 
-      const importMicrotask = Promise.resolve().then(() => {
+      // Import GPUExternalTexture
+      queueMicrotask(() => {
         externalTexture = t.device.importExternalTexture({
           /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
           source: source as any,
         });
       });
 
-      const submitMicrotask = Promise.resolve().then(() => {
+      // Submit GPUExternalTexture
+      queueMicrotask(() => {
         bindGroup = t.device.createBindGroup({
           layout: t.getDefaultBindGroupLayout(),
           entries: [{ binding: 0, resource: externalTexture }],
         });
-        t.submitCommandBuffer(bindGroup, false);
+        t.submitCommandBuffer(bindGroup, true);
       });
-      await importMicrotask;
-      await submitMicrotask;
     });
   });
 
 g.test('import_and_use_in_different_task')
   .desc(
     `
-    Tests that in the different task scope, privious imported GPUExternalTexture
+    Tests that in the different task scope, previous imported GPUExternalTexture
     should be expired.
     `
   )
@@ -183,12 +183,12 @@ g.test('import_and_use_in_different_task')
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
 
-    await waitForNextAnimationFrame(() => {
+    await waitForNextTask(() => {
       // Enter in another task scope, previous GPUExternalTexture should be expired.
-      t.submitCommandBuffer(bindGroup, true);
+      t.submitCommandBuffer(bindGroup, false);
     });
   });
 
@@ -226,10 +226,10 @@ g.test('use_import_to_refresh')
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
 
-    await waitForNextAnimationFrame(() => {
+    await waitForNextTask(() => {
       // Video frame is not updated, import should return the same GPUExternalTexture object.
       const shouldBeTheSameExternalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -238,7 +238,7 @@ g.test('use_import_to_refresh')
       assert(externalTexture === shouldBeTheSameExternalTexture);
 
       // ImportExternalTexture should refresh expired GPUExternalTexture.
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
   });
 
@@ -266,11 +266,11 @@ g.test('webcodec_video_frame_close_expire_immediately')
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
 
       source.close();
 
-      t.submitCommandBuffer(bindGroup, true);
+      t.submitCommandBuffer(bindGroup, false);
     });
   });
 
@@ -298,7 +298,7 @@ g.test('import_from_different_video_frame')
         entries: [{ binding: 0, resource: externalTexture }],
       });
 
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
 
     // Update new video frame.
@@ -312,13 +312,13 @@ g.test('import_from_different_video_frame')
       // VideoFrame is updated. GPUExternalTexture imported from old frame should be expired and
       // cannot be refreshed again.
       // Using the GPUExternalTexture should result in an error.
-      t.submitCommandBuffer(bindGroup, true);
+      t.submitCommandBuffer(bindGroup, false);
 
       // Update bindGroup with updated GPUExternalTexture should work.
       bindGroup = t.device.createBindGroup({
         layout: t.getDefaultBindGroupLayout(),
         entries: [{ binding: 0, resource: newValidExternalTexture }],
       });
-      t.submitCommandBuffer(bindGroup, false);
+      t.submitCommandBuffer(bindGroup, true);
     });
   });
