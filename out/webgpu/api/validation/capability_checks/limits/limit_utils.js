@@ -2,7 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';import { makeTestGroup } from '../../../../../common/framework/test_group.js';import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
-import { assert } from '../../../../../common/util/util.js';
+import { assert, range, reorder } from '../../../../../common/util/util.js';
 import { kLimitInfo } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
@@ -10,25 +10,19 @@ import { GPUTestBase } from '../../../../gpu_test.js';
 
 const CreatePipelineTypes = {
   createRenderPipeline: true,
+  createRenderPipelineWithFragmentStage: true,
   createComputePipeline: true
 };
 
-
-export const kCreatePipelineTypes = [
-'createRenderPipeline',
-'createComputePipeline'];
-
+export const kCreatePipelineTypes = keysOf(CreatePipelineTypes);
 
 const CreatePipelineAsyncTypes = {
   createRenderPipelineAsync: true,
+  createRenderPipelineAsyncWithFragmentStage: true,
   createComputePipelineAsync: true
 };
 
-
-export const kCreatePipelineAsyncTypes = [
-'createRenderPipelineAsync',
-'createComputePipelineAsync'];
-
+export const kCreatePipelineAsyncTypes = keysOf(CreatePipelineAsyncTypes);
 
 const RenderEncoderTypes = {
   render: true,
@@ -44,6 +38,197 @@ const EncoderTypes = {
 };
 
 export const kEncoderTypes = keysOf(EncoderTypes);
+
+const BindGroupTests = {
+  sameGroup: true,
+  differentGroups: true
+};
+
+export const kBindGroupTests = keysOf(BindGroupTests);
+
+const BindingCombinations = {
+  vertex: true,
+  fragment: true,
+  vertexAndFragmentWithPossibleVertexStageOverflow: true,
+  vertexAndFragmentWithPossibleFragmentStageOverflow: true,
+  compute: true
+};
+
+export const kBindingCombinations = keysOf(BindingCombinations);
+
+export function getPipelineTypeForBindingCombination(bindingCombination) {
+  switch (bindingCombination) {
+    case 'vertex':
+      return 'createRenderPipeline';
+    case 'fragment':
+    case 'vertexAndFragmentWithPossibleVertexStageOverflow':
+    case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
+      return 'createRenderPipelineWithFragmentStage';
+    case 'compute':
+      return 'createComputePipeline';}
+
+}
+
+export function getPipelineAsyncTypeForBindingCombination(bindingCombination) {
+  switch (bindingCombination) {
+    case 'vertex':
+      return 'createRenderPipelineAsync';
+    case 'fragment':
+    case 'vertexAndFragmentWithPossibleVertexStageOverflow':
+    case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
+      return 'createRenderPipelineAsyncWithFragmentStage';
+    case 'compute':
+      return 'createComputePipelineAsync';}
+
+}
+
+function getBindGroupIndex(bindGroupTest, i) {
+  switch (bindGroupTest) {
+    case 'sameGroup':
+      return 0;
+    case 'differentGroups':
+      return i % 3;}
+
+}
+
+function getWGSLBindings(
+order,
+bindGroupTest,
+storageDefinitionWGSLSnippetFn,
+numBindings,
+id)
+{
+  return reorder(
+  order,
+  range(
+  numBindings,
+  (i) =>
+  `@group(${getBindGroupIndex(
+  bindGroupTest,
+  i)
+  }) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`)).
+
+  join('\n');
+}
+
+export function getPerStageWGSLForBindingCombinationImpl(
+bindingCombination,
+order,
+bindGroupTest,
+storageDefinitionWGSLSnippetFn,
+bodyFn,
+numBindings,
+extraWGSL = '')
+{
+  switch (bindingCombination) {
+    case 'vertex':
+      return `
+        ${extraWGSL}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        @vertex fn mainVS() -> @builtin(position) vec4f {
+          ${bodyFn(numBindings, 0)}
+          return vec4f(0);
+        }
+      `;
+    case 'fragment':
+      return `
+        ${extraWGSL}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        @vertex fn mainVS() -> @builtin(position) vec4f {
+          return vec4f(0);
+        }
+        @fragment fn mainFS() -> @location(0) vec4f {
+          ${bodyFn(numBindings, 0)}
+          return vec4f(0);
+        }
+      `;
+    case 'vertexAndFragmentWithPossibleVertexStageOverflow':{
+        return `
+        ${extraWGSL}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings - 1, 1)}
+        @vertex fn mainVS() -> @builtin(position) vec4f {
+          ${bodyFn(numBindings, 0)}
+          return vec4f(0);
+        }
+        @fragment fn mainFS() -> @location(0) vec4f {
+          ${bodyFn(numBindings - 1, 1)}
+          return vec4f(0);
+        }
+      `;
+      }
+    case 'vertexAndFragmentWithPossibleFragmentStageOverflow':{
+        return `
+        ${extraWGSL}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings - 1, 0)}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 1)}
+        @vertex fn mainVS() -> @builtin(position) vec4f {
+          ${bodyFn(numBindings - 1, 0)}
+          return vec4f(0);
+        }
+        @fragment fn mainFS() -> @location(0) vec4f {
+          ${bodyFn(numBindings, 1)}
+          return vec4f(0);
+        }
+      `;
+      }
+    case 'compute':
+      return `
+        ${extraWGSL}
+        ${getWGSLBindings(order, bindGroupTest, storageDefinitionWGSLSnippetFn, numBindings, 0)}
+        @group(3) @binding(0) var<storage, read_write> d: f32;
+        @compute @workgroup_size(1) fn main() {
+          ${bodyFn(numBindings, 0)}
+        }
+      `;
+      break;}
+
+}
+
+export function getPerStageWGSLForBindingCombination(
+bindingCombination,
+order,
+bindGroupTest,
+storageDefinitionWGSLSnippetFn,
+usageWGSLSnippetFn,
+numBindings,
+extraWGSL = '')
+{
+  return getPerStageWGSLForBindingCombinationImpl(
+  bindingCombination,
+  order,
+  bindGroupTest,
+  storageDefinitionWGSLSnippetFn,
+  (numBindings, set) =>
+  `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')}`,
+  numBindings,
+  extraWGSL);
+
+}
+
+export function getPerStageWGSLForBindingCombinationStorageTextures(
+bindingCombination,
+order,
+bindGroupTest,
+storageDefinitionWGSLSnippetFn,
+usageWGSLSnippetFn,
+numBindings,
+extraWGSL = '')
+{
+  return getPerStageWGSLForBindingCombinationImpl(
+  bindingCombination,
+  order,
+  bindGroupTest,
+  storageDefinitionWGSLSnippetFn,
+  (numBindings, set) => {
+    return bindingCombination === 'compute' ?
+    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')};` :
+    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')}; return vec4f(0);`;
+  },
+  numBindings,
+  extraWGSL);
+
+}
 
 export const TestValues = {
   atLimit: true,
@@ -388,17 +573,27 @@ export class LimitTestsImpl extends GPUTestBase {
       case 'createRenderPipelineAsync':
         return `
           @group(${groupIndex}) @binding(0) var<uniform> v: f32;
-          @vertex fn main() -> @builtin(position) vec4f {
+          @vertex fn mainVS() -> @builtin(position) vec4f {
             return vec4f(v);
+          }
+        `;
+      case 'createRenderPipelineWithFragmentStage':
+      case 'createRenderPipelineAsyncWithFragmentStage':
+        return `
+          @group(${groupIndex}) @binding(0) var<uniform> v: f32;
+          @vertex fn mainVS() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+          @fragment fn mainFS() -> @location(0) vec4f {
+            return vec4f(1);
           }
         `;
       case 'createComputePipeline':
       case 'createComputePipelineAsync':
         return `
-          @group(0) @binding(0) var<storage, read_write> d: f32;
           @group(${groupIndex}) @binding(0) var<uniform> v: f32;
           @compute @workgroup_size(1) fn main() {
-            d = v;
+            _ = v;
           }
         `;
         break;}
@@ -414,17 +609,27 @@ export class LimitTestsImpl extends GPUTestBase {
       case 'createRenderPipelineAsync':
         return `
           @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
-          @vertex fn main() -> @builtin(position) vec4f {
+          @vertex fn mainVS() -> @builtin(position) vec4f {
             return vec4f(v);
+          }
+        `;
+      case 'createRenderPipelineWithFragmentStage':
+      case 'createRenderPipelineAsyncWithFragmentStage':
+        return `
+          @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
+          @vertex fn mainVS() -> @builtin(position) vec4f {
+            return vec4f(v);
+          }
+          @fragment fn mainFS() -> @location(0) vec4f {
+            return vec4f(1);
           }
         `;
       case 'createComputePipeline':
       case 'createComputePipelineAsync':
         return `
-          @group(0) @binding(0) var<storage, read_write> d: f32;
           @group(0) @binding(${bindingIndex}) var<uniform> v: f32;
           @compute @workgroup_size(1) fn main() {
-            d = v;
+            _ = v;
           }
         `;
         break;}
@@ -440,7 +645,21 @@ export class LimitTestsImpl extends GPUTestBase {
           layout: 'auto',
           vertex: {
             module,
-            entryPoint: 'main'
+            entryPoint: 'mainVS'
+          }
+        });
+        break;
+      case 'createRenderPipelineWithFragmentStage':
+        return device.createRenderPipeline({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'mainVS'
+          },
+          fragment: {
+            module,
+            entryPoint: 'mainFS',
+            targets: [{ format: 'rgba8unorm' }]
           }
         });
         break;
@@ -465,7 +684,20 @@ export class LimitTestsImpl extends GPUTestBase {
           layout: 'auto',
           vertex: {
             module,
-            entryPoint: 'main'
+            entryPoint: 'mainVS'
+          }
+        });
+      case 'createRenderPipelineAsyncWithFragmentStage':
+        return device.createRenderPipelineAsync({
+          layout: 'auto',
+          vertex: {
+            module,
+            entryPoint: 'mainVS'
+          },
+          fragment: {
+            module,
+            entryPoint: 'mainFS',
+            targets: [{ format: 'rgba8unorm' }]
           }
         });
       case 'createComputePipelineAsync':
@@ -487,16 +719,20 @@ export class LimitTestsImpl extends GPUTestBase {
 
     switch (encoderType) {
       case 'render':{
-          const buffer = device.createBuffer({
+          const buffer = this.trackForCleanup(
+          device.createBuffer({
             size: 16,
             usage: GPUBufferUsage.UNIFORM
-          });
+          }));
 
-          const texture = device.createTexture({
+
+          const texture = this.trackForCleanup(
+          device.createTexture({
             size: [1, 1],
             format: 'rgba8unorm',
             usage: GPUTextureUsage.RENDER_ATTACHMENT
-          });
+          }));
+
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -537,20 +773,18 @@ export class LimitTestsImpl extends GPUTestBase {
             },
             test() {
               encoder.finish();
-            },
-            cleanup() {
-              buffer.destroy();
-              texture.destroy();
             }
           };
           break;
         }
 
       case 'renderBundle':{
-          const buffer = device.createBuffer({
+          const buffer = this.trackForCleanup(
+          device.createBuffer({
             size: 16,
             usage: GPUBufferUsage.UNIFORM
-          });
+          }));
+
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -582,9 +816,6 @@ export class LimitTestsImpl extends GPUTestBase {
             prep() {},
             test() {
               mixin.finish();
-            },
-            cleanup() {
-              buffer.destroy();
             }
           };
           break;
@@ -602,13 +833,11 @@ export class LimitTestsImpl extends GPUTestBase {
   shouldError,
   msg = '')
   {
-    const { mixin, prep, test, cleanup } = this._getGPURenderCommandsMixin(encoderType);
+    const { mixin, prep, test } = this._getGPURenderCommandsMixin(encoderType);
     fn({ mixin });
     prep();
 
     await this.expectValidationError(test, shouldError, msg);
-
-    cleanup();
   }
 
   /**
@@ -619,10 +848,12 @@ export class LimitTestsImpl extends GPUTestBase {
 
     switch (encoderType) {
       case 'compute':{
-          const buffer = device.createBuffer({
+          const buffer = this.trackForCleanup(
+          device.createBuffer({
             size: 16,
             usage: GPUBufferUsage.UNIFORM
-          });
+          }));
+
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -654,9 +885,6 @@ export class LimitTestsImpl extends GPUTestBase {
             },
             test() {
               encoder.finish();
-            },
-            cleanup() {
-              buffer.destroy();
             }
           };
           break;
@@ -678,13 +906,11 @@ export class LimitTestsImpl extends GPUTestBase {
   shouldError,
   msg = '')
   {
-    const { mixin, bindGroup, prep, test, cleanup } = this._getGPUBindingCommandsMixin(encoderType);
+    const { mixin, bindGroup, prep, test } = this._getGPUBindingCommandsMixin(encoderType);
     fn({ mixin, bindGroup });
     prep();
 
     await this.expectValidationError(test, shouldError, msg);
-
-    cleanup();
   }
 }
 

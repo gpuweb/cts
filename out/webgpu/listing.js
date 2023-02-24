@@ -656,7 +656,43 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxSampledTexturesPerShaderStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxSamplersPerShaderStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxStorageBufferBindingSize"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxStorageBuffersPerShaderStage"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxStorageTexturesPerShaderStage"
     ]
   },
   {
@@ -702,6 +738,15 @@ export const listing = [
       "capability_checks",
       "limits",
       "maxUniformBufferBindingSize"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxUniformBuffersPerShaderStage"
     ]
   },
   {

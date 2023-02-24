@@ -219,6 +219,41 @@ export function mapLazy(xs, f) {
   };
 }
 
+const ReorderOrders = {
+  forward: true,
+  backward: true,
+  shiftByHalf: true
+};
+
+export const kReorderOrderKeys = keysOf(ReorderOrders);
+
+/**
+ * Creates a new array from the given array with the first half
+ * swapped with the last half.
+ */
+export function shiftByHalf(arr) {
+  const len = arr.length;
+  const half = len / 2 | 0;
+  const firstHalf = arr.splice(0, half);
+  return [...arr, ...firstHalf];
+}
+
+/**
+ * Creates a reordered array from the input array based on the Order
+ */
+export function reorder(order, arr) {
+  switch (order) {
+    case 'forward':
+      return arr.slice();
+    case 'backward':
+      return arr.slice().reverse();
+    case 'shiftByHalf':{
+        // should this be pseudo random?
+        return shiftByHalf(arr);
+      }}
+
+}
+
 const TypedArrayBufferViewInstances = [
 new Uint8Array(),
 new Uint8ClampedArray(),
