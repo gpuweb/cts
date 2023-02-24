@@ -98,18 +98,24 @@ mapAsync on it should reject and produce a validation error. `
         // this case, we don't do any validations on the OOM buffer.
         try {
           t.device.pushErrorScope('out-of-memory');
-          const buffer = createBuffer(t.device, kSize, mappable, mode, mappedAtCreation);
+          const buffer = t.trackForCleanup(
+            createBuffer(t.device, kSize, mappable, mode, mappedAtCreation)
+          );
           if (await t.device.popErrorScope()) {
             errorBuffer = buffer;
             break;
           }
           buffers.push(buffer);
         } catch (ex) {
+          t.expect(ex instanceof RangeError);
           await finish();
+          return;
         }
       } else {
         t.device.pushErrorScope('out-of-memory');
-        const buffer = createBuffer(t.device, kSize, mappable, mode, mappedAtCreation);
+        const buffer = t.trackForCleanup(
+          createBuffer(t.device, kSize, mappable, mode, mappedAtCreation)
+        );
         if (await t.device.popErrorScope()) {
           errorBuffer = buffer;
           break;
