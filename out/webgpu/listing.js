@@ -2648,6 +2648,62 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "flow_control",
+      "call"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "for"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "if"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "loop"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "return"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "switch"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "while"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "memory_model",
       "atomicity"
     ]
