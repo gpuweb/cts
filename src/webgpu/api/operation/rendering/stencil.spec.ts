@@ -146,10 +146,11 @@ class StencilTest extends TextureTestMixin(GPUTest) {
       })
     );
 
+    const hasDepth = kTextureFormatInfo[depthStencilFormat].depth;
     const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
       view: depthTexture.createView(),
-      depthLoadOp: 'load',
-      depthStoreOp: 'store',
+      depthLoadOp: hasDepth ? 'load' : undefined,
+      depthStoreOp: hasDepth ? 'store' : undefined,
       stencilLoadOp: 'load',
       stencilStoreOp: 'store',
     };
