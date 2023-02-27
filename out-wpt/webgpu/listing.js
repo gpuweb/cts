@@ -674,6 +674,24 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxInterStageShaderComponents"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxInterStageShaderVariables"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxSampledTexturesPerShaderStage"
     ]
   },

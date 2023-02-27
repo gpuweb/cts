@@ -1743,6 +1743,7 @@ export const kLimitInfo = makeTable(
     maxVertexAttributes: [, 16],
     maxVertexBufferArrayStride: [, 2048],
     maxInterStageShaderComponents: [, 60],
+    maxInterStageShaderVariables: [, 16],
 
     maxColorAttachments: [, 8],
     maxColorAttachmentBytesPerSample: [, 32],
