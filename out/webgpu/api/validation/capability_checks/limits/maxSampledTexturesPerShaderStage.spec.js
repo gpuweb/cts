@@ -177,7 +177,7 @@ fn(async (t) => {
     const module = device.createShaderModule({ code });
 
     await t.shouldRejectConditionally(
-    'OperationError',
+    'GPUPipelineError',
     t.createPipelineAsync(pipelineType, module),
     shouldError,
     `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`);
