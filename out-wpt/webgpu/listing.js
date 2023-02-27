@@ -656,6 +656,24 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxDynamicStorageBuffersPerPipelineLayout"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxDynamicUniformBuffersPerPipelineLayout"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxSampledTexturesPerShaderStage"
     ]
   },
