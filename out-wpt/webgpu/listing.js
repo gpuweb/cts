@@ -834,6 +834,24 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "capability_checks",
+      "limits",
+      "minStorageBufferOffsetAlignment"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "minUniformBufferOffsetAlignment"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "compute_pipeline"
     ]
   },

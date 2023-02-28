@@ -230,6 +230,7 @@ extraWGSL = '')
 
 }
 
+// MAINTENANCE_TODO: rename LimitsModes to MaximumLimitsModes and update its derivatives.
 const LimitModes = {
   defaultLimit: true,
   maxLimit: true
@@ -238,6 +239,7 @@ const LimitModes = {
 export const kLimitModes = keysOf(LimitModes);
 
 
+// MAINTENANCE_TODO: rename TestValues to MaximumTestValues and update its derivatives.
 export const TestValues = {
   atLimit: true,
   overLimit: true
@@ -254,6 +256,14 @@ export function getTestValue(limit, testValue) {
 
 }
 
+export const MinimumTestValues = {
+  atLimit: true,
+  underLimit: true
+};
+
+export const kMinimumTestValueKeys = keysOf(MinimumTestValues);
+
+// MAINTENANCE_TODO: rename LimitValueTests to MaximumLimitValueTests and update its derivatives.
 export const LimitValueTests = {
   atDefault: true,
   underDefault: true,
@@ -283,10 +293,21 @@ limitValueTest)
 
 }
 
+export const MinimumLimitValueTests = {
+  atDefault: true,
+  overDefault: true,
+  betweenDefaultAndMinimum: true,
+  atMinimum: true,
+  underMinimum: true
+};
+
+export const kMinimumLimitValueTestKeys = keysOf(MinimumLimitValueTests);
+
 export function getDefaultLimit(limit) {
   return kLimitInfo[limit].default;
 }
 
+// MAINTENANCE_TODO: rename maximumLimit here and in LimitTestImpl to adapterLimit
 
 
 
@@ -302,6 +323,11 @@ export function getDefaultLimit(limit) {
 
 
 
+
+
+const kMinimumLimits = new Set([
+'minUniformBufferOffsetAlignment',
+'minStorageBufferOffsetAlignment']);
 
 
 /**
@@ -311,6 +337,11 @@ export const kLimitBaseParams = kUnitCaseParamsBuilder.
 combine('limitTest', kLimitValueTestKeys).
 beginSubcases().
 combine('testValueName', kTestValueKeys);
+
+export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder.
+combine('limitTest', kMinimumLimitValueTestKeys).
+beginSubcases().
+combine('testValueName', kMinimumTestValueKeys);
 
 export class LimitTestsImpl extends GPUTestBase {
   _adapter = null;
@@ -353,6 +384,7 @@ export class LimitTestsImpl extends GPUTestBase {
     }
   }
 
+  // MAINTENANCE_TODO: rename to getDefaultOrAdapterLimit
   getDefaultOrMaximumLimit(limit, limitMode) {
     switch (limitMode) {
       case 'defaultLimit':
@@ -386,7 +418,9 @@ export class LimitTestsImpl extends GPUTestBase {
       }
     }
 
-    const shouldReject = requestedLimit > maximumLimit;
+    const shouldReject = kMinimumLimits.has(limit) ?
+    requestedLimit < maximumLimit :
+    requestedLimit > maximumLimit;
 
     const device = await this.requestDeviceWithLimits(adapter, requiredLimits, shouldReject);
     const actualLimit = device ? device.limits[limit] : 0;
@@ -394,10 +428,18 @@ export class LimitTestsImpl extends GPUTestBase {
     if (shouldReject) {
       this.expect(!device);
     } else {
-      if (requestedLimit <= defaultLimit) {
-        this.expect(actualLimit === defaultLimit);
+      if (kMinimumLimits.has(limit)) {
+        if (requestedLimit <= defaultLimit) {
+          this.expect(actualLimit === requestedLimit);
+        } else {
+          this.expect(actualLimit === defaultLimit);
+        }
       } else {
-        this.expect(actualLimit === requestedLimit);
+        if (requestedLimit <= defaultLimit) {
+          this.expect(actualLimit === defaultLimit);
+        } else {
+          this.expect(actualLimit === requestedLimit);
+        }
       }
     }
 
@@ -431,7 +473,10 @@ export class LimitTestsImpl extends GPUTestBase {
 
     const { device, actualLimit } = deviceAndLimits;
     this._device = device;
-    const shouldError = testValue > actualLimit;
+
+    const shouldError = kMinimumLimits.has(this.limit) ?
+    testValue < actualLimit :
+    testValue > actualLimit;
 
     device.pushErrorScope('internal');
     device.pushErrorScope('out-of-memory');
