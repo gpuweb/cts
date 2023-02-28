@@ -199,7 +199,7 @@ g.test('createRenderPipelineAsync,at_over')
         const { pipelineDescriptor, code } = result;
 
         await t.shouldRejectConditionally(
-          'OperationError',
+          'GPUPipelineError',
           device.createRenderPipelineAsync(pipelineDescriptor),
           shouldError,
           code
