@@ -31,7 +31,7 @@ const kDeterminantMatrixF32Values = {
   ]),
   3: kDeterminantValues.map((f, idx) => [
     [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
-    [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, -idx % 9 === 5 ? f : -idx],
+    [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
     [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx],
   ]),
   4: kDeterminantValues.map((f, idx) => [
@@ -39,7 +39,7 @@ const kDeterminantMatrixF32Values = {
       idx % 16 === 0 ? f : idx,
       idx % 16 === 1 ? f : -idx,
       idx % 16 === 2 ? f : idx,
-      idx % 16 === 3 ? f : idx,
+      idx % 16 === 3 ? f : -idx,
     ],
     [
       idx % 16 === 4 ? f : -idx,

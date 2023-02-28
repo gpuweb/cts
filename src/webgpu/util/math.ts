@@ -894,7 +894,7 @@ const kSparseMatrixF32Values = {
     ]),
     3: kInterestingF32Values.map((f, idx) => [
       [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
-      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, -idx % 9 === 5 ? f : -idx],
+      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
       [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx],
     ]),
     4: kInterestingF32Values.map((f, idx) => [
@@ -927,16 +927,16 @@ const kSparseMatrixF32Values = {
     ]),
     3: kInterestingF32Values.map((f, idx) => [
       [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
-      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, -idx % 12 === 5 ? f : -idx],
+      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, idx % 12 === 5 ? f : -idx],
       [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
-      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, -idx % 12 === 11 ? f : idx],
+      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, idx % 12 === 11 ? f : -idx],
     ]),
     4: kInterestingF32Values.map((f, idx) => [
       [
         idx % 16 === 0 ? f : idx,
         idx % 16 === 1 ? f : -idx,
         idx % 16 === 2 ? f : idx,
-        idx % 16 === 3 ? f : idx,
+        idx % 16 === 3 ? f : -idx,
       ],
       [
         idx % 16 === 4 ? f : -idx,
