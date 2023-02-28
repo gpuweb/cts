@@ -51,8 +51,8 @@ g.test('after_func_decl')
 g.test('after_type_alias_decl')
   .desc(`Test that a semicolon must be placed after an type alias declaration.`)
   .fn(t => {
-    t.expectCompileResult(/* pass */ true, `type T = i32;`);
-    t.expectCompileResult(/* pass */ false, `type T = i32`);
+    t.expectCompileResult(/* pass */ true, `alias T = i32;`);
+    t.expectCompileResult(/* pass */ false, `alias T = i32`);
   });
 
 g.test('after_return')

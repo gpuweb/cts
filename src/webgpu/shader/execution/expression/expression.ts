@@ -1,5 +1,5 @@
 import { globalTestConfig } from '../../../../common/framework/test_config.js';
-import { assert, unreachable } from '../../../../common/util/util.js';
+import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, anyOf } from '../../../util/compare.js';
 import {
@@ -21,10 +21,15 @@ import {
 import {
   BinaryToInterval,
   F32Interval,
+  MatrixPairToMatrix,
+  MatrixScalarToMatrix,
   MatrixToMatrix,
+  MatrixVectorToVector,
   PointToInterval,
   PointToVector,
+  ScalarMatrixToMatrix,
   TernaryToInterval,
+  VectorMatrixToVector,
   VectorPairToInterval,
   VectorPairToVector,
   VectorToInterval,
@@ -436,6 +441,17 @@ struct Output {
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
 `;
 
+  cases.forEach(c => {
+    const inputTypes = c.input instanceof Array ? c.input.map(i => i.type) : [c.input.type];
+    if (!objectEquals(inputTypes, parameterTypes)) {
+      const input_str = `[${inputTypes.join(',')}]`;
+      const param_str = `[${parameterTypes.join(',')}]`;
+      throw new Error(
+        `case input types ${input_str} do not match provided runner parameter types ${param_str}`
+      );
+    }
+  });
+
   switch (inputSource) {
     case 'const': {
       //////////////////////////////////////////////////////////////////////////
@@ -541,14 +557,15 @@ fn main() {
         const caseStride = valueStrides(parameterTypes);
         for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
           const caseBase = caseIdx * caseStride;
+          let offset = caseBase;
           for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-            const offset = caseBase + paramIdx * valueStride(parameterTypes[paramIdx]);
             const params = cases[caseIdx].input;
             if (params instanceof Array) {
               params[paramIdx].copyTo(inputData, offset);
             } else {
               params.copyTo(inputData, offset);
             }
+            offset += valueStride(parameterTypes[paramIdx]);
           }
         }
       }
@@ -937,7 +954,7 @@ function makeVectorToVectorCase(
   const param_f32 = param.map(f32);
 
   const vectors = ops.map(o => o(param));
-  if (filter === 'f32-only' && vectors.some(v => !v.every(e => e.isFinite()))) {
+  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -987,7 +1004,7 @@ function makeVectorPairToVectorCase(
   const param1_f32 = param1.map(f32);
 
   const vectors = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && vectors.some(v => !v.every(e => e.isFinite()))) {
+  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1064,6 +1081,282 @@ export function generateMatrixToMatrixCases(
     }
     return cases;
   }, new Array<Case>());
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param param0 the first param to pass in
+ * @param param1 the second param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeMatrixPairToMatrixCase(
+  param0: number[][],
+  param1: number[][],
+  filter: IntervalFilter,
+  ...ops: MatrixPairToMatrix[]
+): Case | undefined {
+  param0 = map2DArray(param0, quantizeToF32);
+  param1 = map2DArray(param1, quantizeToF32);
+  const param0_f32 = map2DArray(param0, f32);
+  const param1_f32 = map2DArray(param1, f32);
+
+  const results = ops.map(o => o(param0, param1));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(param0_f32), new Matrix(param1_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first input
+ * @param param1s array of inputs to try for the second input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateMatrixPairToMatrixCases(
+  param0s: number[][][],
+  param1s: number[][][],
+  filter: IntervalFilter,
+  ...ops: MatrixPairToMatrix[]
+): Case[] {
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+    const c = makeMatrixPairToMatrixCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param scalar the scalar to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeMatrixScalarToMatrixCase(
+  mat: number[][],
+  scalar: number,
+  filter: IntervalFilter,
+  ...ops: MatrixScalarToMatrix[]
+): Case | undefined {
+  mat = map2DArray(mat, quantizeToF32);
+  scalar = quantizeToF32(scalar);
+  const mat_f32 = map2DArray(mat, f32);
+  const scalar_f32 = f32(scalar);
+
+  const results = ops.map(o => o(mat, scalar));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(mat_f32), scalar_f32],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param mats array of inputs to try for the matrix input
+ * @param scalars array of inputs to try for the scalar input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateMatrixScalarToMatrixCases(
+  mats: number[][][],
+  scalars: number[],
+  filter: IntervalFilter,
+  ...ops: MatrixScalarToMatrix[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  mats.forEach(mat => {
+    scalars.forEach(scalar => {
+      const c = makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and matrix of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param scalar the scalar to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+function makeScalarMatrixToMatrixCase(
+  scalar: number,
+  mat: number[][],
+  filter: IntervalFilter,
+  ...ops: ScalarMatrixToMatrix[]
+): Case | undefined {
+  mat = map2DArray(mat, quantizeToF32);
+  scalar = quantizeToF32(scalar);
+  const mat_f32 = map2DArray(mat, f32);
+  const scalar_f32 = f32(scalar);
+
+  const results = ops.map(o => o(scalar, mat));
+  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+    return undefined;
+  }
+  return {
+    input: [scalar_f32, new Matrix(mat_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param scalars array of inputs to try for the scalar input
+ * @param mats array of inputs to try for the matrix input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an matrix of acceptance
+ *            intervals for a pair of matrices.
+ */
+export function generateScalarMatrixToMatrixCases(
+  scalars: number[],
+  mats: number[][][],
+  filter: IntervalFilter,
+  ...ops: ScalarMatrixToMatrix[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  mats.forEach(mat => {
+    scalars.forEach(scalar => {
+      const c = makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and the vector of intervals generator provided
+ * @param mat the matrix param to pass in
+ * @param vec the vector to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a matrix and a vector.
+ */
+function makeMatrixVectorToVectorCase(
+  mat: number[][],
+  vec: number[],
+  filter: IntervalFilter,
+  ...ops: MatrixVectorToVector[]
+): Case | undefined {
+  mat = map2DArray(mat, quantizeToF32);
+  vec = vec.map(quantizeToF32);
+  const mat_f32 = map2DArray(mat, f32);
+  const vec_f32 = vec.map(f32);
+
+  const results = ops.map(o => o(mat, vec));
+  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [new Matrix(mat_f32), new Vector(vec_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param mats array of inputs to try for the matrix input
+ * @param vecs array of inputs to try for the vector input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a matrix and a vector.
+ */
+export function generateMatrixVectorToVectorCases(
+  mats: number[][][],
+  vecs: number[][],
+  filter: IntervalFilter,
+  ...ops: MatrixVectorToVector[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  mats.forEach(mat => {
+    vecs.forEach(vec => {
+      const c = makeMatrixVectorToVectorCase(mat, vec, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and the vector of intervals generator provided
+ * @param vec the vector to pass in
+ * @param mat the matrix param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a matrix.
+ */
+function makeVectorMatrixToVectorCase(
+  vec: number[],
+  mat: number[][],
+  filter: IntervalFilter,
+  ...ops: VectorMatrixToVector[]
+): Case | undefined {
+  vec = vec.map(quantizeToF32);
+  mat = map2DArray(mat, quantizeToF32);
+  const vec_f32 = vec.map(f32);
+  const mat_f32 = map2DArray(mat, f32);
+
+  const results = ops.map(o => o(vec, mat));
+  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [new Vector(vec_f32), new Matrix(mat_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param vecs array of inputs to try for the vector input
+ * @param mats array of inputs to try for the matrix input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a matrix.
+ */
+export function generateVectorMatrixToVectorCases(
+  vecs: number[][],
+  mats: number[][][],
+  filter: IntervalFilter,
+  ...ops: VectorMatrixToVector[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  vecs.forEach(vec => {
+    mats.forEach(mat => {
+      const c = makeVectorMatrixToVectorCase(vec, mat, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
 }
 
 /**

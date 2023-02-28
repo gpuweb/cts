@@ -88,7 +88,7 @@ g.test('createRenderPipeline,at_over')
   .params(kLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+    const { defaultLimit, maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -97,7 +97,6 @@ g.test('createRenderPipeline,at_over')
     );
 
     await t.testDeviceWithSpecificLimits(
-      adapter,
       requestedLimit,
       testValue,
       async ({ device, testValue, shouldError }) => {
@@ -115,7 +114,7 @@ g.test('createRenderPipelineAsync,at_over')
   .params(kLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+    const { defaultLimit, maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -123,13 +122,12 @@ g.test('createRenderPipelineAsync,at_over')
       maximumLimit
     );
     await t.testDeviceWithSpecificLimits(
-      adapter,
       requestedLimit,
       testValue,
       async ({ device, testValue, shouldError }) => {
         const pipelineDescriptor = getPipelineDescriptor(device, testValue);
         await t.shouldRejectConditionally(
-          'OperationError',
+          'GPUPipelineError',
           device.createRenderPipelineAsync(pipelineDescriptor),
           shouldError
         );

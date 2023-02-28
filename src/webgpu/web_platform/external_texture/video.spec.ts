@@ -10,11 +10,10 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 
 import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { makeTable, valueof } from '../../../common/util/data_tables.js';
+import { makeTable } from '../../../common/util/data_tables.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
-  getVideoColorSpaceInit,
   getVideoFrameFromVideoElement,
   waitForNextFrame,
 } from '../../web_platform/util.js';
@@ -24,49 +23,87 @@ const kWidth = 16;
 const kFormat = 'rgba8unorm';
 
 const kVideoInfo = /* prettier-ignore */ makeTable(
-                                ['colorSpace',                       'mimeType'] as const,
-                                [   undefined,                        undefined] as const, {
+                                ['mimeType'] as const,
+                                [undefined] as const, {
   // All video names
-  'red-green.webmvp8.webm'    : [    'REC601',         'video/webm; codecs=vp8'],
-  'red-green.theora.ogv'      : [    'REC601',       'video/ogg; codecs=theora'],
-  'red-green.mp4'             : [    'REC601',  'video/mp4; codecs=avc1.4d400c'],
-  'red-green.bt601.vp9.webm'  : [    'REC601',         'video/webm; codecs=vp9'],
-  'red-green.bt709.vp9.webm'  : [    'REC709',         'video/webm; codecs=vp9'],
-  'red-green.bt2020.vp9.webm' : [   'REC2020',         'video/webm; codecs=vp9']
+  'four-colors-vp8-bt601.webm'  : ['video/webm; codecs=vp8'],
+  'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
+  'four-colors-h264-bt601.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-vp9-bt601.webm'  : ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt709.webm'  : ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9'],
+  'four-colors-h264-bt601-rotate-90.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-180.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-270.mp4'  : ['video/mp4; codecs=avc1.4d400c']
 } as const);
 type VideoName = keyof typeof kVideoInfo;
-type VideoInfo = valueof<typeof kVideoInfo>;
+
+// The process to calculate these expected pixel values can be found:
+// https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
+const kBt601Red = new Uint8Array([248, 36, 0, 255]);
+const kBt601Green = new Uint8Array([64, 252, 0, 255]);
+const kBt601Blue = new Uint8Array([26, 35, 255, 255]);
+const kBt601Yellow = new Uint8Array([254, 253, 0, 255]);
 
 const kVideoExpectations = [
   {
-    videoName: 'red-green.webmvp8.webm',
-    _redExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]),
+    videoName: 'four-colors-vp8-bt601.webm',
+    _redExpectation: kBt601Red,
+    _greenExpectation: kBt601Green,
+    _blueExpectation: kBt601Blue,
+    _yellowExpectation: kBt601Yellow,
   },
   {
-    videoName: 'red-green.theora.ogv',
-    _redExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]),
+    videoName: 'four-colors-theora-bt601.ogv',
+    _redExpectation: kBt601Red,
+    _greenExpectation: kBt601Green,
+    _blueExpectation: kBt601Blue,
+    _yellowExpectation: kBt601Yellow,
   },
   {
-    videoName: 'red-green.mp4',
-    _redExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]),
+    videoName: 'four-colors-h264-bt601.mp4',
+    _redExpectation: kBt601Red,
+    _greenExpectation: kBt601Green,
+    _blueExpectation: kBt601Blue,
+    _yellowExpectation: kBt601Yellow,
   },
   {
-    videoName: 'red-green.bt601.vp9.webm',
-    _redExpectation: new Uint8Array([0xf8, 0x24, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x3f, 0xfb, 0x00, 0xff]),
+    videoName: 'four-colors-vp9-bt601.webm',
+    _redExpectation: kBt601Red,
+    _greenExpectation: kBt601Green,
+    _blueExpectation: kBt601Blue,
+    _yellowExpectation: kBt601Yellow,
   },
   {
-    videoName: 'red-green.bt709.vp9.webm',
-    _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+    videoName: 'four-colors-vp9-bt709.webm',
+    _redExpectation: new Uint8Array([255, 0, 0, 255]),
+    _greenExpectation: new Uint8Array([0, 255, 0, 255]),
+    _blueExpectation: new Uint8Array([0, 0, 255, 255]),
+    _yellowExpectation: new Uint8Array([255, 255, 0, 255]),
+  },
+] as const;
+
+const kVideoRotationExpectations = [
+  {
+    videoName: 'four-colors-h264-bt601-rotate-90.mp4',
+    _topLeftExpectation: kBt601Red,
+    _topRightExpectation: kBt601Green,
+    _bottomLeftExpectation: kBt601Yellow,
+    _bottomRightExpectation: kBt601Blue,
   },
   {
-    videoName: 'red-green.bt2020.vp9.webm',
-    _redExpectation: new Uint8Array([0xff, 0x00, 0x00, 0xff]),
-    _greenExpectation: new Uint8Array([0x00, 0xff, 0x00, 0xff]),
+    videoName: 'four-colors-h264-bt601-rotate-180.mp4',
+    _topLeftExpectation: kBt601Green,
+    _topRightExpectation: kBt601Blue,
+    _bottomLeftExpectation: kBt601Red,
+    _bottomRightExpectation: kBt601Yellow,
+  },
+  {
+    videoName: 'four-colors-h264-bt601-rotate-270.mp4',
+    _topLeftExpectation: kBt601Blue,
+    _topRightExpectation: kBt601Yellow,
+    _bottomLeftExpectation: kBt601Green,
+    _bottomRightExpectation: kBt601Red,
   },
 ] as const;
 
@@ -147,11 +184,11 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
-function getVideoElementAndInfo(
+function getVideoElement(
   t: GPUTest,
   sourceType: 'VideoElement' | 'VideoFrame',
   videoName: VideoName
-): { videoElement: HTMLVideoElement; videoInfo: VideoInfo } {
+): HTMLVideoElement {
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
     t.skip('WebCodec is not supported');
   }
@@ -166,7 +203,7 @@ function getVideoElementAndInfo(
   const videoUrl = getResourcePath(videoName);
   videoElement.src = videoUrl;
 
-  return { videoElement, videoInfo };
+  return videoElement;
 }
 
 g.test('importExternalTexture,sample')
@@ -183,16 +220,12 @@ for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(
-              t,
-              videoElement,
-              getVideoColorSpaceInit(videoInfo.colorSpace)
-            )
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
 
       const colorAttachment = t.device.createTexture({
@@ -224,10 +257,75 @@ for several combinations of video format and color space.
       // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
       t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
-        // Top left corner should be red.
-        { coord: { x: 5, y: 5 }, exp: t.params._redExpectation },
-        // Bottom right corner should be green.
-        { coord: { x: kWidth - 5, y: kHeight - 5 }, exp: t.params._greenExpectation },
+        // Top-left should be yellow.
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._yellowExpectation },
+        // Top-right should be red.
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._redExpectation },
+        // Bottom-left should be blue.
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._blueExpectation },
+        // Bottom-right should be green.
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._greenExpectation },
+      ]);
+
+      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
+    });
+  });
+
+g.test('importExternalTexture,sampleWithRotationMetadata')
+  .desc(
+    `
+Tests that when importing an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sampling from
+it will honor rotation metadata.
+`
+  )
+  .params(u =>
+    u //
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
+      .combineWithParams(kVideoRotationExpectations)
+  )
+  .fn(async t => {
+    const sourceType = t.params.sourceType;
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      const source =
+        sourceType === 'VideoFrame'
+          ? await getVideoFrameFromVideoElement(t, videoElement)
+          : videoElement;
+
+      const colorAttachment = t.device.createTexture({
+        format: kFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      });
+
+      const pipeline = createExternalTextureSamplingTestPipeline(t);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass({
+        colorAttachments: [
+          {
+            view: colorAttachment.createView(),
+            clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      });
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.draw(6);
+      passEncoder.end();
+      t.device.queue.submit([commandEncoder.finish()]);
+
+      // For validation, we sample a few pixels away from the edges to avoid compression
+      // artifacts.
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._topLeftExpectation },
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._topRightExpectation },
+        { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._bottomLeftExpectation },
+        { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._bottomRightExpectation },
       ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();
@@ -251,7 +349,7 @@ TODO: Make this test work without requestVideoFrameCallback support (in waitForN
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement } = getVideoElementAndInfo(t, sourceType, 'red-green.webmvp8.webm');
+    const videoElement = getVideoElement(t, sourceType, 'four-colors-vp9-bt601.webm');
 
     if (!('requestVideoFrameCallback' in videoElement)) {
       t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
@@ -336,16 +434,12 @@ compute shader, for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const { videoElement, videoInfo } = getVideoElementAndInfo(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
         sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(
-              t,
-              videoElement,
-              getVideoColorSpaceInit(videoInfo.colorSpace)
-            )
+          ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -354,25 +448,28 @@ compute shader, for several combinations of video format and color space.
 
       const outputTexture = t.device.createTexture({
         format: 'rgba8unorm',
-        size: [2, 1, 1],
+        size: [2, 2, 1],
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
       });
 
       const pipeline = t.device.createComputePipeline({
         layout: 'auto',
         compute: {
-          // Shader will load a pixel near the upper left and lower right corners, which are then
-          // stored in storage texture.
+          // Shader loads 4 pixels near each corner, and then store them in a storage texture.
           module: t.device.createShaderModule({
             code: `
               @group(0) @binding(0) var t : texture_external;
               @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
               @compute @workgroup_size(1) fn main() {
-                var red : vec4<f32> = textureLoad(t, vec2<i32>(10,10));
-                textureStore(outImage, vec2<i32>(0, 0), red);
-                var green : vec4<f32> = textureLoad(t, vec2<i32>(70,118));
-                textureStore(outImage, vec2<i32>(1, 0), green);
+                var yellow : vec4<f32> = textureLoad(t, vec2<i32>(80, 60));
+                textureStore(outImage, vec2<i32>(0, 0), yellow);
+                var red : vec4<f32> = textureLoad(t, vec2<i32>(240, 60));
+                textureStore(outImage, vec2<i32>(0, 1), red);
+                var blue : vec4<f32> = textureLoad(t, vec2<i32>(80, 180));
+                textureStore(outImage, vec2<i32>(1, 0), blue);
+                var green : vec4<f32> = textureLoad(t, vec2<i32>(240, 180));
+                textureStore(outImage, vec2<i32>(1, 1), green);
                 return;
               }
             `,
@@ -398,10 +495,14 @@ compute shader, for several combinations of video format and color space.
       t.device.queue.submit([encoder.finish()]);
 
       t.expectSinglePixelComparisonsAreOkInTexture({ texture: outputTexture }, [
-        // Top left corner should be red.
-        { coord: { x: 0, y: 0 }, exp: t.params._redExpectation },
-        // Bottom right corner should be green.
-        { coord: { x: 1, y: 0 }, exp: t.params._greenExpectation },
+        // Top-left should be yellow.
+        { coord: { x: 0, y: 0 }, exp: t.params._yellowExpectation },
+        // Top-right should be red.
+        { coord: { x: 0, y: 1 }, exp: t.params._redExpectation },
+        // Bottom-left should be blue.
+        { coord: { x: 1, y: 0 }, exp: t.params._blueExpectation },
+        // Bottom-right should be green.
+        { coord: { x: 1, y: 1 }, exp: t.params._greenExpectation },
       ]);
 
       if (sourceType === 'VideoFrame') (source as VideoFrame).close();

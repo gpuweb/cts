@@ -112,7 +112,7 @@ const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
   'rgba8snorm':            [       false,         false,     false,        ,        ,          ,      true,          ,          ,              'float',               4],
   'rgba8uint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'uint',               4,             ,              ,                           4,                                1],
   'rgba8sint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'sint',               4,             ,              ,                           4,                                1],
-  'bgra8unorm':            [        true,          true,      true,        ,        ,          ,      true,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
+  'bgra8unorm':            [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
   'bgra8unorm-srgb':       [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
   // Packed 32-bit formats
   'rgb10a2unorm':          [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                4],
@@ -922,7 +922,7 @@ export function textureBindingEntries(includeUndefined: boolean): readonly BGLEn
   return [
     ...(includeUndefined ? [{ texture: { multisampled: undefined } }] : []),
     { texture: { multisampled: false } },
-    { texture: { multisampled: true } },
+    { texture: { multisampled: true, sampleType: 'unfilterable-float' } },
   ] as const;
 }
 /**
@@ -973,6 +973,15 @@ export const kShaderStages: readonly GPUShaderStageFlags[] = [
 ];
 /** List of all possible combinations of GPUShaderStage values. */
 export const kShaderStageCombinations: readonly GPUShaderStageFlags[] = [0, 1, 2, 3, 4, 5, 6, 7];
+export const kShaderStageCombinationsWithStage: readonly GPUShaderStageFlags[] = [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+];
 
 /**
  * List of all possible texture sampleCount values.
@@ -1051,6 +1060,7 @@ export const kLimitInfo = /* prettier-ignore */ makeTable(
   'maxVertexAttributes':                       [           ,        16,                          ],
   'maxVertexBufferArrayStride':                [           ,      2048,                          ],
   'maxInterStageShaderComponents':             [           ,        60,                          ],
+  'maxInterStageShaderVariables':              [           ,        16,                          ],
 
   'maxColorAttachments':                       [           ,         8,                          ],
   'maxColorAttachmentBytesPerSample':          [           ,        32,                          ],

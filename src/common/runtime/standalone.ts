@@ -15,12 +15,14 @@ import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
 import { optionEnabled, optionString } from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
 
+const rootQuerySpec = 'webgpu:*';
+let promptBeforeReload = false;
+let isFullCTS = false;
+
 window.onbeforeunload = () => {
   // Prompt user before reloading if there are any results
-  return haveSomeResults ? false : undefined;
+  return promptBeforeReload ? false : undefined;
 };
-
-let haveSomeResults = false;
 
 // The possible options for the tests.
 interface StandaloneOptions {
@@ -205,7 +207,6 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
     const result: SubtreeResult = emptySubtreeResult();
     progressTestNameElem.textContent = name;
 
-    haveSomeResults = true;
     const [rec, res] = logger.record(name);
     caseResult = res;
     if (worker) {
@@ -302,6 +303,10 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
     if (runDepth === 0) {
       stopRequested = false;
       progressElem.style.display = '';
+      // only prompt if this is the full CTS and we started from the root.
+      if (isFullCTS && n.query.filePathParts.length === 0) {
+        promptBeforeReload = true;
+      }
     }
     if (stopRequested) {
       const result = emptySubtreeResult();
@@ -536,8 +541,9 @@ void (async () => {
   // MAINTENANCE_TODO: start populating page before waiting for everything to load?
   const qs = new URLSearchParams(window.location.search).getAll('q');
   if (qs.length === 0) {
-    qs.push('webgpu:*');
+    qs.push(rootQuerySpec);
   }
+  isFullCTS = qs.length === 1 && qs[0] === rootQuerySpec;
 
   // Update the URL bar to match the exact current options.
   const updateURLWithCurrentOptions = () => {
