@@ -656,6 +656,24 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxColorAttachmentBytesPerSample"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxColorAttachments"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxDynamicStorageBuffersPerPipelineLayout"
     ]
   },

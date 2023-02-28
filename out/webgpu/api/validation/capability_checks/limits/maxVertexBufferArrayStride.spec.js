@@ -88,7 +88,7 @@ desc(`Test using createRenderPipeline at and over ${limit} limit`).
 params(kLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
-  const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+  const { defaultLimit, maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
   limitTest,
   testValueName,
@@ -97,7 +97,6 @@ fn(async (t) => {
 
 
   await t.testDeviceWithSpecificLimits(
-  adapter,
   requestedLimit,
   testValue,
   async ({ device, testValue, shouldError }) => {
@@ -115,7 +114,7 @@ desc(`Test using createRenderPipelineAsync at and over ${limit} limit`).
 params(kLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
-  const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+  const { defaultLimit, maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
   limitTest,
   testValueName,
@@ -123,7 +122,6 @@ fn(async (t) => {
   maximumLimit);
 
   await t.testDeviceWithSpecificLimits(
-  adapter,
   requestedLimit,
   testValue,
   async ({ device, testValue, shouldError }) => {

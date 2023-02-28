@@ -223,6 +223,13 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
   );
 }
 
+const LimitModes = {
+  defaultLimit: true,
+  maxLimit: true,
+};
+
+export const kLimitModes = keysOf(LimitModes);
+
 export const TestValues = {
   atLimit: true,
   overLimit: true,
@@ -249,7 +256,7 @@ export const LimitValueTests = {
 
 export const kLimitValueTestKeys = keysOf(LimitValueTests);
 
-function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
+export function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
   switch (limitValueTest) {
     case 'atDefault':
       return defaultLimit;
@@ -264,6 +271,10 @@ function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
   }
 }
 
+export function getDefaultLimit(limit) {
+  return kLimitInfo[limit].default;
+}
+
 /**
  * Adds the default parameters to a limit test
  */
@@ -273,8 +284,27 @@ export const kLimitBaseParams = kUnitCaseParamsBuilder
   .combine('testValueName', kTestValueKeys);
 
 export class LimitTestsImpl extends GPUTestBase {
+  _adapter = null;
   _device = undefined;
   limit = '';
+  defaultLimit = 0;
+  maximumLimit = 0;
+
+  async init() {
+    await super.init();
+    const gpu = getGPU();
+    this._adapter = await gpu.requestAdapter();
+    const limit = this.limit;
+    this.defaultLimit = getDefaultLimit(limit);
+    this.maximumLimit = this.adapter.limits[limit];
+    assert(!Number.isNaN(this.defaultLimit));
+    assert(!Number.isNaN(this.maximumLimit));
+  }
+
+  get adapter() {
+    assert(this._adapter !== undefined);
+    return this._adapter;
+  }
 
   get device() {
     assert(this._device !== undefined, 'device is only valid in _testThenDestroyDevice callback');
@@ -290,18 +320,13 @@ export class LimitTestsImpl extends GPUTestBase {
     }
   }
 
-  async getAdapterAndLimits() {
-    const limit = this.limit;
-    const gpu = getGPU();
-    const adapter = await gpu.requestAdapter();
-    assert(!!adapter);
-
-    const defaultLimit = kLimitInfo[limit].default;
-    const maximumLimit = adapter.limits[limit];
-    assert(!Number.isNaN(defaultLimit));
-    assert(!Number.isNaN(maximumLimit));
-
-    return { adapter, defaultLimit, maximumLimit };
+  getDefaultOrMaximumLimit(limit, limitMode) {
+    switch (limitMode) {
+      case 'defaultLimit':
+        return getDefaultLimit(limit);
+      case 'maxLimit':
+        return this.adapter.limits[limit];
+    }
   }
 
   /**
@@ -309,16 +334,20 @@ export class LimitTestsImpl extends GPUTestBase {
    * is correct or that the device failed to create if the requested limit is
    * beyond the maximum supported by the device.
    */
-  async _getDeviceWithSpecificLimit(adapter, requestedLimit) {
-    const limit = this.limit;
-
-    const defaultLimit = kLimitInfo[limit].default;
-    const maximumLimit = adapter.limits[limit];
-    assert(!Number.isNaN(defaultLimit));
-    assert(!Number.isNaN(maximumLimit));
+  async _getDeviceWithSpecificLimit(requestedLimit, extraLimits) {
+    const { adapter, limit, maximumLimit, defaultLimit } = this;
 
     const requiredLimits = {};
     requiredLimits[limit] = requestedLimit;
+
+    if (extraLimits) {
+      for (const [extraLimitStr, limitMode] of Object.entries(extraLimits)) {
+        const extraLimit = extraLimitStr;
+        requiredLimits[extraLimit] =
+          limitMode === 'defaultLimit' ? getDefaultLimit(extraLimit) : adapter.limits[extraLimit];
+      }
+    }
+
     const shouldReject = requestedLimit > maximumLimit;
 
     const device = await this.requestDeviceWithLimits(adapter, requiredLimits, shouldReject);
@@ -342,11 +371,11 @@ export class LimitTestsImpl extends GPUTestBase {
    * is correct or that the device failed to create if the requested limit is
    * beyond the maximum supported by the device.
    */
-  async _getDeviceWithRequestedLimit(limitValueTest) {
-    const { adapter, defaultLimit, maximumLimit } = await this.getAdapterAndLimits();
+  async _getDeviceWithRequestedLimit(limitValueTest, extraLimits) {
+    const { defaultLimit, maximumLimit } = this;
 
     const requestedLimit = getLimitValue(defaultLimit, maximumLimit, limitValueTest);
-    return this._getDeviceWithSpecificLimit(adapter, requestedLimit);
+    return this._getDeviceWithSpecificLimit(requestedLimit, extraLimits);
   }
 
   /**
@@ -383,10 +412,10 @@ export class LimitTestsImpl extends GPUTestBase {
    * If the device is created then we call a test function, checking
    * that the function does not leak any GPU errors.
    */
-  async testDeviceWithSpecificLimits(adapter, deviceLimitValue, testValue, fn) {
+  async testDeviceWithSpecificLimits(deviceLimitValue, testValue, fn, extraLimits) {
     assert(!this._device);
 
-    const deviceAndLimits = await this._getDeviceWithSpecificLimit(adapter, deviceLimitValue);
+    const deviceAndLimits = await this._getDeviceWithSpecificLimit(deviceLimitValue, extraLimits);
     // If we request over the limit requestDevice will throw
     if (!deviceAndLimits) {
       return;
@@ -401,10 +430,10 @@ export class LimitTestsImpl extends GPUTestBase {
    * If the device is created then we call a test function, checking
    * that the function does not leak any GPU errors.
    */
-  async testDeviceWithRequestedLimits(limitTest, testValueName, fn) {
+  async testDeviceWithRequestedLimits(limitTest, testValueName, fn, extraLimits) {
     assert(!this._device);
 
-    const deviceAndLimits = await this._getDeviceWithRequestedLimit(limitTest);
+    const deviceAndLimits = await this._getDeviceWithRequestedLimit(limitTest, extraLimits);
     // If we request over the limit requestDevice will throw
     if (!deviceAndLimits) {
       return;

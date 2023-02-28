@@ -72,7 +72,7 @@ g.test('createBindGroup,at_over')
   .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
-    const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+    const { defaultLimit, maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -81,7 +81,6 @@ g.test('createBindGroup,at_over')
     );
 
     await t.testDeviceWithSpecificLimits(
-      adapter,
       requestedLimit,
       testValue,
       async ({ device, testValue, shouldError }) => {
@@ -136,10 +135,10 @@ g.test('validate,maxBufferSize')
   .params(u => u.combine('limitTest', kLimitValueTestKeys))
   .fn(async t => {
     const { limitTest } = t.params;
-    const { adapter, defaultLimit, maximumLimit } = await t.getAdapterAndLimits();
+    const { defaultLimit, maximumLimit } = t;
     const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
 
-    await t.testDeviceWithSpecificLimits(adapter, requestedLimit, 0, ({ device, actualLimit }) => {
+    await t.testDeviceWithSpecificLimits(requestedLimit, 0, ({ device, actualLimit }) => {
       t.expect(actualLimit <= device.limits.maxBufferSize);
     });
   });
