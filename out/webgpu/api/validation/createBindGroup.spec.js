@@ -345,7 +345,7 @@ fn((t) => {
     {
       binding: 0,
       visibility: GPUShaderStage.FRAGMENT,
-      texture: { multisampled }
+      texture: { multisampled, sampleType: multisampled ? 'unfilterable-float' : undefined }
     }]
 
   });

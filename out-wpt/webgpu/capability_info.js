@@ -1613,7 +1613,7 @@ export function textureBindingEntries(includeUndefined) {
   return [
     ...(includeUndefined ? [{ texture: { multisampled: undefined } }] : []),
     { texture: { multisampled: false } },
-    { texture: { multisampled: true } },
+    { texture: { multisampled: true, sampleType: 'unfilterable-float' } },
   ];
 }
 /**
