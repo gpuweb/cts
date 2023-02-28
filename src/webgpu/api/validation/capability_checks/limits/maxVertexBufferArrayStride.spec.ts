@@ -1,6 +1,11 @@
 import { roundDown } from '../../../../util/math.js';
 
-import { kLimitBaseParams, makeLimitTestGroup, LimitValueTest, TestValue } from './limit_utils.js';
+import {
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup,
+  MaximumLimitValueTest,
+  MaximumTestValue,
+} from './limit_utils.js';
 
 function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderPipelineDescriptor {
   const code = `
@@ -33,7 +38,7 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderP
 const kMinAttributeStride = 4;
 
 function getDeviceLimitToRequest(
-  limitValueTest: LimitValueTest,
+  limitValueTest: MaximumLimitValueTest,
   defaultLimit: number,
   maximumLimit: number
 ) {
@@ -54,7 +59,7 @@ function getDeviceLimitToRequest(
   }
 }
 
-function getTestValue(testValueName: TestValue, requestedLimit: number) {
+function getTestValue(testValueName: MaximumTestValue, requestedLimit: number) {
   switch (testValueName) {
     case 'atLimit':
       return requestedLimit;
@@ -64,8 +69,8 @@ function getTestValue(testValueName: TestValue, requestedLimit: number) {
 }
 
 function getDeviceLimitToRequestAndValueToTest(
-  limitValueTest: LimitValueTest,
-  testValueName: TestValue,
+  limitValueTest: MaximumLimitValueTest,
+  testValueName: MaximumTestValue,
   defaultLimit: number,
   maximumLimit: number
 ) {
@@ -85,10 +90,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using createRenderPipeline at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -111,10 +116,10 @@ g.test('createRenderPipeline,at_over')
 
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using createRenderPipelineAsync at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
