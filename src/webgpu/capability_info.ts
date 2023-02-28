@@ -922,7 +922,7 @@ export function textureBindingEntries(includeUndefined: boolean): readonly BGLEn
   return [
     ...(includeUndefined ? [{ texture: { multisampled: undefined } }] : []),
     { texture: { multisampled: false } },
-    { texture: { multisampled: true } },
+    { texture: { multisampled: true, sampleType: 'unfilterable-float' } },
   ] as const;
 }
 /**
