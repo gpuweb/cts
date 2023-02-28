@@ -223,7 +223,7 @@ extraWGSL = '')
   (numBindings, set) => {
     return bindingCombination === 'compute' ?
     `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')};` :
-    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')}; return vec4f(0);`;
+    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n')};`;
   },
   numBindings,
   extraWGSL);
