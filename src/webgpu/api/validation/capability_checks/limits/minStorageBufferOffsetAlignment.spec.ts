@@ -58,7 +58,7 @@ g.test('createBindGroup,at_over')
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
     // note: LimitTest.maximum is the adapter.limits[limit] value
-    const { defaultLimit, maximumLimit: minimumLimit } = t;
+    const { defaultLimit, adapterLimit: minimumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -111,7 +111,7 @@ g.test('setBindGroup,at_over')
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
     // note: LimitTest.maximum is the adapter.limits[limit] value
-    const { defaultLimit, maximumLimit: minimumLimit } = t;
+    const { defaultLimit, adapterLimit: minimumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -172,12 +172,12 @@ g.test('validate,powerOf2')
   .desc('Verify that ${limit} is power of 2')
   .fn(t => {
     t.expect(isPowerOfTwo(t.defaultLimit));
-    t.expect(isPowerOfTwo(t.maximumLimit));
+    t.expect(isPowerOfTwo(t.adapterLimit));
   });
 
 g.test('validate,greaterThanOrEqualTo32')
   .desc('Verify that ${limit} is >= 32')
   .fn(t => {
     t.expect(t.defaultLimit >= 32);
-    t.expect(t.maximumLimit >= 32);
+    t.expect(t.adapterLimit >= 32);
   });

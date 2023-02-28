@@ -1,17 +1,17 @@
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { kAllCanvasTypes, createCanvas } from '../../../../util/create_elements.js';
 
-import { kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 const limit = 'maxTextureDimension2D';
 export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createTexture,at_over')
   .desc(`Test using at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, shouldError, testValue, actualLimit }) => {
@@ -46,10 +46,10 @@ g.test('createTexture,at_over')
 
 g.test('configure,at_over')
   .desc(`Test using at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('canvasType', kAllCanvasTypes))
+  .params(kMaximumLimitBaseParams.combine('canvasType', kAllCanvasTypes))
   .fn(async t => {
     const { limitTest, testValueName, canvasType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, shouldError, testValue, actualLimit }) => {
@@ -82,10 +82,10 @@ g.test('configure,at_over')
 
 g.test('getCurrentTexture,at_over')
   .desc(`Test using at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('canvasType', kAllCanvasTypes))
+  .params(kMaximumLimitBaseParams.combine('canvasType', kAllCanvasTypes))
   .fn(async t => {
     const { limitTest, testValueName, canvasType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, shouldError, testValue, actualLimit }) => {

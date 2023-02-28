@@ -1,6 +1,10 @@
 import { keysOf } from '../../../../../common/util/data_tables.js';
 
-import { kLimitBaseParams, kLimitValueTestKeys, makeLimitTestGroup } from './limit_utils.js';
+import {
+  kMaximumLimitBaseParams,
+  kMaximumLimitValueTestKeys,
+  makeLimitTestGroup,
+} from './limit_utils.js';
 
 const BufferParts = {
   wholeBuffer: true,
@@ -24,10 +28,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createBindGroup,at_over')
   .desc(`Test using at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
+  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -74,10 +78,14 @@ g.test('createBindGroup,at_over')
 
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
-  .params(u => u.combine('limitTest', kLimitValueTestKeys))
+  .params(u => u.combine('limitTest', kMaximumLimitValueTestKeys))
   .fn(async t => {
     const { limitTest } = t.params;
-    await t.testDeviceWithRequestedLimits(limitTest, 'atLimit', ({ device, actualLimit }) => {
-      t.expect(actualLimit <= device.limits.maxBufferSize);
-    });
+    await t.testDeviceWithRequestedMaximumLimits(
+      limitTest,
+      'atLimit',
+      ({ device, actualLimit }) => {
+        t.expect(actualLimit <= device.limits.maxBufferSize);
+      }
+    );
   });
