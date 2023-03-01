@@ -104,10 +104,10 @@ const kSourceMaps = {
 };
 const kSourceMapsKeys = keysOf(kSourceMaps);
 
-g.test('compilationInfo_returns')
+g.test('getCompilationInfo_returns')
   .desc(
     `
-    Test that compilationInfo() can be called on any ShaderModule.
+    Test that getCompilationInfo() can be called on any ShaderModule.
 
     Note: sourcemaps are not used in the WebGPU API. We are only testing that
     browser that happen to use them don't fail or crash if the sourcemap is
@@ -133,7 +133,7 @@ g.test('compilationInfo_returns')
       !valid
     );
 
-    const info = await shaderModule.compilationInfo();
+    const info = await shaderModule.getCompilationInfo();
 
     t.expect(
       info instanceof GPUCompilationInfo,
@@ -182,7 +182,7 @@ g.test('line_number_and_position')
       return t.device.createShaderModule({ code: _code, ...(sourceMap && { sourceMap }) });
     });
 
-    const info = await shaderModule.compilationInfo();
+    const info = await shaderModule.getCompilationInfo();
 
     let foundAppropriateError = false;
     for (const message of info.messages) {
@@ -236,7 +236,7 @@ g.test('offset_and_length')
       !valid
     );
 
-    const info = await shaderModule.compilationInfo();
+    const info = await shaderModule.getCompilationInfo();
 
     for (const message of info.messages) {
       // Any offsets and lengths should reference valid spans of the shader code.

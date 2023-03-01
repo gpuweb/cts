@@ -27,7 +27,7 @@ export class ShaderValidationTest extends GPUTest {
 
     const error = new ErrorWithExtra('', () => ({ shaderModule }));
     this.eventualAsyncExpectation(async () => {
-      const compilationInfo = await shaderModule.compilationInfo();
+      const compilationInfo = await shaderModule.getCompilationInfo();
 
       // MAINTENANCE_TODO: Pretty-print error messages with source context.
       const messagesLog = compilationInfo.messages
