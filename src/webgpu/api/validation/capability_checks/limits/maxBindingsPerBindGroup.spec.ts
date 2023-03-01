@@ -75,3 +75,21 @@ g.test('createPipelineAsync,at_over')
       }
     );
   });
+
+g.test('validate')
+  .desc(`Test ${limit} matches the spec limits`)
+  .fn(t => {
+    const { adapter, maximumLimit } = t;
+    const maxBindingsPerShaderStage =
+      adapter.limits.maxSampledTexturesPerShaderStage +
+      adapter.limits.maxSamplersPerShaderStage +
+      adapter.limits.maxStorageBuffersPerShaderStage +
+      adapter.limits.maxStorageTexturesPerShaderStage +
+      adapter.limits.maxUniformBuffersPerShaderStage;
+    const maxShaderStagesPerPipeline = 2;
+    const minMaxBindingsPerBindGroup = maxBindingsPerShaderStage * maxShaderStagesPerPipeline;
+    t.expect(
+      maximumLimit >= minMaxBindingsPerBindGroup,
+      `maxBindingsPerBindGroup(${maximumLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) + maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`
+    );
+  });
