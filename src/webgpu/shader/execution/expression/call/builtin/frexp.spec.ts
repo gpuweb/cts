@@ -16,7 +16,7 @@ The magnitude of the significand is in the range of [0.5, 1.0) or 0.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
-import { f32, i32, toVector, TypeF32, TypeI32, TypeVec } from '../../../../../util/conversion';
+import { f32, i32, toVector, TypeF32, TypeI32, TypeVec } from '../../../../../util/conversion.js';
 import {
   cartesianProduct,
   frexp,
@@ -25,7 +25,7 @@ import {
   quantizeToF32,
   vectorF32Range,
 } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache';
+import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, ExpressionBuilder, run } from '../../expression.js';
 
 export const g = makeTestGroup(GPUTest);

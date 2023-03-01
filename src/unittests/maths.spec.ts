@@ -26,7 +26,6 @@ import {
   fullI32Range,
   hexToF32,
   hexToF64,
-  isFiniteF32,
   lerp,
   linearRange,
   nextAfterF32,
