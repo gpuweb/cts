@@ -139,6 +139,7 @@ function createExternalTextureSamplingTestPipeline(t: GPUTest): GPURenderPipelin
 
 function createExternalTextureSamplingTestBindGroup(
   t: GPUTest,
+  allowCopy: boolean,
   source: HTMLVideoElement | VideoFrame,
   pipeline: GPURenderPipeline
 ): GPUBindGroup {
@@ -149,6 +150,7 @@ function createExternalTextureSamplingTestBindGroup(
     source: source as any,
   });
 
+  expectZeroCopy(t, allowCopy, externalTexture);
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
@@ -166,6 +168,25 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
+function expectZeroCopy(t: GPUTest, allowCopy: boolean, externalTexture: GPUExternalTexture): void {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (!allowCopy && !(externalTexture as any).isZeroCopy) {
+    t.fail('0-copy import failed.');
+  }
+}
+
+function allowCopyParams() {
+  if (
+    typeof GPUExternalTexture !== 'undefined' &&
+    // eslint-disable-next-line no-prototype-builtins
+    GPUExternalTexture.prototype.hasOwnProperty('isZeroCopy')
+  ) {
+    return [{ allowCopy: true }, { allowCopy: false }] as const;
+  } else {
+    return [{ allowCopy: true }] as const;
+  }
+}
+
 g.test('importExternalTexture,sample')
   .desc(
     `
@@ -175,6 +196,7 @@ for several combinations of video format and color space.
   )
   .params(u =>
     u //
+      .combineWithParams(allowCopyParams())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoExpectations)
   )
@@ -199,7 +221,12 @@ for several combinations of video format and color space.
       });
 
       const pipeline = createExternalTextureSamplingTestPipeline(t);
-      const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(
+        t,
+        t.params.allowCopy,
+        source,
+        pipeline
+      );
 
       const commandEncoder = t.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginRenderPass({
@@ -244,6 +271,7 @@ it will honor rotation metadata.
   )
   .params(u =>
     u //
+      .combineWithParams(allowCopyParams())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoRotationExpectations)
   )
@@ -264,7 +292,12 @@ it will honor rotation metadata.
       });
 
       const pipeline = createExternalTextureSamplingTestPipeline(t);
-      const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(
+        t,
+        t.params.allowCopy,
+        source,
+        pipeline
+      );
 
       const commandEncoder = t.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginRenderPass({
@@ -305,6 +338,7 @@ compute shader, for several combinations of video format and color space.
   )
   .params(u =>
     u //
+      .combineWithParams(allowCopyParams())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoExpectations)
   )
@@ -325,7 +359,7 @@ compute shader, for several combinations of video format and color space.
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
       });
-
+      expectZeroCopy(t, t.params.allowCopy, externalTexture);
       const outputTexture = t.device.createTexture({
         format: 'rgba8unorm',
         size: [2, 2, 1],
