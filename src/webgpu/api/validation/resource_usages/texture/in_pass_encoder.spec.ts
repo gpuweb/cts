@@ -234,15 +234,23 @@ g.test('subresources_and_binding_types_combination_for_color')
   .params(u =>
     u
       .combine('compute', [false, true])
-      .combineWithParams([
-        { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
-        { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
-        { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
-        // Race condition upon multiple writable storage texture is valid.
-        { _usageOK: true, type0: 'writeonly-storage-texture', type1: 'writeonly-storage-texture' },
-        { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
-        { _usageOK: false, type0: 'render-target', type1: 'render-target' },
-      ] as const)
+      .expandWithParams(
+        p =>
+          [
+            { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
+            { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
+            { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
+            // Race condition upon multiple writable storage texture is valid.
+            // For p.compute === true, fails at pass.dispatch because aliasing exists.
+            {
+              _usageOK: !p.compute,
+              type0: 'writeonly-storage-texture',
+              type1: 'writeonly-storage-texture',
+            },
+            { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
+            { _usageOK: false, type0: 'render-target', type1: 'render-target' },
+          ] as const
+      )
       .beginSubcases()
       .combine('binding0InBundle', [false, true])
       .combine('binding1InBundle', [false, true])
