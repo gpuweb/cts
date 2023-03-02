@@ -147,7 +147,11 @@ g.test('depth_disabled').
 desc('Tests render results with depth test disabled.').
 fn((t) => {
   const depthSpencilFormat = 'depth24plus-stencil8';
-  const state = { format: depthSpencilFormat };
+  const state = {
+    format: depthSpencilFormat,
+    depthWriteEnabled: false,
+    depthCompare: 'always'
+  };
 
   const testStates = [
   { state, color: kBaseColor, depth: 0.0 },

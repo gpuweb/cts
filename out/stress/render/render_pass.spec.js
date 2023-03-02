@@ -126,7 +126,8 @@ fn((t) => {
       primitive: { topology: 'point-list' },
       depthStencil: {
         format: 'depth24plus-stencil8',
-
+        depthCompare: 'always',
+        depthWriteEnabled: false,
         // Not really used, but it ensures that each pipeline is unique.
         depthBias: i
       },

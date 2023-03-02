@@ -29,7 +29,9 @@ fn((t) => {
   const { isAsync, format } = t.params;
   const info = kTextureFormatInfo[format];
 
-  const descriptor = t.getDescriptor({ depthStencil: { format } });
+  const descriptor = t.getDescriptor({
+    depthStencil: { format, depthWriteEnabled: false, depthCompare: 'always' }
+  });
 
   t.doCreateRenderPipelineTest(isAsync, info.depth || info.stencil, descriptor);
 });
@@ -42,7 +44,7 @@ params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('format', kDepthStencilFormats).
-combine('depthCompare', [undefined, ...kCompareFunctions])).
+combine('depthCompare', kCompareFunctions)).
 
 beforeAllSubcases((t) => {
   const { format } = t.params;
@@ -54,7 +56,7 @@ fn((t) => {
   const info = kTextureFormatInfo[format];
 
   const descriptor = t.getDescriptor({
-    depthStencil: { format, depthCompare }
+    depthStencil: { format, depthCompare, depthWriteEnabled: false }
   });
 
   const depthTestEnabled = depthCompare !== undefined && depthCompare !== 'always';
@@ -81,7 +83,7 @@ fn((t) => {
   const info = kTextureFormatInfo[format];
 
   const descriptor = t.getDescriptor({
-    depthStencil: { format, depthWriteEnabled }
+    depthStencil: { format, depthWriteEnabled, depthCompare: 'always' }
   });
   t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
 });
@@ -104,7 +106,9 @@ fn((t) => {
   const descriptor = t.getDescriptor({
     // Keep one color target so that the pipeline is still valid with no depth stencil target.
     targets: [{ format: 'rgba8unorm' }],
-    depthStencil: format ? { format, depthWriteEnabled: true } : undefined,
+    depthStencil: format ?
+    { format, depthWriteEnabled: true, depthCompare: 'always' } :
+    undefined,
     fragmentShaderCode: getFragmentShaderCodeWithOutput(
     [{ values: [1, 1, 1, 1], plainType: 'f32', componentCount: 4 }],
     { value: 0.5 })
@@ -137,9 +141,23 @@ fn((t) => {
 
   let descriptor;
   if (face === 'front') {
-    descriptor = t.getDescriptor({ depthStencil: { format, stencilFront: { compare } } });
+    descriptor = t.getDescriptor({
+      depthStencil: {
+        format,
+        depthWriteEnabled: false,
+        depthCompare: 'always',
+        stencilFront: { compare }
+      }
+    });
   } else {
-    descriptor = t.getDescriptor({ depthStencil: { format, stencilBack: { compare } } });
+    descriptor = t.getDescriptor({
+      depthStencil: {
+        format,
+        depthWriteEnabled: false,
+        depthCompare: 'always',
+        stencilBack: { compare }
+      }
+    });
   }
 
   const stencilTestEnabled = compare !== undefined && compare !== 'always';
@@ -173,25 +191,30 @@ fn((t) => {
   const { isAsync, format, faceAndOpType, op } = t.params;
   const info = kTextureFormatInfo[format];
 
+  const common = {
+    format,
+    depthWriteEnabled: false,
+    depthCompare: 'always'
+  };
   let depthStencil;
   switch (faceAndOpType) {
     case 'frontFailOp':
-      depthStencil = { format, stencilFront: { failOp: op } };
+      depthStencil = { ...common, stencilFront: { failOp: op } };
       break;
     case 'frontDepthFailOp':
-      depthStencil = { format, stencilFront: { depthFailOp: op } };
+      depthStencil = { ...common, stencilFront: { depthFailOp: op } };
       break;
     case 'frontPassOp':
-      depthStencil = { format, stencilFront: { passOp: op } };
+      depthStencil = { ...common, stencilFront: { passOp: op } };
       break;
     case 'backFailOp':
-      depthStencil = { format, stencilBack: { failOp: op } };
+      depthStencil = { ...common, stencilBack: { failOp: op } };
       break;
     case 'backDepthFailOp':
-      depthStencil = { format, stencilBack: { depthFailOp: op } };
+      depthStencil = { ...common, stencilBack: { depthFailOp: op } };
       break;
     case 'backPassOp':
-      depthStencil = { format, stencilBack: { passOp: op } };
+      depthStencil = { ...common, stencilBack: { passOp: op } };
       break;
     default:
       unreachable();}

@@ -457,7 +457,9 @@ Test that the depth attachment format in render passes or bundles match the pipe
 
     const pipeline = t.createRenderPipeline(
       [{ format: 'rgba8unorm', writeMask: 0 }],
-      pipelineFormat !== undefined ? { format: pipelineFormat } : undefined
+      pipelineFormat !== undefined
+        ? { format: pipelineFormat, depthCompare: 'always', depthWriteEnabled: false }
+        : undefined
     );
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
@@ -543,6 +545,7 @@ Test that the depth stencil read only state in render passes or bundles is compa
         : {
             format,
             depthWriteEnabled,
+            depthCompare: 'always',
             stencilWriteMask,
             stencilFront,
             stencilBack,
@@ -619,7 +622,9 @@ Test that the sample count in render passes or bundles match the pipeline sample
 
     const pipeline = t.createRenderPipeline(
       colorFormats.map(format => ({ format, writeMask: 0 })),
-      depthStencilFormat ? { format: depthStencilFormat } : undefined,
+      depthStencilFormat
+        ? { format: depthStencilFormat, depthWriteEnabled: false, depthCompare: 'always' }
+        : undefined,
       pipelineSampleCount
     );
 

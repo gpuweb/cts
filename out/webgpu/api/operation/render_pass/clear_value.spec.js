@@ -110,6 +110,7 @@ fn((t) => {
     depthStencil: {
       format: stencilFormat,
       depthCompare: 'always',
+      depthWriteEnabled: false,
       stencilFront: {
         compare: 'equal'
       },
@@ -138,6 +139,7 @@ fn((t) => {
 
   const depthStencilAttachment = {
     view: stencilTexture.createView(),
+    depthClearValue: 0,
     stencilLoadOp: 'clear',
     stencilStoreOp: 'store',
     stencilClearValue

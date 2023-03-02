@@ -358,7 +358,9 @@ fn((t) => {
         entryPoint: 'main'
       },
       depthStencil: {
-        format
+        format,
+        depthCompare: 'always',
+        depthWriteEnabled: false
       },
       fragment: {
         module: t.device.createShaderModule({

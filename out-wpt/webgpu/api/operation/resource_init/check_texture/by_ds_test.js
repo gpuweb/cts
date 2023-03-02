@@ -50,6 +50,7 @@ function getDepthTestEqualPipeline(t, format, sampleCount, expected) {
     depthStencil: {
       format,
       depthCompare: 'equal',
+      depthWriteEnabled: false,
     },
     primitive: { topology: 'triangle-list' },
     multisample: { count: sampleCount },
@@ -76,6 +77,8 @@ function getStencilTestEqualPipeline(t, format, sampleCount) {
       targets: [{ format: 'r8unorm' }],
     },
     depthStencil: {
+      depthWriteEnabled: false,
+      depthCompare: 'always',
       format,
       stencilFront: { compare: 'equal' },
       stencilBack: { compare: 'equal' },

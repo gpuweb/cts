@@ -861,7 +861,8 @@ fn((t) => {
   const depthStencilAttachment = {
     view: t.createTexture({ format }).createView(),
     depthReadOnly,
-    stencilReadOnly
+    stencilReadOnly,
+    depthClearValue: 0
   };
 
   if (setDepthLoadStoreOp) {

@@ -302,7 +302,7 @@ fn((t) => {
   const descriptor = t.getDescriptor({
     targets: format ? [{ format, writeMask }] : [],
     // To have a dummy depthStencil attachment to avoid having no attachment at all which is invalid
-    depthStencil: { format: 'depth24plus' },
+    depthStencil: { format: 'depth24plus', depthWriteEnabled: false, depthCompare: 'always' },
     fragmentShaderCode: getFragmentShaderCodeWithOutput(
     shaderOutput ?
     [{ values, plainType: shaderOutput.scalar, componentCount: shaderOutput.count }] :

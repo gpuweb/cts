@@ -465,7 +465,9 @@ fn((t) => {
 
   const pipeline = t.createRenderPipeline(
   [{ format: 'rgba8unorm', writeMask: 0 }],
-  pipelineFormat !== undefined ? { format: pipelineFormat } : undefined);
+  pipelineFormat !== undefined ?
+  { format: pipelineFormat, depthCompare: 'always', depthWriteEnabled: false } :
+  undefined);
 
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
@@ -551,6 +553,7 @@ fn((t) => {
   {
     format,
     depthWriteEnabled,
+    depthCompare: 'always',
     stencilWriteMask,
     stencilFront,
     stencilBack
@@ -627,7 +630,9 @@ fn((t) => {
 
   const pipeline = t.createRenderPipeline(
   colorFormats.map((format) => ({ format, writeMask: 0 })),
-  depthStencilFormat ? { format: depthStencilFormat } : undefined,
+  depthStencilFormat ?
+  { format: depthStencilFormat, depthWriteEnabled: false, depthCompare: 'always' } :
+  undefined,
   pipelineSampleCount);
 
 

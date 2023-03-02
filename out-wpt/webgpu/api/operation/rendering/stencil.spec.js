@@ -546,12 +546,16 @@ g.test('stencil_reference_initialized')
 
     const baseState = {
       format,
+      depthWriteEnabled: true,
+      depthCompare: 'always',
       stencilFront: baseStencilState,
       stencilBack: baseStencilState,
     };
 
     const testState = {
       format,
+      depthWriteEnabled: true,
+      depthCompare: 'always',
       stencilFront: testStencilState,
       stencilBack: testStencilState,
     };

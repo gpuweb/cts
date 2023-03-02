@@ -839,6 +839,7 @@ g.test('depth_stencil_attachment')
       view: t.createTexture({ format }).createView(),
       depthReadOnly,
       stencilReadOnly,
+      depthClearValue: 0,
     };
 
     if (setDepthLoadStoreOp) {

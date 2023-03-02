@@ -174,7 +174,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
         topology: 'point-list',
         unclippedDepth,
       },
-      depthStencil: { format, depthWriteEnabled: true },
+      depthStencil: { format, depthWriteEnabled: true, depthCompare: 'always' },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: {
         module,
@@ -425,7 +425,7 @@ to be empty.`
       layout: 'auto',
       vertex: { module, entryPoint: 'vmain' },
       primitive: { topology: 'point-list' },
-      depthStencil: { format, depthWriteEnabled: true },
+      depthStencil: { format, depthWriteEnabled: true, depthCompare: 'always' },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: { module, entryPoint: 'finit', targets: [] },
     });
@@ -439,7 +439,7 @@ to be empty.`
         topology: 'point-list',
         unclippedDepth,
       },
-      depthStencil: { format, depthCompare: 'not-equal' },
+      depthStencil: { format, depthCompare: 'not-equal', depthWriteEnabled: false },
       multisample: multisampled ? { count: 4 } : undefined,
       fragment: { module, entryPoint: 'ftest', targets: [{ format: 'r8unorm' }] },
     });
