@@ -6,8 +6,8 @@ import {
   makeLimitTestGroup,
   LimitValueTest,
   TestValue,
-  kLimitValueTestKeys,
   LimitMode,
+  getDefaultLimit,
 } from './limit_utils.js';
 
 const BufferParts = {
@@ -146,18 +146,8 @@ g.test('createBindGroup,at_over')
 
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
-  .params(u => u.combine('limitTest', kLimitValueTestKeys))
-  .fn(async t => {
-    const { limitTest } = t.params;
-    const { defaultLimit, maximumLimit } = t;
-    const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
-
-    await t.testDeviceWithSpecificLimits(
-      requestedLimit,
-      0,
-      ({ device, actualLimit }) => {
-        t.expect(actualLimit <= device.limits.maxBufferSize);
-      },
-      kExtraLimits
-    );
+  .fn(t => {
+    const { adapter, defaultLimit, maximumLimit } = t;
+    t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+    t.expect(maximumLimit <= adapter.limits.maxBufferSize);
   });
