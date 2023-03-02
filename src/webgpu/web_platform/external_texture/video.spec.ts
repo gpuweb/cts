@@ -249,7 +249,7 @@ it will honor rotation metadata.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
