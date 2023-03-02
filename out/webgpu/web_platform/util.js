@@ -1,12 +1,32 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { SkipTestCase } from '../../common/framework/fixture.js';import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
+**/import { SkipTestCase } from '../../common/framework/fixture.js';import { getResourcePath } from '../../common/framework/resources.js';import { makeTable } from '../../common/util/data_tables.js';
+import { timeout } from '../../common/util/timeout.js';
+import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 
 
 
 
 
 
+
+
+
+
+export const kVideoInfo = makeTable(
+['mimeType'],
+[undefined], {
+  // All video names
+  'four-colors-vp8-bt601.webm': ['video/webm; codecs=vp8'],
+  'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
+  'four-colors-h264-bt601.mp4': ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-vp9-bt601.webm': ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt709.webm': ['video/webm; codecs=vp9'],
+  'four-colors-vp9-bt2020.webm': ['video/webm; codecs=vp9'],
+  'four-colors-h264-bt601-rotate-90.mp4': ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-180.mp4': ['video/mp4; codecs=avc1.4d400c'],
+  'four-colors-h264-bt601-rotate-270.mp4': ['video/mp4; codecs=avc1.4d400c']
+});
 
 
 /**
@@ -73,6 +93,19 @@ callback)
 }
 
 /**
+ * Fire a `callback` when the script animation reaches a new frame.
+ * Returns a promise which resolves after `callback` (which may be async) completes.
+ */
+export function waitForNextTask(callback) {
+  const { promise, callbackAndResolve } = callbackHelper(callback, 'wait for next task timed out');
+  timeout(() => {
+    callbackAndResolve();
+  }, 0);
+
+  return promise;
+}
+
+/**
  * Fire a `callback` when the video reaches a new frame.
  * Returns a promise which resolves after `callback` (which may be async) completes.
  *
@@ -84,10 +117,7 @@ export function waitForNextFrame(
 video,
 callback)
 {
-  const { promise, callbackAndResolve } = videoCallbackHelper(
-  callback,
-  'waitForNextFrame timed out');
-
+  const { promise, callbackAndResolve } = callbackHelper(callback, 'waitForNextFrame timed out');
 
   if ('requestVideoFrameCallback' in video) {
     video.requestVideoFrameCallback(() => {
@@ -137,11 +167,34 @@ video)
 }
 
 /**
+ * Create HTMLVideoElement based on VideoName. Check whether video is playable in current
+ * browser environment.
+ * Returns a HTMLVideoElement.
+ *
+ * @param t: GPUTest that requires getting HTMLVideoElement
+ * @param videoName: Required video name
+ *
+ */
+export function getVideoElement(t, videoName) {
+  const videoElement = document.createElement('video');
+  const videoInfo = kVideoInfo[videoName];
+
+  if (videoElement.canPlayType(videoInfo.mimeType) === '') {
+    t.skip('Video codec is not supported');
+  }
+
+  const videoUrl = getResourcePath(videoName);
+  videoElement.src = videoUrl;
+
+  return videoElement;
+}
+
+/**
  * Helper for doing something inside of a (possibly async) callback (directly, not in a following
  * microtask), and returning a promise when the callback is done.
  * MAINTENANCE_TODO: Use this in startPlayingAndWaitForVideo (and make sure it works).
  */
-function videoCallbackHelper(
+function callbackHelper(
 callback,
 timeoutMessage)
 {
