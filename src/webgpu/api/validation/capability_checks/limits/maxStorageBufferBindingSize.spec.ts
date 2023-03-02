@@ -109,18 +109,24 @@ g.test('createBindGroup,at_over')
 
         const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
 
-        await t.expectValidationError(
-          async () => {
-            device.pushErrorScope('out-of-memory');
-            const storageBuffer = t.trackForCleanup(
-              device.createBuffer({
-                usage: GPUBufferUsage.STORAGE,
-                size,
-              })
-            );
-            const outOfMemoryError = await device.popErrorScope();
+        // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
+        // skip the validation since the allocation will fail.
+        if (size > device.limits.maxBufferSize) {
+          return;
+        }
 
-            if (!outOfMemoryError) {
+        device.pushErrorScope('out-of-memory');
+        const storageBuffer = t.trackForCleanup(
+          device.createBuffer({
+            usage: GPUBufferUsage.STORAGE,
+            size,
+          })
+        );
+        const outOfMemoryError = await device.popErrorScope();
+
+        if (!outOfMemoryError) {
+          await t.expectValidationError(
+            () => {
               device.createBindGroup({
                 layout: bindGroupLayout,
                 entries: [
@@ -134,11 +140,11 @@ g.test('createBindGroup,at_over')
                   },
                 ],
               });
-            }
-          },
-          shouldError || size > device.limits.maxBufferSize,
-          `size: ${size}, offset: ${offset}, testValue: ${testValue}`
-        );
+            },
+            shouldError,
+            `size: ${size}, offset: ${offset}, testValue: ${testValue}`
+          );
+        }
       },
       kExtraLimits
     );
