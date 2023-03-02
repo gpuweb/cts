@@ -69,15 +69,19 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
 
 /** Per-GPUErrorFilter info. */
 export const kErrorScopeFilterInfo: {
-  readonly [k in GPUErrorFilter]: {};
+  readonly [k in GPUErrorFilter]: {
+    generatable: boolean;
+  };
 } = /* prettier-ignore */ {
-  'out-of-memory': {},
-  'validation':    {},
-  'internal':      {},
+  'internal':      { generatable: false },
+  'out-of-memory': { generatable: false },
+  'validation':    { generatable: true },
 };
 /** List of all GPUErrorFilter values. */
 export const kErrorScopeFilters = keysOf(kErrorScopeFilterInfo);
-export const kGeneratableErrorScopeFilters = kErrorScopeFilters.filter(e => e !== 'internal');
+export const kGeneratableErrorScopeFilters = kErrorScopeFilters.filter(
+  e => kErrorScopeFilterInfo[e].generatable
+);
 
 // Textures
 
