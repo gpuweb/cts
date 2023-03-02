@@ -90,6 +90,6 @@ g.test('validate')
     const minMaxBindingsPerBindGroup = maxBindingsPerShaderStage * maxShaderStagesPerPipeline;
     t.expect(
       maximumLimit >= minMaxBindingsPerBindGroup,
-      `maxBindingsPerBindGroup(${maximumLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) + maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`
+      `maxBindingsPerBindGroup(${maximumLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) * maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`
     );
   });
