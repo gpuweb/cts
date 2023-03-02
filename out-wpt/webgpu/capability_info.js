@@ -59,7 +59,7 @@ export const kAllBufferUsageBits = kBufferUsages.reduce(
 /** Per-GPUErrorFilter info. */
 export const kErrorScopeFilterInfo = {
   internal: { generatable: false },
-  'out-of-memory': { generatable: false },
+  'out-of-memory': { generatable: true },
   validation: { generatable: true },
 };
 /** List of all GPUErrorFilter values. */

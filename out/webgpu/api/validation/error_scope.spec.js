@@ -36,6 +36,20 @@ class ErrorScopeTests extends Fixture {
   // direct way to inject errors.
   generateError(filter) {
     switch (filter) {
+      case 'out-of-memory':
+        this.trackForCleanup(
+        this.device.createTexture({
+          // One of the largest formats. With the base limits, the texture will be 256 GiB.
+          format: 'rgba32float',
+          usage: GPUTextureUsage.COPY_DST,
+          size: [
+          this.device.limits.maxTextureDimension2D,
+          this.device.limits.maxTextureDimension2D,
+          this.device.limits.maxTextureArrayLayers]
+
+        }));
+
+        break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.
         this.trackForCleanup(
