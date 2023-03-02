@@ -234,14 +234,22 @@ desc(
 params((u) =>
 u.
 combine('compute', [false, true]).
-combineWithParams([
+expandWithParams(
+(p) =>
+[
 { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
 { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
 { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
 // Race condition upon multiple writable storage texture is valid.
-{ _usageOK: true, type0: 'writeonly-storage-texture', type1: 'writeonly-storage-texture' },
+// For p.compute === true, fails at pass.dispatch because aliasing exists.
+{
+  _usageOK: !p.compute,
+  type0: 'writeonly-storage-texture',
+  type1: 'writeonly-storage-texture'
+},
 { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
 { _usageOK: false, type0: 'render-target', type1: 'render-target' }]).
+
 
 beginSubcases().
 combine('binding0InBundle', [false, true]).
