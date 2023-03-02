@@ -16,7 +16,8 @@
     "dev": "node tools/dev_server"
   },
   "engines": {
-    "node": "^12.22.0 || ^14.17.0 || >=16.0.0"
+    "node": "^12.22.0 || ^14.17.0 || >=16.0.0",
+    "npm" : ">=8.5.2"
   },
   "repository": {
     "type": "git",
