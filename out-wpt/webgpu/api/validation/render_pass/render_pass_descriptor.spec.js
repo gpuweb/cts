@@ -154,7 +154,7 @@ g.test('color_attachments,limits,maxColorAttachments')
 
     const colorAttachments = [];
     for (let i = 0; i < colorAttachmentsCount; i++) {
-      const colorTexture = t.createTexture();
+      const colorTexture = t.createTexture({ format: 'r8unorm' });
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
 
@@ -183,7 +183,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
 
     const colorAttachments = [];
     for (let i = 0; i < attachmentCount; i++) {
-      const colorTexture = t.createTexture();
+      const colorTexture = t.createTexture({ format });
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
@@ -210,12 +210,12 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
       {
         formats: ['r8unorm', 'r32float', 'rgba8unorm', 'rgba32float', 'r8unorm'],
 
-        _success: true,
+        _success: false,
       },
       {
         formats: ['r32float', 'rgba8unorm', 'rgba32float', 'r8unorm', 'r8unorm'],
 
-        _success: false,
+        _success: true,
       },
     ])
   )

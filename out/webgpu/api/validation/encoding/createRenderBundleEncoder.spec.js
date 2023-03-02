@@ -86,7 +86,7 @@ u.combineWithParams([
   'rgba32float',
   'r8unorm'],
 
-  _shouldError: false
+  _shouldError: true
 },
 {
   formats: [
@@ -96,7 +96,7 @@ u.combineWithParams([
   'r8unorm',
   'r8unorm'],
 
-  _shouldError: true
+  _shouldError: false
 }])).
 
 

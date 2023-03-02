@@ -169,7 +169,7 @@ fn((t) => {
 
   const colorAttachments = [];
   for (let i = 0; i < colorAttachmentsCount; i++) {
-    const colorTexture = t.createTexture();
+    const colorTexture = t.createTexture({ format: 'r8unorm' });
     colorAttachments.push(t.getColorAttachment(colorTexture));
   }
 
@@ -198,7 +198,7 @@ fn((t) => {
 
   const colorAttachments = [];
   for (let i = 0; i < attachmentCount; i++) {
-    const colorTexture = t.createTexture();
+    const colorTexture = t.createTexture({ format });
     colorAttachments.push(t.getColorAttachment(colorTexture));
   }
   const shouldError =
@@ -230,7 +230,7 @@ u.combineWithParams([
   'rgba32float',
   'r8unorm'],
 
-  _success: true
+  _success: false
 },
 {
   formats: [
@@ -240,7 +240,7 @@ u.combineWithParams([
   'r8unorm',
   'r8unorm'],
 
-  _success: false
+  _success: true
 }])).
 
 
