@@ -13,7 +13,6 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { getGPU } from '../../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kErrorScopeFilters, kGeneratableErrorScopeFilters } from '../../capability_info.js';
-import { kMaxUnsignedLongLongValue } from '../../constants.js';
 
 class ErrorScopeTests extends Fixture {
   _device = undefined;
@@ -38,19 +37,15 @@ class ErrorScopeTests extends Fixture {
   // direct way to inject errors.
   generateError(filter) {
     switch (filter) {
-      case 'out-of-memory':
-        // Generating an out-of-memory error by allocating a massive buffer.
-        this.device.createBuffer({
-          size: kMaxUnsignedLongLongValue, // Unrealistically massive buffer size
-          usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-        });
-        break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.
-        this.device.createBuffer({
-          size: 1024,
-          usage: 0xffff, // Invalid GPUBufferUsage
-        });
+        this.trackForCleanup(
+          this.device.createBuffer({
+            size: 1024,
+            usage: 0xffff, // Invalid GPUBufferUsage
+          })
+        );
+
         break;
     }
 
