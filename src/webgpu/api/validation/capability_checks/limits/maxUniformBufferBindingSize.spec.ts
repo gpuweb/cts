@@ -1,6 +1,11 @@
 import { keysOf } from '../../../../../common/util/data_tables.js';
 
-import { kLimitBaseParams, kLimitValueTestKeys, makeLimitTestGroup } from './limit_utils.js';
+import {
+  LimitMode,
+  kLimitBaseParams,
+  kLimitValueTestKeys,
+  makeLimitTestGroup,
+} from './limit_utils.js';
 
 const BufferParts = {
   wholeBuffer: true,
@@ -22,6 +27,9 @@ function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart
 const limit = 'maxUniformBufferBindingSize';
 export const { g, description } = makeLimitTestGroup(limit);
 
+// We also need to update the maxBufferSize limit when testing.
+const kExtraLimits = { maxBufferSize: 'maxLimit' as LimitMode };
+
 g.test('createBindGroup,at_over')
   .desc(`Test using at and over ${limit} limit`)
   .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
@@ -42,33 +50,39 @@ g.test('createBindGroup,at_over')
         });
 
         const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
-        device.pushErrorScope('out-of-memory');
-        const uniformBuffer = t.trackForCleanup(
-          device.createBuffer({
-            usage: GPUBufferUsage.UNIFORM,
-            size,
-          })
-        );
-        const outOfMemoryError = await device.popErrorScope();
 
-        if (!outOfMemoryError) {
-          await t.expectValidationError(() => {
-            device.createBindGroup({
-              layout: bindGroupLayout,
-              entries: [
-                {
-                  binding: 0,
-                  resource: {
-                    buffer: uniformBuffer,
-                    offset,
-                    size: testValue,
+        await t.expectValidationError(
+          async () => {
+            device.pushErrorScope('out-of-memory');
+            const uniformBuffer = t.trackForCleanup(
+              device.createBuffer({
+                usage: GPUBufferUsage.UNIFORM,
+                size,
+              })
+            );
+            const outOfMemoryError = await device.popErrorScope();
+
+            if (!outOfMemoryError) {
+              device.createBindGroup({
+                layout: bindGroupLayout,
+                entries: [
+                  {
+                    binding: 0,
+                    resource: {
+                      buffer: uniformBuffer,
+                      offset,
+                      size: testValue,
+                    },
                   },
-                },
-              ],
-            });
-          }, shouldError);
-        }
-      }
+                ],
+              });
+            }
+          },
+          shouldError || size > device.limits.maxBufferSize,
+          `size: ${size}, offset: ${offset}, testValue: ${testValue}`
+        );
+      },
+      kExtraLimits
     );
   });
 
@@ -77,7 +91,12 @@ g.test('validate,maxBufferSize')
   .params(u => u.combine('limitTest', kLimitValueTestKeys))
   .fn(async t => {
     const { limitTest } = t.params;
-    await t.testDeviceWithRequestedLimits(limitTest, 'atLimit', ({ device, actualLimit }) => {
-      t.expect(actualLimit <= device.limits.maxBufferSize);
-    });
+    await t.testDeviceWithRequestedLimits(
+      limitTest,
+      'atLimit',
+      ({ device, actualLimit }) => {
+        t.expect(actualLimit <= device.limits.maxBufferSize);
+      },
+      kExtraLimits
+    );
   });

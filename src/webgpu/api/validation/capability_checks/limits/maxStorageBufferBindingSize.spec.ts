@@ -7,6 +7,7 @@ import {
   LimitValueTest,
   TestValue,
   kLimitValueTestKeys,
+  LimitMode,
 } from './limit_utils.js';
 
 const BufferParts = {
@@ -27,6 +28,9 @@ function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart
 }
 
 const kStorageBufferRequiredSizeAlignment = 4;
+
+// We also need to update the maxBufferSize limit when testing.
+const kExtraLimits = { maxBufferSize: 'maxLimit' as LimitMode };
 
 function getDeviceLimitToRequest(
   limitValueTest: LimitValueTest,
@@ -104,18 +108,19 @@ g.test('createBindGroup,at_over')
         });
 
         const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
-        device.pushErrorScope('out-of-memory');
-        const storageBuffer = t.trackForCleanup(
-          device.createBuffer({
-            usage: GPUBufferUsage.STORAGE,
-            size,
-          })
-        );
-        const outOfMemoryError = await device.popErrorScope();
 
-        if (!outOfMemoryError) {
-          await t.expectValidationError(
-            () => {
+        await t.expectValidationError(
+          async () => {
+            device.pushErrorScope('out-of-memory');
+            const storageBuffer = t.trackForCleanup(
+              device.createBuffer({
+                usage: GPUBufferUsage.STORAGE,
+                size,
+              })
+            );
+            const outOfMemoryError = await device.popErrorScope();
+
+            if (!outOfMemoryError) {
               device.createBindGroup({
                 layout: bindGroupLayout,
                 entries: [
@@ -129,12 +134,13 @@ g.test('createBindGroup,at_over')
                   },
                 ],
               });
-            },
-            shouldError,
-            `size: ${size}, offset: ${offset}, testValue: ${testValue}`
-          );
-        }
-      }
+            }
+          },
+          shouldError || size > device.limits.maxBufferSize,
+          `size: ${size}, offset: ${offset}, testValue: ${testValue}`
+        );
+      },
+      kExtraLimits
     );
   });
 
@@ -146,7 +152,12 @@ g.test('validate,maxBufferSize')
     const { defaultLimit, maximumLimit } = t;
     const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
 
-    await t.testDeviceWithSpecificLimits(requestedLimit, 0, ({ device, actualLimit }) => {
-      t.expect(actualLimit <= device.limits.maxBufferSize);
-    });
+    await t.testDeviceWithSpecificLimits(
+      requestedLimit,
+      0,
+      ({ device, actualLimit }) => {
+        t.expect(actualLimit <= device.limits.maxBufferSize);
+      },
+      kExtraLimits
+    );
   });
