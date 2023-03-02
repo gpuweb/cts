@@ -691,6 +691,7 @@ g.test('acosInterval')
       { input: -1/2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] },  // ~2π/3
       { input: 0, expected: kAny },
       { input: 1/2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] },  // ~π/3
+      { input: 1, expected: kAny },
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -764,16 +765,22 @@ g.test('asinInterval')
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-      // form due to the inherited nature of the errors.
+      // form due to the irrational nature of the values.
       //
-      // The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt
+      // The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms
+      // of inversqrt.
       // The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
+      // Near 0, but not subnormal the absolute error should be larger, so will be +/- 6.77e-5, away from 0 the atan2
+      // inherited error should be larger.
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
       { input: -1, expected: kAny },
-      { input: -1/2, expected: [hexToF32(0xbf061a96), hexToF32(0xbf05fa8e)] },  // ~-π/6
+      { input: -1/2, expected: [hexToF64(0xbfe0c352, 0xc0000000), hexToF64(0xbfe0bf51, 0xc0000000)] },  // ~-π/6
+      { input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] },  // ~0
       { input: 0, expected: kAny },
-      { input: 1/2, expected: [hexToF32(0x3f05fa8e), hexToF32(0x3f061a96)] },  // ~π/6
+      { input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] },  // ~0
+      { input: 1/2, expected: [hexToF64(0x3fe0bf51, 0xc0000000), hexToF64(0x3fe0c352, 0xc0000000)] },  // ~π/6
+      { input: 1, expected: kAny },  // ~π/2
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]

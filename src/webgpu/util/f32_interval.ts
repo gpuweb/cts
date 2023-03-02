@@ -1407,9 +1407,9 @@ export function additionMatrixInterval(x: Matrix<number>, y: Matrix<number>): F3
 
 const AsinIntervalOp: PointToIntervalOp = {
   impl: limitPointToIntervalDomain(toF32Interval([-1.0, 1.0]), (n: number) => {
-    // asin(n) = atan2(n, sqrt(1.0 - n * n))
+    // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
     const x = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
-    return atan2Interval(n, x);
+    return F32Interval.span(atan2Interval(n, x), absoluteErrorInterval(Math.asin(n), 6.77e-5));
   }),
 };
 
