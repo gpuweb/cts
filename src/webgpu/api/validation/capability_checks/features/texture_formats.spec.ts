@@ -359,6 +359,8 @@ g.test('depth_stencil_state')
         },
         depthStencil: {
           format,
+          depthCompare: 'always',
+          depthWriteEnabled: false,
         },
         fragment: {
           module: t.device.createShaderModule({
