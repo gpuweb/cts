@@ -115,8 +115,8 @@ if the feature bgra8unorm-storage is not enabled.
 g.test('configure_storage_usage_on_canvas_context_without_bgra8unorm_storage')
   .desc(
     `
-Test that it is invalid to configure a GPUCanvasContext with GPUStorageBinding usage and a GPUDevice
-without 'bgra8unorm-storage' enabled.
+Test that it is invalid to configure a GPUCanvasContext to 'GPUStorageBinding' usage with
+'bgra8unorm' format on a GPUDevice with 'bgra8unorm-storage' disabled.
 `
   )
   .params(u =>
@@ -139,14 +139,14 @@ without 'bgra8unorm-storage' enabled.
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    const incompatible = usage & GPUTextureUsage.STORAGE_BINDING;
+    const requiredStorageBinding = !!(usage & GPUTextureUsage.STORAGE_BINDING);
     t.expectValidationError(() => {
       ctx.configure({
         device: t.device,
         format: 'bgra8unorm',
         usage,
       });
-    }, !!incompatible);
+    }, requiredStorageBinding);
   });
 
 g.test('configure_storage_usage_on_canvas_context_with_bgra8unorm_storage')
