@@ -139,14 +139,14 @@ without 'bgra8unorm-storage' enabled.
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    const compatible = usage & GPUTextureUsage.STORAGE_BINDING;
+    const incompatible = usage & GPUTextureUsage.STORAGE_BINDING;
     t.expectValidationError(() => {
       ctx.configure({
         device: t.device,
         format: 'bgra8unorm',
         usage,
       });
-    }, !!compatible);
+    }, !!incompatible);
   });
 
 g.test('configure_storage_usage_on_canvas_context_with_bgra8unorm_storage')
