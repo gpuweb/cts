@@ -5,8 +5,9 @@ import {
 kMaximumLimitBaseParams,
 makeLimitTestGroup,
 
+getDefaultLimit } from
 
-kMaximumLimitValueTestKeys } from
+
 './limit_utils.js';
 
 const BufferParts = {
@@ -27,6 +28,9 @@ function getSizeAndOffsetForBufferPart(device, bufferPart, size) {
 }
 
 const kStorageBufferRequiredSizeAlignment = 4;
+
+// We also need to update the maxBufferSize limit when testing.
+const kExtraLimits = { maxBufferSize: 'maxLimit' };
 
 function getDeviceLimitToRequest(
 limitValueTest,
@@ -104,6 +108,13 @@ fn(async (t) => {
     });
 
     const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
+
+    // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
+    // skip the validation since the allocation will fail with a validation error.
+    if (size > device.limits.maxBufferSize) {
+      return;
+    }
+
     device.pushErrorScope('out-of-memory');
     const storageBuffer = t.trackForCleanup(
     device.createBuffer({
@@ -134,20 +145,16 @@ fn(async (t) => {
       `size: ${size}, offset: ${offset}, testValue: ${testValue}`);
 
     }
-  });
+  },
+  kExtraLimits);
 
 });
 
 g.test('validate,maxBufferSize').
 desc(`Test that ${limit} <= maxBufferSize`).
-params((u) => u.combine('limitTest', kMaximumLimitValueTestKeys)).
-fn(async (t) => {
-  const { limitTest } = t.params;
-  const { defaultLimit, adapterLimit: maximumLimit } = t;
-  const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
-
-  await t.testDeviceWithSpecificLimits(requestedLimit, 0, ({ device, actualLimit }) => {
-    t.expect(actualLimit <= device.limits.maxBufferSize);
-  });
+fn((t) => {
+  const { adapter, defaultLimit, adapterLimit } = t;
+  t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+  t.expect(adapterLimit <= adapter.limits.maxBufferSize);
 });
 //# sourceMappingURL=maxStorageBufferBindingSize.spec.js.map
