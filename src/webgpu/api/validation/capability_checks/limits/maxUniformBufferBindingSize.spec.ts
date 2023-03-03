@@ -1,6 +1,11 @@
 import { keysOf } from '../../../../../common/util/data_tables.js';
 
-import { LimitMode, getDefaultLimit, kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import {
+  LimitMode,
+  getDefaultLimit,
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup,
+} from './limit_utils.js';
 
 const BufferParts = {
   wholeBuffer: true,
@@ -27,10 +32,10 @@ const kExtraLimits = { maxBufferSize: 'maxLimit' as LimitMode };
 
 g.test('createBindGroup,at_over')
   .desc(`Test using at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
+  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -90,7 +95,7 @@ g.test('createBindGroup,at_over')
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
   .fn(t => {
-    const { adapter, defaultLimit, maximumLimit } = t;
+    const { adapter, defaultLimit, adapterLimit } = t;
     t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
-    t.expect(maximumLimit <= adapter.limits.maxBufferSize);
+    t.expect(adapterLimit <= adapter.limits.maxBufferSize);
   });

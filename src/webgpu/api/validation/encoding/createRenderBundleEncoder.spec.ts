@@ -86,7 +86,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned')
           'rgba32float',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _shouldError: false,
+        _shouldError: true,
       },
       {
         formats: [
@@ -96,7 +96,7 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned')
           'r8unorm',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _shouldError: true,
+        _shouldError: false,
       },
     ])
   )

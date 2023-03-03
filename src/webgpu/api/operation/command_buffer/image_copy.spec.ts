@@ -854,6 +854,8 @@ class ImageCopyTest extends GPUTest {
       },
 
       depthStencil: {
+        depthWriteEnabled: false,
+        depthCompare: 'always',
         format: stencilTextureFormat,
         stencilFront: {
           compare: 'equal',

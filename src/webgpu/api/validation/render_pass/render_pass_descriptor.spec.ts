@@ -169,7 +169,7 @@ g.test('color_attachments,limits,maxColorAttachments')
 
     const colorAttachments = [];
     for (let i = 0; i < colorAttachmentsCount; i++) {
-      const colorTexture = t.createTexture();
+      const colorTexture = t.createTexture({ format: 'r8unorm' });
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
 
@@ -198,7 +198,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
 
     const colorAttachments = [];
     for (let i = 0; i < attachmentCount; i++) {
-      const colorTexture = t.createTexture();
+      const colorTexture = t.createTexture({ format });
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
@@ -230,7 +230,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
           'rgba32float',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _success: true,
+        _success: false,
       },
       {
         formats: [
@@ -240,7 +240,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
           'r8unorm',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _success: false,
+        _success: true,
       },
     ])
   )
@@ -862,6 +862,7 @@ g.test('depth_stencil_attachment')
       view: t.createTexture({ format }).createView(),
       depthReadOnly,
       stencilReadOnly,
+      depthClearValue: 0,
     };
 
     if (setDepthLoadStoreOp) {
