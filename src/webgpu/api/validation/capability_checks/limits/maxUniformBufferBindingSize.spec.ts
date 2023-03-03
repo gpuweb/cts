@@ -47,7 +47,7 @@ g.test('createBindGroup,at_over')
         const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
 
         // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
-        // skip the validation since the allocation will fail.
+        // skip the validation since the allocation will fail with a validation error.
         if (size > device.limits.maxBufferSize) {
           return;
         }
