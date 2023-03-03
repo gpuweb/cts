@@ -8,35 +8,17 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 `;
 
-import { getResourcePath } from '../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { makeTable } from '../../../common/util/data_tables.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
   getVideoFrameFromVideoElement,
-  waitForNextFrame,
+  getVideoElement,
 } from '../../web_platform/util.js';
 
 const kHeight = 16;
 const kWidth = 16;
 const kFormat = 'rgba8unorm';
-
-const kVideoInfo = /* prettier-ignore */ makeTable(
-                                ['mimeType'] as const,
-                                [undefined] as const, {
-  // All video names
-  'four-colors-vp8-bt601.webm'  : ['video/webm; codecs=vp8'],
-  'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
-  'four-colors-h264-bt601.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-vp9-bt601.webm'  : ['video/webm; codecs=vp9'],
-  'four-colors-vp9-bt709.webm'  : ['video/webm; codecs=vp9'],
-  'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9'],
-  'four-colors-h264-bt601-rotate-90.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-h264-bt601-rotate-180.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-h264-bt601-rotate-270.mp4'  : ['video/mp4; codecs=avc1.4d400c']
-} as const);
-type VideoName = keyof typeof kVideoInfo;
 
 // The process to calculate these expected pixel values can be found:
 // https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
@@ -184,28 +166,6 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
-function getVideoElement(
-  t: GPUTest,
-  sourceType: 'VideoElement' | 'VideoFrame',
-  videoName: VideoName
-): HTMLVideoElement {
-  if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
-    t.skip('WebCodec is not supported');
-  }
-
-  const videoElement = document.createElement('video');
-  const videoInfo = kVideoInfo[videoName];
-
-  if (videoElement.canPlayType(videoInfo.mimeType) === '') {
-    t.skip('Video codec is not supported');
-  }
-
-  const videoUrl = getResourcePath(videoName);
-  videoElement.src = videoUrl;
-
-  return videoElement;
-}
-
 g.test('importExternalTexture,sample')
   .desc(
     `
@@ -220,7 +180,11 @@ for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+      t.skip('WebCodec is not supported');
+    }
+
+    const videoElement = getVideoElement(t, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -285,7 +249,7 @@ it will honor rotation metadata.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+    const videoElement = getVideoElement(t, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
@@ -332,94 +296,6 @@ it will honor rotation metadata.
     });
   });
 
-g.test('importExternalTexture,expired')
-  .desc(
-    `
-Tests that GPUExternalTexture.expired is false when HTMLVideoElement is not updated
-or VideoFrame(webcodec) is alive. And it will be changed to true when imported
-HTMLVideoElement is updated or imported VideoFrame is closed. Using expired
-GPUExternalTexture results in an error.
-
-TODO: Make this test work without requestVideoFrameCallback support (in waitForNextFrame).
-`
-  )
-  .params(u =>
-    u //
-      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
-  )
-  .fn(async t => {
-    const sourceType = t.params.sourceType;
-    const videoElement = getVideoElement(t, sourceType, 'four-colors-vp9-bt601.webm');
-
-    if (!('requestVideoFrameCallback' in videoElement)) {
-      t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
-    }
-
-    const colorAttachment = t.device.createTexture({
-      format: kFormat,
-      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-    const passDescriptor = {
-      colorAttachments: [
-        {
-          view: colorAttachment.createView(),
-          clearValue: [0, 0, 0, 1],
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-    } as const;
-
-    const bindGroupLayout = t.device.createBindGroupLayout({
-      entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }],
-    });
-
-    let bindGroup: GPUBindGroup;
-    const useExternalTexture = () => {
-      const commandEncoder = t.device.createCommandEncoder();
-      const passEncoder = commandEncoder.beginRenderPass(passDescriptor);
-      passEncoder.setBindGroup(0, bindGroup);
-      passEncoder.end();
-      return commandEncoder.finish();
-    };
-
-    let externalTexture: GPUExternalTexture;
-    await startPlayingAndWaitForVideo(videoElement, async () => {
-      const source =
-        sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(t, videoElement)
-          : videoElement;
-      externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
-      });
-      // Set `bindGroup` here, which will then be used in microtask1 and microtask3.
-      bindGroup = t.device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [{ binding: 0, resource: externalTexture }],
-      });
-
-      const commandBuffer = useExternalTexture();
-      t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), false);
-
-      if (sourceType === 'VideoFrame') {
-        (source as VideoFrame).close();
-        const commandBuffer = useExternalTexture();
-        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
-      }
-    });
-    if (sourceType === 'VideoElement') {
-      // Update new video frame.
-      await waitForNextFrame(videoElement, () => {
-        // VideoFrame is updated. GPUExternalTexture imported from HTMLVideoElement should be expired.
-        // Using the GPUExternalTexture should result in an error.
-        const commandBuffer = useExternalTexture();
-        t.expectGPUError('validation', () => t.device.queue.submit([commandBuffer]), true);
-      });
-    }
-  });
-
 g.test('importExternalTexture,compute')
   .desc(
     `
@@ -434,7 +310,11 @@ compute shader, for several combinations of video format and color space.
   )
   .fn(async t => {
     const sourceType = t.params.sourceType;
-    const videoElement = getVideoElement(t, sourceType, t.params.videoName);
+    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+      t.skip('WebCodec is not supported');
+    }
+
+    const videoElement = getVideoElement(t, t.params.videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
       const source =
