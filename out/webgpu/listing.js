@@ -674,6 +674,60 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxComputeInvocationsPerWorkgroup"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxComputeWorkgroupSizeX"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxComputeWorkgroupSizeY"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxComputeWorkgroupSizeZ"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxComputeWorkgroupStorageSize"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
+      "maxComputeWorkgroupsPerDimension"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxDynamicStorageBuffersPerPipelineLayout"
     ]
   },
