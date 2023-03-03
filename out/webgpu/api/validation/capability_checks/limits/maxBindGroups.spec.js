@@ -4,7 +4,7 @@
 kCreatePipelineTypes,
 kCreatePipelineAsyncTypes,
 kEncoderTypes,
-kLimitBaseParams,
+kMaximumLimitBaseParams,
 makeLimitTestGroup } from
 './limit_utils.js';
 
@@ -13,10 +13,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createPipelineLayout,at_over').
 desc(`Test using createPipelineLayout at and over ${limit} limit`).
-params(kLimitBaseParams).
+params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, shouldError }) => {
@@ -41,11 +41,11 @@ fn(async (t) => {
 
 g.test('createPipeline,at_over').
 desc(`Test using createRenderPipeline and createComputePipeline at and over ${limit} limit`).
-params(kLimitBaseParams.combine('createPipelineType', kCreatePipelineTypes)).
+params(kMaximumLimitBaseParams.combine('createPipelineType', kCreatePipelineTypes)).
 fn(async (t) => {
   const { limitTest, testValueName, createPipelineType } = t.params;
 
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, shouldError }) => {
@@ -65,11 +65,11 @@ g.test('createPipelineAsync,at_over').
 desc(
 `Test using createRenderPipelineAsync and createComputePipelineAsync at and over ${limit} limit`).
 
-params(kLimitBaseParams.combine('createPipelineAsyncType', kCreatePipelineAsyncTypes)).
+params(kMaximumLimitBaseParams.combine('createPipelineAsyncType', kCreatePipelineAsyncTypes)).
 fn(async (t) => {
   const { limitTest, testValueName, createPipelineAsyncType } = t.params;
 
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, shouldError }) => {
@@ -86,10 +86,10 @@ fn(async (t) => {
 
 g.test('setBindGroup,at_over').
 desc(`Test using setBindGroup at and over ${limit} limit`).
-params(kLimitBaseParams.combine('encoderType', kEncoderTypes)).
+params(kMaximumLimitBaseParams.combine('encoderType', kEncoderTypes)).
 fn(async (t) => {
   const { limitTest, testValueName, encoderType } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ testValue, actualLimit, shouldError }) => {

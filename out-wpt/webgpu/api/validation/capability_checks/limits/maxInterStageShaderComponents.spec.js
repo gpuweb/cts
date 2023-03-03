@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert, range } from '../../../../../common/util/util.js';
-import { kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 function getTypeForNumComponents(numComponents) {
   return numComponents > 1 ? `vec${numComponents}f` : 'f32';
@@ -95,7 +95,7 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
   .params(
-    kLimitBaseParams
+    kMaximumLimitBaseParams
       .combine('pointList', [false, true])
       .combine('frontFacing', [false, true])
       .combine('sampleIndex', [false, true])
@@ -112,7 +112,7 @@ g.test('createRenderPipeline,at_over')
       sampleMaskIn,
       sampleMaskOut,
     } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -140,7 +140,7 @@ g.test('createRenderPipeline,at_over')
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
   .params(
-    kLimitBaseParams
+    kMaximumLimitBaseParams
       .combine('pointList', [false, true])
       .combine('frontFacing', [false, true])
       .combine('sampleIndex', [false, true])
@@ -157,7 +157,7 @@ g.test('createRenderPipelineAsync,at_over')
       sampleMaskIn,
       sampleMaskOut,
     } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {

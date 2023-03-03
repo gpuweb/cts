@@ -2,11 +2,11 @@ import { keysOf } from '../../../../../common/util/data_tables.js';
 import { align, roundDown } from '../../../../util/math.js';
 
 import {
-  kLimitBaseParams,
+  kMaximumLimitBaseParams,
   makeLimitTestGroup,
-  LimitValueTest,
-  TestValue,
-  kLimitValueTestKeys,
+  MaximumLimitValueTest,
+  MaximumTestValue,
+  kMaximumLimitValueTestKeys,
 } from './limit_utils.js';
 
 const BufferParts = {
@@ -29,7 +29,7 @@ function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart
 const kStorageBufferRequiredSizeAlignment = 4;
 
 function getDeviceLimitToRequest(
-  limitValueTest: LimitValueTest,
+  limitValueTest: MaximumLimitValueTest,
   defaultLimit: number,
   maximumLimit: number
 ) {
@@ -47,7 +47,7 @@ function getDeviceLimitToRequest(
   }
 }
 
-function getTestValue(testValueName: TestValue, requestedLimit: number) {
+function getTestValue(testValueName: MaximumTestValue, requestedLimit: number) {
   switch (testValueName) {
     case 'atLimit':
       return roundDown(requestedLimit, kStorageBufferRequiredSizeAlignment);
@@ -61,8 +61,8 @@ function getTestValue(testValueName: TestValue, requestedLimit: number) {
 }
 
 function getDeviceLimitToRequestAndValueToTest(
-  limitValueTest: LimitValueTest,
-  testValueName: TestValue,
+  limitValueTest: MaximumLimitValueTest,
+  testValueName: MaximumTestValue,
   defaultLimit: number,
   maximumLimit: number
 ) {
@@ -78,10 +78,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createBindGroup,at_over')
   .desc(`Test using createBindGroup at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
+  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -140,10 +140,10 @@ g.test('createBindGroup,at_over')
 
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
-  .params(u => u.combine('limitTest', kLimitValueTestKeys))
+  .params(u => u.combine('limitTest', kMaximumLimitValueTestKeys))
   .fn(async t => {
     const { limitTest } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
 
     await t.testDeviceWithSpecificLimits(requestedLimit, 0, ({ device, actualLimit }) => {

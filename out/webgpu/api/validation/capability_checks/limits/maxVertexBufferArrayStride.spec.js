@@ -1,6 +1,11 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { roundDown } from '../../../../util/math.js';import { kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+**/import { roundDown } from '../../../../util/math.js';import {
+kMaximumLimitBaseParams,
+makeLimitTestGroup } from
+
+
+'./limit_utils.js';
 
 function getPipelineDescriptor(device, testValue) {
   const code = `
@@ -85,10 +90,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over').
 desc(`Test using createRenderPipeline at and over ${limit} limit`).
-params(kLimitBaseParams).
+params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
-  const { defaultLimit, maximumLimit } = t;
+  const { defaultLimit, adapterLimit: maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
   limitTest,
   testValueName,
@@ -111,10 +116,10 @@ fn(async (t) => {
 
 g.test('createRenderPipelineAsync,at_over').
 desc(`Test using createRenderPipelineAsync at and over ${limit} limit`).
-params(kLimitBaseParams).
+params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
-  const { defaultLimit, maximumLimit } = t;
+  const { defaultLimit, adapterLimit: maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
   limitTest,
   testValueName,

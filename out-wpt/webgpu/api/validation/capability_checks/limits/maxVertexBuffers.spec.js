@@ -2,7 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { keysOf } from '../../../../../common/util/data_tables.js';
 import { range } from '../../../../../common/util/util.js';
-import { kRenderEncoderTypes, kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import { kRenderEncoderTypes, kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 const PipelineTypes = {
   withoutLocations: true,
@@ -47,10 +47,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
-  .params(kLimitBaseParams.combine('pipelineType', kPipelineTypes))
+  .params(kMaximumLimitBaseParams.combine('pipelineType', kPipelineTypes))
   .fn(async t => {
     const { limitTest, testValueName, pipelineType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -65,10 +65,10 @@ g.test('createRenderPipeline,at_over')
 
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(kLimitBaseParams.combine('pipelineType', kPipelineTypes))
+  .params(kMaximumLimitBaseParams.combine('pipelineType', kPipelineTypes))
   .fn(async t => {
     const { limitTest, testValueName, pipelineType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -84,10 +84,10 @@ g.test('createRenderPipelineAsync,at_over')
 
 g.test('setVertexBuffer,at_over')
   .desc(`Test using at and over ${limit} limit in setVertexBuffer`)
-  .params(kLimitBaseParams.combine('encoderType', kRenderEncoderTypes))
+  .params(kMaximumLimitBaseParams.combine('encoderType', kRenderEncoderTypes))
   .fn(async t => {
     const { limitTest, testValueName, encoderType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError, actualLimit }) => {

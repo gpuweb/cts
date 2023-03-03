@@ -1,4 +1,4 @@
-import { kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 function getPipelineDescriptor(device: GPUDevice, lastIndex: number): GPURenderPipelineDescriptor {
   const code = `
@@ -27,10 +27,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using createRenderPipeline at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -46,10 +46,10 @@ g.test('createRenderPipeline,at_over')
 
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using createRenderPipelineAsync at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {

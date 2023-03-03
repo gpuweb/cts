@@ -2,7 +2,11 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { keysOf } from '../../../../../common/util/data_tables.js';
 import { align, roundDown } from '../../../../util/math.js';
-import { kLimitBaseParams, makeLimitTestGroup, kLimitValueTestKeys } from './limit_utils.js';
+import {
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup,
+  kMaximumLimitValueTestKeys,
+} from './limit_utils.js';
 
 const BufferParts = {
   wholeBuffer: true,
@@ -69,10 +73,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createBindGroup,at_over')
   .desc(`Test using createBindGroup at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
+  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
       testValueName,
@@ -132,10 +136,10 @@ g.test('createBindGroup,at_over')
 
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
-  .params(u => u.combine('limitTest', kLimitValueTestKeys))
+  .params(u => u.combine('limitTest', kMaximumLimitValueTestKeys))
   .fn(async t => {
     const { limitTest } = t.params;
-    const { defaultLimit, maximumLimit } = t;
+    const { defaultLimit, adapterLimit: maximumLimit } = t;
     const requestedLimit = getDeviceLimitToRequest(limitTest, defaultLimit, maximumLimit);
 
     await t.testDeviceWithSpecificLimits(requestedLimit, 0, ({ device, actualLimit }) => {

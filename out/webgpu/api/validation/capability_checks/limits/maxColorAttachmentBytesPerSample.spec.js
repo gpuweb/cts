@@ -3,7 +3,7 @@
 **/import { assert, range } from '../../../../../common/util/util.js';import { kTextureSampleCounts, kTextureFormatInfo } from '../../../../capability_info.js';import { align } from '../../../../util/math.js';
 
 import {
-kLimitBaseParams,
+kMaximumLimitBaseParams,
 kLimitModes,
 
 makeLimitTestGroup } from
@@ -147,7 +147,7 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createRenderPipeline,at_over').
 desc(`Test using at and over ${limit} limit in createRenderPipeline`).
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('maxColorAttachmentsLimitMode', kLimitModes).
 combine('sampleCount', kTextureSampleCounts).
 combine('interleaveFormat', kInterleaveFormats)).
@@ -160,7 +160,7 @@ fn(async (t) => {
     sampleCount,
     interleaveFormat
   } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {
@@ -191,7 +191,7 @@ fn(async (t) => {
 g.test('createRenderPipelineAsync,at_over').
 desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`).
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('maxColorAttachmentsLimitMode', kLimitModes).
 combine('sampleCount', kTextureSampleCounts).
 combine('interleaveFormat', kInterleaveFormats)).
@@ -204,7 +204,7 @@ fn(async (t) => {
     sampleCount,
     interleaveFormat
   } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {
@@ -234,7 +234,7 @@ fn(async (t) => {
 g.test('beginRenderPass,at_over').
 desc(`Test using at and over ${limit} limit in beginRenderPass`).
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('maxColorAttachmentsLimitMode', kLimitModes).
 combine('sampleCount', kTextureSampleCounts).
 combine('interleaveFormat', kInterleaveFormats)).
@@ -247,7 +247,7 @@ fn(async (t) => {
     sampleCount,
     interleaveFormat
   } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {
@@ -284,7 +284,7 @@ fn(async (t) => {
 g.test('createRenderBundle,at_over').
 desc(`Test using at and over ${limit} limit in createRenderBundle`).
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('maxColorAttachmentsLimitMode', kLimitModes).
 combine('sampleCount', kTextureSampleCounts).
 combine('interleaveFormat', kInterleaveFormats)).
@@ -297,7 +297,7 @@ fn(async (t) => {
     sampleCount,
     interleaveFormat
   } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {

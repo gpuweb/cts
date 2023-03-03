@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { kLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+ **/ import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 function getPipelineDescriptor(device, testValue) {
   const code = `
     struct VSOut {
@@ -29,10 +29,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -48,10 +48,10 @@ g.test('createRenderPipeline,at_over')
 
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {

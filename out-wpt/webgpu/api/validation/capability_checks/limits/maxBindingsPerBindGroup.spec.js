@@ -3,7 +3,7 @@
  **/ import {
   kCreatePipelineTypes,
   kCreatePipelineAsyncTypes,
-  kLimitBaseParams,
+  kMaximumLimitBaseParams,
   makeLimitTestGroup,
 } from './limit_utils.js';
 
@@ -12,10 +12,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createBindGroupLayout,at_over')
   .desc(`Test using createBindGroupLayout at and over ${limit} limit`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -36,10 +36,10 @@ g.test('createBindGroupLayout,at_over')
 
 g.test('createPipeline,at_over')
   .desc(`Test using createRenderPipeline and createComputePipeline at and over ${limit} limit`)
-  .params(kLimitBaseParams.combine('createPipelineType', kCreatePipelineTypes))
+  .params(kMaximumLimitBaseParams.combine('createPipelineType', kCreatePipelineTypes))
   .fn(async t => {
     const { limitTest, testValueName, createPipelineType } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -59,11 +59,11 @@ g.test('createPipelineAsync,at_over')
   .desc(
     `Test using createRenderPipelineAsync and createComputePipelineAsync at and over ${limit} limit`
   )
-  .params(kLimitBaseParams.combine('createPipelineAsyncType', kCreatePipelineAsyncTypes))
+  .params(kMaximumLimitBaseParams.combine('createPipelineAsyncType', kCreatePipelineAsyncTypes))
   .fn(async t => {
     const { limitTest, testValueName, createPipelineAsyncType } = t.params;
 
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -75,5 +75,23 @@ g.test('createPipelineAsync,at_over')
         const promise = t.createPipelineAsync(createPipelineAsyncType, module);
         await t.shouldRejectConditionally('GPUPipelineError', promise, shouldError);
       }
+    );
+  });
+
+g.test('validate')
+  .desc(`Test ${limit} matches the spec limits`)
+  .fn(t => {
+    const { adapter, adapterLimit } = t;
+    const maxBindingsPerShaderStage =
+      adapter.limits.maxSampledTexturesPerShaderStage +
+      adapter.limits.maxSamplersPerShaderStage +
+      adapter.limits.maxStorageBuffersPerShaderStage +
+      adapter.limits.maxStorageTexturesPerShaderStage +
+      adapter.limits.maxUniformBuffersPerShaderStage;
+    const maxShaderStagesPerPipeline = 2;
+    const minMaxBindingsPerBindGroup = maxBindingsPerShaderStage * maxShaderStagesPerPipeline;
+    t.expect(
+      adapterLimit >= minMaxBindingsPerBindGroup,
+      `maxBindingsPerBindGroup(${adapterLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) * maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`
     );
   });

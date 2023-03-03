@@ -1,6 +1,6 @@
 import { range } from '../../../../../common/util/util.js';
 
-import { kLimitBaseParams, getDefaultLimit, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, getDefaultLimit, makeLimitTestGroup } from './limit_utils.js';
 
 function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderPipelineDescriptor {
   const code = `
@@ -32,10 +32,10 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -50,10 +50,10 @@ g.test('createRenderPipeline,at_over')
 
 g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -69,10 +69,10 @@ g.test('createRenderPipelineAsync,at_over')
 
 g.test('beginRenderPass,at_over')
   .desc(`Test using at and over ${limit} limit in beginRenderPass`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -106,10 +106,10 @@ g.test('beginRenderPass,at_over')
 
 g.test('createRenderBundle,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderBundle`)
-  .params(kLimitBaseParams)
+  .params(kMaximumLimitBaseParams)
   .fn(async t => {
     const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedLimits(
+    await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
@@ -125,7 +125,7 @@ g.test('createRenderBundle,at_over')
 g.test('validate')
   .desc(`Test ${limit} against maxColorAttachmentBytesPerSample`)
   .fn(t => {
-    const { adapter, defaultLimit, maximumLimit } = t;
+    const { adapter, defaultLimit, adapterLimit: maximumLimit } = t;
     const minColorAttachmentBytesPerSample = getDefaultLimit('maxColorAttachmentBytesPerSample');
     // The smallest attachment is 1 byte
     // so make sure maxColorAttachments < maxColorAttachmentBytesPerSample

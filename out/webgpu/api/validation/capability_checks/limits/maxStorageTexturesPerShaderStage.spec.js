@@ -7,7 +7,7 @@ kReorderOrderKeys } from
 import { GPUConst } from '../../../../constants.js';
 
 import {
-kLimitBaseParams,
+kMaximumLimitBaseParams,
 makeLimitTestGroup,
 kBindGroupTests,
 getPipelineTypeForBindingCombination,
@@ -47,7 +47,7 @@ desc(
   `).
 
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('visibility', [
 GPUConst.ShaderStage.FRAGMENT,
 GPUConst.ShaderStage.COMPUTE,
@@ -57,7 +57,7 @@ combine('order', kReorderOrderKeys)).
 
 fn(async (t) => {
   const { limitTest, testValueName, visibility, order } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, shouldError }) => {
@@ -79,7 +79,7 @@ desc(
   `).
 
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('visibility', [
 GPUConst.ShaderStage.FRAGMENT,
 GPUConst.ShaderStage.COMPUTE,
@@ -89,7 +89,7 @@ combine('order', kReorderOrderKeys)).
 
 fn(async (t) => {
   const { limitTest, testValueName, visibility, order } = t.params;
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, shouldError }) => {
@@ -117,7 +117,7 @@ desc(
   `).
 
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('bindingCombination', ['fragment', 'compute']).
 combine('order', kReorderOrderKeys).
 combine('bindGroupTest', kBindGroupTests)).
@@ -126,7 +126,7 @@ fn(async (t) => {
   const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
   const pipelineType = getPipelineTypeForBindingCombination(bindingCombination);
 
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {
@@ -161,7 +161,7 @@ desc(
   `).
 
 params(
-kLimitBaseParams.
+kMaximumLimitBaseParams.
 combine('bindingCombination', ['fragment', 'compute']).
 combine('order', kReorderOrderKeys).
 combine('bindGroupTest', kBindGroupTests)).
@@ -170,7 +170,7 @@ fn(async (t) => {
   const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
   const pipelineType = getPipelineAsyncTypeForBindingCombination(bindingCombination);
 
-  await t.testDeviceWithRequestedLimits(
+  await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
   async ({ device, testValue, actualLimit, shouldError }) => {
