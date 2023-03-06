@@ -9,6 +9,7 @@ import {
   bool,
   f32,
   i32,
+  reinterpretI32AsU32,
   TypeBool,
   TypeF32,
   TypeI32,
@@ -37,11 +38,7 @@ export const d = makeCaseCache('unary/u32_conversion', {
   },
   i32: () => {
     return fullI32Range().map(i => {
-      const data = new ArrayBuffer(4);
-      const dataU32 = new Uint32Array(data);
-      const dataI32 = new Int32Array(data);
-      dataI32[0] = i;
-      return { input: i32(i), expected: u32(dataU32[0]) };
+      return { input: i32(i), expected: u32(reinterpretI32AsU32(i)) };
     });
   },
   f32: () => {
