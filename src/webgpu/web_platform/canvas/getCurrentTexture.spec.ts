@@ -22,6 +22,24 @@ class GPUContextTest extends GPUTest {
 
     return ctx;
   }
+
+  // Request a new "frame" based on the WebGPU canvas type.
+  requestNewFrameOnCanvasType(canvasType: CanvasType, ctx: GPUCanvasContext, fn: () => void) {
+    switch (canvasType) {
+      case 'onscreen':
+        requestAnimationFrame(fn);
+        break;
+      case 'offscreen': {
+        (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
+        // The beginning of frameCheck runs immediately (in the same task), so this
+        // verifies the state has changed synchronously.
+        void fn();
+        break;
+      }
+      default:
+        unreachable();
+    }
+  }
 }
 
 export const g = makeTestGroup(GPUContextTest);
@@ -179,21 +197,7 @@ g.test('multiple_frames')
         prevTexture = currentTexture;
 
         if (frameCount++ < 5) {
-          // Which method will be used to begin a new "frame"?
-          switch (canvasType) {
-            case 'onscreen':
-              requestAnimationFrame(frameCheck);
-              break;
-            case 'offscreen': {
-              (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
-              // The beginning of frameCheck runs immediately (in the same task), so this
-              // verifies the state has changed synchronously.
-              void frameCheck();
-              break;
-            }
-            default:
-              unreachable();
-          }
+          t.requestNewFrameOnCanvasType(canvasType, ctx, frameCheck);
         } else {
           resolve();
         }
@@ -259,4 +263,81 @@ g.test('resize')
 
     currentTexture = ctx.getCurrentTexture();
     t.expect(prevTexture === currentTexture);
+  });
+
+g.test('expiry')
+  .desc(
+    `
+Test automatic WebGPU canvas texture expiry on all canvas types with the following requirements:
+- getCurrentTexture returns the same texture object within the same frame, throughout:
+  - after previous frame update the rendering
+  - before current frame update the rendering
+  - in a microtask off the current frame task
+- getCurrentTexture returns a new texture object and the old texture object becomes invalid as soon as possible after HTML update the rendering.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('canvasType', kAllCanvasTypes)
+      .combine('prevFrameCallsite', ['requestPostAnimationFrame', 'requestAnimationFrame'] as const)
+  )
+  .fn(t => {
+    const { canvasType, prevFrameCallsite } = t.params;
+    const ctx = t.initCanvasContext(t.params.canvasType);
+    // Create a bindGroupLayout to test invalid texture view usage later.
+    const bgl = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          texture: {},
+        },
+      ],
+    });
+
+    // The fn is called immediately after previous frame updating the rendering.
+    // Polyfill by calling the callback by setTimeout, in the requestAnimationFrame callback (for onscreen canvas)
+    // or after transferToImageBitmap (for offscreen canvas).
+    function requestPostAnimationFrame(fn: () => void) {
+      t.requestNewFrameOnCanvasType(canvasType, ctx, () => {
+        setTimeout(fn);
+      });
+    }
+
+    function checkGetCurrentTexture() {
+      // Call getCurrentTexture on previous frame.
+      const prevTexture = ctx.getCurrentTexture();
+
+      // Call getCurrentTexture immediately after the frame, the texture object should stay the same.
+      queueMicrotask(() => {
+        t.expect(prevTexture === ctx.getCurrentTexture());
+      });
+
+      // Call getCurrentTexture immediately after this frame updating the rendering.
+      // It should return a new texture object.
+      setTimeout(() => {
+        t.expect(prevTexture !== ctx.getCurrentTexture());
+
+        // prevTexture expired and is invalid, but createView should still succeed.
+        const prevTextureView = prevTexture.createView();
+        // Using the invalid view should fail.
+        t.expectValidationError(() => {
+          t.device.createBindGroup({
+            layout: bgl,
+            entries: [{ binding: 0, resource: prevTextureView }],
+          });
+        });
+      });
+    }
+
+    switch (prevFrameCallsite) {
+      case 'requestPostAnimationFrame':
+        requestPostAnimationFrame(checkGetCurrentTexture);
+        break;
+      case 'requestAnimationFrame':
+        requestAnimationFrame(checkGetCurrentTexture);
+        break;
+      default:
+        break;
+    }
   });
