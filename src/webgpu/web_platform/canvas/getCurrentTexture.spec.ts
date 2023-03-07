@@ -4,6 +4,7 @@ Tests for GPUCanvasContext.getCurrentTexture.
 
 import { SkipTestCase } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { timeout } from '../../../common/util/timeout.js';
 import { assert, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas, CanvasType } from '../../util/create_elements.js';
@@ -300,7 +301,7 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
     // or after transferToImageBitmap (for offscreen canvas).
     function requestPostAnimationFrame(fn: () => void) {
       t.requestNewFrameOnCanvasType(canvasType, ctx, () => {
-        setTimeout(fn);
+        timeout(fn);
       });
     }
 
@@ -315,7 +316,7 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
 
       // Call getCurrentTexture immediately after this frame updating the rendering.
       // It should return a new texture object.
-      setTimeout(() => {
+      timeout(() => {
         t.expect(prevTexture !== ctx.getCurrentTexture());
 
         // prevTexture expired and is invalid, but createView should still succeed.
