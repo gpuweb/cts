@@ -2792,6 +2792,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "f32_conversion"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "i32_arithmetic"
     ]
   },

@@ -15,6 +15,7 @@ import {
   isFiniteF32,
   isSubnormalNumberF16,
   isSubnormalNumberF32,
+  map2DArray,
   oneULP,
   unflatten2DArray,
 } from './math.js';
@@ -976,6 +977,11 @@ const CorrectlyRoundedIntervalOp = {
 /** @returns an interval of the correctly rounded values around the point */
 export function correctlyRoundedInterval(n) {
   return runPointToIntervalOp(toF32Interval(n), CorrectlyRoundedIntervalOp);
+}
+
+/** @returns a matrix of correctly rounded intervals for the provided matrix */
+export function correctlyRoundedMatrix(m) {
+  return toF32Matrix(map2DArray(m, correctlyRoundedInterval));
 }
 
 /** @returns a PointToIntervalOp for [n - error_range, n + error_range] */
