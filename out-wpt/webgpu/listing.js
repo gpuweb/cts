@@ -1308,7 +1308,25 @@ export const listing = [
       "validation",
       "queue",
       "destroyed",
+      "buffer"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "queue",
+      "destroyed",
       "query_set"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "queue",
+      "destroyed",
+      "texture"
     ]
   },
   {
