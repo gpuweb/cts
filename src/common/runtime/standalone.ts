@@ -24,6 +24,8 @@ window.onbeforeunload = () => {
   return promptBeforeReload ? false : undefined;
 };
 
+const kOpenTestLinkAltText = 'Open';
+
 // The possible options for the tests.
 interface StandaloneOptions {
   runnow: boolean;
@@ -435,7 +437,7 @@ function makeTreeNodeHeaderHTML(
     onChange(true);
   };
 
-  const href = `?${worker ? 'worker&' : ''}${debug ? 'debug&' : ''}q=${n.query.toString()}`;
+  const href = createSearchQuery([n.query.toString()]);
   if (onChange) {
     div.on('toggle', function (this) {
       onChange((this as HTMLDetailsElement).open);
@@ -458,8 +460,8 @@ function makeTreeNodeHeaderHTML(
   $('<a>')
     .addClass('nodelink')
     .attr('href', href)
-    .attr('alt', 'Open')
-    .attr('title', 'Open')
+    .attr('alt', kOpenTestLinkAltText)
+    .attr('title', kOpenTestLinkAltText)
     .appendTo(header);
   if ('testCreationStack' in n && n.testCreationStack) {
     $('<button>')
@@ -535,6 +537,18 @@ function prepareParams(params: Record<string, ParamValue>): string {
   return new URLSearchParams(pairs).toString();
 }
 
+/**
+ * Given a search query, generates a search parameter string
+ * @param queries array of queries
+ * @param params an optional existing search
+ * @returns a search query string
+ */
+function createSearchQuery(queries: string[], params?: string) {
+  params = params === undefined ? prepareParams(optionsToRecord(options)) : params;
+  // Add in q separately to avoid escaping punctuation marks.
+  return `?${params}${params ? '&' : ''}${queries.map(q => 'q=' + q).join('&')}`;
+}
+
 void (async () => {
   const loader = new DefaultTestFileLoader();
 
@@ -546,14 +560,17 @@ void (async () => {
   isFullCTS = qs.length === 1 && qs[0] === rootQuerySpec;
 
   // Update the URL bar to match the exact current options.
-  const updateURLWithCurrentOptions = () => {
-    const search = prepareParams(optionsToRecord(options));
+  const updateURLsWithCurrentOptions = () => {
+    const params = prepareParams(optionsToRecord(options));
     let url = `${window.location.origin}${window.location.pathname}`;
-    // Add in q separately to avoid escaping punctuation marks.
-    url += `?${search}${search ? '&' : ''}${qs.map(q => 'q=' + q).join('&')}`;
+    url += createSearchQuery(qs, params);
     window.history.replaceState(null, '', url.toString());
+    document.querySelectorAll(`a[alt=${kOpenTestLinkAltText}]`).forEach(elem => {
+      const a = elem as HTMLAnchorElement;
+      const qs = new URLSearchParams(a.search).getAll('q');
+      a.search = createSearchQuery(qs, params);
+    });
   };
-  updateURLWithCurrentOptions();
 
   const addOptionsToPage = (options: StandaloneOptions, optionsInfos: StandaloneOptionsInfos) => {
     const optionsElem = $('table#options>tbody')[0];
@@ -565,14 +582,14 @@ void (async () => {
         .prop('checked', optionValues[optionName] as boolean)
         .on('change', function () {
           optionValues[optionName] = (this as HTMLInputElement).checked;
-          updateURLWithCurrentOptions();
+          updateURLsWithCurrentOptions();
         });
     };
 
     const createSelect = (optionName: string, info: StandaloneOptionInfo) => {
       const select = $('<select>').on('change', function () {
         optionValues[optionName] = (this as HTMLInputElement).value;
-        updateURLWithCurrentOptions();
+        updateURLsWithCurrentOptions();
       });
       const currentValue = optionValues[optionName];
       for (const { value, description } of info.selectValueDescriptions!) {
