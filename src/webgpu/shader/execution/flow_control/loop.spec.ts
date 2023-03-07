@@ -11,6 +11,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('loop_break')
   .desc('Test that flow control exits a loop when reaching a break statement')
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -33,6 +34,7 @@ g.test('loop_break')
 
 g.test('loop_continue')
   .desc('Test flow control for a loop continue statement')
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -60,6 +62,7 @@ g.test('loop_continue')
 
 g.test('loop_continuing_basic')
   .desc('Test basic flow control for a loop continuing block')
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
