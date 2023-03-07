@@ -11,6 +11,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('while_basic').
 desc('Test that flow control executes a while-loop body the correct number of times').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
   t,
@@ -29,6 +30,7 @@ fn((t) => {
 
 g.test('while_break').
 desc('Test that flow control exits a while-loop when reaching a break statement').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
   t,
@@ -52,6 +54,7 @@ fn((t) => {
 
 g.test('while_continue').
 desc('Test flow control for a while-loop continue statement').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
   t,

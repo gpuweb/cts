@@ -26,6 +26,26 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Builds, runs then checks the output of a flow control shader test.
  *
@@ -55,9 +75,10 @@
  * ```
  *
  * @param t The test object
- * @param builder The shader builder function that takes a FlowControlTestBuilder as the single
- * argument, and returns either a WGSL string which is embedded into the WGSL entrypoint function,
- * or a structure with entrypoint-scoped WGSL code and extra module-scope WGSL code.
+ * @param builder The shader builder function that takes a
+ * FlowControlTestBuilder as the single argument, and returns either a WGSL
+ * string which is embedded into the WGSL entrypoint function, or a structure
+ * with entrypoint-scoped WGSL code and extra module-scope WGSL code.
  */
 export function runFlowControlTest(
 t,
@@ -80,12 +101,16 @@ build_wgsl)
 
   const build_wgsl_result = build_wgsl({
     value: (v) => {
-      if (typeof v === 'boolean') {
-        inputData.push(v ? 1 : 0);
-        return `inputs[${inputData.length - 1}] != 0`;
+      if (t.params.preventValueOptimizations) {
+        if (typeof v === 'boolean') {
+          inputData.push(v ? 1 : 0);
+          return `inputs[${inputData.length - 1}] != 0`;
+        }
+        inputData.push(v);
+        return `inputs[${inputData.length - 1}]`;
+      } else {
+        return `${v}`;
       }
-      inputData.push(v);
-      return `inputs[${inputData.length - 1}]`;
     },
     expect_order: (...expected) => {
       expectations.push({
@@ -117,7 +142,7 @@ struct Outputs {
   count : u32,
   data  : array<u32>,
 };
-@group(0) @binding(0) var<storage, read>       inputs  : array<u32>;
+@group(0) @binding(0) var<storage, read>       inputs  : array<i32>;
 @group(0) @binding(1) var<storage, read_write> outputs : Outputs;
 
 fn push_output(value : u32) {
@@ -142,7 +167,8 @@ ${main_wgsl.extra}
     }
   });
 
-  // If there are no inputs, just put a single value in the buffer to keep makeBufferWithContents() happy.
+  // If there are no inputs, just put a single value in the buffer to keep
+  // makeBufferWithContents() happy.
   if (inputData.length === 0) {
     inputData.push(0);
   }
@@ -191,8 +217,8 @@ ${main_wgsl.extra}
     // returns an Error with the given message and WGSL source
     const fail = (err) => Error(`${err}\nWGSL:\n${Colors.dim(Colors.blue(wgsl))}`);
 
-    // returns a colorized string of the expect_order() call, highlighting the event number that
-    // caused an error.
+    // returns a colorized string of the expect_order() call, highlighting
+    // the event number that caused an error.
     const expect_order_err = (expectation, err_idx) => {
       let out = 'expect_order(';
       for (let i = 0; i < expectation.values.length; i++) {

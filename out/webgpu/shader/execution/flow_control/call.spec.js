@@ -11,6 +11,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('call_basic').
 desc('Test that flow control enters a called function').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -27,6 +28,7 @@ fn f() {
 
 g.test('call_nested').
 desc('Test that flow control enters a nested function calls').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -53,6 +55,7 @@ fn c() {
 
 g.test('call_repeated').
 desc('Test that flow control enters a nested function calls').
+params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `

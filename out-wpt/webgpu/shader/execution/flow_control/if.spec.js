@@ -14,6 +14,7 @@ g.test('if_true')
   .desc(
     "Test that flow control executes the 'true' block of an if statement and not the 'false' block"
   )
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -33,6 +34,7 @@ g.test('if_false')
   .desc(
     "Test that flow control executes the 'false' block of an if statement and not the 'true' block"
   )
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -50,6 +52,7 @@ g.test('if_false')
 
 g.test('else_if')
   .desc("Test that flow control executes the correct 'else if' block of an if statement")
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
