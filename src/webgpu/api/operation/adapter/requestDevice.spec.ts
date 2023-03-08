@@ -130,18 +130,34 @@ g.test('stale')
         break;
     }
 
+    let device: GPUDevice | undefined = undefined;
     const promise = adapter.requestDevice();
     if (awaitSuccess) {
-      const device = await promise;
+      device = await promise;
       assert(device !== null);
     } else {
-      t.shouldResolve(promise);
+      t.shouldResolve(
+        (async () => {
+          const device = await promise;
+          device.destroy();
+        })()
+      );
     }
 
     const kTimeoutMS = 1000;
-    const device = await adapter.requestDevice();
-    const lost = await raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'adapter was not stale');
+    const lostDevice = await adapter.requestDevice();
+    const lost = await raceWithRejectOnTimeout(
+      lostDevice.lost,
+      kTimeoutMS,
+      'adapter was not stale'
+    );
     t.expect(lost.reason === undefined);
+
+    // Make sure to destroy the valid device after trying to get a second one. Otherwise, the second
+    // device may fail because the adapter is put into an invalid state from the destroy.
+    if (device) {
+      device.destroy();
+    }
   });
 
 g.test('features,unknown')
