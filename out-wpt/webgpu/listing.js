@@ -1612,13 +1612,6 @@ export const listing = [
     "file": [
       "shader",
       "execution",
-      "evaluation_order"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
       "expression",
       "binary",
       "bitwise"
@@ -2837,6 +2830,14 @@ export const listing = [
       "execution",
       "flow_control",
       "call"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "flow_control",
+      "eval_order"
     ]
   },
   {
