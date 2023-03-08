@@ -681,16 +681,19 @@ paramsSubcasesOnly(
 
 [
 // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// form due to the complexity of their derivation.
 //
 // The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
 // The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
+// Near 1, the absolute error should be larger and, away from 1 the atan2
+// inherited error should be larger.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
 { input: -1 / 2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] }, // ~2π/3
 { input: 0, expected: kAny },
 { input: 1 / 2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] }, // ~π/3
+{ input: minusOneULP(1), expected: [hexToF64(0x3f2ffdff, 0x60000000), hexToF64(0x3f3b106f, 0xc9334fb9)] }, // ~0.0003
 { input: 1, expected: kAny },
 { input: kValue.f32.positive.max, expected: kAny },
 { input: kValue.f32.infinity.positive, expected: kAny }]).

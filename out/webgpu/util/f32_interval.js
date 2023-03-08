@@ -1346,9 +1346,9 @@ export function absInterval(n) {
 
 const AcosIntervalOp = {
   impl: limitPointToIntervalDomain(toF32Interval([-1.0, 1.0]), (n) => {
-    // acos(n) = atan2(sqrt(1.0 - n * n), n)
+    // acos(n) = atan2(sqrt(1.0 - n * n), n) or a polynomial approximation with absolute error
     const y = sqrtInterval(subtractionInterval(1, multiplicationInterval(n, n)));
-    return atan2Interval(y, n);
+    return F32Interval.span(atan2Interval(y, n), absoluteErrorInterval(Math.acos(n), 6.77e-5));
   })
 };
 
