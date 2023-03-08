@@ -90,9 +90,9 @@ g.test('stale')
       .combine('initialError', [undefined, 'TypeError', 'OperationError'])
       .combine('awaitInitialError', [true, false])
       .combine('awaitSuccess', [true, false])
-      .filter(({ initialError, awaitInitialError }) => {
-        return !(initialError === undefined && awaitInitialError);
-      })
+      .unless(
+        ({ initialError, awaitInitialError }) => initialError === undefined && awaitInitialError
+      )
   )
   .fn(async t => {
     const gpu = getGPU();
