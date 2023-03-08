@@ -91,7 +91,7 @@ g.test('stale')
       .combine('awaitInitialError', [true, false])
       .combine('awaitSuccess', [true, false])
       .filter(({ initialError, awaitInitialError }) => {
-        return initialError !== undefined && !awaitInitialError;
+        return !(initialError === undefined && awaitInitialError);
       })
   )
   .fn(async t => {
@@ -118,13 +118,15 @@ g.test('stale')
         }
         break;
       case 'OperationError':
-        // Cause an operation error by requesting with an unknown limit.
+        // Cause an operation error by requesting with an alignment limit that is not a power of 2.
         if (awaitInitialError) {
-          await assertReject(adapter.requestDevice({ requiredLimits: { unknownLimitName: 9000 } }));
+          await assertReject(
+            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
+          );
         } else {
           t.shouldReject(
             'OperationError',
-            adapter.requestDevice({ requiredLimits: { unknownLimitName: 9000 } })
+            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
           );
         }
         break;
