@@ -764,8 +764,8 @@ g.test('asinInterval')
   .paramsSubcasesOnly<PointToIntervalCase>(
     // prettier-ignore
     [
-      // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-      // form due to the irrational nature of the values.
+      // Some of these are hard coded, since the error intervals are difficult to express in a simple human readable
+      // form due to the complexity of their derivation.
       //
       // The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms
       // of inversqrt.
