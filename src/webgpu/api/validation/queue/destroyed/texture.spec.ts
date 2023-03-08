@@ -1,12 +1,9 @@
 export const description = `
 Tests using a destroyed texture on a queue.
-
-TODO:
-- test renderPass/computePass (setBindGroup)
-- test beginRenderPass target
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { unreachable } from '../../../../../common/util/util.js';
 import { ValidationTest } from '../../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -155,4 +152,143 @@ Tests that using a destroyed texture in copyTextureToBuffer fails.
     t.expectValidationError(() => {
       t.queue.submit([commandBuffer]);
     }, destroyed);
+  });
+
+g.test('setBindGroup')
+  .desc(
+    `
+Tests that using a destroyed texture referenced by a bindGroup set with setBindGroup fails
+- x= {not destroyed (control case), destroyed}
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u
+      .combine('destroyed', [false, true] as const)
+      .combine('encoderType', ['compute pass', 'render pass', 'render bundle'] as const)
+  )
+  .fn(t => {
+    const { destroyed, encoderType } = t.params;
+    const { device } = t;
+    const texture = t.trackForCleanup(
+      t.device.createTexture({
+        size: [1, 1, 1],
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      })
+    );
+
+    const layout = device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          texture: {},
+        },
+      ],
+    });
+
+    const bindGroup = device.createBindGroup({
+      layout,
+      entries: [{ binding: 0, resource: texture.createView() }],
+    });
+
+    const { encoder, finish } = t.createEncoder(encoderType);
+    encoder.setBindGroup(0, bindGroup);
+    const commandBuffer = finish();
+
+    if (destroyed) {
+      texture.destroy();
+    }
+
+    t.expectValidationError(() => {
+      t.queue.submit([commandBuffer]);
+    }, destroyed);
+  });
+
+g.test('beginRenderPass')
+  .desc(
+    `
+Tests that using a destroyed texture referenced by a render pass fails
+- x= {not destroyed (control case), colorAttachment destroyed, depthAttachment destroyed, resolveTarget destroyed}
+    `
+  )
+  .paramsSubcasesOnly(u =>
+    u.combine('textureToDestroy', [
+      'none',
+      'colorAttachment',
+      'resolveAttachment',
+      'depthStencilAttachment',
+    ])
+  )
+  .fn(t => {
+    const { textureToDestroy } = t.params;
+    const { device } = t;
+
+    const colorAttachment = t.trackForCleanup(
+      t.device.createTexture({
+        size: [1, 1, 1],
+        format: 'rgba8unorm',
+        sampleCount: 4,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
+
+    const resolveAttachment = t.trackForCleanup(
+      t.device.createTexture({
+        size: [1, 1, 1],
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
+
+    const depthStencilAttachment = t.trackForCleanup(
+      t.device.createTexture({
+        size: [1, 1, 1],
+        format: 'depth32float',
+        sampleCount: 4,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
+
+    const encoder = device.createCommandEncoder();
+    const pass = encoder.beginRenderPass({
+      colorAttachments: [
+        {
+          view: colorAttachment.createView(),
+          resolveTarget: resolveAttachment.createView(),
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+      depthStencilAttachment: {
+        view: depthStencilAttachment.createView(),
+        depthClearValue: 0,
+        depthLoadOp: 'clear',
+        depthStoreOp: 'store',
+      },
+    });
+    pass.end();
+    const commandBuffer = encoder.finish();
+
+    switch (textureToDestroy) {
+      case 'none':
+        break;
+      case 'colorAttachment':
+        colorAttachment.destroy();
+        break;
+      case 'resolveAttachment':
+        resolveAttachment.destroy();
+        break;
+      case 'depthStencilAttachment':
+        depthStencilAttachment.destroy();
+        break;
+      default:
+        unreachable();
+    }
+
+    const shouldError = textureToDestroy !== 'none';
+
+    t.expectValidationError(() => {
+      t.queue.submit([commandBuffer]);
+    }, shouldError);
   });
