@@ -91,9 +91,21 @@ g.test('switch_multiple_case_default')
     }
   }
   ${f.expect_order(2)}
+  switch (${f.value(1)}) {
+    case 0, 1: {
+      ${f.expect_order(3)}
+      break;
+    }
+    case 2, 3, default: {
+      ${f.expect_not_reached()}
+      break;
+    }
+  }
+  ${f.expect_order(4)}
 `
     );
   });
+
 g.test('switch_default')
   .desc('Test that flow control executes the switch default block')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
