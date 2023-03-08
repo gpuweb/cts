@@ -139,6 +139,7 @@ function createExternalTextureSamplingTestPipeline(t) {
 
 function createExternalTextureSamplingTestBindGroup(
 t,
+checkNonStandardIsZeroCopy,
 source,
 pipeline)
 {
@@ -149,6 +150,9 @@ pipeline)
     source: source
   });
 
+  if (checkNonStandardIsZeroCopy) {
+    expectZeroCopyNonStandard(t, externalTexture);
+  }
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
@@ -166,6 +170,33 @@ pipeline)
   return bindGroup;
 }
 
+/**
+ * Expect the non-standard `externalTexture.isZeroCopy` is true.
+ */
+function expectZeroCopyNonStandard(t, externalTexture) {
+
+  t.expect(externalTexture.isZeroCopy, '0-copy import failed.');
+}
+
+/**
+ * `externalTexture.isZeroCopy` is a non-standard Chrome API for testing only.
+ * It is exposed by enabling chrome://flags/#enable-webgpu-developer-features
+ *
+ * If the API is available, this function adds a parameter `checkNonStandardIsZeroCopy`.
+ * Cases with that parameter set to `true` will fail if `externalTexture.isZeroCopy` is not true.
+ */
+function checkNonStandardIsZeroCopyIfAvailable() {
+  if (
+  typeof GPUExternalTexture !== 'undefined' &&
+
+  GPUExternalTexture.prototype.hasOwnProperty('isZeroCopy'))
+  {
+    return [{}, { checkNonStandardIsZeroCopy: true }];
+  } else {
+    return [{}];
+  }
+}
+
 g.test('importExternalTexture,sample').
 desc(
 `
@@ -175,7 +206,8 @@ for several combinations of video format and color space.
 
 params((u) =>
 u //
-.combine('sourceType', ['VideoElement', 'VideoFrame']).
+.combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combine('sourceType', ['VideoElement', 'VideoFrame']).
 combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
@@ -199,7 +231,12 @@ fn(async (t) => {
     });
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
-    const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+    const bindGroup = createExternalTextureSamplingTestBindGroup(
+    t,
+    t.params.checkNonStandardIsZeroCopy,
+    source,
+    pipeline);
+
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -244,7 +281,8 @@ it will honor rotation metadata.
 
 params((u) =>
 u //
-.combine('sourceType', ['VideoElement', 'VideoFrame']).
+.combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combine('sourceType', ['VideoElement', 'VideoFrame']).
 combineWithParams(kVideoRotationExpectations)).
 
 fn(async (t) => {
@@ -264,7 +302,12 @@ fn(async (t) => {
     });
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
-    const bindGroup = createExternalTextureSamplingTestBindGroup(t, source, pipeline);
+    const bindGroup = createExternalTextureSamplingTestBindGroup(
+    t,
+    t.params.checkNonStandardIsZeroCopy,
+    source,
+    pipeline);
+
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -305,7 +348,8 @@ compute shader, for several combinations of video format and color space.
 
 params((u) =>
 u //
-.combine('sourceType', ['VideoElement', 'VideoFrame']).
+.combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combine('sourceType', ['VideoElement', 'VideoFrame']).
 combineWithParams(kVideoExpectations)).
 
 fn(async (t) => {
@@ -325,7 +369,9 @@ fn(async (t) => {
 
       source: source
     });
-
+    if (t.params.checkNonStandardIsZeroCopy) {
+      expectZeroCopyNonStandard(t, externalTexture);
+    }
     const outputTexture = t.device.createTexture({
       format: 'rgba8unorm',
       size: [2, 2, 1],
