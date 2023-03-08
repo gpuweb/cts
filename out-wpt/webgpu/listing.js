@@ -2808,6 +2808,15 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "expression",
+      "unary",
+      "u32_conversion"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "flow_control",
       "call"
     ]
