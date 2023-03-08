@@ -2774,6 +2774,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "bool_conversion"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "bool_logical"
     ]
   },
