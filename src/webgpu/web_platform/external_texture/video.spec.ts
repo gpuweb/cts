@@ -139,7 +139,7 @@ function createExternalTextureSamplingTestPipeline(t: GPUTest): GPURenderPipelin
 
 function createExternalTextureSamplingTestBindGroup(
   t: GPUTest,
-  allowCopy: boolean,
+  checkNonStandardIsZeroCopy: true | undefined,
   source: HTMLVideoElement | VideoFrame,
   pipeline: GPURenderPipeline
 ): GPUBindGroup {
@@ -150,7 +150,9 @@ function createExternalTextureSamplingTestBindGroup(
     source: source as any,
   });
 
-  expectZeroCopy(t, allowCopy, externalTexture);
+  if (checkNonStandardIsZeroCopy) {
+    expectZeroCopyNonStandard(t, externalTexture);
+  }
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
@@ -168,22 +170,30 @@ function createExternalTextureSamplingTestBindGroup(
   return bindGroup;
 }
 
-function expectZeroCopy(t: GPUTest, allowCopy: boolean, externalTexture: GPUExternalTexture): void {
+/**
+ * Expect the non-standard `externalTexture.isZeroCopy` is true.
+ */
+function expectZeroCopyNonStandard(t: GPUTest, externalTexture: GPUExternalTexture): void {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  if (!allowCopy && !(externalTexture as any).isZeroCopy) {
-    t.fail('0-copy import failed.');
-  }
+  t.expect((externalTexture as any).isZeroCopy, '0-copy import failed.');
 }
 
-function allowCopyParams() {
+/**
+ * `externalTexture.isZeroCopy` is a non-standard Chrome API for testing only.
+ * It is exposed by enabling chrome://flags/#enable-webgpu-developer-features
+ *
+ * If the API is available, this function adds a parameter `checkNonStandardIsZeroCopy`.
+ * Cases with that parameter set to `true` will fail if `externalTexture.isZeroCopy` is not true.
+ */
+function checkNonStandardIsZeroCopyIfAvailable(): { checkNonStandardIsZeroCopy?: true }[] {
   if (
     typeof GPUExternalTexture !== 'undefined' &&
     // eslint-disable-next-line no-prototype-builtins
     GPUExternalTexture.prototype.hasOwnProperty('isZeroCopy')
   ) {
-    return [{ allowCopy: true }, { allowCopy: false }] as const;
+    return [{}, { checkNonStandardIsZeroCopy: true }];
   } else {
-    return [{ allowCopy: true }] as const;
+    return [{}];
   }
 }
 
@@ -196,7 +206,7 @@ for several combinations of video format and color space.
   )
   .params(u =>
     u //
-      .combineWithParams(allowCopyParams())
+      .combineWithParams(checkNonStandardIsZeroCopyIfAvailable())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoExpectations)
   )
@@ -223,7 +233,7 @@ for several combinations of video format and color space.
       const pipeline = createExternalTextureSamplingTestPipeline(t);
       const bindGroup = createExternalTextureSamplingTestBindGroup(
         t,
-        t.params.allowCopy,
+        t.params.checkNonStandardIsZeroCopy,
         source,
         pipeline
       );
@@ -271,7 +281,7 @@ it will honor rotation metadata.
   )
   .params(u =>
     u //
-      .combineWithParams(allowCopyParams())
+      .combineWithParams(checkNonStandardIsZeroCopyIfAvailable())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoRotationExpectations)
   )
@@ -294,7 +304,7 @@ it will honor rotation metadata.
       const pipeline = createExternalTextureSamplingTestPipeline(t);
       const bindGroup = createExternalTextureSamplingTestBindGroup(
         t,
-        t.params.allowCopy,
+        t.params.checkNonStandardIsZeroCopy,
         source,
         pipeline
       );
@@ -338,7 +348,7 @@ compute shader, for several combinations of video format and color space.
   )
   .params(u =>
     u //
-      .combineWithParams(allowCopyParams())
+      .combineWithParams(checkNonStandardIsZeroCopyIfAvailable())
       .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combineWithParams(kVideoExpectations)
   )
@@ -359,7 +369,9 @@ compute shader, for several combinations of video format and color space.
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
       });
-      expectZeroCopy(t, t.params.allowCopy, externalTexture);
+      if (t.params.checkNonStandardIsZeroCopy) {
+        expectZeroCopyNonStandard(t, externalTexture);
+      }
       const outputTexture = t.device.createTexture({
         format: 'rgba8unorm',
         size: [2, 2, 1],
