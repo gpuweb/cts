@@ -945,6 +945,12 @@ export function reinterpretU32AsF32(u32: number): number {
   return new Float32Array(array.buffer)[0];
 }
 
+export function reinterpretU32AsI32(u32: number): number {
+  const array = new Uint32Array(1);
+  array[0] = u32;
+  return new Int32Array(array.buffer)[0];
+}
+
 export function reinterpretI32AsU32(i32: number): number {
   const array = new Int32Array(1);
   array[0] = i32;
