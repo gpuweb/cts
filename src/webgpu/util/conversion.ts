@@ -951,6 +951,12 @@ export function reinterpretU32AsI32(u32: number): number {
   return new Int32Array(array.buffer)[0];
 }
 
+export function reinterpretI32AsU32(i32: number): number {
+  const array = new Int32Array(1);
+  array[0] = i32;
+  return new Uint32Array(array.buffer)[0];
+}
+
 /**
  * Class that encapsulates a vector value.
  */

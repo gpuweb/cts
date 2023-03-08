@@ -11,6 +11,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('return')
   .desc("Test that flow control does not execute after a 'return' statement")
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -24,6 +25,7 @@ g.test('return')
 
 g.test('return_conditional_true')
   .desc("Test that flow control does not execute after a 'return' statement in a if (true) block")
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
@@ -39,6 +41,7 @@ g.test('return_conditional_true')
 
 g.test('return_conditional_false')
   .desc("Test that flow control does not execute after a 'return' statement in a if (false) block")
+  .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
     runFlowControlTest(
       t,
