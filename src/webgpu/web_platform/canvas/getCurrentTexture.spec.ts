@@ -274,16 +274,18 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
   - after previous frame update the rendering
   - before current frame update the rendering
   - in a microtask off the current frame task
-- getCurrentTexture returns a new texture object and the old texture object becomes invalid as soon as possible after HTML update the rendering.
+- getCurrentTexture returns a new texture object and the old texture object becomes invalid
+  as soon as possible after HTML update the rendering.
   `
   )
   .params(u =>
     u //
       .combine('canvasType', kAllCanvasTypes)
       .combine('prevFrameCallsite', ['requestPostAnimationFrame', 'requestAnimationFrame'] as const)
+      .combine('getCurrentTextureAgain', [true, false] as const)
   )
   .fn(t => {
-    const { canvasType, prevFrameCallsite } = t.params;
+    const { canvasType, prevFrameCallsite, getCurrentTextureAgain } = t.params;
     const ctx = t.initCanvasContext(t.params.canvasType);
     // Create a bindGroupLayout to test invalid texture view usage later.
     const bgl = t.device.createBindGroupLayout({
@@ -311,13 +313,17 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
 
       // Call getCurrentTexture immediately after the frame, the texture object should stay the same.
       queueMicrotask(() => {
-        t.expect(prevTexture === ctx.getCurrentTexture());
+        if (getCurrentTextureAgain) {
+          t.expect(prevTexture === ctx.getCurrentTexture());
+        }
       });
 
       // Call getCurrentTexture immediately after this frame updating the rendering.
       // It should return a new texture object.
       timeout(() => {
-        t.expect(prevTexture !== ctx.getCurrentTexture());
+        if (getCurrentTextureAgain) {
+          t.expect(prevTexture !== ctx.getCurrentTexture());
+        }
 
         // prevTexture expired and is invalid, but createView should still succeed.
         const prevTextureView = prevTexture.createView();
