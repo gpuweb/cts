@@ -791,13 +791,13 @@ fn d() -> i32 {
   });
 
 g.test('1d_array_assignment')
-  .desc('Test RHS of an array element assignment is evaluated before LHS')
+  .desc('Test LHS of an array element assignment is evaluated before RHS')
   .fn(t => {
     runFlowControlTest(t, f => ({
       entrypoint: `
   var arr : array<i32, 8>;
   ${f.expect_order(0)}
-  arr[b()] = arr[a()];
+  arr[a()] = arr[b()];
   ${f.expect_order(3)}
 `,
       extra: `
@@ -814,13 +814,13 @@ fn b() -> i32 {
   });
 
 g.test('2d_array_assignment')
-  .desc('Test RHS of 2D-array element assignment is evaluated before LHS')
+  .desc('Test LHS of 2D-array element assignment is evaluated before RHS')
   .fn(t => {
     runFlowControlTest(t, f => ({
       entrypoint: `
   var arr : array<array<i32, 8>, 8>;
   ${f.expect_order(0)}
-  arr[c()][d()] = arr[a()][b()];
+  arr[a()][b()] = arr[c()][d()];
   ${f.expect_order(5)}
 `,
       extra: `
