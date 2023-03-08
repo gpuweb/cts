@@ -9,6 +9,8 @@ import { assert, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import { kAllCanvasTypes, createCanvas, CanvasType } from '../../util/create_elements.js';
 
+const kFormat = 'bgra8unorm';
+
 class GPUContextTest extends GPUTest {
   initCanvasContext(canvasType: CanvasType = 'onscreen'): GPUCanvasContext {
     const canvas = createCanvas(this, canvasType, 2, 2);
@@ -17,7 +19,7 @@ class GPUContextTest extends GPUTest {
 
     ctx.configure({
       device: this.device,
-      format: 'rgba8unorm',
+      format: kFormat,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
     });
 
@@ -67,7 +69,7 @@ g.test('configured')
     // Once the context has been configured getCurrentTexture can be called.
     ctx.configure({
       device: t.device,
-      format: 'rgba8unorm',
+      format: kFormat,
     });
 
     let prevTexture = ctx.getCurrentTexture();
