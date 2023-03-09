@@ -2961,6 +2961,14 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "statement",
+      "increment_decrement"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "zero_init"
     ]
   },
