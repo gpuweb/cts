@@ -20,6 +20,7 @@ calculatePermutations,
 cartesianProduct,
 correctlyRoundedF32,
 
+frexp,
 fullF16Range,
 fullF32Range,
 fullI32Range,
@@ -418,6 +419,46 @@ fn((t) => {
   t.expect(
   objectEquals(expected, got),
   `correctlyRoundedF32(${value}) returned [${got}]. Expected [${expected}]`);
+
+});
+
+
+
+
+
+
+
+g.test('frexp').
+paramsSimple([
+{ input: 0, fract: 0, exp: 0 },
+{ input: -0, fract: -0, exp: 0 },
+{ input: Number.POSITIVE_INFINITY, fract: Number.POSITIVE_INFINITY, exp: 0 },
+{ input: Number.NEGATIVE_INFINITY, fract: Number.NEGATIVE_INFINITY, exp: 0 },
+{ input: 0.5, fract: 0.5, exp: 0 },
+{ input: -0.5, fract: -0.5, exp: 0 },
+{ input: 1, fract: 0.5, exp: 1 },
+{ input: -1, fract: -0.5, exp: 1 },
+{ input: 2, fract: 0.5, exp: 2 },
+{ input: -2, fract: -0.5, exp: 2 },
+{ input: 10000, fract: 0.6103515625, exp: 14 },
+{ input: -10000, fract: -0.6103515625, exp: 14 },
+{ input: kValue.f32.positive.max, fract: 0.9999999403953552, exp: 128 },
+{ input: kValue.f32.positive.min, fract: 0.5, exp: -125 },
+{ input: kValue.f32.negative.max, fract: -0.5, exp: -125 },
+{ input: kValue.f32.negative.min, fract: -0.9999999403953552, exp: 128 },
+{ input: kValue.f32.subnormal.positive.max, fract: 0.9999998807907104, exp: -126 },
+{ input: kValue.f32.subnormal.positive.min, fract: 0.5, exp: -148 },
+{ input: kValue.f32.subnormal.negative.max, fract: -0.5, exp: -148 },
+{ input: kValue.f32.subnormal.negative.min, fract: -0.9999998807907104, exp: -126 }]).
+
+fn((test) => {
+  const input = test.params.input;
+  const got = frexp(input);
+  const expect = { fract: test.params.fract, exp: test.params.exp };
+
+  test.expect(
+  objectEquals(got, expect),
+  `frexp(${input}) returned { fract: ${got.fract}, exp: ${got.exp} }. Expected { fract: ${expect.fract}, exp: ${expect.exp} }`);
 
 });
 

@@ -46,7 +46,7 @@ function makeVectorCaseFract(v: number[]): Case {
   return { input: toVector(v, f32), expected: fs };
 }
 
-/* @returns a fract Case for a given vector input */
+/* @returns a whole Case for a given vector input */
 function makeVectorCaseWhole(v: number[]): Case {
   v = v.map(quantizeToF32);
   const ws = v.map(e => {
