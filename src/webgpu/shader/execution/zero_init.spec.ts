@@ -51,7 +51,7 @@ function prettyPrint(t: ShaderTypeInfo): string {
 export const g = makeTestGroup(GPUTest);
 g.test('compute,zero_init')
   .desc(
-    `Test that uninitialized variables in workgroup, private, and function storage classes are initialized to zero.
+    `Test that uninitialized variables in workgroup, private, and function storage classes are initialized to zero.`
   )
   .params(u =>
     u
