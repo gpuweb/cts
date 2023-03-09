@@ -4,7 +4,7 @@ import { align } from '../../../../util/math.js';
 
 import {
   kMaximumLimitBaseParams,
-  kLimitModes,
+  LimitsRequest,
   LimitTestsImpl,
   makeLimitTestGroup,
 } from './limit_utils.js';
@@ -122,6 +122,12 @@ function getPipelineDescriptor(
       entryPoint: 'fs',
       targets,
     },
+    // depth should not affect the test so added to make sure the implementation does not consider it
+    depthStencil: {
+      depthWriteEnabled: true,
+      depthCompare: 'less',
+      format: 'depth24plus',
+    },
     multisample: {
       count: sampleCount,
     },
@@ -141,6 +147,11 @@ function createTextures(t: LimitTestsImpl, targets: GPUColorTargetState[]) {
   );
 }
 
+const kExtraLimits: LimitsRequest = {
+  maxColorAttachments: 'adapterLimit',
+  maxFragmentCombinedOutputResources: 'adapterLimit',
+};
+
 const limit = 'maxColorAttachmentBytesPerSample';
 export const { g, description } = makeLimitTestGroup(limit);
 
@@ -148,18 +159,11 @@ g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
   .params(
     kMaximumLimitBaseParams
-      .combine('maxColorAttachmentsLimitMode', kLimitModes)
       .combine('sampleCount', kTextureSampleCounts)
       .combine('interleaveFormat', kInterleaveFormats)
   )
   .fn(async t => {
-    const {
-      limitTest,
-      testValueName,
-      maxColorAttachmentsLimitMode,
-      sampleCount,
-      interleaveFormat,
-    } = t.params;
+    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
@@ -175,6 +179,13 @@ g.test('createRenderPipeline,at_over')
           return;
         }
         const { pipelineDescriptor, code } = result;
+        const numTargets = (pipelineDescriptor.fragment!.targets as GPUColorTargetState[]).length;
+        if (
+          numTargets > device.limits.maxColorAttachments ||
+          numTargets > device.limits.maxFragmentCombinedOutputResources
+        ) {
+          return;
+        }
 
         await t.expectValidationError(
           () => {
@@ -184,7 +195,7 @@ g.test('createRenderPipeline,at_over')
           code
         );
       },
-      { maxColorAttachments: maxColorAttachmentsLimitMode }
+      kExtraLimits
     );
   });
 
@@ -192,18 +203,11 @@ g.test('createRenderPipelineAsync,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
   .params(
     kMaximumLimitBaseParams
-      .combine('maxColorAttachmentsLimitMode', kLimitModes)
       .combine('sampleCount', kTextureSampleCounts)
       .combine('interleaveFormat', kInterleaveFormats)
   )
   .fn(async t => {
-    const {
-      limitTest,
-      testValueName,
-      maxColorAttachmentsLimitMode,
-      sampleCount,
-      interleaveFormat,
-    } = t.params;
+    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
@@ -219,6 +223,13 @@ g.test('createRenderPipelineAsync,at_over')
           return;
         }
         const { pipelineDescriptor, code } = result;
+        const numTargets = (pipelineDescriptor.fragment!.targets as GPUColorTargetState[]).length;
+        if (
+          numTargets > device.limits.maxColorAttachments ||
+          numTargets > device.limits.maxFragmentCombinedOutputResources
+        ) {
+          return;
+        }
 
         await t.shouldRejectConditionally(
           'GPUPipelineError',
@@ -227,7 +238,7 @@ g.test('createRenderPipelineAsync,at_over')
           code
         );
       },
-      { maxColorAttachments: maxColorAttachmentsLimitMode }
+      kExtraLimits
     );
   });
 
@@ -235,25 +246,20 @@ g.test('beginRenderPass,at_over')
   .desc(`Test using at and over ${limit} limit in beginRenderPass`)
   .params(
     kMaximumLimitBaseParams
-      .combine('maxColorAttachmentsLimitMode', kLimitModes)
       .combine('sampleCount', kTextureSampleCounts)
       .combine('interleaveFormat', kInterleaveFormats)
   )
   .fn(async t => {
-    const {
-      limitTest,
-      testValueName,
-      maxColorAttachmentsLimitMode,
-      sampleCount,
-      interleaveFormat,
-    } = t.params;
+    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
         const targets = getAttachments(interleaveFormat, testValue);
-        const maxColorAttachments = device.limits.maxColorAttachments;
-        if (targets.length > maxColorAttachments) {
+        if (
+          targets.length > device.limits.maxColorAttachments ||
+          targets.length > device.limits.maxFragmentCombinedOutputResources
+        ) {
           return;
         }
 
@@ -277,7 +283,7 @@ g.test('beginRenderPass,at_over')
           getDescription(testValue, actualLimit, sampleCount, targets)
         );
       },
-      { maxColorAttachments: maxColorAttachmentsLimitMode }
+      kExtraLimits
     );
   });
 
@@ -285,25 +291,20 @@ g.test('createRenderBundle,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderBundle`)
   .params(
     kMaximumLimitBaseParams
-      .combine('maxColorAttachmentsLimitMode', kLimitModes)
       .combine('sampleCount', kTextureSampleCounts)
       .combine('interleaveFormat', kInterleaveFormats)
   )
   .fn(async t => {
-    const {
-      limitTest,
-      testValueName,
-      maxColorAttachmentsLimitMode,
-      sampleCount,
-      interleaveFormat,
-    } = t.params;
+    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
         const targets = getAttachments(interleaveFormat, testValue);
-        const maxColorAttachments = device.limits.maxColorAttachments;
-        if (targets.length > maxColorAttachments) {
+        if (
+          targets.length > device.limits.maxColorAttachments ||
+          targets.length > device.limits.maxFragmentCombinedOutputResources
+        ) {
           return;
         }
 
@@ -317,6 +318,6 @@ g.test('createRenderBundle,at_over')
           getDescription(testValue, actualLimit, sampleCount, targets)
         );
       },
-      { maxColorAttachments: maxColorAttachmentsLimitMode }
+      kExtraLimits
     );
   });

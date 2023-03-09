@@ -10,11 +10,16 @@ import {
   kMaximumLimitBaseParams,
   makeLimitTestGroup,
   kBindGroupTests,
+  LimitsRequest,
   getPipelineTypeForBindingCombination,
   getPipelineAsyncTypeForBindingCombination,
   getPerStageWGSLForBindingCombinationStorageTextures,
   BindingCombination,
 } from './limit_utils.js';
+
+const kExtraLimits: LimitsRequest = {
+  maxFragmentCombinedOutputResources: 'adapterLimit',
+};
 
 const limit = 'maxStorageTexturesPerShaderStage';
 export const { g, description } = makeLimitTestGroup(limit);
@@ -130,6 +135,13 @@ g.test('createPipeline,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
+        if (
+          bindingCombination === 'fragment' &&
+          testValue > device.limits.maxFragmentCombinedOutputResources
+        ) {
+          return;
+        }
+
         const code = getPerStageWGSLForBindingCombinationStorageTextures(
           bindingCombination,
           order,
@@ -147,7 +159,8 @@ g.test('createPipeline,at_over')
           shouldError,
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );
-      }
+      },
+      kExtraLimits
     );
   });
 
@@ -174,6 +187,13 @@ g.test('createPipelineAsync,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
+        if (
+          bindingCombination === 'fragment' &&
+          testValue > device.limits.maxFragmentCombinedOutputResources
+        ) {
+          return;
+        }
+
         const code = getPerStageWGSLForBindingCombinationStorageTextures(
           bindingCombination,
           order,
@@ -190,6 +210,7 @@ g.test('createPipelineAsync,at_over')
           shouldError,
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );
-      }
+      },
+      kExtraLimits
     );
   });

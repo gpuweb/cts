@@ -3,8 +3,9 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
-import { kLimitInfo } from '../../../../capability_info.js';
+import { kLimitInfo, kTextureFormatInfo } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
+import { align } from '../../../../util/math.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
 
@@ -109,6 +110,21 @@ function getWGSLBindings(
         )}) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`
     )
   ).join('\n');
+}
+
+/**
+ * Given an array of GPUColorTargetState return the number of bytes per sample
+ */
+export function computeBytesPerSample(targets: GPUColorTargetState[]) {
+  let bytesPerSample = 0;
+  for (const { format } of targets) {
+    const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
+      format
+    ];
+    const alignedBytesPerSample = align(bytesPerSample, renderTargetComponentAlignment!);
+    bytesPerSample = alignedBytesPerSample + renderTargetPixelByteCost!;
+  }
+  return bytesPerSample;
 }
 
 export function getPerStageWGSLForBindingCombinationImpl(

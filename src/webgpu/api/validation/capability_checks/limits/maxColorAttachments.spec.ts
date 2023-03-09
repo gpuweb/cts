@@ -122,7 +122,7 @@ g.test('createRenderBundle,at_over')
     );
   });
 
-g.test('validate')
+g.test('validate,maxColorAttachmentBytesPerSample')
   .desc(`Test ${limit} against maxColorAttachmentBytesPerSample`)
   .fn(t => {
     const { adapter, defaultLimit, adapterLimit: maximumLimit } = t;
@@ -131,4 +131,15 @@ g.test('validate')
     // so make sure maxColorAttachments < maxColorAttachmentBytesPerSample
     t.expect(defaultLimit <= minColorAttachmentBytesPerSample);
     t.expect(maximumLimit <= adapter.limits.maxColorAttachmentBytesPerSample);
+  });
+
+g.test('validate,maxFragmentCombineOutputResources')
+  .desc(`Test ${limit} against maxFragmentCombineOutputResources`)
+  .fn(t => {
+    const { adapter, defaultLimit, adapterLimit: maximumLimit } = t;
+    const minFragmentCombinedOutputResources = getDefaultLimit(
+      'maxFragmentCombinedOutputResources'
+    );
+    t.expect(defaultLimit <= minFragmentCombinedOutputResources);
+    t.expect(maximumLimit <= adapter.limits.maxFragmentCombinedOutputResources);
   });
