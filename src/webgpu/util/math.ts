@@ -431,6 +431,59 @@ export function correctlyRoundedF16(n: number): number[] {
 }
 
 /**
+ * Once-allocated ArrayBuffer/views to avoid overhead of allocation in frexp
+ *
+ * This makes frexp non-reentrant due to shared state between calls.
+ */
+const frexpData = new ArrayBuffer(4);
+const frexpDataU32 = new Uint32Array(frexpData);
+const frexpDataF32 = new Float32Array(frexpData);
+
+/**
+ * Calculates WGSL frexp
+ *
+ * Splits val into a fraction and an exponent so that
+ * val = fraction * 2 ^ exponent.
+ * The fraction is 0.0 or its magnitude is in the range [0.5, 1.0).
+ *
+ * Inspired by golang's implementation of frexp.
+ *
+ * This code is non-reentrant due to the use of a non-local data buffer and
+ * views.
+ *
+ * @param val the f32 to split
+ * @returns the results of splitting val
+ */
+export function frexp(val: number): { fract: number; exp: number } {
+  frexpDataF32[0] = val;
+  // Do not directly use val after this point, so that changes are reflected in
+  // both the f32 and u32 views.
+
+  // Handles 0 and -0
+  if (frexpDataF32[0] === 0) {
+    return { fract: frexpDataF32[0], exp: 0 };
+  }
+
+  // Covers NaNs, OOB and Infinities
+  if (!isFiniteF32(frexpDataF32[0])) {
+    return { fract: frexpDataF32[0], exp: 0 };
+  }
+
+  // Normalize if subnormal
+  let exp = 0;
+  if (isSubnormalNumberF32(frexpDataF32[0])) {
+    frexpDataF32[0] = frexpDataF32[0] * (1 << 23);
+    exp = -23;
+  }
+  exp += ((frexpDataU32[0] >> 23) & 0xff) - 126; // shift & mask, minus the bias + 1
+
+  frexpDataU32[0] &= 0x807fffff; // mask the exponent bits
+  frexpDataU32[0] |= 0x3f000000; // extract the mantissa bits
+  const fract = frexpDataF32[0]; // Convert from bits to number
+  return { fract, exp };
+}
+
+/**
  * Calculates the linear interpolation between two values of a given fractional.
  *
  * If |t| is 0, |a| is returned, if |t| is 1, |b| is returned, otherwise
