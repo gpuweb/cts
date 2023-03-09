@@ -19,9 +19,11 @@ export const g = makeTestGroup(GPUTest);
 
 // Accuracy for determinant is only defined for e, where e is an integer and
 // |e| < quadroot(2**21) [~38],
-// due to computational complexity of calculating the general solution, so
-// custom matrices are used.
-
+// due to computational complexity of calculating the general solution for 4x4,
+// so custom matrices are used.
+//
+// Note: For 2x2 and 3x3 the limits are squareroot and cuberoot instead of
+// quadroot, but using the tighter 4x4 limits for all cases for simplicity.
 const kDeterminantValues = [-38, -10, -5, -1, 0, 1, 5, 10, 38];
 
 const kDeterminantMatrixF32Values = {

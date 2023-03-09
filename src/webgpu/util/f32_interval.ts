@@ -1712,13 +1712,10 @@ function determinant3x3Interval(m: Matrix<number>): F32Interval {
   // For simplicity sake A, B, C are calculated as the elements of the first
   // column
   const A = multiplicationInterval(m[0][0], determinant2x2Interval(minorNxN(m, 0, 0)));
-  const B = multiplicationInterval(
-    m[0][1],
-    multiplicationInterval(-1, determinant2x2Interval(minorNxN(m, 0, 1)))
-  );
+  const B = multiplicationInterval(-m[0][1], determinant2x2Interval(minorNxN(m, 0, 1)));
   const C = multiplicationInterval(m[0][2], determinant2x2Interval(minorNxN(m, 0, 2)));
 
-  // Need to calculate permutations, since for fp addition is not transitive,
+  // Need to calculate permutations, since for fp addition is not associative,
   // so A + B + C is not guaranteed to equal B + C + A, etc.
   const permutations: F32Interval[][] = calculatePermutations([A, B, C]);
   return F32Interval.span(
@@ -1743,17 +1740,11 @@ function determinant4x4Interval(m: Matrix<number>): F32Interval {
   // For simplicity sake A, B, C, D are calculated as the elements of the
   // first column
   const A = multiplicationInterval(m[0][0], determinant3x3Interval(minorNxN(m, 0, 0)));
-  const B = multiplicationInterval(
-    m[0][1],
-    multiplicationInterval(-1, determinant3x3Interval(minorNxN(m, 0, 1)))
-  );
+  const B = multiplicationInterval(-m[0][1], determinant3x3Interval(minorNxN(m, 0, 1)));
   const C = multiplicationInterval(m[0][2], determinant3x3Interval(minorNxN(m, 0, 2)));
-  const D = multiplicationInterval(
-    m[0][3],
-    multiplicationInterval(-1, determinant3x3Interval(minorNxN(m, 0, 3)))
-  );
+  const D = multiplicationInterval(-m[0][3], determinant3x3Interval(minorNxN(m, 0, 3)));
 
-  // Need to calculate permutations, since for fp addition is not transitive,
+  // Need to calculate permutations, since for fp addition is not associative
   // so A + B + C + D is not guaranteed to equal B + C + A + D, etc.
   const permutations: F32Interval[][] = calculatePermutations([A, B, C, D]);
   return F32Interval.span(

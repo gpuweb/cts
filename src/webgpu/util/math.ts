@@ -1129,7 +1129,7 @@ export function cartesianProduct<T>(...inputs: T[][]): T[][] {
  * entries.
  *
  * Only feasible for inputs of lengths 5 or so, since the number of permutations
- * is (inpyt.length)!, so will cause the stack to explode for longer inputs.
+ * is (input.length)!, so will cause the stack to explode for longer inputs.
  *
  * This code could be made iterative using something like
  * Steinhaus–Johnson–Trotter and additionally turned into a generator to reduce
