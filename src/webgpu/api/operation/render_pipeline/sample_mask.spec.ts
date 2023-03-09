@@ -261,8 +261,8 @@ class F extends TextureTestMixin(GPUTest) {
     rasterizationMask: number,
     pipeline: GPURenderPipeline,
     uniformBuffer: GPUBuffer,
-    colorTargetsCount: number = 1
-  ): { color: GPUTexture; depthStencil: GPUTexture } {
+    colorTargets: Iterable<GPUColorTargetState | null>
+  ): { colors: (GPUTexture | null)[]; depthStencil: GPUTexture } {
     assert(this.sampleTexture !== undefined);
     assert(this.sampler !== undefined);
 
@@ -286,37 +286,42 @@ class F extends TextureTestMixin(GPUTest) {
       ],
     });
 
-    const renderTargetTextures = [];
+    const renderTargetTextures: (GPUTexture | null)[] = [];
     const resolveTargetTextures: (GPUTexture | null)[] = [];
-    for (let i = 0; i < colorTargetsCount; i++) {
-      const renderTargetTexture = this.device.createTexture({
-        format,
-        size: {
-          width: kRenderTargetSize,
-          height: kRenderTargetSize,
-          depthOrArrayLayers: 1,
-        },
-        sampleCount,
-        mipLevelCount: 1,
-        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
-      });
-      renderTargetTextures.push(renderTargetTexture);
+    for (const target of colorTargets) {
+      if (target === null) {
+        renderTargetTextures.push(null);
+        resolveTargetTextures.push(null);
+      } else {
+        const renderTargetTexture = this.device.createTexture({
+          format,
+          size: {
+            width: kRenderTargetSize,
+            height: kRenderTargetSize,
+            depthOrArrayLayers: 1,
+          },
+          sampleCount,
+          mipLevelCount: 1,
+          usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
+        });
+        renderTargetTextures.push(renderTargetTexture);
 
-      const resolveTargetTexture =
-        sampleCount === 1
-          ? null
-          : this.device.createTexture({
-              format,
-              size: {
-                width: kRenderTargetSize,
-                height: kRenderTargetSize,
-                depthOrArrayLayers: 1,
-              },
-              sampleCount: 1,
-              mipLevelCount: 1,
-              usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-            });
-      resolveTargetTextures.push(resolveTargetTexture);
+        const resolveTargetTexture =
+          sampleCount === 1
+            ? null
+            : this.device.createTexture({
+                format,
+                size: {
+                  width: kRenderTargetSize,
+                  height: kRenderTargetSize,
+                  depthOrArrayLayers: 1,
+                },
+                sampleCount: 1,
+                mipLevelCount: 1,
+                usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+              });
+        resolveTargetTextures.push(resolveTargetTexture);
+      }
     }
 
     const depthStencilTexture = this.device.createTexture({
@@ -331,6 +336,10 @@ class F extends TextureTestMixin(GPUTest) {
 
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: renderTargetTextures.map((renderTargetTexture, index) => {
+        if (renderTargetTexture === null) {
+          return null;
+        }
+
         return {
           view: renderTargetTexture.createView(),
           resolveTarget: resolveTargetTextures[index]?.createView(),
@@ -383,7 +392,7 @@ class F extends TextureTestMixin(GPUTest) {
     this.device.queue.submit([commandEncoder.finish()]);
 
     return {
-      color: renderTargetTextures[0],
+      colors: renderTargetTextures,
       depthStencil: depthStencilTexture,
     };
   }
@@ -514,6 +523,7 @@ textureLoad each sample index from the texture and write to a storage buffer to 
       new Uint32Array([fragmentShaderOutputMask])
     );
 
+    const colorTargets = [{ format }] as const;
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -540,7 +550,7 @@ textureLoad each sample index from the texture and write to a storage buffer to 
           }`,
         }),
         entryPoint: 'main',
-        targets: [{ format }],
+        targets: colorTargets,
       },
       primitive: { topology: 'triangle-list' },
       multisample: {
@@ -564,12 +574,15 @@ textureLoad each sample index from the texture and write to a storage buffer to 
       },
     });
 
-    const { color, depthStencil } = t.GetTargetTexture(
+    const { colors, depthStencil } = t.GetTargetTexture(
       sampleCount,
       rasterizationMask,
       pipeline,
-      fragmentMaskUniformBuffer
+      fragmentMaskUniformBuffer,
+      colorTargets
     );
+    const color = colors[0];
+    assert(color !== null);
 
     t.CheckColorAttachmentResult(
       color,
@@ -601,12 +614,13 @@ textureLoad each sample index from the texture and write to a storage buffer to 
 g.test('alpha_to_coverage_mask')
   .desc(
     `
-Test that alpha_to_coverage_mask is working properly with the alpha output of color target[0].
+Test that alpha_to_coverage_mask is working properly with the shader alpha output of color target[0].
 
 - for sampleCount = 4, alphaToCoverageEnabled = true and various combinations of:
   - rasterization masks
   - increasing alpha0 values of the color0 output including { < 0, = 0, = 1/16, = 2/16, ..., = 15/16, = 1, > 1 }
-  - alpha1 values of the color1 output = { 0, 0.5, 1.0 }.
+  - unrelated alpha1 values of the color1 output = { 0, 0.5, 1.0 } (when target[0] is not empty) or = { 1.0 } (when target[0] is empty)
+  - target[0] is empty or not
 - test that for a single pixel in { color0, color1 } { color0, depth, stencil } output the final sample mask is applied to it, moreover:
   - if alpha0 is 0.0 or less then alpha to coverage mask is 0x0,
   - if alpha0 is 1.0 or greater then alpha to coverage mask is 0xFFFFFFFF,
@@ -622,18 +636,31 @@ color' <= color.
   )
   .params(u =>
     u
+      .combine('hasSparseColorAttachment', [false, true] as const)
       .expand('rasterizationMask', function* (p) {
         for (let i = 0, len = 0xf; i <= len; i++) {
           yield i;
         }
       })
       .beginSubcases()
-      .combine('alpha1', [0.0, 0.5, 1.0] as const)
+      .expand('alpha1', p => {
+        if (p.hasSparseColorAttachment) {
+          // when hasSparseColorAttachment is true
+          // target[0] is empty but target[0].a is still used as alphaToCoverage value.
+          // target[1] is used as the color output, so target[1].a stays at 1.0 to match sample texture values.
+          return [1.0];
+        }
+        return [0.0, 0.5, 1.0];
+      })
   )
   .fn(async t => {
     const sampleCount = 4;
     const sampleMask = 0xffffffff;
-    const { rasterizationMask, alpha1 } = t.params;
+    const { hasSparseColorAttachment, rasterizationMask, alpha1 } = t.params;
+    const colorTargets = [
+      hasSparseColorAttachment ? null : ({ format } as const),
+      { format },
+    ] as const;
 
     const alphaValues = new Float32Array(4); // [alpha0, alpha1, 0, 0]
     const alphaValueUniformBuffer = t.device.createBuffer({
@@ -674,7 +701,7 @@ color' <= color.
           }`,
         }),
         entryPoint: 'main',
-        targets: [{ format }, { format }],
+        targets: colorTargets,
       },
       primitive: { topology: 'triangle-list' },
       multisample: {
@@ -699,24 +726,28 @@ color' <= color.
     });
 
     // { < 0, = 0, = 1/16, = 2/16, ..., = 15/16, = 1, > 1 }
-    const alpha0ParamsArray = [-0.1, ...range(16, i => i / 16), 1.0, 1.1];
+    const alphaParamsArray = [-0.1, ...range(16, i => i / 16), 1.0, 1.1];
 
     const colorResultPromises = [];
     const depthResultPromises = [];
     const stencilResultPromises = [];
 
-    for (const alpha0 of alpha0ParamsArray) {
+    for (const alpha0 of alphaParamsArray) {
       alphaValues[0] = alpha0;
       alphaValues[1] = alpha1;
+
       t.device.queue.writeBuffer(alphaValueUniformBuffer, 0, alphaValues);
 
-      const { color, depthStencil } = t.GetTargetTexture(
+      const { colors, depthStencil } = t.GetTargetTexture(
         sampleCount,
         rasterizationMask,
         pipeline,
         alphaValueUniformBuffer,
-        2
+        colorTargets
       );
+
+      const color = hasSparseColorAttachment ? colors[1] : colors[0];
+      assert(color !== null);
 
       const colorBuffer = t.copySinglePixelTextureToBufferUsingComputePass(
         TypeF32, // correspond to 'rgba8unorm' format
@@ -776,13 +807,13 @@ color' <= color.
     ) => {
       for (let i = 0; i < results.length; i++) {
         const result = results[i];
-        const alpha0 = alpha0ParamsArray[i];
+        const alpha = alphaParamsArray[i];
 
-        if (alpha0 <= 0) {
+        if (alpha <= 0) {
           const expected = getExpectedDataFn(sampleCount, rasterizationMask, sampleMask, 0x0);
           const check = checkElementsEqual(result.data, expected);
           t.expectOK(check);
-        } else if (alpha0 >= 1) {
+        } else if (alpha >= 1) {
           const expected = getExpectedDataFn(
             sampleCount,
             rasterizationMask,
