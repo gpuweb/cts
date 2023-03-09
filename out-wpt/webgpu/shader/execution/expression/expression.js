@@ -921,6 +921,45 @@ export function generateVectorPairToVectorCases(param0s, param1s, filter, ...ops
  * @returns a Case for the param and an array of interval generators provided
  * @param param the param to pass in
  * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an acceptance  interval for a
+ *            matrix.
+ */
+function makeMatrixToScalarCase(param, filter, ...ops) {
+  param = map2DArray(param, quantizeToF32);
+  const param_f32 = map2DArray(param, f32);
+
+  const results = ops.map(o => o(param));
+  if (filter === 'f32-only' && results.some(e => !e.isFinite())) {
+    return undefined;
+  }
+
+  return {
+    input: [new Matrix(param_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            matrix.
+ */
+export function generateMatrixToScalarCases(params, filter, ...ops) {
+  return params.reduce((cases, e) => {
+    const c = makeMatrixToScalarCase(e, filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array());
+}
+
+/**
+ * @returns a Case for the param and an array of interval generators provided
+ * @param param the param to pass in
+ * @param filter what interval filtering to apply
  * @param ops callbacks that implement generating a matrix of acceptance
  *            intervals for a matrix.
  */

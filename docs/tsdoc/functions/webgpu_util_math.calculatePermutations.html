@@ -24,6 +24,12 @@
 <h3>Returns</h3><p>all of the permutations of an array</p>
 <p>Recursively calculates all of the permutations, does not cull duplicate
 entries.</p>
+<p>Only feasible for inputs of lengths 5 or so, since the number of permutations
+is (input.length)!, so will cause the stack to explode for longer inputs.</p>
+<p>This code could be made iterative using something like
+Steinhaus–Johnson–Trotter and additionally turned into a generator to reduce
+the stack size, but there is still a fundamental combinatorial explosion
+here that will affect runtime.</p>
 </div>
 <section class="tsd-panel tsd-type-parameters">
 <h4>Type Parameters</h4>
@@ -39,7 +45,7 @@ entries.</p>
 </div></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type" data-tsd-kind="Type parameter">T</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">[]</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/1c53bf3/src/webgpu/util/math.ts#L1133">src/webgpu/util/math.ts:1133</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/5be43e3/src/webgpu/util/math.ts#L1141">src/webgpu/util/math.ts:1141</a></li></ul></aside></li></ul></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">

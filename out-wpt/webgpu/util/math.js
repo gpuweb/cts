@@ -890,7 +890,7 @@ const kSparseMatrixF32Values = {
 
     3: kInterestingF32Values.map((f, idx) => [
       [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
-      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, -idx % 9 === 5 ? f : -idx],
+      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
       [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx],
     ]),
 
@@ -927,9 +927,9 @@ const kSparseMatrixF32Values = {
 
     3: kInterestingF32Values.map((f, idx) => [
       [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
-      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, -idx % 12 === 5 ? f : -idx],
+      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, idx % 12 === 5 ? f : -idx],
       [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
-      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, -idx % 12 === 11 ? f : idx],
+      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, idx % 12 === 11 ? f : -idx],
     ]),
 
     4: kInterestingF32Values.map((f, idx) => [
@@ -937,7 +937,7 @@ const kSparseMatrixF32Values = {
         idx % 16 === 0 ? f : idx,
         idx % 16 === 1 ? f : -idx,
         idx % 16 === 2 ? f : idx,
-        idx % 16 === 3 ? f : idx,
+        idx % 16 === 3 ? f : -idx,
       ],
 
       [
@@ -1126,6 +1126,14 @@ export function cartesianProduct(...inputs) {
  *
  * Recursively calculates all of the permutations, does not cull duplicate
  * entries.
+ *
+ * Only feasible for inputs of lengths 5 or so, since the number of permutations
+ * is (input.length)!, so will cause the stack to explode for longer inputs.
+ *
+ * This code could be made iterative using something like
+ * Steinhaus–Johnson–Trotter and additionally turned into a generator to reduce
+ * the stack size, but there is still a fundamental combinatorial explosion
+ * here that will affect runtime.
  *
  * @param input the array to get permutations of
  */

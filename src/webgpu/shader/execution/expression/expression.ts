@@ -24,6 +24,7 @@ import {
   MatrixPairToMatrix,
   MatrixScalarToMatrix,
   MatrixToMatrix,
+  MatrixToScalar,
   MatrixVectorToVector,
   PointToInterval,
   PointToVector,
@@ -1029,6 +1030,53 @@ export function generateVectorPairToVectorCases(
 ): Case[] {
   return cartesianProduct(param0s, param1s).reduce((cases, e) => {
     const c = makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+    if (c !== undefined) {
+      cases.push(c);
+    }
+    return cases;
+  }, new Array<Case>());
+}
+
+/**
+ * @returns a Case for the param and an array of interval generators provided
+ * @param param the param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an acceptance  interval for a
+ *            matrix.
+ */
+function makeMatrixToScalarCase(
+  param: number[][],
+  filter: IntervalFilter,
+  ...ops: MatrixToScalar[]
+): Case | undefined {
+  param = map2DArray(param, quantizeToF32);
+  const param_f32 = map2DArray(param, f32);
+
+  const results = ops.map(o => o(param));
+  if (filter === 'f32-only' && results.some(e => !e.isFinite())) {
+    return undefined;
+  }
+
+  return {
+    input: [new Matrix(param_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param params array of inputs to try
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating an acceptance interval for a
+ *            matrix.
+ */
+export function generateMatrixToScalarCases(
+  params: number[][][],
+  filter: IntervalFilter,
+  ...ops: MatrixToScalar[]
+): Case[] {
+  return params.reduce((cases, e) => {
+    const c = makeMatrixToScalarCase(e, filter, ...ops);
     if (c !== undefined) {
       cases.push(c);
     }
