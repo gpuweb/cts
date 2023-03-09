@@ -396,7 +396,7 @@ g.test('compute,zero_init')
       }
     `;
 
-    if (t.params.storageClass == 'workgroup') {
+    if (t.params.storageClass === 'workgroup') {
       // Populate the maximum amount of workgroup memory with known values to
       // ensure initialization overrides in another shader.
       const wg_memory_limits = t.device.limits.maxComputeWorkgroupStorageSize;
