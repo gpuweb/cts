@@ -19,8 +19,16 @@ const kTextureStorageTypes = [
 ];
 
 function getPipelineDescriptor(device: GPUDevice, testValue: number) {
-  const numStorageTextures = (testValue / 2) | 0;
-  const numTargets = testValue - numStorageTextures;
+  const numStorageResources = ((testValue * 2) / 3) | 0;
+  const numTargets = testValue - numStorageResources;
+
+  const bindingAndGroup = (i: number) => `@group(${i % 3}) @binding(${(i / 3) | 0})`;
+  const textureDecl = (i: number) =>
+    `var usedTexture${i}: ${select(kTextureStorageTypes, i).type}<rgba32float, write>;`;
+  const bufferDecl = (i: number) => `var<storage, read_write> usedBuffer${i}: array<f32>;`;
+  const textureUsage = (i: number) =>
+    `textureStore(usedTexture${i}, ${select(kTextureStorageTypes, i).coords}, vec4f(0));`;
+  const bufferUsage = (i: number) => `usedBuffer${i}[0] = 0.0;`;
 
   const code = `
     @vertex fn vs() -> @builtin(position) vec4f {
@@ -34,25 +42,21 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number) {
     @group(3) @binding(3) var unusedTexture3d: texture_storage_3d<rgba32float, write>;
 
     // testValue: ${testValue}
-    // numStorageTextures: ${numStorageTextures}
+    // numStorageTextures: ${numStorageResources}
     // numTargets: ${numTargets}
 
     // We use rgba32float format storage textures as they take the most size and so are most likely
     // to trigger any invalid validation.
 
     ${range(
-      numStorageTextures,
-      i =>
-        `@group(${i % 3}) @binding(${(i / 3) | 0}) var usedTexture${i}: ${
-          select(kTextureStorageTypes, i).type
-        }<rgba32float, write>;`
+      numStorageResources,
+      i => `${bindingAndGroup(i)} ${i % 2 ? textureDecl(i) : bufferDecl(i)}`
     ).join('\n    ')}
 
     @fragment fn fs() -> @location(0) vec4f {
-      ${range(
-        numStorageTextures,
-        i => `textureStore(usedTexture${i}, ${select(kTextureStorageTypes, i).coords}, vec4f(0));`
-      ).join('\n      ')}
+      ${range(numStorageResources, i => (i % 2 ? textureUsage(i) : bufferUsage(i))).join(
+        '\n      '
+      )}
       return vec4f(0);
     }
   `;
@@ -72,73 +76,48 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number) {
   return {
     pipelineDescriptor,
     code,
+    numStorageTextures: ((numStorageResources + 1) / 2) | 0,
+    numStorageBuffers: (numStorageResources / 2) | 0,
   };
 }
 
 const kExtraLimits: LimitsRequest = {
   maxColorAttachments: 'adapterLimit',
   maxColorAttachmentBytesPerSample: 'adapterLimit',
+  maxStorageBuffersPerShaderStage: 'adapterLimit',
+  maxStorageTexturesPerShaderStage: 'adapterLimit',
 };
 
 const limit = 'maxFragmentCombinedOutputResources';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createRenderPipeline,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
-  .params(kMaximumLimitBaseParams)
+g.test('createRenderPipeline,async,at_over')
+  .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
+  .params(kMaximumLimitBaseParams.combine('async', [false, true] as const))
   .fn(async t => {
-    const { limitTest, testValueName } = t.params;
+    const { limitTest, testValueName, async } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
-        const { pipelineDescriptor, code } = getPipelineDescriptor(device, testValue);
+        const {
+          pipelineDescriptor,
+          code,
+          numStorageBuffers,
+          numStorageTextures,
+        } = getPipelineDescriptor(device, testValue);
         const targets = pipelineDescriptor.fragment?.targets as GPUColorTargetState[];
         const bytesPerSample = computeBytesPerSample(targets);
         if (
           targets.length > device.limits.maxColorAttachments ||
-          bytesPerSample > device.limits.maxColorAttachmentBytesPerSample
+          bytesPerSample > device.limits.maxColorAttachmentBytesPerSample ||
+          numStorageBuffers > device.limits.maxStorageBuffersPerShaderStage ||
+          numStorageTextures > device.limits.maxStorageTexturesPerShaderStage
         ) {
           return;
         }
 
-        await t.expectValidationError(
-          () => {
-            device.createRenderPipeline(pipelineDescriptor);
-          },
-          shouldError,
-          code
-        );
-      },
-      kExtraLimits
-    );
-  });
-
-g.test('createRenderPipelineAsync,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(kMaximumLimitBaseParams)
-  .fn(async t => {
-    const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedMaximumLimits(
-      limitTest,
-      testValueName,
-      async ({ device, testValue, shouldError }) => {
-        const { pipelineDescriptor, code } = getPipelineDescriptor(device, testValue);
-        const targets = pipelineDescriptor.fragment?.targets as GPUColorTargetState[];
-        const bytesPerSample = computeBytesPerSample(targets);
-        if (
-          targets.length > device.limits.maxColorAttachments ||
-          bytesPerSample > device.limits.maxColorAttachmentBytesPerSample
-        ) {
-          return;
-        }
-
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          device.createRenderPipelineAsync(pipelineDescriptor),
-          shouldError,
-          code
-        );
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
       },
       kExtraLimits
     );

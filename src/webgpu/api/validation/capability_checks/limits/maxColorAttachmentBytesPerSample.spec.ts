@@ -155,15 +155,16 @@ const kExtraLimits: LimitsRequest = {
 const limit = 'maxColorAttachmentBytesPerSample';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createRenderPipeline,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
+g.test('createRenderPipeline,async,at_over')
+  .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
   .params(
     kMaximumLimitBaseParams
+      .combine('async', [false, true] as const)
       .combine('sampleCount', kTextureSampleCounts)
       .combine('interleaveFormat', kInterleaveFormats)
   )
   .fn(async t => {
-    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
+    const { limitTest, testValueName, async, sampleCount, interleaveFormat } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
@@ -187,56 +188,7 @@ g.test('createRenderPipeline,at_over')
           return;
         }
 
-        await t.expectValidationError(
-          () => {
-            device.createRenderPipeline(pipelineDescriptor);
-          },
-          shouldError,
-          code
-        );
-      },
-      kExtraLimits
-    );
-  });
-
-g.test('createRenderPipelineAsync,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(
-    kMaximumLimitBaseParams
-      .combine('sampleCount', kTextureSampleCounts)
-      .combine('interleaveFormat', kInterleaveFormats)
-  )
-  .fn(async t => {
-    const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
-    await t.testDeviceWithRequestedMaximumLimits(
-      limitTest,
-      testValueName,
-      async ({ device, testValue, actualLimit, shouldError }) => {
-        const result = getPipelineDescriptor(
-          device,
-          actualLimit,
-          interleaveFormat,
-          sampleCount,
-          testValue
-        );
-        if (!result) {
-          return;
-        }
-        const { pipelineDescriptor, code } = result;
-        const numTargets = (pipelineDescriptor.fragment!.targets as GPUColorTargetState[]).length;
-        if (
-          numTargets > device.limits.maxColorAttachments ||
-          numTargets > device.limits.maxFragmentCombinedOutputResources
-        ) {
-          return;
-        }
-
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          device.createRenderPipelineAsync(pipelineDescriptor),
-          shouldError,
-          code
-        );
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
       },
       kExtraLimits
     );
