@@ -11,9 +11,8 @@ import {
   makeLimitTestGroup,
   kBindGroupTests,
   LimitsRequest,
-  getPipelineTypeForBindingCombination,
-  getPipelineAsyncTypeForBindingCombination,
   getPerStageWGSLForBindingCombinationStorageTextures,
+  getPipelineTypeForBindingCombination,
   BindingCombination,
 } from './limit_utils.js';
 
@@ -112,10 +111,10 @@ g.test('createPipelineLayout,at_over')
     );
   });
 
-g.test('createPipeline,at_over')
+g.test('createPipeline,async,at_over')
   .desc(
     `
-  Test using createRenderPipeline and createComputePipeline at and over ${limit} limit
+  Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit
   
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
@@ -123,12 +122,13 @@ g.test('createPipeline,at_over')
   )
   .params(
     kMaximumLimitBaseParams
+      .combine('async', [false, true] as const)
       .combine('bindingCombination', ['fragment', 'compute'] as BindingCombination[])
       .combine('order', kReorderOrderKeys)
       .combine('bindGroupTest', kBindGroupTests)
   )
   .fn(async t => {
-    const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
+    const { limitTest, testValueName, async, bindingCombination, order, bindGroupTest } = t.params;
     const pipelineType = getPipelineTypeForBindingCombination(bindingCombination);
 
     await t.testDeviceWithRequestedMaximumLimits(
@@ -152,61 +152,10 @@ g.test('createPipeline,at_over')
         );
         const module = device.createShaderModule({ code });
 
-        await t.expectValidationError(
-          () => {
-            t.createPipeline(pipelineType, module);
-          },
-          shouldError,
-          `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
-        );
-      },
-      kExtraLimits
-    );
-  });
-
-g.test('createPipelineAsync,at_over')
-  .desc(
-    `
-  Test using createRenderPipelineAsync and createComputePipelineAsync at and over ${limit} limit
-  
-  Note: We also test order to make sure the implementation isn't just looking
-  at just the last entry.
-  `
-  )
-  .params(
-    kMaximumLimitBaseParams
-      .combine('bindingCombination', ['fragment', 'compute'] as BindingCombination[])
-      .combine('order', kReorderOrderKeys)
-      .combine('bindGroupTest', kBindGroupTests)
-  )
-  .fn(async t => {
-    const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
-    const pipelineType = getPipelineAsyncTypeForBindingCombination(bindingCombination);
-
-    await t.testDeviceWithRequestedMaximumLimits(
-      limitTest,
-      testValueName,
-      async ({ device, testValue, actualLimit, shouldError }) => {
-        if (
-          bindingCombination === 'fragment' &&
-          testValue > device.limits.maxFragmentCombinedOutputResources
-        ) {
-          return;
-        }
-
-        const code = getPerStageWGSLForBindingCombinationStorageTextures(
-          bindingCombination,
-          order,
-          bindGroupTest,
-          (i, j) => `var u${j}_${i}: texture_storage_2d<rgba8unorm, write>`,
-          (i, j) => `textureStore(u${j}_${i}, vec2u(0), vec4f(1));`,
-          testValue
-        );
-        const module = device.createShaderModule({ code });
-
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          t.createPipelineAsync(pipelineType, module),
+        await t.testCreatePipeline(
+          pipelineType,
+          async,
+          module,
           shouldError,
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );

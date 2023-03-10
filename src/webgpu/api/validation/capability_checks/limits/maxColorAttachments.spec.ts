@@ -30,39 +30,18 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number): GPURenderP
 const limit = 'maxColorAttachments';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createRenderPipeline,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
-  .params(kMaximumLimitBaseParams)
+g.test('createRenderPipeline,async,at_over')
+  .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
+  .params(kMaximumLimitBaseParams.combine('async', [false, true] as const))
   .fn(async t => {
-    const { limitTest, testValueName } = t.params;
+    const { limitTest, testValueName, async } = t.params;
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
         const pipelineDescriptor = getPipelineDescriptor(device, testValue);
 
-        await t.expectValidationError(() => {
-          device.createRenderPipeline(pipelineDescriptor);
-        }, shouldError);
-      }
-    );
-  });
-
-g.test('createRenderPipelineAsync,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(kMaximumLimitBaseParams)
-  .fn(async t => {
-    const { limitTest, testValueName } = t.params;
-    await t.testDeviceWithRequestedMaximumLimits(
-      limitTest,
-      testValueName,
-      async ({ device, testValue, shouldError }) => {
-        const pipelineDescriptor = getPipelineDescriptor(device, testValue);
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          device.createRenderPipelineAsync(pipelineDescriptor),
-          shouldError
-        );
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
       }
     );
   });
