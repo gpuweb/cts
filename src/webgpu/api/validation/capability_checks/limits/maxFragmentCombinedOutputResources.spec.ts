@@ -19,16 +19,20 @@ const kTextureStorageTypes = [
 ];
 
 function getPipelineDescriptor(device: GPUDevice, testValue: number) {
-  const numStorageResources = ((testValue * 2) / 3) | 0;
-  const numTargets = testValue - numStorageResources;
+  const numStorageResourcesTargetPerType = (testValue / 3) | 0;
+  const numStorageBuffers = Math.min(
+    numStorageResourcesTargetPerType,
+    device.limits.maxStorageBuffersPerShaderStage
+  );
+  const numStorageTextures = Math.min(
+    numStorageResourcesTargetPerType,
+    device.limits.maxStorageTexturesPerShaderStage
+  );
 
-  const bindingAndGroup = (i: number) => `@group(${i % 3}) @binding(${(i / 3) | 0})`;
-  const textureDecl = (i: number) =>
-    `var usedTexture${i}: ${select(kTextureStorageTypes, i).type}<rgba32float, write>;`;
-  const bufferDecl = (i: number) => `var<storage, read_write> usedBuffer${i}: array<f32>;`;
-  const textureUsage = (i: number) =>
-    `textureStore(usedTexture${i}, ${select(kTextureStorageTypes, i).coords}, vec4f(0));`;
-  const bufferUsage = (i: number) => `usedBuffer${i}[0] = 0.0;`;
+  const numTargets = testValue - numStorageBuffers - numStorageTextures;
+
+  const bindingAndGroup = (i: number, bindingOffset: number) =>
+    `@group(${i % 3}) @binding(${((i / 3) | 0) * 2 + bindingOffset})`;
 
   const code = `
     @vertex fn vs() -> @builtin(position) vec4f {
@@ -42,21 +46,31 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number) {
     @group(3) @binding(3) var unusedTexture3d: texture_storage_3d<rgba32float, write>;
 
     // testValue: ${testValue}
-    // numStorageTextures: ${numStorageResources}
+    // numStorageBuffers: ${numStorageBuffers}
+    // numStorageTextures: ${numStorageTextures}
     // numTargets: ${numTargets}
 
     // We use rgba32float format storage textures as they take the most size and so are most likely
     // to trigger any invalid validation.
 
     ${range(
-      numStorageResources,
-      i => `${bindingAndGroup(i)} ${i % 2 ? textureDecl(i) : bufferDecl(i)}`
+      numStorageBuffers,
+      i => `${bindingAndGroup(i, 0)} var<storage, read_write> usedBuffer${i}: array<f32>;`
+    ).join('\n    ')}
+    ${range(
+      numStorageTextures,
+      i =>
+        `${bindingAndGroup(i, 1)} var usedTexture${i}: ${
+          select(kTextureStorageTypes, i).type
+        }<rgba32float, write>;`
     ).join('\n    ')}
 
     @fragment fn fs() -> @location(0) vec4f {
-      ${range(numStorageResources, i => (i % 2 ? textureUsage(i) : bufferUsage(i))).join(
-        '\n      '
-      )}
+      ${range(numStorageBuffers, i => `usedBuffer${i}[0] = 0.0;`).join('\n      ')}
+      ${range(
+        numStorageTextures,
+        i => `textureStore(usedTexture${i}, ${select(kTextureStorageTypes, i).coords}, vec4f(0));`
+      ).join('\n      ')}
       return vec4f(0);
     }
   `;
@@ -73,12 +87,7 @@ function getPipelineDescriptor(device: GPUDevice, testValue: number) {
       targets: new Array(numTargets).fill({ format: 'r8unorm', writeMask: 0 }),
     },
   };
-  return {
-    pipelineDescriptor,
-    code,
-    numStorageTextures: ((numStorageResources + 1) / 2) | 0,
-    numStorageBuffers: (numStorageResources / 2) | 0,
-  };
+  return { pipelineDescriptor, code };
 }
 
 const kExtraLimits: LimitsRequest = {
@@ -100,19 +109,12 @@ g.test('createRenderPipeline,async,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
-        const {
-          pipelineDescriptor,
-          code,
-          numStorageBuffers,
-          numStorageTextures,
-        } = getPipelineDescriptor(device, testValue);
+        const { pipelineDescriptor, code } = getPipelineDescriptor(device, testValue);
         const targets = pipelineDescriptor.fragment?.targets as GPUColorTargetState[];
         const bytesPerSample = computeBytesPerSample(targets);
         if (
           targets.length > device.limits.maxColorAttachments ||
-          bytesPerSample > device.limits.maxColorAttachmentBytesPerSample ||
-          numStorageBuffers > device.limits.maxStorageBuffersPerShaderStage ||
-          numStorageTextures > device.limits.maxStorageTexturesPerShaderStage
+          bytesPerSample > device.limits.maxColorAttachmentBytesPerSample
         ) {
           return;
         }
