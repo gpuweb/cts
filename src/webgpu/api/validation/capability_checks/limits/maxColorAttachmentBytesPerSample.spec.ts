@@ -33,13 +33,13 @@ function getAttachments(interleaveFormat: GPUTextureFormat, testValue: number) {
     const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
       format
     ];
-    const alignedBytesPerSample = align(bytesPerSample, renderTargetComponentAlignment!);
-    const bytesRemaining = testValue - alignedBytesPerSample;
-    if (renderTargetPixelByteCost! > bytesRemaining) {
+    const newBytesPerSample =
+      align(bytesPerSample, renderTargetComponentAlignment!) + renderTargetPixelByteCost!;
+    if (newBytesPerSample > testValue) {
       return false;
     }
     targets.push({ format, writeMask: 0 });
-    bytesPerSample = alignedBytesPerSample + renderTargetPixelByteCost!;
+    bytesPerSample = newBytesPerSample;
     return true;
   };
 
