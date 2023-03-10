@@ -1,8 +1,7 @@
 export const description = `Test that variables in the shader are zero initialized`;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { iterRange } from '../../../common/util/util.js';
-import { unreachable } from '../../../common/util/util.js';
+import { iterRange, unreachable } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 import {
   ScalarType,
