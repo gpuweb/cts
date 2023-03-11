@@ -107,7 +107,7 @@ function getDeviceLimitToRequestAndValueToTest(
 const limit = 'maxComputeInvocationsPerWorkgroup';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createComputePipeline,async,at_over')
+g.test('createComputePipeline,at_over')
   .desc(`Test using createComputePipeline(Async) at and over ${limit} limit`)
   .params(kMaximumLimitBaseParams.combine('async', [false, true] as const))
   .fn(async t => {

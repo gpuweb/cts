@@ -138,7 +138,7 @@ function getDeviceLimitToRequestAndValueToTest(
   };
 }
 
-g.test('createComputePipeline,async,at_over')
+g.test('createComputePipeline,at_over')
   .desc(`Test using createComputePipeline(Async) at and over ${limit} limit`)
   .params(
     kMaximumLimitBaseParams.combine('async', [false, true] as const).combine('wgslType', kWGSLTypes)
