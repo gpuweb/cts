@@ -89,10 +89,10 @@ const limit = 'maxVertexBufferArrayStride';
 export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
-  .desc(`Test using createRenderPipeline at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams)
+  .desc(`Test using createRenderPipeline(Async) at and over ${limit} limit`)
+  .params(kMaximumLimitBaseParams.combine('async', [false, true]))
   .fn(async t => {
-    const { limitTest, testValueName } = t.params;
+    const { limitTest, testValueName, async } = t.params;
     const { defaultLimit, adapterLimit: maximumLimit } = t;
     const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
       limitTest,
@@ -107,35 +107,7 @@ g.test('createRenderPipeline,at_over')
       async ({ device, testValue, shouldError }) => {
         const pipelineDescriptor = getPipelineDescriptor(device, testValue);
 
-        await t.expectValidationError(() => {
-          device.createRenderPipeline(pipelineDescriptor);
-        }, shouldError);
-      }
-    );
-  });
-
-g.test('createRenderPipelineAsync,at_over')
-  .desc(`Test using createRenderPipelineAsync at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams)
-  .fn(async t => {
-    const { limitTest, testValueName } = t.params;
-    const { defaultLimit, adapterLimit: maximumLimit } = t;
-    const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-      limitTest,
-      testValueName,
-      defaultLimit,
-      maximumLimit
-    );
-    await t.testDeviceWithSpecificLimits(
-      requestedLimit,
-      testValue,
-      async ({ device, testValue, shouldError }) => {
-        const pipelineDescriptor = getPipelineDescriptor(device, testValue);
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          device.createRenderPipelineAsync(pipelineDescriptor),
-          shouldError
-        );
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
       }
     );
   });
