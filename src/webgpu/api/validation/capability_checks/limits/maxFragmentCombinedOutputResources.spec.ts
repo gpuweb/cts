@@ -100,7 +100,7 @@ const kExtraLimits: LimitsRequest = {
 const limit = 'maxFragmentCombinedOutputResources';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createRenderPipeline,async,at_over')
+g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
   .params(kMaximumLimitBaseParams.combine('async', [false, true] as const))
   .fn(async t => {

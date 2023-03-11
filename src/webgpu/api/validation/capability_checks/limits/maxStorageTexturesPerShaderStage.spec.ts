@@ -111,7 +111,7 @@ g.test('createPipelineLayout,at_over')
     );
   });
 
-g.test('createPipeline,async,at_over')
+g.test('createPipeline,at_over')
   .desc(
     `
   Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit

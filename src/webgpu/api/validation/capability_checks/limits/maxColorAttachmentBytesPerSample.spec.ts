@@ -155,7 +155,7 @@ const kExtraLimits: LimitsRequest = {
 const limit = 'maxColorAttachmentBytesPerSample';
 export const { g, description } = makeLimitTestGroup(limit);
 
-g.test('createRenderPipeline,async,at_over')
+g.test('createRenderPipeline,at_over')
   .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
   .params(
     kMaximumLimitBaseParams
