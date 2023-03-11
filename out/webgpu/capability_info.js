@@ -1068,6 +1068,7 @@ export const kLimitInfo = makeTable(
 
   'maxColorAttachments': [, 8],
   'maxColorAttachmentBytesPerSample': [, 32],
+  'maxFragmentCombinedOutputResources': [, 8],
 
   'maxComputeWorkgroupStorageSize': [, 16384],
   'maxComputeInvocationsPerWorkgroup': [, 256],
@@ -1109,7 +1110,8 @@ export const kFeatureNameInfo =
   'timestamp-query': {},
   'indirect-first-instance': {},
   'shader-f16': {},
-  'rg11b10ufloat-renderable': {}
+  'rg11b10ufloat-renderable': {},
+  'float32-filterable': {}
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);

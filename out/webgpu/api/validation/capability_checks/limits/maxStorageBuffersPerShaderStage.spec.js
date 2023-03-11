@@ -12,9 +12,13 @@ makeLimitTestGroup,
 kBindGroupTests,
 kBindingCombinations,
 getPipelineTypeForBindingCombination,
-getPipelineAsyncTypeForBindingCombination,
 getPerStageWGSLForBindingCombination } from
+
 './limit_utils.js';
+
+const kExtraLimits = {
+  maxFragmentCombinedOutputResources: 'adapterLimit'
+};
 
 const limit = 'maxStorageBuffersPerShaderStage';
 export const { g, description } = makeLimitTestGroup(limit);
@@ -132,7 +136,7 @@ fn(async (t) => {
 g.test('createPipeline,at_over').
 desc(
 `
-  Test using createRenderPipeline and createComputePipeline at and over ${limit} limit
+  Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit
   
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
@@ -140,12 +144,13 @@ desc(
 
 params(
 kMaximumLimitBaseParams.
+combine('async', [false, true]).
 combine('bindingCombination', kBindingCombinations).
 combine('order', kReorderOrderKeys).
 combine('bindGroupTest', kBindGroupTests)).
 
 fn(async (t) => {
-  const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
+  const { limitTest, testValueName, async, bindingCombination, order, bindGroupTest } = t.params;
   const pipelineType = getPipelineTypeForBindingCombination(bindingCombination);
 
   await t.testDeviceWithRequestedMaximumLimits(
@@ -162,57 +167,15 @@ fn(async (t) => {
 
     const module = device.createShaderModule({ code });
 
-    await t.expectValidationError(
-    () => {
-      t.createPipeline(pipelineType, module);
-    },
+    await t.testCreatePipeline(
+    pipelineType,
+    async,
+    module,
     shouldError,
     `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`);
 
-  });
-
-});
-
-g.test('createPipelineAsync,at_over').
-desc(
-`
-  Test using createRenderPipelineAsync and createComputePipelineAsync at and over ${limit} limit
-  
-  Note: We also test order to make sure the implementation isn't just looking
-  at just the last entry.
-  `).
-
-params(
-kMaximumLimitBaseParams.
-combine('bindingCombination', kBindingCombinations).
-combine('order', kReorderOrderKeys).
-combine('bindGroupTest', kBindGroupTests)).
-
-fn(async (t) => {
-  const { limitTest, testValueName, bindingCombination, order, bindGroupTest } = t.params;
-  const pipelineType = getPipelineAsyncTypeForBindingCombination(bindingCombination);
-
-  await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    const code = getPerStageWGSLForBindingCombination(
-    bindingCombination,
-    order,
-    bindGroupTest,
-    (i, j) => `var<storage> u${j}_${i}: f32`,
-    (i, j) => `_ = u${j}_${i};`,
-    testValue);
-
-    const module = device.createShaderModule({ code });
-
-    await t.shouldRejectConditionally(
-    'GPUPipelineError',
-    t.createPipelineAsync(pipelineType, module),
-    shouldError,
-    `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`);
-
-  });
+  },
+  kExtraLimits);
 
 });
 //# sourceMappingURL=maxStorageBuffersPerShaderStage.spec.js.map

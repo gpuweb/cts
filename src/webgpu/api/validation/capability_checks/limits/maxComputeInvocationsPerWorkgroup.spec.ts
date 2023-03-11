@@ -108,10 +108,10 @@ const limit = 'maxComputeInvocationsPerWorkgroup';
 export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createComputePipeline,at_over')
-  .desc(`Test using createComputePipeline at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams)
+  .desc(`Test using createComputePipeline(Async) at and over ${limit} limit`)
+  .params(kMaximumLimitBaseParams.combine('async', [false, true] as const))
   .fn(async t => {
-    const { limitTest, testValueName } = t.params;
+    const { limitTest, testValueName, async } = t.params;
     const { defaultLimit, adapterLimit: maximumLimit } = t;
 
     const { requestedLimit, workgroupSize } = getDeviceLimitToRequestAndValueToTest(
@@ -125,59 +125,15 @@ g.test('createComputePipeline,at_over')
     await t.testDeviceWithSpecificLimits(
       requestedLimit,
       testValue,
-      async ({ device, testValue, actualLimit, shouldError }) => {
-        const module = t.getModuleForWorkgroupSize(workgroupSize);
+      async ({ testValue, actualLimit, shouldError }) => {
+        const { module, code } = t.getModuleForWorkgroupSize(workgroupSize);
 
-        await t.testForValidationErrorWithPossibleOutOfMemoryError(
-          () => {
-            device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module,
-                entryPoint: 'main',
-              },
-            });
-          },
+        await t.testCreatePipeline(
+          'createComputePipeline',
+          async,
+          module,
           shouldError,
-          `workgroupSize: [${workgroupSize}], size: ${testValue}, limit: ${actualLimit}`
-        );
-      }
-    );
-  });
-
-g.test('createComputePipelineAsync,at_over')
-  .desc(`Test using createComputePipeline at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams)
-  .fn(async t => {
-    const { limitTest, testValueName } = t.params;
-    const { defaultLimit, adapterLimit: maximumLimit } = t;
-
-    const { requestedLimit, workgroupSize } = getDeviceLimitToRequestAndValueToTest(
-      limitTest,
-      testValueName,
-      defaultLimit,
-      maximumLimit
-    );
-    const testValue = workgroupSize.reduce((a, b) => a * b, 1);
-
-    await t.testDeviceWithSpecificLimits(
-      requestedLimit,
-      testValue,
-      async ({ device, testValue, actualLimit, shouldError }) => {
-        const module = t.getModuleForWorkgroupSize(workgroupSize);
-
-        const promise = device.createComputePipelineAsync({
-          layout: 'auto',
-          compute: {
-            module,
-            entryPoint: 'main',
-          },
-        });
-        await t.shouldRejectConditionally(
-          'OperationError',
-          promise,
-          shouldError,
-          `workgroupSize: [${workgroupSize}], size: ${testValue}, limit: ${actualLimit}`
+          `workgroupSize: [${workgroupSize}], size: ${testValue}, limit: ${actualLimit}\n${code}`
         );
       }
     );

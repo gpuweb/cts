@@ -132,10 +132,10 @@ function getDeviceLimitToRequestAndValueToTest(
 }
 
 g.test('createComputePipeline,at_over')
-  .desc(`Test using createComputePipeline at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams.combine('wgslType', kWGSLTypes))
+  .desc(`Test using createComputePipeline(Async) at and over ${limit} limit`)
+  .params(kMaximumLimitBaseParams.combine('async', [false, true]).combine('wgslType', kWGSLTypes))
   .fn(async t => {
-    const { limitTest, testValueName, wgslType } = t.params;
+    const { limitTest, testValueName, async, wgslType } = t.params;
     const { defaultLimit, adapterLimit: maximumLimit } = t;
 
     const hasF16 = t.adapter.features.has('shader-f16');
@@ -158,62 +158,13 @@ g.test('createComputePipeline,at_over')
       async ({ device, testValue, actualLimit, shouldError }) => {
         const { module, code } = getModuleForWorkgroupStorageSize(device, wgslType, testValue);
 
-        await t.expectValidationError(
-          () => {
-            device.createComputePipeline({
-              layout: 'auto',
-              compute: {
-                module,
-                entryPoint: 'main',
-              },
-            });
-          },
+        await t.testCreatePipeline(
+          'createComputePipeline',
+          async,
+          module,
           shouldError,
           `size: ${testValue}, limit: ${actualLimit}\n${code}`
         );
-      },
-      {},
-      features
-    );
-  });
-
-g.test('createComputePipelineAsync,at_over')
-  .desc(`Test using createComputePipeline at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams.combine('wgslType', kWGSLTypes))
-  .fn(async t => {
-    const { limitTest, testValueName, wgslType } = t.params;
-    const { defaultLimit, adapterLimit: maximumLimit } = t;
-
-    const hasF16 = t.adapter.features.has('shader-f16');
-    if (!hasF16 && wgslType in wgslF16Types) {
-      return;
-    }
-
-    const features = hasF16 ? ['shader-f16'] : [];
-
-    const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-      limitTest,
-      testValueName,
-      defaultLimit,
-      maximumLimit
-    );
-
-    await t.testDeviceWithSpecificLimits(
-      requestedLimit,
-      testValue,
-      async ({ device, testValue, actualLimit, shouldError }) => {
-        const { module, code } = getModuleForWorkgroupStorageSize(device, wgslType, testValue);
-
-        const promise = device.createComputePipelineAsync({
-          layout: 'auto',
-          compute: {
-            module,
-            entryPoint: 'main',
-          },
-        });
-
-        const msg = `size: ${testValue}, limit: ${actualLimit}\n${code}`;
-        await t.shouldRejectConditionally('OperationError', promise, shouldError, msg);
       },
       {},
       features
