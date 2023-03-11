@@ -92,9 +92,10 @@ const limit = 'maxInterStageShaderComponents';
 export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createRenderPipeline,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipeline`)
+  .desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`)
   .params(
     kMaximumLimitBaseParams
+      .combine('async', [false, true])
       .combine('pointList', [false, true])
       .combine('frontFacing', [false, true])
       .combine('sampleIndex', [false, true])
@@ -105,6 +106,7 @@ g.test('createRenderPipeline,at_over')
     const {
       limitTest,
       testValueName,
+      async,
       pointList,
       frontFacing,
       sampleIndex,
@@ -125,56 +127,7 @@ g.test('createRenderPipeline,at_over')
           sampleMaskOut
         );
 
-        await t.expectValidationError(
-          () => {
-            device.createRenderPipeline(pipelineDescriptor);
-          },
-          shouldError,
-          code
-        );
-      }
-    );
-  });
-
-g.test('createRenderPipelineAsync,at_over')
-  .desc(`Test using at and over ${limit} limit in createRenderPipelineAsync`)
-  .params(
-    kMaximumLimitBaseParams
-      .combine('pointList', [false, true])
-      .combine('frontFacing', [false, true])
-      .combine('sampleIndex', [false, true])
-      .combine('sampleMaskIn', [false, true])
-      .combine('sampleMaskOut', [false, true])
-  )
-  .fn(async t => {
-    const {
-      limitTest,
-      testValueName,
-      pointList,
-      frontFacing,
-      sampleIndex,
-      sampleMaskIn,
-      sampleMaskOut,
-    } = t.params;
-    await t.testDeviceWithRequestedMaximumLimits(
-      limitTest,
-      testValueName,
-      async ({ device, testValue, shouldError }) => {
-        const { pipelineDescriptor, code } = getPipelineDescriptor(
-          device,
-          testValue,
-          pointList,
-          frontFacing,
-          sampleIndex,
-          sampleMaskIn,
-          sampleMaskOut
-        );
-        await t.shouldRejectConditionally(
-          'GPUPipelineError',
-          device.createRenderPipelineAsync(pipelineDescriptor),
-          shouldError,
-          code
-        );
+        await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
       }
     );
   });
