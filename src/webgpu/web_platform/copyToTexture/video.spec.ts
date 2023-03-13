@@ -6,7 +6,6 @@ copyToTexture with HTMLVideoElement (and other video-type sources?).
 - TODO: enhance with more cases with crop, rotation, etc.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
-TODO: plan
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -37,7 +36,6 @@ It creates HTMLVideoElement with videos under Resource folder.
   The tests covers:
   - Video comes from different color spaces.
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
-  - TODO: Compare whole contents instead of single pixels
   - TODO: partial copy tests should be added
   - TODO: all valid dstColorFormat tests should be added.
   - TODO: dst color space tests need to be added

@@ -33,10 +33,29 @@ export type VideoName = keyof typeof kVideoInfo;
 // Source video color space affects expected values.
 // The process to calculate these expected pixel values can be found:
 // https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
-const kBt601Red = new Uint8Array([248, 36, 0, 255]);
-const kBt601Green = new Uint8Array([64, 252, 0, 255]);
-const kBt601Blue = new Uint8Array([26, 35, 255, 255]);
-const kBt601Yellow = new Uint8Array([254, 253, 0, 255]);
+// and https://github.com/gpuweb/cts/pull/2242#issuecomment-1463273434
+const kBt601PixelValue = {
+  red: new Float32Array([0.972945567233341, 0.141794376683341, -0.0209589916711088, 1.0]),
+  green: new Float32Array([0.248234279433399, 0.984810378661784, -0.0564701319494314, 1.0]),
+  blue: new Float32Array([0.10159735826538, 0.135451122863674, 1.00262982899724, 1.0]),
+  yellow: new Float32Array([0.995470750775951, 0.992742114518355, -0.0774291236205402, 1.0]),
+};
+
+function convertToUnorm8(expectation: Float32Array): Uint8Array {
+  const unorm8 = new Uint8ClampedArray(expectation.length);
+
+  for (let i = 0; i < expectation.length; ++i) {
+    unorm8[i] = Math.round(expectation[i] * 255.0);
+  }
+
+  return new Uint8Array(unorm8.buffer);
+}
+
+// kVideoExpectations uses unorm8 results
+const kBt601Red = convertToUnorm8(kBt601PixelValue.red);
+const kBt601Green = convertToUnorm8(kBt601PixelValue.green);
+const kBt601Blue = convertToUnorm8(kBt601PixelValue.blue);
+const kBt601Yellow = convertToUnorm8(kBt601PixelValue.yellow);
 
 export const kVideoExpectations = [
   {
