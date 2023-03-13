@@ -3034,6 +3034,15 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "expression",
+      "binary",
+      "bitwise_shift"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "parse",
       "align"
     ]
