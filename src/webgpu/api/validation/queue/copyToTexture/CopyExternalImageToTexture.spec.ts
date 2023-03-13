@@ -20,7 +20,6 @@ import {
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
   CanvasType,
-  canCopyFromCanvasContext,
   createCanvas,
   createOnscreenCanvas,
   createOffscreenCanvas,
@@ -209,10 +208,7 @@ g.test('source_canvas,contexts')
   Test HTMLCanvasElement as source image with different contexts.
 
   Call HTMLCanvasElement.getContext() with different context type.
-  Only '2d', 'experimental-webgl', 'webgl', 'webgl2' is valid context
-  type.
-
-  Check whether 'OperationError' is generated when context type is invalid.
+  And all of them are valid context type.
   `
   )
   .params(u =>
@@ -245,7 +241,7 @@ g.test('source_canvas,contexts')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      canCopyFromCanvasContext(contextType) ? '' : 'OperationError'
+      ''
     );
   });
 
