@@ -15,7 +15,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unary/u32_complement', {
   complement: () => {
-    return [0, 1, ...fullU32Range()].map(e => {
+    return fullU32Range().map(e => {
       return { input: u32(e), expected: u32(~e) };
     });
   },
