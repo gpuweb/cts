@@ -2830,7 +2830,25 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "i32_complement"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "i32_conversion"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
+      "u32_complement"
     ]
   },
   {
