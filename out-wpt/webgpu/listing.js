@@ -1632,6 +1632,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "bitwise_shift"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "bool_logical"
     ]
   },
