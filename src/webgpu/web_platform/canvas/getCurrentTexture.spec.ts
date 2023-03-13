@@ -14,6 +14,15 @@ const kFormat = 'bgra8unorm';
 class GPUContextTest extends GPUTest {
   initCanvasContext(canvasType: CanvasType = 'onscreen'): GPUCanvasContext {
     const canvas = createCanvas(this, canvasType, 2, 2);
+    if (canvasType === 'onscreen') {
+      // To make sure onscreen canvas are visible
+      const onscreencanvas = canvas as HTMLCanvasElement;
+      onscreencanvas.style.position = 'fixed';
+      onscreencanvas.style.top = '0';
+      onscreencanvas.style.left = '0';
+      // Set it to transparent so that if multiple canvas are created, they are still visible.
+      onscreencanvas.style.opacity = '50%';
+    }
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
@@ -34,9 +43,9 @@ class GPUContextTest extends GPUTest {
         break;
       case 'offscreen': {
         (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
-        // The beginning of frameCheck runs immediately (in the same task), so this
+        // The beginning of frameCheck runs immediately, so this
         // verifies the state has changed synchronously.
-        void fn();
+        fn();
         break;
       }
       default:
@@ -272,18 +281,30 @@ g.test('expiry')
   .desc(
     `
 Test automatic WebGPU canvas texture expiry on all canvas types with the following requirements:
-- getCurrentTexture returns the same texture object within the same frame, throughout:
+- getCurrentTexture returns the same texture object until the next task:
   - after previous frame update the rendering
   - before current frame update the rendering
   - in a microtask off the current frame task
 - getCurrentTexture returns a new texture object and the old texture object becomes invalid
   as soon as possible after HTML update the rendering.
+
+TODO: make [1] a warning instead of error.
+
+TODO: test more canvas types, and ways to update the rendering
+- if on the same thread, expiry happens when the document updates its rendering (window "rPAF") OR transferToImageBitmap is called
+- if on a different thread, expiry happens when the worker updates its rendering (worker "rPAF") OR transferToImageBitmap is called
+- [draw, transferControlToOffscreen, then canvas is displayed] on either {main thread, or transferred to worker}
+- [draw, canvas is displayed, then transferControlToOffscreen] on either {main thread, or transferred to worker}
+- reftests for the above 2 (what gets displayed when the canvas is displayed)
+- with canvas element added to DOM or not (applies to other canvas tests as well)
+  - canvas is added to DOM after being rendered
+  - canvas is already in DOM but becomes visible after being rendered
   `
   )
   .params(u =>
     u //
       .combine('canvasType', kAllCanvasTypes)
-      .combine('prevFrameCallsite', ['requestPostAnimationFrame', 'requestAnimationFrame'] as const)
+      .combine('prevFrameCallsite', ['runInNewCanvasFrame', 'requestAnimationFrame'] as const)
       .combine('getCurrentTextureAgain', [true, false] as const)
   )
   .fn(t => {
@@ -303,9 +324,14 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
     // The fn is called immediately after previous frame updating the rendering.
     // Polyfill by calling the callback by setTimeout, in the requestAnimationFrame callback (for onscreen canvas)
     // or after transferToImageBitmap (for offscreen canvas).
-    function requestPostAnimationFrame(fn: () => void) {
+    function runInNewCanvasFrame(fn: () => void) {
       t.requestNewFrameOnCanvasType(canvasType, ctx, () => {
-        timeout(fn);
+        if (canvasType === 'onscreen') {
+          timeout(fn);
+        } else {
+          // for offscreen canvas, after calling transferToImageBitmap, we are in a new frame immediately
+          fn();
+        }
       });
     }
 
@@ -321,15 +347,15 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
       });
 
       // Call getCurrentTexture immediately after this frame updating the rendering.
-      // It should return a new texture object.
+      // It could return a new texture object as early as the next task. [1]
       timeout(() => {
         if (getCurrentTextureAgain) {
           t.expect(prevTexture !== ctx.getCurrentTexture());
         }
 
-        // prevTexture expired and is invalid, but createView should still succeed.
+        // Event when prevTexture expired, createView should still succeed anyway.
         const prevTextureView = prevTexture.createView();
-        // Using the invalid view should fail.
+        // Using the invalid view should fail if it expires.
         t.expectValidationError(() => {
           t.device.createBindGroup({
             layout: bgl,
@@ -340,8 +366,8 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
     }
 
     switch (prevFrameCallsite) {
-      case 'requestPostAnimationFrame':
-        requestPostAnimationFrame(checkGetCurrentTexture);
+      case 'runInNewCanvasFrame':
+        runInNewCanvasFrame(checkGetCurrentTexture);
         break;
       case 'requestAnimationFrame':
         requestAnimationFrame(checkGetCurrentTexture);
