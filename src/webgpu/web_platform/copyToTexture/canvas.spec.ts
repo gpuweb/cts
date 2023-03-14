@@ -651,14 +651,14 @@ g.test('copy_contents_from_gpu_context_canvas')
     });
   });
 
-g.test('copy_contents_from_ImageBitmapRendering_context_canvas')
+g.test('copy_contents_from_bitmaprenderer_context_canvas')
   .desc(
     `
-  Test HTMLCanvasElement and OffscreenCanvas with ImageBitmapRendering context
+  Test HTMLCanvasElement and OffscreenCanvas with ImageBitmapRenderingContext
   can be copied to WebGPU texture correctly.
 
-  It creates HTMLCanvasElement/OffscreenCanvas with 'ImageBitmapRendering'.
-  Use fillRect(2d context) to render red rect for top-left,
+  It creates HTMLCanvasElement/OffscreenCanvas with 'bitmaprenderer'.
+  First, use fillRect(2d context) to render red rect for top-left,
   green rect for top-right, blue rect for bottom-left and white for bottom-right on a
   2d context canvas and create imageBitmap with that canvas. Use transferFromImageBitmap()
   to render the imageBitmap to source canvas.
