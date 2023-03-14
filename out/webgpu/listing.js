@@ -1659,7 +1659,7 @@ export const listing = [
       "execution",
       "expression",
       "binary",
-      "f32_logical"
+      "f32_comparison"
     ]
   },
   {
