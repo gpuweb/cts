@@ -158,7 +158,7 @@ class CopyExternalImageToTextureTest extends ValidationTest {
   ): HTMLCanvasElement | OffscreenCanvas {
     const canvas = createCanvas(this, canvasType, 1, 1);
     const ctx = canvas.getContext('2d');
-    assert(ctx !== null);
+    assert(ctx instanceof CanvasRenderingContext2D);
     ctx.drawImage(content, 0, 0);
 
     return canvas;
@@ -289,7 +289,7 @@ g.test('source_offscreenCanvas,contexts')
       { texture: dstTexture },
       copySize,
       true, // No validation errors.
-      canCopyFromCanvasContext(contextType) ? '' : 'OperationError'
+      ''
     );
   });
 
