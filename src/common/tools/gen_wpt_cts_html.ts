@@ -33,9 +33,10 @@ if (process.argv.length !== 4 && process.argv.length !== 7 && process.argv.lengt
   printUsageAndExit(1);
 }
 
+// prettier-ignore
 const [
-  ,
-  ,
+  , // `node` binary
+  , // this script
   outFile,
   templateFile,
   argsPrefixesFile,
