@@ -22,6 +22,7 @@ class GPUContextTest extends GPUTest {
       onscreencanvas.style.left = '0';
       // Set it to transparent so that if multiple canvas are created, they are still visible.
       onscreencanvas.style.opacity = '50%';
+      document.body.appendChild(onscreencanvas);
     }
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
