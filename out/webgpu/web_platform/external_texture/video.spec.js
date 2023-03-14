@@ -13,81 +13,14 @@ import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
 startPlayingAndWaitForVideo,
 getVideoFrameFromVideoElement,
-getVideoElement } from
+getVideoElement,
+kVideoExpectations,
+kVideoRotationExpectations } from
 '../../web_platform/util.js';
 
 const kHeight = 16;
 const kWidth = 16;
 const kFormat = 'rgba8unorm';
-
-// The process to calculate these expected pixel values can be found:
-// https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
-const kBt601Red = new Uint8Array([248, 36, 0, 255]);
-const kBt601Green = new Uint8Array([64, 252, 0, 255]);
-const kBt601Blue = new Uint8Array([26, 35, 255, 255]);
-const kBt601Yellow = new Uint8Array([254, 253, 0, 255]);
-
-const kVideoExpectations = [
-{
-  videoName: 'four-colors-vp8-bt601.webm',
-  _redExpectation: kBt601Red,
-  _greenExpectation: kBt601Green,
-  _blueExpectation: kBt601Blue,
-  _yellowExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-theora-bt601.ogv',
-  _redExpectation: kBt601Red,
-  _greenExpectation: kBt601Green,
-  _blueExpectation: kBt601Blue,
-  _yellowExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-h264-bt601.mp4',
-  _redExpectation: kBt601Red,
-  _greenExpectation: kBt601Green,
-  _blueExpectation: kBt601Blue,
-  _yellowExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-vp9-bt601.webm',
-  _redExpectation: kBt601Red,
-  _greenExpectation: kBt601Green,
-  _blueExpectation: kBt601Blue,
-  _yellowExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-vp9-bt709.webm',
-  _redExpectation: new Uint8Array([255, 0, 0, 255]),
-  _greenExpectation: new Uint8Array([0, 255, 0, 255]),
-  _blueExpectation: new Uint8Array([0, 0, 255, 255]),
-  _yellowExpectation: new Uint8Array([255, 255, 0, 255])
-}];
-
-
-const kVideoRotationExpectations = [
-{
-  videoName: 'four-colors-h264-bt601-rotate-90.mp4',
-  _topLeftExpectation: kBt601Red,
-  _topRightExpectation: kBt601Green,
-  _bottomLeftExpectation: kBt601Yellow,
-  _bottomRightExpectation: kBt601Blue
-},
-{
-  videoName: 'four-colors-h264-bt601-rotate-180.mp4',
-  _topLeftExpectation: kBt601Green,
-  _topRightExpectation: kBt601Blue,
-  _bottomLeftExpectation: kBt601Red,
-  _bottomRightExpectation: kBt601Yellow
-},
-{
-  videoName: 'four-colors-h264-bt601-rotate-270.mp4',
-  _topLeftExpectation: kBt601Blue,
-  _topRightExpectation: kBt601Yellow,
-  _bottomLeftExpectation: kBt601Green,
-  _bottomRightExpectation: kBt601Red
-}];
-
 
 export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
