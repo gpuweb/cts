@@ -20,7 +20,6 @@ API operations tests for occlusion queries.
 
 import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../../common/util/data_tables.js';
 import {
   assert,
   TypedArrayBufferView,
@@ -29,24 +28,17 @@ import {
 } from '../../../../../common/util/util.js';
 import { kMaxQueryCount, DepthStencilFormat } from '../../../../capability_info.js';
 import { GPUTest } from '../../../../gpu_test.js';
+import { makeBufferWithContents } from '../../../../util/buffer.js';
 
 const kRequiredQueryBufferOffsetAlignment = 256;
 const kBytesPerQuery = 8;
 const kTextureSize = [4, 4];
 
-const RenderModes = {
-  direct: true,
-  'render-bundle': true,
-};
-type RenderMode = keyof typeof RenderModes;
-const kRenderModes = keysOf(RenderModes);
+const kRenderModes = ['direct', 'render-bundle'] as const;
+type RenderMode = typeof kRenderModes[number];
 
-const BufferOffsets = {
-  zero: true,
-  'non-zero': true,
-};
-type BufferOffset = keyof typeof BufferOffsets;
-const kBufferOffsets = keysOf(BufferOffsets);
+const kBufferOffsets = ['zero', 'non-zero'] as const;
+type BufferOffset = typeof kBufferOffsets[number];
 
 type SetupParams = {
   numQueries: number;
@@ -60,8 +52,19 @@ type SetupParams = {
   renderMode?: RenderMode;
 };
 
+// MAINTENANCE_TODO: Refactor these helper classes to use GPUTestBase.createEncoder
+//
+// The refactor would require some new features in CommandBufferMaker such as:
+//
+// * Multi render bundle in single render pass support
+//
+// * Some way to allow calling render pass commands on render bundle encoder.
+//   Potentially have a special abstract encoder that wraps the two and defers
+//   relevant calls appropriately.
+
 /**
- * Used
+ * This class is used by the RenderPassHelper below to
+ * abstract calling these 4 functions on a RenderPassEncoder or a RenderBundleEncoder.
  */
 interface QueryHelper {
   setPipeline(pipeline: GPURenderPipeline): void;
@@ -132,9 +135,9 @@ class QueryHelperDirect implements QueryHelper {
     this._pass.draw(count);
   }
   end() {
-    // make this impossible to use
+    // make this object impossible to use after calling end
     const fn = this._endFn;
-    this._endFn;
+    this._endFn = unreachable;
     this._pass = undefined;
     fn();
   }
@@ -184,9 +187,9 @@ class QueryHelperRenderBundle implements QueryHelper {
     this._encoder.draw(count);
   }
   end() {
-    // make this impossible to use
+    // make this object impossible to use after calling end
     const fn = this._endFn;
-    this._endFn;
+    this._endFn = unreachable;
     this._encoder = undefined;
     fn();
   }
@@ -258,12 +261,7 @@ class OcclusionQueryTest extends GPUTest {
     return this.trackForCleanup(this.device.createQuerySet(desc));
   }
   createVertexBuffer(data: TypedArrayBufferView) {
-    const vertexBuffer = this.createBuffer({
-      size: data.byteLength,
-      usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST,
-    });
-    this.device.queue.writeBuffer(vertexBuffer, 0, data);
-    return vertexBuffer;
+    return this.trackForCleanup(makeBufferWithContents(this.device, data, GPUBufferUsage.VERTEX));
   }
   createSingleTriangleVertexBuffer(z: number) {
     // prettier-ignore
@@ -273,7 +271,7 @@ class OcclusionQueryTest extends GPUTest {
       -0.5,  0.5,  z,
     ]));
   }
-  async readBufferAaBigUint16(buffer: GPUBuffer) {
+  async readBufferAsBigUint64(buffer: GPUBuffer) {
     await buffer.mapAsync(GPUMapMode.READ);
     const result = new BigUint64Array(buffer.getMappedRange().slice(0));
     buffer.unmap();
@@ -332,6 +330,9 @@ class OcclusionQueryTest extends GPUTest {
       `,
     });
 
+    const haveDepth = !!depthStencilFormat && depthStencilFormat.includes('depth');
+    const haveStencil = !!depthStencilFormat && depthStencilFormat.includes('stencil');
+
     const pipeline = device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -365,9 +366,9 @@ class OcclusionQueryTest extends GPUTest {
       ...(depthStencilTexture && {
         depthStencil: {
           format: depthStencilFormat as GPUTextureFormat,
-          depthWriteEnabled: depthStencilFormat?.includes('depth'),
-          depthCompare: depthStencilFormat?.includes('depth') ? 'less-equal' : undefined,
-          ...(depthStencilFormat?.includes('stencil') && {
+          depthWriteEnabled: haveDepth,
+          depthCompare: haveDepth ? 'less-equal' : 'always',
+          ...(haveStencil && {
             stencilFront: {
               compare: 'equal',
             },
@@ -445,7 +446,7 @@ class OcclusionQueryTest extends GPUTest {
     );
     device.queue.submit([encoder.finish()]);
 
-    const result = await this.readBufferAaBigUint16(readBuffer);
+    const result = await this.readBufferAsBigUint64(readBuffer);
     for (const queryIndex of queryIndices) {
       const passed = !!result[queryIndex];
       checkQueryIndexResultFn(passed, queryIndex);
@@ -642,7 +643,7 @@ g.test('occlusion_query,scissor')
             width,
             height: height / 2,
             occluded: true,
-            name: 'top 1/4',
+            name: 'top quarter',
           };
         default:
           unreachable();
@@ -673,11 +674,11 @@ g.test('occlusion_query,scissor')
         queryHelper.end();
       },
       (passed, queryIndex) => {
-        const { occluded, name } = getScissorRect(queryIndex);
+        const { occluded, name: scissorCase } = getScissorRect(queryIndex);
         const expectPassed = !occluded;
         t.expect(
           !!passed === expectPassed,
-          `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+          `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
         );
       }
     );
@@ -687,6 +688,9 @@ g.test('occlusion_query,depth')
   .desc(
     `
       Test beginOcclusionQuery/endOcclusionQuery using depth test to occlude
+
+      Compares depth against 0.5, with alternating vertex buffers which have a depth
+      of 0 and 1. When depth check passes, we expect non-zero successful fragments.
     `
   )
   .params(kQueryTestBaseParams)
@@ -750,6 +754,9 @@ g.test('occlusion_query,stencil')
   .desc(
     `
       Test beginOcclusionQuery/endOcclusionQuery using stencil to occlude
+
+      Compares stencil against 0, with alternating stencil reference values of
+      of 0 and 1. When stencil test passes, we expect non-zero successful fragments.
     `
   )
   .params(kQueryTestBaseParams)
@@ -815,7 +822,8 @@ g.test('occlusion_query,sample_mask')
     `
       Test beginOcclusionQuery/endOcclusionQuery using sample_mask to occlude
 
-      Set mask to 4 and draw quads in opposing corners of the texel.
+      Set sampleMask to 0, 2, 4, 6 and draw quads in top right or bottom left corners of the texel.
+      If the corner we draw to matches the corner masked we expect non-zero successful fragments.
     `
   )
   .params(kQueryTestBaseParams.combine('sampleMask', [0, 2, 4, 6]))
@@ -846,8 +854,8 @@ g.test('occlusion_query,sample_mask')
       ]));
     };
 
-    const vertexBufferTL = createQuad(0);
-    const vertexBufferBR = createQuad(0.25);
+    const vertexBufferBL = createQuad(0);
+    const vertexBufferTR = createQuad(0.25);
 
     const multisampleRenderTarget = t.createTexture({
       size: kTextureSize,
@@ -874,11 +882,16 @@ g.test('occlusion_query,sample_mask')
       (helper, queryIndex) => {
         const queryHelper = helper.beginOcclusionQuery(queryIndex);
         queryHelper.setPipeline(pipeline);
-        queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferBR : vertexBufferTL);
+        queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferTR : vertexBufferBL);
         queryHelper.draw(6);
         queryHelper.end();
       },
       (passed, queryIndex) => {
+        // Above we draw to a specific corner (sample) of a multi-sampled texel
+        // drawMask is the "sampleMask" representation of that corner.
+        // In other words, if drawMask is 2 (we drew to the top right) and
+        // sampleMask is 2 (drawing is allowed to the top right) then we expect
+        // passing fragments.
         const drawMask = queryIndex % 2 ? 2 : 4;
         const expectPassed = !!(sampleMask & drawMask);
         t.expect(
@@ -894,7 +907,13 @@ g.test('occlusion_query,alpha_to_coverage')
     `
       Test beginOcclusionQuery/endOcclusionQuery using alphaToCoverage to occlude
 
-      Set alpha to 0.25, draw quads in 4 corners of texel. Some should be culled.
+      Set alpha to 0, 0.25, 0.5, 0.75, and 1, draw quads in 4 corners of texel.
+      Some should be culled. We count how many passed via queries. It's undefined which
+      will pass but it is defined how many will pass for a given alpha value.
+
+      Note: It seems like the result is well defined but if we find some devices/drivers
+      don't follow this exactly then we can relax check for the expected number of passed
+      queries.
     `
   )
   .params(kQueryTestBaseParams.combine('alpha', [0, 0.25, 0.5, 0.75, 1.0]))
@@ -1058,9 +1077,9 @@ g.test('occlusion_query,multi_resolve')
     }
 
     const results = await Promise.all([
-      t.readBufferAaBigUint16(readBuffer),
-      t.readBufferAaBigUint16(readBuffer2),
-      t.readBufferAaBigUint16(readBuffer3),
+      t.readBufferAsBigUint64(readBuffer),
+      t.readBufferAsBigUint64(readBuffer2),
+      t.readBufferAsBigUint64(readBuffer3),
     ]);
 
     results.forEach((result, r) => {
