@@ -5,7 +5,6 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
 
 - videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), color spaces
   (bt.601, bt.709, bt.2020)
-- TODO: enhance with more cases with crop, rotation, etc.
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -272,6 +271,118 @@ fn(async (t) => {
   });
 });
 
+g.test('importExternalTexture,sampleWithVideoFrameWithVisibleRectParam').
+desc(
+`
+Tests that we can import VideoFrames and sample the correct sub-rectangle when visibleRect
+parameters are present.
+`).
+
+params((u) =>
+u //
+.combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combineWithParams(kVideoExpectations)).
+
+fn(async (t) => {
+  const videoElement = getVideoElement(t, t.params.videoName);
+
+  await startPlayingAndWaitForVideo(videoElement, async () => {
+    const source = await getVideoFrameFromVideoElement(t, videoElement);
+
+    // All tested videos are derived from an image showing yellow, red, blue or green in each
+    // quadrant. In this test we crop the video to each quadrant and check that desired color
+    // is sampled from each corner of the cropped image.
+    const srcVideoHeight = 240;
+    const srcVideoWidth = 320;
+    const cropParams = [
+    // Top left (yellow)
+    {
+      subRect: { x: 0, y: 0, width: srcVideoWidth / 2, height: srcVideoHeight / 2 },
+      color: t.params._yellowExpectation
+    },
+    // Top right (red)
+    {
+      subRect: {
+        x: srcVideoWidth / 2,
+        y: 0,
+        width: srcVideoWidth / 2,
+        height: srcVideoHeight / 2
+      },
+      color: t.params._redExpectation
+    },
+    // Bottom left (blue)
+    {
+      subRect: {
+        x: 0,
+        y: srcVideoHeight / 2,
+        width: srcVideoWidth / 2,
+        height: srcVideoHeight / 2
+      },
+      color: t.params._blueExpectation
+    },
+    // Bottom right (green)
+    {
+      subRect: {
+        x: srcVideoWidth / 2,
+        y: srcVideoHeight / 2,
+        width: srcVideoWidth / 2,
+        height: srcVideoHeight / 2
+      },
+      color: t.params._greenExpectation
+    }];
+
+
+    for (const cropParam of cropParams) {
+      // MAINTENANCE_TODO: remove cast with TypeScript 4.9.6+.
+
+      const subRect = new VideoFrame(source, { visibleRect: cropParam.subRect });
+
+      const colorAttachment = t.device.createTexture({
+        format: kFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+      });
+
+      const pipeline = createExternalTextureSamplingTestPipeline(t);
+      const bindGroup = createExternalTextureSamplingTestBindGroup(
+      t,
+      t.params.checkNonStandardIsZeroCopy,
+      subRect,
+      pipeline);
+
+
+      const commandEncoder = t.device.createCommandEncoder();
+      const passEncoder = commandEncoder.beginRenderPass({
+        colorAttachments: [
+        {
+          view: colorAttachment.createView(),
+          clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
+          loadOp: 'clear',
+          storeOp: 'store'
+        }]
+
+      });
+      passEncoder.setPipeline(pipeline);
+      passEncoder.setBindGroup(0, bindGroup);
+      passEncoder.draw(6);
+      passEncoder.end();
+      t.device.queue.submit([commandEncoder.finish()]);
+
+      // For validation, we sample a few pixels away from the edges to avoid compression
+      // artifacts.
+      t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
+      { coord: { x: kWidth * 0.1, y: kHeight * 0.1 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.9, y: kHeight * 0.1 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.1, y: kHeight * 0.9 }, exp: cropParam.color },
+      { coord: { x: kWidth * 0.9, y: kHeight * 0.9 }, exp: cropParam.color }]);
+
+
+      subRect.close();
+    }
+
+    source.close();
+  });
+});
 g.test('importExternalTexture,compute').
 desc(
 `
