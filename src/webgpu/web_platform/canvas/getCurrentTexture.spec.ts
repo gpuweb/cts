@@ -292,7 +292,6 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
   as soon as possible after HTML update the rendering.
 
 TODO: test more canvas types, and ways to update the rendering
-- if on the same thread, expiry happens when the document updates its rendering (window "rPAF") OR transferToImageBitmap is called
 - if on a different thread, expiry happens when the worker updates its rendering (worker "rPAF") OR transferToImageBitmap is called
 - [draw, transferControlToOffscreen, then canvas is displayed] on either {main thread, or transferred to worker}
 - [draw, canvas is displayed, then transferControlToOffscreen] on either {main thread, or transferred to worker}
