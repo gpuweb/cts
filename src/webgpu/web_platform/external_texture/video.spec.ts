@@ -361,7 +361,7 @@ parameters are present.
       // is sampled from each corner of the cropped image.
       const srcVideoHeight = 240;
       const srcVideoWidth = 320;
-      let cropParams = [
+      const cropParams = [
         // Top left (yellow)
         {
           subRect: { x: 0, y: 0, width: srcVideoWidth / 2, height: srcVideoHeight / 2 },
@@ -399,8 +399,10 @@ parameters are present.
         },
       ];
 
-      for (let cropParam of cropParams) {
-        const subRect = new VideoFrame(source, { visibleRect: cropParam.subRect });
+      for (const cropParam of cropParams) {
+        // MAINTENANCE_TODO: remove cast with TypeScript 4.9.6+.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const subRect = new VideoFrame(source as any, { visibleRect: cropParam.subRect });
 
         const colorAttachment = t.device.createTexture({
           format: kFormat,
@@ -409,8 +411,12 @@ parameters are present.
         });
 
         const pipeline = createExternalTextureSamplingTestPipeline(t);
-        const bindGroup = createExternalTextureSamplingTestBindGroup(t, 
-          t.params.checkNonStandardIsZeroCopy, subRect, pipeline);
+        const bindGroup = createExternalTextureSamplingTestBindGroup(
+          t,
+          t.params.checkNonStandardIsZeroCopy,
+          subRect,
+          pipeline
+        );
 
         const commandEncoder = t.device.createCommandEncoder();
         const passEncoder = commandEncoder.beginRenderPass({
