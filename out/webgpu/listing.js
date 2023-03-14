@@ -1686,7 +1686,25 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "i32_comparison"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "u32_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
+      "u32_comparison"
     ]
   },
   {
