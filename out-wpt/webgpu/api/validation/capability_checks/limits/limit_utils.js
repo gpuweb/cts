@@ -306,12 +306,10 @@ const kMinimumLimits = new Set([
  */
 export const kMaximumLimitBaseParams = kUnitCaseParamsBuilder
   .combine('limitTest', kMaximumLimitValueTestKeys)
-  .beginSubcases()
   .combine('testValueName', kMaximumTestValueKeys);
 
 export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder
   .combine('limitTest', kMinimumLimitValueTestKeys)
-  .beginSubcases()
   .combine('testValueName', kMinimumTestValueKeys);
 
 export class LimitTestsImpl extends GPUTestBase {
