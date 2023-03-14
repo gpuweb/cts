@@ -27,7 +27,6 @@ import {
 } from '../../../../capability_info.js';
 
 import {
-  canCopyFromCanvasContext,
   createCanvas,
   kAllCanvasTypes,
   kValidCanvasContextIds,
@@ -896,9 +895,6 @@ Tests copyExternalImageToTexture from canvas on queue on destroyed device.
     u
       .combine('canvasType', kAllCanvasTypes)
       .combine('contextType', kValidCanvasContextIds)
-      .filter(({ contextType }) => {
-        return canCopyFromCanvasContext(contextType);
-      })
       .beginSubcases()
       .combine('awaitLost', [true, false])
   )

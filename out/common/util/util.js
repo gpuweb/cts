@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Float16Array } from '../../external/petamoriken/float16/float16.js';import { globalTestConfig } from '../framework/test_config.js';import { Logger } from '../internal/logging/logger.js';
+**/import { Float16Array } from '../../external/petamoriken/float16/float16.js';import { SkipTestCase } from '../framework/fixture.js';import { globalTestConfig } from '../framework/test_config.js';
+import { Logger } from '../internal/logging/logger.js';
 
 import { keysOf } from './data_tables.js';
 import { timeout } from './timeout.js';
@@ -63,6 +64,13 @@ export async function assertReject(p, msg) {
  */
 export function unreachable(msg) {
   throw new Error(msg);
+}
+
+/**
+ * Throw a `SkipTestCase` exception, which skips the test case.
+ */
+export function skipTestCase(msg) {
+  throw new SkipTestCase(msg);
 }
 
 /**

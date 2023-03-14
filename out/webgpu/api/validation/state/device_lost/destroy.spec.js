@@ -26,7 +26,6 @@ kTextureFormatInfo } from
 '../../../../capability_info.js';
 
 import {
-canCopyFromCanvasContext,
 createCanvas,
 kAllCanvasTypes,
 kValidCanvasContextIds } from
@@ -901,9 +900,6 @@ params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
 combine('contextType', kValidCanvasContextIds).
-filter(({ contextType }) => {
-  return canCopyFromCanvasContext(contextType);
-}).
 beginSubcases().
 combine('awaitLost', [true, false])).
 
