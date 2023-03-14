@@ -3,6 +3,7 @@ copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { skipTestCase } from '../../../common/util/util.js';
 import {
   kCanvasAlphaModes,
   kTextureFormatInfo,
@@ -700,7 +701,7 @@ g.test('copy_contents_from_ImageBitmapRendering_context_canvas')
     const imageBitmapRenderingContext = canvas.getContext('bitmaprenderer');
 
     if (!(imageBitmapRenderingContext instanceof ImageBitmapRenderingContext)) {
-      t.skip(canvasType + ' canvas imageBitmap rendering context not available');
+      skipTestCase(canvasType + ' canvas imageBitmap rendering context not available');
     }
 
     const { canvas: sourceContentCanvas, expectedSourceData } = t.init2DCanvasContent({
@@ -710,7 +711,7 @@ g.test('copy_contents_from_ImageBitmapRendering_context_canvas')
     });
 
     const imageBitmap = await createImageBitmap(sourceContentCanvas, { premultiplyAlpha: 'none' });
-    imageBitmapRenderingContext?.transferFromImageBitmap(imageBitmap);
+    imageBitmapRenderingContext.transferFromImageBitmap(imageBitmap);
 
     t.doCopyContentsTest(canvas, expectedSourceData, {
       srcPremultiplied: false,
