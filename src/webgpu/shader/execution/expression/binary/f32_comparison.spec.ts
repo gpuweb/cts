@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for the f32 logical binary expression operations
+Execution Tests for the f32 comparison operations
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -23,6 +23,8 @@ function makeCase(
   rhs: number,
   truthFunc: (lhs: Scalar, rhs: Scalar) => boolean
 ): Case {
+  // Subnormal float values may be flushed at any time.
+  // https://www.w3.org/TR/WGSL/#floating-point-evaluation
   const f32_lhs = f32(lhs);
   const f32_rhs = f32(rhs);
   const lhs_options = new Set([f32_lhs, flushSubnormalScalarF32(f32_lhs)]);
@@ -152,7 +154,7 @@ export const d = makeCaseCache('binary/f32_logical', {
 });
 
 g.test('equals')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x == y
@@ -170,7 +172,7 @@ Accuracy: Correct result
   });
 
 g.test('not_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x != y
@@ -188,7 +190,7 @@ Accuracy: Correct result
   });
 
 g.test('less_than')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x < y
@@ -206,7 +208,7 @@ Accuracy: Correct result
   });
 
 g.test('less_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x <= y
@@ -224,7 +226,7 @@ Accuracy: Correct result
   });
 
 g.test('greater_than')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x > y
@@ -242,7 +244,7 @@ Accuracy: Correct result
   });
 
 g.test('greater_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
   .desc(
     `
 Expression: x >= y
