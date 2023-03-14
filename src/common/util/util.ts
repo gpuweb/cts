@@ -1,4 +1,5 @@
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { SkipTestCase } from '../framework/fixture.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { Logger } from '../internal/logging/logger.js';
 
@@ -63,6 +64,13 @@ export async function assertReject(p: Promise<unknown>, msg?: string): Promise<v
  */
 export function unreachable(msg?: string): never {
   throw new Error(msg);
+}
+
+/**
+ * Throw a `SkipTestCase` exception, which skips the test case.
+ */
+export function skipTestCase(msg: string): never {
+  throw new SkipTestCase(msg);
 }
 
 /**
