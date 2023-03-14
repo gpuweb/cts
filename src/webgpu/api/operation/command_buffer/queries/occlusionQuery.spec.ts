@@ -309,6 +309,15 @@ class OcclusionQueryTest extends GPUTest {
       usage: GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
+    const multisampleRenderTarget = sampleCount
+      ? this.createTexture({
+          size: kTextureSize,
+          format: 'rgba8unorm',
+          usage: GPUTextureUsage.RENDER_ATTACHMENT,
+          sampleCount,
+        })
+      : null;
+
     const depthStencilTexture = depthStencilFormat
       ? this.createTexture({
           format: depthStencilFormat,
@@ -331,6 +340,7 @@ class OcclusionQueryTest extends GPUTest {
 
     const haveDepth = !!depthStencilFormat && depthStencilFormat.includes('depth');
     const haveStencil = !!depthStencilFormat && depthStencilFormat.includes('stencil');
+    assert(!(haveDepth && haveStencil), 'code does not handle mixed depth-stencil');
 
     const pipeline = device.createRenderPipeline({
       layout: 'auto',
@@ -382,6 +392,42 @@ class OcclusionQueryTest extends GPUTest {
       count: numQueries + querySetOffset,
     });
 
+    const renderPassDescriptor: GPURenderPassDescriptor = {
+      colorAttachments: sampleCount
+        ? [
+            {
+              view: multisampleRenderTarget!.createView(),
+              resolveTarget: renderTargetTexture.createView(),
+              loadOp: 'clear',
+              storeOp: 'store',
+            },
+          ]
+        : [
+            {
+              view: renderTargetTexture.createView(),
+              loadOp: 'clear',
+              storeOp: 'store',
+            },
+          ],
+      ...(haveDepth && {
+        depthStencilAttachment: {
+          view: depthStencilTexture!.createView(),
+          depthLoadOp: 'clear',
+          depthStoreOp: 'store',
+          depthClearValue: 0.5,
+        },
+      }),
+      ...(haveStencil && {
+        depthStencilAttachment: {
+          view: depthStencilTexture!.createView(),
+          stencilClearValue: 0,
+          stencilLoadOp: 'clear',
+          stencilStoreOp: 'store',
+        },
+      }),
+      occlusionQuerySet,
+    };
+
     return {
       readBuffer,
       vertexBuffer,
@@ -389,6 +435,7 @@ class OcclusionQueryTest extends GPUTest {
       queryResolveBufferOffset,
       occlusionQuerySet,
       renderTargetTexture,
+      renderPassDescriptor,
       pipeline,
       depthStencilTexture,
       querySetOffset,
@@ -491,18 +538,7 @@ g.test('occlusion_query,basic')
       querySetOffset,
       numQueries: kNumQueries,
     });
-    const { occlusionQuerySet, renderTargetTexture, vertexBuffer, pipeline } = resources;
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
-    };
+    const { renderPassDescriptor, vertexBuffer, pipeline } = resources;
 
     await t.runQueryTest(
       resources,
@@ -537,18 +573,7 @@ g.test('occlusion_query,empty')
   .fn(async t => {
     const kNumQueries = 30;
     const resources = t.setup({ numQueries: kNumQueries });
-    const { vertexBuffer, occlusionQuerySet, renderTargetTexture, pipeline } = resources;
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
-    };
+    const { vertexBuffer, renderPassDescriptor, pipeline } = resources;
 
     const makeQueryRunner = (draw: boolean) => {
       return (helper: RenderPassHelper, queryIndex: number) => {
@@ -603,7 +628,7 @@ g.test('occlusion_query,scissor')
       querySetOffset,
       numQueries: kNumQueries,
     });
-    const { occlusionQuerySet, renderTargetTexture, vertexBuffer, pipeline } = resources;
+    const { renderPassDescriptor, renderTargetTexture, vertexBuffer, pipeline } = resources;
 
     const getScissorRect = (i: number) => {
       const { width, height } = renderTargetTexture;
@@ -647,17 +672,6 @@ g.test('occlusion_query,scissor')
         default:
           unreachable();
       }
-    };
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
     };
 
     await t.runQueryTest(
@@ -704,30 +718,8 @@ g.test('occlusion_query,depth')
       numQueries: kNumQueries,
       depthStencilFormat: 'depth24plus',
     });
-    const {
-      vertexBuffer: vertexBufferAtZ0,
-      occlusionQuerySet,
-      renderTargetTexture,
-      depthStencilTexture,
-      pipeline,
-    } = resources;
+    const { vertexBuffer: vertexBufferAtZ0, renderPassDescriptor, pipeline } = resources;
     const vertexBufferAtZ1 = t.createSingleTriangleVertexBuffer(1);
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      depthStencilAttachment: {
-        view: depthStencilTexture!.createView(),
-        depthLoadOp: 'clear',
-        depthStoreOp: 'store',
-        depthClearValue: 0.5,
-      },
-      occlusionQuerySet,
-    };
 
     await t.runQueryTest(
       resources,
@@ -770,30 +762,7 @@ g.test('occlusion_query,stencil')
       numQueries: kNumQueries,
       depthStencilFormat: 'stencil8',
     });
-    const {
-      vertexBuffer,
-      occlusionQuerySet,
-      renderTargetTexture,
-      depthStencilTexture,
-      pipeline,
-    } = resources;
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      depthStencilAttachment: {
-        view: depthStencilTexture!.createView(),
-        stencilClearValue: 0,
-        stencilLoadOp: 'clear',
-        stencilStoreOp: 'store',
-      },
-      occlusionQuerySet,
-    };
+    const { vertexBuffer, renderPassDescriptor, pipeline } = resources;
 
     await t.runQueryTest(
       resources,
@@ -823,6 +792,8 @@ g.test('occlusion_query,sample_mask')
 
       Set sampleMask to 0, 2, 4, 6 and draw quads in top right or bottom left corners of the texel.
       If the corner we draw to matches the corner masked we expect non-zero successful fragments.
+
+      See: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels
     `
   )
   .params(kQueryTestBaseParams.combine('sampleMask', [0, 2, 4, 6]))
@@ -839,7 +810,7 @@ g.test('occlusion_query,sample_mask')
       sampleCount,
       sampleMask,
     });
-    const { occlusionQuerySet, renderTargetTexture, pipeline } = resources;
+    const { renderPassDescriptor, pipeline } = resources;
 
     const createQuad = (offset: number) => {
       // prettier-ignore
@@ -855,25 +826,6 @@ g.test('occlusion_query,sample_mask')
 
     const vertexBufferBL = createQuad(0);
     const vertexBufferTR = createQuad(0.25);
-
-    const multisampleRenderTarget = t.createTexture({
-      size: kTextureSize,
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount,
-    });
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: multisampleRenderTarget.createView(),
-          resolveTarget: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
-    };
 
     await t.runQueryTest(
       resources,
@@ -913,6 +865,8 @@ g.test('occlusion_query,alpha_to_coverage')
       Note: It seems like the result is well defined but if we find some devices/drivers
       don't follow this exactly then we can relax check for the expected number of passed
       queries.
+
+      See: https://bgolus.medium.com/anti-aliased-alpha-test-the-esoteric-alpha-to-coverage-8b177335ae4f
     `
   )
   .params(kQueryTestBaseParams.combine('alpha', [0, 0.25, 0.5, 0.75, 1.0]))
@@ -929,7 +883,7 @@ g.test('occlusion_query,alpha_to_coverage')
       sampleCount,
       alpha,
     });
-    const { occlusionQuerySet, renderTargetTexture, pipeline } = resources;
+    const { renderPassDescriptor, pipeline } = resources;
 
     const createQuad = (xOffset: number, yOffset: number) => {
       // prettier-ignore
@@ -949,25 +903,6 @@ g.test('occlusion_query,alpha_to_coverage')
       createQuad(0, 0.25),
       createQuad(0.25, 0.25),
     ];
-
-    const multisampleRenderTarget = t.createTexture({
-      size: kTextureSize,
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT,
-      sampleCount,
-    });
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: multisampleRenderTarget.createView(),
-          resolveTarget: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
-    };
 
     const numPassedPerGroup = new Array(kNumQueries / 4).fill(0);
     await t.runQueryTest(
@@ -1003,6 +938,7 @@ g.test('occlusion_query,multi_resolve')
       pipeline,
       vertexBuffer,
       occlusionQuerySet,
+      renderPassDescriptor,
       renderTargetTexture,
       queryResolveBuffer,
       readBuffer,
@@ -1010,17 +946,6 @@ g.test('occlusion_query,multi_resolve')
 
     const readBuffer2 = t.createBuffer(readBuffer);
     const readBuffer3 = t.createBuffer(readBuffer);
-
-    const renderPassDescriptor: GPURenderPassDescriptor = {
-      colorAttachments: [
-        {
-          view: renderTargetTexture.createView(),
-          loadOp: 'clear',
-          storeOp: 'store',
-        },
-      ],
-      occlusionQuerySet,
-    };
 
     const renderSomething = (encoder: GPUCommandEncoder) => {
       const pass = encoder.beginRenderPass(renderPassDescriptor);
