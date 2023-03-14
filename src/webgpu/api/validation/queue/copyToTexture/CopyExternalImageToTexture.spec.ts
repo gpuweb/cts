@@ -23,7 +23,6 @@ import {
   createCanvas,
   createOnscreenCanvas,
   createOffscreenCanvas,
-  kValidCanvasContextIds,
 } from '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
