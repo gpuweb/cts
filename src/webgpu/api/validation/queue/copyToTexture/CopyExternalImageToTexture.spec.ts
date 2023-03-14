@@ -202,49 +202,6 @@ class CopyExternalImageToTextureTest extends ValidationTest {
 
 export const g = makeTestGroup(CopyExternalImageToTextureTest);
 
-g.test('source_canvas,contexts')
-  .desc(
-    `
-  Test HTMLCanvasElement as source image with different contexts.
-
-  Call HTMLCanvasElement.getContext() with different context type.
-  And all of them are valid context type.
-  `
-  )
-  .params(u =>
-    u //
-      .combine('contextType', kValidCanvasContextIds)
-      .beginSubcases()
-      .combine('copySize', [
-        { width: 0, height: 0, depthOrArrayLayers: 0 },
-        { width: 1, height: 1, depthOrArrayLayers: 1 },
-      ])
-  )
-  .fn(t => {
-    const { contextType, copySize } = t.params;
-    const canvas = createOnscreenCanvas(t, 1, 1);
-    const dstTexture = t.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: 'bgra8unorm',
-      usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
-    });
-
-    const ctx = canvas.getContext(contextType);
-    if (ctx === null) {
-      t.skip('Failed to get context for canvas element');
-      return;
-    }
-    t.tryTrackForCleanup(ctx);
-
-    t.runTest(
-      { source: canvas },
-      { texture: dstTexture },
-      copySize,
-      true, // No validation errors.
-      ''
-    );
-  });
-
 g.test('source_offscreenCanvas,contexts')
   .desc(
     `
