@@ -23,6 +23,11 @@ class GPUContextTest extends GPUTest {
       // Set it to transparent so that if multiple canvas are created, they are still visible.
       onscreencanvas.style.opacity = '50%';
       document.body.appendChild(onscreencanvas);
+      this.trackForCleanup({
+        close() {
+          document.body.removeChild(onscreencanvas);
+        },
+      });
     }
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
@@ -34,24 +39,6 @@ class GPUContextTest extends GPUTest {
     });
 
     return ctx;
-  }
-
-  // Request a new "frame" based on the WebGPU canvas type.
-  requestNewFrameOnCanvasType(canvasType: CanvasType, ctx: GPUCanvasContext, fn: () => void) {
-    switch (canvasType) {
-      case 'onscreen':
-        requestAnimationFrame(fn);
-        break;
-      case 'offscreen': {
-        (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
-        // The beginning of frameCheck runs immediately, so this
-        // verifies the state has changed synchronously.
-        fn();
-        break;
-      }
-      default:
-        unreachable();
-    }
   }
 }
 
@@ -210,13 +197,28 @@ g.test('multiple_frames')
         prevTexture = currentTexture;
 
         if (frameCount++ < 5) {
-          t.requestNewFrameOnCanvasType(canvasType, ctx, frameCheck);
+          // Which method will be used to begin a new "frame"?
+          switch (canvasType) {
+            case 'onscreen':
+              requestAnimationFrame(frameCheck);
+              break;
+            case 'offscreen': {
+              (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
+              frameCheck();
+              break;
+            }
+            default:
+              unreachable();
+          }
         } else {
           resolve();
         }
       }
 
-      void frameCheck();
+      // Call frameCheck for the first time from requestAnimationFrame
+      // To make sure two frameChecks are run in different frames for onscreen canvas.
+      // offscreen canvas doesn't care.
+      requestAnimationFrame(frameCheck);
     });
   });
 
@@ -289,8 +291,6 @@ Test automatic WebGPU canvas texture expiry on all canvas types with the followi
 - getCurrentTexture returns a new texture object and the old texture object becomes invalid
   as soon as possible after HTML update the rendering.
 
-TODO: make [1] a warning instead of error.
-
 TODO: test more canvas types, and ways to update the rendering
 - if on the same thread, expiry happens when the document updates its rendering (window "rPAF") OR transferToImageBitmap is called
 - if on a different thread, expiry happens when the worker updates its rendering (worker "rPAF") OR transferToImageBitmap is called
@@ -326,14 +326,18 @@ TODO: test more canvas types, and ways to update the rendering
     // Polyfill by calling the callback by setTimeout, in the requestAnimationFrame callback (for onscreen canvas)
     // or after transferToImageBitmap (for offscreen canvas).
     function runInNewCanvasFrame(fn: () => void) {
-      t.requestNewFrameOnCanvasType(canvasType, ctx, () => {
-        if (canvasType === 'onscreen') {
-          timeout(fn);
-        } else {
+      switch (canvasType) {
+        case 'onscreen':
+          requestAnimationFrame(() => timeout(fn));
+          break;
+        case 'offscreen':
           // for offscreen canvas, after calling transferToImageBitmap, we are in a new frame immediately
+          (ctx.canvas as OffscreenCanvas).transferToImageBitmap();
           fn();
-        }
-      });
+          break;
+        default:
+          unreachable();
+      }
     }
 
     function checkGetCurrentTexture() {
@@ -345,22 +349,23 @@ TODO: test more canvas types, and ways to update the rendering
         if (getCurrentTextureAgain) {
           t.expect(prevTexture === ctx.getCurrentTexture());
         }
-      });
 
-      // Call getCurrentTexture immediately after this frame updating the rendering.
-      // It could return a new texture object as early as the next task. [1]
-      timeout(() => {
-        if (getCurrentTextureAgain) {
-          t.expect(prevTexture !== ctx.getCurrentTexture());
-        }
+        // Call getCurrentTexture in a new frame.
+        // It should expire the previous texture object return a new texture object by the next frame by then.
+        // Call runInNewCanvasFrame in the micro task to make sure the new frame run after the getCurrentTexture in the micro task for offscreen canvas.
+        runInNewCanvasFrame(() => {
+          if (getCurrentTextureAgain) {
+            t.expect(prevTexture !== ctx.getCurrentTexture());
+          }
 
-        // Event when prevTexture expired, createView should still succeed anyway.
-        const prevTextureView = prevTexture.createView();
-        // Using the invalid view should fail if it expires.
-        t.expectValidationError(() => {
-          t.device.createBindGroup({
-            layout: bgl,
-            entries: [{ binding: 0, resource: prevTextureView }],
+          // Event when prevTexture expired, createView should still succeed anyway.
+          const prevTextureView = prevTexture.createView();
+          // Using the invalid view should fail if it expires.
+          t.expectValidationError(() => {
+            t.device.createBindGroup({
+              layout: bgl,
+              entries: [{ binding: 0, resource: prevTextureView }],
+            });
           });
         });
       });
