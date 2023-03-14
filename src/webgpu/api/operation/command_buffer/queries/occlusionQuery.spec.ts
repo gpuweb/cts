@@ -28,7 +28,6 @@ import {
 } from '../../../../../common/util/util.js';
 import { kMaxQueryCount, DepthStencilFormat } from '../../../../capability_info.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { makeBufferWithContents } from '../../../../util/buffer.js';
 
 const kRequiredQueryBufferOffsetAlignment = 256;
 const kBytesPerQuery = 8;
@@ -261,7 +260,7 @@ class OcclusionQueryTest extends GPUTest {
     return this.trackForCleanup(this.device.createQuerySet(desc));
   }
   createVertexBuffer(data: TypedArrayBufferView) {
-    return this.trackForCleanup(makeBufferWithContents(this.device, data, GPUBufferUsage.VERTEX));
+    return this.makeBufferWithContents(data, GPUBufferUsage.VERTEX);
   }
   createSingleTriangleVertexBuffer(z: number) {
     // prettier-ignore
