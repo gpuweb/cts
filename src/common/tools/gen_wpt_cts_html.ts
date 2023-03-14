@@ -29,7 +29,8 @@ and myexpectations.txt is a file containing a list of WPT paths to suppress, e.g
 }
 
 if (process.argv.length !== 4 && process.argv.length !== 7 && process.argv.length !== 8) {
-  printUsageAndExit(0);
+  console.error('incorrect number of arguments!');
+  printUsageAndExit(1);
 }
 
 const [
