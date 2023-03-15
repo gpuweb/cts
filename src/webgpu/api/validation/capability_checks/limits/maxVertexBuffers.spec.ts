@@ -1,14 +1,9 @@
-import { keysOf } from '../../../../../common/util/data_tables.js';
 import { range } from '../../../../../common/util/util.js';
 
 import { kRenderEncoderTypes, kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
-const PipelineTypes = {
-  withoutLocations: true,
-  withLocations: true,
-};
-type PipelineType = keyof typeof PipelineTypes;
-const kPipelineTypes = keysOf(PipelineTypes);
+const kPipelineTypes = ['withoutLocations', 'withLocations'] as const;
+type PipelineType = typeof kPipelineTypes[number];
 
 function getPipelineDescriptor(
   device: GPUDevice,

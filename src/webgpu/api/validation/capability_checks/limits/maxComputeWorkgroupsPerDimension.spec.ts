@@ -1,16 +1,13 @@
-import { keysOf } from '../../../../../common/util/data_tables.js';
-
 import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 const limit = 'maxComputeWorkgroupsPerDimension';
 export const { g, description } = makeLimitTestGroup(limit);
 
-const CreateComputePipelineTypes = {
-  createComputePipeline: true,
-  createComputePipelineAsync: true,
-};
-type CreateComputePipelineType = keyof typeof CreateComputePipelineTypes;
-const kCreateComputePipelineTypes = keysOf(CreateComputePipelineTypes);
+const kCreateComputePipelineTypes = [
+  'createComputePipeline',
+  'createComputePipelineAsync',
+] as const;
+type CreateComputePipelineType = typeof kCreateComputePipelineTypes[number];
 
 async function createComputePipeline(
   device: GPUDevice,

@@ -1,6 +1,5 @@
 import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
 import { kLimitInfo, kTextureFormatInfo } from '../../../../capability_info.js';
@@ -9,45 +8,30 @@ import { align } from '../../../../util/math.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
 
-const CreatePipelineTypes = {
-  createRenderPipeline: true,
-  createRenderPipelineWithFragmentStage: true,
-  createComputePipeline: true,
-};
-export type CreatePipelineType = keyof typeof CreatePipelineTypes;
-export const kCreatePipelineTypes = keysOf(CreatePipelineTypes);
+export const kCreatePipelineTypes = [
+  'createRenderPipeline',
+  'createRenderPipelineWithFragmentStage',
+  'createComputePipeline',
+] as const;
+export type CreatePipelineType = typeof kCreatePipelineTypes[number];
 
-const RenderEncoderTypes = {
-  render: true,
-  renderBundle: true,
-};
-export type RenderEncoderType = keyof typeof RenderEncoderTypes;
-export const kRenderEncoderTypes = keysOf(RenderEncoderTypes);
+export const kRenderEncoderTypes = ['render', 'renderBundle'] as const;
+export type RenderEncoderType = typeof kRenderEncoderTypes[number];
 
-const EncoderTypes = {
-  compute: true,
-  render: true,
-  renderBundle: true,
-};
-export type EncoderType = keyof typeof EncoderTypes;
-export const kEncoderTypes = keysOf(EncoderTypes);
+export const kEncoderTypes = ['compute', 'render', 'renderBundle'] as const;
+export type EncoderType = typeof kEncoderTypes[number];
 
-const BindGroupTests = {
-  sameGroup: true,
-  differentGroups: true,
-};
-export type BindGroupTest = keyof typeof BindGroupTests;
-export const kBindGroupTests = keysOf(BindGroupTests);
+export const kBindGroupTests = ['sameGroup', 'differentGroups'] as const;
+export type BindGroupTest = typeof kBindGroupTests[number];
 
-const BindingCombinations = {
-  vertex: true,
-  fragment: true,
-  vertexAndFragmentWithPossibleVertexStageOverflow: true,
-  vertexAndFragmentWithPossibleFragmentStageOverflow: true,
-  compute: true,
-};
-export type BindingCombination = keyof typeof BindingCombinations;
-export const kBindingCombinations = keysOf(BindingCombinations);
+export const kBindingCombinations = [
+  'vertex',
+  'fragment',
+  'vertexAndFragmentWithPossibleVertexStageOverflow',
+  'vertexAndFragmentWithPossibleFragmentStageOverflow',
+  'compute',
+] as const;
+export type BindingCombination = typeof kBindingCombinations[number];
 
 export function getPipelineTypeForBindingCombination(bindingCombination: BindingCombination) {
   switch (bindingCombination) {
@@ -232,20 +216,12 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
   );
 }
 
-const LimitModes = {
-  defaultLimit: true,
-  adapterLimit: true,
-};
-export type LimitMode = keyof typeof LimitModes;
-export const kLimitModes = keysOf(LimitModes);
+export const kLimitModes = ['defaultLimit', 'adapterLimit'] as const;
+export type LimitMode = typeof kLimitModes[number];
 export type LimitsRequest = Record<string, LimitMode>;
 
-export const MaximumTestValues = {
-  atLimit: true,
-  overLimit: true,
-};
-export type MaximumTestValue = keyof typeof MaximumTestValues;
-export const kMaximumTestValueKeys = keysOf(MaximumTestValues);
+export const kMaximumTestValues = ['atLimit', 'overLimit'] as const;
+export type MaximumTestValue = typeof kMaximumTestValues[number];
 
 export function getMaximumTestValue(limit: number, testValue: MaximumTestValue) {
   switch (testValue) {
@@ -256,22 +232,17 @@ export function getMaximumTestValue(limit: number, testValue: MaximumTestValue) 
   }
 }
 
-export const MinimumTestValues = {
-  atLimit: true,
-  underLimit: true,
-};
-export type MinimumTestValue = keyof typeof MinimumTestValues;
-export const kMinimumTestValueKeys = keysOf(MinimumTestValues);
+export const kMinimumTestValues = ['atLimit', 'underLimit'] as const;
+export type MinimumTestValue = typeof kMinimumTestValues[number];
 
-export const MaximumLimitValueTests = {
-  atDefault: true,
-  underDefault: true,
-  betweenDefaultAndMaximum: true,
-  atMaximum: true,
-  overMaximum: true,
-};
-export type MaximumLimitValueTest = keyof typeof MaximumLimitValueTests;
-export const kMaximumLimitValueTestKeys = keysOf(MaximumLimitValueTests);
+export const kMaximumLimitValueTests = [
+  'atDefault',
+  'underDefault',
+  'betweenDefaultAndMaximum',
+  'atMaximum',
+  'overMaximum',
+] as const;
+export type MaximumLimitValueTest = typeof kMaximumLimitValueTests[number];
 
 export function getLimitValue(
   defaultLimit: number,
@@ -292,15 +263,14 @@ export function getLimitValue(
   }
 }
 
-export const MinimumLimitValueTests = {
-  atDefault: true,
-  overDefault: true,
-  betweenDefaultAndMinimum: true,
-  atMinimum: true,
-  underMinimum: true,
-};
-export type MinimumLimitValueTest = keyof typeof MinimumLimitValueTests;
-export const kMinimumLimitValueTestKeys = keysOf(MinimumLimitValueTests);
+export const kMinimumLimitValueTests = [
+  'atDefault',
+  'overDefault',
+  'betweenDefaultAndMinimum',
+  'atMinimum',
+  'underMinimum',
+] as const;
+export type MinimumLimitValueTest = typeof kMinimumLimitValueTests[number];
 
 export function getDefaultLimit(limit: GPUSupportedLimit): number {
   return (kLimitInfo as Record<string, { default: number }>)[limit].default;
@@ -332,12 +302,12 @@ const kMinimumLimits = new Set<GPUSupportedLimit>([
  * Adds the default parameters to a limit test
  */
 export const kMaximumLimitBaseParams = kUnitCaseParamsBuilder
-  .combine('limitTest', kMaximumLimitValueTestKeys)
-  .combine('testValueName', kMaximumTestValueKeys);
+  .combine('limitTest', kMaximumLimitValueTests)
+  .combine('testValueName', kMaximumTestValues);
 
 export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder
-  .combine('limitTest', kMinimumLimitValueTestKeys)
-  .combine('testValueName', kMinimumTestValueKeys);
+  .combine('limitTest', kMinimumLimitValueTests)
+  .combine('testValueName', kMinimumTestValues);
 
 export class LimitTestsImpl extends GPUTestBase {
   _adapter: GPUAdapter | null = null;
