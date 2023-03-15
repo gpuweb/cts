@@ -138,12 +138,12 @@ g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
         {
           formats: ['r8unorm', 'r32float', 'rgba8unorm', 'rgba32float', 'r8unorm'],
 
-          _success: true,
+          _success: false,
         },
         {
           formats: ['r32float', 'rgba8unorm', 'rgba32float', 'r8unorm', 'r8unorm'],
 
-          _success: false,
+          _success: true,
         },
       ])
       .beginSubcases()

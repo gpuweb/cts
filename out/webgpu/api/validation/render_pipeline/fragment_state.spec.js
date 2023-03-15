@@ -142,7 +142,7 @@ combineWithParams([
   'rgba32float',
   'r8unorm'],
 
-  _success: true
+  _success: false
 },
 {
   formats: [
@@ -152,7 +152,7 @@ combineWithParams([
   'r8unorm',
   'r8unorm'],
 
-  _success: false
+  _success: true
 }]).
 
 beginSubcases().
