@@ -236,6 +236,73 @@ fn c() -> i32 {
     }));
   });
 
+g.test('array_index_lhs_assignment')
+  .desc(
+    'Test that array indices are evaluated left-to-right, when indexing the LHS of an assignment'
+  )
+  .fn(t => {
+    runFlowControlTest(t, f => ({
+      entrypoint: `
+  var arr : array<array<array<i32, 8>, 8>, 8>;
+  ${f.expect_order(0)}
+  arr[a()][b()][c()] = ~d();
+  ${f.expect_order(5)}
+`,
+      extra: `
+fn a() -> i32 {
+  ${f.expect_order(1)}
+  return 1;
+}
+fn b() -> i32 {
+  ${f.expect_order(2)}
+  return 1;
+}
+fn c() -> i32 {
+  ${f.expect_order(3)}
+  return 1;
+}
+fn d() -> i32 {
+  ${f.expect_order(4)}
+  return 1;
+}`,
+    }));
+  });
+
+g.test('array_index_lhs_member_assignment')
+  .desc(
+    'Test that array indices are evaluated left-to-right, when indexing with member-accessors in the LHS of an assignment'
+  )
+  .fn(t => {
+    runFlowControlTest(t, f => ({
+      entrypoint: `
+  var arr : array<array<S, 8>, 8>;
+  ${f.expect_order(0)}
+  arr[a()][b()].member[c()] = d();
+  ${f.expect_order(5)}
+`,
+      extra: `
+struct S {
+  member : array<i32, 8>,
+}
+fn a() -> i32 {
+  ${f.expect_order(1)}
+  return 1;
+}
+fn b() -> i32 {
+  ${f.expect_order(2)}
+  return 1;
+}
+fn c() -> i32 {
+  ${f.expect_order(3)}
+  return 1;
+}
+fn d() -> i32 {
+  ${f.expect_order(4)}
+  return 1;
+}`,
+    }));
+  });
+
 g.test('array_index_via_ptrs')
   .desc('Test that array indices are evaluated in order, when used via pointers')
   .fn(t => {

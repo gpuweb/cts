@@ -1333,6 +1333,8 @@
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:binary_op_chain_C_C_C_R:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:binary_op_parenthesized_expr:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:array_index:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,eval_order:array_index_lhs_assignment:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,eval_order:array_index_lhs_member_assignment:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:array_index_via_ptrs:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:array_index_via_struct_members:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,eval_order:matrix_index:*'>
@@ -1376,6 +1378,11 @@
 <meta name=variant content='webgpu:shader,execution,flow_control,loop:loop_continue:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,loop:loop_continuing_basic:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,loop:nested_loops:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,phony:phony_assign_call_basic:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,phony:phony_assign_call_must_use:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,phony:phony_assign_call_nested:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,phony:phony_assign_call_nested_must_use:*'>
+<meta name=variant content='webgpu:shader,execution,flow_control,phony:phony_assign_call_builtin:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,return:return:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,return:return_conditional_true:*'>
 <meta name=variant content='webgpu:shader,execution,flow_control,return:return_conditional_false:*'>
