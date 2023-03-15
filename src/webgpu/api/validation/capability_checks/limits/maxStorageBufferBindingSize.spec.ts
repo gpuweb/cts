@@ -1,4 +1,3 @@
-import { keysOf } from '../../../../../common/util/data_tables.js';
 import { align, roundDown } from '../../../../util/math.js';
 
 import {
@@ -10,12 +9,8 @@ import {
   MaximumTestValue,
 } from './limit_utils.js';
 
-const BufferParts = {
-  wholeBuffer: true,
-  biggerBufferWithOffset: true,
-};
-type BufferPart = keyof typeof BufferParts;
-const kBufferPartsKeys = keysOf(BufferParts);
+const kBufferParts = ['wholeBuffer', 'biggerBufferWithOffset'] as const;
+type BufferPart = typeof kBufferParts[number];
 
 function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart, size: number) {
   const align = device.limits.minUniformBufferOffsetAlignment;
@@ -82,7 +77,7 @@ export const { g, description } = makeLimitTestGroup(limit);
 
 g.test('createBindGroup,at_over')
   .desc(`Test using createBindGroup at and over ${limit} limit`)
-  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys))
+  .params(kMaximumLimitBaseParams.combine('bufferPart', kBufferParts))
   .fn(async t => {
     const { limitTest, testValueName, bufferPart } = t.params;
     const { defaultLimit, adapterLimit: maximumLimit } = t;
