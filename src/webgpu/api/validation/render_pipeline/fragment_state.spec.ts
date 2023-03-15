@@ -142,7 +142,7 @@ g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
             'rgba32float',
             'r8unorm',
           ] as GPUTextureFormat[],
-          _success: true,
+          _success: false,
         },
         {
           formats: [
@@ -152,7 +152,7 @@ g.test('limits,maxColorAttachmentBytesPerSample,unaligned')
             'r8unorm',
             'r8unorm',
           ] as GPUTextureFormat[],
-          _success: false,
+          _success: true,
         },
       ])
       .beginSubcases()
