@@ -1,17 +1,10 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { keysOf } from '../../../../../common/util/data_tables.js';
-import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
-
+ **/ import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 const limit = 'maxComputeWorkgroupsPerDimension';
 export const { g, description } = makeLimitTestGroup(limit);
 
-const CreateComputePipelineTypes = {
-  createComputePipeline: true,
-  createComputePipelineAsync: true,
-};
-
-const kCreateComputePipelineTypes = keysOf(CreateComputePipelineTypes);
+const kCreateComputePipelineTypes = ['createComputePipeline', 'createComputePipelineAsync'];
 
 async function createComputePipeline(device, descriptor, pipelineType) {
   switch (pipelineType) {

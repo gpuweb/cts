@@ -2,52 +2,31 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../../common/util/data_tables.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder } from '../../../../../common/util/util.js';
 import { kLimitInfo, kTextureFormatInfo } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 
-const CreatePipelineTypes = {
-  createRenderPipeline: true,
-  createRenderPipelineWithFragmentStage: true,
-  createComputePipeline: true,
-};
+export const kCreatePipelineTypes = [
+  'createRenderPipeline',
+  'createRenderPipelineWithFragmentStage',
+  'createComputePipeline',
+];
 
-export const kCreatePipelineTypes = keysOf(CreatePipelineTypes);
+export const kRenderEncoderTypes = ['render', 'renderBundle'];
 
-const RenderEncoderTypes = {
-  render: true,
-  renderBundle: true,
-};
+export const kEncoderTypes = ['compute', 'render', 'renderBundle'];
 
-export const kRenderEncoderTypes = keysOf(RenderEncoderTypes);
+export const kBindGroupTests = ['sameGroup', 'differentGroups'];
 
-const EncoderTypes = {
-  compute: true,
-  render: true,
-  renderBundle: true,
-};
-
-export const kEncoderTypes = keysOf(EncoderTypes);
-
-const BindGroupTests = {
-  sameGroup: true,
-  differentGroups: true,
-};
-
-export const kBindGroupTests = keysOf(BindGroupTests);
-
-const BindingCombinations = {
-  vertex: true,
-  fragment: true,
-  vertexAndFragmentWithPossibleVertexStageOverflow: true,
-  vertexAndFragmentWithPossibleFragmentStageOverflow: true,
-  compute: true,
-};
-
-export const kBindingCombinations = keysOf(BindingCombinations);
+export const kBindingCombinations = [
+  'vertex',
+  'fragment',
+  'vertexAndFragmentWithPossibleVertexStageOverflow',
+  'vertexAndFragmentWithPossibleFragmentStageOverflow',
+  'compute',
+];
 
 export function getPipelineTypeForBindingCombination(bindingCombination) {
   switch (bindingCombination) {
@@ -227,19 +206,9 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
   );
 }
 
-const LimitModes = {
-  defaultLimit: true,
-  adapterLimit: true,
-};
+export const kLimitModes = ['defaultLimit', 'adapterLimit'];
 
-export const kLimitModes = keysOf(LimitModes);
-
-export const MaximumTestValues = {
-  atLimit: true,
-  overLimit: true,
-};
-
-export const kMaximumTestValueKeys = keysOf(MaximumTestValues);
+export const kMaximumTestValues = ['atLimit', 'overLimit'];
 
 export function getMaximumTestValue(limit, testValue) {
   switch (testValue) {
@@ -250,22 +219,15 @@ export function getMaximumTestValue(limit, testValue) {
   }
 }
 
-export const MinimumTestValues = {
-  atLimit: true,
-  underLimit: true,
-};
+export const kMinimumTestValues = ['atLimit', 'underLimit'];
 
-export const kMinimumTestValueKeys = keysOf(MinimumTestValues);
-
-export const MaximumLimitValueTests = {
-  atDefault: true,
-  underDefault: true,
-  betweenDefaultAndMaximum: true,
-  atMaximum: true,
-  overMaximum: true,
-};
-
-export const kMaximumLimitValueTestKeys = keysOf(MaximumLimitValueTests);
+export const kMaximumLimitValueTests = [
+  'atDefault',
+  'underDefault',
+  'betweenDefaultAndMaximum',
+  'atMaximum',
+  'overMaximum',
+];
 
 export function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
   switch (limitValueTest) {
@@ -282,15 +244,13 @@ export function getLimitValue(defaultLimit, maximumLimit, limitValueTest) {
   }
 }
 
-export const MinimumLimitValueTests = {
-  atDefault: true,
-  overDefault: true,
-  betweenDefaultAndMinimum: true,
-  atMinimum: true,
-  underMinimum: true,
-};
-
-export const kMinimumLimitValueTestKeys = keysOf(MinimumLimitValueTests);
+export const kMinimumLimitValueTests = [
+  'atDefault',
+  'overDefault',
+  'betweenDefaultAndMinimum',
+  'atMinimum',
+  'underMinimum',
+];
 
 export function getDefaultLimit(limit) {
   return kLimitInfo[limit].default;
@@ -305,12 +265,12 @@ const kMinimumLimits = new Set([
  * Adds the default parameters to a limit test
  */
 export const kMaximumLimitBaseParams = kUnitCaseParamsBuilder
-  .combine('limitTest', kMaximumLimitValueTestKeys)
-  .combine('testValueName', kMaximumTestValueKeys);
+  .combine('limitTest', kMaximumLimitValueTests)
+  .combine('testValueName', kMaximumTestValues);
 
 export const kMinimumLimitBaseParams = kUnitCaseParamsBuilder
-  .combine('limitTest', kMinimumLimitValueTestKeys)
-  .combine('testValueName', kMinimumTestValueKeys);
+  .combine('limitTest', kMinimumLimitValueTests)
+  .combine('testValueName', kMinimumTestValues);
 
 export class LimitTestsImpl extends GPUTestBase {
   _adapter = null;

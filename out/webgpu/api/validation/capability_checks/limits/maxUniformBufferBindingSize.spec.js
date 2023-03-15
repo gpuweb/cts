@@ -1,18 +1,12 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { keysOf } from '../../../../../common/util/data_tables.js';import {
-
-getDefaultLimit,
+**/import { getDefaultLimit,
 kMaximumLimitBaseParams,
 makeLimitTestGroup } from
 './limit_utils.js';
 
-const BufferParts = {
-  wholeBuffer: true,
-  biggerBufferWithOffset: true
-};
+const kBufferParts = ['wholeBuffer', 'biggerBufferWithOffset'];
 
-const kBufferPartsKeys = keysOf(BufferParts);
 
 function getSizeAndOffsetForBufferPart(device, bufferPart, size) {
   const align = device.limits.minUniformBufferOffsetAlignment;
@@ -32,7 +26,7 @@ const kExtraLimits = { maxBufferSize: 'maxLimit' };
 
 g.test('createBindGroup,at_over').
 desc(`Test using at and over ${limit} limit`).
-params(kMaximumLimitBaseParams.combine('bufferPart', kBufferPartsKeys)).
+params(kMaximumLimitBaseParams.combine('bufferPart', kBufferParts)).
 fn(async (t) => {
   const { limitTest, testValueName, bufferPart } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
