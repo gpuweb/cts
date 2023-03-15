@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { assert, range } from '../../../../../common/util/util.js';
+ **/ import { assert } from '../../../../../common/util/util.js';
 import { kTextureSampleCounts, kTextureFormatInfo } from '../../../../capability_info.js';
 import { align } from '../../../../util/math.js';
 
@@ -196,8 +196,8 @@ g.test('beginRenderPass,at_over')
         const textures = createTextures(t, targets);
 
         const pass = encoder.beginRenderPass({
-          colorAttachments: range(testValue, i => ({
-            view: textures[i].createView(),
+          colorAttachments: textures.map(texture => ({
+            view: texture.createView(),
             loadOp: 'clear',
             storeOp: 'store',
           })),
