@@ -553,15 +553,17 @@ export function compoundAssignmentBuilder(op: string): ShaderBuilder {
         body = cases
           .map((_, i) => {
             return `
-  outputs[${i}].value = lhs[${i}];
-  outputs[${i}].value ${op} rhs[${i}];`;
+  var ret_${i} = lhs[${i}];
+  ret_${i} ${op} rhs[${i}];
+  outputs[${i}].value = ${storageType(resultType)}(ret_${i});`;
           })
           .join('\n  ');
       } else {
         body = `
   for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = lhs[i];
-    outputs[i].value ${op} rhs[i];
+    var ret = lhs[i];
+    ret ${op} rhs[i];
+    outputs[i].value = ${storageType(resultType)}(ret);
   }`;
       }
 
