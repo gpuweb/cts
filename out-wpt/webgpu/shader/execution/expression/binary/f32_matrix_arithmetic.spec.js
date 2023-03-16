@@ -31,7 +31,7 @@ import {
   run,
 } from '../expression.js';
 
-import { binary } from './binary.js';
+import { binary, compoundBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -1364,6 +1364,36 @@ Accuracy: Correctly rounded
     );
   });
 
+g.test('addition_compound')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x =+ y, where x and y are matrices
+Accuracy: Correctly rounded
+`
+  )
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('cols', [2, 3, 4]).combine('rows', [2, 3, 4])
+  )
+  .fn(async t => {
+    const cols = t.params.cols;
+    const rows = t.params.rows;
+    const cases = await d.get(
+      t.params.inputSource === 'const'
+        ? `addition_${cols}x${rows}_const`
+        : `addition_${cols}x${rows}_non_const`
+    );
+
+    await run(
+      t,
+      compoundBinary('+'),
+      [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
+      TypeMat(cols, rows, TypeF32),
+      t.params,
+      cases
+    );
+  });
+
 g.test('multiplication_matrix_matrix')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
@@ -1424,6 +1454,36 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('*'),
+      [TypeMat(cols, rows, TypeF32), TypeF32],
+      TypeMat(cols, rows, TypeF32),
+      t.params,
+      cases
+    );
+  });
+
+g.test('multiplication_matrix_scalar_compound')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x *= y, where x is a matrix and y is a scalar
+Accuracy: Correctly rounded
+`
+  )
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('cols', [2, 3, 4]).combine('rows', [2, 3, 4])
+  )
+  .fn(async t => {
+    const cols = t.params.cols;
+    const rows = t.params.rows;
+    const cases = await d.get(
+      t.params.inputSource === 'const'
+        ? `multiplication_${cols}x${rows}_scalar_const`
+        : `multiplication_${cols}x${rows}_scalar_non_const`
+    );
+
+    await run(
+      t,
+      compoundBinary('*'),
       [TypeMat(cols, rows, TypeF32), TypeF32],
       TypeMat(cols, rows, TypeF32),
       t.params,
@@ -1544,6 +1604,36 @@ Accuracy: Correctly rounded
     await run(
       t,
       binary('-'),
+      [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
+      TypeMat(cols, rows, TypeF32),
+      t.params,
+      cases
+    );
+  });
+
+g.test('subtraction_compound')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x -= y, where x and y are matrices
+Accuracy: Correctly rounded
+`
+  )
+  .params(u =>
+    u.combine('inputSource', allInputSources).combine('cols', [2, 3, 4]).combine('rows', [2, 3, 4])
+  )
+  .fn(async t => {
+    const cols = t.params.cols;
+    const rows = t.params.rows;
+    const cases = await d.get(
+      t.params.inputSource === 'const'
+        ? `subtraction_${cols}x${rows}_const`
+        : `subtraction_${cols}x${rows}_non_const`
+    );
+
+    await run(
+      t,
+      compoundBinary('-'),
       [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
       TypeMat(cols, rows, TypeF32),
       t.params,
