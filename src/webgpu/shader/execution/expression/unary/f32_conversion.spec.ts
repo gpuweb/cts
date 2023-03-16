@@ -23,12 +23,7 @@ import {
   sparseMatrixF32Range,
 } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import {
-  allInputSources,
-  ExpressionBuilder,
-  generateMatrixToMatrixCases,
-  run,
-} from '../expression.js';
+import { allInputSources, generateMatrixToMatrixCases, run, ShaderBuilder } from '../expression.js';
 
 import { unary } from './unary.js';
 
@@ -184,13 +179,13 @@ export const d = makeCaseCache('unary/f32_conversion', {
   },
 });
 
-/** Generate expression builder based on how the test case is to be vectorized */
-function vectorizeToExpression(vectorize: undefined | 2 | 3 | 4): ExpressionBuilder {
+/** Generate a ShaderBuilder based on how the test case is to be vectorized */
+function vectorizeToExpression(vectorize: undefined | 2 | 3 | 4): ShaderBuilder {
   return vectorize === undefined ? unary('f32') : unary(`vec${vectorize}<f32>`);
 }
 
-/** Generate expression builder for a matrix of the provided dimensions */
-function matrixExperession(cols: number, rows: number): ExpressionBuilder {
+/** Generate a ShaderBuilder for a matrix of the provided dimensions */
+function matrixExperession(cols: number, rows: number): ShaderBuilder {
   return unary(`mat${cols}x${rows}<f32>`);
 }
 

@@ -1,6 +1,6 @@
-import { ExpressionBuilder } from '../../expression.js';
+import { basicExpressionBuilder, ShaderBuilder } from '../../expression.js';
 
-/* @returns an ExpressionBuilder that calls the builtin with the given name */
-export function builtin(name: string): ExpressionBuilder {
-  return values => `${name}(${values.join(', ')})`;
+/* @returns a ShaderBuilder that calls the builtin with the given name */
+export function builtin(name: string): ShaderBuilder {
+  return basicExpressionBuilder(values => `${name}(${values.join(', ')})`);
 }
