@@ -18,7 +18,7 @@ import {
 } from '../../../../util/conversion.js';
 import { fullF32Range, fullI32Range, fullU32Range, quantizeToF32 } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, ExpressionBuilder, run } from '../expression.js';
+import { allInputSources, run, ShaderBuilder } from '../expression.js';
 
 import { unary } from './unary.js';
 
@@ -68,8 +68,8 @@ export const d = makeCaseCache('unary/u32_conversion', {
   },
 });
 
-/** Generate expression builder based on how the test case is to be vectorized */
-function vectorizeToExpression(vectorize: undefined | 2 | 3 | 4): ExpressionBuilder {
+/** Generate a ShaderBuilder based on how the test case is to be vectorized */
+function vectorizeToExpression(vectorize: undefined | 2 | 3 | 4): ShaderBuilder {
   return vectorize === undefined ? unary('u32') : unary(`vec${vectorize}<u32>`);
 }
 
