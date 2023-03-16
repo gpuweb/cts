@@ -16,7 +16,7 @@ import {
   run,
 } from '../expression.js';
 
-import { binary } from './binary.js';
+import { binary, compoundBinary } from './binary.js';
 
 function u32_add(x, y) {
   return x + y;
@@ -313,10 +313,22 @@ g.test('addition')
 Expression: x + y
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get('addition');
-    await run(t, binary('+'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('+') : binary('+'),
+      [TypeU32, TypeU32],
+      TypeU32,
+      t.params,
+      cases
+    );
   });
 
 g.test('subtraction')
@@ -326,10 +338,22 @@ g.test('subtraction')
 Expression: x - y
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get('subtraction');
-    await run(t, binary('-'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('-') : binary('-'),
+      [TypeU32, TypeU32],
+      TypeU32,
+      t.params,
+      cases
+    );
   });
 
 g.test('multiplication')
@@ -339,10 +363,22 @@ g.test('multiplication')
 Expression: x * y
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get('multiplication');
-    await run(t, binary('*'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('*') : binary('*'),
+      [TypeU32, TypeU32],
+      TypeU32,
+      t.params,
+      cases
+    );
   });
 
 g.test('division')
@@ -352,13 +388,25 @@ g.test('division')
 Expression: x / y
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'division_const' : 'division_non_const'
     );
 
-    await run(t, binary('/'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('/') : binary('/'),
+      [TypeU32, TypeU32],
+      TypeU32,
+      t.params,
+      cases
+    );
   });
 
 g.test('remainder')
@@ -368,13 +416,25 @@ g.test('remainder')
 Expression: x % y
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const'
     );
 
-    await run(t, binary('%'), [TypeU32, TypeU32], TypeU32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('%') : binary('%'),
+      [TypeU32, TypeU32],
+      TypeU32,
+      t.params,
+      cases
+    );
   });
 
 g.test('addition_scalar_vector')

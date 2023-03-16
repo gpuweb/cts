@@ -100,6 +100,8 @@ export const allInputSources = ['const', 'uniform', 'storage_r', 'storage_rw'];
 
 
 
+
+
 // Helper for returning the stride for a given Type
 function valueStride(ty) {
   if (ty instanceof MatrixType) {
@@ -234,7 +236,7 @@ t,
 expressionBuilder,
 parameterTypes,
 returnType,
-cfg = { inputSource: 'storage_r' },
+cfg = { inputSource: 'storage_r', compoundStmt: false },
 cases)
 {
   // If the 'vectorize' config option was provided, pack the cases into vectors.
@@ -287,6 +289,7 @@ cases)
     returnType,
     batchCases,
     cfg.inputSource,
+    cfg.compoundStmt || false,
     pipelineCache);
 
 
@@ -315,6 +318,7 @@ cases)
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
+ * @param compoundStmt if the expression is a compound statement
  * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
@@ -325,6 +329,7 @@ parameterTypes,
 returnType,
 cases,
 inputSource,
+compoundStmt,
 pipelineCache)
 {
   // Construct a buffer to hold the results of the expression tests
@@ -341,6 +346,7 @@ pipelineCache)
   returnType,
   cases,
   inputSource,
+  compoundStmt,
   outputBuffer,
   pipelineCache);
 
@@ -409,6 +415,217 @@ function ith(v, i) {
 }
 
 /**
+ * Constructs the shader for a compound const input source
+ * @param expressionBuilder the expression builder function
+ * @param parameterTypes the list of expression parameter types
+ * @param returnType the return type for the expression overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param inputSource the source of the input values
+ * @param wgslStorageType the wgsl storage type
+ * @param wgslOutput the wgsl output location
+ */
+function makeConstCompoundShader(
+expressionBuilder,
+parameterTypes,
+returnType,
+cases,
+wgslStorageType,
+wgslOutputs)
+{
+  const wgslValues = cases.map((c) => {
+    const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
+    return `  array(${args[0]}, ${args[1]})`;
+  });
+
+  let wgslBody = '';
+  if (globalTestConfig.unrollConstEvalLoops) {
+    wgslBody = wgslValues.
+    map((v, i) => {
+      return `  outputs[${i}].value = values[${i}][0];
+    outputs[${i}].value ${expressionBuilder([])}= values[${i}][1];`;
+    }).
+    join('\n  ');
+  } else {
+    wgslBody = `  for (var i = 0u; i < ${cases.length}; i++) {
+  outputs[i].value = values[i][0];
+  outputs[i].value ${expressionBuilder([])}= values[i][1];
+}`;
+  }
+
+  // the full WGSL shader source
+  return `
+  ${wgslOutputs}
+
+  const values = array<array<${wgslStorageType}, 2>, ${cases.length}>(
+  ${wgslValues.map((s) => `${s}`).join(',\n  ')}
+  );
+
+  @compute @workgroup_size(1)
+  fn main() {
+  ${wgslBody}
+  }
+  `;
+}
+
+/**
+ * Constructs the shader for a const input source
+ * @param expressionBuilder the expression builder function
+ * @param parameterTypes the list of expression parameter types
+ * @param returnType the return type for the expression overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param inputSource the source of the input values
+ * @param wgslStorageType the wgsl storage type
+ * @param wgslOutput the wgsl output location
+ */
+function makeConstShader(
+expressionBuilder,
+parameterTypes,
+returnType,
+cases,
+wgslStorageType,
+wgslOutputs)
+{
+  //////////////////////////////////////////////////////////////////////////
+  // Input values are constant values in the WGSL shader
+  //////////////////////////////////////////////////////////////////////////
+  const wgslValues = cases.map((c) => {
+    const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
+    return `${toStorage(returnType, expressionBuilder(args))}`;
+  });
+
+  const wgslBody = globalTestConfig.unrollConstEvalLoops ?
+  wgslValues.map((_, i) => `outputs[${i}].value = values[${i}];`).join('\n  ') :
+  `for (var i = 0u; i < ${cases.length}; i++) {
+  outputs[i].value = values[i];
+}`;
+
+  // the full WGSL shader source
+  return `
+  ${wgslOutputs}
+
+  const values = array<${wgslStorageType}, ${cases.length}>(
+    ${wgslValues.join(',\n  ')}
+  );
+
+  @compute @workgroup_size(1)
+  fn main() {
+    ${wgslBody}
+  }
+  `;
+}
+
+/**
+ * Constructs the shader for a compound non-const input source
+ * @param expressionBuilder the expression builder function
+ * @param parameterTypes the list of expression parameter types
+ * @param returnType the return type for the expression overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param inputSource the source of the input values
+ * @param wgslOutputs the wgsl output location
+ */
+function makeNonConstCompoundShader(
+expressionBuilder,
+parameterTypes,
+returnType,
+cases,
+inputSource,
+wgslOutputs)
+{
+  // input binding var<...> declaration
+  const wgslInputVar = function () {
+    switch (inputSource) {
+      case 'storage_r':
+        return 'var<storage, read>';
+      case 'storage_rw':
+        return 'var<storage, read_write>';
+      case 'uniform':
+        return 'var<uniform>';
+      default:
+        return '';}
+
+  }();
+
+  return `
+struct Input {
+${parameterTypes.
+  map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
+  join('\n')}
+};
+
+${wgslOutputs}
+
+@group(0) @binding(1)
+${wgslInputVar} inputs : array<Input, ${cases.length}>;
+
+@compute @workgroup_size(1)
+fn main() {
+  for(var i = 0; i < ${cases.length}; i++) {
+    outputs[i].value = inputs[i].param0;
+    outputs[i].value ${expressionBuilder([])}= inputs[i].param1;
+  }
+}
+`;
+}
+
+/**
+ * Constructs the shader for a non-const input source
+ * @param expressionBuilder the expression builder function
+ * @param parameterTypes the list of expression parameter types
+ * @param returnType the return type for the expression overload
+ * @param cases list of test cases that fit within the binding limits of the device
+ * @param inputSource the source of the input values
+ * @param wgslOutputs the wgsl output location
+ */
+function makeNonConstShader(
+expressionBuilder,
+parameterTypes,
+returnType,
+cases,
+inputSource,
+wgslOutputs)
+{
+  // returns the WGSL expression to load the ith parameter of the given type from the input buffer
+  const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
+
+  // resolves to the expression that calls the builtin
+  const expr = toStorage(returnType, expressionBuilder(parameterTypes.map(paramExpr)));
+
+  // input binding var<...> declaration
+  const wgslInputVar = function () {
+    switch (inputSource) {
+      case 'storage_r':
+        return 'var<storage, read>';
+      case 'storage_rw':
+        return 'var<storage, read_write>';
+      case 'uniform':
+        return 'var<uniform>';
+      default:
+        return '';}
+
+  }();
+
+  return `
+struct Input {
+${parameterTypes.
+  map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
+  join('\n')}
+};
+
+${wgslOutputs}
+
+@group(0) @binding(1)
+${wgslInputVar} inputs : array<Input, ${cases.length}>;
+
+@compute @workgroup_size(1)
+fn main() {
+  for(var i = 0; i < ${cases.length}; i++) {
+    outputs[i].value = ${expr};
+  }
+}
+`;
+}
+
+/**
  * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
  * batch of test cases. If a pre-created pipeline can be found in
  * @p pipelineCache, then this may be returned instead of creating a new
@@ -419,6 +636,7 @@ function ith(v, i) {
  * @param returnType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
+ * @param compoundStmt true if the expression is a compound statement
  * @param outputBuffer the buffer that will hold the output values of the tests
  * @param pipelineCache the cache of compute pipelines, shared between batches
  */
@@ -429,6 +647,7 @@ parameterTypes,
 returnType,
 cases,
 inputSource,
+compoundStmt,
 outputBuffer,
 pipelineCache)
 {
@@ -455,33 +674,23 @@ struct Output {
 
   switch (inputSource) {
     case 'const':{
-        //////////////////////////////////////////////////////////////////////////
-        // Input values are constant values in the WGSL shader
-        //////////////////////////////////////////////////////////////////////////
-        const wgslValues = cases.map((c) => {
-          const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
-          return `${toStorage(returnType, expressionBuilder(args))}`;
-        });
+        const source = compoundStmt ?
+        makeConstCompoundShader(
+        expressionBuilder,
+        parameterTypes,
+        returnType,
+        cases,
+        wgslStorageType,
+        wgslOutputs) :
 
-        const wgslBody = globalTestConfig.unrollConstEvalLoops ?
-        wgslValues.map((_, i) => `outputs[${i}].value = values[${i}];`).join('\n  ') :
-        `for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = values[i];
-  }`;
+        makeConstShader(
+        expressionBuilder,
+        parameterTypes,
+        returnType,
+        cases,
+        wgslStorageType,
+        wgslOutputs);
 
-        // the full WGSL shader source
-        const source = `
-${wgslOutputs}
-
-const values = array<${wgslStorageType}, ${cases.length}>(
-  ${wgslValues.join(',\n  ')}
-);
-
-@compute @workgroup_size(1)
-fn main() {
-  ${wgslBody}
-}
-`;
 
         // build the shader module
         const module = t.device.createShaderModule({ code: source });
@@ -508,44 +717,24 @@ fn main() {
         // Input values come from a uniform or storage buffer
         //////////////////////////////////////////////////////////////////////////
 
-        // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-        const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
-
-        // resolves to the expression that calls the builtin
-        const expr = toStorage(returnType, expressionBuilder(parameterTypes.map(paramExpr)));
-
-        // input binding var<...> declaration
-        const wgslInputVar = function () {
-          switch (inputSource) {
-            case 'storage_r':
-              return 'var<storage, read>';
-            case 'storage_rw':
-              return 'var<storage, read_write>';
-            case 'uniform':
-              return 'var<uniform>';}
-
-        }();
-
         // the full WGSL shader source
-        const source = `
-struct Input {
-${parameterTypes.
-        map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
-        join('\n')}
-};
+        const source = compoundStmt ?
+        makeNonConstCompoundShader(
+        expressionBuilder,
+        parameterTypes,
+        returnType,
+        cases,
+        inputSource,
+        wgslOutputs) :
 
-${wgslOutputs}
+        makeNonConstShader(
+        expressionBuilder,
+        parameterTypes,
+        returnType,
+        cases,
+        inputSource,
+        wgslOutputs);
 
-@group(0) @binding(1)
-${wgslInputVar} inputs : array<Input, ${cases.length}>;
-
-@compute @workgroup_size(1)
-fn main() {
-  for(var i = 0; i < ${cases.length}; i++) {
-    outputs[i].value = ${expr};
-  }
-}
-`;
 
         // size in bytes of the input buffer
         const inputSize = cases.length * valueStrides(parameterTypes);

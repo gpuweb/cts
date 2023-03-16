@@ -8,7 +8,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { i32, scalarType, u32 } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
-import { binary } from './binary.js';
+import { binary, compoundBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -27,6 +27,7 @@ Bitwise-or. Component-wise when T is a vector.
       .combine('type', ['i32', 'u32'])
       .combine('inputSource', allInputSources)
       .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
   )
   .fn(async t => {
     const type = scalarType(t.params.type);
@@ -74,7 +75,14 @@ Bitwise-or. Component-wise when T is a vector.
         });
       }
     }
-    await run(t, binary('|'), [type, type], type, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('|') : binary('|'),
+      [type, type],
+      type,
+      t.params,
+      cases
+    );
   });
 
 g.test('bitwise_and')
@@ -92,6 +100,7 @@ Bitwise-and. Component-wise when T is a vector.
       .combine('type', ['i32', 'u32'])
       .combine('inputSource', allInputSources)
       .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
   )
   .fn(async t => {
     const type = scalarType(t.params.type);
@@ -147,7 +156,14 @@ Bitwise-and. Component-wise when T is a vector.
         });
       }
     }
-    await run(t, binary('&'), [type, type], type, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('&') : binary('&'),
+      [type, type],
+      type,
+      t.params,
+      cases
+    );
   });
 
 g.test('bitwise_exclusive_or')
@@ -165,6 +181,7 @@ Bitwise-exclusive-or. Component-wise when T is a vector.
       .combine('type', ['i32', 'u32'])
       .combine('inputSource', allInputSources)
       .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
   )
   .fn(async t => {
     const type = scalarType(t.params.type);
@@ -220,5 +237,12 @@ Bitwise-exclusive-or. Component-wise when T is a vector.
         });
       }
     }
-    await run(t, binary('^'), [type, type], type, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('^') : binary('^'),
+      [type, type],
+      type,
+      t.params,
+      cases
+    );
   });

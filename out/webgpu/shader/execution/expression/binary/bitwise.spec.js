@@ -7,7 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { i32, scalarType, u32 } from '../../../../util/conversion.js';
 import { allInputSources, run } from '../expression.js';
 
-import { binary } from './binary.js';
+import { binary, compoundBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -25,7 +25,8 @@ params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
+combine('vectorize', [undefined, 2, 3, 4]).
+combine('compoundStmt', [false, true])).
 
 fn(async (t) => {
   const type = scalarType(t.params.type);
@@ -72,7 +73,14 @@ fn(async (t) => {
       });
     }
   }
-  await run(t, binary('|'), [type, type], type, t.params, cases);
+  await run(
+  t,
+  t.params.compoundStmt ? compoundBinary('|') : binary('|'),
+  [type, type],
+  type,
+  t.params,
+  cases);
+
 });
 
 g.test('bitwise_and').
@@ -89,7 +97,8 @@ params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
+combine('vectorize', [undefined, 2, 3, 4]).
+combine('compoundStmt', [false, true])).
 
 fn(async (t) => {
   const type = scalarType(t.params.type);
@@ -144,7 +153,14 @@ fn(async (t) => {
       });
     }
   }
-  await run(t, binary('&'), [type, type], type, t.params, cases);
+  await run(
+  t,
+  t.params.compoundStmt ? compoundBinary('&') : binary('&'),
+  [type, type],
+  type,
+  t.params,
+  cases);
+
 });
 
 g.test('bitwise_exclusive_or').
@@ -161,7 +177,8 @@ params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
+combine('vectorize', [undefined, 2, 3, 4]).
+combine('compoundStmt', [false, true])).
 
 fn(async (t) => {
   const type = scalarType(t.params.type);
@@ -216,6 +233,13 @@ fn(async (t) => {
       });
     }
   }
-  await run(t, binary('^'), [type, type], type, t.params, cases);
+  await run(
+  t,
+  t.params.compoundStmt ? compoundBinary('^') : binary('^'),
+  [type, type],
+  type,
+  t.params,
+  cases);
+
 });
 //# sourceMappingURL=bitwise.spec.js.map

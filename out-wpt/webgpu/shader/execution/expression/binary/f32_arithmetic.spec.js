@@ -17,7 +17,7 @@ import { fullF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, generateBinaryToF32IntervalCases, run } from '../expression.js';
 
-import { binary } from './binary.js';
+import { binary, compoundBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -112,13 +112,25 @@ Expression: x + y
 Accuracy: Correctly rounded
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'addition_const' : 'addition_non_const'
     );
 
-    await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('+') : binary('+'),
+      [TypeF32, TypeF32],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('subtraction')
@@ -129,13 +141,25 @@ Expression: x - y
 Accuracy: Correctly rounded
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'subtraction_const' : 'subtraction_non_const'
     );
 
-    await run(t, binary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('-') : binary('-'),
+      [TypeF32, TypeF32],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('multiplication')
@@ -146,13 +170,25 @@ Expression: x * y
 Accuracy: Correctly rounded
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'multiplication_const' : 'multiplication_non_const'
     );
 
-    await run(t, binary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('*') : binary('*'),
+      [TypeF32, TypeF32],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('division')
@@ -163,13 +199,25 @@ Expression: x / y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'division_const' : 'division_non_const'
     );
 
-    await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('/') : binary('/'),
+      [TypeF32, TypeF32],
+      TypeF32,
+      t.params,
+      cases
+    );
   });
 
 g.test('remainder')
@@ -180,11 +228,23 @@ Expression: x % y
 Accuracy: Derived from x - y * trunc(x/y)
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u =>
+    u
+      .combine('inputSource', allInputSources)
+      .combine('vectorize', [undefined, 2, 3, 4])
+      .combine('compoundStmt', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const'
     );
 
-    await run(t, binary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(
+      t,
+      t.params.compoundStmt ? compoundBinary('%') : binary('%'),
+      [TypeF32, TypeF32],
+      TypeF32,
+      t.params,
+      cases
+    );
   });

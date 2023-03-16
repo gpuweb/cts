@@ -7,3 +7,10 @@ export function binary(op) {
     return `(${values_str.join(op)})`;
   };
 }
+
+/* @returns an ExpressionBuilder that evaluates a compound binary operation */
+export function compoundBinary(op) {
+  return values => {
+    return op;
+  };
+}
