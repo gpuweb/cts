@@ -1389,7 +1389,7 @@ Accuracy: Correctly rounded
     );
     await run(
       t,
-      compoundBinary('+'),
+      compoundBinary('+='),
       [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
       TypeMat(cols, rows, TypeF32),
       t.params,
@@ -1489,7 +1489,7 @@ Accuracy: Correctly rounded
     );
     await run(
       t,
-      compoundBinary('*'),
+      compoundBinary('*='),
       [TypeMat(cols, rows, TypeF32), TypeF32],
       TypeMat(cols, rows, TypeF32),
       t.params,
@@ -1649,7 +1649,7 @@ Accuracy: Correctly rounded
     );
     await run(
       t,
-      compoundBinary('-'),
+      compoundBinary('-='),
       [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
       TypeMat(cols, rows, TypeF32),
       t.params,
