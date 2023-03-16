@@ -808,78 +808,98 @@ g.test('depth_stencil_attachment,sample_counts_mismatch')
     }
   });
 
-g.test('depth_stencil_attachment')
+g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadOnly')
   .desc(
     `
   Test GPURenderPassDepthStencilAttachment Usage:
-    - depthReadOnly and stencilReadOnly must match if the format is a combined depth-stencil format.
-    - depthLoadOp and depthStoreOp must be provided iff the format has a depth aspect and
-      depthReadOnly is not true.
-    - stencilLoadOp and stencilStoreOp must be provided iff the format has a stencil aspect and
-      stencilReadOnly is not true.
+    - if the format has a depth aspect:
+      - if depthReadOnly is true
+        - depthLoadOp and depthStoreOp must not be provided
+      - else:
+        - depthLoadOp and depthStoreOp must be provided
+    - if the format has a stencil aspect:
+      - if stencilReadOnly is true
+        - stencilLoadOp and stencilStoreOp must not be provided
+      - else:
+        - stencilLoadOp and stencilStoreOp must be provided
   `
   )
   .params(u =>
-    u //
+    u
       .combine('format', kDepthStencilFormats)
-      .beginSubcases()
-      .combine('depthReadOnly', [false, true])
-      .combine('stencilReadOnly', [false, true])
-      .combine('setDepthLoadStoreOp', [false, true])
-      .combine('setStencilLoadStoreOp', [false, true])
+      .beginSubcases() // Note: It's easier to debug if you comment this line out as you can then run an individual case.
+      .combine('depthReadOnly', [undefined, true, false])
+      .combine('depthLoadOp', [undefined, 'clear', 'load'] as GPULoadOp[])
+      .combine('depthStoreOp', [undefined, 'discard', 'store'] as GPUStoreOp[])
+      .combine('stencilReadOnly', [undefined, true, false])
+      .combine('stencilLoadOp', [undefined, 'clear', 'load'] as GPULoadOp[])
+      .combine('stencilStoreOp', [undefined, 'discard', 'store'] as GPUStoreOp[])
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+    const info = kTextureFormatInfo[t.params.format as GPUTextureFormat];
+    t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
     const {
       format,
       depthReadOnly,
+      depthLoadOp,
+      depthStoreOp,
       stencilReadOnly,
-      setDepthLoadStoreOp,
-      setStencilLoadStoreOp,
+      stencilLoadOp,
+      stencilStoreOp,
     } = t.params;
 
-    let isValid = true;
+    const depthAttachment = t.trackForCleanup(
+      t.device.createTexture({
+        format,
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.RENDER_ATTACHMENT,
+      })
+    );
+    const depthAttachmentView = depthAttachment.createView();
+
+    const encoder = t.device.createCommandEncoder();
+    const renderPassDescriptor: GPURenderPassDescriptor = {
+      colorAttachments: [],
+      depthStencilAttachment: {
+        view: depthAttachmentView,
+        depthLoadOp,
+        depthStoreOp,
+        depthReadOnly,
+        stencilLoadOp,
+        stencilStoreOp,
+        stencilReadOnly,
+      },
+    };
+    const pass = encoder.beginRenderPass(renderPassDescriptor);
+    pass.end();
+
     const info = kTextureFormatInfo[format];
-    if (info.depth && info.stencil) {
-      isValid &&= depthReadOnly === stencilReadOnly;
-    }
+    const hasDepthSettings = !!depthLoadOp && !!depthStoreOp && !depthReadOnly;
+    const hasStencilSettings = !!stencilLoadOp && !!stencilStoreOp && !stencilReadOnly;
+    const hasDepth = info.depth;
+    const hasStencil = info.stencil;
 
-    if (info.depth && !depthReadOnly) {
-      isValid &&= setDepthLoadStoreOp;
-    } else {
-      isValid &&= !setDepthLoadStoreOp;
-    }
+    const goodAspectCombo =
+      (hasDepth && hasStencil ? !depthReadOnly === !stencilReadOnly : true) &&
+      (hasDepthSettings ? hasDepth : true) &&
+      (hasStencilSettings ? hasStencil : true);
 
-    if (info.stencil && !stencilReadOnly) {
-      isValid &&= setStencilLoadStoreOp;
-    } else {
-      isValid &&= !setStencilLoadStoreOp;
-    }
+    const hasBothDepthOps = !!depthLoadOp && !!depthStoreOp;
+    const hasBothStencilOps = !!stencilLoadOp && !!stencilStoreOp;
+    const hasNeitherDepthOps = !depthLoadOp && !depthStoreOp;
+    const hasNeitherStencilOps = !stencilLoadOp && !stencilStoreOp;
 
-    const depthStencilAttachment: GPURenderPassDepthStencilAttachment = {
-      view: t.createTexture({ format }).createView(),
-      depthReadOnly,
-      stencilReadOnly,
-      depthClearValue: 0,
-    };
+    const goodDepthCombo = hasDepth && !depthReadOnly ? hasBothDepthOps : hasNeitherDepthOps;
+    const goodStencilCombo =
+      hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
 
-    if (setDepthLoadStoreOp) {
-      depthStencilAttachment.depthLoadOp = 'clear';
-      depthStencilAttachment.depthStoreOp = 'store';
-    }
-    if (setStencilLoadStoreOp) {
-      depthStencilAttachment.stencilLoadOp = 'clear';
-      depthStencilAttachment.stencilStoreOp = 'store';
-    }
+    const shouldError = !goodAspectCombo || !goodDepthCombo || !goodStencilCombo;
 
-    const descriptor = {
-      colorAttachments: [t.getColorAttachment(t.createTexture())],
-      depthStencilAttachment,
-    };
-
-    t.tryRenderPass(isValid, descriptor);
+    t.expectValidationError(() => {
+      encoder.finish();
+    }, shouldError);
   });
 
 g.test('depth_stencil_attachment,depth_clear_value')
@@ -892,13 +912,7 @@ g.test('depth_stencil_attachment,depth_clear_value')
   .params(u =>
     u
       .combine('depthLoadOp', ['load', 'clear', undefined] as const)
-      .combineWithParams([
-        { depthClearValue: -1.0 },
-        { depthClearValue: 0.0 },
-        { depthClearValue: 0.5 },
-        { depthClearValue: 1.0 },
-        { depthClearValue: 1.5 },
-      ])
+      .combine('depthClearValue', [undefined, -1.0, 0.0, 0.5, 1.0, 1.5] as const)
   )
   .fn(t => {
     const { depthLoadOp, depthClearValue } = t.params;
@@ -918,9 +932,12 @@ g.test('depth_stencil_attachment,depth_clear_value')
       depthStencilAttachment,
     };
 
-    const isValid = !(depthLoadOp === 'clear' && (depthClearValue < 0.0 || depthClearValue > 1.0));
+    // We can not check for out of range because NaN is not out of range.
+    // So (v < 0.0 || v > 1.0) would return false when depthClearValue is undefined (NaN)
+    const isDepthValueInRange = depthClearValue! >= 0.0 && depthClearValue! <= 1.0;
+    const isInvalid = depthLoadOp === 'clear' && !isDepthValueInRange;
 
-    t.tryRenderPass(isValid, descriptor);
+    t.tryRenderPass(!isInvalid, descriptor);
   });
 
 g.test('resolveTarget,format_supports_resolve')
