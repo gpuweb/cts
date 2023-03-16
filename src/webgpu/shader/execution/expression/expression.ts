@@ -600,8 +600,9 @@ ${wgslInputVar(inputSource, cases.length)}
 @compute @workgroup_size(1)
 fn main() {
   for (var i = 0; i < ${cases.length}; i++) {
-    outputs[i].value = inputs[i].lhs;
-    outputs[i].value ${op} inputs[i].rhs;
+    var ret = ${lhsType}(inputs[i].lhs);
+    ret ${op} ${rhsType}(inputs[i].rhs);
+    outputs[i].value = ${storageType(resultType)}(ret);
   }
 }
 `;
