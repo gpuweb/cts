@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { globalTestConfig } from '../../../../common/framework/test_config.js';import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
+**/import { globalTestConfig } from '../../../../common/framework/test_config.js';import { objectEquals, unreachable } from '../../../../common/util/util.js';
 import { compare, anyOf } from '../../../util/compare.js';
 import {
 ScalarType,
@@ -88,8 +88,6 @@ export function toComparator(input) {
 export const allInputSources = ['const', 'uniform', 'storage_r', 'storage_rw'];
 
 /** Configuration for running a expression test */
-
-
 
 
 
@@ -194,12 +192,7 @@ function toStorage(ty, expr) {
   return expr;
 }
 
-// ExpressionBuilder returns the WGSL used to test an expression.
-
-
-
-
-
+// A Pipeline is a map of WGSL shader source to a built pipeline
 
 
 /**
@@ -219,32 +212,33 @@ function getOrCreate(map, key, create) {
   map.set(key, value);
   return value;
 }
+
 /**
  * Runs the list of expression tests, possibly splitting the tests into multiple
  * dispatches to keep the input data within the buffer binding limits.
  * run() will pack the scalar test cases into smaller set of vectorized tests
  * if `cfg.vectorize` is defined.
  * @param t the GPUTest
- * @param expressionBuilder the expression builder function
+ * @param shaderBuilder the shader builder function
  * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
+ * @param resultType the return type for the expression overload
  * @param cfg test configuration values
  * @param cases list of test cases
  */
 export async function run(
 t,
-expressionBuilder,
+shaderBuilder,
 parameterTypes,
-returnType,
-cfg = { inputSource: 'storage_r', compoundStmt: false },
+resultType,
+cfg = { inputSource: 'storage_r' },
 cases)
 {
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
-    const packed = packScalarsToVector(parameterTypes, returnType, cases, cfg.vectorize);
+    const packed = packScalarsToVector(parameterTypes, resultType, cases, cfg.vectorize);
     cases = packed.cases;
     parameterTypes = packed.parameterTypes;
-    returnType = packed.returnType;
+    resultType = packed.resultType;
   }
 
   // The size of the input buffer may exceed the maximum buffer binding size,
@@ -284,12 +278,11 @@ cases)
 
     const checkBatch = submitBatch(
     t,
-    expressionBuilder,
+    shaderBuilder,
     parameterTypes,
-    returnType,
+    resultType,
     batchCases,
     cfg.inputSource,
-    cfg.compoundStmt || false,
     pipelineCache);
 
 
@@ -313,27 +306,25 @@ cases)
  * Submits the list of expression tests. The input data must fit within the
  * buffer binding limits of the given inputSource.
  * @param t the GPUTest
- * @param expressionBuilder the expression builder function
+ * @param shaderBuilder the shader builder function
  * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
+ * @param resultType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
- * @param compoundStmt if the expression is a compound statement
  * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
 function submitBatch(
 t,
-expressionBuilder,
+shaderBuilder,
 parameterTypes,
-returnType,
+resultType,
 cases,
 inputSource,
-compoundStmt,
 pipelineCache)
 {
   // Construct a buffer to hold the results of the expression tests
-  const outputBufferSize = cases.length * valueStride(returnType);
+  const outputBufferSize = cases.length * valueStride(resultType);
   const outputBuffer = t.device.createBuffer({
     size: outputBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
@@ -341,12 +332,11 @@ pipelineCache)
 
   const [pipeline, group] = buildPipeline(
   t,
-  expressionBuilder,
+  shaderBuilder,
   parameterTypes,
-  returnType,
+  resultType,
   cases,
   inputSource,
-  compoundStmt,
   outputBuffer,
   pipelineCache);
 
@@ -369,7 +359,7 @@ pipelineCache)
       // Read the outputs from the output buffer
       const outputs = new Array(cases.length);
       for (let i = 0; i < cases.length; i++) {
-        outputs[i] = returnType.read(outputData, i * valueStride(returnType));
+        outputs[i] = resultType.read(outputData, i * valueStride(resultType));
       }
 
       // The list of expectation failures
@@ -401,228 +391,220 @@ pipelineCache)
 }
 
 /**
- * @param v either an array of T or a single element of type T
- * @param i the value index to
- * @returns the i'th value of v, if v is an array, otherwise v (i must be 0)
+ * map is a helper for returning a new array with each element of @p v
+ * transformed with @p fn.
+ * If @p v is not an array, then @p fn is called with (v, 0).
  */
-function ith(v, i) {
+function map(v, fn) {
   if (v instanceof Array) {
-    assert(i < v.length);
-    return v[i];
+    return v.map(fn);
   }
-  assert(i === 0);
-  return v;
+  return [fn(v, 0)];
 }
 
 /**
- * Constructs the shader for a compound const input source
- * @param expressionBuilder the expression builder function
+ * ShaderBuilder is a function used to construct the WGSL shader used by an
+ * expression test.
  * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
+ * @param resultType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
- * @param wgslStorageType the wgsl storage type
- * @param wgslOutput the wgsl output location
  */
-function makeConstCompoundShader(
-expressionBuilder,
-parameterTypes,
-returnType,
-cases,
-wgslStorageType,
-wgslOutputs)
-{
-  const wgslValues = cases.map((c) => {
-    const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
-    return `  array(${args[0]}, ${args[1]})`;
-  });
 
-  let wgslBody = '';
-  if (globalTestConfig.unrollConstEvalLoops) {
-    wgslBody = wgslValues.
-    map((v, i) => {
-      return `  outputs[${i}].value = values[${i}][0];
-    outputs[${i}].value ${expressionBuilder([])}= values[${i}][1];`;
-    }).
-    join('\n  ');
-  } else {
-    wgslBody = `  for (var i = 0u; i < ${cases.length}; i++) {
-  outputs[i].value = values[i][0];
-  outputs[i].value ${expressionBuilder([])}= values[i][1];
-}`;
-  }
 
-  // the full WGSL shader source
-  return `
-  ${wgslOutputs}
 
-  const values = array<array<${wgslStorageType}, 2>, ${cases.length}>(
-  ${wgslValues.map((s) => `${s}`).join(',\n  ')}
-  );
 
-  @compute @workgroup_size(1)
-  fn main() {
-  ${wgslBody}
-  }
-  `;
-}
+
+
 
 /**
- * Constructs the shader for a const input source
- * @param expressionBuilder the expression builder function
- * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
- * @param wgslStorageType the wgsl storage type
- * @param wgslOutput the wgsl output location
+ * Helper that returns the WGSL to declare the output storage buffer for a shader
  */
-function makeConstShader(
-expressionBuilder,
-parameterTypes,
-returnType,
-cases,
-wgslStorageType,
-wgslOutputs)
-{
-  //////////////////////////////////////////////////////////////////////////
-  // Input values are constant values in the WGSL shader
-  //////////////////////////////////////////////////////////////////////////
-  const wgslValues = cases.map((c) => {
-    const args = parameterTypes.map((_, i) => `(${ith(c.input, i).wgsl()})`);
-    return `${toStorage(returnType, expressionBuilder(args))}`;
-  });
-
-  const wgslBody = globalTestConfig.unrollConstEvalLoops ?
-  wgslValues.map((_, i) => `outputs[${i}].value = values[${i}];`).join('\n  ') :
-  `for (var i = 0u; i < ${cases.length}; i++) {
-  outputs[i].value = values[i];
-}`;
-
-  // the full WGSL shader source
+function wgslOutputs(resultType, count) {
   return `
-  ${wgslOutputs}
-
-  const values = array<${wgslStorageType}, ${cases.length}>(
-    ${wgslValues.join(',\n  ')}
-  );
-
-  @compute @workgroup_size(1)
-  fn main() {
-    ${wgslBody}
-  }
-  `;
-}
-
-/**
- * Constructs the shader for a compound non-const input source
- * @param expressionBuilder the expression builder function
- * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
- * @param wgslOutputs the wgsl output location
- */
-function makeNonConstCompoundShader(
-expressionBuilder,
-parameterTypes,
-returnType,
-cases,
-inputSource,
-wgslOutputs)
-{
-  // input binding var<...> declaration
-  const wgslInputVar = function () {
-    switch (inputSource) {
-      case 'storage_r':
-        return 'var<storage, read>';
-      case 'storage_rw':
-        return 'var<storage, read_write>';
-      case 'uniform':
-        return 'var<uniform>';
-      default:
-        return '';}
-
-  }();
-
-  return `
-struct Input {
-${parameterTypes.
-  map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
-  join('\n')}
+struct Output {
+  @size(${valueStride(resultType)}) value : ${storageType(resultType)}
 };
+@group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${count}>;`;
+}
 
-${wgslOutputs}
+/**
+ * Helper that returns the WGSL 'var' declaration for the given input source
+ */
+function wgslInputVar(inputSource, count) {
+  switch (inputSource) {
+    case 'storage_r':
+      return `@group(0) @binding(1) var<storage, read> inputs : array<Input, ${count}>;`;
+    case 'storage_rw':
+      return `@group(0) @binding(1) var<storage, read_write> inputs : array<Input, ${count}>;`;
+    case 'uniform':
+      return `@group(0) @binding(1) var<uniform> inputs : array<Input, ${count}>;`;}
 
-@group(0) @binding(1)
-${wgslInputVar} inputs : array<Input, ${cases.length}>;
+  throw new Error(`InputSource ${inputSource} does not use an input var`);
+}
+
+/**
+ * ExpressionBuilder returns the WGSL used to evaluate an expression with the
+ * given input values.
+ */
+
+
+/**
+ * Returns a ShaderBuilder that builds a basic expression test shader.
+ * @param expressionBuilder the expression builder
+ */
+export function basicExpressionBuilder(expressionBuilder) {
+  return (
+  parameterTypes,
+  resultType,
+  cases,
+  inputSource) =>
+  {
+    if (inputSource === 'const') {
+      //////////////////////////////////////////////////////////////////////////
+      // Constant eval
+      //////////////////////////////////////////////////////////////////////////
+      let body = '';
+      if (globalTestConfig.unrollConstEvalLoops) {
+        body = cases.map((_, i) => `  outputs[${i}].value = values[${i}];`).join('\n  ');
+      } else {
+        body = `
+  for (var i = 0u; i < ${cases.length}; i++) {
+    outputs[i].value = values[i];
+  }`;
+      }
+
+      return `
+${wgslOutputs(resultType, cases.length)}
+
+const values = array(
+  ${cases.
+      map((c) => toStorage(resultType, expressionBuilder(map(c.input, (v) => v.wgsl())))).
+      join(',\n  ')}
+);
 
 @compute @workgroup_size(1)
 fn main() {
-  for(var i = 0; i < ${cases.length}; i++) {
-    outputs[i].value = inputs[i].param0;
-    outputs[i].value ${expressionBuilder([])}= inputs[i].param1;
-  }
-}
-`;
-}
+${body}
+}`;
+    } else {
+      //////////////////////////////////////////////////////////////////////////
+      // Runtime eval
+      //////////////////////////////////////////////////////////////////////////
 
-/**
- * Constructs the shader for a non-const input source
- * @param expressionBuilder the expression builder function
- * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
- * @param wgslOutputs the wgsl output location
- */
-function makeNonConstShader(
-expressionBuilder,
-parameterTypes,
-returnType,
-cases,
-inputSource,
-wgslOutputs)
-{
-  // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-  const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
+      // returns the WGSL expression to load the ith parameter of the given type from the input buffer
+      const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
 
-  // resolves to the expression that calls the builtin
-  const expr = toStorage(returnType, expressionBuilder(parameterTypes.map(paramExpr)));
+      // resolves to the expression that calls the builtin
+      const expr = toStorage(resultType, expressionBuilder(parameterTypes.map(paramExpr)));
 
-  // input binding var<...> declaration
-  const wgslInputVar = function () {
-    switch (inputSource) {
-      case 'storage_r':
-        return 'var<storage, read>';
-      case 'storage_rw':
-        return 'var<storage, read_write>';
-      case 'uniform':
-        return 'var<uniform>';
-      default:
-        return '';}
-
-  }();
-
-  return `
+      return `
 struct Input {
 ${parameterTypes.
-  map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
-  join('\n')}
+      map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
+      join('\n')}
 };
 
-${wgslOutputs}
+${wgslOutputs(resultType, cases.length)}
 
-@group(0) @binding(1)
-${wgslInputVar} inputs : array<Input, ${cases.length}>;
+${wgslInputVar(inputSource, cases.length)}
 
 @compute @workgroup_size(1)
 fn main() {
-  for(var i = 0; i < ${cases.length}; i++) {
+  for (var i = 0; i < ${cases.length}; i++) {
     outputs[i].value = ${expr};
   }
 }
 `;
+    }
+  };
+}
+
+/**
+ * Returns a ShaderBuilder that builds a compound assignment operator test shader.
+ * @param op the compound operator
+ */
+export function compoundAssignmentBuilder(op) {
+  return (
+  parameterTypes,
+  resultType,
+  cases,
+  inputSource) =>
+  {
+    //////////////////////////////////////////////////////////////////////////
+    // Input validation
+    //////////////////////////////////////////////////////////////////////////
+    if (parameterTypes.length !== 2) {
+      throw new Error(`compoundBinaryOp() requires exactly two parameters values per case`);
+    }
+    const lhsType = parameterTypes[0];
+    const rhsType = parameterTypes[1];
+    if (!objectEquals(lhsType, resultType)) {
+      throw new Error(
+      `compoundBinaryOp() requires result type (${resultType}) to be equal to the LHS type (${lhsType})`);
+
+    }
+    if (inputSource === 'const') {
+      //////////////////////////////////////////////////////////////////////////
+      // Constant eval
+      //////////////////////////////////////////////////////////////////////////
+      let body = '';
+      if (globalTestConfig.unrollConstEvalLoops) {
+        body = cases.
+        map((_, i) => {
+          return `
+  outputs[${i}].value = lhs[${i}];
+  outputs[${i}].value ${op} rhs[${i}];`;
+        }).
+        join('\n  ');
+      } else {
+        body = `
+  for (var i = 0u; i < ${cases.length}; i++) {
+    outputs[i].value = lhs[i];
+    outputs[i].value ${op} rhs[i];
+  }`;
+      }
+
+      const values = cases.map((c) => c.input.map((v) => v.wgsl()));
+
+      return `
+${wgslOutputs(resultType, cases.length)}
+
+const lhs = array(
+${values.map((c) => `${c[0]}`).join(',\n  ')}
+      );
+const rhs = array(
+${values.map((c) => `${c[1]}`).join(',\n  ')}
+);
+
+@compute @workgroup_size(1)
+fn main() {
+${body}
+}`;
+    } else {
+      //////////////////////////////////////////////////////////////////////////
+      // Runtime eval
+      //////////////////////////////////////////////////////////////////////////
+      return `
+${wgslOutputs(resultType, cases.length)}
+
+struct Input {
+  @size(${valueStride(lhsType)}) lhs : ${storageType(lhsType)},
+  @size(${valueStride(rhsType)}) rhs : ${storageType(rhsType)},
+}
+
+${wgslInputVar(inputSource, cases.length)}
+
+@compute @workgroup_size(1)
+fn main() {
+  for (var i = 0; i < ${cases.length}; i++) {
+    outputs[i].value = inputs[i].lhs;
+    outputs[i].value ${op} inputs[i].rhs;
+  }
+}
+`;
+    }
+  };
 }
 
 /**
@@ -631,36 +613,24 @@ fn main() {
  * @p pipelineCache, then this may be returned instead of creating a new
  * pipeline.
  * @param t the GPUTest
- * @param expressionBuilder the expression builder function
+ * @param shaderBuilder the shader builder
  * @param parameterTypes the list of expression parameter types
- * @param returnType the return type for the expression overload
+ * @param resultType the return type for the expression overload
  * @param cases list of test cases that fit within the binding limits of the device
  * @param inputSource the source of the input values
- * @param compoundStmt true if the expression is a compound statement
  * @param outputBuffer the buffer that will hold the output values of the tests
  * @param pipelineCache the cache of compute pipelines, shared between batches
  */
 function buildPipeline(
 t,
-expressionBuilder,
+shaderBuilder,
 parameterTypes,
-returnType,
+resultType,
 cases,
 inputSource,
-compoundStmt,
 outputBuffer,
 pipelineCache)
 {
-  // wgsl declaration of output buffer and binding
-  const wgslValueStride = valueStride(returnType);
-  const wgslStorageType = storageType(returnType);
-  const wgslOutputs = `
-struct Output {
-  @size(${wgslValueStride}) value : ${wgslStorageType}
-};
-@group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${cases.length}>;
-`;
-
   cases.forEach((c) => {
     const inputTypes = c.input instanceof Array ? c.input.map((i) => i.type) : [c.input.type];
     if (!objectEquals(inputTypes, parameterTypes)) {
@@ -672,26 +642,10 @@ struct Output {
     }
   });
 
+  const source = shaderBuilder(parameterTypes, resultType, cases, inputSource);
+
   switch (inputSource) {
     case 'const':{
-        const source = compoundStmt ?
-        makeConstCompoundShader(
-        expressionBuilder,
-        parameterTypes,
-        returnType,
-        cases,
-        wgslStorageType,
-        wgslOutputs) :
-
-        makeConstShader(
-        expressionBuilder,
-        parameterTypes,
-        returnType,
-        cases,
-        wgslStorageType,
-        wgslOutputs);
-
-
         // build the shader module
         const module = t.device.createShaderModule({ code: source });
 
@@ -713,28 +667,7 @@ struct Output {
     case 'uniform':
     case 'storage_r':
     case 'storage_rw':{
-        //////////////////////////////////////////////////////////////////////////
         // Input values come from a uniform or storage buffer
-        //////////////////////////////////////////////////////////////////////////
-
-        // the full WGSL shader source
-        const source = compoundStmt ?
-        makeNonConstCompoundShader(
-        expressionBuilder,
-        parameterTypes,
-        returnType,
-        cases,
-        inputSource,
-        wgslOutputs) :
-
-        makeNonConstShader(
-        expressionBuilder,
-        parameterTypes,
-        returnType,
-        cases,
-        inputSource,
-        wgslOutputs);
-
 
         // size in bytes of the input buffer
         const inputSize = cases.length * valueStrides(parameterTypes);
@@ -802,7 +735,7 @@ struct Output {
  */
 function packScalarsToVector(
 parameterTypes,
-returnType,
+resultType,
 cases,
 vectorWidth)
 {
@@ -815,15 +748,15 @@ vectorWidth)
 
     }
   }
-  if (!(returnType instanceof ScalarType)) {
+  if (!(resultType instanceof ScalarType)) {
     throw new Error(
-    `packScalarsToVector() can only be used with a scalar return type, but the return type is a ${returnType}'`);
+    `packScalarsToVector() can only be used with a scalar return type, but the return type is a ${resultType}'`);
 
   }
 
   const packedCases = [];
   const packedParameterTypes = parameterTypes.map((p) => TypeVec(vectorWidth, p));
-  const packedReturnType = new VectorType(vectorWidth, returnType);
+  const packedResultType = new VectorType(vectorWidth, resultType);
 
   const clampCaseIdx = (idx) => Math.min(idx, cases.length - 1);
 
@@ -857,8 +790,8 @@ vectorWidth)
       }
       return {
         matched,
-        got: `${packedReturnType}(${gElements.join(', ')})`,
-        expected: `${packedReturnType}(${eElements.join(', ')})`
+        got: `${packedResultType}(${gElements.join(', ')})`,
+        expected: `${packedResultType}(${eElements.join(', ')})`
       };
     };
 
@@ -870,7 +803,7 @@ vectorWidth)
   return {
     cases: packedCases,
     parameterTypes: packedParameterTypes,
-    returnType: packedReturnType
+    resultType: packedResultType
   };
 }
 

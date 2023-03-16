@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ /* @returns an ExpressionBuilder that calls the builtin with the given name */
+**/import { basicExpressionBuilder } from '../../expression.js'; /* @returns a ShaderBuilder that calls the builtin with the given name */
 export function builtin(name) {
-  return (values) => `${name}(${values.join(', ')})`;
+  return basicExpressionBuilder((values) => `${name}(${values.join(', ')})`);
 }
 //# sourceMappingURL=builtin.js.map

@@ -1,6 +1,6 @@
-import { ExpressionBuilder } from '../expression.js';
+import { basicExpressionBuilder, ShaderBuilder } from '../expression.js';
 
-/* @returns an ExpressionBuilder that evaluates a prefix unary operation */
-export function unary(op: string): ExpressionBuilder {
-  return value => `${op}(${value})`;
+/* @returns a ShaderBuilder that evaluates a prefix unary operation */
+export function unary(op: string): ShaderBuilder {
+  return basicExpressionBuilder(value => `${op}(${value})`);
 }

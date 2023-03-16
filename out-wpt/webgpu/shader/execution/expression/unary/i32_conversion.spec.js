@@ -73,7 +73,7 @@ export const d = makeCaseCache('unary/i32_conversion', {
   },
 });
 
-/** Generate expression builder based on how the test case is to be vectorized */
+/** Generate a ShaderBuilder based on how the test case is to be vectorized */
 function vectorizeToExpression(vectorize) {
   return vectorize === undefined ? unary('i32') : unary(`vec${vectorize}<i32>`);
 }

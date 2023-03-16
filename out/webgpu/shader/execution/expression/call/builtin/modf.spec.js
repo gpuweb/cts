@@ -22,18 +22,24 @@ import { f32, toVector, TypeF32, TypeVec } from '../../../../../util/conversion.
 import { modfInterval } from '../../../../../util/f32_interval.js';
 import { fullF32Range, quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import {
+allInputSources,
+basicExpressionBuilder,
+
+run } from
+
+'../../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/* @returns an ExpressionBuilder that evaluates modf and returns .whole from the result structure */
+/* @returns an ShaderBuilder that evaluates modf and returns .whole from the result structure */
 function wholeBuilder() {
-  return (value) => `modf(${value}).whole`;
+  return basicExpressionBuilder((value) => `modf(${value}).whole`);
 }
 
-/* @returns an ExpressionBuilder that evaluates modf and returns .fract from the result structure */
+/* @returns an ShaderBuilder that evaluates modf and returns .fract from the result structure */
 function fractBuilder() {
-  return (value) => `modf(${value}).fract`;
+  return basicExpressionBuilder((value) => `modf(${value}).fract`);
 }
 
 /* @returns a fract Case for a given vector input */

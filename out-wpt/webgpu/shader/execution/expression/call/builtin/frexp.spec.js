@@ -27,18 +27,18 @@ import {
   vectorF32Range,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, basicExpressionBuilder, run } from '../../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/* @returns an ExpressionBuilder that evaluates frexp and returns .fract from the result structure */
+/* @returns an ShaderBuilder that evaluates frexp and returns .fract from the result structure */
 function fractBuilder() {
-  return value => `frexp(${value}).fract`;
+  return basicExpressionBuilder(value => `frexp(${value}).fract`);
 }
 
-/* @returns an ExpressionBuilder that evaluates frexp and returns .exp from the result structure */
+/* @returns an ShaderBuilder that evaluates frexp and returns .exp from the result structure */
 function expBuilder() {
-  return value => `frexp(${value}).exp`;
+  return basicExpressionBuilder(value => `frexp(${value}).exp`);
 }
 
 /* @returns a fract Case for a given vector input */
