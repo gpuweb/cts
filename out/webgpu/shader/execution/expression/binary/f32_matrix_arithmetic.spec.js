@@ -1389,7 +1389,7 @@ fn(async (t) => {
 
   await run(
   t,
-  compoundBinary('+'),
+  compoundBinary('+='),
   [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
   TypeMat(cols, rows, TypeF32),
   t.params,
@@ -1489,7 +1489,7 @@ fn(async (t) => {
 
   await run(
   t,
-  compoundBinary('*'),
+  compoundBinary('*='),
   [TypeMat(cols, rows, TypeF32), TypeF32],
   TypeMat(cols, rows, TypeF32),
   t.params,
@@ -1649,7 +1649,7 @@ fn(async (t) => {
 
   await run(
   t,
-  compoundBinary('-'),
+  compoundBinary('-='),
   [TypeMat(cols, rows, TypeF32), TypeMat(cols, rows, TypeF32)],
   TypeMat(cols, rows, TypeF32),
   t.params,

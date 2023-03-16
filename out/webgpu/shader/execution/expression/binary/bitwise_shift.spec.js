@@ -214,7 +214,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
-  await run(t, compoundBinary('<<'), [type, TypeU32], type, t.params, cases);
+  await run(t, compoundBinary('<<='), [type, TypeU32], type, t.params, cases);
 });
 
 function makeShiftRightConcreteCases(inputType, inputSource, type) {
@@ -339,6 +339,6 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);
-  await run(t, compoundBinary('>>'), [type, TypeU32], type, t.params, cases);
+  await run(t, compoundBinary('>>='), [type, TypeU32], type, t.params, cases);
 });
 //# sourceMappingURL=bitwise_shift.spec.js.map

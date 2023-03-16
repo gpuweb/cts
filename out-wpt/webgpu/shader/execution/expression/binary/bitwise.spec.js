@@ -103,7 +103,7 @@ Bitwise-or. Component-wise when T is a vector.
     const type = scalarType(t.params.type);
     const cases = makeBitwiseOrCases(t.params.type);
 
-    await run(t, compoundBinary('|'), [type, type], type, t.params, cases);
+    await run(t, compoundBinary('|='), [type, type], type, t.params, cases);
   });
 
 function makeBitwiseAndCases(inputType) {
@@ -203,7 +203,7 @@ Bitwise-and. Component-wise when T is a vector.
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeBitwiseAndCases(t.params.type);
-    await run(t, compoundBinary('&'), [type, type], type, t.params, cases);
+    await run(t, compoundBinary('&='), [type, type], type, t.params, cases);
   });
 
 function makeBitwiseExcluseOrCases(inputType) {
@@ -303,5 +303,5 @@ Bitwise-exclusive-or. Component-wise when T is a vector.
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeBitwiseExcluseOrCases(t.params.type);
-    await run(t, compoundBinary('^'), [type, type], type, t.params, cases);
+    await run(t, compoundBinary('^='), [type, type], type, t.params, cases);
   });

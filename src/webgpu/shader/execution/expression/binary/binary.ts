@@ -7,5 +7,5 @@ export function binary(op: string): ShaderBuilder {
 
 /* @returns a ShaderBuilder that evaluates a compound binary operation */
 export function compoundBinary(op: string): ShaderBuilder {
-  return compoundAssignmentBuilder(op + '=');
+  return compoundAssignmentBuilder(op);
 }

@@ -101,7 +101,7 @@ fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseOrCases(t.params.type);
 
-  await run(t, compoundBinary('|'), [type, type], type, t.params, cases);
+  await run(t, compoundBinary('|='), [type, type], type, t.params, cases);
 });
 
 function makeBitwiseAndCases(inputType) {
@@ -200,7 +200,7 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseAndCases(t.params.type);
-  await run(t, compoundBinary('&'), [type, type], type, t.params, cases);
+  await run(t, compoundBinary('&='), [type, type], type, t.params, cases);
 });
 
 function makeBitwiseExcluseOrCases(inputType) {
@@ -299,6 +299,6 @@ combine('vectorize', [undefined, 2, 3, 4])).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseExcluseOrCases(t.params.type);
-  await run(t, compoundBinary('^'), [type, type], type, t.params, cases);
+  await run(t, compoundBinary('^='), [type, type], type, t.params, cases);
 });
 //# sourceMappingURL=bitwise.spec.js.map

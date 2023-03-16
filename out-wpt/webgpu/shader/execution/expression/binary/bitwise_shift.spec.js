@@ -215,7 +215,7 @@ Shift left (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, compoundBinary('<<'), [type, TypeU32], type, t.params, cases);
+    await run(t, compoundBinary('<<='), [type, TypeU32], type, t.params, cases);
   });
 
 function makeShiftRightConcreteCases(inputType, inputSource, type) {
@@ -350,5 +350,5 @@ Shift right (shifted value is concrete)
   .fn(async t => {
     const type = scalarType(t.params.type);
     const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);
-    await run(t, compoundBinary('>>'), [type, TypeU32], type, t.params, cases);
+    await run(t, compoundBinary('>>='), [type, TypeU32], type, t.params, cases);
   });

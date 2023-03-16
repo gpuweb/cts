@@ -10,5 +10,5 @@ export function binary(op) {
 
 /* @returns a ShaderBuilder that evaluates a compound binary operation */
 export function compoundBinary(op) {
-  return compoundAssignmentBuilder(op + '=');
+  return compoundAssignmentBuilder(op);
 }

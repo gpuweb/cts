@@ -135,7 +135,7 @@ Accuracy: Correctly rounded
       t.params.inputSource === 'const' ? 'addition_const' : 'addition_non_const'
     );
 
-    await run(t, compoundBinary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('+='), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('subtraction')
@@ -169,7 +169,7 @@ Accuracy: Correctly rounded
       t.params.inputSource === 'const' ? 'subtraction_const' : 'subtraction_non_const'
     );
 
-    await run(t, compoundBinary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('-='), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('multiplication')
@@ -203,7 +203,7 @@ Accuracy: Correctly rounded
       t.params.inputSource === 'const' ? 'multiplication_const' : 'multiplication_non_const'
     );
 
-    await run(t, compoundBinary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('*='), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('division')
@@ -237,7 +237,7 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
       t.params.inputSource === 'const' ? 'division_const' : 'division_non_const'
     );
 
-    await run(t, compoundBinary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('/='), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
 g.test('remainder')
@@ -271,5 +271,5 @@ Accuracy: Derived from x - y * trunc(x/y)
       t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const'
     );
 
-    await run(t, compoundBinary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+    await run(t, compoundBinary('%='), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });

@@ -52,7 +52,7 @@ Logical "and". Component-wise when T is a vector. Evaluates both e1 and e2.
       { input: [bool(true), bool(true)], expected: bool(true) },
     ];
 
-    await run(t, compoundBinary('&'), [TypeBool, TypeBool], TypeBool, t.params, cases);
+    await run(t, compoundBinary('&='), [TypeBool, TypeBool], TypeBool, t.params, cases);
   });
 
 g.test('and_short_circuit')
@@ -112,7 +112,7 @@ Logical "or". Component-wise when T is a vector. Evaluates both e1 and e2.
       { input: [bool(true), bool(true)], expected: bool(true) },
     ];
 
-    await run(t, compoundBinary('|'), [TypeBool, TypeBool], TypeBool, t.params, cases);
+    await run(t, compoundBinary('|='), [TypeBool, TypeBool], TypeBool, t.params, cases);
   });
 
 g.test('or_short_circuit')

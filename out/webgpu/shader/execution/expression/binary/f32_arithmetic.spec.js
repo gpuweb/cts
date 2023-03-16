@@ -136,7 +136,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'addition_const' : 'addition_non_const');
 
-  await run(t, compoundBinary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, compoundBinary('+='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('subtraction').
@@ -172,7 +172,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'subtraction_const' : 'subtraction_non_const');
 
-  await run(t, compoundBinary('-'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, compoundBinary('-='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('multiplication').
@@ -208,7 +208,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'multiplication_const' : 'multiplication_non_const');
 
-  await run(t, compoundBinary('*'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, compoundBinary('*='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('division').
@@ -244,7 +244,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'division_const' : 'division_non_const');
 
-  await run(t, compoundBinary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, compoundBinary('/='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('remainder').
@@ -280,6 +280,6 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const');
 
-  await run(t, compoundBinary('%'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, compoundBinary('%='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 //# sourceMappingURL=f32_arithmetic.spec.js.map

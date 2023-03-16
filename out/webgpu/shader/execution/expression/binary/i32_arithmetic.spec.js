@@ -345,7 +345,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const cases = await d.get('addition');
-  await run(t, compoundBinary('+'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+  await run(t, compoundBinary('+='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('subtraction').
@@ -375,7 +375,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const cases = await d.get('subtraction');
-  await run(t, compoundBinary('-'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+  await run(t, compoundBinary('-='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('multiplication').
@@ -405,7 +405,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 
 fn(async (t) => {
   const cases = await d.get('multiplication');
-  await run(t, compoundBinary('*'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+  await run(t, compoundBinary('*='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('division').
@@ -439,7 +439,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'division_const' : 'division_non_const');
 
-  await run(t, compoundBinary('/'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+  await run(t, compoundBinary('/='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('remainder').
@@ -473,7 +473,7 @@ fn(async (t) => {
   const cases = await d.get(
   t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const');
 
-  await run(t, compoundBinary('%'), [TypeI32, TypeI32], TypeI32, t.params, cases);
+  await run(t, compoundBinary('%='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('addition_scalar_vector').
@@ -524,7 +524,7 @@ fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
   const cases = await d.get(`addition_vector${vec_size}_scalar`);
-  await run(t, compoundBinary('+'), [vec_type, TypeI32], vec_type, t.params, cases);
+  await run(t, compoundBinary('+='), [vec_type, TypeI32], vec_type, t.params, cases);
 });
 
 g.test('subtraction_scalar_vector').
@@ -575,7 +575,7 @@ fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
   const cases = await d.get(`subtraction_vector${vec_size}_scalar`);
-  await run(t, compoundBinary('-'), [vec_type, TypeI32], vec_type, t.params, cases);
+  await run(t, compoundBinary('-='), [vec_type, TypeI32], vec_type, t.params, cases);
 });
 
 g.test('multiplication_scalar_vector').
@@ -626,7 +626,7 @@ fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
   const cases = await d.get(`multiplication_vector${vec_size}_scalar`);
-  await run(t, compoundBinary('*'), [vec_type, TypeI32], vec_type, t.params, cases);
+  await run(t, compoundBinary('*='), [vec_type, TypeI32], vec_type, t.params, cases);
 });
 
 g.test('division_scalar_vector').
@@ -680,7 +680,7 @@ fn(async (t) => {
   const vec_type = TypeVec(vec_size, TypeI32);
   const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
   const cases = await d.get(`division_vector${vec_size}_scalar_${source}`);
-  await run(t, compoundBinary('/'), [vec_type, TypeI32], vec_type, t.params, cases);
+  await run(t, compoundBinary('/='), [vec_type, TypeI32], vec_type, t.params, cases);
 });
 
 g.test('remainder_scalar_vector').
@@ -734,6 +734,6 @@ fn(async (t) => {
   const vec_type = TypeVec(vec_size, TypeI32);
   const source = t.params.inputSource === 'const' ? 'const' : 'non_const';
   const cases = await d.get(`remainder_vector${vec_size}_scalar_${source}`);
-  await run(t, compoundBinary('%'), [vec_type, TypeI32], vec_type, t.params, cases);
+  await run(t, compoundBinary('%='), [vec_type, TypeI32], vec_type, t.params, cases);
 });
 //# sourceMappingURL=i32_arithmetic.spec.js.map
