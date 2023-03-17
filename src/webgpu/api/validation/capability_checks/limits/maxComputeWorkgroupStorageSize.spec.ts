@@ -15,51 +15,51 @@ export const { g, description } = makeLimitTestGroup(limit);
 const kSmallestWorkgroupVarSize = 4;
 
 const wgslF16Types = {
-  f16: { alignOf: 2, sizeOf: 2 },
-  'vec2<f16>': { alignOf: 4, sizeOf: 4 },
-  'vec3<f16>': { alignOf: 8, sizeOf: 6 },
-  'vec4<f16>': { alignOf: 8, sizeOf: 8 },
-  'mat2x2<f16>': { alignOf: 4, sizeOf: 8 },
-  'mat3x2<f16>': { alignOf: 4, sizeOf: 12 },
-  'mat4x2<f16>': { alignOf: 4, sizeOf: 16 },
-  'mat2x3<f16>': { alignOf: 8, sizeOf: 16 },
-  'mat3x3<f16>': { alignOf: 8, sizeOf: 24 },
-  'mat4x3<f16>': { alignOf: 8, sizeOf: 32 },
-  'mat2x4<f16>': { alignOf: 8, sizeOf: 16 },
-  'mat3x4<f16>': { alignOf: 8, sizeOf: 24 },
-  'mat4x4<f16>': { alignOf: 8, sizeOf: 32 },
+  f16: { alignOf: 2, sizeOf: 2, requireF16: true },
+  'vec2<f16>': { alignOf: 4, sizeOf: 4, requireF16: true },
+  'vec3<f16>': { alignOf: 8, sizeOf: 6, requireF16: true },
+  'vec4<f16>': { alignOf: 8, sizeOf: 8, requireF16: true },
+  'mat2x2<f16>': { alignOf: 4, sizeOf: 8, requireF16: true },
+  'mat3x2<f16>': { alignOf: 4, sizeOf: 12, requireF16: true },
+  'mat4x2<f16>': { alignOf: 4, sizeOf: 16, requireF16: true },
+  'mat2x3<f16>': { alignOf: 8, sizeOf: 16, requireF16: true },
+  'mat3x3<f16>': { alignOf: 8, sizeOf: 24, requireF16: true },
+  'mat4x3<f16>': { alignOf: 8, sizeOf: 32, requireF16: true },
+  'mat2x4<f16>': { alignOf: 8, sizeOf: 16, requireF16: true },
+  'mat3x4<f16>': { alignOf: 8, sizeOf: 24, requireF16: true },
+  'mat4x4<f16>': { alignOf: 8, sizeOf: 32, requireF16: true },
 };
 
 const wgslBaseTypes = {
-  f32: { alignOf: 4, sizeOf: 4 },
-  i32: { alignOf: 4, sizeOf: 4 },
-  u32: { alignOf: 4, sizeOf: 4 },
+  f32: { alignOf: 4, sizeOf: 4, requireF16: false },
+  i32: { alignOf: 4, sizeOf: 4, requireF16: false },
+  u32: { alignOf: 4, sizeOf: 4, requireF16: false },
 
-  'vec2<f32>': { alignOf: 8, sizeOf: 8 },
-  'vec2<i32>': { alignOf: 8, sizeOf: 8 },
-  'vec2<u32>': { alignOf: 8, sizeOf: 8 },
+  'vec2<f32>': { alignOf: 8, sizeOf: 8, requireF16: false },
+  'vec2<i32>': { alignOf: 8, sizeOf: 8, requireF16: false },
+  'vec2<u32>': { alignOf: 8, sizeOf: 8, requireF16: false },
 
-  'vec3<f32>': { alignOf: 16, sizeOf: 12 },
-  'vec3<i32>': { alignOf: 16, sizeOf: 12 },
-  'vec3<u32>': { alignOf: 16, sizeOf: 12 },
+  'vec3<f32>': { alignOf: 16, sizeOf: 12, requireF16: false },
+  'vec3<i32>': { alignOf: 16, sizeOf: 12, requireF16: false },
+  'vec3<u32>': { alignOf: 16, sizeOf: 12, requireF16: false },
 
-  'vec4<f32>': { alignOf: 16, sizeOf: 16 },
-  'vec4<i32>': { alignOf: 16, sizeOf: 16 },
-  'vec4<u32>': { alignOf: 16, sizeOf: 16 },
+  'vec4<f32>': { alignOf: 16, sizeOf: 16, requireF16: false },
+  'vec4<i32>': { alignOf: 16, sizeOf: 16, requireF16: false },
+  'vec4<u32>': { alignOf: 16, sizeOf: 16, requireF16: false },
 
-  'mat2x2<f32>': { alignOf: 8, sizeOf: 16 },
-  'mat3x2<f32>': { alignOf: 8, sizeOf: 24 },
-  'mat4x2<f32>': { alignOf: 8, sizeOf: 32 },
-  'mat2x3<f32>': { alignOf: 16, sizeOf: 32 },
-  'mat3x3<f32>': { alignOf: 16, sizeOf: 48 },
-  'mat4x3<f32>': { alignOf: 16, sizeOf: 64 },
-  'mat2x4<f32>': { alignOf: 16, sizeOf: 32 },
-  'mat3x4<f32>': { alignOf: 16, sizeOf: 48 },
-  'mat4x4<f32>': { alignOf: 16, sizeOf: 64 },
+  'mat2x2<f32>': { alignOf: 8, sizeOf: 16, requireF16: false },
+  'mat3x2<f32>': { alignOf: 8, sizeOf: 24, requireF16: false },
+  'mat4x2<f32>': { alignOf: 8, sizeOf: 32, requireF16: false },
+  'mat2x3<f32>': { alignOf: 16, sizeOf: 32, requireF16: false },
+  'mat3x3<f32>': { alignOf: 16, sizeOf: 48, requireF16: false },
+  'mat4x3<f32>': { alignOf: 16, sizeOf: 64, requireF16: false },
+  'mat2x4<f32>': { alignOf: 16, sizeOf: 32, requireF16: false },
+  'mat3x4<f32>': { alignOf: 16, sizeOf: 48, requireF16: false },
+  'mat4x4<f32>': { alignOf: 16, sizeOf: 64, requireF16: false },
 
-  S1: { alignOf: 16, sizeOf: 48 },
-  S2: { alignOf: 4, sizeOf: 16 * 7 },
-  S3: { alignOf: 16, sizeOf: 32 },
+  S1: { alignOf: 16, sizeOf: 48, requireF16: false },
+  S2: { alignOf: 4, sizeOf: 16 * 7, requireF16: false },
+  S3: { alignOf: 16, sizeOf: 32, requireF16: false },
 };
 
 const wgslTypes = { ...wgslF16Types, ...wgslBaseTypes };
@@ -68,12 +68,14 @@ const kWGSLTypes = keysOf(wgslTypes);
 
 function getModuleForWorkgroupStorageSize(device: GPUDevice, wgslType: WGSLType, size: number) {
   assert(size % kSmallestWorkgroupVarSize === 0);
-  const { sizeOf, alignOf } = wgslTypes[wgslType];
+  const { sizeOf, alignOf, requireF16 } = wgslTypes[wgslType];
   const unitSize = align(sizeOf, alignOf);
   const units = Math.floor(size / unitSize);
   const extra = (size - units * unitSize) / kSmallestWorkgroupVarSize;
 
-  const code = `
+  const code =
+    (requireF16 ? 'enable f16;\n' : '') +
+    `
     struct S1 {
       a: f32,
       b: vec4f,
