@@ -1407,14 +1407,6 @@ export const listing = [
     "file": [
       "api",
       "validation",
-      "render_pass",
-      "storeOp"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
       "render_pipeline",
       "depth_stencil_state"
     ]
