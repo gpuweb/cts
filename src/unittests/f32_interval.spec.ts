@@ -449,10 +449,10 @@ g.test('correctlyRoundedInterval')
       { value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x00000000, 0x00000001), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000002), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x800fffff, 0xffffffff), expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
 
       // 32-bit normals
       { value: 0, expected: [0, 0] },
@@ -462,14 +462,14 @@ g.test('correctlyRoundedInterval')
       { value: hexToF32(0x83800001), expected: [hexToF32(0x83800001)] },
 
       // 64-bit normals
-      { value: hexToF64(0x3ff00000, 0x00000001), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff00000, 0x00000002), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff00010, 0x00000010), expected: [hexToF32(0x3f800080), hexToF32(0x3f800081)] },
-      { value: hexToF64(0x3ff00020, 0x00000020), expected: [hexToF32(0x3f800100), hexToF32(0x3f800101)] },
-      { value: hexToF64(0xbff00000, 0x00000001), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff00000, 0x00000002), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff00010, 0x00000010), expected: [hexToF32(0xbf800081), hexToF32(0xbf800080)] },
-      { value: hexToF64(0xbff00020, 0x00000020), expected: [hexToF32(0xbf800101), hexToF32(0xbf800100)] },
+      { value: hexToF64(0x3ff0_0000_0000_0001n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
+      { value: hexToF64(0x3ff0_0000_0000_0002n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
+      { value: hexToF64(0x3ff0_0010_0000_0010n), expected: [hexToF32(0x3f800080), hexToF32(0x3f800081)] },
+      { value: hexToF64(0x3ff0_0020_0000_0020n), expected: [hexToF32(0x3f800100), hexToF32(0x3f800101)] },
+      { value: hexToF64(0xbff0_0000_0000_0001n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
+      { value: hexToF64(0xbff0_0000_0000_0002n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
+      { value: hexToF64(0xbff0_0010_0000_0010n), expected: [hexToF32(0xbf800081), hexToF32(0xbf800080)] },
+      { value: hexToF64(0xbff0_0020_0000_0020n), expected: [hexToF32(0xbf800101), hexToF32(0xbf800100)] },
     ]
   )
   .fn(t => {
@@ -527,18 +527,18 @@ g.test('absoluteErrorInterval')
       { value: kValue.f32.subnormal.negative.max, error: 1, expected: [-1, 1] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x00000000, 0x00000001), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000001), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x00000000, 0x00000001), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x00000000, 0x00000002), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000002), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x00000000, 0x00000002), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x800fffff, 0xffffffff), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xffffffff), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x800fffff, 0xffffffff), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
 
       // Zero
       { value: 0, error: 0, expected: [0] },
@@ -601,18 +601,18 @@ g.test('ulpInterval')
       { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x00000000, 0x00000001), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x00000000, 0x00000002), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
-      { value: hexToF64(0x800fffff, 0xffffffff), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
-      { value: hexToF64(0x800fffff, 0xfffffffe), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
+      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
+      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
+      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
+      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
 
       // Zero
       { value: 0, num_ulp: 0, expected: [0] },
@@ -660,8 +660,8 @@ g.test('absInterval')
       { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
 
       // 64-bit subnormals
-      { input: hexToF64(0x00000000, 0x00000001), expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: hexToF64(0x800fffff, 0xffffffff), expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: hexToF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
 
       // Zero
       { input: 0, expected: [0]},
@@ -694,7 +694,7 @@ g.test('acosInterval')
       { input: -1/2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] },  // ~2π/3
       { input: 0, expected: kAny },
       { input: 1/2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] },  // ~π/3
-      { input: minusOneULP(1), expected: [hexToF64(0x3f2ffdff, 0x60000000), hexToF64(0x3f3b106f, 0xc9334fb9)] },  // ~0.0003
+      { input: minusOneULP(1), expected: [hexToF64(0x3f2f_fdff_6000_0000n), hexToF64(0x3f3b_106f_c933_4fb9n)] },  // ~0.0003
       { input: 1, expected: kAny },
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
@@ -721,8 +721,8 @@ g.test('acoshAlternativeInterval')
       { input: -1, expected: kAny },
       { input: 0, expected: kAny },
       { input: 1, expected: kAny },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [hexToF64(0x3fdc6368, 0x80000000), hexToF64(0x3fdc636f, 0x20000000)] },  // ~0.443..., differs from the primary in the later digits
-      { input: 10, expected: [hexToF64(0x4007f21e, 0x40000000), hexToF64(0x4007f21f, 0x60000000)] },  // ~2.993...
+      { input: 1.1, expected: [hexToF64(0x3fdc_6368_8000_0000n), hexToF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -748,8 +748,8 @@ g.test('acoshPrimaryInterval')
       { input: -1, expected: kAny },
       { input: 0, expected: kAny },
       { input: 1, expected: kAny },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [hexToF64(0x3fdc6368, 0x20000000), hexToF64(0x3fdc636f, 0x80000000)] }, // ~0.443..., differs from the alternative in the later digits
-      { input: 10, expected: [hexToF64(0x4007f21e, 0x40000000), hexToF64(0x4007f21f, 0x60000000)] },  // ~2.993...
+      { input: 1.1, expected: [hexToF64(0x3fdc_6368_2000_0000n), hexToF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
+      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -779,11 +779,11 @@ g.test('asinInterval')
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
       { input: -1, expected: kAny },
-      { input: -1/2, expected: [hexToF64(0xbfe0c352, 0xc0000000), hexToF64(0xbfe0bf51, 0xc0000000)] },  // ~-π/6
+      { input: -1/2, expected: [hexToF64(0xbfe0_c352_c000_0000n), hexToF64(0xbfe0_bf51_c000_0000n)] },  // ~-π/6
       { input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] },  // ~0
       { input: 0, expected: kAny },
       { input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] },  // ~0
-      { input: 1/2, expected: [hexToF64(0x3fe0bf51, 0xc0000000), hexToF64(0x3fe0c352, 0xc0000000)] },  // ~π/6
+      { input: 1/2, expected: [hexToF64(0x3fe0_bf51_c000_0000n), hexToF64(0x3fe0_c352_c000_0000n)] },  // ~π/6
       { input: 1, expected: kAny },  // ~π/2
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
@@ -807,9 +807,9 @@ g.test('asinhInterval')
       // form due to the inherited nature of the errors.
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
-      { input: -1, expected: [hexToF64(0xbfec343a, 0x80000000), hexToF64(0xbfec3432, 0x80000000)] },  // ~-0.88137...
-      { input: 0, expected: [hexToF64(0xbeaa0000, 0x20000000), hexToF64(0x3eb1ffff, 0xd0000000)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fec3435, 0x40000000), hexToF64(0x3fec3437, 0x80000000)] },  // ~0.88137...
+      { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
+      { input: 0, expected: [hexToF64(0xbeaa_0000_2000_0000n), hexToF64(0x3eb1_ffff_d000_0000n)] },  // ~0
+      { input: 1, expected: [hexToF64(0x3fec_3435_4000_0000n), hexToF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -863,9 +863,9 @@ g.test('atanhInterval')
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
       { input: -1, expected: kAny },
-      { input: -0.1, expected: [hexToF64(0xbfb9af9a, 0x60000000), hexToF64(0xbfb9af8c, 0xc0000000)] },  // ~-0.1003...
-      { input: 0, expected: [hexToF64(0xbe960000, 0x20000000), hexToF64(0x3e980000, 0x00000000)] },  // ~0
-      { input: 0.1, expected: [hexToF64(0x3fb9af8b, 0x80000000), hexToF64(0x3fb9af9b, 0x00000000)] },  // ~0.1003...
+      { input: -0.1, expected: [hexToF64(0xbfb9_af9a_6000_0000n), hexToF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
+      { input: 0, expected: [hexToF64(0xbe96_0000_2000_0000n), hexToF64(0x3e98_0000_0000_0000n)] },  // ~0
+      { input: 0.1, expected: [hexToF64(0x3fb9_af8b_8000_0000n), hexToF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
       { input: 1, expected: kAny },
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
@@ -1119,11 +1119,11 @@ g.test('fractInterval')
       { input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
       { input: 0.9, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] },  // ~0.9
       { input: 1.0, expected: [0] },
-      { input: 1.1, expected: [hexToF64(0x3fb99998, 0x00000000), hexToF64(0x3fb9999a, 0x00000000)] }, // ~0.1
+      { input: 1.1, expected: [hexToF64(0x3fb9_9998_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
       { input: -0.1, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] },  // ~0.9
-      { input: -0.9, expected: [hexToF64(0x3fb99999, 0x00000000), hexToF64(0x3fb9999a, 0x00000000)] }, // ~0.1
+      { input: -0.9, expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
       { input: -1.0, expected: [0] },
-      { input: -1.1, expected: [hexToF64(0x3feccccc, 0xc0000000), hexToF64(0x3feccccd, 0x00000000), ] }, // ~0.9
+      { input: -1.1, expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
 
       // Edge cases
       { input: kValue.f32.infinity.positive, expected: kAny },
@@ -1181,12 +1181,12 @@ g.test('lengthIntervalScalar')
       //
       // length(0) = kAny, because length uses sqrt, which is defined as 1/inversesqrt
       {input: 0, expected: kAny },
-      {input: 1.0, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: -1.0, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: 0.1, expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      {input: -0.1, expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      {input: 10.0, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
-      {input: -10.0, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
+      {input: 1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: -1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: 0.1, expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: -0.1, expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: 10.0, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      {input: -10.0, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
 
       // Subnormal Cases
       { input: kValue.f32.subnormal.negative.min, expected: kAny },
@@ -1558,10 +1558,10 @@ g.test('sqrtInterval')
       // form due to the inherited nature of the errors.
       { input: -1, expected: kAny },
       { input: 0, expected: kAny },
-      { input: 0.01, expected: [hexToF64(0x3fb99998, 0xb0000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: 1, expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: 4, expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      { input: 100, expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
+      { input: 0.01, expected: [hexToF64(0x3fb9_9998_b000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: 1, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: 4, expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: 100, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
   )
@@ -1590,11 +1590,11 @@ g.test('tanInterval')
       // The examples here have been manually traced to confirm the expectation values are correct.
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
-      { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf4002bc, 0x90000000), hexToF64(0x3f400144, 0xf0000000)] },  // ~0.0
+      { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf40_02bc_9000_0000n), hexToF64(0x3f40_0144_f000_0000n)] },  // ~0.0
       { input: kValue.f32.negative.pi.half, expected: kAny },
-      { input: 0, expected: [hexToF64(0xbf400200, 0xb0000000), hexToF64(0x3f400200, 0xb0000000)] },  // ~0.0
+      { input: 0, expected: [hexToF64(0xbf40_0200_b000_0000n), hexToF64(0x3f40_0200_b000_0000n)] },  // ~0.0
       { input: kValue.f32.positive.pi.half, expected: kAny },
-      { input: kValue.f32.positive.pi.whole, expected: [hexToF64(0xbf400144, 0xf0000000), hexToF64(0x3f4002bc, 0x90000000)] },  // ~0.0
+      { input: kValue.f32.positive.pi.whole, expected: [hexToF64(0xbf40_0144_f000_0000n), hexToF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -1617,9 +1617,9 @@ g.test('tanhInterval')
       // form due to the inherited nature of the errors.
       { input: kValue.f32.infinity.negative, expected: kAny },
       { input: kValue.f32.negative.min, expected: kAny },
-      { input: -1, expected: [hexToF64(0xbfe85efd, 0x10000000), hexToF64(0xbfe85ef8, 0x90000000)] },  // ~-0.7615...
-      { input: 0, expected: [hexToF64(0xbe8c0000, 0xb0000000), hexToF64(0x3e8c0000, 0xb0000000)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fe85ef8, 0x90000000), hexToF64(0x3fe85efd, 0x10000000)] },  // ~0.7615...
+      { input: -1, expected: [hexToF64(0xbfe8_5efd_1000_0000n), hexToF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
+      { input: 0, expected: [hexToF64(0xbe8c_0000_b000_0000n), hexToF64(0x3e8c_0000_b000_0000n)] },  // ~0
+      { input: 1, expected: [hexToF64(0x3fe8_5ef8_9000_0000n), hexToF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
       { input: kValue.f32.positive.max, expected: kAny },
       { input: kValue.f32.infinity.positive, expected: kAny },
     ]
@@ -1757,7 +1757,7 @@ g.test('atan2Interval')
       // positive y, positive x
       { input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULP(kValue.f32.positive.pi.sixth, 4097), plusNULP(kValue.f32.positive.pi.sixth, 4096)] },  // x = √3
       { input: [1, 1], expected: [minusNULP(kValue.f32.positive.pi.quarter, 4097), plusNULP(kValue.f32.positive.pi.quarter, 4096)] },
-      // { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0bf52, 0x00000000), hexToF64(0x3ff0c352, 0x60000000)] },  // y = √3
+      // { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0_bf52_0000_0000n), hexToF64(0x3ff0_c352_6000_0000n)] },  // y = √3
       { input: [Number.POSITIVE_INFINITY, 1], expected: kAny },
 
       // positive y, negative x
@@ -1819,20 +1819,20 @@ g.test('distanceIntervalScalar')
       // distance(x, y), where x - y = 0 has an acceptance interval of kAny,
       // because distance(x, y) = length(x - y), and length(0) = kAny
       { input: [0, 0], expected: kAny },
-      { input: [1.0, 0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      { input: [1.0, 0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
       { input: [1.0, 1.0], expected: kAny },
-      { input: [-0.0, -1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [0.0, -1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
+      { input: [-0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
       { input: [-1.0, -1.0], expected: kAny },
-      { input: [0.1, 0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [0, 0.1], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [-0.1, 0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [0, -0.1], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [10.0, 0], expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
-      { input: [0, 10.0], expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
-      { input: [-10.0, 0], expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
-      { input: [0, -10.0], expected: [hexToF64(0x4023ffff, 0x70000000), hexToF64(0x40240000, 0xb0000000)] },  // ~10
+      { input: [0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [0, 0.1], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [-0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [0, -0.1], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [10.0, 0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [0, 10.0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [-10.0, 0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [0, -10.0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
 
       // Subnormal Cases
       { input: [kValue.f32.subnormal.negative.min, 0], expected: kAny },
@@ -2196,17 +2196,17 @@ g.test('powInterval')
       // form due to the inherited nature of the errors.
       { input: [-1, 0], expected: kAny },
       { input: [0, 0], expected: kAny },
-      { input: [1, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
-      { input: [2, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
-      { input: [kValue.f32.positive.max, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff00000, 0x30000000)] },  // ~1
+      { input: [1, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [2, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [kValue.f32.positive.max, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
       { input: [0, 1], expected: kAny },
-      { input: [1, 1], expected: [hexToF64(0x3feffffe, 0xdffffe00), hexToF64(0x3ff00000, 0xc0000200)] },  // ~1
-      { input: [1, 100], expected: [hexToF64(0x3fefffba, 0x3fff3800), hexToF64(0x3ff00023, 0x2000c800)] },  // ~1
+      { input: [1, 1], expected: [hexToF64(0x3fef_fffe_dfff_fe00n), hexToF64(0x3ff0_0000_c000_0200n)] },  // ~1
+      { input: [1, 100], expected: [hexToF64(0x3fef_ffba_3fff_3800n), hexToF64(0x3ff0_0023_2000_c800n)] },  // ~1
       { input: [1, kValue.f32.positive.max], expected: kAny },
-      { input: [2, 1], expected: [hexToF64(0x3ffffffe, 0xa0000200), hexToF64(0x40000001, 0x00000200)] },  // ~2
-      { input: [2, 2], expected: [hexToF64(0x400ffffd, 0xa0000400), hexToF64(0x40100001, 0xa0000400)] },  // ~4
-      { input: [10, 10], expected: [hexToF64(0x4202a04f, 0x51f77000), hexToF64(0x4202a070, 0xee08e000)] },  // ~10000000000
-      { input: [10, 1], expected: [hexToF64(0x4023fffe, 0x0b658b00), hexToF64(0x40240002, 0x149a7c00)] },  // ~10
+      { input: [2, 1], expected: [hexToF64(0x3fff_fffe_a000_0200n), hexToF64(0x4000_0001_0000_0200n)] },  // ~2
+      { input: [2, 2], expected: [hexToF64(0x400f_fffd_a000_0400n), hexToF64(0x4010_0001_a000_0400n)] },  // ~4
+      { input: [10, 10], expected: [hexToF64(0x4202_a04f_51f7_7000n), hexToF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
+      { input: [10, 1], expected: [hexToF64(0x4023_fffe_0b65_8b00n), hexToF64(0x4024_0002_149a_7c00n)] },  // ~10
       { input: [kValue.f32.positive.max, 1], expected: kAny },
     ]
   )
@@ -2521,45 +2521,45 @@ g.test('mixImpreciseInterval')
       // [0.0, 1.0] cases
       { input: [0.0, 1.0, -1.0], expected: [-1.0] },
       { input: [0.0, 1.0, 0.0], expected: [0.0] },
-      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb99999,0x80000000), hexToF64(0x3fb99999,0xa0000000)] },  // ~0.1
+      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
       { input: [0.0, 1.0, 0.5], expected: [0.5] },
-      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [0.0, 1.0, 1.0], expected: [1.0] },
       { input: [0.0, 1.0, 2.0], expected: [2.0] },
 
       // [1.0, 0.0] cases
       { input: [1.0, 0.0, -1.0], expected: [2.0] },
       { input: [1.0, 0.0, 0.0], expected: [1.0] },
-      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [1.0, 0.0, 0.5], expected: [0.5] },
-      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb99999,0x00000000), hexToF64(0x3fb9999a,0x00000000)] },  // ~0.1
+      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
       { input: [1.0, 0.0, 1.0], expected: [0.0] },
       { input: [1.0, 0.0, 2.0], expected: [-1.0] },
 
       // [0.0, 10.0] cases
       { input: [0.0, 10.0, -1.0], expected: [-10.0] },
       { input: [0.0, 10.0, 0.0], expected: [0.0] },
-      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fefffff,0xe0000000), hexToF64(0x3ff00000,0x20000000)] },  // ~1
+      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] },  // ~1
       { input: [0.0, 10.0, 0.5], expected: [5.0] },
-      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021ffff,0xe0000000), hexToF64(0x40220000,0x20000000)] },  // ~9
+      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] },  // ~9
       { input: [0.0, 10.0, 1.0], expected: [10.0] },
       { input: [0.0, 10.0, 2.0], expected: [20.0] },
 
       // [2.0, 10.0] cases
       { input: [2.0, 10.0, -1.0], expected: [-6.0] },
       { input: [2.0, 10.0, 0.0], expected: [2.0] },
-      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x40066666,0x60000000), hexToF64(0x40066666,0x80000000)] },  // ~2.8
+      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_6000_0000n), hexToF64(0x4006_6666_8000_0000n)] },  // ~2.8
       { input: [2.0, 10.0, 0.5], expected: [6.0] },
-      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x40226666,0x60000000), hexToF64(0x40226666,0x80000000)] },  // ~9.2
+      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_6000_0000n), hexToF64(0x4022_6666_8000_0000n)] },  // ~9.2
       { input: [2.0, 10.0, 1.0], expected: [10.0] },
       { input: [2.0, 10.0, 2.0], expected: [18.0] },
 
       // [-1.0, 1.0] cases
       { input: [-1.0, 1.0, -2.0], expected: [-5.0] },
       { input: [-1.0, 1.0, 0.0], expected: [-1.0] },
-      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe99999,0xa0000000), hexToF64(0xbfe99999,0x80000000)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_a000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
       { input: [-1.0, 1.0, 0.5], expected: [0.0] },
-      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe99999,0x80000000), hexToF64(0x3fe99999,0xc0000000)] },  // ~0.8
+      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
       { input: [-1.0, 1.0, 1.0], expected: [1.0] },
       { input: [-1.0, 1.0, 2.0], expected: [3.0] },
 
@@ -2599,45 +2599,45 @@ g.test('mixPreciseInterval')
       // [0.0, 1.0] cases
       { input: [0.0, 1.0, -1.0], expected: [-1.0] },
       { input: [0.0, 1.0, 0.0], expected: [0.0] },
-      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb99999,0x80000000), hexToF64(0x3fb99999,0xa0000000)] },  // ~0.1
+      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
       { input: [0.0, 1.0, 0.5], expected: [0.5] },
-      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [0.0, 1.0, 1.0], expected: [1.0] },
       { input: [0.0, 1.0, 2.0], expected: [2.0] },
 
       // [1.0, 0.0] cases
       { input: [1.0, 0.0, -1.0], expected: [2.0] },
       { input: [1.0, 0.0, 0.0], expected: [1.0] },
-      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3feccccc,0xc0000000), hexToF64(0x3feccccc,0xe0000000)] },  // ~0.9
+      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [1.0, 0.0, 0.5], expected: [0.5] },
-      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb99999,0x00000000), hexToF64(0x3fb9999a,0x00000000)] },  // ~0.1
+      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
       { input: [1.0, 0.0, 1.0], expected: [0.0] },
       { input: [1.0, 0.0, 2.0], expected: [-1.0] },
 
       // [0.0, 10.0] cases
       { input: [0.0, 10.0, -1.0], expected: [-10.0] },
       { input: [0.0, 10.0, 0.0], expected: [0.0] },
-      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fefffff,0xe0000000), hexToF64(0x3ff00000,0x20000000)] },  // ~1
+      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] },  // ~1
       { input: [0.0, 10.0, 0.5], expected: [5.0] },
-      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021ffff,0xe0000000), hexToF64(0x40220000,0x20000000)] },  // ~9
+      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] },  // ~9
       { input: [0.0, 10.0, 1.0], expected: [10.0] },
       { input: [0.0, 10.0, 2.0], expected: [20.0] },
 
       // [2.0, 10.0] cases
       { input: [2.0, 10.0, -1.0], expected: [-6.0] },
       { input: [2.0, 10.0, 0.0], expected: [2.0] },
-      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x40066666,0x40000000), hexToF64(0x40066666,0x80000000)] },  // ~2.8
+      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_4000_0000n), hexToF64(0x4006_6666_8000_0000n)] },  // ~2.8
       { input: [2.0, 10.0, 0.5], expected: [6.0] },
-      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x40226666,0x40000000), hexToF64(0x40226666,0xa0000000)] },  // ~9.2
+      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_4000_0000n), hexToF64(0x4022_6666_a000_0000n)] },  // ~9.2
       { input: [2.0, 10.0, 1.0], expected: [10.0] },
       { input: [2.0, 10.0, 2.0], expected: [18.0] },
 
       // [-1.0, 1.0] cases
       { input: [-1.0, 1.0, -2.0], expected: [-5.0] },
       { input: [-1.0, 1.0, 0.0], expected: [-1.0] },
-      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe99999,0xc0000000), hexToF64(0xbfe99999,0x80000000)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_c000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
       { input: [-1.0, 1.0, 0.5], expected: [0.0] },
-      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe99999,0x80000000), hexToF64(0x3fe99999,0xc0000000)] },  // ~0.8
+      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
       { input: [-1.0, 1.0, 1.0], expected: [1.0] },
       { input: [-1.0, 1.0, 2.0], expected: [3.0] },
 
@@ -2732,25 +2732,25 @@ interface PointToVectorCase {
 {
   const kZeroBounds: IntervalBounds = [hexToF32(0x81200000), hexToF32(0x01200000)];
   const kOneBoundsSnorm: IntervalBounds = [
-    hexToF64(0x3fefffff, 0xa0000000),
-    hexToF64(0x3ff00000, 0x40000000),
+    hexToF64(0x3fef_ffff_a000_0000n),
+    hexToF64(0x3ff0_0000_4000_0000n),
   ];
   const kOneBoundsUnorm: IntervalBounds = [
-    hexToF64(0x3fefffff, 0xb0000000),
-    hexToF64(0x3ff00000, 0x28000000),
+    hexToF64(0x3fef_ffff_b000_0000n),
+    hexToF64(0x3ff0_0000_2800_0000n),
   ];
   const kNegOneBoundsSnorm: IntervalBounds = [
-    hexToF64(0xbff00000, 0x00000000),
-    hexToF64(0xbfefffff, 0xa0000000),
+    hexToF64(0xbff0_0000_0000_0000n),
+    hexToF64(0xbfef_ffff_a000_0000n),
   ];
 
   const kHalfBounds2x16snorm: IntervalBounds = [
-    hexToF64(0x3fe0001f, 0xa0000000),
-    hexToF64(0x3fe00020, 0x80000000),
+    hexToF64(0x3fe0_001f_a000_0000n),
+    hexToF64(0x3fe0_0020_8000_0000n),
   ]; // ~0.5..., due to lack of precision in i16
   const kNegHalfBounds2x16snorm: IntervalBounds = [
-    hexToF64(0xbfdfffc0, 0x60000000),
-    hexToF64(0xbfdfffbf, 0x80000000),
+    hexToF64(0xbfdf_ffc0_6000_0000n),
+    hexToF64(0xbfdf_ffbf_8000_0000n),
   ]; // ~-0.5..., due to lack of precision in i16
 
   g.test('unpack2x16snormInterval')
@@ -2818,8 +2818,8 @@ interface PointToVectorCase {
     });
 
   const kHalfBounds2x16unorm: IntervalBounds = [
-    hexToF64(0x3fe0000f, 0xb0000000),
-    hexToF64(0x3fe00010, 0x70000000),
+    hexToF64(0x3fe0_000f_b000_0000n),
+    hexToF64(0x3fe0_0010_7000_0000n),
   ]; // ~0.5..., due to lack of precision in u16
 
   g.test('unpack2x16unormInterval')
@@ -2847,12 +2847,12 @@ interface PointToVectorCase {
     });
 
   const kHalfBounds4x8snorm: IntervalBounds = [
-    hexToF64(0x3fe02040, 0x20000000),
-    hexToF64(0x3fe02041, 0x00000000),
+    hexToF64(0x3fe0_2040_2000_0000n),
+    hexToF64(0x3fe0_2041_0000_0000n),
   ]; // ~0.50196..., due to lack of precision in i8
   const kNegHalfBounds4x8snorm: IntervalBounds = [
-    hexToF64(0xbfdfbf7f, 0x60000000),
-    hexToF64(0xbfdfbf7e, 0x80000000),
+    hexToF64(0xbfdf_bf7f_6000_0000n),
+    hexToF64(0xbfdf_bf7e_8000_0000n),
   ]; // ~-0.49606..., due to lack of precision in i8
 
   g.test('unpack4x8snormInterval')
@@ -2888,8 +2888,8 @@ interface PointToVectorCase {
     });
 
   const kHalfBounds4x8unorm: IntervalBounds = [
-    hexToF64(0x3fe0100f, 0xb0000000),
-    hexToF64(0x3fe01010, 0x70000000),
+    hexToF64(0x3fe0_100f_b000_0000n),
+    hexToF64(0x3fe0_1010_7000_0000n),
   ]; // ~0.50196..., due to lack of precision in u8
 
   g.test('unpack4x8unormInterval')
@@ -2935,31 +2935,31 @@ g.test('lengthIntervalVector')
       // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
       // form due to the inherited nature of the errors.
       // vec2
-      {input: [1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [1.0, 1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
-      {input: [-1.0, -1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
-      {input: [-1.0, 1.0], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
-      {input: [0.1, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      {input: [1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [-1.0, -1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [-1.0, 1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [0.1, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec3
-      {input: [1.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [1.0, 1.0, 1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      {input: [-1.0, -1.0, -1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      {input: [1.0, -1.0, -1.0], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      {input: [0.1, 0.0, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      {input: [1.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0, 1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [-1.0, -1.0, -1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [1.0, -1.0, -1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [0.1, 0.0, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      {input: [-1.0, -1.0, -1.0, -1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      {input: [-1.0, 1.0, -1.0, 1.0], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      {input: [0.1, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [-1.0, -1.0, -1.0, -1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [-1.0, 1.0, -1.0, 1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [0.1, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // Test that dot going OOB bounds in the intermediate calculations propagates
       { input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kAny },
@@ -2995,44 +2995,44 @@ g.test('distanceIntervalVector')
 
       // vec2
       { input: [[1.0, 0.0], [1.0, 0.0]], expected: kAny },
-      { input: [[1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0], [-1.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 1.0], [-1.0, 0.0]], expected: [hexToF64(0x3ff6a09d, 0xb0000000), hexToF64(0x3ff6a09f, 0x10000000)] },  // ~√2
-      { input: [[0.1, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      { input: [[1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0], [-1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0], [-1.0, 0.0]], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      { input: [[0.1, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec3
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kAny },
-      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: [hexToF64(0x3ffbb67a, 0x10000000), hexToF64(0x3ffbb67b, 0xb0000000)] },  // ~√3
-      { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec4
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kAny },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [hexToF64(0x3fefffff, 0x70000000), hexToF64(0x3ff00000, 0x90000000)] },  // ~1
-      { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: [hexToF64(0x3fffffff, 0x70000000), hexToF64(0x40000000, 0x90000000)] },  // ~2
-      { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99998, 0x90000000), hexToF64(0x3fb9999a, 0x70000000)] },  // ~0.1
+      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
     ]
   )
   .fn(t => {
@@ -3055,7 +3055,7 @@ g.test('dotInterval')
       { input: [[1.0, 1.0], [1.0, 1.0]], expected: [2.0] },
       { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: [2.0] },
       { input: [[-1.0, 1.0], [1.0, -1.0]], expected: [-2.0] },
-      { input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)]},  // ~0.1
+      { input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // vec3
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [1.0] },
@@ -3064,7 +3064,7 @@ g.test('dotInterval')
       { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [3.0] },
       { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [3.0] },
       { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [-1.0] },
-      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)]},  // ~0.1
+      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // vec4
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [1.0] },
@@ -3074,7 +3074,7 @@ g.test('dotInterval')
       { input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: [4.0] },
       { input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: [4.0] },
       { input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: [-4.0] },
-      { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb99999, 0x80000000), hexToF64(0x3fb99999, 0xa0000000)]},  // ~0.1
+      { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // Test that going out of bounds in the intermediate calculations is caught correctly.
       { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAny },
@@ -3109,25 +3109,25 @@ g.test('normalizeInterval')
     // prettier-ignore
     [
       // vec2
-      {input: [1.0, 0.0], expected: [[hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)]] },  // [ ~0.0, ~1.0]
-      {input: [-1.0, 0.0], expected: [[hexToF64(0xbff00000, 0xb0000000), hexToF64(0xbfeffffe, 0x70000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [1.0, 1.0], expected: [[hexToF64(0x3fe6a09d, 0x50000000), hexToF64(0x3fe6a09f, 0x90000000)], [hexToF64(0x3fe6a09d, 0x50000000), hexToF64(0x3fe6a09f, 0x90000000)]] },  // [ ~1/√2, ~1/√2]
+      {input: [1.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
+      {input: [-1.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [1.0, 1.0], expected: [[hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)], [hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
 
       // vec3
-      {input: [1.0, 0.0, 0.0], expected: [[hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)]] },  // [ ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0], expected: [[hexToF64(0xbff00000, 0xb0000000), hexToF64(0xbfeffffe, 0x70000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0], expected: [[hexToF64(0x3fe279a6, 0x50000000), hexToF64(0x3fe279a8, 0x50000000)], [hexToF64(0x3fe279a6, 0x50000000), hexToF64(0x3fe279a8, 0x50000000)], [hexToF64(0x3fe279a6, 0x50000000), hexToF64(0x3fe279a8, 0x50000000)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+      {input: [1.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0], expected: [[hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
 
       // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3feffffe, 0x70000000), hexToF64(0x3ff00000, 0xb0000000)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0xbff00000, 0xb0000000), hexToF64(0xbfeffffe, 0x70000000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [[hexToF64(0x3fdffffe, 0x70000000), hexToF64(0x3fe00000, 0xb0000000)], [hexToF64(0x3fdffffe, 0x70000000), hexToF64(0x3fe00000, 0xb0000000)], [hexToF64(0x3fdffffe, 0x70000000), hexToF64(0x3fe00000, 0xb0000000)], [hexToF64(0x3fdffffe, 0x70000000), hexToF64(0x3fe00000, 0xb0000000)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [[hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
     ]
   )
   .fn(t => {
@@ -3331,8 +3331,8 @@ interface RefractCase {
 // numbers that don't pollute the global namespace or have unwieldy long names.
 {
   const kNegativeOneBounds: IntervalBounds = [
-    hexToF64(0xbff00000, 0xc0000000),
-    hexToF64(0xbfefffff, 0x40000000),
+    hexToF64(0xbff0_0000_c000_0000n),
+    hexToF64(0xbfef_ffff_4000_0000n),
   ];
 
   g.test('refractInterval')
