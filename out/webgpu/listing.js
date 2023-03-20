@@ -3078,6 +3078,16 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "expression",
+      "call",
+      "builtin",
+      "atomics"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "parse",
       "align"
     ]

@@ -7,24 +7,14 @@ import { GPUTest } from '../../../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('stage').
-specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
-desc(
-`
-Atomic built-in functions must not be used in a vertex shader stage.
-`).
-
-params((u) => u.combine('stage', ['fragment', 'vertex', 'compute'])).
-unimplemented();
-
 g.test('exchange').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
 `
-SC is storage or workgroup
+AS is storage or workgroup
 T is i32 or u32
 
-fn atomicExchange(atomic_ptr: ptr<SC, atomic<T>, read_write>, v: T) -> T
+fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 `).
 
 params((u) =>
