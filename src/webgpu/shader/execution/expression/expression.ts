@@ -29,10 +29,12 @@ import {
   PointToInterval,
   PointToVector,
   ScalarMatrixToMatrix,
+  ScalarVectorToVector,
   TernaryToInterval,
   VectorMatrixToVector,
   VectorPairToInterval,
   VectorPairToVector,
+  VectorScalarToVector,
   VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
@@ -1163,6 +1165,118 @@ export function generateVectorPairToVectorCases(
 }
 
 /**
+ * @returns a Case for the params and the interval generators provided
+ * @param vec the vector param to pass in
+ * @param scalar the scalar to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a scalar.
+ */
+function makeVectorF32ToVectorCase(
+  vec: number[],
+  scalar: number,
+  filter: IntervalFilter,
+  ...ops: VectorScalarToVector[]
+): Case | undefined {
+  vec = vec.map(quantizeToF32);
+  scalar = quantizeToF32(scalar);
+  const vec_f32 = vec.map(f32);
+  const scalar_f32 = f32(scalar);
+
+  const results = ops.map(o => o(vec, scalar));
+  if (filter === 'f32-only' && results.some(r => r.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [new Vector(vec_f32), scalar_f32],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param vecs array of inputs to try for the vector input
+ * @param scalars array of inputs to try for the scalar input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a vector and a scalar.
+ */
+export function generateVectorF32ToVectorCases(
+  vecs: number[][],
+  scalars: number[],
+  filter: IntervalFilter,
+  ...ops: VectorScalarToVector[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  vecs.forEach(vec => {
+    scalars.forEach(scalar => {
+      const c = makeVectorF32ToVectorCase(vec, scalar, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
+ * @returns a Case for the params and the interval generators provided
+ * @param scalar the scalar to pass in
+ * @param vec the vector param to pass in
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a scalar and a vector.
+ */
+function makeF32VectorToVectorCase(
+  scalar: number,
+  vec: number[],
+  filter: IntervalFilter,
+  ...ops: ScalarVectorToVector[]
+): Case | undefined {
+  scalar = quantizeToF32(scalar);
+  vec = vec.map(quantizeToF32);
+  const scalar_f32 = f32(scalar);
+  const vec_f32 = vec.map(f32);
+
+  const results = ops.map(o => o(scalar, vec));
+  if (filter === 'f32-only' && results.some(r => r.some(e => !e.isFinite()))) {
+    return undefined;
+  }
+  return {
+    input: [scalar_f32, new Vector(vec_f32)],
+    expected: anyOf(...results),
+  };
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param scalars array of inputs to try for the scalar input
+ * @param vecs array of inputs to try for the vector input
+ * @param filter what interval filtering to apply
+ * @param ops callbacks that implement generating a vector of acceptance
+ *            intervals for a scalar and a vector .
+ */
+export function generateF32VectorToVectorCases(
+  scalars: number[],
+  vecs: number[][],
+  filter: IntervalFilter,
+  ...ops: ScalarVectorToVector[]
+): Case[] {
+  // Cannot use cartesianProduct here, due to heterogeneous types
+  const cases: Case[] = [];
+  scalars.forEach(scalar => {
+    vecs.forEach(vec => {
+      const c = makeF32VectorToVectorCase(scalar, vec, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+    });
+  });
+  return cases;
+}
+
+/**
  * @returns a Case for the param and an array of interval generators provided
  * @param param the param to pass in
  * @param filter what interval filtering to apply
@@ -1345,6 +1459,7 @@ function makeMatrixScalarToMatrixCase(
  * @param ops callbacks that implement generating an matrix of acceptance
  *            intervals for a pair of matrices.
  */
+
 export function generateMatrixScalarToMatrixCases(
   mats: number[][][],
   scalars: number[],

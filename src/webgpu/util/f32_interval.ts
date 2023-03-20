@@ -623,6 +623,26 @@ interface VectorPairToVectorOp {
 }
 
 /**
+ * A function that converts a vector and a scalar to a vector of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface VectorScalarToVector {
+  (x: number[], y: number): F32Vector;
+}
+
+/**
+ * A function that converts a scalar and a vector  to a vector of acceptance
+ * intervals.
+ * This is the public facing API for builtin implementations that is called
+ * from tests.
+ */
+export interface ScalarVectorToVector {
+  (x: number, y: number[]): F32Vector;
+}
+
+/**
  * A function that converts a matrix to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
