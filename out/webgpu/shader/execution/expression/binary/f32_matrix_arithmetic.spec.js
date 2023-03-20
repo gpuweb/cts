@@ -1433,6 +1433,41 @@ fn(async (t) => {
 
 });
 
+g.test('multiplication_matrix_matrix_compound').
+specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
+desc(
+`
+Expression: x *= y, where x is a matrix and y is a matrix
+Accuracy: Correctly rounded
+`).
+
+params((u) =>
+u.
+combine('inputSource', allInputSources).
+combine('common_dim', [2, 3, 4]).
+combine('x_rows', [2, 3, 4])).
+
+fn(async (t) => {
+  const x_cols = t.params.common_dim;
+  const x_rows = t.params.x_rows;
+  const y_cols = x_cols;
+  const y_rows = t.params.common_dim;
+
+  const cases = await d.get(
+  t.params.inputSource === 'const' ?
+  `multiplication_${x_cols}x${x_rows}_${y_cols}x${y_rows}_const` :
+  `multiplication_${x_cols}x${x_rows}_${y_cols}x${y_rows}_non_const`);
+
+  await run(
+  t,
+  compoundBinary('*='),
+  [TypeMat(x_cols, x_rows, TypeF32), TypeMat(y_cols, y_rows, TypeF32)],
+  TypeMat(y_cols, x_rows, TypeF32),
+  t.params,
+  cases);
+
+});
+
 g.test('multiplication_matrix_scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
@@ -1586,6 +1621,33 @@ fn(async (t) => {
   await run(
   t,
   binary('*'),
+  [TypeVec(rows, TypeF32), TypeMat(cols, rows, TypeF32)],
+  TypeVec(cols, TypeF32),
+  t.params,
+  cases);
+
+});
+
+g.test('multiplication_vector_matrix_compound').
+specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
+desc(
+`
+Expression: x *= y, where x is a vector and y is is a matrix
+Accuracy: Correctly rounded
+`).
+
+params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
+fn(async (t) => {
+  const cols = t.params.dim;
+  const rows = t.params.dim;
+  const cases = await d.get(
+  t.params.inputSource === 'const' ?
+  `multiplication_vec${rows}_${cols}x${rows}_const` :
+  `multiplication_vec${rows}_${cols}x${rows}_non_const`);
+
+  await run(
+  t,
+  compoundBinary('*='),
   [TypeVec(rows, TypeF32), TypeMat(cols, rows, TypeF32)],
   TypeVec(cols, TypeF32),
   t.params,
