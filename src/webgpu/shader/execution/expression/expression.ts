@@ -1459,7 +1459,6 @@ function makeMatrixScalarToMatrixCase(
  * @param ops callbacks that implement generating an matrix of acceptance
  *            intervals for a pair of matrices.
  */
-
 export function generateMatrixScalarToMatrixCases(
   mats: number[][][],
   scalars: number[],
