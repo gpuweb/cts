@@ -1127,13 +1127,9 @@ export function hexToF16(hex) {
   return floatBitsToNumber(hex, kFloat16Format);
 }
 
-/** Converts two 32-bit hex values to a 64-bit float value */
-export function hexToF64(h32, l32) {
-  const u32Arr = new Uint32Array(2);
-  u32Arr[0] = l32;
-  u32Arr[1] = h32;
-  const f64Arr = new Float64Array(u32Arr.buffer);
-  return f64Arr[0];
+/** Converts 64-bit hex value to a 64-bit float value */
+export function hexToF64(hex) {
+  return new Float64Array(new BigInt64Array([hex]).buffer)[0];
 }
 
 /** @returns the cross of an array with the intermediate result of cartesianProduct
