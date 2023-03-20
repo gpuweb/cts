@@ -49,7 +49,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   },
   f32: () => {
     return fullF32Range().map(f => {
-      return { input: f32(f), expected: f32(f) };
+      return { input: f32(f), expected: correctlyRoundedInterval(f) };
     });
   },
   f32_mat2x2_const: () => {
