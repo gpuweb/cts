@@ -2,18 +2,7 @@ import { assert } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit, kValue } from './constants.js';
-import {
-  f16,
-  f16Bits,
-  f32,
-  f32Bits,
-  floatBitsToNumber,
-  i32,
-  kFloat16Format,
-  kFloat32Format,
-  Scalar,
-  u32,
-} from './conversion.js';
+import { f32, floatBitsToNumber, i32, kFloat16Format, kFloat32Format, u32 } from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -50,28 +39,6 @@ export function flushSubnormalNumberF32(val: number): number {
   return isSubnormalNumberF32(val) ? 0 : val;
 }
 
-/** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
-export function flushSubnormalScalarF32(val: Scalar): Scalar {
-  return isSubnormalScalarF32(val) ? f32(0) : val;
-}
-
-/**
- * @returns true if |val| is a subnormal f32 number, otherwise returns false
- * 0 is considered a non-subnormal number by this function.
- */
-export function isSubnormalScalarF32(val: Scalar): boolean {
-  if (val.type.kind !== 'f32') {
-    return false;
-  }
-
-  if (val === f32(0)) {
-    return false;
-  }
-
-  const u32_val = new Uint32Array(new Float32Array([val.value.valueOf() as number]).buffer)[0];
-  return (u32_val & 0x7f800000) === 0;
-}
-
 /** U/** @returns if number is within subnormal range of f32 */
 export function isSubnormalNumberF32(n: number): boolean {
   return n > kValue.f32.negative.max && n < kValue.f32.positive.min;
@@ -87,28 +54,6 @@ export function flushSubnormalNumberF16(val: number): number {
   return isSubnormalNumberF16(val) ? 0 : val;
 }
 
-/** @returns 0 if |val| is a subnormal f16 number, otherwise returns |val| */
-export function flushSubnormalScalarF16(val: Scalar): Scalar {
-  return isSubnormalScalarF16(val) ? f16(0) : val;
-}
-
-/**
- * @returns true if |val| is a subnormal f16 number, otherwise returns false
- * 0 is considered a non-subnormal number by this function.
- */
-export function isSubnormalScalarF16(val: Scalar): boolean {
-  if (val.type.kind !== 'f16') {
-    return false;
-  }
-
-  if (val === f16(0)) {
-    return false;
-  }
-
-  const u16_val = new Uint16Array(new Float16Array([val.value.valueOf() as number]).buffer)[0];
-  return (u16_val & 0x7f800000) === 0;
-}
-
 /** @returns if number is within subnormal range of f16 */
 export function isSubnormalNumberF16(n: number): boolean {
   return n > kValue.f16.negative.max && n < kValue.f16.positive.min;
@@ -122,11 +67,24 @@ export function isFiniteF16(n: number) {
 /** Should FTZ occur during calculations or not */
 export type FlushMode = 'flush' | 'no-flush';
 
-/**
- * @returns the next f32 value after |val|,
- * towards +inf if |dir| is true, otherwise towards -inf.
+/** Should nextAfter calculate towards positive infinity or negative infinity */
+export type NextDirection = 'positive' | 'negative';
 
- * If |mpode| is 'flush', all subnormal values will be flushed to 0,
+/**
+ * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
+ * converting between numeric formats
+ *
+ * Usage of a once-allocated pattern like this makes nextAfterF32 non-reentrant,
+ * so cannot call itself directly or indirectly.
+ */
+const nextAfterF32Data = new ArrayBuffer(4);
+const nextAfterF32Hex = new Uint32Array(nextAfterF32Data);
+const nextAfterF32Float = new Float32Array(nextAfterF32Data);
+
+/**
+ * @returns the next f32 value after |val|, towards +inf or -inf as specified by |dir|.
+
+ * If |mode| is 'flush', all subnormal values will be flushed to 0,
  * before processing and for -/+0 the nextAfterF32 will be the closest normal in
  * the correct direction.
 
@@ -136,158 +94,142 @@ export type FlushMode = 'flush' | 'no-flush';
  *
  * val needs to be in [min f32, max f32]
  */
-export function nextAfterF32(val: number, dir: boolean = true, mode: FlushMode): Scalar {
+export function nextAfterF32(val: number, dir: NextDirection, mode: FlushMode): number {
   if (Number.isNaN(val)) {
-    return f32Bits(kBit.f32.nan.positive.s);
+    return val;
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return f32Bits(kBit.f32.infinity.positive);
+    return kValue.f32.infinity.positive;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return f32Bits(kBit.f32.infinity.negative);
+    return kValue.f32.infinity.negative;
   }
 
   assert(
     val <= kValue.f32.positive.max && val >= kValue.f32.negative.min,
-    `${val} is not in the range of float32`
+    `${val} is not in the range of f32`
   );
 
   val = mode === 'flush' ? flushSubnormalNumberF32(val) : val;
 
   // -/+0 === 0 returns true
   if (val === 0) {
-    if (dir) {
-      return mode === 'flush'
-        ? f32Bits(kBit.f32.positive.min)
-        : f32Bits(kBit.f32.subnormal.positive.min);
+    if (dir === 'positive') {
+      return mode === 'flush' ? kValue.f32.positive.min : kValue.f32.subnormal.positive.min;
     } else {
-      return mode === 'flush'
-        ? f32Bits(kBit.f32.negative.max)
-        : f32Bits(kBit.f32.subnormal.negative.max);
+      return mode === 'flush' ? kValue.f32.negative.max : kValue.f32.subnormal.negative.max;
     }
   }
 
-  const converted: number = new Float32Array([val])[0];
-  let u32_result: number;
-  if (val === converted) {
-    // val is expressible precisely as a float32
-    u32_result = new Uint32Array(new Float32Array([val]).buffer)[0];
-    const is_positive = (u32_result & 0x80000000) === 0;
-    if (dir === is_positive) {
-      u32_result += 1;
+  nextAfterF32Float[0] = val; // This quantizes from number (f64) to f32
+  if (
+    (dir === 'positive' && nextAfterF32Float[0] <= val) ||
+    (dir === 'negative' && nextAfterF32Float[0] >= val)
+  ) {
+    // val is either f32 precise or quantizing rounded in the opposite direction
+    // from what is needed, so need to calculate the value in the correct
+    // direction.
+    const is_positive = (nextAfterF32Hex[0] & 0x80000000) === 0;
+    if (is_positive === (dir === 'positive')) {
+      nextAfterF32Hex[0] += 1;
     } else {
-      u32_result -= 1;
-    }
-  } else {
-    // val had to be rounded to be expressed as a float32
-    if (dir === converted > val) {
-      // Rounding was in the direction requested
-      u32_result = new Uint32Array(new Float32Array([converted]).buffer)[0];
-    } else {
-      // Round was opposite of the direction requested, so need nextAfterF32 in the requested direction.
-      // This will not recurse since converted is guaranteed to be a float32 due to the conversion above.
-      const next = nextAfterF32(converted, dir, mode).value.valueOf() as number;
-      u32_result = new Uint32Array(new Float32Array([next]).buffer)[0];
+      nextAfterF32Hex[0] -= 1;
     }
   }
 
   // Checking for overflow
-  if ((u32_result & 0x7f800000) === 0x7f800000) {
-    if (dir) {
-      return f32Bits(kBit.f32.infinity.positive);
+  if ((nextAfterF32Hex[0] & 0x7f800000) === 0x7f800000) {
+    if (dir === 'positive') {
+      return kValue.f32.infinity.positive;
     } else {
-      return f32Bits(kBit.f32.infinity.negative);
+      return kValue.f32.infinity.negative;
     }
   }
 
-  const f32_result = f32Bits(u32_result);
-  return mode === 'flush' ? flushSubnormalScalarF32(f32_result) : f32_result;
+  return mode === 'flush' ? flushSubnormalNumberF32(nextAfterF32Float[0]) : nextAfterF32Float[0];
 }
 
 /**
- * @returns the next f16 value after |val|,
- * towards +inf if |dir| is true, otherwise towards -inf.
+ * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
+ * converting between numeric formats
  *
- * If |mode| is true, all subnormal values will be flushed to 0,
- * before processing, and for -/+0 the nextAfterF16 will be the closest normal
- * in the correct direction
- *
- * If |mode| is false, the next subnormal will be calculated when appropriate,
+ * Usage of a once-allocated pattern like this makes nextAfterF16 non-reentrant,
+ * so cannot call itself directly or indirectly.
+ */
+const nextAfterF16Data = new ArrayBuffer(2);
+const nextAfterF16Hex = new Uint16Array(nextAfterF16Data);
+const nextAfterF16Float = new Float16Array(nextAfterF16Data);
+
+/**
+ * @returns the next f16 value after |val|, towards +inf or -inf as specified by |dir|.
+
+ * If |mode| is 'flush', all subnormal values will be flushed to 0,
+ * before processing and for -/+0 the nextAfterF16 will be the closest normal in
+ * the correct direction.
+
+ * If |mode| is 'no-flush', the next subnormal will be calculated when appropriate,
  * and for -/+0 the nextAfterF16 will be the closest subnormal in the correct
  * direction.
  *
  * val needs to be in [min f16, max f16]
  */
-export function nextAfterF16(val: number, dir: boolean = true, mode: FlushMode): Scalar {
+export function nextAfterF16(val: number, dir: NextDirection, mode: FlushMode): number {
   if (Number.isNaN(val)) {
-    return f16Bits(kBit.f16.nan.positive.s);
+    return val;
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return f16Bits(kBit.f16.infinity.positive);
+    return kValue.f16.infinity.positive;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return f16Bits(kBit.f16.infinity.negative);
+    return kValue.f16.infinity.negative;
   }
 
   assert(
     val <= kValue.f16.positive.max && val >= kValue.f16.negative.min,
-    `${val} is not in the range of float16`
+    `${val} is not in the range of f16`
   );
 
   val = mode === 'flush' ? flushSubnormalNumberF16(val) : val;
 
   // -/+0 === 0 returns true
   if (val === 0) {
-    if (dir) {
-      return mode === 'flush'
-        ? f16Bits(kBit.f16.positive.min)
-        : f16Bits(kBit.f16.subnormal.positive.min);
+    if (dir === 'positive') {
+      return mode === 'flush' ? kValue.f16.positive.min : kValue.f16.subnormal.positive.min;
     } else {
-      return mode === 'flush'
-        ? f16Bits(kBit.f16.negative.max)
-        : f16Bits(kBit.f16.subnormal.negative.max);
+      return mode === 'flush' ? kValue.f16.negative.max : kValue.f16.subnormal.negative.max;
     }
   }
 
-  const converted: number = new Float16Array([val])[0];
-  let u16_result: number;
-  if (val === converted) {
-    // val is expressible precisely as a float16
-    u16_result = new Uint16Array(new Float16Array([val]).buffer)[0];
-    const is_positive = (u16_result & 0x8000) === 0;
-    if (dir === is_positive) {
-      u16_result += 1;
+  nextAfterF16Float[0] = val; // This quantizes from number (f64) to f16
+  if (
+    (dir === 'positive' && nextAfterF16Float[0] <= val) ||
+    (dir === 'negative' && nextAfterF16Float[0] >= val)
+  ) {
+    // val is either f16 precise or quantizing rounded in the opposite direction
+    // from what is needed, so need to calculate the value in the correct
+    // direction.
+    const is_positive = (nextAfterF16Hex[0] & 0x8000) === 0;
+    if (is_positive === (dir === 'positive')) {
+      nextAfterF16Hex[0] += 1;
     } else {
-      u16_result -= 1;
-    }
-  } else {
-    // val had to be rounded to be expressed as a float16
-    if (dir === converted > val) {
-      // Rounding was in the direction requested
-      u16_result = new Uint16Array(new Float16Array([converted]).buffer)[0];
-    } else {
-      // Round was opposite of the direction requested, so need nextAfterF16 in the requested direction.
-      // This will not recurse since converted is guaranteed to be a float16 due to the conversion above.
-      const next = nextAfterF16(converted, dir, mode).value.valueOf() as number;
-      u16_result = new Uint16Array(new Float16Array([next]).buffer)[0];
+      nextAfterF16Hex[0] -= 1;
     }
   }
 
   // Checking for overflow
-  if ((u16_result & 0x7f800000) === 0x7f800000) {
-    if (dir) {
-      return f16Bits(kBit.f16.infinity.positive);
+  if ((nextAfterF16Hex[0] & 0x7c00) === 0x7c00) {
+    if (dir === 'positive') {
+      return kValue.f16.infinity.positive;
     } else {
-      return f16Bits(kBit.f16.infinity.negative);
+      return kValue.f16.infinity.negative;
     }
   }
 
-  const f16_result = f16Bits(u16_result);
-  return mode === 'flush' ? flushSubnormalScalarF16(f16_result) : f16_result;
+  return mode === 'flush' ? flushSubnormalNumberF16(nextAfterF16Float[0]) : nextAfterF16Float[0];
 }
 
 /**
@@ -301,7 +243,7 @@ export function nextAfterF16(val: number, dir: boolean = true, mode: FlushMode):
  * @param target number to calculate ULP for
  * @param mode should FTZ occuring during calculation or not
  */
-export function oneULP(target: number, mode: FlushMode = 'flush'): number {
+export function oneULPF32(target: number, mode: FlushMode = 'flush'): number {
   if (Number.isNaN(target)) {
     return Number.NaN;
   }
@@ -320,8 +262,8 @@ export function oneULP(target: number, mode: FlushMode = 'flush'): number {
   //     before <= x <= after
   //     before =/= after
   //     before and after are f32 representable
-  const before = nextAfterF32(target, false, mode).value.valueOf() as number;
-  const after = nextAfterF32(target, true, mode).value.valueOf() as number;
+  const before = nextAfterF32(target, 'negative', mode);
+  const after = nextAfterF32(target, 'positive', mode);
   const converted: number = new Float32Array([target])[0];
   if (converted === target) {
     // |target| is f32 representable, so either before or after will be x
@@ -372,11 +314,11 @@ export function correctlyRoundedF32(n: number): number[] {
 
   if (converted > n) {
     // n_32 rounded towards +inf, so is after n
-    const other = nextAfterF32(n_32, false, 'no-flush').value as number;
+    const other = nextAfterF32(n_32, 'negative', 'no-flush');
     return [other, converted];
   } else {
     // n_32 rounded towards -inf, so is before n
-    const other = nextAfterF32(n_32, true, 'no-flush').value as number;
+    const other = nextAfterF32(n_32, 'positive', 'no-flush');
     return [converted, other];
   }
 }
@@ -421,11 +363,11 @@ export function correctlyRoundedF16(n: number): number[] {
 
   if (converted > n) {
     // n_16 rounded towards +inf, so is after n
-    const other = nextAfterF16(n_16, false, 'no-flush').value as number;
+    const other = nextAfterF16(n_16, 'negative', 'no-flush');
     return [other, converted];
   } else {
     // n_16 rounded towards -inf, so is before n
-    const other = nextAfterF16(n_16, true, 'no-flush').value as number;
+    const other = nextAfterF16(n_16, 'positive', 'no-flush');
     return [converted, other];
   }
 }
