@@ -553,9 +553,11 @@ fn((t) => {
     passOp: 'keep'
   };
 
+  const hasDepth = kTextureFormatInfo[format].depth;
+
   const baseState = {
     format,
-    depthWriteEnabled: true,
+    depthWriteEnabled: hasDepth,
     depthCompare: 'always',
     stencilFront: baseStencilState,
     stencilBack: baseStencilState
@@ -563,7 +565,7 @@ fn((t) => {
 
   const testState = {
     format,
-    depthWriteEnabled: true,
+    depthWriteEnabled: hasDepth,
     depthCompare: 'always',
     stencilFront: testStencilState,
     stencilBack: testStencilState
