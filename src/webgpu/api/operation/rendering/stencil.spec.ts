@@ -553,9 +553,11 @@ g.test('stencil_reference_initialized')
       passOp: 'keep',
     } as const;
 
+    const hasDepth = kTextureFormatInfo[format].depth;
+
     const baseState = {
       format,
-      depthWriteEnabled: true,
+      depthWriteEnabled: hasDepth,
       depthCompare: 'always',
       stencilFront: baseStencilState,
       stencilBack: baseStencilState,
@@ -563,7 +565,7 @@ g.test('stencil_reference_initialized')
 
     const testState = {
       format,
-      depthWriteEnabled: true,
+      depthWriteEnabled: hasDepth,
       depthCompare: 'always',
       stencilFront: testStencilState,
       stencilBack: testStencilState,
