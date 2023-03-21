@@ -50,7 +50,11 @@ g.test('invalid')
   .desc(
     `
     Test that requesting device on an invalid adapter resolves with lost device.
-    - Induce invalid adapter via a device lost from a device.destroy()`
+    - Induce invalid adapter via a device lost from a device.destroy()
+    - Check the device is lost with reason 'destroyed'
+    - Try creating another device on the now-stale adapter
+    - Check that returns a device lost with 'unknown'
+    `
   )
   .fn(async t => {
     const gpu = getGPU();
@@ -71,7 +75,7 @@ g.test('invalid')
     const kTimeoutMS = 1000;
     const device = await adapter.requestDevice();
     const lost = await raceWithRejectOnTimeout(device.lost, kTimeoutMS, 'device was not lost');
-    t.expect(lost.reason === undefined);
+    t.expect(lost.reason === 'unknown');
   });
 
 g.test('stale')
