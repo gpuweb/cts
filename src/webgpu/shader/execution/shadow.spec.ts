@@ -47,7 +47,7 @@ function runShaderTest(t: GPUTest, wgsl: string, expected: Uint32Array): void {
   t.expectGPUBufferValuesEqual(outputBuffer, expected);
 }
 
-g.test('shadow')
+g.test('declaration')
   .desc(`Test that shadowing is handled correctly`)
   .fn(t => {
     const wgsl = `
@@ -72,12 +72,6 @@ g.test('shadow')
 
         my_func_param_shadow: u32,
         my_func_shadow: u32,
-
-        my_max_shadow: u32,
-
-        my_idx_before: u32,
-        my_idx_loop: array<u32, 2>,
-        my_idx_after: u32,
       }
       @group(0) @binding(0) var<storage, read_write> buffer : S;
 
@@ -102,16 +96,6 @@ g.test('shadow')
             buffer.my_let_block_shadow = my_let;  // 210
         }
 
-        // For loop shadowing
-        var my_idx = 500u;
-        buffer.my_idx_before = my_idx; // 500;
-        for (var my_idx = 0u; my_idx < 2u; my_idx++) {
-          let pos = my_idx;
-          var my_idx = 501u + my_idx;
-          buffer.my_idx_loop[pos] = my_idx;  // 501, 502
-        }
-        buffer.my_idx_after = my_idx; // 500;
-
         buffer.my_var_unshadow = my_var;  // 1
         buffer.my_const_unshadow = my_const;  // 100
 
@@ -120,9 +104,6 @@ g.test('shadow')
         buffer.my_var_after_func = my_var;  // 1
         buffer.my_const_after_func = my_const;  // 100
         buffer.my_let_after_func = my_let;  // 200;
-
-        let max = 400u;
-        buffer.my_max_shadow = max;
       };
 
       // Note, defined after |main|
@@ -173,9 +154,70 @@ g.test('shadow')
         // my_func
         300, // my_func_param_shadow
         310, // my_func_shadow
+      ])
+    );
+  });
+
+g.test('builtin')
+  .desc(`Test that shadowing a builtin name is handled correctly`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_max_shadow: u32,
+        max_call: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        let max = 400u;
+        buffer.my_max_shadow = max;
+
+        my_func();
+      };
+
+      fn my_func() {
+        buffer.max_call = max(310u, 410u);
+      }
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
         // my_max
         400, // my_max_shadow
-        // my_idx
+        410, // max_call
+      ])
+    );
+  });
+
+g.test('for_loop')
+  .desc(`Test that shadowing is handled correctly with for loops`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_idx_before: u32,
+        my_idx_loop: array<u32, 2>,
+        my_idx_after: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        var my_idx = 500u;
+        buffer.my_idx_before = my_idx; // 500;
+        for (var my_idx = 0u; my_idx < 2u; my_idx++) {
+          let pos = my_idx;
+          var my_idx = 501u + my_idx;
+          buffer.my_idx_loop[pos] = my_idx;  // 501, 502
+        }
+        buffer.my_idx_after = my_idx; // 500;
+      };
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
         500, // my_idx_before
         501, // my_idx_loop[0]
         502, // my_idx_loop[1]
