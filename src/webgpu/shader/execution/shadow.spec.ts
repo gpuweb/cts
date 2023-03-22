@@ -225,3 +225,182 @@ g.test('for_loop')
       ])
     );
   });
+
+g.test('while')
+  .desc(`Test that shadowing is handled correctly with while loops`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_idx_before: u32,
+        my_idx_loop: array<u32, 2>,
+        my_idx_after: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        var my_idx = 0u;
+        buffer.my_idx_before = my_idx; // 0;
+
+        var counter = 0u;
+        while (counter < 2) {
+          var my_idx = 500u + counter;
+          buffer.my_idx_loop[counter] = my_idx;  // 500, 501
+
+          counter += 1;
+        }
+
+        buffer.my_idx_after = my_idx; // 1;
+      };
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
+        0, // my_idx_before
+        500, // my_idx_loop[0]
+        501, // my_idx_loop[1]
+        0, // my_idx_after
+      ])
+    );
+  });
+
+g.test('loop')
+  .desc(`Test that shadowing is handled correctly with loops`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_idx_before: u32,
+        my_idx_loop: array<u32, 2>,
+        my_idx_continuing: array<u32, 2>,
+        my_idx_after: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        var my_idx = 0u;
+        buffer.my_idx_before = my_idx; // 0;
+
+        var counter = 0u;
+        loop {
+          var my_idx = 500u + counter;
+          buffer.my_idx_loop[counter] = my_idx;  // 500, 501
+
+
+          continuing {
+            var my_idx = 600u + counter;
+            buffer.my_idx_continuing[counter] = my_idx; // 600, 601
+
+            counter += 1;
+            break if counter == 2;
+          }
+        }
+        buffer.my_idx_after = my_idx; // 1;
+      };
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
+        0, // my_idx_before
+        500, // my_idx_loop[0]
+        501, // my_idx_loop[1]
+        600, // my_idx_continuing[0]
+        601, // my_idx_continuing[1]
+        0, // my_idx_after
+      ])
+    );
+  });
+
+g.test('switch')
+  .desc(`Test that shadowing is handled correctly with a switch`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_idx_before: u32,
+        my_idx_case: u32,
+        my_idx_default: u32,
+        my_idx_after: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        var my_idx = 0u;
+        buffer.my_idx_before = my_idx; // 0;
+
+        for (var i = 0; i < 2; i++) {
+          switch (i) {
+            case 0: {
+              var my_idx = 10u;
+              buffer.my_idx_case = my_idx; // 10
+            }
+            default: {
+              var my_idx = 20u;
+              buffer.my_idx_default = my_idx; // 20
+            }
+          }
+        }
+
+        buffer.my_idx_after = my_idx; // 1;
+      };
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
+        0, // my_idx_before
+        10, // my_idx_case
+        20, // my_idx_default
+        0, // my_idx_after
+      ])
+    );
+  });
+
+g.test('if')
+  .desc(`Test that shadowing is handled correctly with a switch`)
+  .fn(t => {
+    const wgsl = `
+      struct S {
+        my_idx_before: u32,
+        my_idx_if: u32,
+        my_idx_elseif: u32,
+        my_idx_else: u32,
+        my_idx_after: u32,
+      }
+      @group(0) @binding(0) var<storage, read_write> buffer : S;
+
+      @compute @workgroup_size(1)
+      fn main() {
+        var my_idx = 0u;
+        buffer.my_idx_before = my_idx; // 0;
+
+        for (var i = 0; i < 3; i++) {
+          if i == 0 {
+            var my_idx = 10u;
+            buffer.my_idx_if = my_idx; // 10
+          } else if i == 1 {
+            var my_idx = 20u;
+            buffer.my_idx_elseif = my_idx; // 20
+          } else {
+            var my_idx = 30u;
+            buffer.my_idx_else = my_idx; // 30
+          }
+        }
+
+        buffer.my_idx_after = my_idx; // 1;
+      };
+    `;
+    runShaderTest(
+      t,
+      wgsl,
+      new Uint32Array([
+        0, // my_idx_before
+        10, // my_idx_if
+        20, // my_idx_elseif
+        30, // my_idx_else
+        0, // my_idx_after
+      ])
+    );
+  });
