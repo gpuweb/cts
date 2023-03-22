@@ -15,7 +15,7 @@ isFiniteF32,
 isSubnormalNumberF16,
 isSubnormalNumberF32,
 map2DArray,
-oneULP,
+oneULPF32,
 unflatten2DArray } from
 './math.js';
 
@@ -1349,7 +1349,7 @@ function ULPIntervalOp(numULP) {
     op.impl = (n) => {
       assert(!Number.isNaN(n), `ULP error not defined for NaN`);
 
-      const ulp = oneULP(n);
+      const ulp = oneULPF32(n);
       const begin = n - numULP * ulp;
       const end = n + numULP * ulp;
 

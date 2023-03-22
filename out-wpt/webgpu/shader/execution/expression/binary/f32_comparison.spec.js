@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
 import { bool, f32, TypeBool, TypeF32 } from '../../../../util/conversion.js';
-import { flushSubnormalScalarF32, vectorF32Range } from '../../../../util/math.js';
+import { flushSubnormalNumberF32, vectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -24,8 +24,8 @@ function makeCase(lhs, rhs, truthFunc) {
   // https://www.w3.org/TR/WGSL/#floating-point-evaluation
   const f32_lhs = f32(lhs);
   const f32_rhs = f32(rhs);
-  const lhs_options = new Set([f32_lhs, flushSubnormalScalarF32(f32_lhs)]);
-  const rhs_options = new Set([f32_rhs, flushSubnormalScalarF32(f32_rhs)]);
+  const lhs_options = new Set([f32_lhs, f32(flushSubnormalNumberF32(lhs))]);
+  const rhs_options = new Set([f32_rhs, f32(flushSubnormalNumberF32(rhs))]);
   const expected = [];
   lhs_options.forEach(l => {
     rhs_options.forEach(r => {
