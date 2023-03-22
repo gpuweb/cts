@@ -85,7 +85,7 @@ import {
   unpack4x8unormInterval,
   determinantInterval,
 } from '../webgpu/util/f32_interval.js';
-import { hexToF32, hexToF64, oneULP } from '../webgpu/util/math.js';
+import { hexToF32, hexToF64, oneULPF32 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -96,7 +96,7 @@ const kAny: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY
 
 /** @returns a number N * ULP greater than the provided number */
 function plusNULP(x: number, n: number): number {
-  return x + n * oneULP(x);
+  return x + n * oneULPF32(x);
 }
 
 /** @returns a number one ULP greater than the provided number */
@@ -106,7 +106,7 @@ function plusOneULP(x: number): number {
 
 /** @returns a number N * ULP less than the provided number */
 function minusNULP(x: number, n: number): number {
-  return x - n * oneULP(x);
+  return x - n * oneULPF32(x);
 }
 
 /** @returns a number one ULP less than the provided number */
@@ -841,7 +841,7 @@ g.test('atanInterval')
   )
   .fn(t => {
     const error = (n: number): number => {
-      return 4096 * oneULP(n);
+      return 4096 * oneULPF32(n);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1029,7 +1029,7 @@ g.test('expInterval')
   .fn(t => {
     const error = (x: number): number => {
       const n = 3 + 2 * Math.abs(t.params.input);
-      return n * oneULP(x);
+      return n * oneULPF32(x);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1055,7 +1055,7 @@ g.test('exp2Interval')
   .fn(t => {
     const error = (x: number): number => {
       const n = 3 + 2 * Math.abs(t.params.input);
-      return n * oneULP(x);
+      return n * oneULPF32(x);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1159,7 +1159,7 @@ g.test('inverseSqrtInterval')
   )
   .fn(t => {
     const error = (n: number): number => {
-      return 2 * oneULP(n);
+      return 2 * oneULPF32(n);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1229,7 +1229,7 @@ g.test('logInterval')
       if (t.params.input >= 0.5 && t.params.input <= 2.0) {
         return 2 ** -21;
       }
-      return 3 * oneULP(n);
+      return 3 * oneULPF32(n);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1258,7 +1258,7 @@ g.test('log2Interval')
       if (t.params.input >= 0.5 && t.params.input <= 2.0) {
         return 2 ** -21;
       }
-      return 3 * oneULP(n);
+      return 3 * oneULPF32(n);
     };
 
     t.params.expected = applyError(t.params.expected, error);
@@ -1897,7 +1897,7 @@ g.test('divisionInterval')
   )
   .fn(t => {
     const error = (n: number): number => {
-      return 2.5 * oneULP(n);
+      return 2.5 * oneULPF32(n);
     };
 
     const [x, y] = t.params.input;

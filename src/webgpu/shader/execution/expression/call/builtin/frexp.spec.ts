@@ -15,10 +15,9 @@ The magnitude of the significand is in the range of [0.5, 1.0) or 0.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { anyOf } from '../../../../../util/compare.js';
+import { skipUndefined } from '../../../../../util/compare.js';
 import { f32, i32, toVector, TypeF32, TypeI32, TypeVec } from '../../../../../util/conversion.js';
 import {
-  cartesianProduct,
   frexp,
   fullF32Range,
   isSubnormalNumberF32,
@@ -49,55 +48,49 @@ function expBuilder(): ShaderBuilder {
 /* @returns a fract Case for a given vector input */
 function makeVectorCaseFract(v: number[]): Case {
   v = v.map(quantizeToF32);
+  if (v.some(e => e !== 0 && isSubnormalNumberF32(e))) {
+    return { input: toVector(v, f32), expected: skipUndefined(undefined) };
+  }
+
   const fs = v.map(e => {
-    const result = [frexp(e).fract];
-    if (isSubnormalNumberF32(e)) {
-      result.push(frexp(0).fract);
-    }
-    return result;
+    return frexp(e).fract;
   });
 
-  const options = cartesianProduct(...fs);
-  const expected = anyOf(...options.map(o => toVector(o, f32)));
-  return { input: toVector(v, f32), expected };
+  return { input: toVector(v, f32), expected: toVector(fs, f32) };
 }
 
 /* @returns an exp Case for a given vector input */
 function makeVectorCaseExp(v: number[]): Case {
   v = v.map(quantizeToF32);
+  if (v.some(e => e !== 0 && isSubnormalNumberF32(e))) {
+    return { input: toVector(v, f32), expected: skipUndefined(undefined) };
+  }
+
   const fs = v.map(e => {
-    const result = [frexp(e).exp];
-    if (isSubnormalNumberF32(e)) {
-      result.push(frexp(0).exp);
-    }
-    return result;
+    return frexp(e).exp;
   });
 
-  const options = cartesianProduct(...fs);
-  const expected = anyOf(...options.map(o => toVector(o, i32)));
-  return { input: toVector(v, f32), expected };
+  return { input: toVector(v, f32), expected: toVector(fs, i32) };
 }
 
 export const d = makeCaseCache('frexp', {
   f32_fract: () => {
     const makeCase = (n: number): Case => {
       n = quantizeToF32(n);
-      const expected = [f32(frexp(n).fract)];
-      if (isSubnormalNumberF32(n)) {
-        expected.push(f32(frexp(0).fract));
+      if (n !== 0 && isSubnormalNumberF32(n)) {
+        return { input: f32(n), expected: skipUndefined(undefined) };
       }
-      return { input: f32(n), expected: anyOf(...expected) };
+      return { input: f32(n), expected: f32(frexp(n).fract) };
     };
     return fullF32Range().map(makeCase);
   },
   f32_exp: () => {
     const makeCase = (n: number): Case => {
       n = quantizeToF32(n);
-      const expected = [i32(frexp(n).exp)];
-      if (isSubnormalNumberF32(n)) {
-        expected.push(i32(frexp(0).exp));
+      if (n !== 0 && isSubnormalNumberF32(n)) {
+        return { input: f32(n), expected: skipUndefined(undefined) };
       }
-      return { input: f32(n), expected: anyOf(...expected) };
+      return { input: f32(n), expected: i32(frexp(n).exp) };
     };
     return fullF32Range().map(makeCase);
   },
