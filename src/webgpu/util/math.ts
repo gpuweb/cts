@@ -72,7 +72,7 @@ export function isSubnormalScalarF32(val: Scalar): boolean {
   return (u32_val & 0x7f800000) === 0;
 }
 
-/** U/** @returns if number is within subnormal range of f32 */
+/** @returns if number is within subnormal range of f32 */
 export function isSubnormalNumberF32(n: number): boolean {
   return n > kValue.f32.negative.max && n < kValue.f32.positive.min;
 }

@@ -1592,7 +1592,7 @@ export function clampMedianInterval(
 
 const ClampMinMaxIntervalOp: TernaryToIntervalOp = {
   impl: (x: number, low: number, high: number): F32Interval => {
-    return correctlyRoundedInterval(Math.min(Math.max(x, low), high));
+    return minInterval(maxInterval(x, low), high);
   },
 };
 
@@ -2129,6 +2129,11 @@ export function log2Interval(x: number | F32Interval): F32Interval {
 
 const MaxIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
+    // If both of he inputs are subnormal, then either of the inputs can be returned
+    if (isSubnormalNumberF32(x) && isSubnormalNumberF32(y)) {
+      return correctlyRoundedInterval(F32Interval.span(toF32Interval(x), toF32Interval(y)));
+    }
+
     return correctlyRoundedInterval(Math.max(x, y));
   },
 };
@@ -2140,6 +2145,11 @@ export function maxInterval(x: number | F32Interval, y: number | F32Interval): F
 
 const MinIntervalOp: BinaryToIntervalOp = {
   impl: (x: number, y: number): F32Interval => {
+    // If both of he inputs are subnormal, then either of the inputs can be returned
+    if (isSubnormalNumberF32(x) && isSubnormalNumberF32(y)) {
+      return correctlyRoundedInterval(F32Interval.span(toF32Interval(x), toF32Interval(y)));
+    }
+
     return correctlyRoundedInterval(Math.min(x, y));
   },
 };
@@ -2452,9 +2462,9 @@ export function roundInterval(n: number): F32Interval {
 /**
  * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
  *
- * The definition of saturate is such that both possible implementations of
- * clamp will return the same value, so arbitrarily picking the minmax version
- * to use.
+ * The definition of saturate does not specify which version of clamp to use.
+ * Using min-max here, since it has wider acceptance intervals, that include
+ * all of median's.
  */
 export function saturateInterval(n: number): F32Interval {
   return runTernaryToIntervalOp(

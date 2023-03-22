@@ -1442,8 +1442,8 @@ g.test('saturateInterval')
       // Subnormals
       { input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
       { input: kValue.f32.subnormal.positive.min, expected: [0.0, kValue.f32.subnormal.positive.min] },
-      { input: kValue.f32.subnormal.negative.min, expected: [0.0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [0.0] },
+      { input: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0.0] },
+      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
 
       // Infinities
       { input: kValue.f32.infinity.positive, expected: kAny },
@@ -1985,15 +1985,18 @@ g.test('maxInterval')
       { input: [-0.1, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
       { input: [-0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] },  // ~-0.1
 
-      // 32-bit normals
+      // 32-bit subnormals
       { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [kValue.f32.subnormal.positive.min, 0], expected: [0, kValue.f32.subnormal.positive.min] },
       { input: [0, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [kValue.f32.subnormal.negative.max, 0], expected: [0] },
-      { input: [0, kValue.f32.subnormal.negative.max], expected: [0] },
-      { input: [kValue.f32.subnormal.negative.min, 0], expected: [0] },
-      { input: [0, kValue.f32.subnormal.negative.min], expected: [0] },
+      { input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
+      { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
+      { input: [1, kValue.f32.subnormal.positive.max], expected: [1] },
+      { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+
 
       // Infinities
       { input: [0, kValue.f32.infinity.positive], expected: kAny },
@@ -2042,15 +2045,17 @@ g.test('minInterval')
       { input: [-0.1, 0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] },  // ~-0.1
       { input: [-0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] },  // ~-0.1
 
-      // 32-bit normals
-      { input: [kValue.f32.subnormal.positive.max, 0], expected: [0] },
-      { input: [0, kValue.f32.subnormal.positive.max], expected: [0] },
-      { input: [kValue.f32.subnormal.positive.min, 0], expected: [0] },
-      { input: [0, kValue.f32.subnormal.positive.min], expected: [0] },
+      // 32-bit subnormals
+      { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.min, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: [0, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
       { input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
       { input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
       { input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
       { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
+      { input: [-1, kValue.f32.subnormal.positive.max], expected: [-1] },
+      { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
 
       // Infinities
       { input: [0, kValue.f32.infinity.positive], expected: kAny },
@@ -2433,15 +2438,15 @@ g.test('clampMinMaxInterval')
       { input: [-10, -10, -10], expected: [-10] },
 
       // Subnormals
-      { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0] },
-      { input: [0, kValue.f32.subnormal.positive.max, 0], expected: [0] },
-      { input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0] },
+      { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
       { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
 
       // Infinities
