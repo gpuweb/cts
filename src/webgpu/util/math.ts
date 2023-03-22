@@ -39,7 +39,7 @@ export function flushSubnormalNumberF32(val: number): number {
   return isSubnormalNumberF32(val) ? 0 : val;
 }
 
-/** U/** @returns if number is within subnormal range of f32 */
+/** @returns if number is within subnormal range of f32 */
 export function isSubnormalNumberF32(n: number): boolean {
   return n > kValue.f32.negative.max && n < kValue.f32.positive.min;
 }
