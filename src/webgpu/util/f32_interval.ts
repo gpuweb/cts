@@ -169,7 +169,7 @@ export type F32Vector =
   | [F32Interval, F32Interval, F32Interval, F32Interval];
 
 /** Coerce F32Interval[] to F32Vector if possible */
-function isF32Vector(v: number[] | IntervalBounds[] | F32Interval[] | F32Vector): v is F32Vector {
+function isF32Vector(v: (number | IntervalBounds | F32Interval)[] | F32Vector): v is F32Vector {
   if (v[0] instanceof F32Interval) {
     return v.length === 2 || v.length === 3 || v.length === 4;
   }
@@ -177,7 +177,7 @@ function isF32Vector(v: number[] | IntervalBounds[] | F32Interval[] | F32Vector)
 }
 
 /** @returns an F32Vector representation of an array fo F32Intervals if possible */
-export function toF32Vector(v: number[] | IntervalBounds[] | F32Interval[] | F32Vector): F32Vector {
+export function toF32Vector(v: (number | IntervalBounds | F32Interval)[] | F32Vector): F32Vector {
   if (isF32Vector(v)) {
     return v;
   }
@@ -279,7 +279,7 @@ export type F32Matrix =
 
 /** Coerce F32Interval[] to F32Matrix if possible */
 function isF32Matrix(
-  m: Matrix<number> | Matrix<IntervalBounds> | Matrix<F32Interval> | F32Vector[] | F32Matrix
+  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[] | F32Matrix
 ): m is F32Matrix {
   if (!(m[0][0] instanceof F32Interval)) {
     return false;
@@ -307,7 +307,7 @@ function isF32Matrix(
 
 /** @returns an F32Matrix representation of an array fo F32Intervals if possible */
 export function toF32Matrix(
-  m: Matrix<number> | Matrix<IntervalBounds> | Matrix<F32Interval> | F32Vector[] | F32Matrix
+  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[] | F32Matrix
 ): F32Matrix {
   if (isF32Matrix(m)) {
     return m;
