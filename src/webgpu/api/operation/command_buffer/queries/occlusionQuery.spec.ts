@@ -445,8 +445,8 @@ class OcclusionQueryTest extends GPUTest {
   async runQueryTest(
     resources: ReturnType<OcclusionQueryTest['setup']>,
     renderPassDescriptor: GPURenderPassDescriptor | null,
-    encodePassFn: (helper: RenderPassHelper, queryIndex: number) => void,
-    checkQueryIndexResultFn: (passed: boolean, queryIndex: number) => void
+    encodePassFn: (helper: RenderPassHelper, queryIndex: number, querySetOffset: number) => void,
+    checkQueryIndexResultFn: (passed: boolean, queryIndex: number, querySetOffset: number) => void
   ) {
     const { device } = this;
     const {
@@ -471,7 +471,7 @@ class OcclusionQueryTest extends GPUTest {
       );
 
       for (const queryIndex of queryIndices) {
-        encodePassFn(helper, queryIndex);
+        encodePassFn(helper, queryIndex, querySetOffset);
       }
       pass.end();
     }
@@ -494,8 +494,8 @@ class OcclusionQueryTest extends GPUTest {
 
     const result = await this.readBufferAsBigUint64(readBuffer);
     for (const queryIndex of queryIndices) {
-      const passed = !!result[queryIndex];
-      checkQueryIndexResultFn(passed, queryIndex);
+      const passed = !!result[queryIndex - querySetOffset];
+      checkQueryIndexResultFn(passed, queryIndex, querySetOffset);
     }
 
     return result;
@@ -908,15 +908,15 @@ g.test('occlusion_query,alpha_to_coverage')
     await t.runQueryTest(
       resources,
       renderPassDescriptor,
-      (helper, queryIndex) => {
+      (helper, queryIndex, querySetOffset) => {
         const queryHelper = helper.beginOcclusionQuery(queryIndex);
         queryHelper.setPipeline(pipeline);
-        queryHelper.setVertexBuffer(vertexBuffers[queryIndex % 4]);
+        queryHelper.setVertexBuffer(vertexBuffers[(queryIndex - querySetOffset) % 4]);
         queryHelper.draw(6);
         queryHelper.end();
       },
-      (passed, queryIndex) => {
-        numPassedPerGroup[(queryIndex / 4) | 0] += passed ? 1 : 0;
+      (passed, queryIndex, querySetOffset) => {
+        numPassedPerGroup[((queryIndex - querySetOffset) / 4) | 0] += passed ? 1 : 0;
       }
     );
 
