@@ -239,8 +239,48 @@ g.test('scalar_u32_decrement_underflow')
     );
   });
 
-g.test('vector_element_increment')
-  .desc('Tests increment of vector values')
+g.test('vec2_element_increment')
+  .desc('Tests increment of ve2 values')
+  .fn(t => {
+    runStatementTest(
+      t,
+      'i32',
+      new Int32Array([-9, 11]),
+      `
+    var a = vec2(-10, 10);
+
+    a.x++;
+    a.g++;
+
+    push_output(a.x);
+    push_output(a.y);
+`
+    );
+  });
+
+g.test('vec3_element_increment')
+  .desc('Tests increment of vec3 values')
+  .fn(t => {
+    runStatementTest(
+      t,
+      'i32',
+      new Int32Array([-9, 11, kValue.i32.negative.min + 1]),
+      `
+    var a = vec3(-10, 10, ${kValue.i32.negative.min});
+
+    a.x++;
+    a.g++;
+    a.z++;
+
+    push_output(a.x);
+    push_output(a.y);
+    push_output(a.z);
+`
+    );
+  });
+
+g.test('vec4_element_increment')
+  .desc('Tests increment of vec4 values')
   .fn(t => {
     runStatementTest(
       t,
@@ -262,8 +302,48 @@ g.test('vector_element_increment')
     );
   });
 
-g.test('vector_element_decrement')
-  .desc('Tests decrement of vector values')
+g.test('vec2_element_decrement')
+  .desc('Tests decrement of vec2 values')
+  .fn(t => {
+    runStatementTest(
+      t,
+      'i32',
+      new Int32Array([-11, 9]),
+      `
+    var a = vec2(-10, 10);
+
+    a.x--;
+    a.g--;
+
+    push_output(a.x);
+    push_output(a.y);
+`
+    );
+  });
+
+g.test('vec3_element_decrement')
+  .desc('Tests decrement of vec3 values')
+  .fn(t => {
+    runStatementTest(
+      t,
+      'i32',
+      new Int32Array([-11, 9, kValue.i32.negative.min]),
+      `
+    var a = vec3(-10, 10, ${kValue.i32.negative.min + 1});
+
+    a.x--;
+    a.g--;
+    a.z--;
+
+    push_output(a.x);
+    push_output(a.y);
+    push_output(a.z);
+`
+    );
+  });
+
+g.test('vec4_element_decrement')
+  .desc('Tests decrement of vec4 values')
   .fn(t => {
     runStatementTest(
       t,
