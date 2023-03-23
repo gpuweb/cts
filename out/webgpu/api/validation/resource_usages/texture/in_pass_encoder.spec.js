@@ -1032,11 +1032,17 @@ fn((t) => {
   const bindGroups = [];
   if (type0 !== 'render-target') {
     const binding0TexFormat = type0 === 'sampled-texture' ? undefined : 'rgba8unorm';
-    bindGroups[0] = t.createBindGroup(0, view, type0, '2d', { format: binding0TexFormat });
+    bindGroups[0] = t.createBindGroup(0, view, type0, '2d', {
+      format: binding0TexFormat,
+      sampleType: _sampleCount && 'unfilterable-float'
+    });
   }
   if (type1 !== 'render-target') {
     const binding1TexFormat = type1 === 'sampled-texture' ? undefined : 'rgba8unorm';
-    bindGroups[1] = t.createBindGroup(1, view, type1, '2d', { format: binding1TexFormat });
+    bindGroups[1] = t.createBindGroup(1, view, type1, '2d', {
+      format: binding1TexFormat,
+      sampleType: _sampleCount && 'unfilterable-float'
+    });
   }
 
   const encoder = t.device.createCommandEncoder();
