@@ -2883,6 +2883,13 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "float_parse"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "flow_control",
       "call"
     ]
