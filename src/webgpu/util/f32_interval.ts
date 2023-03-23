@@ -168,21 +168,23 @@ export type F32Vector =
   | [F32Interval, F32Interval, F32Interval]
   | [F32Interval, F32Interval, F32Interval, F32Interval];
 
-/** Coerce F32Interval[] to F32Vector if possible */
-function isF32Vector(v: (number | IntervalBounds | F32Interval)[] | F32Vector): v is F32Vector {
-  if (v[0] instanceof F32Interval) {
+/** Coerce an array of values to F32Vector if possible */
+export function isF32Vector(v: (number | IntervalBounds | F32Interval)[]): v is F32Vector {
+  if (v.every(e => e instanceof F32Interval)) {
     return v.length === 2 || v.length === 3 || v.length === 4;
   }
   return false;
 }
 
-/** @returns an F32Vector representation of an array fo F32Intervals if possible */
-export function toF32Vector(v: (number | IntervalBounds | F32Interval)[] | F32Vector): F32Vector {
+/** @returns an F32Vector representation of an array of values if possible */
+export function toF32Vector(v: (number | IntervalBounds | F32Interval)[]): F32Vector {
   if (isF32Vector(v)) {
     return v;
   }
 
   const f = v.map(toF32Interval);
+  // The return of the map above is a F32Interval[], which needs to be coerced
+  // to F32Vector, since F32Vector is defined as fixed length tuples.
   if (isF32Vector(f)) {
     return f;
   }
@@ -277,20 +279,19 @@ export type F32Matrix =
       [F32Interval, F32Interval, F32Interval, F32Interval]
     ];
 
-/** Coerce F32Interval[] to F32Matrix if possible */
-function isF32Matrix(
-  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[] | F32Matrix
+/** Coerce an array of an array of values to F32Matrix if possible */
+export function isF32Matrix(
+  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[]
 ): m is F32Matrix {
-  if (!(m[0][0] instanceof F32Interval)) {
+  if (!m.every(c => c.every(e => e instanceof F32Interval))) {
     return false;
   }
-  // At this point m guaranteed to be a F32Interval[][] | F32Vector[]
-  // | F32Matrix.
-
-  // Coercing the type since F32Vector[] and F32Matrix are functionally
-  // equivalent to F32Interval[][] for .length and .every, but they are not
-  // generally compatible, since tuples are not equivalent to arrays, so TS
-  // considers c in .every to be unresolvable, even though our usage is safe.
+  // At this point m guaranteed to be a F32Interval[][], but maybe typed as a
+  // F32Vector[].
+  // Coercing the type since F32Vector[] is functionally equivalent to
+  // F32Interval[][] for .length and .every, but they are not generally
+  // compatible, since tuples are not equivalent to arrays, so TS considers c in
+  // .every to be unresolvable below, even though our usage is safe.
   m = m as F32Interval[][];
 
   if (m.length > 4 || m.length < 2) {
@@ -305,7 +306,7 @@ function isF32Matrix(
   return m.every(c => c.length === num_rows);
 }
 
-/** @returns an F32Matrix representation of an array fo F32Intervals if possible */
+/** @returns an F32Matrix representation of an array of an array of values if possible */
 export function toF32Matrix(
   m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[] | F32Matrix
 ): F32Matrix {
@@ -313,8 +314,10 @@ export function toF32Matrix(
     return m;
   }
 
-  const result = m.map(c => c.map(toF32Interval));
+  const result = map2DArray(m, toF32Interval);
 
+  // The return of the map above is a F32Interval[][], which needs to be coerced
+  // to F32Matrix, since F32Matrix is defined as fixed length tuples.
   if (isF32Matrix(result)) {
     return result;
   }
