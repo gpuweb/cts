@@ -449,7 +449,7 @@ g.test('matCx3')
         buffer = Type(m);
       }
     `;
-    const f_values = new Float32Array(16);
+    const f_values = new Float32Array(cols * 4);
     const u_values = new Uint32Array(f_values.buffer);
     for (let c = 0; c < cols; c++) {
       f_values[c * 4 + 0] = c * 3 + 1;
@@ -457,7 +457,7 @@ g.test('matCx3')
       f_values[c * 4 + 2] = c * 3 + 3;
       u_values[c * 4 + 3] = 0xdeadbeef;
     }
-    runShaderTest(t, wgsl, u_values.slice(0, cols * 4));
+    runShaderTest(t, wgsl, u_values);
   });
 
 g.test('array_of_matCx3')
@@ -491,7 +491,7 @@ g.test('array_of_matCx3')
       buffer = array<Type, 4>(Type(m), Type(m * 2), Type(m * 3), Type(m * 4));
     }
   `;
-    const f_values = new Float32Array(64);
+    const f_values = new Float32Array(cols * 4 * 4);
     const u_values = new Uint32Array(f_values.buffer);
     for (let i = 0; i < 4; i++) {
       for (let c = 0; c < cols; c++) {
@@ -501,5 +501,5 @@ g.test('array_of_matCx3')
         u_values[i * (cols * 4) + c * 4 + 3] = 0xdeadbeef;
       }
     }
-    runShaderTest(t, wgsl, u_values.slice(0, cols * 4 * 4));
+    runShaderTest(t, wgsl, u_values);
   });
