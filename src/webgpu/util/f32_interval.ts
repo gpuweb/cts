@@ -308,7 +308,7 @@ export function isF32Matrix(
 
 /** @returns an F32Matrix representation of an array of an array of values if possible */
 export function toF32Matrix(
-  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[] | F32Matrix
+  m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[]
 ): F32Matrix {
   if (isF32Matrix(m)) {
     return m;
