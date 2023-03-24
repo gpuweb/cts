@@ -860,6 +860,10 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
     const depthAttachmentView = depthAttachment.createView();
 
     const encoder = t.device.createCommandEncoder();
+
+    // If depthLoadOp is "clear", depthClearValue must be provided and must be between 0.0 and 1.0,
+    // and it will be ignored if depthLoadOp is not "clear".
+    const depthClearValue = depthLoadOp === 'clear' ? 0 : undefined;
     const renderPassDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [],
       depthStencilAttachment: {
@@ -870,6 +874,7 @@ g.test('depth_stencil_attachment,loadOp_storeOp_match_depthReadOnly_stencilReadO
         stencilLoadOp,
         stencilStoreOp,
         stencilReadOnly,
+        depthClearValue,
       },
     };
     const pass = encoder.beginRenderPass(renderPassDescriptor);

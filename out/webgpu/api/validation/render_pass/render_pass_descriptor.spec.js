@@ -860,6 +860,10 @@ fn((t) => {
   const depthAttachmentView = depthAttachment.createView();
 
   const encoder = t.device.createCommandEncoder();
+
+  // If depthLoadOp is "clear", depthClearValue must be provided and must be between 0.0 and 1.0,
+  // and it will be ignored if depthLoadOp is not "clear".
+  const depthClearValue = depthLoadOp === 'clear' ? 0 : undefined;
   const renderPassDescriptor = {
     colorAttachments: [],
     depthStencilAttachment: {
@@ -869,7 +873,8 @@ fn((t) => {
       depthReadOnly,
       stencilLoadOp,
       stencilStoreOp,
-      stencilReadOnly
+      stencilReadOnly,
+      depthClearValue
     }
   };
   const pass = encoder.beginRenderPass(renderPassDescriptor);
