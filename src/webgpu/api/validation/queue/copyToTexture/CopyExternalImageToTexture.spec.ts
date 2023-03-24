@@ -157,7 +157,9 @@ class CopyExternalImageToTextureTest extends ValidationTest {
   ): HTMLCanvasElement | OffscreenCanvas {
     const canvas = createCanvas(this, canvasType, 1, 1);
     const ctx = canvas.getContext('2d');
-    assert(ctx instanceof CanvasRenderingContext2D);
+    assert(
+      ctx instanceof CanvasRenderingContext2D || ctx instanceof OffscreenCanvasRenderingContext2D
+    );
     ctx.drawImage(content, 0, 0);
 
     return canvas;
