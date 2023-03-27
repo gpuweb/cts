@@ -168,7 +168,7 @@ export type F32Vector =
   | [F32Interval, F32Interval, F32Interval]
   | [F32Interval, F32Interval, F32Interval, F32Interval];
 
-/** Coerce an array of values to F32Vector if possible */
+/** Narrow an array of values to F32Vector if possible */
 export function isF32Vector(v: (number | IntervalBounds | F32Interval)[]): v is F32Vector {
   if (v.every(e => e instanceof F32Interval)) {
     return v.length === 2 || v.length === 3 || v.length === 4;
@@ -183,7 +183,7 @@ export function toF32Vector(v: (number | IntervalBounds | F32Interval)[]): F32Ve
   }
 
   const f = v.map(toF32Interval);
-  // The return of the map above is a F32Interval[], which needs to be coerced
+  // The return of the map above is a F32Interval[], which needs to be narrowed
   // to F32Vector, since F32Vector is defined as fixed length tuples.
   if (isF32Vector(f)) {
     return f;
@@ -279,7 +279,7 @@ export type F32Matrix =
       [F32Interval, F32Interval, F32Interval, F32Interval]
     ];
 
-/** Coerce an array of an array of values to F32Matrix if possible */
+/** Narrow an array of an array of values to F32Matrix if possible */
 export function isF32Matrix(
   m: Matrix<number | IntervalBounds | F32Interval> | F32Vector[]
 ): m is F32Matrix {
@@ -316,8 +316,8 @@ export function toF32Matrix(
 
   const result = map2DArray(m, toF32Interval);
 
-  // The return of the map above is a F32Interval[][], which needs to be coerced
-  // to F32Matrix, since F32Matrix is defined as fixed length tuples.
+  // The return of the map above is a F32Interval[][], which needs to be
+  // narrowed to F32Matrix, since F32Matrix is defined as fixed length tuples.
   if (isF32Matrix(result)) {
     return result;
   }
@@ -1255,7 +1255,9 @@ function runMatrixToMatrixOp(m: F32Matrix, op: MatrixToMatrixOp): F32Matrix {
   const result_cols = result.length;
   const result_rows = result[0].length;
 
-  // F32Matrix has to be coerced to F32Interval[][] to use .every
+  // F32Matrix has to be coerced to F32Interval[][] to use .every. This should
+  // always be safe, since F32Matrix are defined as fixed length array of
+  // arrays.
   return (result as F32Interval[][]).every(c => c.every(r => r.isFinite()))
     ? result
     : kAnyF32Matrix[result_cols][result_rows];

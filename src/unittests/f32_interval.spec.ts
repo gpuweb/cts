@@ -477,9 +477,23 @@ g.test('isF32Vector')
 
     // F32Interval, valid dimensions
     { input: [toF32Interval([1]), toF32Interval([2])], expected: true },
+    { input: [toF32Interval([1, 2]), toF32Interval([2, 3])], expected: true },
     { input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: true },
     {
+      input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+      expected: true,
+    },
+    {
       input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3]), toF32Interval([4])],
+      expected: true,
+    },
+    {
+      input: [
+        toF32Interval([1, 2]),
+        toF32Interval([2, 3]),
+        toF32Interval([3, 4]),
+        toF32Interval([4, 5]),
+      ],
       expected: true,
     },
 
@@ -566,10 +580,35 @@ g.test('toF32Vector')
 
     // F32Interval
     { input: [toF32Interval([1]), toF32Interval([2])], expected: [1, 2] },
+    {
+      input: [toF32Interval([1, 2]), toF32Interval([2, 3])],
+      expected: [
+        [1, 2],
+        [2, 3],
+      ],
+    },
     { input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: [1, 2, 3] },
+    {
+      input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+      expected: [[1, 2], [2, 3], [3, 4]],
+    },
     {
       input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3]), toF32Interval([4])],
       expected: [1, 2, 3, 4],
+    },
+    {
+      input: [
+        toF32Interval([1, 2]),
+        toF32Interval([2, 3]),
+        toF32Interval([3, 4]),
+        toF32Interval([4, 5]),
+      ],
+      expected: [
+        [1, 2],
+        [2, 3],
+        [3, 4],
+        [4, 5],
+      ],
     },
 
     // Mixed
@@ -817,6 +856,123 @@ g.test('isF32Matrix')
         [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)],
         [toF32Interval(9), toF32Interval(10), toF32Interval(11), toF32Interval(12)],
         [toF32Interval(13), toF32Interval(14), toF32Interval(15), toF32Interval(16)],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+        [toF32Interval([5, 6]), toF32Interval([6, 7])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+        [toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+        [toF32Interval([10, 11]), toF32Interval([11, 12]), toF32Interval([12, 13])],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+        [
+          toF32Interval([9, 10]),
+          toF32Interval([10, 11]),
+          toF32Interval([11, 12]),
+          toF32Interval([12, 13]),
+        ],
+      ],
+      expected: true,
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+        [
+          toF32Interval([9, 10]),
+          toF32Interval([10, 11]),
+          toF32Interval([11, 12]),
+          toF32Interval([12, 13]),
+        ],
+        [
+          toF32Interval([13, 14]),
+          toF32Interval([14, 15]),
+          toF32Interval([15, 16]),
+          toF32Interval([16, 17]),
+        ],
       ],
       expected: true,
     },
@@ -1229,6 +1385,268 @@ g.test('toF32Matrix')
         [5, 6, 7, 8],
         [9, 10, 11, 12],
         [13, 14, 15, 16],
+      ],
+    },
+
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+        ],
+        [
+          [3, 4],
+          [4, 5],
+        ],
+      ],
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+        [toF32Interval([5, 6]), toF32Interval([6, 7])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+        ],
+        [
+          [3, 4],
+          [4, 5],
+        ],
+        [
+          [5, 6],
+          [6, 7],
+        ],
+      ],
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3])],
+        [toF32Interval([3, 4]), toF32Interval([4, 5])],
+        [toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+        ],
+        [
+          [3, 4],
+          [4, 5],
+        ],
+        [
+          [5, 6],
+          [6, 7],
+        ],
+        [
+          [7, 8],
+          [8, 9],
+        ],
+      ],
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+        ],
+        [
+          [4, 5],
+          [5, 6],
+          [6, 7],
+        ],
+      ],
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+        ],
+        [
+          [4, 5],
+          [5, 6],
+          [6, 7],
+        ],
+        [
+          [7, 8],
+          [8, 9],
+          [9, 10],
+        ],
+      ],
+    },
+    {
+      input: [
+        [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+        [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+        [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+        [toF32Interval([10, 11]), toF32Interval([11, 12]), toF32Interval([12, 13])],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+        ],
+        [
+          [4, 5],
+          [5, 6],
+          [6, 7],
+        ],
+        [
+          [7, 8],
+          [8, 9],
+          [9, 10],
+        ],
+        [
+          [10, 11],
+          [11, 12],
+          [12, 13],
+        ],
+      ],
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+          [4, 5],
+        ],
+        [
+          [5, 6],
+          [6, 7],
+          [7, 8],
+          [8, 9],
+        ],
+      ],
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+        [
+          toF32Interval([9, 10]),
+          toF32Interval([10, 11]),
+          toF32Interval([11, 12]),
+          toF32Interval([12, 13]),
+        ],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+          [4, 5],
+        ],
+        [
+          [5, 6],
+          [6, 7],
+          [7, 8],
+          [8, 9],
+        ],
+        [
+          [9, 10],
+          [10, 11],
+          [11, 12],
+          [12, 13],
+        ],
+      ],
+    },
+    {
+      input: [
+        [
+          toF32Interval([1, 2]),
+          toF32Interval([2, 3]),
+          toF32Interval([3, 4]),
+          toF32Interval([4, 5]),
+        ],
+        [
+          toF32Interval([5, 6]),
+          toF32Interval([6, 7]),
+          toF32Interval([7, 8]),
+          toF32Interval([8, 9]),
+        ],
+        [
+          toF32Interval([9, 10]),
+          toF32Interval([10, 11]),
+          toF32Interval([11, 12]),
+          toF32Interval([12, 13]),
+        ],
+        [
+          toF32Interval([13, 14]),
+          toF32Interval([14, 15]),
+          toF32Interval([15, 16]),
+          toF32Interval([16, 17]),
+        ],
+      ],
+      expected: [
+        [
+          [1, 2],
+          [2, 3],
+          [3, 4],
+          [4, 5],
+        ],
+        [
+          [5, 6],
+          [6, 7],
+          [7, 8],
+          [8, 9],
+        ],
+        [
+          [9, 10],
+          [10, 11],
+          [11, 12],
+          [12, 13],
+        ],
+        [
+          [13, 14],
+          [14, 15],
+          [15, 16],
+          [16, 17],
+        ],
       ],
     },
 
