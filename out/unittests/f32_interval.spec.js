@@ -83,9 +83,11 @@ unpack2x16snormInterval,
 unpack2x16unormInterval,
 unpack4x8snormInterval,
 unpack4x8unormInterval,
-determinantInterval } from
+determinantInterval,
+isF32Vector,
+isF32Matrix } from
 '../webgpu/util/f32_interval.js';
-import { hexToF32, hexToF64, oneULPF32 } from '../webgpu/util/math.js';
+import { hexToF32, hexToF64, map2DArray, oneULPF32 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -119,11 +121,13 @@ function minusOneULP(x) {
  * @param expected the bounds to be adjusted
  * @param error error function to adjust the bounds via
  */
-function applyError(expected, error) {
+function applyError(
+expected,
+error)
+{
   if (expected !== kAny) {
-    const begin = expected[0];
-    const end = expected.length === 2 ? expected[1] : begin;
-    expected = [begin - error(begin), end + error(end)];
+    const interval = toF32Interval(expected);
+    expected = [interval.begin - error(interval.begin), interval.end + error(interval.end)];
   }
 
   return expected;
@@ -196,13 +200,13 @@ paramsSubcasesOnly(
 { bounds: [-5, 10], value: -10, expected: false },
 
 // Point
-{ bounds: [0], value: 0, expected: true },
-{ bounds: [0], value: 10, expected: false },
-{ bounds: [0], value: -1000, expected: false },
-{ bounds: [10], value: 10, expected: true },
-{ bounds: [10], value: 0, expected: false },
-{ bounds: [10], value: -10, expected: false },
-{ bounds: [10], value: 11, expected: false },
+{ bounds: 0, value: 0, expected: true },
+{ bounds: 0, value: 10, expected: false },
+{ bounds: 0, value: -1000, expected: false },
+{ bounds: 10, value: 10, expected: true },
+{ bounds: 10, value: 0, expected: false },
+{ bounds: 10, value: -10, expected: false },
+{ bounds: 10, value: 11, expected: false },
 
 // Upper infinity
 { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.positive.min, expected: true },
@@ -281,7 +285,7 @@ paramsSubcasesOnly(
 
 
 fn((t) => {
-  const i = new F32Interval(...t.params.bounds);
+  const i = toF32Interval(t.params.bounds);
   const value = t.params.value;
   const expected = t.params.expected;
 
@@ -300,7 +304,7 @@ paramsSubcasesOnly(
 
 [
 // Common usage
-{ lhs: [-10, 10], rhs: [0], expected: true },
+{ lhs: [-10, 10], rhs: 0, expected: true },
 { lhs: [-10, 10], rhs: [-1, 0], expected: true },
 { lhs: [-10, 10], rhs: [0, 2], expected: true },
 { lhs: [-10, 10], rhs: [-1, 2], expected: true },
@@ -310,7 +314,7 @@ paramsSubcasesOnly(
 { lhs: [-10, 10], rhs: [-100, 10], expected: false },
 
 // Upper infinity
-{ lhs: [0, kValue.f32.infinity.positive], rhs: [0], expected: true },
+{ lhs: [0, kValue.f32.infinity.positive], rhs: 0, expected: true },
 { lhs: [0, kValue.f32.infinity.positive], rhs: [-1, 0], expected: false },
 { lhs: [0, kValue.f32.infinity.positive], rhs: [0, 1], expected: true },
 { lhs: [0, kValue.f32.infinity.positive], rhs: [0, kValue.f32.positive.max], expected: true },
@@ -319,7 +323,7 @@ paramsSubcasesOnly(
 { lhs: [0, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, kValue.f32.infinity.positive], expected: false },
 
 // Lower infinity
-{ lhs: [kValue.f32.infinity.negative, 0], rhs: [0], expected: true },
+{ lhs: [kValue.f32.infinity.negative, 0], rhs: 0, expected: true },
 { lhs: [kValue.f32.infinity.negative, 0], rhs: [-1, 0], expected: true },
 { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.negative.min, 0], expected: true },
 { lhs: [kValue.f32.infinity.negative, 0], rhs: [0, 1], expected: false },
@@ -328,7 +332,7 @@ paramsSubcasesOnly(
 { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
 
 // Full infinity
-{ lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0], expected: true },
+{ lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: 0, expected: true },
 { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [-1, 0], expected: true },
 { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, 1], expected: true },
 { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, kValue.f32.infinity.positive], expected: true },
@@ -338,7 +342,7 @@ paramsSubcasesOnly(
 { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: true },
 
 // Maximum f32 boundary
-{ lhs: [0, kValue.f32.positive.max], rhs: [0], expected: true },
+{ lhs: [0, kValue.f32.positive.max], rhs: 0, expected: true },
 { lhs: [0, kValue.f32.positive.max], rhs: [-1, 0], expected: false },
 { lhs: [0, kValue.f32.positive.max], rhs: [0, 1], expected: true },
 { lhs: [0, kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true },
@@ -356,7 +360,7 @@ paramsSubcasesOnly(
 { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
 
 // Out of range high
-{ lhs: [0, 2 * kValue.f32.positive.max], rhs: [0], expected: true },
+{ lhs: [0, 2 * kValue.f32.positive.max], rhs: 0, expected: true },
 { lhs: [0, 2 * kValue.f32.positive.max], rhs: [-1, 0], expected: false },
 { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, 1], expected: true },
 { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true },
@@ -365,7 +369,7 @@ paramsSubcasesOnly(
 { lhs: [0, 2 * kValue.f32.positive.max], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
 
 // Out of range low
-{ lhs: [2 * kValue.f32.negative.min, 0], rhs: [0], expected: true },
+{ lhs: [2 * kValue.f32.negative.min, 0], rhs: 0, expected: true },
 { lhs: [2 * kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true },
 { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true },
 { lhs: [2 * kValue.f32.negative.min, 0], rhs: [0, 1], expected: false },
@@ -375,8 +379,8 @@ paramsSubcasesOnly(
 
 
 fn((t) => {
-  const lhs = new F32Interval(...t.params.lhs);
-  const rhs = new F32Interval(...t.params.rhs);
+  const lhs = toF32Interval(t.params.lhs);
+  const rhs = toF32Interval(t.params.rhs);
   const expected = t.params.expected;
 
   const got = lhs.contains(rhs);
@@ -411,7 +415,12 @@ paramsSubcasesOnly(
 // Multiple Intervals
 { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
 { intervals: [[0, 1], [4, 5], [2, 3]], expected: [0, 5] },
-{ intervals: [[0, 1], [0, 1], [0, 1]], expected: [0, 1] }]).
+{ intervals: [[0, 1], [0, 1], [0, 1]], expected: [0, 1] },
+
+// Point Intervals
+{ intervals: [1], expected: 1 },
+{ intervals: [1, 2], expected: [1, 2] },
+{ intervals: [-10, 2], expected: [-10, 2] }]).
 
 
 fn((t) => {
@@ -430,6 +439,1279 @@ fn((t) => {
 
 
 
+g.test('isF32Vector').
+paramsSubcasesOnly([
+// numbers
+{ input: [1, 2], expected: false },
+{ input: [1, 2, 3], expected: false },
+{ input: [1, 2, 3, 4], expected: false },
+
+// IntervalBounds
+{ input: [[1], [2]], expected: false },
+{ input: [[1], [2], [3]], expected: false },
+{ input: [[1], [2], [3], [4]], expected: false },
+{
+  input: [
+  [1, 2],
+  [2, 3]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2],
+  [2, 3],
+  [3, 4]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]],
+
+  expected: false
+},
+
+// F32Interval, valid dimensions
+{ input: [toF32Interval([1]), toF32Interval([2])], expected: true },
+{ input: [toF32Interval([1, 2]), toF32Interval([2, 3])], expected: true },
+{ input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: true },
+{
+  input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  expected: true
+},
+{
+  input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3]), toF32Interval([4])],
+  expected: true
+},
+{
+  input: [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  expected: true
+},
+
+// F32Interval, invalid dimensions
+{ input: [toF32Interval([1])], expected: false },
+{
+  input: [
+  toF32Interval([1]),
+  toF32Interval([2]),
+  toF32Interval([3]),
+  toF32Interval([4]),
+  toF32Interval([5])],
+
+  expected: false
+},
+
+// Mixed
+{ input: [1, [2]], expected: false },
+{ input: [1, [2], toF32Interval([3])], expected: false },
+{ input: [1, toF32Interval([2]), [3], 4], expected: false },
+{ input: [toF32Interval(1), 2], expected: false },
+{ input: [toF32Interval(1), [2]], expected: false }]).
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = t.params.expected;
+
+  const got = isF32Vector(input);
+  t.expect(got === expected, `isF32Vector([${input}]) returned ${got}. Expected ${expected}`);
+});
+
+
+
+
+
+
+g.test('toF32Vector').
+paramsSubcasesOnly([
+// numbers
+{ input: [1, 2], expected: [1, 2] },
+{ input: [1, 2, 3], expected: [1, 2, 3] },
+{ input: [1, 2, 3, 4], expected: [1, 2, 3, 4] },
+
+// IntervalBounds
+{ input: [[1], [2]], expected: [1, 2] },
+{ input: [[1], [2], [3]], expected: [1, 2, 3] },
+{ input: [[1], [2], [3], [4]], expected: [1, 2, 3, 4] },
+{
+  input: [
+  [1, 2],
+  [2, 3]],
+
+  expected: [
+  [1, 2],
+  [2, 3]]
+
+},
+{
+  input: [
+  [1, 2],
+  [2, 3],
+  [3, 4]],
+
+  expected: [
+  [1, 2],
+  [2, 3],
+  [3, 4]]
+
+},
+{
+  input: [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]],
+
+  expected: [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]]
+
+},
+
+// F32Interval
+{ input: [toF32Interval([1]), toF32Interval([2])], expected: [1, 2] },
+{
+  input: [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  expected: [
+  [1, 2],
+  [2, 3]]
+
+},
+{ input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: [1, 2, 3] },
+{
+  input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  expected: [
+  [1, 2],
+  [2, 3],
+  [3, 4]]
+
+},
+{
+  input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3]), toF32Interval([4])],
+  expected: [1, 2, 3, 4]
+},
+{
+  input: [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  expected: [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]]
+
+},
+
+// Mixed
+{ input: [1, [2]], expected: [1, 2] },
+{ input: [1, [2], toF32Interval([3])], expected: [1, 2, 3] },
+{ input: [1, toF32Interval([2]), [3], 4], expected: [1, 2, 3, 4] },
+{
+  input: [1, [2], [2, 3], F32Interval.any()],
+  expected: [1, 2, [2, 3], kAny]
+}]).
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = t.params.expected.map(toF32Interval);
+
+  const got = toF32Vector(input);
+  t.expect(
+  objectEquals(got, expected),
+  `toF32Vector([${input}]) returned [${got}]. Expected [${expected}]`);
+
+});
+
+
+
+
+
+
+g.test('isF32Matrix').
+paramsSubcasesOnly([
+// numbers
+{
+  input: [
+  [1, 2],
+  [3, 4]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  expected: false
+},
+
+// IntervalBounds
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]],
+  [[5], [6]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]],
+  [[5], [6]],
+  [[7], [8]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]],
+  [[7], [8], [9]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]],
+  [[7], [8], [9]],
+  [[10], [11], [12]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]],
+  [[9], [10], [11], [12]]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]],
+  [[9], [10], [11], [12]],
+  [[13], [14], [15], [16]]],
+
+  expected: false
+},
+
+// F32Interval, valid dimensions
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8), toF32Interval(9)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8), toF32Interval(9)],
+  [toF32Interval(10), toF32Interval(11), toF32Interval(12)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)],
+  [toF32Interval(9), toF32Interval(10), toF32Interval(11), toF32Interval(12)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)],
+  [toF32Interval(9), toF32Interval(10), toF32Interval(11), toF32Interval(12)],
+  [toF32Interval(13), toF32Interval(14), toF32Interval(15), toF32Interval(16)]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])],
+  [toF32Interval([5, 6]), toF32Interval([6, 7])]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])],
+  [toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9])]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])]],
+
+  expected: true
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+  [toF32Interval([10, 11]), toF32Interval([11, 12]), toF32Interval([12, 13])]],
+
+  expected: true
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])]],
+
+
+  expected: true
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])],
+
+  [
+  toF32Interval([9, 10]),
+  toF32Interval([10, 11]),
+  toF32Interval([11, 12]),
+  toF32Interval([12, 13])]],
+
+
+  expected: true
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])],
+
+  [
+  toF32Interval([9, 10]),
+  toF32Interval([10, 11]),
+  toF32Interval([11, 12]),
+  toF32Interval([12, 13])],
+
+  [
+  toF32Interval([13, 14]),
+  toF32Interval([14, 15]),
+  toF32Interval([15, 16]),
+  toF32Interval([16, 17])]],
+
+
+  expected: true
+},
+
+// F32Interval, invalid dimensions
+{ input: [[toF32Interval(1)]], expected: false },
+{ input: [[toF32Interval(1)], [toF32Interval(3), toF32Interval(4)]], expected: false },
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4), toF32Interval(5)]],
+
+  expected: false
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5)]],
+
+  expected: false
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8)],
+  [toF32Interval(9), toF32Interval(10)]],
+
+  expected: false
+},
+
+// Mixed
+{
+  input: [
+  [1, [2]],
+  [3, 4]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], 4]],
+
+  expected: false
+},
+{
+  input: [
+  [1, 2],
+  [toF32Interval([3]), 4]],
+
+  expected: false
+},
+{
+  input: [
+  [[1], toF32Interval([2])],
+  [toF32Interval([3]), toF32Interval([4])]],
+
+  expected: false
+},
+{
+  input: [
+  [toF32Interval(1), [2]],
+  [3, 4]],
+
+  expected: false
+}]).
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = t.params.expected;
+
+  const got = isF32Matrix(input);
+  t.expect(got === expected, `isF32Matrix([${input}]) returned ${got}. Expected ${expected}`);
+});
+
+
+
+
+
+
+g.test('toF32Matrix').
+paramsSubcasesOnly([
+// numbers
+{
+  input: [
+  [1, 2],
+  [3, 4]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6]]
+
+},
+{
+  input: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]]
+
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6]]
+
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]]
+
+},
+{
+  input: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]]
+
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]]
+
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]]
+
+},
+{
+  input: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]]
+
+},
+
+// IntervalBounds
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]],
+  [[5], [6]]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6]]
+
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], [4]],
+  [[5], [6]],
+  [[7], [8]]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]]
+
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6]]
+
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]],
+  [[7], [8], [9]]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]]
+
+},
+{
+  input: [
+  [[1], [2], [3]],
+  [[4], [5], [6]],
+  [[7], [8], [9]],
+  [[10], [11], [12]]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]]
+
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]]
+
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]],
+  [[9], [10], [11], [12]]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]]
+
+},
+{
+  input: [
+  [[1], [2], [3], [4]],
+  [[5], [6], [7], [8]],
+  [[9], [10], [11], [12]],
+  [[13], [14], [15], [16]]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]]
+
+},
+
+// F32Interval
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6)]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2)],
+  [toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8)]],
+
+  expected: [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8), toF32Interval(9)]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3)],
+  [toF32Interval(4), toF32Interval(5), toF32Interval(6)],
+  [toF32Interval(7), toF32Interval(8), toF32Interval(9)],
+  [toF32Interval(10), toF32Interval(11), toF32Interval(12)]],
+
+  expected: [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)],
+  [toF32Interval(9), toF32Interval(10), toF32Interval(11), toF32Interval(12)]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]]
+
+},
+{
+  input: [
+  [toF32Interval(1), toF32Interval(2), toF32Interval(3), toF32Interval(4)],
+  [toF32Interval(5), toF32Interval(6), toF32Interval(7), toF32Interval(8)],
+  [toF32Interval(9), toF32Interval(10), toF32Interval(11), toF32Interval(12)],
+  [toF32Interval(13), toF32Interval(14), toF32Interval(15), toF32Interval(16)]],
+
+  expected: [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]]
+
+},
+
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3]],
+
+  [
+  [3, 4],
+  [4, 5]]]
+
+
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])],
+  [toF32Interval([5, 6]), toF32Interval([6, 7])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3]],
+
+  [
+  [3, 4],
+  [4, 5]],
+
+  [
+  [5, 6],
+  [6, 7]]]
+
+
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3])],
+  [toF32Interval([3, 4]), toF32Interval([4, 5])],
+  [toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3]],
+
+  [
+  [3, 4],
+  [4, 5]],
+
+  [
+  [5, 6],
+  [6, 7]],
+
+  [
+  [7, 8],
+  [8, 9]]]
+
+
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4]],
+
+  [
+  [4, 5],
+  [5, 6],
+  [6, 7]]]
+
+
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4]],
+
+  [
+  [4, 5],
+  [5, 6],
+  [6, 7]],
+
+  [
+  [7, 8],
+  [8, 9],
+  [9, 10]]]
+
+
+},
+{
+  input: [
+  [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
+  [toF32Interval([4, 5]), toF32Interval([5, 6]), toF32Interval([6, 7])],
+  [toF32Interval([7, 8]), toF32Interval([8, 9]), toF32Interval([9, 10])],
+  [toF32Interval([10, 11]), toF32Interval([11, 12]), toF32Interval([12, 13])]],
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4]],
+
+  [
+  [4, 5],
+  [5, 6],
+  [6, 7]],
+
+  [
+  [7, 8],
+  [8, 9],
+  [9, 10]],
+
+  [
+  [10, 11],
+  [11, 12],
+  [12, 13]]]
+
+
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])]],
+
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]],
+
+  [
+  [5, 6],
+  [6, 7],
+  [7, 8],
+  [8, 9]]]
+
+
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])],
+
+  [
+  toF32Interval([9, 10]),
+  toF32Interval([10, 11]),
+  toF32Interval([11, 12]),
+  toF32Interval([12, 13])]],
+
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]],
+
+  [
+  [5, 6],
+  [6, 7],
+  [7, 8],
+  [8, 9]],
+
+  [
+  [9, 10],
+  [10, 11],
+  [11, 12],
+  [12, 13]]]
+
+
+},
+{
+  input: [
+  [
+  toF32Interval([1, 2]),
+  toF32Interval([2, 3]),
+  toF32Interval([3, 4]),
+  toF32Interval([4, 5])],
+
+  [
+  toF32Interval([5, 6]),
+  toF32Interval([6, 7]),
+  toF32Interval([7, 8]),
+  toF32Interval([8, 9])],
+
+  [
+  toF32Interval([9, 10]),
+  toF32Interval([10, 11]),
+  toF32Interval([11, 12]),
+  toF32Interval([12, 13])],
+
+  [
+  toF32Interval([13, 14]),
+  toF32Interval([14, 15]),
+  toF32Interval([15, 16]),
+  toF32Interval([16, 17])]],
+
+
+  expected: [
+  [
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5]],
+
+  [
+  [5, 6],
+  [6, 7],
+  [7, 8],
+  [8, 9]],
+
+  [
+  [9, 10],
+  [10, 11],
+  [11, 12],
+  [12, 13]],
+
+  [
+  [13, 14],
+  [14, 15],
+  [15, 16],
+  [16, 17]]]
+
+
+},
+
+// Mixed
+{
+  input: [
+  [1, [2]],
+  [3, 4]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [[1], [2]],
+  [[3], 4]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [1, 2],
+  [toF32Interval([3]), 4]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+},
+{
+  input: [
+  [[1], toF32Interval([2])],
+  [toF32Interval([3]), toF32Interval([4])]],
+
+  expected: [
+  [1, 2],
+  [3, 4]]
+
+}]).
+
+fn((t) => {
+  const input = t.params.input;
+  const expected = map2DArray(t.params.expected, toF32Interval);
+
+  const got = toF32Matrix(input);
+  t.expect(
+  objectEquals(got, expected),
+  `toF32Matrix([${input}]) returned [${got}]. Expected [${expected}]`);
+
+});
+
+
+
+
+
+
 g.test('correctlyRoundedInterval').
 paramsSubcasesOnly(
 
@@ -437,10 +1719,10 @@ paramsSubcasesOnly(
 // Edge Cases
 { value: kValue.f32.infinity.positive, expected: kAny },
 { value: kValue.f32.infinity.negative, expected: kAny },
-{ value: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ value: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
-{ value: kValue.f32.positive.min, expected: [kValue.f32.positive.min] },
-{ value: kValue.f32.negative.max, expected: [kValue.f32.negative.max] },
+{ value: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ value: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ value: kValue.f32.positive.min, expected: kValue.f32.positive.min },
+{ value: kValue.f32.negative.max, expected: kValue.f32.negative.max },
 
 // 32-bit subnormals
 { value: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
@@ -456,10 +1738,10 @@ paramsSubcasesOnly(
 
 // 32-bit normals
 { value: 0, expected: [0, 0] },
-{ value: hexToF32(0x03800000), expected: [hexToF32(0x03800000)] },
-{ value: hexToF32(0x03800001), expected: [hexToF32(0x03800001)] },
-{ value: hexToF32(0x83800000), expected: [hexToF32(0x83800000)] },
-{ value: hexToF32(0x83800001), expected: [hexToF32(0x83800001)] },
+{ value: hexToF32(0x03800000), expected: hexToF32(0x03800000) },
+{ value: hexToF32(0x03800001), expected: hexToF32(0x03800001) },
+{ value: hexToF32(0x83800000), expected: hexToF32(0x83800000) },
+{ value: hexToF32(0x83800001), expected: hexToF32(0x83800001) },
 
 // 64-bit normals
 { value: hexToF64(0x3ff0_0000_0000_0001n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
@@ -499,16 +1781,16 @@ paramsSubcasesOnly(
 { value: kValue.f32.infinity.negative, error: 0, expected: kAny },
 { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAny },
 { value: kValue.f32.infinity.negative, error: 1, expected: kAny },
-{ value: kValue.f32.positive.max, error: 0, expected: [kValue.f32.positive.max] },
-{ value: kValue.f32.positive.max, error: 2 ** -11, expected: [kValue.f32.positive.max] },
+{ value: kValue.f32.positive.max, error: 0, expected: kValue.f32.positive.max },
+{ value: kValue.f32.positive.max, error: 2 ** -11, expected: kValue.f32.positive.max },
 { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAny },
-{ value: kValue.f32.positive.min, error: 0, expected: [kValue.f32.positive.min] },
+{ value: kValue.f32.positive.min, error: 0, expected: kValue.f32.positive.min },
 { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
 { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
-{ value: kValue.f32.negative.min, error: 0, expected: [kValue.f32.negative.min] },
-{ value: kValue.f32.negative.min, error: 2 ** -11, expected: [kValue.f32.negative.min] },
+{ value: kValue.f32.negative.min, error: 0, expected: kValue.f32.negative.min },
+{ value: kValue.f32.negative.min, error: 2 ** -11, expected: kValue.f32.negative.min },
 { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAny },
-{ value: kValue.f32.negative.max, error: 0, expected: [kValue.f32.negative.max] },
+{ value: kValue.f32.negative.max, error: 0, expected: kValue.f32.negative.max },
 { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
 { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
 
@@ -541,7 +1823,7 @@ paramsSubcasesOnly(
 { value: hexToF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
 
 // Zero
-{ value: 0, error: 0, expected: [0] },
+{ value: 0, error: 0, expected: 0 },
 { value: 0, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
 { value: 0, error: 1, expected: [-1, 1] }]).
 
@@ -573,16 +1855,16 @@ paramsSubcasesOnly(
 { value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAny },
 { value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAny },
 { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAny },
-{ value: kValue.f32.positive.max, num_ulp: 0, expected: [kValue.f32.positive.max] },
+{ value: kValue.f32.positive.max, num_ulp: 0, expected: kValue.f32.positive.max },
 { value: kValue.f32.positive.max, num_ulp: 1, expected: kAny },
 { value: kValue.f32.positive.max, num_ulp: 4096, expected: kAny },
-{ value: kValue.f32.positive.min, num_ulp: 0, expected: [kValue.f32.positive.min] },
+{ value: kValue.f32.positive.min, num_ulp: 0, expected: kValue.f32.positive.min },
 { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULP(kValue.f32.positive.min)] },
 { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULP(kValue.f32.positive.min, 4096)] },
-{ value: kValue.f32.negative.min, num_ulp: 0, expected: [kValue.f32.negative.min] },
+{ value: kValue.f32.negative.min, num_ulp: 0, expected: kValue.f32.negative.min },
 { value: kValue.f32.negative.min, num_ulp: 1, expected: kAny },
 { value: kValue.f32.negative.min, num_ulp: 4096, expected: kAny },
-{ value: kValue.f32.negative.max, num_ulp: 0, expected: [kValue.f32.negative.max] },
+{ value: kValue.f32.negative.max, num_ulp: 0, expected: kValue.f32.negative.max },
 { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.negative.max), 0] },
 { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.negative.max, 4096), 0] },
 
@@ -615,7 +1897,7 @@ paramsSubcasesOnly(
 { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
 
 // Zero
-{ value: 0, num_ulp: 0, expected: [0] },
+{ value: 0, num_ulp: 0, expected: 0 },
 { value: 0, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(0)] },
 { value: 0, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(0, 4096)] }]).
 
@@ -640,18 +1922,18 @@ paramsSubcasesOnly(
 
 [
 // Common usages
-{ input: 1, expected: [1] },
-{ input: -1, expected: [1] },
+{ input: 1, expected: 1 },
+{ input: -1, expected: 1 },
 { input: 0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
 { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.positive.min, expected: [kValue.f32.positive.min] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.negative.max, expected: [kValue.f32.positive.min] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
+{ input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
+{ input: kValue.f32.negative.max, expected: kValue.f32.positive.min },
 
 // 32-bit subnormals
 { input: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
@@ -664,7 +1946,7 @@ paramsSubcasesOnly(
 { input: hexToF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
 
 // Zero
-{ input: 0, expected: [0] }]).
+{ input: 0, expected: 0 }]).
 
 
 fn((t) => {
@@ -681,11 +1963,14 @@ g.test('acosInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the complexity of their derivation.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the complexity of
+// their derivation.
 //
-// The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-// The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
+// The acceptance interval @ x = -1 and 1 is kAny, because
+// sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
+// The acceptance interval @ x = 0 is kAny, because atan2 is not
+// well-defined/implemented at 0.
 // Near 1, the absolute error should be larger and, away from 1 the atan2
 // inherited error should be larger.
 { input: kValue.f32.infinity.negative, expected: kAny },
@@ -714,8 +1999,9 @@ g.test('acoshAlternativeInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
@@ -741,8 +2027,9 @@ g.test('acoshPrimaryInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
@@ -768,14 +2055,15 @@ g.test('asinInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a simple human readable
-// form due to the complexity of their derivation.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a simple human-readable form due to the complexity of their derivation.
 //
-// The acceptance interval @ x = -1 and 1 is kAny, because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms
-// of inversqrt.
-// The acceptance interval @ x = 0 is kAny, because atan2 is not well defined/implemented at 0.
-// Near 0, but not subnormal the absolute error should be larger, so will be +/- 6.77e-5, away from 0 the atan2
-// inherited error should be larger.
+// The acceptance interval @ x = -1 and 1 is kAny, because
+// sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
+// The acceptance interval @ x = 0 is kAny, because atan2 is not
+// well-defined/implemented at 0.
+// Near 0, but not subnormal the absolute error should be larger, so will
+// be +/- 6.77e-5, away from 0 the atan2 inherited error should be larger.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
@@ -803,8 +2091,9 @@ g.test('asinhInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] }, // ~-0.88137...
@@ -832,7 +2121,7 @@ paramsSubcasesOnly(
 { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULP(kValue.f32.negative.pi.third)] }, // x = -√3
 { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
 { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULP(kValue.f32.negative.pi.sixth)] }, // x = -1/√3
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: hexToF32(0x3f13cd3a), expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
 { input: 1, expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
 { input: hexToF32(0x3fddb3d7), expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
@@ -858,8 +2147,8 @@ g.test('atanhInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: kAny },
@@ -885,33 +2174,33 @@ g.test('ceilInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
-{ input: 0.1, expected: [1] },
-{ input: 0.9, expected: [1] },
-{ input: 1.0, expected: [1] },
-{ input: 1.1, expected: [2] },
-{ input: 1.9, expected: [2] },
-{ input: -0.1, expected: [0] },
-{ input: -0.9, expected: [0] },
-{ input: -1.0, expected: [-1] },
-{ input: -1.1, expected: [-1] },
-{ input: -1.9, expected: [-1] },
+{ input: 0, expected: 0 },
+{ input: 0.1, expected: 1 },
+{ input: 0.9, expected: 1 },
+{ input: 1.0, expected: 1 },
+{ input: 1.1, expected: 2 },
+{ input: 1.9, expected: 2 },
+{ input: -0.1, expected: 0 },
+{ input: -0.9, expected: 0 },
+{ input: -1.0, expected: -1 },
+{ input: -1.1, expected: -1 },
+{ input: -1.9, expected: -1 },
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.positive.min, expected: [1] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
-{ input: kValue.f32.negative.max, expected: [0] },
-{ input: kValue.powTwo.to30, expected: [kValue.powTwo.to30] },
-{ input: -kValue.powTwo.to30, expected: [-kValue.powTwo.to30] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ input: kValue.f32.positive.min, expected: 1 },
+{ input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ input: kValue.f32.negative.max, expected: 0 },
+{ input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
+{ input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
 
 // 32-bit subnormals
 { input: kValue.f32.subnormal.positive.max, expected: [0, 1] },
 { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
-{ input: kValue.f32.subnormal.negative.min, expected: [0] },
-{ input: kValue.f32.subnormal.negative.max, expected: [0] }]).
+{ input: kValue.f32.subnormal.negative.min, expected: 0 },
+{ input: kValue.f32.subnormal.negative.max, expected: 0 }]).
 
 
 fn((t) => {
@@ -928,10 +2217,12 @@ g.test('cosInterval').
 paramsSubcasesOnly(
 
 [
-// This test does not include some common cases. i.e. f(x = π/2) = 0, because the difference between true x
-// and x as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
-// different, so instead of getting 0 you get a value on the order of 10^-8 away from 0, thus difficult to express
-// in a human readable manner.
+// This test does not include some common cases. i.e. f(x = π/2) = 0,
+// because the difference between true x and x as a f32 is sufficiently
+// large, such that the high slope of f @ x causes the results to be
+// substantially different, so instead of getting 0 you get a value on the
+// order of 10^-8 away from 0, thus difficult to express in a
+// human-readable manner.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: kValue.f32.negative.pi.whole, expected: [-1, plusOneULP(-1)] },
@@ -962,8 +2253,9 @@ g.test('coshInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: [hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] }, // ~1.1543...
@@ -995,7 +2287,7 @@ paramsSubcasesOnly(
 { input: kValue.f32.negative.pi.third, expected: [minusOneULP(-60), plusOneULP(-60)] },
 { input: kValue.f32.negative.pi.quarter, expected: [minusOneULP(-45), plusOneULP(-45)] },
 { input: kValue.f32.negative.pi.sixth, expected: [minusOneULP(-30), plusOneULP(-30)] },
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: kValue.f32.positive.pi.sixth, expected: [minusOneULP(30), plusOneULP(30)] },
 { input: kValue.f32.positive.pi.quarter, expected: [minusOneULP(45), plusOneULP(45)] },
 { input: kValue.f32.positive.pi.third, expected: [minusOneULP(60), plusOneULP(60)] },
@@ -1021,7 +2313,7 @@ paramsSubcasesOnly(
 
 [
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: 0, expected: [1] },
+{ input: 0, expected: 1 },
 { input: 1, expected: [kValue.f32.positive.e, plusOneULP(kValue.f32.positive.e)] },
 { input: 89, expected: kAny }]).
 
@@ -1047,8 +2339,8 @@ paramsSubcasesOnly(
 
 [
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: 0, expected: [1] },
-{ input: 1, expected: [2] },
+{ input: 0, expected: 1 },
+{ input: 1, expected: 2 },
 { input: 128, expected: kAny }]).
 
 
@@ -1072,31 +2364,31 @@ g.test('floorInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
-{ input: 0.1, expected: [0] },
-{ input: 0.9, expected: [0] },
-{ input: 1.0, expected: [1] },
-{ input: 1.1, expected: [1] },
-{ input: 1.9, expected: [1] },
-{ input: -0.1, expected: [-1] },
-{ input: -0.9, expected: [-1] },
-{ input: -1.0, expected: [-1] },
-{ input: -1.1, expected: [-2] },
-{ input: -1.9, expected: [-2] },
+{ input: 0, expected: 0 },
+{ input: 0.1, expected: 0 },
+{ input: 0.9, expected: 0 },
+{ input: 1.0, expected: 1 },
+{ input: 1.1, expected: 1 },
+{ input: 1.9, expected: 1 },
+{ input: -0.1, expected: -1 },
+{ input: -0.9, expected: -1 },
+{ input: -1.0, expected: -1 },
+{ input: -1.1, expected: -2 },
+{ input: -1.9, expected: -2 },
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.positive.min, expected: [0] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
-{ input: kValue.f32.negative.max, expected: [-1] },
-{ input: kValue.powTwo.to30, expected: [kValue.powTwo.to30] },
-{ input: -kValue.powTwo.to30, expected: [-kValue.powTwo.to30] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ input: kValue.f32.positive.min, expected: 0 },
+{ input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ input: kValue.f32.negative.max, expected: -1 },
+{ input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
+{ input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
 
 // 32-bit subnormals
-{ input: kValue.f32.subnormal.positive.max, expected: [0] },
-{ input: kValue.f32.subnormal.positive.min, expected: [0] },
+{ input: kValue.f32.subnormal.positive.max, expected: 0 },
+{ input: kValue.f32.subnormal.positive.min, expected: 0 },
 { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
 { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] }]).
 
@@ -1115,22 +2407,22 @@ g.test('fractInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: 0.9, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] }, // ~0.9
-{ input: 1.0, expected: [0] },
+{ input: 1.0, expected: 0 },
 { input: 1.1, expected: [hexToF64(0x3fb9_9998_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
 { input: -0.1, expected: [hexToF32(0x3f666666), plusOneULP(hexToF32(0x3f666666))] }, // ~0.9
 { input: -0.9, expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-{ input: -1.0, expected: [0] },
+{ input: -1.0, expected: 0 },
 { input: -1.1, expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccd_0000_0000n)] }, // ~0.9
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [0] },
+{ input: kValue.f32.positive.max, expected: 0 },
 { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
-{ input: kValue.f32.negative.min, expected: [0] },
+{ input: kValue.f32.negative.min, expected: 0 },
 { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] }]).
 
 
@@ -1151,7 +2443,7 @@ paramsSubcasesOnly(
 { input: -1, expected: kAny },
 { input: 0, expected: kAny },
 { input: 0.04, expected: [minusOneULP(5), plusOneULP(5)] },
-{ input: 1, expected: [1] },
+{ input: 1, expected: 1 },
 { input: 100, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULP(hexToF32(0x1f800000), 2)] }, // ~5.421...e-20, i.e. 1/√max f32
 { input: kValue.f32.infinity.positive, expected: kAny }]).
@@ -1176,8 +2468,9 @@ g.test('lengthIntervalScalar').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 //
 // length(0) = kAny, because length uses sqrt, which is defined as 1/inversesqrt
 { input: 0, expected: kAny },
@@ -1219,7 +2512,7 @@ paramsSubcasesOnly(
 [
 { input: -1, expected: kAny },
 { input: 0, expected: kAny },
-{ input: 1, expected: [0] },
+{ input: 1, expected: 0 },
 { input: kValue.f32.positive.e, expected: [minusOneULP(1), 1] },
 { input: kValue.f32.positive.max, expected: [minusOneULP(hexToF32(0x42b17218)), hexToF32(0x42b17218)] } // ~88.72...
 ]).
@@ -1248,8 +2541,8 @@ paramsSubcasesOnly(
 [
 { input: -1, expected: kAny },
 { input: 0, expected: kAny },
-{ input: 1, expected: [0] },
-{ input: 2, expected: [1] },
+{ input: 1, expected: 0 },
+{ input: 2, expected: 1 },
 { input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] }]).
 
 
@@ -1275,21 +2568,21 @@ g.test('negationInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: 0.1, expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
-{ input: 1.0, expected: [-1.0] },
+{ input: 1.0, expected: -1.0 },
 { input: 1.9, expected: [hexToF32(0xbff33334), plusOneULP(hexToF32(0xbff33334))] }, // ~-1.9
 { input: -0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
-{ input: -1.0, expected: [1] },
+{ input: -1.0, expected: 1 },
 { input: -1.9, expected: [minusOneULP(hexToF32(0x3ff33334)), hexToF32(0x3ff33334)] }, // ~1.9
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.negative.min] },
-{ input: kValue.f32.positive.min, expected: [kValue.f32.negative.max] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.negative.max, expected: [kValue.f32.positive.min] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.negative.min },
+{ input: kValue.f32.positive.min, expected: kValue.f32.negative.max },
+{ input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
+{ input: kValue.f32.negative.max, expected: kValue.f32.positive.min },
 
 // 32-bit subnormals
 { input: kValue.f32.subnormal.positive.max, expected: [kValue.f32.subnormal.negative.min, 0] },
@@ -1314,21 +2607,21 @@ paramsSubcasesOnly(
 [
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
-{ input: kValue.f16.negative.min, expected: [kValue.f16.negative.min] },
-{ input: -1, expected: [-1] },
+{ input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
+{ input: -1, expected: -1 },
 { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] }, // ~-0.1
-{ input: kValue.f16.negative.max, expected: [kValue.f16.negative.max] },
+{ input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
 { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
 { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
 { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
 { input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
 { input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
-{ input: kValue.f16.positive.min, expected: [kValue.f16.positive.min] },
+{ input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
 { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] }, // ~0.1
-{ input: 1, expected: [1] },
-{ input: kValue.f16.positive.max, expected: [kValue.f16.positive.max] },
+{ input: 1, expected: 1 },
+{ input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
 { input: kValue.f32.positive.max, expected: kAny },
 { input: kValue.f32.infinity.positive, expected: kAny }]).
 
@@ -1354,7 +2647,7 @@ paramsSubcasesOnly(
 { input: -60, expected: [minusOneULP(kValue.f32.negative.pi.third), plusOneULP(kValue.f32.negative.pi.third)] },
 { input: -45, expected: [minusOneULP(kValue.f32.negative.pi.quarter), plusOneULP(kValue.f32.negative.pi.quarter)] },
 { input: -30, expected: [minusOneULP(kValue.f32.negative.pi.sixth), plusOneULP(kValue.f32.negative.pi.sixth)] },
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: 30, expected: [minusOneULP(kValue.f32.positive.pi.sixth), plusOneULP(kValue.f32.positive.pi.sixth)] },
 { input: 45, expected: [minusOneULP(kValue.f32.positive.pi.quarter), plusOneULP(kValue.f32.positive.pi.quarter)] },
 { input: 60, expected: [minusOneULP(kValue.f32.positive.pi.third), plusOneULP(kValue.f32.positive.pi.third)] },
@@ -1378,37 +2671,37 @@ g.test('roundInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
-{ input: 0.1, expected: [0] },
-{ input: 0.5, expected: [0] }, // Testing tie breaking
-{ input: 0.9, expected: [1] },
-{ input: 1.0, expected: [1] },
-{ input: 1.1, expected: [1] },
-{ input: 1.5, expected: [2] }, // Testing tie breaking
-{ input: 1.9, expected: [2] },
-{ input: -0.1, expected: [0] },
-{ input: -0.5, expected: [0] }, // Testing tie breaking
-{ input: -0.9, expected: [-1] },
-{ input: -1.0, expected: [-1] },
-{ input: -1.1, expected: [-1] },
-{ input: -1.5, expected: [-2] }, // Testing tie breaking
-{ input: -1.9, expected: [-2] },
+{ input: 0, expected: 0 },
+{ input: 0.1, expected: 0 },
+{ input: 0.5, expected: 0 }, // Testing tie breaking
+{ input: 0.9, expected: 1 },
+{ input: 1.0, expected: 1 },
+{ input: 1.1, expected: 1 },
+{ input: 1.5, expected: 2 }, // Testing tie breaking
+{ input: 1.9, expected: 2 },
+{ input: -0.1, expected: 0 },
+{ input: -0.5, expected: 0 }, // Testing tie breaking
+{ input: -0.9, expected: -1 },
+{ input: -1.0, expected: -1 },
+{ input: -1.1, expected: -1 },
+{ input: -1.5, expected: -2 }, // Testing tie breaking
+{ input: -1.9, expected: -2 },
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.positive.min, expected: [0] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
-{ input: kValue.f32.negative.max, expected: [0] },
-{ input: kValue.powTwo.to30, expected: [kValue.powTwo.to30] },
-{ input: -kValue.powTwo.to30, expected: [-kValue.powTwo.to30] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ input: kValue.f32.positive.min, expected: 0 },
+{ input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ input: kValue.f32.negative.max, expected: 0 },
+{ input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
+{ input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
 
 // 32-bit subnormals
-{ input: kValue.f32.subnormal.positive.max, expected: [0] },
-{ input: kValue.f32.subnormal.positive.min, expected: [0] },
-{ input: kValue.f32.subnormal.negative.min, expected: [0] },
-{ input: kValue.f32.subnormal.negative.max, expected: [0] }]).
+{ input: kValue.f32.subnormal.positive.max, expected: 0 },
+{ input: kValue.f32.subnormal.positive.min, expected: 0 },
+{ input: kValue.f32.subnormal.negative.min, expected: 0 },
+{ input: kValue.f32.subnormal.negative.max, expected: 0 }]).
 
 
 fn((t) => {
@@ -1426,18 +2719,18 @@ paramsSubcasesOnly(
 
 [
 // Normals
-{ input: 0, expected: [0] },
-{ input: 1, expected: [1.0] },
-{ input: -0.1, expected: [0] },
-{ input: -1, expected: [0] },
-{ input: -10, expected: [0] },
+{ input: 0, expected: 0 },
+{ input: 1, expected: 1.0 },
+{ input: -0.1, expected: 0 },
+{ input: -1, expected: 0 },
+{ input: -10, expected: 0 },
 { input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
-{ input: 10, expected: [1.0] },
-{ input: 11.1, expected: [1.0] },
-{ input: kValue.f32.positive.max, expected: [1.0] },
-{ input: kValue.f32.positive.min, expected: [kValue.f32.positive.min] },
-{ input: kValue.f32.negative.max, expected: [0.0] },
-{ input: kValue.f32.negative.min, expected: [0.0] },
+{ input: 10, expected: 1.0 },
+{ input: 11.1, expected: 1.0 },
+{ input: kValue.f32.positive.max, expected: 1.0 },
+{ input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
+{ input: kValue.f32.negative.max, expected: 0.0 },
+{ input: kValue.f32.negative.min, expected: 0.0 },
 
 // Subnormals
 { input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
@@ -1465,21 +2758,21 @@ paramsSubcasesOnly(
 
 [
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: [-1] },
-{ input: -10, expected: [-1] },
-{ input: -1, expected: [-1] },
-{ input: -0.1, expected: [-1] },
-{ input: kValue.f32.negative.max, expected: [-1] },
+{ input: kValue.f32.negative.min, expected: -1 },
+{ input: -10, expected: -1 },
+{ input: -1, expected: -1 },
+{ input: -0.1, expected: -1 },
+{ input: kValue.f32.negative.max, expected: -1 },
 { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
 { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] },
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: kValue.f32.subnormal.positive.max, expected: [0, 1] },
 { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
-{ input: kValue.f32.positive.min, expected: [1] },
-{ input: 0.1, expected: [1] },
-{ input: 1, expected: [1] },
-{ input: 10, expected: [1] },
-{ input: kValue.f32.positive.max, expected: [1] },
+{ input: kValue.f32.positive.min, expected: 1 },
+{ input: 0.1, expected: 1 },
+{ input: 1, expected: 1 },
+{ input: 10, expected: 1 },
+{ input: kValue.f32.positive.max, expected: 1 },
 { input: kValue.f32.infinity.positive, expected: kAny }]).
 
 
@@ -1497,14 +2790,16 @@ g.test('sinInterval').
 paramsSubcasesOnly(
 
 [
-// This test does not include some common cases, i.e. f(x = -π|π) = 0, because the difference between true x and x
-// as a f32 is sufficiently large, such that the high slope of f @ x causes the results to be substantially
-// different, so instead of getting 0 you get a value on the order of 10^-8 away from it, thus difficult to
-// express in a human readable manner.
+// This test does not include some common cases, i.e. f(x = -π|π) = 0,
+// because the difference between true x and x as a f32 is sufficiently
+// large, such that the high slope of f @ x causes the results to be
+// substantially different, so instead of getting 0 you get a value on the
+// order of 10^-8 away from it, thus difficult to express in a
+// human-readable manner.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: kValue.f32.negative.pi.half, expected: [-1, plusOneULP(-1)] },
-{ input: 0, expected: [0] },
+{ input: 0, expected: 0 },
 { input: kValue.f32.positive.pi.half, expected: [minusOneULP(1), 1] },
 { input: kValue.f32.positive.max, expected: kAny },
 { input: kValue.f32.infinity.positive, expected: kAny }]).
@@ -1529,8 +2824,9 @@ g.test('sinhInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: [hexToF32(0xbf966d05), hexToF32(0xbf966cf8)] }, // ~-1.175...
@@ -1554,8 +2850,9 @@ g.test('sqrtInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: -1, expected: kAny },
 { input: 0, expected: kAny },
 { input: 0.01, expected: [hexToF64(0x3fb9_9998_b000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
@@ -1579,15 +2876,23 @@ g.test('tanInterval').
 paramsSubcasesOnly(
 
 [
-// All of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form. Some easy looking cases like f(x = -π|π) = 0 are actually quite difficult. This is because the interval
-// is calculated from the results of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is irrational,
-// thus does not have an exact representation as a f32.
-// Even at 0, which has a precise f32 value, there is still the problem that result of sin(0) and cos(0) will be
-// intervals due to the inherited nature of errors, so the proper interval will be an interval calculated from
-// dividing an interval by another interval and applying an error function to that. This complexity is why the
-// entire interval framework was developed.
-// The examples here have been manually traced to confirm the expectation values are correct.
+// All of these are hard coded, since the error intervals are difficult to
+// express in a closed human--readable form.
+// Some easy looking cases like f(x = -π|π) = 0 are actually quite
+// difficult. This is because the interval is calculated from the results
+// of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is
+// irrational, thus does not have an exact representation as a f32.
+//
+// Even at 0, which has a precise f32 value, there is still the problem
+// that result of sin(0) and cos(0) will be intervals due to the inherited
+// nature of errors, so the proper interval will be an interval calculated
+// from dividing an interval by another interval and applying an error
+// function to that.
+//
+// This complexity is why the entire interval framework was developed.
+//
+// The examples here have been manually traced to confirm the expectation
+// values are correct.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf40_02bc_9000_0000n), hexToF64(0x3f40_0144_f000_0000n)] }, // ~0.0
@@ -1613,8 +2918,9 @@ g.test('tanhInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: kValue.f32.infinity.negative, expected: kAny },
 { input: kValue.f32.negative.min, expected: kAny },
 { input: -1, expected: [hexToF64(0xbfe8_5efd_1000_0000n), hexToF64(0xbfe8_5ef8_9000_0000n)] }, // ~-0.7615...
@@ -1638,31 +2944,31 @@ g.test('truncInterval').
 paramsSubcasesOnly(
 
 [
-{ input: 0, expected: [0] },
-{ input: 0.1, expected: [0] },
-{ input: 0.9, expected: [0] },
-{ input: 1.0, expected: [1] },
-{ input: 1.1, expected: [1] },
-{ input: 1.9, expected: [1] },
-{ input: -0.1, expected: [0] },
-{ input: -0.9, expected: [0] },
-{ input: -1.0, expected: [-1] },
-{ input: -1.1, expected: [-1] },
-{ input: -1.9, expected: [-1] },
+{ input: 0, expected: 0 },
+{ input: 0.1, expected: 0 },
+{ input: 0.9, expected: 0 },
+{ input: 1.0, expected: 1 },
+{ input: 1.1, expected: 1 },
+{ input: 1.9, expected: 1 },
+{ input: -0.1, expected: 0 },
+{ input: -0.9, expected: 0 },
+{ input: -1.0, expected: -1 },
+{ input: -1.1, expected: -1 },
+{ input: -1.9, expected: -1 },
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAny },
 { input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
-{ input: kValue.f32.positive.min, expected: [0] },
-{ input: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
-{ input: kValue.f32.negative.max, expected: [0] },
+{ input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ input: kValue.f32.positive.min, expected: 0 },
+{ input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ input: kValue.f32.negative.max, expected: 0 },
 
 // 32-bit subnormals
-{ input: kValue.f32.subnormal.positive.max, expected: [0] },
-{ input: kValue.f32.subnormal.positive.min, expected: [0] },
-{ input: kValue.f32.subnormal.negative.min, expected: [0] },
-{ input: kValue.f32.subnormal.negative.max, expected: [0] }]).
+{ input: kValue.f32.subnormal.positive.max, expected: 0 },
+{ input: kValue.f32.subnormal.positive.min, expected: 0 },
+{ input: kValue.f32.subnormal.negative.min, expected: 0 },
+{ input: kValue.f32.subnormal.negative.max, expected: 0 }]).
 
 
 fn((t) => {
@@ -1687,15 +2993,15 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [1, 0], expected: [1] },
-{ input: [0, 1], expected: [1] },
-{ input: [-1, 0], expected: [-1] },
-{ input: [0, -1], expected: [-1] },
-{ input: [1, 1], expected: [2] },
-{ input: [1, -1], expected: [0] },
-{ input: [-1, 1], expected: [0] },
-{ input: [-1, -1], expected: [-2] },
+{ input: [0, 0], expected: 0 },
+{ input: [1, 0], expected: 1 },
+{ input: [0, 1], expected: 1 },
+{ input: [-1, 0], expected: -1 },
+{ input: [0, -1], expected: -1 },
+{ input: [1, 1], expected: 2 },
+{ input: [1, -1], expected: 0 },
+{ input: [-1, 1], expected: 0 },
+{ input: [-1, -1], expected: -2 },
 
 // 64-bit normals
 { input: [0.1, 0], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
@@ -1744,15 +3050,20 @@ g.test('atan2Interval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
-
-// The positive x & y quadrant is tested in more detail, and the other quadrants are spot checked that values are
-// pointing in the right direction.
-
-// Some of the intervals appear slightly asymmetric, i.e. [π/4 - 4097 * ULP(π/4), π/4 + 4096 * ULP(π/4)], this is
-// because π/4 is not precisely expressible as a f32, so the higher precision value can be rounded up or down when
-// converting to f32. Thus one option will be 1 ULP off of the constant value being used.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
+//
+// The positive x & y quadrant is tested in more detail, and the other
+// quadrants are spot checked that values are pointing in the right
+// direction.
+//
+// Some of the intervals appear slightly asymmetric,
+// i.e. [π/4 - 4097 * ULP(π/4), π/4 + 4096 * ULP(π/4)],
+// this is because π/4 is not precisely expressible as a f32, so the
+// higher precision value can be rounded up or down when converting to
+// f32. Thus one option will be 1 ULP off of the constant value being
+// used.
 
 // positive y, positive x
 { input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULP(kValue.f32.positive.pi.sixth, 4097), plusNULP(kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
@@ -1813,7 +3124,7 @@ paramsSubcasesOnly(
 
 [
 // Some of these are hard coded, since the error intervals are difficult
-// to express in a closed human readable  form due to the inherited nature
+// to express in a closed human-readable  form due to the inherited nature
 // of the errors.
 //
 // distance(x, y), where x - y = 0 has an acceptance interval of kAny,
@@ -1864,20 +3175,20 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 1], expected: [0] },
-{ input: [0, -1], expected: [0] },
-{ input: [1, 1], expected: [1] },
-{ input: [1, -1], expected: [-1] },
-{ input: [-1, 1], expected: [-1] },
-{ input: [-1, -1], expected: [1] },
-{ input: [4, 2], expected: [2] },
-{ input: [-4, 2], expected: [-2] },
-{ input: [4, -2], expected: [-2] },
-{ input: [-4, -2], expected: [2] },
+{ input: [0, 1], expected: 0 },
+{ input: [0, -1], expected: 0 },
+{ input: [1, 1], expected: 1 },
+{ input: [1, -1], expected: -1 },
+{ input: [-1, 1], expected: -1 },
+{ input: [-1, -1], expected: 1 },
+{ input: [4, 2], expected: 2 },
+{ input: [-4, 2], expected: -2 },
+{ input: [4, -2], expected: -2 },
+{ input: [-4, -2], expected: 2 },
 
 // 64-bit normals
-{ input: [0, 0.1], expected: [0] },
-{ input: [0, -0.1], expected: [0] },
+{ input: [0, 0.1], expected: 0 },
+{ input: [0, -0.1], expected: 0 },
 { input: [1, 0.1], expected: [minusOneULP(10), plusOneULP(10)] },
 { input: [-1, 0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
 { input: [1, -0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
@@ -1916,29 +3227,29 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [0, 1], expected: [0] },
-{ input: [0, -1], expected: [0] },
-{ input: [1, 1], expected: [2] },
-{ input: [1, -1], expected: [0.5] },
-{ input: [-1, 1], expected: [-2] },
-{ input: [-1, -1], expected: [-0.5] },
+{ input: [0, 0], expected: 0 },
+{ input: [0, 1], expected: 0 },
+{ input: [0, -1], expected: 0 },
+{ input: [1, 1], expected: 2 },
+{ input: [1, -1], expected: 0.5 },
+{ input: [-1, 1], expected: -2 },
+{ input: [-1, -1], expected: -0.5 },
 
 // 64-bit normals
-{ input: [0, 0.1], expected: [0] },
-{ input: [0, -0.1], expected: [0] },
+{ input: [0, 0.1], expected: 0 },
+{ input: [0, -0.1], expected: 0 },
 { input: [1.0000000001, 1], expected: [2, plusNULP(2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
 { input: [-1.0000000001, 1], expected: [minusNULP(-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
 
 // Edge Cases
-{ input: [1.9999998807907104, 127], expected: [kValue.f32.positive.max] },
-{ input: [1, -126], expected: [kValue.f32.positive.min] },
+{ input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
+{ input: [1, -126], expected: kValue.f32.positive.min },
 { input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [1.1920928955078125e-07, -126], expected: [0, kValue.f32.subnormal.positive.min] },
 { input: [-1.1920928955078125e-07, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
 { input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [-1, -126], expected: [kValue.f32.negative.max] },
-{ input: [-1.9999998807907104, 127], expected: [kValue.f32.negative.min] },
+{ input: [-1, -126], expected: kValue.f32.negative.max },
+{ input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
 
 // Out of Bounds
 { input: [1, 128], expected: kAny },
@@ -1965,21 +3276,21 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [1, 0], expected: [1] },
-{ input: [0, 1], expected: [1] },
-{ input: [-1, 0], expected: [0] },
-{ input: [0, -1], expected: [0] },
-{ input: [1, 1], expected: [1] },
-{ input: [1, -1], expected: [1] },
-{ input: [-1, 1], expected: [1] },
-{ input: [-1, -1], expected: [-1] },
+{ input: [0, 0], expected: 0 },
+{ input: [1, 0], expected: 1 },
+{ input: [0, 1], expected: 1 },
+{ input: [-1, 0], expected: 0 },
+{ input: [0, -1], expected: 0 },
+{ input: [1, 1], expected: 1 },
+{ input: [1, -1], expected: 1 },
+{ input: [-1, 1], expected: 1 },
+{ input: [-1, -1], expected: -1 },
 
 // 64-bit normals
 { input: [0.1, 0], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: [0, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, 0], expected: [0] },
-{ input: [0, -0.1], expected: [0] },
+{ input: [-0.1, 0], expected: 0 },
+{ input: [0, -0.1], expected: 0 },
 { input: [0.1, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: [0.1, -0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: [-0.1, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
@@ -1994,7 +3305,7 @@ paramsSubcasesOnly(
 { input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
 { input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
 { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: [1] },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: 1 },
 { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
 
 
@@ -2025,19 +3336,19 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [1, 0], expected: [0] },
-{ input: [0, 1], expected: [0] },
-{ input: [-1, 0], expected: [-1] },
-{ input: [0, -1], expected: [-1] },
-{ input: [1, 1], expected: [1] },
-{ input: [1, -1], expected: [-1] },
-{ input: [-1, 1], expected: [-1] },
-{ input: [-1, -1], expected: [-1] },
+{ input: [0, 0], expected: 0 },
+{ input: [1, 0], expected: 0 },
+{ input: [0, 1], expected: 0 },
+{ input: [-1, 0], expected: -1 },
+{ input: [0, -1], expected: -1 },
+{ input: [1, 1], expected: 1 },
+{ input: [1, -1], expected: -1 },
+{ input: [-1, 1], expected: -1 },
+{ input: [-1, -1], expected: -1 },
 
 // 64-bit normals
-{ input: [0.1, 0], expected: [0] },
-{ input: [0, 0.1], expected: [0] },
+{ input: [0.1, 0], expected: 0 },
+{ input: [0, 0.1], expected: 0 },
 { input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
 { input: [0, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULP(hexToF32(0xbdcccccd))] }, // ~-0.1
 { input: [0.1, 0.1], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
@@ -2054,7 +3365,7 @@ paramsSubcasesOnly(
 { input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
 { input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
 { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [-1, kValue.f32.subnormal.positive.max], expected: [-1] },
+{ input: [-1, kValue.f32.subnormal.positive.max], expected: -1 },
 { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
 
 // Infinities
@@ -2084,29 +3395,29 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [1, 0], expected: [0] },
-{ input: [0, 1], expected: [0] },
-{ input: [-1, 0], expected: [0] },
-{ input: [0, -1], expected: [0] },
-{ input: [1, 1], expected: [1] },
-{ input: [1, -1], expected: [-1] },
-{ input: [-1, 1], expected: [-1] },
-{ input: [-1, -1], expected: [1] },
-{ input: [2, 1], expected: [2] },
-{ input: [1, -2], expected: [-2] },
-{ input: [-2, 1], expected: [-2] },
-{ input: [-2, -1], expected: [2] },
-{ input: [2, 2], expected: [4] },
-{ input: [2, -2], expected: [-4] },
-{ input: [-2, 2], expected: [-4] },
-{ input: [-2, -2], expected: [4] },
+{ input: [0, 0], expected: 0 },
+{ input: [1, 0], expected: 0 },
+{ input: [0, 1], expected: 0 },
+{ input: [-1, 0], expected: 0 },
+{ input: [0, -1], expected: 0 },
+{ input: [1, 1], expected: 1 },
+{ input: [1, -1], expected: -1 },
+{ input: [-1, 1], expected: -1 },
+{ input: [-1, -1], expected: 1 },
+{ input: [2, 1], expected: 2 },
+{ input: [1, -2], expected: -2 },
+{ input: [-2, 1], expected: -2 },
+{ input: [-2, -1], expected: 2 },
+{ input: [2, 2], expected: 4 },
+{ input: [2, -2], expected: -4 },
+{ input: [-2, 2], expected: -4 },
+{ input: [-2, -2], expected: 4 },
 
 // 64-bit normals
-{ input: [0.1, 0], expected: [0] },
-{ input: [0, 0.1], expected: [0] },
-{ input: [-0.1, 0], expected: [0] },
-{ input: [0, -0.1], expected: [0] },
+{ input: [0.1, 0], expected: 0 },
+{ input: [0, 0.1], expected: 0 },
+{ input: [-0.1, 0], expected: 0 },
+{ input: [0, -0.1], expected: 0 },
 { input: [0.1, 0.1], expected: [minusNULP(hexToF32(0x3c23d70a), 2), plusOneULP(hexToF32(0x3c23d70a))] }, // ~0.01
 { input: [0.1, -0.1], expected: [minusOneULP(hexToF32(0xbc23d70a)), plusNULP(hexToF32(0xbc23d70a), 2)] }, // ~-0.01
 { input: [-0.1, 0.1], expected: [minusOneULP(hexToF32(0xbc23d70a)), plusNULP(hexToF32(0xbc23d70a), 2)] }, // ~-0.01
@@ -2197,8 +3508,9 @@ g.test('powInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
 { input: [-1, 0], expected: kAny },
 { input: [0, 0], expected: kAny },
 { input: [1, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] }, // ~1
@@ -2231,54 +3543,54 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [1] },
-{ input: [1, 1], expected: [1] },
-{ input: [0, 1], expected: [1] },
-{ input: [1, 0], expected: [0] },
-{ input: [-1, -1], expected: [1] },
-{ input: [0, -1], expected: [0] },
-{ input: [-1, 0], expected: [1] },
-{ input: [-1, 1], expected: [1] },
-{ input: [1, -1], expected: [0] },
+{ input: [0, 0], expected: 1 },
+{ input: [1, 1], expected: 1 },
+{ input: [0, 1], expected: 1 },
+{ input: [1, 0], expected: 0 },
+{ input: [-1, -1], expected: 1 },
+{ input: [0, -1], expected: 0 },
+{ input: [-1, 0], expected: 1 },
+{ input: [-1, 1], expected: 1 },
+{ input: [1, -1], expected: 0 },
 
 // 64-bit normals
 { input: [0.1, 0.1], expected: [0, 1] },
-{ input: [0, 0.1], expected: [1] },
-{ input: [0.1, 0], expected: [0] },
-{ input: [0.1, 1], expected: [1] },
-{ input: [1, 0.1], expected: [0] },
+{ input: [0, 0.1], expected: 1 },
+{ input: [0.1, 0], expected: 0 },
+{ input: [0.1, 1], expected: 1 },
+{ input: [1, 0.1], expected: 0 },
 { input: [-0.1, -0.1], expected: [0, 1] },
-{ input: [0, -0.1], expected: [0] },
-{ input: [-0.1, 0], expected: [1] },
-{ input: [-0.1, -1], expected: [0] },
-{ input: [-1, -0.1], expected: [1] },
+{ input: [0, -0.1], expected: 0 },
+{ input: [-0.1, 0], expected: 1 },
+{ input: [-0.1, -1], expected: 0 },
+{ input: [-1, -0.1], expected: 1 },
 
 // Subnormals
-{ input: [0, kValue.f32.subnormal.positive.max], expected: [1] },
-{ input: [0, kValue.f32.subnormal.positive.min], expected: [1] },
+{ input: [0, kValue.f32.subnormal.positive.max], expected: 1 },
+{ input: [0, kValue.f32.subnormal.positive.min], expected: 1 },
 { input: [0, kValue.f32.subnormal.negative.max], expected: [0, 1] },
 { input: [0, kValue.f32.subnormal.negative.min], expected: [0, 1] },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: [0] },
-{ input: [1, kValue.f32.subnormal.positive.min], expected: [0] },
-{ input: [1, kValue.f32.subnormal.negative.max], expected: [0] },
-{ input: [1, kValue.f32.subnormal.negative.min], expected: [0] },
-{ input: [-1, kValue.f32.subnormal.positive.max], expected: [1] },
-{ input: [-1, kValue.f32.subnormal.positive.min], expected: [1] },
-{ input: [-1, kValue.f32.subnormal.negative.max], expected: [1] },
-{ input: [-1, kValue.f32.subnormal.negative.min], expected: [1] },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: 0 },
+{ input: [1, kValue.f32.subnormal.positive.min], expected: 0 },
+{ input: [1, kValue.f32.subnormal.negative.max], expected: 0 },
+{ input: [1, kValue.f32.subnormal.negative.min], expected: 0 },
+{ input: [-1, kValue.f32.subnormal.positive.max], expected: 1 },
+{ input: [-1, kValue.f32.subnormal.positive.min], expected: 1 },
+{ input: [-1, kValue.f32.subnormal.negative.max], expected: 1 },
+{ input: [-1, kValue.f32.subnormal.negative.min], expected: 1 },
 { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, 1] },
 { input: [kValue.f32.subnormal.positive.min, 0], expected: [0, 1] },
-{ input: [kValue.f32.subnormal.negative.max, 0], expected: [1] },
-{ input: [kValue.f32.subnormal.negative.min, 0], expected: [1] },
-{ input: [kValue.f32.subnormal.positive.max, 1], expected: [1] },
-{ input: [kValue.f32.subnormal.positive.min, 1], expected: [1] },
-{ input: [kValue.f32.subnormal.negative.max, 1], expected: [1] },
-{ input: [kValue.f32.subnormal.negative.min, 1], expected: [1] },
-{ input: [kValue.f32.subnormal.positive.max, -1], expected: [0] },
-{ input: [kValue.f32.subnormal.positive.min, -1], expected: [0] },
-{ input: [kValue.f32.subnormal.negative.max, -1], expected: [0] },
-{ input: [kValue.f32.subnormal.negative.min, -1], expected: [0] },
-{ input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [1] },
+{ input: [kValue.f32.subnormal.negative.max, 0], expected: 1 },
+{ input: [kValue.f32.subnormal.negative.min, 0], expected: 1 },
+{ input: [kValue.f32.subnormal.positive.max, 1], expected: 1 },
+{ input: [kValue.f32.subnormal.positive.min, 1], expected: 1 },
+{ input: [kValue.f32.subnormal.negative.max, 1], expected: 1 },
+{ input: [kValue.f32.subnormal.negative.min, 1], expected: 1 },
+{ input: [kValue.f32.subnormal.positive.max, -1], expected: 0 },
+{ input: [kValue.f32.subnormal.positive.min, -1], expected: 0 },
+{ input: [kValue.f32.subnormal.negative.max, -1], expected: 0 },
+{ input: [kValue.f32.subnormal.negative.min, -1], expected: 0 },
+{ input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: 1 },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min], expected: [0, 1] },
 
 // Infinities
@@ -2308,15 +3620,15 @@ paramsSubcasesOnly(
 
 [
 // 32-bit normals
-{ input: [0, 0], expected: [0] },
-{ input: [1, 0], expected: [1] },
-{ input: [0, 1], expected: [-1] },
-{ input: [-1, 0], expected: [-1] },
-{ input: [0, -1], expected: [1] },
-{ input: [1, 1], expected: [0] },
-{ input: [1, -1], expected: [2] },
-{ input: [-1, 1], expected: [-2] },
-{ input: [-1, -1], expected: [0] },
+{ input: [0, 0], expected: 0 },
+{ input: [1, 0], expected: 1 },
+{ input: [0, 1], expected: -1 },
+{ input: [-1, 0], expected: -1 },
+{ input: [0, -1], expected: 1 },
+{ input: [1, 1], expected: 0 },
+{ input: [1, -1], expected: 2 },
+{ input: [-1, 1], expected: -2 },
+{ input: [-1, -1], expected: 0 },
 
 // 64-bit normals
 { input: [0.1, 0], expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
@@ -2370,33 +3682,33 @@ paramsSubcasesOnly(
 
 [
 // Normals
-{ input: [0, 0, 0], expected: [0] },
-{ input: [1, 0, 0], expected: [0] },
-{ input: [0, 1, 0], expected: [0] },
-{ input: [0, 0, 1], expected: [0] },
-{ input: [1, 0, 1], expected: [1] },
-{ input: [1, 1, 0], expected: [1] },
-{ input: [0, 1, 1], expected: [1] },
-{ input: [1, 1, 1], expected: [1] },
-{ input: [1, 10, 100], expected: [10] },
-{ input: [10, 1, 100], expected: [10] },
-{ input: [100, 1, 10], expected: [10] },
-{ input: [-10, 1, 100], expected: [1] },
-{ input: [10, 1, -100], expected: [1] },
-{ input: [-10, 1, -100], expected: [-10] },
-{ input: [-10, -10, -10], expected: [-10] },
+{ input: [0, 0, 0], expected: 0 },
+{ input: [1, 0, 0], expected: 0 },
+{ input: [0, 1, 0], expected: 0 },
+{ input: [0, 0, 1], expected: 0 },
+{ input: [1, 0, 1], expected: 1 },
+{ input: [1, 1, 0], expected: 1 },
+{ input: [0, 1, 1], expected: 1 },
+{ input: [1, 1, 1], expected: 1 },
+{ input: [1, 10, 100], expected: 10 },
+{ input: [10, 1, 100], expected: 10 },
+{ input: [100, 1, 10], expected: 10 },
+{ input: [-10, 1, 100], expected: 1 },
+{ input: [10, 1, -100], expected: 1 },
+{ input: [-10, 1, -100], expected: -10 },
+{ input: [-10, -10, -10], expected: -10 },
 
 // Subnormals
-{ input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0] },
-{ input: [0, kValue.f32.subnormal.positive.max, 0], expected: [0] },
-{ input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0] },
+{ input: [kValue.f32.subnormal.positive.max, 0, 0], expected: 0 },
+{ input: [0, kValue.f32.subnormal.positive.max, 0], expected: 0 },
+{ input: [0, 0, kValue.f32.subnormal.positive.max], expected: 0 },
 { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [kValue.f32.positive.max] },
+{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kValue.f32.positive.max },
 
 // Infinities
 { input: [0, 1, kValue.f32.infinity.positive], expected: kAny },
@@ -2421,21 +3733,21 @@ paramsSubcasesOnly(
 
 [
 // Normals
-{ input: [0, 0, 0], expected: [0] },
-{ input: [1, 0, 0], expected: [0] },
-{ input: [0, 1, 0], expected: [0] },
-{ input: [0, 0, 1], expected: [0] },
-{ input: [1, 0, 1], expected: [1] },
-{ input: [1, 1, 0], expected: [0] },
-{ input: [0, 1, 1], expected: [1] },
-{ input: [1, 1, 1], expected: [1] },
-{ input: [1, 10, 100], expected: [10] },
-{ input: [10, 1, 100], expected: [10] },
-{ input: [100, 1, 10], expected: [10] },
-{ input: [-10, 1, 100], expected: [1] },
-{ input: [10, 1, -100], expected: [-100] },
-{ input: [-10, 1, -100], expected: [-100] },
-{ input: [-10, -10, -10], expected: [-10] },
+{ input: [0, 0, 0], expected: 0 },
+{ input: [1, 0, 0], expected: 0 },
+{ input: [0, 1, 0], expected: 0 },
+{ input: [0, 0, 1], expected: 0 },
+{ input: [1, 0, 1], expected: 1 },
+{ input: [1, 1, 0], expected: 0 },
+{ input: [0, 1, 1], expected: 1 },
+{ input: [1, 1, 1], expected: 1 },
+{ input: [1, 10, 100], expected: 10 },
+{ input: [10, 1, 100], expected: 10 },
+{ input: [100, 1, 10], expected: 10 },
+{ input: [-10, 1, 100], expected: 1 },
+{ input: [10, 1, -100], expected: -100 },
+{ input: [-10, 1, -100], expected: -100 },
+{ input: [-10, -10, -10], expected: -10 },
 
 // Subnormals
 { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -2472,25 +3784,25 @@ paramsSubcasesOnly(
 
 [
 // Normals
-{ input: [0, 0, 0], expected: [0] },
-{ input: [1, 0, 0], expected: [0] },
-{ input: [0, 1, 0], expected: [0] },
-{ input: [0, 0, 1], expected: [1] },
-{ input: [1, 0, 1], expected: [1] },
-{ input: [1, 1, 0], expected: [1] },
-{ input: [0, 1, 1], expected: [1] },
-{ input: [1, 1, 1], expected: [2] },
-{ input: [1, 10, 100], expected: [110] },
-{ input: [10, 1, 100], expected: [110] },
-{ input: [100, 1, 10], expected: [110] },
-{ input: [-10, 1, 100], expected: [90] },
-{ input: [10, 1, -100], expected: [-90] },
-{ input: [-10, 1, -100], expected: [-110] },
-{ input: [-10, -10, -10], expected: [90] },
+{ input: [0, 0, 0], expected: 0 },
+{ input: [1, 0, 0], expected: 0 },
+{ input: [0, 1, 0], expected: 0 },
+{ input: [0, 0, 1], expected: 1 },
+{ input: [1, 0, 1], expected: 1 },
+{ input: [1, 1, 0], expected: 1 },
+{ input: [0, 1, 1], expected: 1 },
+{ input: [1, 1, 1], expected: 2 },
+{ input: [1, 10, 100], expected: 110 },
+{ input: [10, 1, 100], expected: 110 },
+{ input: [100, 1, 10], expected: 110 },
+{ input: [-10, 1, 100], expected: 90 },
+{ input: [10, 1, -100], expected: -90 },
+{ input: [-10, 1, -100], expected: -110 },
+{ input: [-10, -10, -10], expected: 90 },
 
 // Subnormals
-{ input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0] },
-{ input: [0, kValue.f32.subnormal.positive.max, 0], expected: [0] },
+{ input: [kValue.f32.subnormal.positive.max, 0, 0], expected: 0 },
+{ input: [0, kValue.f32.subnormal.positive.max, 0], expected: 0 },
 { input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.min] },
@@ -2521,52 +3833,54 @@ g.test('mixImpreciseInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
+
 // [0.0, 1.0] cases
-{ input: [0.0, 1.0, -1.0], expected: [-1.0] },
-{ input: [0.0, 1.0, 0.0], expected: [0.0] },
+{ input: [0.0, 1.0, -1.0], expected: -1.0 },
+{ input: [0.0, 1.0, 0.0], expected: 0.0 },
 { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
-{ input: [0.0, 1.0, 0.5], expected: [0.5] },
+{ input: [0.0, 1.0, 0.5], expected: 0.5 },
 { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] }, // ~0.9
-{ input: [0.0, 1.0, 1.0], expected: [1.0] },
-{ input: [0.0, 1.0, 2.0], expected: [2.0] },
+{ input: [0.0, 1.0, 1.0], expected: 1.0 },
+{ input: [0.0, 1.0, 2.0], expected: 2.0 },
 
 // [1.0, 0.0] cases
-{ input: [1.0, 0.0, -1.0], expected: [2.0] },
-{ input: [1.0, 0.0, 0.0], expected: [1.0] },
+{ input: [1.0, 0.0, -1.0], expected: 2.0 },
+{ input: [1.0, 0.0, 0.0], expected: 1.0 },
 { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] }, // ~0.9
-{ input: [1.0, 0.0, 0.5], expected: [0.5] },
+{ input: [1.0, 0.0, 0.5], expected: 0.5 },
 { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-{ input: [1.0, 0.0, 1.0], expected: [0.0] },
-{ input: [1.0, 0.0, 2.0], expected: [-1.0] },
+{ input: [1.0, 0.0, 1.0], expected: 0.0 },
+{ input: [1.0, 0.0, 2.0], expected: -1.0 },
 
 // [0.0, 10.0] cases
-{ input: [0.0, 10.0, -1.0], expected: [-10.0] },
-{ input: [0.0, 10.0, 0.0], expected: [0.0] },
+{ input: [0.0, 10.0, -1.0], expected: -10.0 },
+{ input: [0.0, 10.0, 0.0], expected: 0.0 },
 { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] }, // ~1
-{ input: [0.0, 10.0, 0.5], expected: [5.0] },
+{ input: [0.0, 10.0, 0.5], expected: 5.0 },
 { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] }, // ~9
-{ input: [0.0, 10.0, 1.0], expected: [10.0] },
-{ input: [0.0, 10.0, 2.0], expected: [20.0] },
+{ input: [0.0, 10.0, 1.0], expected: 10.0 },
+{ input: [0.0, 10.0, 2.0], expected: 20.0 },
 
 // [2.0, 10.0] cases
-{ input: [2.0, 10.0, -1.0], expected: [-6.0] },
-{ input: [2.0, 10.0, 0.0], expected: [2.0] },
+{ input: [2.0, 10.0, -1.0], expected: -6.0 },
+{ input: [2.0, 10.0, 0.0], expected: 2.0 },
 { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_6000_0000n), hexToF64(0x4006_6666_8000_0000n)] }, // ~2.8
-{ input: [2.0, 10.0, 0.5], expected: [6.0] },
+{ input: [2.0, 10.0, 0.5], expected: 6.0 },
 { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_6000_0000n), hexToF64(0x4022_6666_8000_0000n)] }, // ~9.2
-{ input: [2.0, 10.0, 1.0], expected: [10.0] },
-{ input: [2.0, 10.0, 2.0], expected: [18.0] },
+{ input: [2.0, 10.0, 1.0], expected: 10.0 },
+{ input: [2.0, 10.0, 2.0], expected: 18.0 },
 
 // [-1.0, 1.0] cases
-{ input: [-1.0, 1.0, -2.0], expected: [-5.0] },
-{ input: [-1.0, 1.0, 0.0], expected: [-1.0] },
+{ input: [-1.0, 1.0, -2.0], expected: -5.0 },
+{ input: [-1.0, 1.0, 0.0], expected: -1.0 },
 { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_a000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] }, // ~-0.8
-{ input: [-1.0, 1.0, 0.5], expected: [0.0] },
+{ input: [-1.0, 1.0, 0.5], expected: 0.0 },
 { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] }, // ~0.8
-{ input: [-1.0, 1.0, 1.0], expected: [1.0] },
-{ input: [-1.0, 1.0, 2.0], expected: [3.0] },
+{ input: [-1.0, 1.0, 1.0], expected: 1.0 },
+{ input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
 { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
@@ -2581,7 +3895,7 @@ paramsSubcasesOnly(
 { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
 
 // Showing how precise and imprecise versions diff
-{ input: [kValue.f32.negative.min, 10.0, 1.0], expected: [0.0] }]).
+{ input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 }]).
 
 
 fn((t) => {
@@ -2599,52 +3913,54 @@ g.test('mixPreciseInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
+
 // [0.0, 1.0] cases
-{ input: [0.0, 1.0, -1.0], expected: [-1.0] },
-{ input: [0.0, 1.0, 0.0], expected: [0.0] },
+{ input: [0.0, 1.0, -1.0], expected: -1.0 },
+{ input: [0.0, 1.0, 0.0], expected: 0.0 },
 { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
-{ input: [0.0, 1.0, 0.5], expected: [0.5] },
+{ input: [0.0, 1.0, 0.5], expected: 0.5 },
 { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] }, // ~0.9
-{ input: [0.0, 1.0, 1.0], expected: [1.0] },
-{ input: [0.0, 1.0, 2.0], expected: [2.0] },
+{ input: [0.0, 1.0, 1.0], expected: 1.0 },
+{ input: [0.0, 1.0, 2.0], expected: 2.0 },
 
 // [1.0, 0.0] cases
-{ input: [1.0, 0.0, -1.0], expected: [2.0] },
-{ input: [1.0, 0.0, 0.0], expected: [1.0] },
+{ input: [1.0, 0.0, -1.0], expected: 2.0 },
+{ input: [1.0, 0.0, 0.0], expected: 1.0 },
 { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] }, // ~0.9
-{ input: [1.0, 0.0, 0.5], expected: [0.5] },
+{ input: [1.0, 0.0, 0.5], expected: 0.5 },
 { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-{ input: [1.0, 0.0, 1.0], expected: [0.0] },
-{ input: [1.0, 0.0, 2.0], expected: [-1.0] },
+{ input: [1.0, 0.0, 1.0], expected: 0.0 },
+{ input: [1.0, 0.0, 2.0], expected: -1.0 },
 
 // [0.0, 10.0] cases
-{ input: [0.0, 10.0, -1.0], expected: [-10.0] },
-{ input: [0.0, 10.0, 0.0], expected: [0.0] },
+{ input: [0.0, 10.0, -1.0], expected: -10.0 },
+{ input: [0.0, 10.0, 0.0], expected: 0.0 },
 { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] }, // ~1
-{ input: [0.0, 10.0, 0.5], expected: [5.0] },
+{ input: [0.0, 10.0, 0.5], expected: 5.0 },
 { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] }, // ~9
-{ input: [0.0, 10.0, 1.0], expected: [10.0] },
-{ input: [0.0, 10.0, 2.0], expected: [20.0] },
+{ input: [0.0, 10.0, 1.0], expected: 10.0 },
+{ input: [0.0, 10.0, 2.0], expected: 20.0 },
 
 // [2.0, 10.0] cases
-{ input: [2.0, 10.0, -1.0], expected: [-6.0] },
-{ input: [2.0, 10.0, 0.0], expected: [2.0] },
+{ input: [2.0, 10.0, -1.0], expected: -6.0 },
+{ input: [2.0, 10.0, 0.0], expected: 2.0 },
 { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_4000_0000n), hexToF64(0x4006_6666_8000_0000n)] }, // ~2.8
-{ input: [2.0, 10.0, 0.5], expected: [6.0] },
+{ input: [2.0, 10.0, 0.5], expected: 6.0 },
 { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_4000_0000n), hexToF64(0x4022_6666_a000_0000n)] }, // ~9.2
-{ input: [2.0, 10.0, 1.0], expected: [10.0] },
-{ input: [2.0, 10.0, 2.0], expected: [18.0] },
+{ input: [2.0, 10.0, 1.0], expected: 10.0 },
+{ input: [2.0, 10.0, 2.0], expected: 18.0 },
 
 // [-1.0, 1.0] cases
-{ input: [-1.0, 1.0, -2.0], expected: [-5.0] },
-{ input: [-1.0, 1.0, 0.0], expected: [-1.0] },
+{ input: [-1.0, 1.0, -2.0], expected: -5.0 },
+{ input: [-1.0, 1.0, 0.0], expected: -1.0 },
 { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_c000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] }, // ~-0.8
-{ input: [-1.0, 1.0, 0.5], expected: [0.0] },
+{ input: [-1.0, 1.0, 0.5], expected: 0.0 },
 { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] }, // ~0.8
-{ input: [-1.0, 1.0, 1.0], expected: [1.0] },
-{ input: [-1.0, 1.0, 2.0], expected: [3.0] },
+{ input: [-1.0, 1.0, 1.0], expected: 1.0 },
+{ input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
 { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
@@ -2659,7 +3975,7 @@ paramsSubcasesOnly(
 { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
 
 // Showing how precise and imprecise versions diff
-{ input: [kValue.f32.negative.min, 10.0, 1.0], expected: [10.0] }]).
+{ input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10.0 }]).
 
 
 fn((t) => {
@@ -2677,13 +3993,15 @@ g.test('smoothStepInterval').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
+
 // Normals
 { input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
 { input: [0, 1, 1], expected: [hexToF32(0x3f7ffffa), hexToF32(0x3f800003)] }, // ~1
-{ input: [0, 1, 10], expected: [1] },
-{ input: [0, 1, -10], expected: [0] },
+{ input: [0, 1, 10], expected: 1 },
+{ input: [0, 1, -10], expected: 0 },
 { input: [0, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
 { input: [0, 2, 0.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] }, // ~0.15625...
 { input: [2, 0, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
@@ -2762,8 +4080,6 @@ fn((t) => {
   paramsSubcasesOnly(
 
   [
-  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-  // form due to the inherited nature of the errors.
   { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
   { input: 0x00007fff, expected: [kOneBoundsSnorm, kZeroBounds] },
   { input: 0x7fff0000, expected: [kZeroBounds, kOneBoundsSnorm] },
@@ -2788,23 +4104,21 @@ fn((t) => {
   paramsSubcasesOnly(
 
   [
-  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-  // form due to the inherited nature of the errors.
   // f16 normals
-  { input: 0x00000000, expected: [[0], [0]] },
-  { input: 0x80000000, expected: [[0], [0]] },
-  { input: 0x00008000, expected: [[0], [0]] },
-  { input: 0x80008000, expected: [[0], [0]] },
-  { input: 0x00003c00, expected: [[1], [0]] },
-  { input: 0x3c000000, expected: [[0], [1]] },
-  { input: 0x3c003c00, expected: [[1], [1]] },
-  { input: 0xbc00bc00, expected: [[-1], [-1]] },
-  { input: 0x49004900, expected: [[10], [10]] },
-  { input: 0xc900c900, expected: [[-10], [-10]] },
+  { input: 0x00000000, expected: [0, 0] },
+  { input: 0x80000000, expected: [0, 0] },
+  { input: 0x00008000, expected: [0, 0] },
+  { input: 0x80008000, expected: [0, 0] },
+  { input: 0x00003c00, expected: [1, 0] },
+  { input: 0x3c000000, expected: [0, 1] },
+  { input: 0x3c003c00, expected: [1, 1] },
+  { input: 0xbc00bc00, expected: [-1, -1] },
+  { input: 0x49004900, expected: [10, 10] },
+  { input: 0xc900c900, expected: [-10, -10] },
 
   // f16 subnormals
-  { input: 0x000003ff, expected: [[0, kValue.f16.subnormal.positive.max], [0]] },
-  { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], [0]] },
+  { input: 0x000003ff, expected: [[0, kValue.f16.subnormal.positive.max], 0] },
+  { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], 0] },
 
   // f16 out of bounds
   { input: 0x7c000000, expected: [kAny, kAny] },
@@ -2831,8 +4145,6 @@ fn((t) => {
   paramsSubcasesOnly(
 
   [
-  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-  // form due to the inherited nature of the errors.
   { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
   { input: 0x0000ffff, expected: [kOneBoundsUnorm, kZeroBounds] },
   { input: 0xffff0000, expected: [kZeroBounds, kOneBoundsUnorm] },
@@ -2864,8 +4176,6 @@ fn((t) => {
   paramsSubcasesOnly(
 
   [
-  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-  // form due to the inherited nature of the errors.
   { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
   { input: 0x0000007f, expected: [kOneBoundsSnorm, kZeroBounds, kZeroBounds, kZeroBounds] },
   { input: 0x00007f00, expected: [kZeroBounds, kOneBoundsSnorm, kZeroBounds, kZeroBounds] },
@@ -2901,8 +4211,6 @@ fn((t) => {
   paramsSubcasesOnly(
 
   [
-  // Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-  // form due to the inherited nature of the errors.
   { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
   { input: 0x000000ff, expected: [kOneBoundsUnorm, kZeroBounds, kZeroBounds, kZeroBounds] },
   { input: 0x0000ff00, expected: [kZeroBounds, kOneBoundsUnorm, kZeroBounds, kZeroBounds] },
@@ -2937,8 +4245,10 @@ g.test('lengthIntervalVector').
 paramsSubcasesOnly(
 
 [
-// Some of these are hard coded, since the error intervals are difficult to express in a closed human readable
-// form due to the inherited nature of the errors.
+// Some of these are hard coded, since the error intervals are difficult
+// to express in a closed human-readable form due to the inherited nature
+// of the errors.
+
 // vec2
 { input: [1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -2992,7 +4302,7 @@ paramsSubcasesOnly(
 
 [
 // Some of these are hard coded, since the error intervals are difficult
-// to express in a closed human readable form due to the inherited nature
+// to express in a closed human-readable form due to the inherited nature
 // of the errors.
 //
 // distance(x, y), where x - y = 0 has an acceptance interval of kAny,
@@ -3055,30 +4365,30 @@ paramsSubcasesOnly(
 
 [
 // vec2
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 1.0], [0.0, 1.0]], expected: [1.0] },
-{ input: [[1.0, 1.0], [1.0, 1.0]], expected: [2.0] },
-{ input: [[-1.0, -1.0], [-1.0, -1.0]], expected: [2.0] },
-{ input: [[-1.0, 1.0], [1.0, -1.0]], expected: [-2.0] },
+{ input: [[1.0, 0.0], [1.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 1.0], [0.0, 1.0]], expected: 1.0 },
+{ input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
+{ input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
+{ input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
 { input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
 
 // vec3
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [1.0] },
-{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [3.0] },
-{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [3.0] },
-{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [-1.0] },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: 1.0 },
+{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
+{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
+{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
 { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
 
 // vec4
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0] },
-{ input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0] },
-{ input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: [4.0] },
-{ input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: [4.0] },
-{ input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: [-4.0] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: 1.0 },
+{ input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: 1.0 },
+{ input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
+{ input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
+{ input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
 { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
 
 // Test that going out of bounds in the intermediate calculations is caught correctly.
@@ -3156,18 +4466,18 @@ paramsSubcasesOnly(
 
 [
 // parallel vectors, AXB == 0
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[0.0], [0.0], [0.0]] },
-{ input: [[kValue.f32.subnormal.positive.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[0.0], [0.0], [0.0]] },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+{ input: [[kValue.f32.subnormal.positive.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
 
 // non-parallel vectors, AXB != 0
 // f32 normals
-{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [[2.0], [2.0], [0.0]] },
-{ input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [[-1], [-4], [3]] },
+{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
+{ input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
 
 // f64 normals
 { input: [[0.1, -0.1, -0.1], [-0.1, 0.1, -0.1]],
@@ -3199,35 +4509,35 @@ paramsSubcasesOnly(
 
 [
 // vec2s
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: [[-1.0], [0.0]] },
-{ input: [[1.0, 0.0], [0.0, 1.0]], expected: [[1.0], [0.0]] },
-{ input: [[0.0, 1.0], [0.0, 1.0]], expected: [[0.0], [-1.0]] },
-{ input: [[0.0, 1.0], [1.0, 0.0]], expected: [[0.0], [1.0]] },
-{ input: [[1.0, 1.0], [1.0, 1.0]], expected: [[-3.0], [-3.0]] },
-{ input: [[-1.0, -1.0], [1.0, 1.0]], expected: [[3.0], [3.0]] },
+{ input: [[1.0, 0.0], [1.0, 0.0]], expected: [-1.0, 0.0] },
+{ input: [[1.0, 0.0], [0.0, 1.0]], expected: [1.0, 0.0] },
+{ input: [[0.0, 1.0], [0.0, 1.0]], expected: [0.0, -1.0] },
+{ input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
+{ input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
+{ input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
 { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[hexToF32(0xbe99999a), hexToF32(0xbe999998)], [hexToF32(0xbe99999a), hexToF32(0xbe999998)]] }, // [~-0.3, ~-0.3]
 { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)]] }, // [~0.0, ~0.0]
 
 // vec3s
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[-1.0], [0.0], [0.0]] },
-{ input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [[0.0], [1.0], [0.0]] },
-{ input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [[0.0], [0.0], [1.0]] },
-{ input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [[1.0], [0.0], [0.0]] },
-{ input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [[1.0], [0.0], [0.0]] },
-{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [[-5.0], [-5.0], [-5.0]] },
-{ input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [[5.0], [5.0], [5.0]] },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
+{ input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
+{ input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0] },
+{ input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0] },
+{ input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
+{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
+{ input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
 { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[hexToF32(0xbf000001), hexToF32(0xbefffffe)], [hexToF32(0xbf000001), hexToF32(0xbefffffe)], [hexToF32(0xbf000001), hexToF32(0xbefffffe)]] }, // [~-0.5, ~-0.5, ~-0.5]
 { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0]
 
 // vec4s
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[-1.0], [0.0], [0.0], [0.0]] },
-{ input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[0.0], [1.0], [0.0], [0.0]] },
-{ input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[0.0], [0.0], [1.0], [0.0]] },
-{ input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [[0.0], [0.0], [0.0], [1.0]] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [[1.0], [0.0], [0.0], [0.0]] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [[1.0], [0.0], [0.0], [0.0]] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [[1.0], [0.0], [0.0], [0.0]] },
-{ input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [[7.0], [7.0], [7.0], [7.0]] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
+{ input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
+{ input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0, 0.0] },
+{ input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0, 1.0] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+{ input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
 { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)]] }, // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
 { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0, ~0.0]
 
@@ -3264,55 +4574,55 @@ paramsSubcasesOnly(
 
 [
 // vec2
-{ input: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[[-1.0], [0.0]]] },
-{ input: [[-1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[[1.0], [0.0]]] },
-{ input: [[1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[[1.0], [0.0]]] },
-{ input: [[-1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[[-1.0], [0.0]]] },
-{ input: [[10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[[-10.0], [0.0]]] },
-{ input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[[10.0], [0.0]]] },
-{ input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[[10.0], [0.0]]] },
-{ input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[[-10.0], [0.0]]] },
-{ input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0]]] },
-{ input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0]]] },
-{ input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0]]] },
-{ input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0]]] },
+{ input: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[-1.0, 0.0]] },
+{ input: [[-1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[1.0, 0.0]] },
+{ input: [[1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[1.0, 0.0]] },
+{ input: [[-1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[-1.0, 0.0]] },
+{ input: [[10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[-10.0, 0.0]] },
+{ input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[10.0, 0.0]] },
+{ input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[10.0, 0.0]] },
+{ input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[-10.0, 0.0]] },
+{ input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0]] },
+{ input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0]] },
+{ input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0]] },
+{ input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0]] },
 
 // vec3
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0]]] },
-{ input: [[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0]]] },
-{ input: [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[[1.0], [0.0], [0.0]]] },
-{ input: [[-1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[[-1.0], [0.0], [0.0]]] },
-{ input: [[10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0]]] },
-{ input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0]]] },
-{ input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[[10.0], [0.0], [0.0]]] },
-{ input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[[-10.0], [0.0], [0.0]]] },
-{ input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0]]] },
-{ input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0]]] },
-{ input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0]]] },
-{ input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0]]] },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
+{ input: [[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
+{ input: [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
+{ input: [[-1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
+{ input: [[10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
+{ input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
+{ input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
+{ input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
+{ input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0]] },
+{ input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0]] },
+{ input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0]] },
+{ input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0]] },
 
 // vec4
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0], [0.0]]] },
-{ input: [[-1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0], [0.0]]] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[[1.0], [0.0], [0.0], [0.0]]] },
-{ input: [[-1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[[-1.0], [0.0], [0.0], [0.0]]] },
-{ input: [[10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0], [0.0]]] },
-{ input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0], [0.0]]] },
-{ input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[[10.0], [0.0], [0.0], [0.0]]] },
-{ input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[[-10.0], [0.0], [0.0], [0.0]]] },
-{ input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0], [0.0]]] },
-{ input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0], [0.0]]] },
-{ input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], [0.0], [0.0], [0.0]]] },
-{ input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], [0.0], [0.0], [0.0]]] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
+{ input: [[-1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
+{ input: [[1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
+{ input: [[-1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
+{ input: [[10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
+{ input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
+{ input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
+{ input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
+{ input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
+{ input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
+{ input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
+{ input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
 
 // dot(y, z) === 0
-{ input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected: [[[-1.0], [-1.0]]] },
+{ input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected: [[-1.0, -1.0]] },
 
 // subnormals, also dot(y, z) spans 0
-{ input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected: [[[0.0, kValue.f32.subnormal.positive.max], [0.0]], [[kValue.f32.subnormal.negative.min, 0], [0.0]]] },
+{ input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected: [[[0.0, kValue.f32.subnormal.positive.max], 0.0], [[kValue.f32.subnormal.negative.min, 0], 0.0]] },
 
 // dot going OOB returns [undefined, x, -x]
-{ input: [[1.0, 1.0], [kValue.f32.positive.max, kValue.f32.positive.max], [kValue.f32.positive.max, kValue.f32.positive.max]], expected: [undefined, [[1], [1]], [[-1], [-1]]] }]).
+{ input: [[1.0, 1.0], [kValue.f32.positive.max, kValue.f32.positive.max], [kValue.f32.positive.max, kValue.f32.positive.max]], expected: [undefined, [1, 1], [-1, -1]] }]).
 
 
 
@@ -3343,31 +4653,31 @@ fn((t) => {
   g.test('refractInterval').
   paramsSubcasesOnly(
   // Some of these are hard coded, since the error intervals are difficult
-  // to express in a closed human readable form due to the inherited nature
+  // to express in a closed human-readable form due to the inherited nature
   // of the errors.
 
 
   [
   // k < 0
-  { input: [[1, 1], [0.1, 0], 10], expected: [[0], [0]] },
+  { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
 
   // k contains 0
   { input: [[1, 1], [0.1, 0], 1.005038], expected: [kAny, kAny] },
 
   // k > 0
   // vec2
-  { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, [1]] },
+  { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, 1] },
   { input: [[1, -2], [3, 4], 5], expected: [[hexToF32(0x40ce87a4), hexToF32(0x40ce8840)], // ~6.454...
     [hexToF32(0xc100fae8), hexToF32(0xc100fa80)]] }, // ~-8.061...
 
   // vec3
-  { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, [1], [1]] },
+  { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1] },
   { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[hexToF32(0x40d24480), hexToF32(0x40d24c00)], // ~6.571...
     [hexToF32(0xc1576f80), hexToF32(0xc1576ad0)], // ~-13.464...
     [hexToF32(0x41a2d9b0), hexToF32(0x41a2dc80)]] }, // ~20.356...
 
   // vec4
-  { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, [1], [1], [1]] },
+  { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1, 1] },
   { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [[hexToF32(0x410ae480), hexToF32(0x410af240)], // ~8.680...
     [hexToF32(0xc18cf7c0), hexToF32(0xc18cef80)], // ~-17.620...
     [hexToF32(0x41d46cc0), hexToF32(0x41d47660)], // ~26.553...
@@ -3405,27 +4715,27 @@ paramsSubcasesOnly(
 
 [
 // Normals
-{ input: 0, fract: [0], whole: [0] },
-{ input: 1, fract: [0], whole: [1] },
-{ input: -1, fract: [0], whole: [-1] },
-{ input: 0.5, fract: [0.5], whole: [0] },
-{ input: -0.5, fract: [-0.5], whole: [0] },
-{ input: 2.5, fract: [0.5], whole: [2] },
-{ input: -2.5, fract: [-0.5], whole: [-2] },
-{ input: 10.0, fract: [0], whole: [10] },
-{ input: -10.0, fract: [0], whole: [-10] },
+{ input: 0, fract: 0, whole: 0 },
+{ input: 1, fract: 0, whole: 1 },
+{ input: -1, fract: 0, whole: -1 },
+{ input: 0.5, fract: 0.5, whole: 0 },
+{ input: -0.5, fract: -0.5, whole: 0 },
+{ input: 2.5, fract: 0.5, whole: 2 },
+{ input: -2.5, fract: -0.5, whole: -2 },
+{ input: 10.0, fract: 0, whole: 10 },
+{ input: -10.0, fract: 0, whole: -10 },
 
 // Subnormals
-{ input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: [0] },
-{ input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: [0] },
-{ input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: [0] },
-{ input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: [0] },
+{ input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: 0 },
+{ input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: 0 },
+{ input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: 0 },
+{ input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: 0 },
 
 // Boundaries
-{ input: kValue.f32.negative.min, fract: [0], whole: [kValue.f32.negative.min] },
-{ input: kValue.f32.negative.max, fract: [kValue.f32.negative.max], whole: [0] },
-{ input: kValue.f32.positive.min, fract: [kValue.f32.positive.min], whole: [0] },
-{ input: kValue.f32.positive.max, fract: [0], whole: [kValue.f32.positive.max] }]).
+{ input: kValue.f32.negative.min, fract: 0, whole: kValue.f32.negative.min },
+{ input: kValue.f32.negative.max, fract: kValue.f32.negative.max, whole: 0 },
+{ input: kValue.f32.positive.min, fract: kValue.f32.positive.min, whole: 0 },
+{ input: kValue.f32.positive.max, fract: 0, whole: kValue.f32.positive.max }]).
 
 
 fn((t) => {
@@ -4736,7 +6046,8 @@ fn((t) => {
 
 });
 
-// There are not explicit tests for multiplicationScalarMatrixInterval since it is just a passthrough to multiplicationMatrixScalarInterval
+// There are no explicit tests for multiplicationScalarMatrixInterval, since it
+// is just a pass-through to multiplicationMatrixScalarInterval
 
 
 
