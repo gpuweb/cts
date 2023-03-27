@@ -590,7 +590,11 @@ g.test('toF32Vector')
     { input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: [1, 2, 3] },
     {
       input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
-      expected: [[1, 2], [2, 3], [3, 4]],
+      expected: [
+        [1, 2],
+        [2, 3],
+        [3, 4],
+      ],
     },
     {
       input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3]), toF32Interval([4])],
