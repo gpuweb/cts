@@ -183,7 +183,6 @@ g.test('struct_member')
 
      Test parameters:
      - member_offset: The offset (in bytes) of the array member from the start of the struct.
-                      An offset of '0' uses the array directly as the store type without a struct.
      - type: The WGSL type to use as the array element type.
      - stride: The stride in bytes of the array element type.
     `
