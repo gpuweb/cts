@@ -138,84 +138,85 @@ struct Varyings {
 @vertex
 fn vmain(@builtin(vertex_index) VertexIndex : u32,
     @builtin(instance_index) InstanceIndex : u32) -> Varyings {
-  // Standard sample locations within a pixel, multiplied by 8 so the pixel ranges from -8 to 8 in
-  // each dimension (as in the D3D documentation).
+  // Standard sample locations within a pixel, where the pixel ranges from (-1,-1) to (1,1), and is
+  // centered at (0,0) (NDC - the test uses a 1x1 render target).
   // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels
-  var sampleCentersX8 = array(
+  var sampleCenters = array(
       // sampleCount = 1
       vec2f(0, 0),
       // sampleCount = 4
-      vec2f(-2, 6),
-      vec2f(6, 2),
-      vec2f(-6, -2),
-      vec2f(2, -6),
+      vec2f(-2,  6) / 8,
+      vec2f( 6,  2) / 8,
+      vec2f(-6, -2) / 8,
+      vec2f( 2, -6) / 8,
     );
   // A tiny quad to draw around the sample center to ensure we hit only the expected point.
-  var tinyQuadX8 = array(
-    vec2( 0.25,  0.25),
-    vec2( 0.25, -0.25),
-    vec2(-0.25, -0.25),
-    vec2( 0.25,  0.25),
-    vec2(-0.25, -0.25),
-    vec2(-0.25,  0.25),
+  let kTinyQuadRadius = 1.0 / 32;
+  var tinyQuad = array(
+    vec2f( kTinyQuadRadius,  kTinyQuadRadius),
+    vec2f( kTinyQuadRadius, -kTinyQuadRadius),
+    vec2f(-kTinyQuadRadius, -kTinyQuadRadius),
+    vec2f( kTinyQuadRadius,  kTinyQuadRadius),
+    vec2f(-kTinyQuadRadius, -kTinyQuadRadius),
+    vec2f(-kTinyQuadRadius,  kTinyQuadRadius),
     );
 
   var uvsFlat = array(
       // sampleCount = 1
       // Note: avoids hitting the point between the 4 texels.
-      vec2(0.51, 0.51),
+      vec2f(0.51, 0.51),
       // sampleCount = 4
-      vec2(0.25, 0.25),
-      vec2<f32>(0.75, 0.25),
-      vec2<f32>(0.25, 0.75),
-      vec2<f32>(0.75, 0.75),
+      vec2f(0.25, 0.25),
+      vec2f(0.75, 0.25),
+      vec2f(0.25, 0.75),
+      vec2f(0.75, 0.75),
     );
   var uvsInterpolated = array(
       // center quad
       // Note: the interpolated point will be exactly in the middle of the 4 texels.
       // The test expects to get texel 1,1 (the 3rd texel) in this case.
-      vec2<f32>(1.0, 0.0),
-      vec2<f32>(1.0, 1.0),
-      vec2<f32>(0.0, 1.0),
-      vec2<f32>(1.0, 0.0),
-      vec2<f32>(0.0, 1.0),
-      vec2<f32>(0.0, 0.0),
+      vec2f(1.0, 0.0),
+      vec2f(1.0, 1.0),
+      vec2f(0.0, 1.0),
+      vec2f(1.0, 0.0),
+      vec2f(0.0, 1.0),
+      vec2f(0.0, 0.0),
 
       // top-left quad (texel 0)
-      vec2<f32>(0.5, 0.0),
-      vec2<f32>(0.5, 0.5),
-      vec2<f32>(0.0, 0.5),
-      vec2<f32>(0.5, 0.0),
-      vec2<f32>(0.0, 0.5),
-      vec2<f32>(0.0, 0.0),
+      vec2f(0.5, 0.0),
+      vec2f(0.5, 0.5),
+      vec2f(0.0, 0.5),
+      vec2f(0.5, 0.0),
+      vec2f(0.0, 0.5),
+      vec2f(0.0, 0.0),
 
       // top-right quad (texel 1)
-      vec2<f32>(1.0, 0.0),
-      vec2<f32>(1.0, 0.5),
-      vec2<f32>(0.5, 0.5),
-      vec2<f32>(1.0, 0.0),
-      vec2<f32>(0.5, 0.5),
-      vec2<f32>(0.5, 0.0),
+      vec2f(1.0, 0.0),
+      vec2f(1.0, 0.5),
+      vec2f(0.5, 0.5),
+      vec2f(1.0, 0.0),
+      vec2f(0.5, 0.5),
+      vec2f(0.5, 0.0),
 
       // bottom-left quad (texel 2)
-      vec2<f32>(0.5, 0.5),
-      vec2<f32>(0.5, 1.0),
-      vec2<f32>(0.0, 1.0),
-      vec2<f32>(0.5, 0.5),
-      vec2<f32>(0.0, 1.0),
-      vec2<f32>(0.0, 0.5),
+      vec2f(0.5, 0.5),
+      vec2f(0.5, 1.0),
+      vec2f(0.0, 1.0),
+      vec2f(0.5, 0.5),
+      vec2f(0.0, 1.0),
+      vec2f(0.0, 0.5),
 
       // bottom-right quad (texel 3)
-      vec2<f32>(1.0, 0.5),
-      vec2<f32>(1.0, 1.0),
-      vec2<f32>(0.5, 1.0),
-      vec2<f32>(1.0, 0.5),
-      vec2<f32>(0.5, 1.0),
-      vec2<f32>(0.5, 0.5)
+      vec2f(1.0, 0.5),
+      vec2f(1.0, 1.0),
+      vec2f(0.5, 1.0),
+      vec2f(1.0, 0.5),
+      vec2f(0.5, 1.0),
+      vec2f(0.5, 0.5)
     );
 
   var output : Varyings;
-  let pos = (sampleCentersX8[InstanceIndex] + tinyQuadX8[VertexIndex]) / 8.0;
+  let pos = sampleCenters[InstanceIndex] + tinyQuad[VertexIndex];
   output.Position = vec4(pos, ${kDepthWriteValue}, 1.0);
   output.uvFlat = uvsFlat[InstanceIndex];
   output.uvInterpolated = uvsInterpolated[InstanceIndex * 6 + VertexIndex];
