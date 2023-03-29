@@ -20,7 +20,6 @@ import {
 } from '../../../util/conversion.js';
 import {
   BinaryToInterval,
-  F32Interval,
   MatrixPairToMatrix,
   MatrixScalarToMatrix,
   MatrixToMatrix,
@@ -38,6 +37,7 @@ import {
   VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
+import { FPInterval } from '../../../util/floating_point.js';
 import {
   cartesianProduct,
   map2DArray,
@@ -47,12 +47,12 @@ import {
   quantizeToU32,
 } from '../../../util/math.js';
 
-export type Expectation = Value | F32Interval | F32Interval[] | F32Interval[][] | Comparator;
+export type Expectation = Value | FPInterval | FPInterval[] | FPInterval[][] | Comparator;
 
 /** Is this expectation actually a Comparator */
 function isComparator(e: Expectation): boolean {
   return !(
-    e instanceof F32Interval ||
+    e instanceof FPInterval ||
     e instanceof Scalar ||
     e instanceof Vector ||
     e instanceof Matrix ||
@@ -823,7 +823,7 @@ export type IntervalFilter =
 
 /**
  * @returns a Case for the param and unary interval generator provided
- * The Case will use use an interval comparator for matching results.
+ * The Case will use an interval comparator for matching results.
  * @param param the param to pass in
  * @param filter what interval filtering to apply
  * @param ops callbacks that implement generating an acceptance interval for an
