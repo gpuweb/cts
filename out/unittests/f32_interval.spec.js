@@ -1,8 +1,15 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `
-F32Interval unit tests.
-`;import { makeTestGroup } from '../common/framework/test_group.js';
+**/ // This is a shim file that performs testing via the old/deprecates f32 API
+// calls.
+// Those currently just pass-through to the new refactored FPContext
+// implementation.
+// As CTS migrates over to directly calling the new API these test will be
+// replaced with direct call tests.
+export const description = `
+F32 unit tests.
+`;
+import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
@@ -31,12 +38,10 @@ divisionInterval,
 dotInterval,
 expInterval,
 exp2Interval,
-F32Interval,
 faceForwardIntervals,
 floorInterval,
 fmaInterval,
 fractInterval,
-
 inverseSqrtInterval,
 ldexpInterval,
 lengthInterval,
@@ -85,8 +90,10 @@ unpack4x8snormInterval,
 unpack4x8unormInterval,
 determinantInterval,
 isF32Vector,
-isF32Matrix } from
+isF32Matrix,
+spanF32Intervals } from
 '../webgpu/util/f32_interval.js';
+import { FPInterval } from '../webgpu/util/floating_point.js';
 import { hexToF32, hexToF64, map2DArray, oneULPF32 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
@@ -94,7 +101,10 @@ import { UnitTest } from './unit_test.js';
 export const g = makeTestGroup(UnitTest);
 
 /** Bounds indicating an expectation of an interval of all possible values */
-const kAny = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+const kAnyBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+
+/** Interval from kAnyBounds */
+const kAnyInterval = toF32Interval(kAnyBounds);
 
 /** @returns a number N * ULP greater than the provided number */
 function plusNULP(x, n) {
@@ -125,7 +135,7 @@ function applyError(
 expected,
 error)
 {
-  if (expected !== kAny) {
+  if (expected !== kAnyBounds) {
     const interval = toF32Interval(expected);
     expected = [interval.begin - error(interval.begin), interval.end + error(interval.end)];
   }
@@ -163,14 +173,14 @@ paramsSubcasesOnly(
 // Infinities
 { input: [0, kValue.f32.infinity.positive], expected: [0, Number.POSITIVE_INFINITY] },
 { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny }]).
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds }]).
 
 
 fn((t) => {
-  const i = new F32Interval(...t.params.input);
+  const i = new FPInterval('f32', ...t.params.input);
   t.expect(
   objectEquals(i.bounds(), t.params.expected),
-  `F32Interval([${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`);
+  `FPInterval([${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`);
 
 });
 
@@ -410,7 +420,7 @@ paramsSubcasesOnly(
 { intervals: [[2, 5], [0, 1]], expected: [0, 5] },
 { intervals: [[0, 2], [1, 5]], expected: [0, 5] },
 { intervals: [[0, 5], [1, 2]], expected: [0, 5] },
-{ intervals: [[kValue.f32.infinity.negative, 0], [0, kValue.f32.infinity.positive]], expected: kAny },
+{ intervals: [[kValue.f32.infinity.negative, 0], [0, kValue.f32.infinity.positive]], expected: kAnyBounds },
 
 // Multiple Intervals
 { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
@@ -424,10 +434,10 @@ paramsSubcasesOnly(
 
 
 fn((t) => {
-  const intervals = t.params.intervals.map(toF32Interval);
+  const intervals = t.params.intervals.map((i) => toF32Interval(i));
   const expected = toF32Interval(t.params.expected);
 
-  const got = F32Interval.span(...intervals);
+  const got = spanF32Intervals(...intervals);
   t.expect(
   objectEquals(got, expected),
   `span({${intervals}}) returned ${got}. Expected ${expected}`);
@@ -478,7 +488,10 @@ paramsSubcasesOnly([
 // F32Interval, valid dimensions
 { input: [toF32Interval([1]), toF32Interval([2])], expected: true },
 { input: [toF32Interval([1, 2]), toF32Interval([2, 3])], expected: true },
-{ input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: true },
+{
+  input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])],
+  expected: true
+},
 {
   input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
   expected: true
@@ -497,7 +510,7 @@ paramsSubcasesOnly([
   expected: true
 },
 
-// F32Interval, invalid dimensions
+// FPInterval, invalid dimensions
 { input: [toF32Interval([1])], expected: false },
 {
   input: [
@@ -587,7 +600,10 @@ paramsSubcasesOnly([
   [2, 3]]
 
 },
-{ input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])], expected: [1, 2, 3] },
+{
+  input: [toF32Interval([1]), toF32Interval([2]), toF32Interval([3])],
+  expected: [1, 2, 3]
+},
 {
   input: [toF32Interval([1, 2]), toF32Interval([2, 3]), toF32Interval([3, 4])],
   expected: [
@@ -620,13 +636,13 @@ paramsSubcasesOnly([
 { input: [1, [2], toF32Interval([3])], expected: [1, 2, 3] },
 { input: [1, toF32Interval([2]), [3], 4], expected: [1, 2, 3, 4] },
 {
-  input: [1, [2], [2, 3], F32Interval.any()],
-  expected: [1, 2, [2, 3], kAny]
+  input: [1, [2], [2, 3], kAnyInterval],
+  expected: [1, 2, [2, 3], kAnyBounds]
 }]).
 
 fn((t) => {
   const input = t.params.input;
-  const expected = t.params.expected.map(toF32Interval);
+  const expected = t.params.expected.map((e) => toF32Interval(e));
 
   const got = toF32Vector(input);
   t.expect(
@@ -790,7 +806,7 @@ paramsSubcasesOnly([
   expected: false
 },
 
-// F32Interval, valid dimensions
+// FPInterval, valid dimensions
 {
   input: [
   [toF32Interval(1), toF32Interval(2)],
@@ -981,9 +997,12 @@ paramsSubcasesOnly([
   expected: true
 },
 
-// F32Interval, invalid dimensions
+// FPInterval, invalid dimensions
 { input: [[toF32Interval(1)]], expected: false },
-{ input: [[toF32Interval(1)], [toF32Interval(3), toF32Interval(4)]], expected: false },
+{
+  input: [[toF32Interval(1)], [toF32Interval(3), toF32Interval(4)]],
+  expected: false
+},
 {
   input: [
   [toF32Interval(1), toF32Interval(2)],
@@ -1282,7 +1301,7 @@ paramsSubcasesOnly([
 
 },
 
-// F32Interval
+// FPInterval
 {
   input: [
   [toF32Interval(1), toF32Interval(2)],
@@ -1698,7 +1717,7 @@ paramsSubcasesOnly([
 
 fn((t) => {
   const input = t.params.input;
-  const expected = map2DArray(t.params.expected, toF32Interval);
+  const expected = map2DArray(t.params.expected, (e) => toF32Interval(e));
 
   const got = toF32Matrix(input);
   t.expect(
@@ -1717,8 +1736,8 @@ paramsSubcasesOnly(
 
 [
 // Edge Cases
-{ value: kValue.f32.infinity.positive, expected: kAny },
-{ value: kValue.f32.infinity.negative, expected: kAny },
+{ value: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, expected: kAnyBounds },
 { value: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { value: kValue.f32.negative.min, expected: kValue.f32.negative.min },
 { value: kValue.f32.positive.min, expected: kValue.f32.positive.min },
@@ -1756,7 +1775,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = correctlyRoundedInterval(t.params.value);
   t.expect(
   objectEquals(expected, got),
@@ -1775,21 +1793,21 @@ paramsSubcasesOnly(
 
 [
 // Edge Cases
-{ value: kValue.f32.infinity.positive, error: 0, expected: kAny },
-{ value: kValue.f32.infinity.positive, error: 2 ** -11, expected: kAny },
-{ value: kValue.f32.infinity.positive, error: 1, expected: kAny },
-{ value: kValue.f32.infinity.negative, error: 0, expected: kAny },
-{ value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAny },
-{ value: kValue.f32.infinity.negative, error: 1, expected: kAny },
+{ value: kValue.f32.infinity.positive, error: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, error: 2 ** -11, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, error: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 1, expected: kAnyBounds },
 { value: kValue.f32.positive.max, error: 0, expected: kValue.f32.positive.max },
 { value: kValue.f32.positive.max, error: 2 ** -11, expected: kValue.f32.positive.max },
-{ value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAny },
+{ value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAnyBounds },
 { value: kValue.f32.positive.min, error: 0, expected: kValue.f32.positive.min },
 { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
 { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
 { value: kValue.f32.negative.min, error: 0, expected: kValue.f32.negative.min },
 { value: kValue.f32.negative.min, error: 2 ** -11, expected: kValue.f32.negative.min },
-{ value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAny },
+{ value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAnyBounds },
 { value: kValue.f32.negative.max, error: 0, expected: kValue.f32.negative.max },
 { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
 { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
@@ -1830,7 +1848,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = absoluteErrorInterval(t.params.value, t.params.error);
   t.expect(
   objectEquals(expected, got),
@@ -1849,21 +1866,21 @@ paramsSubcasesOnly(
 
 [
 // Edge Cases
-{ value: kValue.f32.infinity.positive, num_ulp: 0, expected: kAny },
-{ value: kValue.f32.infinity.positive, num_ulp: 1, expected: kAny },
-{ value: kValue.f32.infinity.positive, num_ulp: 4096, expected: kAny },
-{ value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAny },
-{ value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAny },
-{ value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAny },
+{ value: kValue.f32.infinity.positive, num_ulp: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, num_ulp: 4096, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAnyBounds },
 { value: kValue.f32.positive.max, num_ulp: 0, expected: kValue.f32.positive.max },
-{ value: kValue.f32.positive.max, num_ulp: 1, expected: kAny },
-{ value: kValue.f32.positive.max, num_ulp: 4096, expected: kAny },
+{ value: kValue.f32.positive.max, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.positive.max, num_ulp: 4096, expected: kAnyBounds },
 { value: kValue.f32.positive.min, num_ulp: 0, expected: kValue.f32.positive.min },
 { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULP(kValue.f32.positive.min)] },
 { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULP(kValue.f32.positive.min, 4096)] },
 { value: kValue.f32.negative.min, num_ulp: 0, expected: kValue.f32.negative.min },
-{ value: kValue.f32.negative.min, num_ulp: 1, expected: kAny },
-{ value: kValue.f32.negative.min, num_ulp: 4096, expected: kAny },
+{ value: kValue.f32.negative.min, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.negative.min, num_ulp: 4096, expected: kAnyBounds },
 { value: kValue.f32.negative.max, num_ulp: 0, expected: kValue.f32.negative.max },
 { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.negative.max), 0] },
 { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.negative.max, 4096), 0] },
@@ -1904,7 +1921,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = ulpInterval(t.params.value, t.params.num_ulp);
   t.expect(
   objectEquals(expected, got),
@@ -1928,8 +1944,8 @@ paramsSubcasesOnly(
 { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
 { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
@@ -1951,7 +1967,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = absInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -1967,27 +1982,26 @@ paramsSubcasesOnly(
 // to express in a closed human-readable form due to the complexity of
 // their derivation.
 //
-// The acceptance interval @ x = -1 and 1 is kAny, because
+// The acceptance interval @ x = -1 and 1 is kAnyBounds, because
 // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-// The acceptance interval @ x = 0 is kAny, because atan2 is not
+// The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
 // well-defined/implemented at 0.
 // Near 1, the absolute error should be larger and, away from 1 the atan2
 // inherited error should be larger.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: -1, expected: kAnyBounds },
 { input: -1 / 2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] }, // ~2π/3
-{ input: 0, expected: kAny },
+{ input: 0, expected: kAnyBounds },
 { input: 1 / 2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] }, // ~π/3
 { input: minusOneULP(1), expected: [hexToF64(0x3f2f_fdff_6000_0000n), hexToF64(0x3f3b_106f_c933_4fb9n)] }, // ~0.0003
-{ input: 1, expected: kAny },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: 1, expected: kAnyBounds },
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = acosInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2002,20 +2016,19 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
-{ input: 1, expected: kAny }, // 1/0 occurs in inverseSqrt in this formulation
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
+{ input: 1, expected: kAnyBounds }, // 1/0 occurs in inverseSqrt in this formulation
 { input: 1.1, expected: [hexToF64(0x3fdc_6368_8000_0000n), hexToF64(0x3fdc_636f_2000_0000n)] }, // ~0.443..., differs from the primary in the later digits
 { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] }, // ~2.993...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = acoshAlternativeInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2030,20 +2043,19 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
-{ input: 1, expected: kAny }, // 1/0 occurs in inverseSqrt in this formulation
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
+{ input: 1, expected: kAnyBounds }, // 1/0 occurs in inverseSqrt in this formulation
 { input: 1.1, expected: [hexToF64(0x3fdc_6368_2000_0000n), hexToF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
 { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] }, // ~2.993...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = acoshPrimaryInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2058,28 +2070,27 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a simple human-readable form due to the complexity of their derivation.
 //
-// The acceptance interval @ x = -1 and 1 is kAny, because
+// The acceptance interval @ x = -1 and 1 is kAnyBounds, because
 // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
-// The acceptance interval @ x = 0 is kAny, because atan2 is not
+// The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
 // well-defined/implemented at 0.
 // Near 0, but not subnormal the absolute error should be larger, so will
 // be +/- 6.77e-5, away from 0 the atan2 inherited error should be larger.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: -1, expected: kAnyBounds },
 { input: -1 / 2, expected: [hexToF64(0xbfe0_c352_c000_0000n), hexToF64(0xbfe0_bf51_c000_0000n)] }, // ~-π/6
 { input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] }, // ~0
-{ input: 0, expected: kAny },
+{ input: 0, expected: kAnyBounds },
 { input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] }, // ~0
 { input: 1 / 2, expected: [hexToF64(0x3fe0_bf51_c000_0000n), hexToF64(0x3fe0_c352_c000_0000n)] }, // ~π/6
-{ input: 1, expected: kAny }, // ~π/2
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: 1, expected: kAnyBounds }, // ~π/2
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = asinInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2094,18 +2105,17 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] }, // ~-0.88137...
 { input: 0, expected: [hexToF64(0xbeaa_0000_2000_0000n), hexToF64(0x3eb1_ffff_d000_0000n)] }, // ~0
 { input: 1, expected: [hexToF64(0x3fec_3435_4000_0000n), hexToF64(0x3fec_3437_8000_0000n)] }, // ~0.88137...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = asinhInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2117,7 +2127,7 @@ g.test('atanInterval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULP(kValue.f32.negative.pi.third)] }, // x = -√3
 { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
 { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULP(kValue.f32.negative.pi.sixth)] }, // x = -1/√3
@@ -2125,7 +2135,7 @@ paramsSubcasesOnly(
 { input: hexToF32(0x3f13cd3a), expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
 { input: 1, expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
 { input: hexToF32(0x3fddb3d7), expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2149,20 +2159,19 @@ paramsSubcasesOnly(
 [
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: -1, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: -1, expected: kAnyBounds },
 { input: -0.1, expected: [hexToF64(0xbfb9_af9a_6000_0000n), hexToF64(0xbfb9_af8c_c000_0000n)] }, // ~-0.1003...
 { input: 0, expected: [hexToF64(0xbe96_0000_2000_0000n), hexToF64(0x3e98_0000_0000_0000n)] }, // ~0
 { input: 0.1, expected: [hexToF64(0x3fb9_af8b_8000_0000n), hexToF64(0x3fb9_af9b_0000_0000n)] }, // ~0.1003...
-{ input: 1, expected: kAny },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: 1, expected: kAnyBounds },
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = atanhInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2187,8 +2196,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: -1 },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: 1 },
 { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
@@ -2205,7 +2214,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = ceilInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2223,15 +2231,15 @@ paramsSubcasesOnly(
 // substantially different, so instead of getting 0 you get a value on the
 // order of 10^-8 away from 0, thus difficult to express in a
 // human-readable manner.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: kValue.f32.negative.pi.whole, expected: [-1, plusOneULP(-1)] },
 { input: kValue.f32.negative.pi.third, expected: [minusOneULP(1 / 2), 1 / 2] },
 { input: 0, expected: [1, 1] },
 { input: kValue.f32.positive.pi.third, expected: [minusOneULP(1 / 2), 1 / 2] },
 { input: kValue.f32.positive.pi.whole, expected: [-1, plusOneULP(-1)] },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2256,13 +2264,13 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: -1, expected: [hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] }, // ~1.1543...
 { input: 0, expected: [hexToF32(0x3f7ffffd), hexToF32(0x3f800002)] }, // ~1
 { input: 1, expected: [hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] }, // ~1.1543...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2279,8 +2287,8 @@ g.test('degreesInterval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: kValue.f32.negative.pi.whole, expected: [minusOneULP(-180), plusOneULP(-180)] },
 { input: kValue.f32.negative.pi.three_quarters, expected: [minusOneULP(-135), plusOneULP(-135)] },
 { input: kValue.f32.negative.pi.half, expected: [minusOneULP(-90), plusOneULP(-90)] },
@@ -2294,13 +2302,12 @@ paramsSubcasesOnly(
 { input: kValue.f32.positive.pi.half, expected: [minusOneULP(90), plusOneULP(90)] },
 { input: kValue.f32.positive.pi.three_quarters, expected: [minusOneULP(135), plusOneULP(135)] },
 { input: kValue.f32.positive.pi.whole, expected: [minusOneULP(180), plusOneULP(180)] },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = degreesInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2312,10 +2319,10 @@ g.test('expInterval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: 0, expected: 1 },
 { input: 1, expected: [kValue.f32.positive.e, plusOneULP(kValue.f32.positive.e)] },
-{ input: 89, expected: kAny }]).
+{ input: 89, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2338,10 +2345,10 @@ g.test('exp2Interval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: 0, expected: 1 },
 { input: 1, expected: 2 },
-{ input: 128, expected: kAny }]).
+{ input: 128, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2377,8 +2384,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: -2 },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: 0 },
 { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
@@ -2395,7 +2402,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = floorInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2418,8 +2424,8 @@ paramsSubcasesOnly(
 { input: -1.1, expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccd_0000_0000n)] }, // ~0.9
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: 0 },
 { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
 { input: kValue.f32.negative.min, expected: 0 },
@@ -2428,7 +2434,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = fractInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2440,13 +2445,13 @@ g.test('inverseSqrtInterval').
 paramsSubcasesOnly(
 
 [
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
 { input: 0.04, expected: [minusOneULP(5), plusOneULP(5)] },
 { input: 1, expected: 1 },
 { input: 100, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
 { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULP(hexToF32(0x1f800000), 2)] }, // ~5.421...e-20, i.e. 1/√max f32
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2472,8 +2477,8 @@ paramsSubcasesOnly(
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
 //
-// length(0) = kAny, because length uses sqrt, which is defined as 1/inversesqrt
-{ input: 0, expected: kAny },
+// length(0) = kAnyBounds, because length uses sqrt, which is defined as 1/inversesqrt
+{ input: 0, expected: kAnyBounds },
 { input: 1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: -1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: 0.1, expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
@@ -2482,23 +2487,22 @@ paramsSubcasesOnly(
 { input: -10.0, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] }, // ~10
 
 // Subnormal Cases
-{ input: kValue.f32.subnormal.negative.min, expected: kAny },
-{ input: kValue.f32.subnormal.negative.max, expected: kAny },
-{ input: kValue.f32.subnormal.positive.min, expected: kAny },
-{ input: kValue.f32.subnormal.positive.max, expected: kAny },
+{ input: kValue.f32.subnormal.negative.min, expected: kAnyBounds },
+{ input: kValue.f32.subnormal.negative.max, expected: kAnyBounds },
+{ input: kValue.f32.subnormal.positive.min, expected: kAnyBounds },
+{ input: kValue.f32.subnormal.positive.max, expected: kAnyBounds },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
-{ input: kValue.f32.negative.max, expected: kAny },
-{ input: kValue.f32.positive.min, expected: kAny },
-{ input: kValue.f32.positive.max, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
+{ input: kValue.f32.negative.max, expected: kAnyBounds },
+{ input: kValue.f32.positive.min, expected: kAnyBounds },
+{ input: kValue.f32.positive.max, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = lengthInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2510,8 +2514,8 @@ g.test('logInterval').
 paramsSubcasesOnly(
 
 [
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
 { input: 1, expected: 0 },
 { input: kValue.f32.positive.e, expected: [minusOneULP(1), 1] },
 { input: kValue.f32.positive.max, expected: [minusOneULP(hexToF32(0x42b17218)), hexToF32(0x42b17218)] } // ~88.72...
@@ -2539,8 +2543,8 @@ g.test('log2Interval').
 paramsSubcasesOnly(
 
 [
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
 { input: 1, expected: 0 },
 { input: 2, expected: 1 },
 { input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] }]).
@@ -2577,8 +2581,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: [minusOneULP(hexToF32(0x3ff33334)), hexToF32(0x3ff33334)] }, // ~1.9
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.negative.min },
 { input: kValue.f32.positive.min, expected: kValue.f32.negative.max },
 { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
@@ -2593,7 +2597,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = negationInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2605,8 +2608,8 @@ g.test('quantizeToF16Interval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
 { input: -1, expected: -1 },
 { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] }, // ~-0.1
@@ -2622,8 +2625,8 @@ paramsSubcasesOnly(
 { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] }, // ~0.1
 { input: 1, expected: 1 },
 { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2640,7 +2643,7 @@ g.test('radiansInterval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: -180, expected: [minusOneULP(kValue.f32.negative.pi.whole), plusOneULP(kValue.f32.negative.pi.whole)] },
 { input: -135, expected: [minusOneULP(kValue.f32.negative.pi.three_quarters), plusOneULP(kValue.f32.negative.pi.three_quarters)] },
 { input: -90, expected: [minusOneULP(kValue.f32.negative.pi.half), plusOneULP(kValue.f32.negative.pi.half)] },
@@ -2654,12 +2657,11 @@ paramsSubcasesOnly(
 { input: 90, expected: [minusOneULP(kValue.f32.positive.pi.half), plusOneULP(kValue.f32.positive.pi.half)] },
 { input: 135, expected: [minusOneULP(kValue.f32.positive.pi.three_quarters), plusOneULP(kValue.f32.positive.pi.three_quarters)] },
 { input: 180, expected: [minusOneULP(kValue.f32.positive.pi.whole), plusOneULP(kValue.f32.positive.pi.whole)] },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = radiansInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2688,8 +2690,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: -2 },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: 0 },
 { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
@@ -2706,7 +2708,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = roundInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2739,13 +2740,12 @@ paramsSubcasesOnly(
 { input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
 
 // Infinities
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = saturateInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2757,7 +2757,7 @@ g.test('signInterval').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.negative.min, expected: -1 },
 { input: -10, expected: -1 },
 { input: -1, expected: -1 },
@@ -2773,12 +2773,11 @@ paramsSubcasesOnly(
 { input: 1, expected: 1 },
 { input: 10, expected: 1 },
 { input: kValue.f32.positive.max, expected: 1 },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = signInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2796,13 +2795,13 @@ paramsSubcasesOnly(
 // substantially different, so instead of getting 0 you get a value on the
 // order of 10^-8 away from it, thus difficult to express in a
 // human-readable manner.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: kValue.f32.negative.pi.half, expected: [-1, plusOneULP(-1)] },
 { input: 0, expected: 0 },
 { input: kValue.f32.positive.pi.half, expected: [minusOneULP(1), 1] },
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -2827,18 +2826,17 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: -1, expected: [hexToF32(0xbf966d05), hexToF32(0xbf966cf8)] }, // ~-1.175...
 { input: 0, expected: [hexToF32(0xb4600000), hexToF32(0x34600000)] }, // ~0
 { input: 1, expected: [hexToF32(0x3f966cf8), hexToF32(0x3f966d05)] }, // ~1.175...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = sinhInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2853,18 +2851,17 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: -1, expected: kAny },
-{ input: 0, expected: kAny },
+{ input: -1, expected: kAnyBounds },
+{ input: 0, expected: kAnyBounds },
 { input: 0.01, expected: [hexToF64(0x3fb9_9998_b000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 { input: 1, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: 4, expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] }, // ~2
 { input: 100, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] }, // ~10
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = sqrtInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2893,20 +2890,19 @@ paramsSubcasesOnly(
 //
 // The examples here have been manually traced to confirm the expectation
 // values are correct.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf40_02bc_9000_0000n), hexToF64(0x3f40_0144_f000_0000n)] }, // ~0.0
-{ input: kValue.f32.negative.pi.half, expected: kAny },
+{ input: kValue.f32.negative.pi.half, expected: kAnyBounds },
 { input: 0, expected: [hexToF64(0xbf40_0200_b000_0000n), hexToF64(0x3f40_0200_b000_0000n)] }, // ~0.0
-{ input: kValue.f32.positive.pi.half, expected: kAny },
+{ input: kValue.f32.positive.pi.half, expected: kAnyBounds },
 { input: kValue.f32.positive.pi.whole, expected: [hexToF64(0xbf40_0144_f000_0000n), hexToF64(0x3f40_02bc_9000_0000n)] }, // ~0.0
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = tanInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2921,18 +2917,17 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kAny },
-{ input: kValue.f32.negative.min, expected: kAny },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ input: kValue.f32.negative.min, expected: kAnyBounds },
 { input: -1, expected: [hexToF64(0xbfe8_5efd_1000_0000n), hexToF64(0xbfe8_5ef8_9000_0000n)] }, // ~-0.7615...
 { input: 0, expected: [hexToF64(0xbe8c_0000_b000_0000n), hexToF64(0x3e8c_0000_b000_0000n)] }, // ~0
 { input: 1, expected: [hexToF64(0x3fe8_5ef8_9000_0000n), hexToF64(0x3fe8_5efd_1000_0000n)] }, // ~0.7615...
-{ input: kValue.f32.positive.max, expected: kAny },
-{ input: kValue.f32.infinity.positive, expected: kAny }]).
+{ input: kValue.f32.positive.max, expected: kAnyBounds },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = tanhInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -2957,8 +2952,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: -1 },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kAny },
-{ input: kValue.f32.infinity.negative, expected: kAny },
+{ input: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: 0 },
 { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
@@ -2973,7 +2968,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = truncInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -3024,20 +3018,19 @@ paramsSubcasesOnly(
 { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = additionInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3069,49 +3062,48 @@ paramsSubcasesOnly(
 { input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULP(kValue.f32.positive.pi.sixth, 4097), plusNULP(kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
 { input: [1, 1], expected: [minusNULP(kValue.f32.positive.pi.quarter, 4097), plusNULP(kValue.f32.positive.pi.quarter, 4096)] },
 // { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0_bf52_0000_0000n), hexToF64(0x3ff0_c352_6000_0000n)] },  // y = √3
-{ input: [Number.POSITIVE_INFINITY, 1], expected: kAny },
+{ input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
 
 // positive y, negative x
 { input: [1, -1], expected: [minusNULP(kValue.f32.positive.pi.three_quarters, 4096), plusNULP(kValue.f32.positive.pi.three_quarters, 4097)] },
-{ input: [Number.POSITIVE_INFINITY, -1], expected: kAny },
+{ input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
 
 // negative y, negative x
 { input: [-1, -1], expected: [minusNULP(kValue.f32.negative.pi.three_quarters, 4097), plusNULP(kValue.f32.negative.pi.three_quarters, 4096)] },
-{ input: [Number.NEGATIVE_INFINITY, -1], expected: kAny },
+{ input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
 
 // negative y, positive x
 { input: [-1, 1], expected: [minusNULP(kValue.f32.negative.pi.quarter, 4096), plusNULP(kValue.f32.negative.pi.quarter, 4097)] },
-{ input: [Number.NEGATIVE_INFINITY, 1], expected: kAny },
+{ input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
 
 // Discontinuity @ origin (0,0)
-{ input: [0, 0], expected: kAny },
-{ input: [0, kValue.f32.subnormal.positive.max], expected: kAny },
-{ input: [0, kValue.f32.subnormal.negative.min], expected: kAny },
-{ input: [0, kValue.f32.positive.min], expected: kAny },
-{ input: [0, kValue.f32.negative.max], expected: kAny },
-{ input: [0, kValue.f32.positive.max], expected: kAny },
-{ input: [0, kValue.f32.negative.min], expected: kAny },
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [0, 1], expected: kAny },
-{ input: [kValue.f32.subnormal.positive.max, 1], expected: kAny },
-{ input: [kValue.f32.subnormal.negative.min, 1], expected: kAny },
+{ input: [0, 0], expected: kAnyBounds },
+{ input: [0, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
+{ input: [0, kValue.f32.subnormal.negative.min], expected: kAnyBounds },
+{ input: [0, kValue.f32.positive.min], expected: kAnyBounds },
+{ input: [0, kValue.f32.negative.max], expected: kAnyBounds },
+{ input: [0, kValue.f32.positive.max], expected: kAnyBounds },
+{ input: [0, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [0, 1], expected: kAnyBounds },
+{ input: [kValue.f32.subnormal.positive.max, 1], expected: kAnyBounds },
+{ input: [kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
 
 // When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
 { input: [hexToF32(0x80800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.negative.pi.whole, 4096), plusNULP(kValue.f32.negative.pi.whole, 4096)] },
 { input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULP(kValue.f32.positive.pi.whole, 4096), plusNULP(kValue.f32.positive.pi.whole, 4096)] },
 
-// Very large |x| values should cause kAny to be returned, due to the restrictions on division
-{ input: [1, kValue.f32.positive.max], expected: kAny },
-{ input: [1, kValue.f32.positive.nearest_max], expected: kAny },
-{ input: [1, kValue.f32.negative.min], expected: kAny },
-{ input: [1, kValue.f32.negative.nearest_min], expected: kAny }]).
+// Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
+{ input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+{ input: [1, kValue.f32.positive.nearest_max], expected: kAnyBounds },
+{ input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [1, kValue.f32.negative.nearest_min], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [y, x] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = atan2Interval(y, x);
   t.expect(
   objectEquals(expected, got),
@@ -3127,15 +3119,15 @@ paramsSubcasesOnly(
 // to express in a closed human-readable  form due to the inherited nature
 // of the errors.
 //
-// distance(x, y), where x - y = 0 has an acceptance interval of kAny,
-// because distance(x, y) = length(x - y), and length(0) = kAny
-{ input: [0, 0], expected: kAny },
+// distance(x, y), where x - y = 0 has an acceptance interval of kAnyBounds,
+// because distance(x, y) = length(x - y), and length(0) = kAnyBounds
+{ input: [0, 0], expected: kAnyBounds },
 { input: [1.0, 0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
-{ input: [1.0, 1.0], expected: kAny },
+{ input: [1.0, 1.0], expected: kAnyBounds },
 { input: [-0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
-{ input: [-1.0, -1.0], expected: kAny },
+{ input: [-1.0, -1.0], expected: kAnyBounds },
 { input: [0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 { input: [0, 0.1], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 { input: [-0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
@@ -3146,23 +3138,22 @@ paramsSubcasesOnly(
 { input: [0, -10.0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] }, // ~10
 
 // Subnormal Cases
-{ input: [kValue.f32.subnormal.negative.min, 0], expected: kAny },
-{ input: [kValue.f32.subnormal.negative.max, 0], expected: kAny },
-{ input: [kValue.f32.subnormal.positive.min, 0], expected: kAny },
-{ input: [kValue.f32.subnormal.positive.max, 0], expected: kAny },
+{ input: [kValue.f32.subnormal.negative.min, 0], expected: kAnyBounds },
+{ input: [kValue.f32.subnormal.negative.max, 0], expected: kAnyBounds },
+{ input: [kValue.f32.subnormal.positive.min, 0], expected: kAnyBounds },
+{ input: [kValue.f32.subnormal.positive.max, 0], expected: kAnyBounds },
 
 // Edge cases
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.negative.min, 0], expected: kAny },
-{ input: [kValue.f32.negative.max, 0], expected: kAny },
-{ input: [kValue.f32.positive.min, 0], expected: kAny },
-{ input: [kValue.f32.positive.max, 0], expected: kAny }]).
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.negative.min, 0], expected: kAnyBounds },
+{ input: [kValue.f32.negative.max, 0], expected: kAnyBounds },
+{ input: [kValue.f32.positive.min, 0], expected: kAnyBounds },
+{ input: [kValue.f32.positive.max, 0], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = distanceInterval(...t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -3195,15 +3186,15 @@ paramsSubcasesOnly(
 { input: [-1, -0.1], expected: [minusOneULP(10), plusOneULP(10)] },
 
 // Denominator out of range
-{ input: [1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [1, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny },
-{ input: [1, kValue.f32.positive.max], expected: kAny },
-{ input: [1, kValue.f32.negative.min], expected: kAny },
-{ input: [1, 0], expected: kAny },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: kAny }]).
+{ input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+{ input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [1, 0], expected: kAnyBounds },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: kAnyBounds }]).
 
 
 fn((t) => {
@@ -3252,18 +3243,17 @@ paramsSubcasesOnly(
 { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
 
 // Out of Bounds
-{ input: [1, 128], expected: kAny },
-{ input: [-1, 128], expected: kAny },
-{ input: [100, 126], expected: kAny },
-{ input: [-100, 126], expected: kAny },
-{ input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kAny },
-{ input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kAny }]).
+{ input: [1, 128], expected: kAnyBounds },
+{ input: [-1, 128], expected: kAnyBounds },
+{ input: [100, 126], expected: kAnyBounds },
+{ input: [-100, 126], expected: kAnyBounds },
+{ input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kAnyBounds },
+{ input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = ldexpInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3310,20 +3300,19 @@ paramsSubcasesOnly(
 
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = maxInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3369,20 +3358,19 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = minInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3424,28 +3412,27 @@ paramsSubcasesOnly(
 { input: [-0.1, -0.1], expected: [minusNULP(hexToF32(0x3c23d70a), 2), plusOneULP(hexToF32(0x3c23d70a))] }, // ~0.01
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [-1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [1, kValue.f32.infinity.negative], expected: kAny },
-{ input: [-1, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [-1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [-1, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
 
 // Edge of f32
-{ input: [kValue.f32.positive.max, kValue.f32.positive.max], expected: kAny },
-{ input: [kValue.f32.negative.min, kValue.f32.negative.min], expected: kAny },
-{ input: [kValue.f32.positive.max, kValue.f32.negative.min], expected: kAny },
-{ input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: kAny }]).
+{ input: [kValue.f32.positive.max, kValue.f32.positive.max], expected: kAnyBounds },
+{ input: [kValue.f32.negative.min, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [kValue.f32.positive.max, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = multiplicationInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3482,21 +3469,20 @@ paramsSubcasesOnly(
 { input: [-1, -0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
 
 // Denominator out of range
-{ input: [1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [1, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny },
-{ input: [1, kValue.f32.positive.max], expected: kAny },
-{ input: [1, kValue.f32.negative.min], expected: kAny },
-{ input: [1, 0], expected: kAny },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: kAny }]).
+{ input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+{ input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [1, 0], expected: kAnyBounds },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = remainderInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3511,26 +3497,25 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: [-1, 0], expected: kAny },
-{ input: [0, 0], expected: kAny },
+{ input: [-1, 0], expected: kAnyBounds },
+{ input: [0, 0], expected: kAnyBounds },
 { input: [1, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] }, // ~1
 { input: [2, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] }, // ~1
 { input: [kValue.f32.positive.max, 0], expected: [minusNULP(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] }, // ~1
-{ input: [0, 1], expected: kAny },
+{ input: [0, 1], expected: kAnyBounds },
 { input: [1, 1], expected: [hexToF64(0x3fef_fffe_dfff_fe00n), hexToF64(0x3ff0_0000_c000_0200n)] }, // ~1
 { input: [1, 100], expected: [hexToF64(0x3fef_ffba_3fff_3800n), hexToF64(0x3ff0_0023_2000_c800n)] }, // ~1
-{ input: [1, kValue.f32.positive.max], expected: kAny },
+{ input: [1, kValue.f32.positive.max], expected: kAnyBounds },
 { input: [2, 1], expected: [hexToF64(0x3fff_fffe_a000_0200n), hexToF64(0x4000_0001_0000_0200n)] }, // ~2
 { input: [2, 2], expected: [hexToF64(0x400f_fffd_a000_0400n), hexToF64(0x4010_0001_a000_0400n)] }, // ~4
 { input: [10, 10], expected: [hexToF64(0x4202_a04f_51f7_7000n), hexToF64(0x4202_a070_ee08_e000n)] }, // ~10000000000
 { input: [10, 1], expected: [hexToF64(0x4023_fffe_0b65_8b00n), hexToF64(0x4024_0002_149a_7c00n)] }, // ~10
-{ input: [kValue.f32.positive.max, 1], expected: kAny }]).
+{ input: [kValue.f32.positive.max, 1], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = powInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3594,20 +3579,19 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min], expected: [0, 1] },
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [edge, x] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = stepInterval(edge, x);
   t.expect(
   objectEquals(expected, got),
@@ -3651,20 +3635,19 @@ paramsSubcasesOnly(
 { input: [0, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.max] },
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = subtractionInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -3711,16 +3694,15 @@ paramsSubcasesOnly(
 { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kValue.f32.positive.max },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y, z] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = clampMedianInterval(x, y, z);
   t.expect(
   objectEquals(expected, got),
@@ -3762,16 +3744,15 @@ paramsSubcasesOnly(
 { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [x, y, z] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = clampMinMaxInterval(x, y, z);
   t.expect(
   objectEquals(expected, got),
@@ -3812,16 +3793,15 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [hexToF32(0x80000002), 0] },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kAny },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAny },
-{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kAny }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = fmaInterval(...t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -3883,16 +3863,16 @@ paramsSubcasesOnly(
 { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
-{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAny },
-{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAny },
-{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAnyBounds },
+{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAnyBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAnyBounds },
 
 // Showing how precise and imprecise versions diff
 { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 }]).
@@ -3901,7 +3881,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const [x, y, z] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = mixImpreciseInterval(x, y, z);
   t.expect(
   objectEquals(expected, got),
@@ -3963,16 +3942,16 @@ paramsSubcasesOnly(
 { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
-{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAny },
-{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAny },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAny },
-{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAny },
-{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAny },
-{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAny },
+{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kAnyBounds },
+{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kAnyBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kAnyBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kAnyBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kAnyBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kAnyBounds },
 
 // Showing how precise and imprecise versions diff
 { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10.0 }]).
@@ -3981,7 +3960,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const [x, y, z] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = mixPreciseInterval(x, y, z);
   t.expect(
   objectEquals(expected, got),
@@ -4020,24 +3998,23 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
 { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
 { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] }, // ~0.5
-{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kAny },
-{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kAny },
-{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kAny },
-{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kAny },
+{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kAnyBounds },
+{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kAnyBounds },
+{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kAnyBounds },
+{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
 
 // Infinities
-{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kAny },
-{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kAny },
-{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kAny },
-{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kAny },
-{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kAny },
-{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kAny }]).
+{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kAnyBounds },
+{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kAnyBounds },
+{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kAnyBounds },
+{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kAnyBounds },
+{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
+{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const [low, high, x] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = smoothStepInterval(low, high, x);
   t.expect(
   objectEquals(expected, got),
@@ -4091,9 +4068,7 @@ fn((t) => {
 
   fn((t) => {
     const expected = toF32Vector(t.params.expected);
-
     const got = unpack2x16snormInterval(t.params.input);
-
     t.expect(
     objectEquals(expected, got),
     `unpack2x16snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
@@ -4121,15 +4096,13 @@ fn((t) => {
   { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], 0] },
 
   // f16 out of bounds
-  { input: 0x7c000000, expected: [kAny, kAny] },
-  { input: 0xffff0000, expected: [kAny, kAny] }]).
+  { input: 0x7c000000, expected: [kAnyBounds, kAnyBounds] },
+  { input: 0xffff0000, expected: [kAnyBounds, kAnyBounds] }]).
 
 
   fn((t) => {
     const expected = toF32Vector(t.params.expected);
-
     const got = unpack2x16floatInterval(t.params.input);
-
     t.expect(
     objectEquals(expected, got),
     `unpack2x16floatInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
@@ -4154,9 +4127,7 @@ fn((t) => {
 
   fn((t) => {
     const expected = toF32Vector(t.params.expected);
-
     const got = unpack2x16unormInterval(t.params.input);
-
     t.expect(
     objectEquals(expected, got),
     `unpack2x16unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
@@ -4193,9 +4164,7 @@ fn((t) => {
 
   fn((t) => {
     const expected = toF32Vector(t.params.expected);
-
     const got = unpack4x8snormInterval(t.params.input);
-
     t.expect(
     objectEquals(expected, got),
     `unpack4x8snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
@@ -4226,9 +4195,7 @@ fn((t) => {
 
   fn((t) => {
     const expected = toF32Vector(t.params.expected);
-
     const got = unpack4x8unormInterval(t.params.input);
-
     t.expect(
     objectEquals(expected, got),
     `unpack4x8unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
@@ -4277,14 +4244,13 @@ paramsSubcasesOnly(
 { input: [0.1, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // Test that dot going OOB bounds in the intermediate calculations propagates
-{ input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kAny },
-{ input: [kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], expected: kAny },
-{ input: [kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], expected: kAny }]).
+{ input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], expected: kAnyBounds },
+{ input: [kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], expected: kAnyBounds }]).
 
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = lengthInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -4305,11 +4271,11 @@ paramsSubcasesOnly(
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
 //
-// distance(x, y), where x - y = 0 has an acceptance interval of kAny,
-// because distance(x, y) = length(x - y), and length(0) = kAny
+// distance(x, y), where x - y = 0 has an acceptance interval of kAnyBounds,
+// because distance(x, y) = length(x - y), and length(0) = kAnyBounds
 
 // vec2
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: kAny },
+{ input: [[1.0, 0.0], [1.0, 0.0]], expected: kAnyBounds },
 { input: [[1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -4318,7 +4284,7 @@ paramsSubcasesOnly(
 { input: [[0.1, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // vec3
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kAny },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kAnyBounds },
 { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -4333,7 +4299,7 @@ paramsSubcasesOnly(
 { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // vec4
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kAny },
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kAnyBounds },
 { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -4352,7 +4318,6 @@ paramsSubcasesOnly(
 
 fn((t) => {
   const expected = toF32Interval(t.params.expected);
-
   const got = distanceInterval(...t.params.input);
   t.expect(
   objectEquals(expected, got),
@@ -4392,12 +4357,12 @@ paramsSubcasesOnly(
 { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
 
 // Test that going out of bounds in the intermediate calculations is caught correctly.
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAny },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAny },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAny },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAny },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAny },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAny },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAnyBounds },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
+{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAnyBounds },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
+{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
 
 // https://github.com/gpuweb/cts/issues/2155
 { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] }]).
@@ -4406,7 +4371,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = dotInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -4448,7 +4412,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const x = t.params.input;
   const expected = toF32Vector(t.params.expected);
-
   const got = normalizeInterval(x);
   t.expect(
   objectEquals(expected, got),
@@ -4496,7 +4459,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Vector(t.params.expected);
-
   const got = crossInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -4542,25 +4504,26 @@ paramsSubcasesOnly(
 { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0, ~0.0]
 
 // Test that dot going OOB bounds in the intermediate calculations propagates
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kAny, kAny, kAny] },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
 
 // Test that post-dot going OOB propagates
-{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kAny, kAny, kAny, kAny] }]).
+{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds, kAnyBounds] }]).
 
 
 fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Vector(t.params.expected);
-
   const got = reflectInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `reflectInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
+  `reflectInterval([${x}], [${y}]) returned ${JSON.stringify(got)}. Expected ${JSON.stringify(
+  expected)
+  }`);
 
 });
 
@@ -4629,7 +4592,6 @@ paramsSubcasesOnly(
 fn((t) => {
   const [x, y, z] = t.params.input;
   const expected = t.params.expected.map((e) => e !== undefined ? toF32Vector(e) : undefined);
-
   const got = faceForwardIntervals(x, y, z);
   t.expect(
   objectEquals(expected, got),
@@ -4662,7 +4624,7 @@ fn((t) => {
   { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
 
   // k contains 0
-  { input: [[1, 1], [0.1, 0], 1.005038], expected: [kAny, kAny] },
+  { input: [[1, 1], [0.1, 0], 1.005038], expected: [kAnyBounds, kAnyBounds] },
 
   // k > 0
   // vec2
@@ -4684,18 +4646,17 @@ fn((t) => {
     [hexToF32(0xc20dfa80), hexToF32(0xc20df500)]] }, // ~-35.494...
 
   // Test that dot going OOB bounds in the intermediate calculations propagates
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] },
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] },
-  { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] },
-  { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAny, kAny, kAny] }]).
+  { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+  { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+  { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+  { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+  { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+  { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] }]).
 
 
   fn((t) => {
     const [i, s, r] = t.params.input;
     const expected = toF32Vector(t.params.expected);
-
     const got = refractInterval(i, s, r);
     t.expect(
     objectEquals(expected, got),
@@ -4859,7 +4820,6 @@ paramsSubcasesOnly([
 fn((t) => {
   const input = t.params.input;
   const expected = toF32Interval(t.params.expected);
-
   const got = determinantInterval(input);
   t.expect(
   objectEquals(expected, got),
@@ -5002,7 +4962,6 @@ paramsSubcasesOnly([
 fn((t) => {
   const input = t.params.input;
   const expected = toF32Matrix(t.params.expected);
-
   const got = transposeInterval(input);
   t.expect(
   objectEquals(expected, got),
@@ -5200,7 +5159,6 @@ fn((t) => {
   const x = t.params.input[0];
   const y = t.params.input[1];
   const expected = toF32Matrix(t.params.expected);
-
   const got = additionMatrixInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -5393,7 +5351,6 @@ fn((t) => {
   const x = t.params.input[0];
   const y = t.params.input[1];
   const expected = toF32Matrix(t.params.expected);
-
   const got = subtractionMatrixInterval(x, y);
   t.expect(
   objectEquals(expected, got),
@@ -5892,7 +5849,6 @@ fn((t) => {
   const [x, y] = t.params.input;
   const expected = toF32Matrix(t.params.expected);
   const got = multiplicationMatrixMatrixInterval(x, y);
-
   t.expect(
   objectEquals(expected, got),
   `multiplicationMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
@@ -6036,7 +5992,6 @@ fn((t) => {
   const matrix = t.params.matrix;
   const scalar = t.params.scalar;
   const expected = toF32Matrix(t.params.expected);
-
   const got = multiplicationMatrixScalarInterval(matrix, scalar);
   t.expect(
   objectEquals(expected, got),
@@ -6149,7 +6104,6 @@ fn((t) => {
   const matrix = t.params.matrix;
   const vector = t.params.vector;
   const expected = toF32Vector(t.params.expected);
-
   const got = multiplicationMatrixVectorInterval(matrix, vector);
   t.expect(
   objectEquals(expected, got),
@@ -6258,7 +6212,6 @@ fn((t) => {
   const vector = t.params.vector;
   const matrix = t.params.matrix;
   const expected = toF32Vector(t.params.expected);
-
   const got = multiplicationVectorMatrixInterval(vector, matrix);
   t.expect(
   objectEquals(expected, got),

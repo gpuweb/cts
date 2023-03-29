@@ -16,7 +16,8 @@ import {
   Matrix,
   MatrixType,
 } from '../../../util/conversion.js';
-import { F32Interval } from '../../../util/f32_interval.js';
+
+import { FPInterval } from '../../../util/floating_point.js';
 import {
   cartesianProduct,
   map2DArray,
@@ -28,7 +29,7 @@ import {
 /** Is this expectation actually a Comparator */
 function isComparator(e) {
   return !(
-    e instanceof F32Interval ||
+    e instanceof FPInterval ||
     e instanceof Scalar ||
     e instanceof Vector ||
     e instanceof Matrix ||
@@ -756,7 +757,7 @@ function packScalarsToVector(parameterTypes, resultType, cases, vectorWidth) {
 
 /**
  * @returns a Case for the param and unary interval generator provided
- * The Case will use use an interval comparator for matching results.
+ * The Case will use an interval comparator for matching results.
  * @param param the param to pass in
  * @param filter what interval filtering to apply
  * @param ops callbacks that implement generating an acceptance interval for an

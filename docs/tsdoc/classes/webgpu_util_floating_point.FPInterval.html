@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>F32Interval | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>FPInterval | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -13,18 +13,18 @@
 <div class="tsd-page-title">
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@webgpu/cts</a></li>
-<li><a href="../modules/webgpu_util_f32_interval.html">webgpu/util/f32_interval</a></li>
-<li><a href="webgpu_util_f32_interval.F32Interval.html">F32Interval</a></li></ul>
-<h1>Class F32Interval</h1></div>
+<li><a href="../modules/webgpu_util_floating_point.html">webgpu/util/floating_point</a></li>
+<li><a href="webgpu_util_floating_point.FPInterval.html">FPInterval</a></li></ul>
+<h1>Class FPInterval</h1></div>
 <section class="tsd-panel tsd-comment">
-<div class="tsd-comment tsd-typography"><p>Represents a closed interval in the f32 range</p>
+<div class="tsd-comment tsd-typography"><p>Represents a closed interval of floating point numbers</p>
 </div></section>
 <section class="tsd-panel tsd-hierarchy">
 <h4>Hierarchy</h4>
 <ul class="tsd-hierarchy">
-<li><span class="target">F32Interval</span></li></ul></section><aside class="tsd-sources">
+<li><span class="target">FPInterval</span></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L31">src/webgpu/util/f32_interval.ts:31</a></li></ul></aside>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L37">src/webgpu/util/floating_point.ts:37</a></li></ul></aside>
 <section class="tsd-panel-group tsd-index-group">
 <section class="tsd-panel tsd-index-panel">
 <details class="tsd-index-content tsd-index-accordion" open><summary class="tsd-accordion-summary tsd-index-summary">
@@ -32,75 +32,82 @@
 <div class="tsd-accordion-details">
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Constructors</h3>
-<div class="tsd-index-list"><a href="webgpu_util_f32_interval.F32Interval.html#constructor" class="tsd-index-link tsd-kind-constructor tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#4D7FFF" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-512-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-512-text"></path></svg><span>constructor</span></a>
+<div class="tsd-index-list"><a href="webgpu_util_floating_point.FPInterval.html#constructor" class="tsd-index-link tsd-kind-constructor tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#4D7FFF" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-512-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-512-text"></path></svg><span>constructor</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Properties</h3>
-<div class="tsd-index-list"><a href="webgpu_util_f32_interval.F32Interval.html#begin" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-1024-path"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)" id="icon-1024-text"></path></svg><span>begin</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#end" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>end</span></a>
+<div class="tsd-index-list"><a href="webgpu_util_floating_point.FPInterval.html#begin" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF984D" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-1024-path"></rect><path d="M9.354 16V7.24H12.174C12.99 7.24 13.638 7.476 14.118 7.948C14.606 8.412 14.85 9.036 14.85 9.82C14.85 10.604 14.606 11.232 14.118 11.704C13.638 12.168 12.99 12.4 12.174 12.4H10.434V16H9.354ZM10.434 11.428H12.174C12.646 11.428 13.022 11.284 13.302 10.996C13.59 10.7 13.734 10.308 13.734 9.82C13.734 9.324 13.59 8.932 13.302 8.644C13.022 8.356 12.646 8.212 12.174 8.212H10.434V11.428Z" fill="var(--color-text)" id="icon-1024-text"></path></svg><span>begin</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#end" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>end</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#kind" class="tsd-index-link tsd-kind-property tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg><span>kind</span></a>
 </div></section>
 <section class="tsd-index-section">
 <h3 class="tsd-index-heading">Methods</h3>
-<div class="tsd-index-list"><a href="webgpu_util_f32_interval.F32Interval.html#bounds" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-2048-path"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)" id="icon-2048-text"></path></svg><span>bounds</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#contains" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>contains</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#containsZeroOrSubnormals" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>contains<wbr/>Zero<wbr/>Or<wbr/>Subnormals</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#isFinite" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>is<wbr/>Finite</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#isPoint" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>is<wbr/>Point</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#toString" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>to<wbr/>String</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#any" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>any</span></a>
-<a href="webgpu_util_f32_interval.F32Interval.html#span" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>span</span></a>
+<div class="tsd-index-list"><a href="webgpu_util_floating_point.FPInterval.html#bounds" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="#FF4DB8" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="12" id="icon-2048-path"></rect><path d="M9.162 16V7.24H10.578L11.514 10.072C11.602 10.328 11.674 10.584 11.73 10.84C11.794 11.088 11.842 11.28 11.874 11.416C11.906 11.28 11.954 11.088 12.018 10.84C12.082 10.584 12.154 10.324 12.234 10.06L13.122 7.24H14.538V16H13.482V12.82C13.482 12.468 13.49 12.068 13.506 11.62C13.53 11.172 13.558 10.716 13.59 10.252C13.622 9.78 13.654 9.332 13.686 8.908C13.726 8.476 13.762 8.1 13.794 7.78L12.366 12.16H11.334L9.894 7.78C9.934 8.092 9.97 8.456 10.002 8.872C10.042 9.28 10.078 9.716 10.11 10.18C10.142 10.636 10.166 11.092 10.182 11.548C10.206 12.004 10.218 12.428 10.218 12.82V16H9.162Z" fill="var(--color-text)" id="icon-2048-text"></path></svg><span>bounds</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#contains" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>contains</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#containsZeroOrSubnormals" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>contains<wbr/>Zero<wbr/>Or<wbr/>Subnormals</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#isFinite" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>is<wbr/>Finite</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#isPoint" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>is<wbr/>Point</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#toString" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>to<wbr/>String</span></a>
+<a href="webgpu_util_floating_point.FPInterval.html#traits" class="tsd-index-link tsd-kind-method tsd-parent-kind-class"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg><span>traits</span></a>
 </div></section></div></details></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Constructors</h2>
 <section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class"><a id="constructor" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>constructor</span><a href="#constructor" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="constructor.new_F32Interval">new <wbr/>F32<wbr/>Interval<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>bounds<span class="tsd-signature-symbol">: </span><a href="../types/webgpu_util_f32_interval.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><a href="#constructor.new_F32Interval" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="constructor.new_FPInterval">new FPInterval<span class="tsd-signature-symbol">(</span>kind<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">&quot;f32&quot;</span>, <span class="tsd-signature-symbol">...</span>bounds<span class="tsd-signature-symbol">: </span><a href="../types/webgpu_util_floating_point.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="webgpu_util_floating_point.FPInterval.html" class="tsd-signature-type" data-tsd-kind="Class">FPInterval</a><a href="#constructor.new_FPInterval" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography"><p>Constructor</p>
-<p><code>toF32Interval</code> is the preferred way to create F32Intervals</p>
+<p><code>FPTraits.toInterval</code> is the preferred way to create FPIntervals</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span>bounds: <a href="../types/webgpu_util_f32_interval.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a></h5>
-<div class="tsd-comment tsd-typography"><p>either a pair of numbers indicating the beginning then the
-              end of the interval, or a single element array indicating the
-              interval is a point</p>
+<h5>kind: <span class="tsd-signature-type">&quot;f32&quot;</span></h5>
+<div class="tsd-comment tsd-typography"><p>the floating point number type this is an interval for</p>
+</div></li>
+<li>
+<h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span>bounds: <a href="../types/webgpu_util_floating_point.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a></h5>
+<div class="tsd-comment tsd-typography"><p>beginning and end of the interval</p>
 </div></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <a href="webgpu_util_floating_point.FPInterval.html" class="tsd-signature-type" data-tsd-kind="Class">FPInterval</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L44">src/webgpu/util/f32_interval.ts:44</a></li></ul></aside></li></ul></section></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L50">src/webgpu/util/floating_point.ts:50</a></li></ul></aside></li></ul></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Properties</h2>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="begin" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>begin</span><a href="#begin" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">begin<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L32">src/webgpu/util/f32_interval.ts:32</a></li></ul></aside></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L39">src/webgpu/util/floating_point.ts:39</a></li></ul></aside></section>
 <section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="end" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>end</span><a href="#end" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <div class="tsd-signature">end<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L33">src/webgpu/util/f32_interval.ts:33</a></li></ul></aside></section></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L40">src/webgpu/util/floating_point.ts:40</a></li></ul></aside></section>
+<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class"><a id="kind" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagReadonly">Readonly</code> <span>kind</span><a href="#kind" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<div class="tsd-signature">kind<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">&quot;f32&quot;</span></div><aside class="tsd-sources">
+<ul>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L38">src/webgpu/util/floating_point.ts:38</a></li></ul></aside></section></section>
 <section class="tsd-panel-group tsd-member-group">
 <h2>Methods</h2>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="bounds" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>bounds</span><a href="#bounds" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="bounds.bounds-1">bounds<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/webgpu_util_f32_interval.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a><a href="#bounds.bounds-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="bounds.bounds-1">bounds<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../types/webgpu_util_floating_point.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a><a href="#bounds.bounds-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography">
 <h3>Returns</h3><p>begin and end if non-point interval, otherwise just begin</p>
 </div>
-<h4 class="tsd-returns-title">Returns <a href="../types/webgpu_util_f32_interval.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <a href="../types/webgpu_util_floating_point.IntervalBounds.html" class="tsd-signature-type" data-tsd-kind="Type alias">IntervalBounds</a></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L54">src/webgpu/util/f32_interval.ts:54</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L67">src/webgpu/util/floating_point.ts:67</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="contains" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>contains</span><a href="#contains" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="contains.contains-1">contains<span class="tsd-signature-symbol">(</span>n<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><a href="#contains.contains-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="contains.contains-1">contains<span class="tsd-signature-symbol">(</span>n<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><a href="webgpu_util_floating_point.FPInterval.html" class="tsd-signature-type" data-tsd-kind="Class">FPInterval</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><a href="#contains.contains-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography">
 <h3>Returns</h3><p>if a point or interval is completely contained by this interval</p>
@@ -109,10 +116,10 @@
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>n: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a></h5></li></ul></div>
+<h5>n: <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><a href="webgpu_util_floating_point.FPInterval.html" class="tsd-signature-type" data-tsd-kind="Class">FPInterval</a></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L59">src/webgpu/util/f32_interval.ts:59</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L72">src/webgpu/util/floating_point.ts:72</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="containsZeroOrSubnormals" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>contains<wbr/>Zero<wbr/>Or<wbr/>Subnormals</span><a href="#containsZeroOrSubnormals" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -124,7 +131,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L73">src/webgpu/util/f32_interval.ts:73</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L89">src/webgpu/util/floating_point.ts:89</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="isFinite" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>is<wbr/>Finite</span><a href="#isFinite" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -135,7 +142,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L85">src/webgpu/util/f32_interval.ts:85</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L102">src/webgpu/util/floating_point.ts:102</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="isPoint" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>is<wbr/>Point</span><a href="#isPoint" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -146,7 +153,7 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L80">src/webgpu/util/f32_interval.ts:80</a></li></ul></aside></li></ul></section>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L97">src/webgpu/util/floating_point.ts:97</a></li></ul></aside></li></ul></section>
 <section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="toString" class="tsd-anchor"></a>
 <h3 class="tsd-anchor-link"><span>to<wbr/>String</span><a href="#toString" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -157,36 +164,18 @@
 </div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L102">src/webgpu/util/f32_interval.ts:102</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="any" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>any</span><a href="#any" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L107">src/webgpu/util/floating_point.ts:107</a></li></ul></aside></li></ul></section>
+<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="traits" class="tsd-anchor"></a>
+<h3 class="tsd-anchor-link"><span>traits</span><a href="#traits" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
 <ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="any.any-1">any<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><a href="#any.any-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="traits.traits-1">traits<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">FPTraits</span><a href="#traits.traits-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
 <li class="tsd-description">
 <div class="tsd-comment tsd-typography">
-<h3>Returns</h3><p>a singleton for interval of all possible values
-This interval is used in situations where accuracy is not defined, so any
-result is valid.</p>
+<h3>Returns</h3><p>the floating point traits for this interval</p>
 </div>
-<h4 class="tsd-returns-title">Returns <a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a></h4><aside class="tsd-sources">
+<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">FPTraits</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L110">src/webgpu/util/f32_interval.ts:110</a></li></ul></aside></li></ul></section>
-<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class"><a id="span" class="tsd-anchor"></a>
-<h3 class="tsd-anchor-link"><code class="tsd-tag ts-flagStatic">Static</code> <span>span</span><a href="#span" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></h3>
-<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-<li class="tsd-signature tsd-anchor-link" id="span.span-1">span<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">...</span>intervals<span class="tsd-signature-symbol">: </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><a href="#span.span-1" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><use href="#icon-anchor-a"></use><use href="#icon-anchor-b"></use><use href="#icon-anchor-c"></use></svg></a></li>
-<li class="tsd-description">
-<div class="tsd-comment tsd-typography">
-<h3>Returns</h3><p>an interval with the tightest bounds that includes all provided intervals</p>
-</div>
-<div class="tsd-parameters">
-<h4 class="tsd-parameters-title">Parameters</h4>
-<ul class="tsd-parameter-list">
-<li>
-<h5><code class="tsd-tag ts-flagRest">Rest</code> <span class="tsd-signature-symbol">...</span>intervals: <a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a><span class="tsd-signature-symbol">[]</span></h5></li></ul></div>
-<h4 class="tsd-returns-title">Returns <a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-signature-type" data-tsd-kind="Class">F32Interval</a></h4><aside class="tsd-sources">
-<ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/fd777c3/src/webgpu/util/f32_interval.ts#L90">src/webgpu/util/f32_interval.ts:90</a></li></ul></aside></li></ul></section></section></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/0eacf57/src/webgpu/util/floating_point.ts#L62">src/webgpu/util/floating_point.ts:62</a></li></ul></aside></li></ul></section></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -263,7 +252,8 @@ result is valid.</p>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_conversion.html">webgpu/util/conversion</a></li>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_copy_to_texture.html">webgpu/util/copy_<wbr/>to_<wbr/>texture</a></li>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_create_elements.html">webgpu/util/create_<wbr/>elements</a></li>
-<li class="current tsd-kind-module"><a href="../modules/webgpu_util_f32_interval.html">webgpu/util/f32_<wbr/>interval</a></li>
+<li class="tsd-kind-module"><a href="../modules/webgpu_util_f32_interval.html">webgpu/util/f32_<wbr/>interval</a></li>
+<li class="current tsd-kind-module"><a href="../modules/webgpu_util_floating_point.html">webgpu/util/floating_<wbr/>point</a></li>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_math.html">webgpu/util/math</a></li>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_memory.html">webgpu/util/memory</a></li>
 <li class="tsd-kind-module"><a href="../modules/webgpu_util_pretty_diff_tables.html">webgpu/util/pretty_<wbr/>diff_<wbr/>tables</a></li>
@@ -284,19 +274,19 @@ result is valid.</p>
 <li class="tsd-kind-module"><a href="../modules/webgpu_web_platform_worker_worker_launcher.html">webgpu/web_<wbr/>platform/worker/worker_<wbr/>launcher</a></li></ul></li></ul></div></details></nav>
 <nav class="tsd-navigation secondary menu-sticky">
 <ul>
-<li class="current tsd-kind-class tsd-parent-kind-module"><a href="webgpu_util_f32_interval.F32Interval.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-128-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-128-text"></path></svg><span>F32<wbr/>Interval</span></a>
+<li class="current tsd-kind-class tsd-parent-kind-module"><a href="webgpu_util_floating_point.FPInterval.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><rect fill="var(--color-icon-background)" stroke="var(--color-ts-class)" stroke-width="1.5" x="1" y="1" width="22" height="22" rx="6" id="icon-128-path"></rect><path d="M11.898 16.1201C11.098 16.1201 10.466 15.8961 10.002 15.4481C9.53803 15.0001 9.30603 14.3841 9.30603 13.6001V9.64012C9.30603 8.85612 9.53803 8.24012 10.002 7.79212C10.466 7.34412 11.098 7.12012 11.898 7.12012C12.682 7.12012 13.306 7.34812 13.77 7.80412C14.234 8.25212 14.466 8.86412 14.466 9.64012H13.386C13.386 9.14412 13.254 8.76412 12.99 8.50012C12.734 8.22812 12.37 8.09212 11.898 8.09212C11.426 8.09212 11.054 8.22412 10.782 8.48812C10.518 8.75212 10.386 9.13212 10.386 9.62812V13.6001C10.386 14.0961 10.518 14.4801 10.782 14.7521C11.054 15.0161 11.426 15.1481 11.898 15.1481C12.37 15.1481 12.734 15.0161 12.99 14.7521C13.254 14.4801 13.386 14.0961 13.386 13.6001H14.466C14.466 14.3761 14.234 14.9921 13.77 15.4481C13.306 15.8961 12.682 16.1201 11.898 16.1201Z" fill="var(--color-text)" id="icon-128-text"></path></svg><span>FPInterval</span></a>
 <ul>
-<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-512-path"></use><use href="#icon-512-text"></use></svg>constructor</a></li>
-<li class="tsd-kind-property tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#begin" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>begin</a></li>
-<li class="tsd-kind-property tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#end" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>end</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#bounds" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>bounds</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#contains" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>contains</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#containsZeroOrSubnormals" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>contains<wbr/>Zero<wbr/>Or<wbr/>Subnormals</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#isFinite" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>is<wbr/>Finite</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#isPoint" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>is<wbr/>Point</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#toString" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>to<wbr/>String</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#any" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>any</a></li>
-<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_f32_interval.F32Interval.html#span" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>span</a></li></ul></li></ul></nav></div></div>
+<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#constructor" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-512-path"></use><use href="#icon-512-text"></use></svg>constructor</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#begin" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>begin</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#end" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>end</a></li>
+<li class="tsd-kind-property tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#kind" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-1024-path"></use><use href="#icon-1024-text"></use></svg>kind</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#bounds" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>bounds</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#contains" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>contains</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#containsZeroOrSubnormals" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>contains<wbr/>Zero<wbr/>Or<wbr/>Subnormals</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#isFinite" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>is<wbr/>Finite</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#isPoint" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>is<wbr/>Point</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#toString" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>to<wbr/>String</a></li>
+<li class="tsd-kind-method tsd-parent-kind-class"><a href="webgpu_util_floating_point.FPInterval.html#traits" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-2048-path"></use><use href="#icon-2048-text"></use></svg>traits</a></li></ul></li></ul></nav></div></div>
 <div class="container tsd-generator">
 <p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p></div>
 <div class="overlay"></div><script src="../assets/main.js"></script></body></html>

@@ -9,7 +9,7 @@ serializeExpectation } from
 import { toComparator } from '../shader/execution/expression/expression.js';
 
 import { isFloatValue, Matrix, Scalar, Vector } from './conversion.js';
-import { F32Interval } from './f32_interval.js';
+import { FPInterval } from './floating_point.js';
 
 /** Comparison describes the result of a Comparator function. */
 
@@ -108,7 +108,7 @@ function compareValue(got, expected) {
 /**
  * Tests it a 'got' Value is contained in 'expected' interval, returning the Comparison information.
  * @param got the Value obtained from the test
- * @param expected the expected F32Interval
+ * @param expected the expected FPInterval
  * @returns the comparison results
  */
 function compareInterval(got, expected) {
@@ -141,7 +141,7 @@ function compareInterval(got, expected) {
 /**
  * Tests it a 'got' Value is contained in 'expected' vector, returning the Comparison information.
  * @param got the Value obtained from the test, is expected to be a Vector
- * @param expected the expected array of F32Intervals, one for each element of the vector
+ * @param expected the expected array of FPIntervals, one for each element of the vector
  * @returns the comparison results
  */
 function compareVector(got, expected) {
@@ -206,7 +206,7 @@ function convertArrayToString(m) {
 /**
  * Tests it a 'got' Value is contained in 'expected' matrix, returning the Comparison information.
  * @param got the Value obtained from the test, is expected to be a Matrix
- * @param expected the expected array of array of F32Intervals, representing a column-major matrix
+ * @param expected the expected array of array of FPIntervals, representing a column-major matrix
  * @returns the comparison results
  */
 function compareMatrix(got, expected) {
@@ -293,7 +293,7 @@ expected)
     }
   }
 
-  if (expected instanceof F32Interval) {
+  if (expected instanceof FPInterval) {
     return compareInterval(got, expected);
   }
 

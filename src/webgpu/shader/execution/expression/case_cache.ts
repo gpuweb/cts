@@ -9,11 +9,11 @@ import {
   Matrix,
 } from '../../../util/conversion.js';
 import {
-  deserializeF32Interval,
-  F32Interval,
-  SerializedF32Interval,
-  serializeF32Interval,
-} from '../../../util/f32_interval.js';
+  deserializeFPInterval,
+  FPInterval,
+  SerializedFPInterval,
+  serializeFPInterval,
+} from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
 import { Case, CaseList, Expectation } from './expression.js';
@@ -35,7 +35,7 @@ type SerializedExpectationValue = {
  */
 type SerializedExpectationInterval = {
   kind: 'interval';
-  value: SerializedF32Interval;
+  value: SerializedFPInterval;
 };
 
 /**
@@ -45,7 +45,7 @@ type SerializedExpectationInterval = {
  */
 type SerializedExpectationIntervals = {
   kind: 'intervals';
-  value: SerializedF32Interval[];
+  value: SerializedFPInterval[];
 };
 
 /**
@@ -58,7 +58,7 @@ type SerializedExpectation2DIntervalArray = {
   kind: '2d-interval-array';
   cols: number;
   rows: number;
-  value: SerializedF32Interval[];
+  value: SerializedFPInterval[];
 };
 
 /**
@@ -87,23 +87,23 @@ export function serializeExpectation(e: Expectation): SerializedExpectation {
   if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     return { kind: 'value', value: serializeValue(e) };
   }
-  if (e instanceof F32Interval) {
-    return { kind: 'interval', value: serializeF32Interval(e) };
+  if (e instanceof FPInterval) {
+    return { kind: 'interval', value: serializeFPInterval(e) };
   }
   if (e instanceof Array) {
     if (e[0] instanceof Array) {
-      e = e as F32Interval[][];
+      e = e as FPInterval[][];
       const cols = e.length;
       const rows = e[0].length;
       return {
         kind: '2d-interval-array',
         cols,
         rows,
-        value: flatten2DArray(e).map(serializeF32Interval),
+        value: flatten2DArray(e).map(serializeFPInterval),
       };
     } else {
-      e = e as F32Interval[];
-      return { kind: 'intervals', value: e.map(serializeF32Interval) };
+      e = e as FPInterval[];
+      return { kind: 'intervals', value: e.map(serializeFPInterval) };
     }
   }
   if (e instanceof Function) {
@@ -129,11 +129,11 @@ export function deserializeExpectation(data: SerializedExpectation): Expectation
     case 'value':
       return deserializeValue(data.value);
     case 'interval':
-      return deserializeF32Interval(data.value);
+      return deserializeFPInterval(data.value);
     case 'intervals':
-      return data.value.map(deserializeF32Interval);
+      return data.value.map(deserializeFPInterval);
     case '2d-interval-array':
-      return unflatten2DArray(data.value.map(deserializeF32Interval), data.cols, data.rows);
+      return unflatten2DArray(data.value.map(deserializeFPInterval), data.cols, data.rows);
     case 'comparator':
       return deserializeComparator(data.value);
   }

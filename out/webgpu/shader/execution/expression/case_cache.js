@@ -9,11 +9,11 @@ deserializeValue,
 Matrix } from
 '../../../util/conversion.js';
 import {
-deserializeF32Interval,
-F32Interval,
+deserializeFPInterval,
+FPInterval,
 
-serializeF32Interval } from
-'../../../util/f32_interval.js';
+serializeFPInterval } from
+'../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
 
@@ -87,8 +87,8 @@ export function serializeExpectation(e) {
   if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     return { kind: 'value', value: serializeValue(e) };
   }
-  if (e instanceof F32Interval) {
-    return { kind: 'interval', value: serializeF32Interval(e) };
+  if (e instanceof FPInterval) {
+    return { kind: 'interval', value: serializeFPInterval(e) };
   }
   if (e instanceof Array) {
     if (e[0] instanceof Array) {
@@ -99,11 +99,11 @@ export function serializeExpectation(e) {
         kind: '2d-interval-array',
         cols,
         rows,
-        value: flatten2DArray(e).map(serializeF32Interval)
+        value: flatten2DArray(e).map(serializeFPInterval)
       };
     } else {
       e = e;
-      return { kind: 'intervals', value: e.map(serializeF32Interval) };
+      return { kind: 'intervals', value: e.map(serializeFPInterval) };
     }
   }
   if (e instanceof Function) {
@@ -129,11 +129,11 @@ export function deserializeExpectation(data) {
     case 'value':
       return deserializeValue(data.value);
     case 'interval':
-      return deserializeF32Interval(data.value);
+      return deserializeFPInterval(data.value);
     case 'intervals':
-      return data.value.map(deserializeF32Interval);
+      return data.value.map(deserializeFPInterval);
     case '2d-interval-array':
-      return unflatten2DArray(data.value.map(deserializeF32Interval), data.cols, data.rows);
+      return unflatten2DArray(data.value.map(deserializeFPInterval), data.cols, data.rows);
     case 'comparator':
       return deserializeComparator(data.value);}
 

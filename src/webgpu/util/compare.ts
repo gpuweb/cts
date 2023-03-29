@@ -9,7 +9,7 @@ import {
 import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
 
 import { isFloatValue, Matrix, Scalar, Value, Vector } from './conversion.js';
-import { F32Interval } from './f32_interval.js';
+import { FPInterval } from './floating_point.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -108,10 +108,10 @@ function compareValue(got: Value, expected: Value): Comparison {
 /**
  * Tests it a 'got' Value is contained in 'expected' interval, returning the Comparison information.
  * @param got the Value obtained from the test
- * @param expected the expected F32Interval
+ * @param expected the expected FPInterval
  * @returns the comparison results
  */
-function compareInterval(got: Value, expected: F32Interval): Comparison {
+function compareInterval(got: Value, expected: FPInterval): Comparison {
   {
     // Check type
     const gTy = got.type;
@@ -141,10 +141,10 @@ function compareInterval(got: Value, expected: F32Interval): Comparison {
 /**
  * Tests it a 'got' Value is contained in 'expected' vector, returning the Comparison information.
  * @param got the Value obtained from the test, is expected to be a Vector
- * @param expected the expected array of F32Intervals, one for each element of the vector
+ * @param expected the expected array of FPIntervals, one for each element of the vector
  * @returns the comparison results
  */
-function compareVector(got: Value, expected: F32Interval[]): Comparison {
+function compareVector(got: Value, expected: FPInterval[]): Comparison {
   // Check got type
   if (!(got instanceof Vector)) {
     return {
@@ -206,10 +206,10 @@ function convertArrayToString<T>(m: T[]): string {
 /**
  * Tests it a 'got' Value is contained in 'expected' matrix, returning the Comparison information.
  * @param got the Value obtained from the test, is expected to be a Matrix
- * @param expected the expected array of array of F32Intervals, representing a column-major matrix
+ * @param expected the expected array of array of FPIntervals, representing a column-major matrix
  * @returns the comparison results
  */
-function compareMatrix(got: Value, expected: F32Interval[][]): Comparison {
+function compareMatrix(got: Value, expected: FPInterval[][]): Comparison {
   // Check got type
   if (!(got instanceof Matrix)) {
     return {
@@ -281,19 +281,19 @@ function compareMatrix(got: Value, expected: F32Interval[][]): Comparison {
  */
 export function compare(
   got: Value,
-  expected: Value | F32Interval | F32Interval[] | F32Interval[][]
+  expected: Value | FPInterval | FPInterval[] | FPInterval[][]
 ): Comparison {
   if (expected instanceof Array) {
     if (expected[0] instanceof Array) {
-      expected = expected as F32Interval[][];
+      expected = expected as FPInterval[][];
       return compareMatrix(got, expected);
     } else {
-      expected = expected as F32Interval[];
+      expected = expected as FPInterval[];
       return compareVector(got, expected);
     }
   }
 
-  if (expected instanceof F32Interval) {
+  if (expected instanceof FPInterval) {
     return compareInterval(got, expected);
   }
 

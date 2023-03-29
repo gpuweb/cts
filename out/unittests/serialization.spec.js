@@ -31,11 +31,8 @@ vec2,
 vec3,
 vec4 } from
 '../webgpu/util/conversion.js';
-import {
-deserializeF32Interval,
-serializeF32Interval,
-toF32Interval } from
-'../webgpu/util/f32_interval.js';
+import { toF32Interval } from '../webgpu/util/f32_interval.js';
+import { deserializeFPInterval, serializeFPInterval } from '../webgpu/util/floating_point.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -244,8 +241,8 @@ g.test('f32_interval').fn((t) => {
   toF32Interval([kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max]),
   toF32Interval([kValue.f32.infinity.negative, kValue.f32.infinity.positive])])
   {
-    const serialized = serializeF32Interval(interval);
-    const deserialized = deserializeF32Interval(serialized);
+    const serialized = serializeFPInterval(interval);
+    const deserialized = deserializeFPInterval(serialized);
     t.expect(
     objectEquals(interval, deserialized),
     `interval ${interval} -> serialize -> deserialize -> ${deserialized}`);
