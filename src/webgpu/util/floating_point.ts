@@ -38,15 +38,11 @@ export class FPInterval {
   public readonly kind: FPKind;
   public readonly begin: number;
   public readonly end: number;
-  // context is JS private, so that objectEquals does not see it when comparing
-  // FPIntervals, since it may not have been initialized yet, but that should
-  // impact equality.
-  #context?: FPContext;
 
   /**
    * Constructor
    *
-   * `FPContext.toInterval` is the preferred way to create FPIntervals
+   * `FPTraits.toInterval` is the preferred way to create FPIntervals
    *
    * @param kind the floating point number type this is an interval for
    * @param bounds beginning and end of the interval
@@ -62,16 +58,11 @@ export class FPInterval {
     this.end = end;
   }
 
-  /** @returns the floating point context for this interval */
-  public context(): FPContext {
-    // context is not fetched and stored at creation time, because there is a
-    // potential dependency cycle between kFPContext and interval on startup.
-    if (this.#context === undefined) {
-      assert(this.kind !== undefined);
-      this.#context = kFPContext[this.kind];
-    }
-    return this.#context;
+  /** @returns the floating point traits for this interval */
+  public traits(): FPTraits {
+    return FP[this.kind];
   }
+
   /** @returns begin and end if non-point interval, otherwise just begin */
   public bounds(): IntervalBounds {
     return this.isPoint() ? [this.begin] : [this.begin, this.end];
@@ -97,8 +88,8 @@ export class FPInterval {
    */
   public containsZeroOrSubnormals(): boolean {
     return !(
-      this.end < this.context().constants().negative.subnormal.min ||
-      this.begin > this.context().constants().positive.subnormal.max
+      this.end < this.traits().constants().negative.subnormal.min ||
+      this.begin > this.traits().constants().positive.subnormal.max
     );
   }
 
@@ -109,12 +100,12 @@ export class FPInterval {
 
   /** @returns if this interval only contains f32 finite values */
   public isFinite(): boolean {
-    return this.context().isFinite(this.begin) && this.context().isFinite(this.end);
+    return this.traits().isFinite(this.begin) && this.traits().isFinite(this.end);
   }
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    return `{ '${this.kind}', [${this.bounds().map(this.context().scalarBuilder)}] }`;
+    return `{ '${this.kind}', [${this.bounds().map(this.traits().scalarBuilder)}] }`;
   }
 }
 
@@ -122,28 +113,28 @@ export class FPInterval {
  * SerializedFPInterval holds the serialized form of a FPInterval.
  * This form can be safely encoded to JSON.
  */
-// When non-f32 contexts are defined this will need to be extended to include a
+// When non-f32 traits are defined this will need to be extended to include a
 // kind entry to differentiate.
 export type SerializedFPInterval = { begin: number; end: number } | 'any';
 
 /** serializeFPInterval() converts a FPInterval to a SerializedFPInterval */
 export function serializeFPInterval(i: FPInterval): SerializedFPInterval {
-  // When non-f32 contexts are defined this will need to be re-written to pull
-  // the kind from i to get the context, and embed the kind in the serialized
+  // When non-f32 traits are defined this will need to be re-written to pull
+  // the kind from i to get the traits, and embed the kind in the serialized
   // form
-  return i === kFPContext['f32'].constants().anyInterval
+  return i === FP['f32'].constants().anyInterval
     ? 'any'
     : { begin: reinterpretF32AsU32(i.begin), end: reinterpretF32AsU32(i.end) };
 }
 
 /** serializeFPInterval() converts a SerializedFPInterval to a FPInterval */
 export function deserializeFPInterval(data: SerializedFPInterval): FPInterval {
-  // When non-f32 contexts are defined this will need to be re-written to pull
-  // the kind from serialized data to get the context and perform unpacking
-  const context = kFPContext['f32'];
+  // When non-f32 traits are defined this will need to be re-written to pull
+  // the kind from serialized data to get the traits and perform unpacking
+  const traits = FP['f32'];
   return data === 'any'
-    ? context.constants().anyInterval
-    : context.toInterval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
+    ? traits.constants().anyInterval
+    : traits.toInterval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
 }
 
 /**
@@ -207,8 +198,8 @@ export type FPMatrix =
 // Utilities
 
 /** @returns input with an appended 0, if inputs contains non-zero subnormals */
-// When f16 context is defined, this can be replaced with something like
-// `kFPContext['f16'].addFlushIfNeeded`
+// When f16 traits is defined, this can be replaced with something like
+// `FP.f16..addFlushIfNeeded`
 function addFlushedIfNeededF16(values: number[]): number[] {
   return values.some(v => v !== 0 && isSubnormalNumberF16(v)) ? values.concat(0) : values;
 }
@@ -482,7 +473,7 @@ export interface VectorMatrixToVector {
   (x: number[], y: Matrix<number>): FPVector;
 }
 
-// Context
+// Traits
 
 /**
  * Typed structure containing all the limits/constants defined for each
@@ -561,7 +552,7 @@ interface FPConstants {
   };
 }
 
-abstract class FPContext {
+abstract class FPTraits {
   public readonly kind: FPKind;
   protected constructor(k: FPKind) {
     this.kind = k;
@@ -2943,12 +2934,12 @@ abstract class FPContext {
   }
 }
 
-// Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPContext members, since this
+// Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
 // executes before they are defined.
 const kF32AnyInterval = new FPInterval('f32', Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
 const kF32ZeroInterval = new FPInterval('f32', 0);
 
-class F32Context extends FPContext {
+class F32Traits extends FPTraits {
   private static _constants: FPConstants = {
     positive: {
       min: kValue.f32.positive.min,
@@ -3073,7 +3064,7 @@ class F32Context extends FPContext {
   }
 
   public constants(): FPConstants {
-    return F32Context._constants;
+    return F32Traits._constants;
   }
 
   // Overrides - Utilities
@@ -3085,6 +3076,6 @@ class F32Context extends FPContext {
   public readonly scalarBuilder = f32;
 }
 
-export const kFPContext = {
-  f32: new F32Context(),
+export const FP = {
+  f32: new F32Traits(),
 };
