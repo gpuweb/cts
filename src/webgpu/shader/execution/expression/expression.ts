@@ -19,17 +19,17 @@ import {
   ScalarBuilder,
 } from '../../../util/conversion.js';
 import {
-  BinaryToInterval,
+  ScalarPairToInterval,
   MatrixPairToMatrix,
   MatrixScalarToMatrix,
   MatrixToMatrix,
   MatrixToScalar,
   MatrixVectorToVector,
-  PointToInterval,
-  PointToVector,
+  ScalarToInterval,
+  ScalarToVector,
   ScalarMatrixToMatrix,
   ScalarVectorToVector,
-  TernaryToInterval,
+  ScalarTripleToInterval,
   VectorMatrixToVector,
   VectorPairToInterval,
   VectorPairToVector,
@@ -832,7 +832,7 @@ export type IntervalFilter =
 function makeUnaryToF32IntervalCase(
   param: number,
   filter: IntervalFilter,
-  ...ops: PointToInterval[]
+  ...ops: ScalarToInterval[]
 ): Case | undefined {
   param = quantizeToF32(param);
 
@@ -853,7 +853,7 @@ function makeUnaryToF32IntervalCase(
 export function generateUnaryToF32IntervalCases(
   params: number[],
   filter: IntervalFilter,
-  ...ops: PointToInterval[]
+  ...ops: ScalarToInterval[]
 ): Case[] {
   return params.reduce((cases, e) => {
     const c = makeUnaryToF32IntervalCase(e, filter, ...ops);
@@ -877,7 +877,7 @@ function makeBinaryToF32IntervalCase(
   param0: number,
   param1: number,
   filter: IntervalFilter,
-  ...ops: BinaryToInterval[]
+  ...ops: ScalarPairToInterval[]
 ): Case | undefined {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
@@ -901,7 +901,7 @@ export function generateBinaryToF32IntervalCases(
   param0s: number[],
   param1s: number[],
   filter: IntervalFilter,
-  ...ops: BinaryToInterval[]
+  ...ops: ScalarPairToInterval[]
 ): Case[] {
   return cartesianProduct(param0s, param1s).reduce((cases, e) => {
     const c = makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops);
@@ -927,7 +927,7 @@ function makeTernaryToF32IntervalCase(
   param1: number,
   param2: number,
   filter: IntervalFilter,
-  ...ops: TernaryToInterval[]
+  ...ops: ScalarTripleToInterval[]
 ): Case | undefined {
   param0 = quantizeToF32(param0);
   param1 = quantizeToF32(param1);
@@ -957,7 +957,7 @@ export function generateTernaryToF32IntervalCases(
   param1s: number[],
   param2s: number[],
   filter: IntervalFilter,
-  ...ops: TernaryToInterval[]
+  ...ops: ScalarTripleToInterval[]
 ): Case[] {
   return cartesianProduct(param0s, param1s, param2s).reduce((cases, e) => {
     const c = makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops);
@@ -1657,7 +1657,7 @@ export function generateVectorMatrixToVectorCases(
 function makeU32ToVectorCase(
   param: number,
   filter: IntervalFilter,
-  ...ops: PointToVector[]
+  ...ops: ScalarToVector[]
 ): Case | undefined {
   param = Math.trunc(param);
   const param_u32 = u32(param);
@@ -1683,7 +1683,7 @@ function makeU32ToVectorCase(
 export function generateU32ToVectorCases(
   params: number[],
   filter: IntervalFilter,
-  ...ops: PointToVector[]
+  ...ops: ScalarToVector[]
 ): Case[] {
   return params.reduce((cases, e) => {
     const c = makeU32ToVectorCase(e, filter, ...ops);

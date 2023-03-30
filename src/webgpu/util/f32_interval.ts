@@ -6,19 +6,19 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface PointToInterval {
+export interface ScalarToInterval {
   (x: number): FPInterval;
 }
 
-export interface BinaryToInterval {
+export interface ScalarPairToInterval {
   (x: number, y: number): FPInterval;
 }
 
-export interface TernaryToInterval {
+export interface ScalarTripleToInterval {
   (x: number, y: number, z: number): FPInterval;
 }
 
-export interface PointToVector {
+export interface ScalarToVector {
   (n: number): FPVector;
 }
 
