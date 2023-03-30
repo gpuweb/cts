@@ -54,7 +54,7 @@ function getPipelineDescriptor(
       ${varyings}
     }
     struct FSIn {
-      ${pointList ? '@builtin(front_facing) frontFacing: bool,' : ''}
+      ${frontFacing ? '@builtin(front_facing) frontFacing: bool,' : ''}
       ${sampleIndex ? '@builtin(sample_index) sampleIndex: u32,' : ''}
       ${sampleMaskIn ? '@builtin(sample_mask) sampleMask: u32,' : ''}
       ${varyings}
@@ -83,6 +83,15 @@ function getPipelineDescriptor(
     vertex: {
       module,
       entryPoint: 'vs',
+    },
+    fragment: {
+      module,
+      entryPoint: 'fs',
+      targets: [
+        {
+          format: 'rgba8unorm',
+        },
+      ],
     },
   };
   return { pipelineDescriptor, code };
