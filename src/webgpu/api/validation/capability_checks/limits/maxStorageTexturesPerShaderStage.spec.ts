@@ -12,7 +12,6 @@ import {
   kBindGroupTests,
   LimitsRequest,
   getPerStageWGSLForBindingCombinationStorageTextures,
-  getPipelineTypeForBindingCombination,
   BindingCombination,
 } from './limit_utils.js';
 
@@ -118,6 +117,10 @@ g.test('createPipeline,at_over')
   
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
+  And the combination of storage buffers, storage textures and color attachments in
+  GPURenderPipelineDescriptor has been tested in maxFragmentCombinedOutputResources.spec.ts,
+  we just test single resource for ${limit} limit, so we need to trun on depth stencil
+  because empty attachments are not allowed.
   `
   )
   .params(
@@ -129,7 +132,6 @@ g.test('createPipeline,at_over')
   )
   .fn(async t => {
     const { limitTest, testValueName, async, bindingCombination, order, bindGroupTest } = t.params;
-    const pipelineType = getPipelineTypeForBindingCombination(bindingCombination);
 
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
@@ -151,14 +153,37 @@ g.test('createPipeline,at_over')
           testValue
         );
         const module = device.createShaderModule({ code });
+        const msg = `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`;
 
-        await t.testCreatePipeline(
-          pipelineType,
-          async,
-          module,
-          shouldError,
-          `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
-        );
+        if (bindingCombination === 'compute') {
+          const pipelineDescriptor: GPUComputePipelineDescriptor = {
+            layout: 'auto',
+            compute: {
+              module,
+              entryPoint: 'main',
+            },
+          };
+          await t.testCreateComputePipeline(pipelineDescriptor, async, shouldError, msg);
+        } else {
+          const pipelineDescriptor: GPURenderPipelineDescriptor = {
+            layout: 'auto',
+            vertex: {
+              module,
+              entryPoint: 'mainVS',
+            },
+            fragment: {
+              module,
+              entryPoint: 'mainFS',
+              targets: [],
+            },
+            depthStencil: {
+              format: 'depth24plus-stencil8',
+              depthWriteEnabled: true,
+              depthCompare: 'always',
+            },
+          };
+          await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, msg);
+        }
       },
       kExtraLimits
     );

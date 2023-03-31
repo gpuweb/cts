@@ -210,7 +210,7 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
     bindGroupTest,
     storageDefinitionWGSLSnippetFn,
     (numBindings: number, set: number) =>
-      `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')};`,
+      `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
     numBindings,
     extraWGSL
   );
@@ -783,6 +783,13 @@ export class LimitTestsImpl extends GPUTestBase {
     msg = ''
   ) {
     if (async) {
+      await this.shouldRejectConditionally(
+        'GPUPipelineError',
+        this.createPipelineAsync(createPipelineType, module),
+        shouldError,
+        msg
+      );
+    } else {
       await this.expectValidationError(
         () => {
           this.createPipeline(createPipelineType, module);
@@ -790,10 +797,28 @@ export class LimitTestsImpl extends GPUTestBase {
         shouldError,
         msg
       );
-    } else {
+    }
+  }
+
+  async testCreateComputePipeline(
+    pipelineDescriptor: GPUComputePipelineDescriptor,
+    async: boolean,
+    shouldError: boolean,
+    msg = ''
+  ) {
+    const { device } = this;
+    if (async) {
       await this.shouldRejectConditionally(
         'GPUPipelineError',
-        this.createPipelineAsync(createPipelineType, module),
+        device.createComputePipelineAsync(pipelineDescriptor),
+        shouldError,
+        msg
+      );
+    } else {
+      await this.expectValidationError(
+        () => {
+          device.createComputePipeline(pipelineDescriptor);
+        },
         shouldError,
         msg
       );
