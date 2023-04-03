@@ -1,6 +1,8 @@
 import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { Case, IntervalFilter } from '../shader/execution/expression/expression.js';
 
+import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import { f32, reinterpretF32AsU32, reinterpretU32AsF32, Scalar } from './conversion.js';
 import {
@@ -17,6 +19,7 @@ import {
   isSubnormalNumberF32,
   map2DArray,
   oneULPF32,
+  quantizeToF32,
   unflatten2DArray,
 } from './math.js';
 
@@ -760,6 +763,11 @@ abstract class FPTraits {
   }
 
   // Utilities - Defined by subclass
+  /**
+   * @returns the nearest precise value to the input. Rounding should be IEEE
+   *          'roundTiesToEven'.
+   */
+  public abstract readonly quantize: (n: number) => number;
   /** @returns all valid roundings of input */
   public abstract readonly correctlyRounded: (n: number) => number[];
   /** @returns true if input is considered finite, otherwise false */
@@ -773,7 +781,52 @@ abstract class FPTraits {
   /** @returns a builder for converting numbers to Scalars */
   public abstract readonly scalarBuilder: (n: number) => Scalar;
 
-  // Framework
+  // Framework - Cases
+
+  /**
+   * @returns a Case for the param and theinterval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  private makeScalarToIntervalCase(
+    param: number,
+    filter: IntervalFilter,
+    ...ops: ScalarToInterval[]
+  ): Case | undefined {
+    param = this.quantize(param);
+
+    const intervals = ops.map(o => o(param));
+    if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
+      return undefined;
+    }
+    return { input: [this.scalarBuilder(param)], expected: anyOf(...intervals) };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating acceptance intervals for the
+   * operations
+   */
+  public generateScalarToIntervalCases(
+    params: number[],
+    filter: IntervalFilter,
+    ...ops: ScalarToInterval[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeScalarToIntervalCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  // Framework - Intervals
+
   /**
    * Converts a point to an acceptance interval, using a specific function
    *
@@ -3098,6 +3151,7 @@ class F32Traits extends FPTraits {
   }
 
   // Overrides - Utilities
+  public readonly quantize = quantizeToF32;
   public readonly correctlyRounded = correctlyRoundedF32;
   public readonly isFinite = isFiniteF32;
   public readonly isSubnormal = isSubnormalNumberF32;

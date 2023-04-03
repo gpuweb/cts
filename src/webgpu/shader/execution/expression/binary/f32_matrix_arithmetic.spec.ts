@@ -39,7 +39,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -55,7 +55,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -71,7 +71,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -87,7 +87,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -103,7 +103,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -119,7 +119,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -135,7 +135,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -151,7 +151,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -167,7 +167,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       additionMatrixInterval
     );
   },
@@ -183,7 +183,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -199,7 +199,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -215,7 +215,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -231,7 +231,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -247,7 +247,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -263,7 +263,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -279,7 +279,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -295,7 +295,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -311,7 +311,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -327,7 +327,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -343,7 +343,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -359,7 +359,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -375,7 +375,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -391,7 +391,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -407,7 +407,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -423,7 +423,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -439,7 +439,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -455,7 +455,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -471,7 +471,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -487,7 +487,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -503,7 +503,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -519,7 +519,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -535,7 +535,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -551,7 +551,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -567,7 +567,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -583,7 +583,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -599,7 +599,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       multiplicationMatrixMatrixInterval
     );
   },
@@ -615,7 +615,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -631,7 +631,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -647,7 +647,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -663,7 +663,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -679,7 +679,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -695,7 +695,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -711,7 +711,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -727,7 +727,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -743,7 +743,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixScalarToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseF32Range(),
-      'f32-only',
+      'finite',
       multiplicationMatrixScalarInterval
     );
   },
@@ -759,7 +759,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -775,7 +775,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -791,7 +791,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -807,7 +807,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -823,7 +823,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -839,7 +839,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -855,7 +855,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -871,7 +871,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -887,7 +887,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateScalarMatrixToMatrixCases(
       sparseF32Range(),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       multiplicationScalarMatrixInterval
     );
   },
@@ -903,7 +903,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(2, 2),
       sparseVectorF32Range(2),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -919,7 +919,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(2, 3),
       sparseVectorF32Range(2),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -935,7 +935,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(2, 4),
       sparseVectorF32Range(2),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -951,7 +951,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(3, 2),
       sparseVectorF32Range(3),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -967,7 +967,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(3, 3),
       sparseVectorF32Range(3),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -983,7 +983,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(3, 4),
       sparseVectorF32Range(3),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -999,7 +999,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(4, 2),
       sparseVectorF32Range(4),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -1015,7 +1015,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(4, 3),
       sparseVectorF32Range(4),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -1031,7 +1031,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixVectorToVectorCases(
       sparseMatrixF32Range(4, 4),
       sparseVectorF32Range(4),
-      'f32-only',
+      'finite',
       multiplicationMatrixVectorInterval
     );
   },
@@ -1047,7 +1047,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(2),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1063,7 +1063,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(2),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1079,7 +1079,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(2),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1095,7 +1095,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(3),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1111,7 +1111,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(3),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1127,7 +1127,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(3),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1143,7 +1143,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(4),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1159,7 +1159,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(4),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1175,7 +1175,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateVectorMatrixToVectorCases(
       sparseVectorF32Range(4),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       multiplicationVectorMatrixInterval
     );
   },
@@ -1191,7 +1191,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1207,7 +1207,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1223,7 +1223,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1239,7 +1239,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1255,7 +1255,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1271,7 +1271,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1287,7 +1287,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1303,7 +1303,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },
@@ -1319,7 +1319,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     return generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       subtractionMatrixInterval
     );
   },

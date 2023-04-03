@@ -24,7 +24,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      'f32-only',
+      'finite',
       reflectInterval
     );
   },
@@ -40,7 +40,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      'f32-only',
+      'finite',
       reflectInterval
     );
   },
@@ -56,7 +56,7 @@ export const d = makeCaseCache('reflect', {
     return generateVectorPairToVectorCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      'f32-only',
+      'finite',
       reflectInterval
     );
   },

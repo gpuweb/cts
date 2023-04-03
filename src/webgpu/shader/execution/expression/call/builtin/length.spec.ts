@@ -29,19 +29,19 @@ export const d = makeCaseCache('length', {
     return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', lengthInterval);
   },
   f32_vec2_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(2), 'f32-only', lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(2), 'finite', lengthInterval);
   },
   f32_vec2_non_const: () => {
     return generateVectorToF32IntervalCases(vectorF32Range(2), 'unfiltered', lengthInterval);
   },
   f32_vec3_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(3), 'f32-only', lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(3), 'finite', lengthInterval);
   },
   f32_vec3_non_const: () => {
     return generateVectorToF32IntervalCases(vectorF32Range(3), 'unfiltered', lengthInterval);
   },
   f32_vec4_const: () => {
-    return generateVectorToF32IntervalCases(vectorF32Range(4), 'f32-only', lengthInterval);
+    return generateVectorToF32IntervalCases(vectorF32Range(4), 'finite', lengthInterval);
   },
   f32_vec4_non_const: () => {
     return generateVectorToF32IntervalCases(vectorF32Range(4), 'unfiltered', lengthInterval);

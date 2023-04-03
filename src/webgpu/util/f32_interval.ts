@@ -124,10 +124,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function absInterval(n: number): FPInterval {
-  return FP.f32.absInterval(n);
-}
-
 export function acosInterval(n: number): FPInterval {
   return FP.f32.acosInterval(n);
 }
