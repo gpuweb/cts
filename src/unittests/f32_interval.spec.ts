@@ -16,7 +16,6 @@ import {
   absoluteErrorInterval,
   additionInterval,
   additionMatrixInterval,
-  asinInterval,
   asinhInterval,
   atanInterval,
   atan2Interval,
@@ -1928,41 +1927,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('asinInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a simple human-readable form due to the complexity of their derivation.
-      //
-      // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-      // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
-      // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-      // well-defined/implemented at 0.
-      // Near 0, but not subnormal the absolute error should be larger, so will
-      // be +/- 6.77e-5, away from 0 the atan2 inherited error should be larger.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: kAnyBounds },
-      { input: -1/2, expected: [hexToF64(0xbfe0_c352_c000_0000n), hexToF64(0xbfe0_bf51_c000_0000n)] },  // ~-π/6
-      { input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] },  // ~0
-      { input: 0, expected: kAnyBounds },
-      { input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] },  // ~0
-      { input: 1/2, expected: [hexToF64(0x3fe0_bf51_c000_0000n), hexToF64(0x3fe0_c352_c000_0000n)] },  // ~π/6
-      { input: 1, expected: kAnyBounds },  // ~π/2
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = asinInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('asinhInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
