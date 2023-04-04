@@ -174,10 +174,6 @@ export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval
   return FP.f32.dotInterval(x, y);
 }
 
-export function expInterval(x: number | FPInterval): FPInterval {
-  return FP.f32.expInterval(x);
-}
-
 export function exp2Interval(x: number | FPInterval): FPInterval {
   return FP.f32.exp2Interval(x);
 }
