@@ -132,10 +132,6 @@ export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export function asinhInterval(n: number): FPInterval {
-  return FP.f32.asinhInterval(n);
-}
-
 export function atanInterval(n: number | FPInterval): FPInterval {
   return FP.f32.atanInterval(n);
 }

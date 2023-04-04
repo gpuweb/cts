@@ -16,7 +16,6 @@ import {
   absoluteErrorInterval,
   additionInterval,
   additionMatrixInterval,
-  asinhInterval,
   atanInterval,
   atan2Interval,
   atanhInterval,
@@ -1927,31 +1926,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('asinhInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
-      { input: 0, expected: [hexToF64(0xbeaa_0000_2000_0000n), hexToF64(0x3eb1_ffff_d000_0000n)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fec_3435_4000_0000n), hexToF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = asinhInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('atanInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

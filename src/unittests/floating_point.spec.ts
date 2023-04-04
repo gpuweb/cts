@@ -194,3 +194,28 @@ g.test('asinInterval_f32')
       `f32.asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
+
+g.test('asinhInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
+      { input: 0, expected: [hexToF64(0xbeaa_0000_2000_0000n), hexToF64(0x3eb1_ffff_d000_0000n)] },  // ~0
+      { input: 1, expected: [hexToF64(0x3fec_3435_4000_0000n), hexToF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.asinhInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });

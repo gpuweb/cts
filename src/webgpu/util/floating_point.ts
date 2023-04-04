@@ -1627,10 +1627,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of asinh(x) */
-  public asinhInterval(n: number): FPInterval {
+  protected asinhIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.AsinhIntervalOp);
   }
+
+  /** Calculate an acceptance interval of asinh(x) */
+  public abstract readonly asinhInterval: (n: number) => FPInterval;
 
   private readonly AtanIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3177,6 +3179,7 @@ class F32Traits extends FPTraits {
     this.acoshPrimaryInterval.bind(this),
   ];
   public asinInterval = this.asinIntervalImpl.bind(this);
+  public asinhInterval = this.asinhIntervalImpl.bind(this);
 }
 
 export const FP = {
