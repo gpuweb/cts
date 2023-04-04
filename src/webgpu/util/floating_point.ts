@@ -4,7 +4,7 @@ import { Case, IntervalFilter } from '../shader/execution/expression/expression.
 
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
-import { f32, reinterpretF32AsU32, reinterpretU32AsF32, Scalar } from './conversion.js';
+import { f32, reinterpretF32AsU32, reinterpretU32AsF32, Scalar, Vector } from './conversion.js';
 import {
   calculatePermutations,
   cartesianProduct,
@@ -784,7 +784,7 @@ abstract class FPTraits {
   // Framework - Cases
 
   /**
-   * @returns a Case for the param and theinterval generator provided.
+   * @returns a Case for the param and the interval generator provided.
    * The Case will use an interval comparator for matching results.
    * @param param the param to pass in
    * @param filter what interval filtering to apply
@@ -818,6 +818,50 @@ abstract class FPTraits {
   ): Case[] {
     return params.reduce((cases, e) => {
       const c = this.makeScalarToIntervalCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  /**
+   * @returns a Case for the params and the interval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  private makeVectorToIntervalCase(
+    param: number[],
+    filter: IntervalFilter,
+    ...ops: VectorToInterval[]
+  ): Case | undefined {
+    param = param.map(this.quantize);
+
+    const intervals = ops.map(o => o(param));
+    if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
+      return undefined;
+    }
+    return {
+      input: [new Vector(param.map(this.scalarBuilder))],
+      expected: anyOf(...intervals),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  public generateVectorToIntervalCases(
+    params: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorToInterval[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeVectorToIntervalCase(e, filter, ...ops);
       if (c !== undefined) {
         cases.push(c);
       }
@@ -2317,14 +2361,18 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of length(x) */
-  public lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
+  protected lengthIntervalImpl(n: number | FPInterval | number[] | FPVector): FPInterval {
     if (n instanceof Array) {
       return this.runVectorToIntervalOp(this.toVector(n), this.LengthIntervalVectorOp);
     } else {
       return this.runScalarToIntervalOp(this.toInterval(n), this.LengthIntervalScalarOp);
     }
   }
+
+  /** Calculate an acceptance interval of length(x) */
+  public abstract readonly lengthInterval: (
+    n: number | FPInterval | number[] | FPVector
+  ) => FPInterval;
 
   private readonly LogIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(
@@ -3214,6 +3262,7 @@ class F32Traits extends FPTraits {
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
+  public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
 }
 
 export const FP = {
