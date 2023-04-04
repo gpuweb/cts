@@ -24,7 +24,6 @@ import {
   distanceInterval,
   divisionInterval,
   dotInterval,
-  exp2Interval,
   faceForwardIntervals,
   floorInterval,
   fmaInterval,
@@ -1919,32 +1918,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('exp2Interval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: 0, expected: 1 },
-      { input: 1, expected: 2 },
-      { input: 128, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const error = (x: number): number => {
-      const n = 3 + 2 * Math.abs(t.params.input);
-      return n * oneULPF32(x);
-    };
-
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = exp2Interval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('floorInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

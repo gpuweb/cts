@@ -2139,10 +2139,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval for exp2(x) */
-  public exp2Interval(x: number | FPInterval): FPInterval {
+  protected exp2IntervalImpl(x: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(x), this.Exp2IntervalOp);
   }
+
+  /** Calculate an acceptance interval for exp2(x) */
+  public abstract readonly exp2Interval: (x: number | FPInterval) => FPInterval;
 
   /**
    * Calculate the acceptance intervals for faceForward(x, y, z)
@@ -3202,6 +3204,7 @@ class F32Traits extends FPTraits {
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
+  public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
 }
 
 export const FP = {
