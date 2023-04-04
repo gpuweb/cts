@@ -21,7 +21,6 @@ import {
   clampMinMaxInterval,
   correctlyRoundedInterval,
   crossInterval,
-  degreesInterval,
   distanceInterval,
   divisionInterval,
   dotInterval,
@@ -1921,38 +1920,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('degreesInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: kValue.f32.negative.pi.whole, expected: [minusOneULP(-180), plusOneULP(-180)] },
-      { input: kValue.f32.negative.pi.three_quarters, expected: [minusOneULP(-135), plusOneULP(-135)] },
-      { input: kValue.f32.negative.pi.half, expected: [minusOneULP(-90), plusOneULP(-90)] },
-      { input: kValue.f32.negative.pi.third, expected: [minusOneULP(-60), plusOneULP(-60)] },
-      { input: kValue.f32.negative.pi.quarter, expected: [minusOneULP(-45), plusOneULP(-45)] },
-      { input: kValue.f32.negative.pi.sixth, expected: [minusOneULP(-30), plusOneULP(-30)] },
-      { input: 0, expected: 0 },
-      { input: kValue.f32.positive.pi.sixth, expected: [minusOneULP(30), plusOneULP(30)] },
-      { input: kValue.f32.positive.pi.quarter, expected: [minusOneULP(45), plusOneULP(45)] },
-      { input: kValue.f32.positive.pi.third, expected: [minusOneULP(60), plusOneULP(60)] },
-      { input: kValue.f32.positive.pi.half, expected: [minusOneULP(90), plusOneULP(90)] },
-      { input: kValue.f32.positive.pi.three_quarters, expected: [minusOneULP(135), plusOneULP(135)] },
-      { input: kValue.f32.positive.pi.whole, expected: [minusOneULP(180), plusOneULP(180)] },
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = degreesInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `degreesInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('expInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

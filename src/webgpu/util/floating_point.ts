@@ -1856,10 +1856,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of degrees(x) */
-  public degreesInterval(n: number): FPInterval {
+  protected degreesIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.DegreesIntervalOp);
   }
+
+  /** Calculate an acceptance interval of degrees(x) */
+  public abstract readonly degreesInterval: (n: number) => FPInterval;
 
   /**
    * Calculate the minor of a NxN matrix.
@@ -3196,6 +3198,7 @@ class F32Traits extends FPTraits {
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
+  public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
 }
 
 export const FP = {

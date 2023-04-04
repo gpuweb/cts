@@ -158,10 +158,6 @@ export function crossInterval(x: number[], y: number[]): FPVector {
   return FP.f32.crossInterval(x, y);
 }
 
-export function degreesInterval(n: number): FPInterval {
-  return FP.f32.degreesInterval(n);
-}
-
 export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
 }
