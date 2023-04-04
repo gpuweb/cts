@@ -14,7 +14,6 @@ import { objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
   absoluteErrorInterval,
-  acosInterval,
   acoshAlternativeInterval,
   acoshPrimaryInterval,
   additionInterval,
@@ -1931,41 +1930,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('acosInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the complexity of
-      // their derivation.
-      //
-      // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-      // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-      // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-      // well-defined/implemented at 0.
-      // Near 1, the absolute error should be larger and, away from 1 the atan2
-      // inherited error should be larger.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: kAnyBounds },
-      { input: -1/2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] },  // ~2π/3
-      { input: 0, expected: kAnyBounds },
-      { input: 1/2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] },  // ~π/3
-      { input: minusOneULP(1), expected: [hexToF64(0x3f2f_fdff_6000_0000n), hexToF64(0x3f3b_106f_c933_4fb9n)] },  // ~0.0003
-      { input: 1, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = acosInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('acoshAlternativeInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

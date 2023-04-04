@@ -6,7 +6,7 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, IntervalBounds } from '../webgpu/util/floating_point.js';
-import { hexToF32, hexToF64 } from '../webgpu/util/math.js';
+import { hexToF32, hexToF64, oneULPF32 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -15,12 +15,22 @@ export const g = makeTestGroup(UnitTest);
 /** Bounds indicating an expectation of an interval of all possible values */
 const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
+/** @returns a number N * ULP less than the provided number */
+function minusNULPF32(x: number, n: number): number {
+  return x - n * oneULPF32(x);
+}
+
+/** @returns a number one ULP less than the provided number */
+function minusOneULPF32(x: number): number {
+  return minusNULPF32(x, 1);
+}
+
 interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
 
-g.test('absInterval')
+g.test('absInterval_f32')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
@@ -58,5 +68,40 @@ g.test('absInterval')
     t.expect(
       objectEquals(expected, got),
       `f32.absInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('acosInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the complexity of
+      // their derivation.
+      //
+      // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
+      // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
+      // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
+      // well-defined/implemented at 0.
+      // Near 1, the absolute error should be larger and, away from 1 the atan2
+      // inherited error should be larger.
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: -1, expected: kAnyBounds },
+      { input: -1/2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] },  // ~2π/3
+      { input: 0, expected: kAnyBounds },
+      { input: 1/2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] },  // ~π/3
+      { input: minusOneULPF32(1), expected: [hexToF64(0x3f2f_fdff_6000_0000n), hexToF64(0x3f3b_106f_c933_4fb9n)] },  // ~0.0003
+      { input: 1, expected: kAnyBounds },
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.acosInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });

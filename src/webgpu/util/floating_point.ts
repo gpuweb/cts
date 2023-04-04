@@ -776,7 +776,7 @@ abstract class FPTraits {
   public abstract readonly isSubnormal: (n: number) => boolean;
   /** @returns 0 if the provided number is subnormal, otherwise returns the proved number */
   public abstract readonly flushSubnormal: (n: number) => number;
-  /** @returns 1 * ULP(number) */
+  /** @returns 1 * ULP: (number) */
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
   /** @returns a builder for converting numbers to Scalars */
   public abstract readonly scalarBuilder: (n: number) => Scalar;
@@ -1512,10 +1512,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval for abs(n) */
-  public absInterval(n: number): FPInterval {
+  protected absIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.AbsIntervalOp);
   }
+
+  /** Calculate an acceptance interval for abs(n) */
+  public abstract readonly absInterval: (n: number) => FPInterval;
 
   private readonly AcosIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
@@ -1528,10 +1530,12 @@ abstract class FPTraits {
     }),
   };
 
-  /** Calculate an acceptance interval for acos(n) */
-  public acosInterval(n: number): FPInterval {
+  protected acosIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.AcosIntervalOp);
   }
+
+  /** Calculate an acceptance interval for acos(n) */
+  public abstract readonly acosInterval: (n: number) => FPInterval;
 
   /** All acceptance interval functions for acosh(x) */
   public readonly acoshIntervals: ScalarToInterval[] = [
@@ -3158,6 +3162,10 @@ class F32Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF32;
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
+
+  // Overrides - API
+  public absInterval = this.absIntervalImpl.bind(this);
+  public acosInterval = this.acosIntervalImpl.bind(this);
 }
 
 export const FP = {
