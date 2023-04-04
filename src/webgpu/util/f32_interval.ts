@@ -154,14 +154,6 @@ export function clampMinMaxInterval(
   return FP.f32.clampMinMaxInterval(x, y, z);
 }
 
-export function cosInterval(n: number): FPInterval {
-  return FP.f32.cosInterval(n);
-}
-
-export function coshInterval(n: number): FPInterval {
-  return FP.f32.coshInterval(n);
-}
-
 export function crossInterval(x: number[], y: number[]): FPVector {
   return FP.f32.crossInterval(x, y);
 }

@@ -1811,10 +1811,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of cosh(x) */
-  public coshInterval(n: number): FPInterval {
+  protected coshIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.CoshIntervalOp);
   }
+
+  /** Calculate an acceptance interval of cosh(x) */
+  public abstract readonly coshInterval: (n: number) => FPInterval;
 
   private readonly CrossIntervalOp: VectorPairToVectorOp = {
     impl: (x: number[], y: number[]): FPVector => {
@@ -3193,6 +3195,7 @@ class F32Traits extends FPTraits {
   public readonly atanhInterval = this.atanhIntervalImpl.bind(this);
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
+  public readonly coshInterval = this.coshIntervalImpl.bind(this);
 }
 
 export const FP = {
