@@ -44,7 +44,7 @@ function makeCaseF32(i, s, r, check) {
   const r_f32 = f32(r);
 
   const vectors = refractInterval(i, s, r);
-  if (check === 'f32-only' && vectors.some(e => !e.isFinite())) {
+  if (check === 'finite' && vectors.some(e => !e.isFinite())) {
     return undefined;
   }
 
@@ -80,7 +80,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec2_non_const: () => {
@@ -96,7 +96,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec3_non_const: () => {
@@ -112,7 +112,7 @@ export const d = makeCaseCache('refract', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseF32Range(),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec4_non_const: () => {

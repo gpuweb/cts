@@ -22,7 +22,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('cosh', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'f32-only', coshInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'finite', coshInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', coshInterval);

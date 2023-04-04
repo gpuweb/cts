@@ -25,7 +25,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
     vectorF32Range(2),
     vectorF32Range(2),
-    'f32-only',
+    'finite',
     dotInterval);
 
   },
@@ -41,7 +41,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
     sparseVectorF32Range(3),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     dotInterval);
 
   },
@@ -57,7 +57,7 @@ export const d = makeCaseCache('dot', {
     return generateVectorPairToF32IntervalCases(
     sparseVectorF32Range(4),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     dotInterval);
 
   },

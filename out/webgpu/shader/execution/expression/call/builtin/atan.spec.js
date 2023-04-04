@@ -35,7 +35,7 @@ Math.sqrt(3),
 
 export const d = makeCaseCache('atan', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'f32-only', atanInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'finite', atanInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(inputs, 'unfiltered', atanInterval);

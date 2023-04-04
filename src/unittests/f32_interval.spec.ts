@@ -13,7 +13,6 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
-  absInterval,
   absoluteErrorInterval,
   acosInterval,
   acoshAlternativeInterval,
@@ -1928,54 +1927,13 @@ g.test('ulpInterval')
     );
   });
 
-interface PointToIntervalCase {
+interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
 
-g.test('absInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
-    // prettier-ignore
-    [
-      // Common usages
-      { input: 1, expected: 1 },
-      { input: -1, expected: 1 },
-      { input: 0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
-      { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
-
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-      { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
-      { input: kValue.f32.negative.max, expected: kValue.f32.positive.min },
-
-      // 32-bit subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: kValue.f32.subnormal.negative.min, expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
-
-      // 64-bit subnormals
-      { input: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: hexToF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
-
-      // Zero
-      { input: 0, expected: 0 },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = absInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `absInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
-
 g.test('acosInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2010,7 +1968,7 @@ g.test('acosInterval')
   });
 
 g.test('acoshAlternativeInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2037,7 +1995,7 @@ g.test('acoshAlternativeInterval')
   });
 
 g.test('acoshPrimaryInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2064,7 +2022,7 @@ g.test('acoshPrimaryInterval')
   });
 
 g.test('asinInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2099,7 +2057,7 @@ g.test('asinInterval')
   });
 
 g.test('asinhInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2124,7 +2082,7 @@ g.test('asinhInterval')
   });
 
 g.test('atanInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2154,7 +2112,7 @@ g.test('atanInterval')
   });
 
 g.test('atanhInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2180,7 +2138,7 @@ g.test('atanhInterval')
   });
 
 g.test('ceilInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2222,7 +2180,7 @@ g.test('ceilInterval')
   });
 
 g.test('cosInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // This test does not include some common cases. i.e. f(x = π/2) = 0,
@@ -2258,7 +2216,7 @@ g.test('cosInterval')
   });
 
 g.test('coshInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2284,7 +2242,7 @@ g.test('coshInterval')
   });
 
 g.test('degreesInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2316,7 +2274,7 @@ g.test('degreesInterval')
   });
 
 g.test('expInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2342,7 +2300,7 @@ g.test('expInterval')
   });
 
 g.test('exp2Interval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2368,7 +2326,7 @@ g.test('exp2Interval')
   });
 
 g.test('floorInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2410,7 +2368,7 @@ g.test('floorInterval')
   });
 
 g.test('fractInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2442,7 +2400,7 @@ g.test('fractInterval')
   });
 
 g.test('inverseSqrtInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: -1, expected: kAnyBounds },
@@ -2470,7 +2428,7 @@ g.test('inverseSqrtInterval')
   });
 
 g.test('lengthIntervalScalar')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2511,7 +2469,7 @@ g.test('lengthIntervalScalar')
   });
 
 g.test('logInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: -1, expected: kAnyBounds },
@@ -2540,7 +2498,7 @@ g.test('logInterval')
   });
 
 g.test('log2Interval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: -1, expected: kAnyBounds },
@@ -2569,7 +2527,7 @@ g.test('log2Interval')
   });
 
 g.test('negationInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2605,7 +2563,7 @@ g.test('negationInterval')
   });
 
 g.test('quantizeToF16Interval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2640,7 +2598,7 @@ g.test('quantizeToF16Interval')
   });
 
 g.test('radiansInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2670,7 +2628,7 @@ g.test('radiansInterval')
   });
 
 g.test('roundInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2716,7 +2674,7 @@ g.test('roundInterval')
   });
 
 g.test('saturateInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Normals
@@ -2754,7 +2712,7 @@ g.test('saturateInterval')
   });
 
 g.test('signInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
@@ -2786,7 +2744,7 @@ g.test('signInterval')
   });
 
 g.test('sinInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // This test does not include some common cases, i.e. f(x = -π|π) = 0,
@@ -2820,7 +2778,7 @@ g.test('sinInterval')
   });
 
 g.test('sinhInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2845,7 +2803,7 @@ g.test('sinhInterval')
   });
 
 g.test('sqrtInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2870,7 +2828,7 @@ g.test('sqrtInterval')
   });
 
 g.test('tanInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // All of these are hard coded, since the error intervals are difficult to
@@ -2911,7 +2869,7 @@ g.test('tanInterval')
   });
 
 g.test('tanhInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -2936,7 +2894,7 @@ g.test('tanhInterval')
   });
 
 g.test('truncInterval')
-  .paramsSubcasesOnly<PointToIntervalCase>(
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
       { input: 0, expected: 0 },
@@ -2975,7 +2933,7 @@ g.test('truncInterval')
     );
   });
 
-interface BinaryToIntervalCase {
+interface ScalarPairToIntervalCase {
   // input is a pair of independent values, not a range, so should not be
   // converted to a FPInterval.
   input: [number, number];
@@ -2983,7 +2941,7 @@ interface BinaryToIntervalCase {
 }
 
 g.test('additionInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3040,7 +2998,7 @@ g.test('additionInterval')
 
 // Note: atan2's parameters are labelled (y, x) instead of (x, y)
 g.test('atan2Interval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -3112,7 +3070,7 @@ g.test('atan2Interval')
   });
 
 g.test('distanceIntervalScalar')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -3162,7 +3120,7 @@ g.test('distanceIntervalScalar')
   });
 
 g.test('divisionInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3214,7 +3172,7 @@ g.test('divisionInterval')
   });
 
 g.test('ldexpInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3262,7 +3220,7 @@ g.test('ldexpInterval')
   });
 
 g.test('maxInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3321,7 +3279,7 @@ g.test('maxInterval')
   });
 
 g.test('minInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3379,7 +3337,7 @@ g.test('minInterval')
   });
 
 g.test('multiplicationInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3441,7 +3399,7 @@ g.test('multiplicationInterval')
   });
 
 g.test('remainderInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3491,7 +3449,7 @@ g.test('remainderInterval')
   });
 
 g.test('powInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -3524,7 +3482,7 @@ g.test('powInterval')
   });
 
 g.test('stepInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3600,7 +3558,7 @@ g.test('stepInterval')
   });
 
 g.test('subtractionInterval')
-  .paramsSubcasesOnly<BinaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore
     [
       // 32-bit normals
@@ -3655,13 +3613,13 @@ g.test('subtractionInterval')
     );
   });
 
-interface TernaryToIntervalCase {
+interface ScalarTripleToIntervalCase {
   input: [number, number, number];
   expected: number | IntervalBounds;
 }
 
 g.test('clampMedianInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Normals
@@ -3711,7 +3669,7 @@ g.test('clampMedianInterval')
   });
 
 g.test('clampMinMaxInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Normals
@@ -3761,7 +3719,7 @@ g.test('clampMinMaxInterval')
   });
 
 g.test('fmaInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Normals
@@ -3810,7 +3768,7 @@ g.test('fmaInterval')
   });
 
 g.test('mixImpreciseInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -3889,7 +3847,7 @@ g.test('mixImpreciseInterval')
   });
 
 g.test('mixPreciseInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -3968,7 +3926,7 @@ g.test('mixPreciseInterval')
   });
 
 g.test('smoothStepInterval')
-  .paramsSubcasesOnly<TernaryToIntervalCase>(
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
     // prettier-ignore
     [
       // Some of these are hard coded, since the error intervals are difficult
@@ -4022,7 +3980,7 @@ g.test('smoothStepInterval')
     );
   });
 
-interface PointToVectorCase {
+interface ScalarToVectorCase {
   input: number;
   expected: (number | IntervalBounds)[];
 }
@@ -4054,7 +4012,7 @@ interface PointToVectorCase {
   ]; // ~-0.5..., due to lack of precision in i16
 
   g.test('unpack2x16snormInterval')
-    .paramsSubcasesOnly<PointToVectorCase>(
+    .paramsSubcasesOnly<ScalarToVectorCase>(
       // prettier-ignore
       [
         { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
@@ -4076,7 +4034,7 @@ interface PointToVectorCase {
     });
 
   g.test('unpack2x16floatInterval')
-    .paramsSubcasesOnly<PointToVectorCase>(
+    .paramsSubcasesOnly<ScalarToVectorCase>(
       // prettier-ignore
       [
         // f16 normals
@@ -4115,7 +4073,7 @@ interface PointToVectorCase {
   ]; // ~0.5..., due to lack of precision in u16
 
   g.test('unpack2x16unormInterval')
-    .paramsSubcasesOnly<PointToVectorCase>(
+    .paramsSubcasesOnly<ScalarToVectorCase>(
       // prettier-ignore
       [
       { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
@@ -4144,7 +4102,7 @@ interface PointToVectorCase {
   ]; // ~-0.49606..., due to lack of precision in i8
 
   g.test('unpack4x8snormInterval')
-    .paramsSubcasesOnly<PointToVectorCase>(
+    .paramsSubcasesOnly<ScalarToVectorCase>(
       // prettier-ignore
       [
         { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
@@ -4177,7 +4135,7 @@ interface PointToVectorCase {
   ]; // ~0.50196..., due to lack of precision in u8
 
   g.test('unpack4x8unormInterval')
-    .paramsSubcasesOnly<PointToVectorCase>(
+    .paramsSubcasesOnly<ScalarToVectorCase>(
       // prettier-ignore
       [
         { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },

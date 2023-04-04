@@ -33,7 +33,7 @@ kValue.f32.negative.min, // Closest to returning 0 as possible
 
 export const d = makeCaseCache('exp', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'f32-only', expInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'finite', expInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(inputs, 'unfiltered', expInterval);

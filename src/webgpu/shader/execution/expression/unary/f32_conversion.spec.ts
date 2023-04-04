@@ -54,7 +54,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat2x2_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(2, 2),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -68,7 +68,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat2x3_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(2, 3),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -82,7 +82,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat2x4_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(2, 4),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -96,7 +96,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat3x2_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(3, 2),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -110,7 +110,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat3x3_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(3, 3),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -124,7 +124,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat3x4_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(3, 4),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -138,7 +138,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat4x2_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(4, 2),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -152,7 +152,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat4x3_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(4, 3),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },
@@ -166,7 +166,7 @@ export const d = makeCaseCache('unary/f32_conversion', {
   f32_mat4x4_const: () => {
     return generateMatrixToMatrixCases(
       sparseMatrixF32Range(4, 4),
-      'f32-only',
+      'finite',
       correctlyRoundedMatrix
     );
   },

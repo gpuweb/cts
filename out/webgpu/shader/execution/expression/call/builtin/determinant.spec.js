@@ -68,7 +68,7 @@ export const d = makeCaseCache('determinant', {
   f32_mat2x2_const: () => {
     return generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[2],
-    'f32-only',
+    'finite',
     determinantInterval);
 
   },
@@ -82,7 +82,7 @@ export const d = makeCaseCache('determinant', {
   f32_mat3x3_const: () => {
     return generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[3],
-    'f32-only',
+    'finite',
     determinantInterval);
 
   },
@@ -96,7 +96,7 @@ export const d = makeCaseCache('determinant', {
   f32_mat4x4_const: () => {
     return generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[4],
-    'f32-only',
+    'finite',
     determinantInterval);
 
   },

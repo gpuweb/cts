@@ -6,19 +6,19 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface PointToInterval {
+export interface ScalarToInterval {
   (x: number): FPInterval;
 }
 
-export interface BinaryToInterval {
+export interface ScalarPairToInterval {
   (x: number, y: number): FPInterval;
 }
 
-export interface TernaryToInterval {
+export interface ScalarTripleToInterval {
   (x: number, y: number, z: number): FPInterval;
 }
 
-export interface PointToVector {
+export interface ScalarToVector {
   (n: number): FPVector;
 }
 
@@ -122,10 +122,6 @@ export function absoluteErrorInterval(n: number, error_range: number): FPInterva
 
 export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
-}
-
-export function absInterval(n: number): FPInterval {
-  return FP.f32.absInterval(n);
 }
 
 export function acosInterval(n: number): FPInterval {

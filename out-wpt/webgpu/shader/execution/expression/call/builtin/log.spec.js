@@ -31,7 +31,7 @@ const inputs = [
 
 export const d = makeCaseCache('log', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'f32-only', logInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'finite', logInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(inputs, 'unfiltered', logInterval);

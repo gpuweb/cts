@@ -75,7 +75,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
     fullF32Range(),
     fullF32Range(),
-    'f32-only',
+    'finite',
     additionInterval);
 
   },
@@ -91,7 +91,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(2),
     fullF32Range(),
-    'f32-only',
+    'finite',
     additionVectorScalarInterval);
 
   },
@@ -107,7 +107,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(3),
     fullF32Range(),
-    'f32-only',
+    'finite',
     additionVectorScalarInterval);
 
   },
@@ -123,7 +123,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(4),
     fullF32Range(),
-    'f32-only',
+    'finite',
     additionVectorScalarInterval);
 
   },
@@ -139,7 +139,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(2),
-    'f32-only',
+    'finite',
     additionScalarVectorInterval);
 
   },
@@ -155,7 +155,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     additionScalarVectorInterval);
 
   },
@@ -171,7 +171,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     additionScalarVectorInterval);
 
   },
@@ -187,7 +187,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
     fullF32Range(),
     fullF32Range(),
-    'f32-only',
+    'finite',
     subtractionInterval);
 
   },
@@ -203,7 +203,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(2),
     fullF32Range(),
-    'f32-only',
+    'finite',
     subtractionVectorScalarInterval);
 
   },
@@ -219,7 +219,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(3),
     fullF32Range(),
-    'f32-only',
+    'finite',
     subtractionVectorScalarInterval);
 
   },
@@ -235,7 +235,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(4),
     fullF32Range(),
-    'f32-only',
+    'finite',
     subtractionVectorScalarInterval);
 
   },
@@ -251,7 +251,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(2),
-    'f32-only',
+    'finite',
     subtractionScalarVectorInterval);
 
   },
@@ -267,7 +267,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     subtractionScalarVectorInterval);
 
   },
@@ -283,7 +283,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     subtractionScalarVectorInterval);
 
   },
@@ -299,7 +299,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
     fullF32Range(),
     fullF32Range(),
-    'f32-only',
+    'finite',
     multiplicationInterval);
 
   },
@@ -315,7 +315,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(2),
     fullF32Range(),
-    'f32-only',
+    'finite',
     multiplicationVectorScalarInterval);
 
   },
@@ -331,7 +331,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(3),
     fullF32Range(),
-    'f32-only',
+    'finite',
     multiplicationVectorScalarInterval);
 
   },
@@ -347,7 +347,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(4),
     fullF32Range(),
-    'f32-only',
+    'finite',
     multiplicationVectorScalarInterval);
 
   },
@@ -363,7 +363,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(2),
-    'f32-only',
+    'finite',
     multiplicationScalarVectorInterval);
 
   },
@@ -379,7 +379,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     multiplicationScalarVectorInterval);
 
   },
@@ -395,7 +395,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     multiplicationScalarVectorInterval);
 
   },
@@ -411,7 +411,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
     fullF32Range(),
     fullF32Range(),
-    'f32-only',
+    'finite',
     divisionInterval);
 
   },
@@ -427,7 +427,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(2),
     fullF32Range(),
-    'f32-only',
+    'finite',
     divisionVectorScalarInterval);
 
   },
@@ -443,7 +443,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(3),
     fullF32Range(),
-    'f32-only',
+    'finite',
     divisionVectorScalarInterval);
 
   },
@@ -459,7 +459,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(4),
     fullF32Range(),
-    'f32-only',
+    'finite',
     divisionVectorScalarInterval);
 
   },
@@ -475,7 +475,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(2),
-    'f32-only',
+    'finite',
     divisionScalarVectorInterval);
 
   },
@@ -491,7 +491,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     divisionScalarVectorInterval);
 
   },
@@ -507,7 +507,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     divisionScalarVectorInterval);
 
   },
@@ -523,7 +523,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateBinaryToF32IntervalCases(
     fullF32Range(),
     fullF32Range(),
-    'f32-only',
+    'finite',
     remainderInterval);
 
   },
@@ -539,7 +539,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(2),
     fullF32Range(),
-    'f32-only',
+    'finite',
     remainderVectorScalarInterval);
 
   },
@@ -555,7 +555,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(3),
     fullF32Range(),
-    'f32-only',
+    'finite',
     remainderVectorScalarInterval);
 
   },
@@ -571,7 +571,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateVectorF32ToVectorCases(
     sparseVectorF32Range(4),
     fullF32Range(),
-    'f32-only',
+    'finite',
     remainderVectorScalarInterval);
 
   },
@@ -587,7 +587,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(2),
-    'f32-only',
+    'finite',
     remainderScalarVectorInterval);
 
   },
@@ -603,7 +603,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(3),
-    'f32-only',
+    'finite',
     remainderScalarVectorInterval);
 
   },
@@ -619,7 +619,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     return generateF32VectorToVectorCases(
     fullF32Range(),
     sparseVectorF32Range(4),
-    'f32-only',
+    'finite',
     remainderScalarVectorInterval);
 
   },

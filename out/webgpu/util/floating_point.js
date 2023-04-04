@@ -1,6 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, unreachable } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+
+import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import { f32, reinterpretF32AsU32, reinterpretU32AsF32 } from './conversion.js';
 import {
@@ -17,6 +19,7 @@ isSubnormalNumberF16,
 isSubnormalNumberF32,
 map2DArray,
 oneULPF32,
+quantizeToF32,
 unflatten2DArray } from
 './math.js';
 
@@ -718,32 +721,35 @@ class FPTraits {
   }
 
   /**
-   * Restrict the inputs to an PointToInterval operation
+   * Restrict the inputs to an ScalarToInterval operation
    *
    * Only used for operations that have tighter domain requirements than 'must
    * be finite'.
    *
    * @param domain interval to restrict inputs to
    * @param impl operation implementation to run if input is within the required domain
-   * @returns a PointToInterval that calls impl if domain contains the input,
+   * @returns a ScalarToInterval that calls impl if domain contains the input,
    *          otherwise it returns an any interval */
-  limitPointToIntervalDomain(domain, impl) {
+  limitScalarToIntervalDomain(
+  domain,
+  impl)
+  {
     return (n) => {
       return domain.contains(n) ? impl(n) : this.constants().anyInterval;
     };
   }
 
   /**
-   * Restrict the inputs to a BinaryToInterval
+   * Restrict the inputs to a ScalarPairToInterval
    *
    * Only used for operations that have tighter domain requirements than 'must be
    * finite'.
    *
    * @param domain set of intervals to restrict inputs to
    * @param impl operation implementation to run if input is within the required domain
-   * @returns a BinaryToInterval that calls impl if domain contains the input,
+   * @returns a ScalarPairToInterval that calls impl if domain contains the input,
    *          otherwise it returns an any interval */
-  limitBinaryToIntervalDomain(
+  limitScalarPairToIntervalDomain(
   domain,
   impl)
   {
@@ -757,7 +763,10 @@ class FPTraits {
   }
 
   // Utilities - Defined by subclass
-  /** @returns all valid roundings of input */
+  /**
+   * @returns the nearest precise value to the input. Rounding should be IEEE
+   *          'roundTiesToEven'.
+   */
 
 
 
@@ -770,7 +779,54 @@ class FPTraits {
 
 
 
-  // Framework
+
+
+  // Framework - Cases
+
+  /**
+   * @returns a Case for the param and theinterval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  makeScalarToIntervalCase(
+  param,
+  filter,
+  ...ops)
+  {
+    param = this.quantize(param);
+
+    const intervals = ops.map((o) => o(param));
+    if (filter === 'finite' && intervals.some((i) => !i.isFinite())) {
+      return undefined;
+    }
+    return { input: [this.scalarBuilder(param)], expected: anyOf(...intervals) };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating acceptance intervals for the
+   * operations
+   */
+  generateScalarToIntervalCases(
+  params,
+  filter,
+  ...ops)
+  {
+    return params.reduce((cases, e) => {
+      const c = this.makeScalarToIntervalCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array());
+  }
+
+  // Framework - Intervals
+
   /**
    * Converts a point to an acceptance interval, using a specific function
    *
@@ -783,7 +839,7 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  roundAndFlushPointToInterval(n, op) {
+  roundAndFlushScalarToInterval(n, op) {
     assert(!Number.isNaN(n), `flush not defined for NaN`);
     const values = this.correctlyRounded(n);
     const inputs = this.addFlushedIfNeeded(values);
@@ -805,7 +861,11 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  roundAndFlushBinaryToInterval(x, y, op) {
+  roundAndFlushScalarPairToInterval(
+  x,
+  y,
+  op)
+  {
     assert(!Number.isNaN(x), `flush not defined for NaN`);
     assert(!Number.isNaN(y), `flush not defined for NaN`);
     const x_values = this.correctlyRounded(x);
@@ -834,7 +894,7 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  roundAndFlushTernaryToInterval(
+  roundAndFlushScalarTripleToInterval(
   x,
   y,
   z,
@@ -1041,7 +1101,7 @@ class FPTraits {
    * Calculate the acceptance interval for a unary function over an interval
    *
    * If the interval is actually a point, this just decays to
-   * roundAndFlushPointToInterval.
+   * roundAndFlushScalarToInterval.
    *
    * The provided domain interval may be adjusted if the operation defines an
    * extrema function.
@@ -1050,7 +1110,7 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  runPointToIntervalOp(x, op) {
+  runScalarToIntervalOp(x, op) {
     if (!x.isFinite()) {
       return this.constants().anyInterval;
     }
@@ -1060,7 +1120,7 @@ class FPTraits {
     }
 
     const result = this.spanIntervals(
-    ...x.bounds().map((b) => this.roundAndFlushPointToInterval(b, op)));
+    ...x.bounds().map((b) => this.roundAndFlushScalarToInterval(b, op)));
 
     return result.isFinite() ? result : this.constants().anyInterval;
   }
@@ -1076,7 +1136,11 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  runBinaryToIntervalOp(x, y, op) {
+  runScalarPairToIntervalOp(
+  x,
+  y,
+  op)
+  {
     if (!x.isFinite() || !y.isFinite()) {
       return this.constants().anyInterval;
     }
@@ -1088,7 +1152,7 @@ class FPTraits {
     const outputs = new Set();
     x.bounds().forEach((inner_x) => {
       y.bounds().forEach((inner_y) => {
-        outputs.add(this.roundAndFlushBinaryToInterval(inner_x, inner_y, op));
+        outputs.add(this.roundAndFlushScalarPairToInterval(inner_x, inner_y, op));
       });
     });
 
@@ -1105,7 +1169,7 @@ class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  runTernaryToIntervalOp(
+  runScalarTripleToIntervalOp(
   x,
   y,
   z,
@@ -1119,7 +1183,7 @@ class FPTraits {
     x.bounds().forEach((inner_x) => {
       y.bounds().forEach((inner_y) => {
         z.bounds().forEach((inner_z) => {
-          outputs.add(this.roundAndFlushTernaryToInterval(inner_x, inner_y, inner_z, op));
+          outputs.add(this.roundAndFlushScalarTripleToInterval(inner_x, inner_y, inner_z, op));
         });
       });
     });
@@ -1221,8 +1285,8 @@ class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  runPointToIntervalOpComponentWise(x, op) {
-    return this.toVector(x.map((e) => this.runPointToIntervalOp(e, op)));
+  runScalarToIntervalOpComponentWise(x, op) {
+    return this.toVector(x.map((e) => this.runScalarToIntervalOp(e, op)));
   }
 
   /**
@@ -1267,19 +1331,19 @@ class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  runBinaryToIntervalOpVectorComponentWise(
+  runScalarPairToIntervalOpVectorComponentWise(
   x,
   y,
   op)
   {
     assert(
     x.length === y.length,
-    `runBinaryToIntervalOpVectorComponentWise requires vectors of the same dimensions`);
+    `runScalarPairToIntervalOpVectorComponentWise requires vectors of the same dimensions`);
 
 
     return this.toVector(
     x.map((i, idx) => {
-      return this.runBinaryToIntervalOp(i, y[idx], op);
+      return this.runScalarPairToIntervalOp(i, y[idx], op);
     }));
 
   }
@@ -1332,14 +1396,14 @@ class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a matrix of intervals with the outputs of op.impl
    */
-  runBinaryToIntervalOpMatrixComponentWise(
+  runScalarPairToIntervalOpMatrixComponentWise(
   x,
   y,
   op)
   {
     assert(
     x.length === y.length && x[0].length === y[0].length,
-    `runBinaryToIntervalOpMatrixComponentWise requires matrices of the same dimensions`);
+    `runScalarPairToIntervalOpMatrixComponentWise requires matrices of the same dimensions`);
 
 
     const cols = x.length;
@@ -1350,7 +1414,7 @@ class FPTraits {
     return this.toMatrix(
     unflatten2DArray(
     flat_x.map((i, idx) => {
-      return this.runBinaryToIntervalOp(i, flat_y[idx], op);
+      return this.runScalarPairToIntervalOp(i, flat_y[idx], op);
     }),
     cols,
     rows));
@@ -1361,7 +1425,7 @@ class FPTraits {
   // API - Fundamental Error Intervals
 
   /**
-   * Defines a PointToIntervalOp for an interval of the correctly rounded values
+   * Defines a ScalarToIntervalOp for an interval of the correctly rounded values
    * around the point
    */
   CorrectlyRoundedIntervalOp = {
@@ -1373,7 +1437,7 @@ class FPTraits {
 
   /** @returns an interval of the correctly rounded values around the point */
   correctlyRoundedInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.CorrectlyRoundedIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.CorrectlyRoundedIntervalOp);
   }
 
   /** @returns a matrix of correctly rounded intervals for the provided matrix */
@@ -1381,7 +1445,7 @@ class FPTraits {
     return this.toMatrix(map2DArray(m, this.correctlyRoundedInterval.bind(this)));
   }
 
-  /** @returns a PointToIntervalOp for [n - error_range, n + error_range] */
+  /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
   AbsoluteErrorIntervalOp(error_range) {
     const op = {
       impl: (_) => {
@@ -1402,10 +1466,13 @@ class FPTraits {
   /** @returns an interval of the absolute error around the point */
   absoluteErrorInterval(n, error_range) {
     error_range = Math.abs(error_range);
-    return this.runPointToIntervalOp(this.toInterval(n), this.AbsoluteErrorIntervalOp(error_range));
+    return this.runScalarToIntervalOp(
+    this.toInterval(n),
+    this.AbsoluteErrorIntervalOp(error_range));
+
   }
 
-  /** @returns a PointToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
+  /** @returns a ScalarToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
   ULPIntervalOp(numULP) {
     const op = {
       impl: (_) => {
@@ -1434,7 +1501,7 @@ class FPTraits {
   /** @returns an interval of N * ULP around the point */
   ulpInterval(n, numULP) {
     numULP = Math.abs(numULP);
-    return this.runPointToIntervalOp(this.toInterval(n), this.ULPIntervalOp(numULP));
+    return this.runScalarToIntervalOp(this.toInterval(n), this.ULPIntervalOp(numULP));
   }
 
   // API - Acceptance Intervals
@@ -1447,11 +1514,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval for abs(n) */
   absInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AbsIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AbsIntervalOp);
   }
 
   AcosIntervalOp = {
-    impl: this.limitPointToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+    impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
       // acos(n) = atan2(sqrt(1.0 - n * n), n) or a polynomial approximation with absolute error
       const y = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
       return this.spanIntervals(
@@ -1463,7 +1530,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for acos(n) */
   acosInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AcosIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AcosIntervalOp);
   }
 
   /** All acceptance interval functions for acosh(x) */
@@ -1486,7 +1553,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
   acoshAlternativeInterval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.AcoshAlternativeIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.AcoshAlternativeIntervalOp);
   }
 
   AcoshPrimaryIntervalOp = {
@@ -1500,7 +1567,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
   acoshPrimaryInterval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.AcoshPrimaryIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.AcoshPrimaryIntervalOp);
   }
 
   AdditionIntervalOp = {
@@ -1511,7 +1578,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of x + y */
   additionInterval(x, y) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.AdditionIntervalOp);
@@ -1520,7 +1587,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of x + y, when x and y are matrices */
   additionMatrixInterval(x, y) {
-    return this.runBinaryToIntervalOpMatrixComponentWise(
+    return this.runScalarPairToIntervalOpMatrixComponentWise(
     this.toMatrix(x),
     this.toMatrix(y),
     this.AdditionIntervalOp);
@@ -1528,7 +1595,7 @@ class FPTraits {
   }
 
   AsinIntervalOp = {
-    impl: this.limitPointToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+    impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
       // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
       const x = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
       return this.spanIntervals(
@@ -1540,7 +1607,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for asin(n) */
   asinInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AsinIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AsinIntervalOp);
   }
 
   AsinhIntervalOp = {
@@ -1554,7 +1621,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of asinh(x) */
   asinhInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AsinhIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AsinhIntervalOp);
   }
 
   AtanIntervalOp = {
@@ -1565,11 +1632,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of atan(x) */
   atanInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AtanIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AtanIntervalOp);
   }
 
   Atan2IntervalOp = {
-    impl: this.limitBinaryToIntervalDomain(
+    impl: this.limitScalarPairToIntervalDomain(
     {
       // For atan2, there params are labelled (y, x), not (x, y), so domain.x is first parameter (y), and domain.y is
       // the second parameter (x)
@@ -1609,7 +1676,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of atan2(y, x) */
   atan2Interval(y, x) {
-    return this.runBinaryToIntervalOp(this.toInterval(y), this.toInterval(x), this.Atan2IntervalOp);
+    return this.runScalarPairToIntervalOp(
+    this.toInterval(y),
+    this.toInterval(x),
+    this.Atan2IntervalOp);
+
   }
 
   AtanhIntervalOp = {
@@ -1624,7 +1695,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of atanh(x) */
   atanhInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.AtanhIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.AtanhIntervalOp);
   }
 
   CeilIntervalOp = {
@@ -1635,7 +1706,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of ceil(x) */
   ceilInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.CeilIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.CeilIntervalOp);
   }
 
   /** All acceptance interval functions for clamp(x, y, z) */
@@ -1668,7 +1739,7 @@ class FPTraits {
   y,
   z)
   {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.toInterval(z),
@@ -1688,7 +1759,7 @@ class FPTraits {
   low,
   high)
   {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(low),
     this.toInterval(high),
@@ -1697,7 +1768,7 @@ class FPTraits {
   }
 
   CosIntervalOp = {
-    impl: this.limitPointToIntervalDomain(
+    impl: this.limitScalarToIntervalDomain(
     this.constants().negPiToPiInterval,
     (n) => {
       return this.absoluteErrorInterval(Math.cos(n), 2 ** -11);
@@ -1707,7 +1778,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of cos(x) */
   cosInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.CosIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.CosIntervalOp);
   }
 
   CoshIntervalOp = {
@@ -1723,7 +1794,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of cosh(x) */
   coshInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.CoshIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.CoshIntervalOp);
   }
 
   CrossIntervalOp = {
@@ -1766,7 +1837,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of degrees(x) */
   degreesInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.DegreesIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.DegreesIntervalOp);
   }
 
   /**
@@ -1932,7 +2003,7 @@ class FPTraits {
   DistanceIntervalVectorOp = {
     impl: (x, y) => {
       return this.lengthInterval(
-      this.runBinaryToIntervalOpVectorComponentWise(
+      this.runScalarPairToIntervalOpVectorComponentWise(
       this.toVector(x),
       this.toVector(y),
       this.SubtractionIntervalOp));
@@ -1954,7 +2025,7 @@ class FPTraits {
       this.DistanceIntervalVectorOp);
 
     } else if (!(x instanceof Array) && !(y instanceof Array)) {
-      return this.runBinaryToIntervalOp(
+      return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.DistanceIntervalScalarOp);
@@ -1966,7 +2037,7 @@ class FPTraits {
   }
 
   DivisionIntervalOp = {
-    impl: this.limitBinaryToIntervalDomain(
+    impl: this.limitScalarPairToIntervalDomain(
     {
       x: [this.toInterval([kValue.f32.negative.min, kValue.f32.positive.max])],
       y: [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])]
@@ -1989,7 +2060,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of x / y */
   divisionInterval(x, y) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.DivisionIntervalOp);
@@ -1999,7 +2070,7 @@ class FPTraits {
   DotIntervalOp = {
     impl: (x, y) => {
       // dot(x, y) = sum of x[i] * y[i]
-      const multiplications = this.runBinaryToIntervalOpVectorComponentWise(
+      const multiplications = this.runScalarPairToIntervalOpVectorComponentWise(
       this.toVector(x),
       this.toVector(y),
       this.MultiplicationIntervalOp);
@@ -2034,7 +2105,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for exp(x) */
   expInterval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.ExpIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.ExpIntervalOp);
   }
 
   Exp2IntervalOp = {
@@ -2045,7 +2116,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for exp2(x) */
   exp2Interval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.Exp2IntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.Exp2IntervalOp);
   }
 
   /**
@@ -2062,15 +2133,15 @@ class FPTraits {
    */
   faceForwardIntervals(x, y, z) {
     const x_vec = this.toVector(x);
-    // Running vector through this.runPointToIntervalOpComponentWise to make
+    // Running vector through this.runScalarToIntervalOpComponentWise to make
     // sure that flushing/rounding is handled, since toVector does not perform
     // those operations.
-    const positive_x = this.runPointToIntervalOpComponentWise(x_vec, {
+    const positive_x = this.runScalarToIntervalOpComponentWise(x_vec, {
       impl: (i) => {
         return this.toInterval(i);
       }
     });
-    const negative_x = this.runPointToIntervalOpComponentWise(x_vec, this.NegationIntervalOp);
+    const negative_x = this.runScalarToIntervalOpComponentWise(x_vec, this.NegationIntervalOp);
 
     const dot_interval = this.dotInterval(z, y);
 
@@ -2113,7 +2184,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of floor(x) */
   floorInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.FloorIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.FloorIntervalOp);
   }
 
   FmaIntervalOp = {
@@ -2124,7 +2195,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for fma(x, y, z) */
   fmaInterval(x, y, z) {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.toInterval(z),
@@ -2154,11 +2225,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of fract(x) */
   fractInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.FractIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.FractIntervalOp);
   }
 
   InverseSqrtIntervalOp = {
-    impl: this.limitPointToIntervalDomain(
+    impl: this.limitScalarToIntervalDomain(
     this.constants().greaterThanZeroInterval,
     (n) => {
       return this.ulpInterval(1 / Math.sqrt(n), 2);
@@ -2168,11 +2239,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of inverseSqrt(x) */
   inverseSqrtInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.InverseSqrtIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.InverseSqrtIntervalOp);
   }
 
   LdexpIntervalOp = {
-    impl: this.limitBinaryToIntervalDomain(
+    impl: this.limitScalarPairToIntervalDomain(
     // Implementing SPIR-V's more restrictive domain until
     // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
     {
@@ -2198,7 +2269,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of ldexp(e1, e2) */
   ldexpInterval(e1, e2) {
-    return this.roundAndFlushBinaryToInterval(e1, e2, this.LdexpIntervalOp);
+    return this.roundAndFlushScalarPairToInterval(e1, e2, this.LdexpIntervalOp);
   }
 
   LengthIntervalScalarOp = {
@@ -2218,12 +2289,12 @@ class FPTraits {
     if (n instanceof Array) {
       return this.runVectorToIntervalOp(this.toVector(n), this.LengthIntervalVectorOp);
     } else {
-      return this.runPointToIntervalOp(this.toInterval(n), this.LengthIntervalScalarOp);
+      return this.runScalarToIntervalOp(this.toInterval(n), this.LengthIntervalScalarOp);
     }
   }
 
   LogIntervalOp = {
-    impl: this.limitPointToIntervalDomain(
+    impl: this.limitScalarToIntervalDomain(
     this.constants().greaterThanZeroInterval,
     (n) => {
       if (n >= 0.5 && n <= 2.0) {
@@ -2236,11 +2307,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of log(x) */
   logInterval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.LogIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.LogIntervalOp);
   }
 
   Log2IntervalOp = {
-    impl: this.limitPointToIntervalDomain(
+    impl: this.limitScalarToIntervalDomain(
     this.constants().greaterThanZeroInterval,
     (n) => {
       if (n >= 0.5 && n <= 2.0) {
@@ -2253,7 +2324,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of log2(x) */
   log2Interval(x) {
-    return this.runPointToIntervalOp(this.toInterval(x), this.Log2IntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(x), this.Log2IntervalOp);
   }
 
   MaxIntervalOp = {
@@ -2271,7 +2342,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of max(x, y) */
   maxInterval(x, y) {
-    return this.runBinaryToIntervalOp(this.toInterval(x), this.toInterval(y), this.MaxIntervalOp);
+    return this.runScalarPairToIntervalOp(
+    this.toInterval(x),
+    this.toInterval(y),
+    this.MaxIntervalOp);
+
   }
 
   MinIntervalOp = {
@@ -2289,7 +2364,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of min(x, y) */
   minInterval(x, y) {
-    return this.runBinaryToIntervalOp(this.toInterval(x), this.toInterval(y), this.MinIntervalOp);
+    return this.runScalarPairToIntervalOp(
+    this.toInterval(x),
+    this.toInterval(y),
+    this.MinIntervalOp);
+
   }
 
   /** All acceptance interval functions for mix(x, y, z) */
@@ -2309,7 +2388,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
   mixImpreciseInterval(x, y, z) {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.toInterval(z),
@@ -2329,7 +2408,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
   mixPreciseInterval(x, y, z) {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.toInterval(z),
@@ -2352,13 +2431,13 @@ class FPTraits {
 
   MultiplicationIntervalOp = {
     impl: (x, y) => {
-      return this.roundAndFlushBinaryToInterval(x, y, this.MultiplicationInnerOp);
+      return this.roundAndFlushScalarPairToInterval(x, y, this.MultiplicationInnerOp);
     }
   };
 
   /** Calculate an acceptance interval of x * y */
   multiplicationInterval(x, y) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.MultiplicationIntervalOp);
@@ -2440,7 +2519,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of -x */
   negationInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.NegationIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.NegationIntervalOp);
   }
 
   NormalizeIntervalOp = {
@@ -2466,7 +2545,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of pow(x, y) */
   powInterval(x, y) {
-    return this.runBinaryToIntervalOp(this.toInterval(x), this.toInterval(y), this.PowIntervalOp);
+    return this.runScalarPairToIntervalOp(
+    this.toInterval(x),
+    this.toInterval(y),
+    this.PowIntervalOp);
+
   }
 
   // Once a full implementation of F16Interval exists, the correctlyRounded for
@@ -2482,7 +2565,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of quantizeToF16(x) */
   quantizeToF16Interval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
   }
 
   RadiansIntervalOp = {
@@ -2493,7 +2576,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of radians(x) */
   radiansInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.RadiansIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.RadiansIntervalOp);
   }
 
   ReflectIntervalOp = {
@@ -2509,7 +2592,7 @@ class FPTraits {
       // y = normal of reflecting surface
       const t = this.multiplicationInterval(2.0, this.dotInterval(x, y));
       const rhs = this.multiplyVectorByScalar(y, t);
-      return this.runBinaryToIntervalOpVectorComponentWise(
+      return this.runScalarPairToIntervalOpVectorComponentWise(
       this.toVector(x),
       rhs,
       this.SubtractionIntervalOp);
@@ -2566,7 +2649,7 @@ class FPTraits {
     const k_sqrt = this.sqrtInterval(k);
     const t = this.additionInterval(dot_times_r, k_sqrt); // t = r * dot(i, s) + sqrt(k)
 
-    const result = this.runBinaryToIntervalOpVectorComponentWise(
+    const result = this.runScalarPairToIntervalOpVectorComponentWise(
     this.multiplyVectorByScalar(i, r),
     this.multiplyVectorByScalar(s, t),
     this.SubtractionIntervalOp);
@@ -2586,7 +2669,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval for x % y */
   remainderInterval(x, y) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.RemainderIntervalOp);
@@ -2615,7 +2698,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of round(x) */
   roundInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.RoundIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.RoundIntervalOp);
   }
 
   /**
@@ -2626,7 +2709,7 @@ class FPTraits {
    * all of median's.
    */
   saturateInterval(n) {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(n),
     this.toInterval(0.0),
     this.toInterval(1.0),
@@ -2649,11 +2732,11 @@ class FPTraits {
 
   /** Calculate an acceptance interval of sign(x) */
   signInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.SignIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.SignIntervalOp);
   }
 
   SinIntervalOp = {
-    impl: this.limitPointToIntervalDomain(
+    impl: this.limitScalarToIntervalDomain(
     this.constants().negPiToPiInterval,
     (n) => {
       return this.absoluteErrorInterval(Math.sin(n), 2 ** -11);
@@ -2663,7 +2746,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of sin(x) */
   sinInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.SinIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.SinIntervalOp);
   }
 
   SinhIntervalOp = {
@@ -2679,7 +2762,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of sinh(x) */
   sinhInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.SinhIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.SinhIntervalOp);
   }
 
   SmoothStepOp = {
@@ -2706,7 +2789,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of smoothStep(low, high, x) */
   smoothStepInterval(low, high, x) {
-    return this.runTernaryToIntervalOp(
+    return this.runScalarTripleToIntervalOp(
     this.toInterval(low),
     this.toInterval(high),
     this.toInterval(x),
@@ -2722,7 +2805,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of sqrt(x) */
   sqrtInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.SqrtIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.SqrtIntervalOp);
   }
 
   StepIntervalOp = {
@@ -2746,7 +2829,7 @@ class FPTraits {
    * was passed in.
    */
   stepInterval(edge, x) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(edge),
     this.toInterval(x),
     this.StepIntervalOp);
@@ -2761,7 +2844,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of x - y */
   subtractionInterval(x, y) {
-    return this.runBinaryToIntervalOp(
+    return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
     this.SubtractionIntervalOp);
@@ -2770,7 +2853,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of x - y, when x and y are matrices */
   subtractionMatrixInterval(x, y) {
-    return this.runBinaryToIntervalOpMatrixComponentWise(
+    return this.runScalarPairToIntervalOpMatrixComponentWise(
     this.toMatrix(x),
     this.toMatrix(y),
     this.SubtractionIntervalOp);
@@ -2785,7 +2868,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of tan(x) */
   tanInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.TanIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.TanIntervalOp);
   }
 
   TanhIntervalOp = {
@@ -2796,7 +2879,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of tanh(x) */
   tanhInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.TanhIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.TanhIntervalOp);
   }
 
   TransposeIntervalOp = {
@@ -2827,7 +2910,7 @@ class FPTraits {
 
   /** Calculate an acceptance interval of trunc(x) */
   truncInterval(n) {
-    return this.runPointToIntervalOp(this.toInterval(n), this.TruncIntervalOp);
+    return this.runScalarToIntervalOp(this.toInterval(n), this.TruncIntervalOp);
   }
 
   /**
@@ -3068,6 +3151,7 @@ class F32Traits extends FPTraits {
   }
 
   // Overrides - Utilities
+  quantize = quantizeToF32;
   correctlyRounded = correctlyRoundedF32;
   isFinite = isFiniteF32;
   isSubnormal = isSubnormalNumberF32;

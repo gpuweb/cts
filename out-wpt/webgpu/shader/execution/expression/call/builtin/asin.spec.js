@@ -27,7 +27,7 @@ const inputs = [
 
 export const d = makeCaseCache('asin', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'f32-only', asinInterval);
+    return generateUnaryToF32IntervalCases(inputs, 'finite', asinInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(inputs, 'unfiltered', asinInterval);

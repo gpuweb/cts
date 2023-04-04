@@ -20,10 +20,10 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kBit } from '../../../../../util/constants.js';
 import { i32Bits, TypeF32, TypeI32, TypeU32, u32Bits } from '../../../../../util/conversion.js';
-import { absInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -31,7 +31,11 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('abs', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', absInterval);
+    return FP.f32.generateScalarToIntervalCases(
+      fullF32Range(),
+      'unfiltered',
+      FP.f32.absInterval.bind(FP.f32)
+    );
   },
 });
 

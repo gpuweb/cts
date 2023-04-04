@@ -21,7 +21,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('sqrt', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'f32-only', sqrtInterval);
+    return generateUnaryToF32IntervalCases(fullF32Range(), 'finite', sqrtInterval);
   },
   f32_non_const: () => {
     return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', sqrtInterval);

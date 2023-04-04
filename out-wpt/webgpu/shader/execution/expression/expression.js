@@ -767,7 +767,7 @@ function makeUnaryToF32IntervalCase(param, filter, ...ops) {
   param = quantizeToF32(param);
 
   const intervals = ops.map(o => o(param));
-  if (filter === 'f32-only' && intervals.some(i => !i.isFinite())) {
+  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
     return undefined;
   }
   return { input: [f32(param)], expected: anyOf(...intervals) };
@@ -804,7 +804,7 @@ function makeBinaryToF32IntervalCase(param0, param1, filter, ...ops) {
   param1 = quantizeToF32(param1);
 
   const intervals = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && intervals.some(i => !i.isFinite())) {
+  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
     return undefined;
   }
   return { input: [f32(param0), f32(param1)], expected: anyOf(...intervals) };
@@ -844,7 +844,7 @@ function makeTernaryToF32IntervalCase(param0, param1, param2, filter, ...ops) {
   param2 = quantizeToF32(param2);
 
   const intervals = ops.map(o => o(param0, param1, param2));
-  if (filter === 'f32-only' && intervals.some(i => !i.isFinite())) {
+  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
     return undefined;
   }
   return {
@@ -884,7 +884,7 @@ function makeVectorToF32IntervalCase(param, filter, ...ops) {
   const param_f32 = param.map(f32);
 
   const intervals = ops.map(o => o(param));
-  if (filter === 'f32-only' && intervals.some(i => !i.isFinite())) {
+  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
     return undefined;
   }
   return {
@@ -925,7 +925,7 @@ function makeVectorPairToF32IntervalCase(param0, param1, filter, ...ops) {
   const param1_f32 = param1.map(f32);
 
   const intervals = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && intervals.some(i => !i.isFinite())) {
+  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
     return undefined;
   }
   return {
@@ -964,7 +964,7 @@ function makeVectorToVectorCase(param, filter, ...ops) {
   const param_f32 = param.map(f32);
 
   const vectors = ops.map(o => o(param));
-  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1005,7 +1005,7 @@ function makeVectorPairToVectorCase(param0, param1, filter, ...ops) {
   const param1_f32 = param1.map(f32);
 
   const vectors = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && vectors.some(v => v.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1047,7 +1047,7 @@ function makeVectorF32ToVectorCase(vec, scalar, filter, ...ops) {
   const scalar_f32 = f32(scalar);
 
   const results = ops.map(o => o(vec, scalar));
-  if (filter === 'f32-only' && results.some(r => r.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && results.some(r => r.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1093,7 +1093,7 @@ function makeF32VectorToVectorCase(scalar, vec, filter, ...ops) {
   const vec_f32 = vec.map(f32);
 
   const results = ops.map(o => o(scalar, vec));
-  if (filter === 'f32-only' && results.some(r => r.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && results.some(r => r.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1136,7 +1136,7 @@ function makeMatrixToScalarCase(param, filter, ...ops) {
   const param_f32 = map2DArray(param, f32);
 
   const results = ops.map(o => o(param));
-  if (filter === 'f32-only' && results.some(e => !e.isFinite())) {
+  if (filter === 'finite' && results.some(e => !e.isFinite())) {
     return undefined;
   }
 
@@ -1175,7 +1175,7 @@ function makeMatrixToMatrixCase(param, filter, ...ops) {
   const param_f32 = map2DArray(param, f32);
 
   const results = ops.map(o => o(param));
-  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
     return undefined;
   }
 
@@ -1217,7 +1217,7 @@ function makeMatrixPairToMatrixCase(param0, param1, filter, ...ops) {
   const param1_f32 = map2DArray(param1, f32);
 
   const results = ops.map(o => o(param0, param1));
-  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
     return undefined;
   }
   return {
@@ -1259,7 +1259,7 @@ function makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops) {
   const scalar_f32 = f32(scalar);
 
   const results = ops.map(o => o(mat, scalar));
-  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
     return undefined;
   }
   return {
@@ -1305,7 +1305,7 @@ function makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops) {
   const scalar_f32 = f32(scalar);
 
   const results = ops.map(o => o(scalar, mat));
-  if (filter === 'f32-only' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
     return undefined;
   }
   return {
@@ -1351,7 +1351,7 @@ function makeMatrixVectorToVectorCase(mat, vec, filter, ...ops) {
   const vec_f32 = vec.map(f32);
 
   const results = ops.map(o => o(mat, vec));
-  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && results.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1397,7 +1397,7 @@ function makeVectorMatrixToVectorCase(vec, mat, filter, ...ops) {
   const mat_f32 = map2DArray(mat, f32);
 
   const results = ops.map(o => o(vec, mat));
-  if (filter === 'f32-only' && results.some(v => v.some(e => !e.isFinite()))) {
+  if (filter === 'finite' && results.some(v => v.some(e => !e.isFinite()))) {
     return undefined;
   }
   return {
@@ -1441,7 +1441,7 @@ function makeU32ToVectorCase(param, filter, ...ops) {
   const param_u32 = u32(param);
 
   const vectors = ops.map(o => o(param));
-  if (filter === 'f32-only' && vectors.some(v => !v.every(e => e.isFinite()))) {
+  if (filter === 'finite' && vectors.some(v => !v.every(e => e.isFinite()))) {
     return undefined;
   }
   return {

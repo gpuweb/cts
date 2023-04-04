@@ -45,7 +45,7 @@ function makeCaseF32(x, y, z, check) {
   const z_f32 = z.map(f32);
 
   const results = faceForwardIntervals(x, y, z);
-  if (check === 'f32-only' && results.some(r => r === undefined)) {
+  if (check === 'finite' && results.some(r => r === undefined)) {
     return undefined;
   }
 
@@ -80,7 +80,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec2_non_const: () => {
@@ -96,7 +96,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec3_non_const: () => {
@@ -112,7 +112,7 @@ export const d = makeCaseCache('faceForward', {
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
-      'f32-only'
+      'finite'
     );
   },
   f32_vec4_non_const: () => {
