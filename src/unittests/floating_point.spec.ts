@@ -3,7 +3,7 @@ Floating Point unit tests.
 `;
 
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { objectEquals } from '../common/util/util.js';
+import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, IntervalBounds } from '../webgpu/util/floating_point.js';
 import { hexToF32, hexToF64, oneULPF32 } from '../webgpu/util/math.js';
@@ -15,14 +15,60 @@ export const g = makeTestGroup(UnitTest);
 /** Bounds indicating an expectation of an interval of all possible values */
 const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
-/** @returns a number N * ULP less than the provided number */
+/** @returns a number N * ULP greater than the provided number, treats input as f32 */
+function plusNULPF32(x: number, n: number): number {
+  return x + n * oneULPF32(x);
+}
+
+/** @returns a number one ULP greater than the provided number, treats input as f32 */
+function plusOneULPF32(x: number): number {
+  return plusNULPF32(x, 1);
+}
+
+/** @returns a number N * ULP less than the provided number, treats input as f32 */
 function minusNULPF32(x: number, n: number): number {
   return x - n * oneULPF32(x);
 }
 
-/** @returns a number one ULP less than the provided number */
+/** @returns a number one ULP less than the provided number, treats input as f32 */
 function minusOneULPF32(x: number): number {
   return minusNULPF32(x, 1);
+}
+
+/** @returns the expected IntervalBounds adjusted by the given error function
+ *
+ * @param expected the bounds to be adjusted
+ * @param error error function to adjust the bounds via
+ */
+function applyError(
+  expected: number | IntervalBounds,
+  error: (n: number) => number
+): IntervalBounds {
+  // Avoiding going through FPInterval to avoid tying this to a specific kind
+  const unpack = (n: number | IntervalBounds): [number, number] => {
+    if (expected instanceof Array) {
+      switch (expected.length) {
+        case 1:
+          return [expected[0], expected[0]];
+        case 2:
+          return [expected[0], expected[1]];
+      }
+      unreachable(`Tried to unpack an IntervalBounds with length other than 1 or 2`);
+    } else {
+      // TS doesn't narrow this to number automatically
+      return [n as number, n as number];
+    }
+  };
+
+  let [begin, end] = unpack(expected);
+
+  begin -= error(begin);
+  end += error(end);
+
+  if (begin === end) {
+    return [begin];
+  }
+  return [begin, end];
 }
 
 interface ScalarToIntervalCase {
@@ -217,5 +263,35 @@ g.test('asinhInterval_f32')
     t.expect(
       objectEquals(expected, got),
       `f32.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('atanInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULPF32(kValue.f32.negative.pi.third)] }, // x = -√3
+      { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULPF32(kValue.f32.negative.pi.quarter)] },
+      { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULPF32(kValue.f32.negative.pi.sixth)] },  // x = -1/√3
+      { input: 0, expected: 0 },
+      { input: hexToF32(0x3f13cd3a), expected: [minusOneULPF32(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = 1/√3
+      { input: 1, expected: [minusOneULPF32(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
+      { input: hexToF32(0x3fddb3d7), expected: [minusOneULPF32(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const error = (n: number): number => {
+      return 4096 * oneULPF32(n);
+    };
+
+    t.params.expected = applyError(t.params.expected, error);
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.atanInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });

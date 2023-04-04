@@ -16,7 +16,6 @@ import {
   absoluteErrorInterval,
   additionInterval,
   additionMatrixInterval,
-  atanInterval,
   atan2Interval,
   atanhInterval,
   ceilInterval,
@@ -1926,36 +1925,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('atanInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULP(kValue.f32.negative.pi.third)] }, // x = -√3
-      { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULP(kValue.f32.negative.pi.quarter)] },
-      { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULP(kValue.f32.negative.pi.sixth)] },  // x = -1/√3
-      { input: 0, expected: 0 },
-      { input: hexToF32(0x3f13cd3a), expected: [minusOneULP(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = 1/√3
-      { input: 1, expected: [minusOneULP(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
-      { input: hexToF32(0x3fddb3d7), expected: [minusOneULP(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const error = (n: number): number => {
-      return 4096 * oneULPF32(n);
-    };
-
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = atanInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('atanhInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

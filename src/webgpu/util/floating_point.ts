@@ -1641,9 +1641,12 @@ abstract class FPTraits {
   };
 
   /** Calculate an acceptance interval of atan(x) */
-  public atanInterval(n: number | FPInterval): FPInterval {
+  protected atanIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.AtanIntervalOp);
   }
+
+  /** Calculate an acceptance interval of atan(x) */
+  public abstract readonly atanInterval: (n: number | FPInterval) => FPInterval;
 
   private readonly Atan2IntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
@@ -3180,6 +3183,7 @@ class F32Traits extends FPTraits {
   ];
   public asinInterval = this.asinIntervalImpl.bind(this);
   public asinhInterval = this.asinhIntervalImpl.bind(this);
+  public atanInterval = this.atanIntervalImpl.bind(this);
 }
 
 export const FP = {
