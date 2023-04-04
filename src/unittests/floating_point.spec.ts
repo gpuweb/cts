@@ -583,3 +583,31 @@ g.test('fractInterval_f32')
       `f32.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
+
+g.test('inverseSqrtInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: -1, expected: kAnyBounds },
+      { input: 0, expected: kAnyBounds },
+      { input: 0.04, expected: [minusOneULPF32(5), plusOneULPF32(5)] },
+      { input: 1, expected: 1 },
+      { input: 100, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
+      { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULPF32(hexToF32(0x1f800000), 2)] },  // ~5.421...e-20, i.e. 1/√max f32
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const error = (n: number): number => {
+      return 2 * oneULPF32(n);
+    };
+
+    t.params.expected = applyError(t.params.expected, error);
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.inverseSqrtInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.inverseSqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });

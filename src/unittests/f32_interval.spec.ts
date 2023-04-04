@@ -26,7 +26,6 @@ import {
   dotInterval,
   faceForwardIntervals,
   fmaInterval,
-  inverseSqrtInterval,
   ldexpInterval,
   lengthInterval,
   logInterval,
@@ -1916,34 +1915,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('inverseSqrtInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: -1, expected: kAnyBounds },
-      { input: 0, expected: kAnyBounds },
-      { input: 0.04, expected: [minusOneULP(5), plusOneULP(5)] },
-      { input: 1, expected: 1 },
-      { input: 100, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULP(hexToF32(0x1f800000), 2)] },  // ~5.421...e-20, i.e. 1/√max f32
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const error = (n: number): number => {
-      return 2 * oneULPF32(n);
-    };
-
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = inverseSqrtInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `inverseSqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('lengthIntervalScalar')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

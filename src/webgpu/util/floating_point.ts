@@ -2268,10 +2268,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of inverseSqrt(x) */
-  public inverseSqrtInterval(n: number | FPInterval): FPInterval {
+  protected inverseSqrtIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.InverseSqrtIntervalOp);
   }
+
+  /** Calculate an acceptance interval of inverseSqrt(x) */
+  public abstract readonly inverseSqrtInterval: (n: number | FPInterval) => FPInterval;
 
   private readonly LdexpIntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
@@ -3211,6 +3213,7 @@ class F32Traits extends FPTraits {
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
+  public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
 }
 
 export const FP = {
