@@ -124,16 +124,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export const acoshIntervals = FP.f32.acoshIntervals;
-
-export function acoshAlternativeInterval(x: number | FPInterval): FPInterval {
-  return FP.f32.acoshAlternativeInterval(x);
-}
-
-export function acoshPrimaryInterval(x: number | FPInterval): FPInterval {
-  return FP.f32.acoshPrimaryInterval(x);
-}
-
 export function additionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
   return FP.f32.additionInterval(x, y);
 }

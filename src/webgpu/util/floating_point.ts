@@ -1537,12 +1537,6 @@ abstract class FPTraits {
   /** Calculate an acceptance interval for acos(n) */
   public abstract readonly acosInterval: (n: number) => FPInterval;
 
-  /** All acceptance interval functions for acosh(x) */
-  public readonly acoshIntervals: ScalarToInterval[] = [
-    this.acoshAlternativeInterval.bind(this),
-    this.acoshPrimaryInterval.bind(this),
-  ];
-
   private readonly AcoshAlternativeIntervalOp: ScalarToIntervalOp = {
     impl: (x: number): FPInterval => {
       // acosh(x) = log(x + sqrt((x + 1.0f) * (x - 1.0)))
@@ -1555,10 +1549,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
-  public acoshAlternativeInterval(x: number | FPInterval): FPInterval {
+  protected acoshAlternativeIntervalImpl(x: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(x), this.AcoshAlternativeIntervalOp);
   }
+
+  /** Calculate an acceptance interval of acosh(x) using log(x + sqrt((x + 1.0f) * (x - 1.0))) */
+  public abstract readonly acoshAlternativeInterval: (x: number | FPInterval) => FPInterval;
 
   private readonly AcoshPrimaryIntervalOp: ScalarToIntervalOp = {
     impl: (x: number): FPInterval => {
@@ -1569,10 +1565,15 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
-  public acoshPrimaryInterval(x: number | FPInterval): FPInterval {
+  protected acoshPrimaryIntervalImpl(x: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(x), this.AcoshPrimaryIntervalOp);
   }
+
+  /** Calculate an acceptance interval of acosh(x) using log(x + sqrt(x * x - 1.0)) */
+  protected abstract acoshPrimaryInterval: (x: number | FPInterval) => FPInterval;
+
+  /** All acceptance interval functions for acosh(x) */
+  public abstract readonly acoshIntervals: ScalarToInterval[];
 
   private readonly AdditionIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -3166,6 +3167,12 @@ class F32Traits extends FPTraits {
   // Overrides - API
   public absInterval = this.absIntervalImpl.bind(this);
   public acosInterval = this.acosIntervalImpl.bind(this);
+  public acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
+  public acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
+  public acoshIntervals = [
+    this.acoshAlternativeInterval.bind(this),
+    this.acoshPrimaryInterval.bind(this),
+  ];
 }
 
 export const FP = {

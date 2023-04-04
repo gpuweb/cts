@@ -105,3 +105,57 @@ g.test('acosInterval_f32')
       `f32.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
+
+g.test('acoshAlternativeInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: -1, expected: kAnyBounds },
+      { input: 0, expected: kAnyBounds },
+      { input: 1, expected: kAnyBounds },  // 1/0 occurs in inverseSqrt in this formulation
+      { input: 1.1, expected: [hexToF64(0x3fdc_6368_8000_0000n), hexToF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.acoshAlternativeInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('acoshPrimaryInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: -1, expected: kAnyBounds },
+      { input: 0, expected: kAnyBounds },
+      { input: 1, expected: kAnyBounds },  // 1/0 occurs in inverseSqrt in this formulation
+      { input: 1.1, expected: [hexToF64(0x3fdc_6368_2000_0000n), hexToF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
+      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.acoshPrimaryInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
