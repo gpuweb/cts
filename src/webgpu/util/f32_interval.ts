@@ -174,20 +174,12 @@ export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval
   return FP.f32.dotInterval(x, y);
 }
 
-export function exp2Interval(x: number | FPInterval): FPInterval {
-  return FP.f32.exp2Interval(x);
-}
-
 export function faceForwardIntervals(
   x: number[],
   y: number[],
   z: number[]
 ): (FPVector | undefined)[] {
   return FP.f32.faceForwardIntervals(x, y, z);
-}
-
-export function floorInterval(n: number): FPInterval {
-  return FP.f32.floorInterval(n);
 }
 
 export function fmaInterval(x: number, y: number, z: number): FPInterval {

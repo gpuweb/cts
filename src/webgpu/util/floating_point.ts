@@ -2209,10 +2209,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of floor(x) */
-  public floorInterval(n: number): FPInterval {
+  protected floorIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.FloorIntervalOp);
   }
+
+  /** Calculate an acceptance interval of floor(x) */
+  public abstract readonly floorInterval: (n: number) => FPInterval;
 
   private readonly FmaIntervalOp: ScalarTripleToIntervalOp = {
     impl: (x: number, y: number, z: number): FPInterval => {
@@ -3205,6 +3207,7 @@ class F32Traits extends FPTraits {
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
+  public readonly floorInterval = this.floorIntervalImpl.bind(this);
 }
 
 export const FP = {

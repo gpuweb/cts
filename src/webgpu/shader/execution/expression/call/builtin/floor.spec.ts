@@ -10,10 +10,10 @@ Returns the floor of e. Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { floorInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,7 +21,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('floor', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(
+    return FP.f32.generateScalarToIntervalCases(
       [
         // Small positive numbers
         0.1,
@@ -38,7 +38,7 @@ export const d = makeCaseCache('floor', {
         ...fullF32Range(),
       ],
       'unfiltered',
-      floorInterval
+      FP.f32.floorInterval
     );
   },
 });
