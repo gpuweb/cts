@@ -186,10 +186,6 @@ export function fmaInterval(x: number, y: number, z: number): FPInterval {
   return FP.f32.fmaInterval(x, y, z);
 }
 
-export function fractInterval(n: number): FPInterval {
-  return FP.f32.fractInterval(n);
-}
-
 export function inverseSqrtInterval(n: number | FPInterval): FPInterval {
   return FP.f32.inverseSqrtInterval(n);
 }

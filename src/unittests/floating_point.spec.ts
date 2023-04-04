@@ -551,3 +551,35 @@ g.test('floorInterval_f32')
       `f32.floorInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
+
+g.test('fractInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: 0, expected: 0 },
+      { input: 0.1, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+      { input: 0.9, expected: [hexToF32(0x3f666666), plusOneULPF32(hexToF32(0x3f666666))] },  // ~0.9
+      { input: 1.0, expected: 0 },
+      { input: 1.1, expected: [hexToF64(0x3fb9_9998_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
+      { input: -0.1, expected: [hexToF32(0x3f666666), plusOneULPF32(hexToF32(0x3f666666))] },  // ~0.9
+      { input: -0.9, expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
+      { input: -1.0, expected: 0 },
+      { input: -1.1, expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
+
+      // Edge cases
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.positive.max, expected: 0 },
+      { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
+      { input: kValue.f32.negative.min, expected: 0 },
+      { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.fractInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
