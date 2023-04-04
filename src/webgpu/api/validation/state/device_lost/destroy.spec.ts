@@ -538,10 +538,15 @@ Tests import external texture on destroyed device. Tests valid combinations of:
           layout: t.device.createBindGroupLayout({
             entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }],
           }),
-          entries: [{ binding: 0, resource: t.device.importExternalTexture({
-            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-            source: source as any,
-          }) }],
+          entries: [
+            {
+              binding: 0,
+              resource: t.device.importExternalTexture({
+                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                source: source as any,
+              }),
+            },
+          ],
         });
       }, awaitLost);
     });
