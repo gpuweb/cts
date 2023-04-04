@@ -136,10 +136,6 @@ export function atan2Interval(y: number | FPInterval, x: number | FPInterval): F
   return FP.f32.atan2Interval(y, x);
 }
 
-export function ceilInterval(n: number): FPInterval {
-  return FP.f32.ceilInterval(n);
-}
-
 export const clampIntervals = FP.f32.clampIntervals;
 
 export function clampMedianInterval(

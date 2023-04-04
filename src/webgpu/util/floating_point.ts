@@ -1719,10 +1719,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of ceil(x) */
-  public ceilInterval(n: number): FPInterval {
+  protected ceilIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.CeilIntervalOp);
   }
+
+  /** Calculate an acceptance interval of ceil(x) */
+  public abstract readonly ceilInterval: (n: number) => FPInterval;
 
   /** All acceptance interval functions for clamp(x, y, z) */
   public readonly clampIntervals: ScalarTripleToInterval[] = [
@@ -3175,18 +3177,19 @@ class F32Traits extends FPTraits {
   public readonly scalarBuilder = f32;
 
   // Overrides - API
-  public absInterval = this.absIntervalImpl.bind(this);
-  public acosInterval = this.acosIntervalImpl.bind(this);
-  public acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
-  public acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
-  public acoshIntervals = [
+  public readonly absInterval = this.absIntervalImpl.bind(this);
+  public readonly acosInterval = this.acosIntervalImpl.bind(this);
+  public readonly acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
+  public readonly acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
+  public readonly acoshIntervals = [
     this.acoshAlternativeInterval.bind(this),
     this.acoshPrimaryInterval.bind(this),
   ];
-  public asinInterval = this.asinIntervalImpl.bind(this);
-  public asinhInterval = this.asinhIntervalImpl.bind(this);
-  public atanInterval = this.atanIntervalImpl.bind(this);
-  public atanhInterval = this.atanhIntervalImpl.bind(this);
+  public readonly asinInterval = this.asinIntervalImpl.bind(this);
+  public readonly asinhInterval = this.asinhIntervalImpl.bind(this);
+  public readonly atanInterval = this.atanIntervalImpl.bind(this);
+  public readonly atanhInterval = this.atanhIntervalImpl.bind(this);
+  public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
 }
 
 export const FP = {
