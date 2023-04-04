@@ -1793,10 +1793,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of cos(x) */
-  public cosInterval(n: number): FPInterval {
+  protected cosIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.CosIntervalOp);
   }
+
+  /** Calculate an acceptance interval of cos(x) */
+  public abstract readonly cosInterval: (n: number) => FPInterval;
 
   private readonly CoshIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3190,6 +3192,7 @@ class F32Traits extends FPTraits {
   public readonly atanInterval = this.atanIntervalImpl.bind(this);
   public readonly atanhInterval = this.atanhIntervalImpl.bind(this);
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
+  public readonly cosInterval = this.cosIntervalImpl.bind(this);
 }
 
 export const FP = {
