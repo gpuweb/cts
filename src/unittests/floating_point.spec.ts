@@ -1356,6 +1356,54 @@ g.test('divisionInterval_f32')
     );
   });
 
+g.test('ldexpInterval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // 32-bit normals
+      { input: [0, 0], expected: 0 },
+      { input: [0, 1], expected: 0 },
+      { input: [0, -1], expected: 0 },
+      { input: [1, 1], expected: 2 },
+      { input: [1, -1], expected: 0.5 },
+      { input: [-1, 1], expected: -2 },
+      { input: [-1, -1], expected: -0.5 },
+
+      // 64-bit normals
+      { input: [0, 0.1], expected: 0 },
+      { input: [0, -0.1], expected: 0 },
+      { input: [1.0000000001, 1], expected: [2, plusNULPF32(2, 2)] },  // ~2, additional ULP error due to first param not being f32 precise
+      { input: [-1.0000000001, 1], expected: [minusNULPF32(-2, 2), -2] },  // ~-2, additional ULP error due to first param not being f32 precise
+
+      // Edge Cases
+      { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
+      { input: [1, -126], expected: kValue.f32.positive.min },
+      { input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [1.1920928955078125e-07, -126], expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: [-1.1920928955078125e-07, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
+      { input: [-1, -126], expected: kValue.f32.negative.max },
+      { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
+
+      // Out of Bounds
+      { input: [1, 128], expected: kAnyBounds },
+      { input: [-1, 128], expected: kAnyBounds },
+      { input: [100, 126], expected: kAnyBounds },
+      { input: [-100, 126], expected: kAnyBounds },
+      { input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kAnyBounds },
+      { input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.ldexpInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 g.test('multiplicationInterval_f32')
   .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore

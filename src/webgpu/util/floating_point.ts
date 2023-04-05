@@ -2569,10 +2569,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of ldexp(e1, e2) */
-  public ldexpInterval(e1: number, e2: number): FPInterval {
+  protected ldexpIntervalImpl(e1: number, e2: number): FPInterval {
     return this.roundAndFlushScalarPairToInterval(e1, e2, this.LdexpIntervalOp);
   }
+
+  /** Calculate an acceptance interval of ldexp(e1, e2) */
+  public abstract readonly ldexpInterval: (e1: number, e2: number) => FPInterval;
 
   private readonly LengthIntervalScalarOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3531,6 +3533,7 @@ class F32Traits extends FPTraits {
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
+  public readonly ldexpInterval = this.ldexpIntervalImpl.bind(this);
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
