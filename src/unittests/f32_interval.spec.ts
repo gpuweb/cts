@@ -42,7 +42,6 @@ import {
   reflectInterval,
   refractInterval,
   remainderInterval,
-  signInterval,
   sinInterval,
   sinhInterval,
   smoothStepInterval,
@@ -1907,38 +1906,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('signInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: -1 },
-      { input: -10, expected: -1 },
-      { input: -1, expected: -1 },
-      { input: -0.1, expected: -1 },
-      { input: kValue.f32.negative.max, expected:  -1 },
-      { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] },
-      { input: 0, expected: 0 },
-      { input: kValue.f32.subnormal.positive.max, expected: [0, 1] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
-      { input: kValue.f32.positive.min, expected: 1 },
-      { input: 0.1, expected: 1 },
-      { input: 1, expected: 1 },
-      { input: 10, expected: 1 },
-      { input: kValue.f32.positive.max, expected: 1 },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = signInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `signInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('sinInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
