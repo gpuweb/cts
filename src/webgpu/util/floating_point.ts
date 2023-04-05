@@ -2386,10 +2386,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of log(x) */
-  public logInterval(x: number | FPInterval): FPInterval {
+  protected logIntervalImpl(x: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(x), this.LogIntervalOp);
   }
+
+  /** Calculate an acceptance interval of log(x) */
+  public abstract readonly logInterval: (x: number | FPInterval) => FPInterval;
 
   private readonly Log2IntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(
@@ -3263,6 +3265,7 @@ class F32Traits extends FPTraits {
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
+  public readonly logInterval = this.logIntervalImpl.bind(this);
 }
 
 export const FP = {

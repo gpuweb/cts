@@ -1,3 +1,5 @@
+import { logInterval, toF32Interval } from '../webgpu/util/f32_interval';
+
 export const description = `
 Floating Point unit tests.
 `;
@@ -650,6 +652,35 @@ g.test('lengthIntervalScalar_f32')
     t.expect(
       objectEquals(expected, got),
       `f32.lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('logInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: -1, expected: kAnyBounds },
+      { input: 0, expected: kAnyBounds },
+      { input: 1, expected: 0 },
+      { input: kValue.f32.positive.e, expected: [minusOneULPF32(1), 1] },
+      { input: kValue.f32.positive.max, expected: [minusOneULPF32(hexToF32(0x42b17218)), hexToF32(0x42b17218)] },  // ~88.72...
+    ]
+  )
+  .fn(t => {
+    const error = (n: number): number => {
+      if (t.params.input >= 0.5 && t.params.input <= 2.0) {
+        return 2 ** -21;
+      }
+      return 3 * oneULPF32(n);
+    };
+
+    t.params.expected = applyError(t.params.expected, error);
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.logInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.logInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
