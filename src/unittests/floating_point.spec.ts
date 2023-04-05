@@ -747,6 +747,41 @@ g.test('negationInterval_f32')
     );
   });
 
+g.test('quantizeToF16Interval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
+      { input: -1, expected: -1 },
+      { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] },  // ~-0.1
+      { input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
+      { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
+      { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { input: 0, expected: 0 },
+      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
+      { input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
+      { input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
+      { input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
+      { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] },  // ~0.1
+      { input: 1, expected: 1 },
+      { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.quantizeToF16Interval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.quantizeToF16Interval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;

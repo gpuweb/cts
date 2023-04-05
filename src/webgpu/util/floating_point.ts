@@ -2650,10 +2650,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of quantizeToF16(x) */
-  public quantizeToF16Interval(n: number): FPInterval {
+  protected quantizeToF16IntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
   }
+
+  /** Calculate an acceptance interval of quantizeToF16(x) */
+  public abstract readonly quantizeToF16Interval: (n: number) => FPInterval;
 
   private readonly RadiansIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3272,6 +3274,7 @@ class F32Traits extends FPTraits {
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
+  public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
 }
 
 export const FP = {

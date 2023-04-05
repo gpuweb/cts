@@ -248,10 +248,6 @@ export function powInterval(x: number | FPInterval, y: number | FPInterval): FPI
   return FP.f32.powInterval(x, y);
 }
 
-export function quantizeToF16Interval(n: number): FPInterval {
-  return FP.f32.quantizeToF16Interval(n);
-}
-
 export function radiansInterval(n: number): FPInterval {
   return FP.f32.radiansInterval(n);
 }
