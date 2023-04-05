@@ -1078,6 +1078,46 @@ g.test('tanhInterval_f32')
     );
   });
 
+g.test('truncInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: 0, expected: 0 },
+      { input: 0.1, expected: 0 },
+      { input: 0.9, expected: 0 },
+      { input: 1.0, expected: 1 },
+      { input: 1.1, expected: 1 },
+      { input: 1.9, expected: 1 },
+      { input: -0.1, expected: 0 },
+      { input: -0.9, expected: 0 },
+      { input: -1.0, expected: -1 },
+      { input: -1.1, expected: -1 },
+      { input: -1.9, expected: -1 },
+
+      // Edge cases
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+      { input: kValue.f32.positive.min, expected: 0 },
+      { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+      { input: kValue.f32.negative.max, expected: 0 },
+
+      // 32-bit subnormals
+      { input: kValue.f32.subnormal.positive.max, expected: 0 },
+      { input: kValue.f32.subnormal.positive.min, expected: 0 },
+      { input: kValue.f32.subnormal.negative.min, expected: 0 },
+      { input: kValue.f32.subnormal.negative.max, expected: 0 },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.truncInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.truncInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;

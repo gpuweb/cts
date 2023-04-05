@@ -3014,10 +3014,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of trunc(x) */
-  public truncInterval(n: number | FPInterval): FPInterval {
+  protected truncIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.TruncIntervalOp);
   }
+
+  /** Calculate an acceptance interval of trunc(x) */
+  public abstract readonly truncInterval: (n: number | FPInterval) => FPInterval;
 
   /**
    * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
@@ -3301,6 +3303,7 @@ class F32Traits extends FPTraits {
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
+  public readonly truncInterval = this.truncIntervalImpl.bind(this);
 }
 
 export const FP = {
