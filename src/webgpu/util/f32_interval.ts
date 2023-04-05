@@ -208,10 +208,6 @@ export function normalizeInterval(n: number[]): FPVector {
   return FP.f32.normalizeInterval(n);
 }
 
-export function powInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.powInterval(x, y);
-}
-
 export function reflectInterval(x: number[], y: number[]): FPVector {
   return FP.f32.reflectInterval(x, y);
 }

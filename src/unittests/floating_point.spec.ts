@@ -1582,6 +1582,39 @@ g.test('multiplicationInterval_f32')
     );
   });
 
+g.test('powInterval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+      { input: [-1, 0], expected: kAnyBounds },
+      { input: [0, 0], expected: kAnyBounds },
+      { input: [1, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [2, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [kValue.f32.positive.max, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [0, 1], expected: kAnyBounds },
+      { input: [1, 1], expected: [hexToF64(0x3fef_fffe_dfff_fe00n), hexToF64(0x3ff0_0000_c000_0200n)] },  // ~1
+      { input: [1, 100], expected: [hexToF64(0x3fef_ffba_3fff_3800n), hexToF64(0x3ff0_0023_2000_c800n)] },  // ~1
+      { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+      { input: [2, 1], expected: [hexToF64(0x3fff_fffe_a000_0200n), hexToF64(0x4000_0001_0000_0200n)] },  // ~2
+      { input: [2, 2], expected: [hexToF64(0x400f_fffd_a000_0400n), hexToF64(0x4010_0001_a000_0400n)] },  // ~4
+      { input: [10, 10], expected: [hexToF64(0x4202_a04f_51f7_7000n), hexToF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
+      { input: [10, 1], expected: [hexToF64(0x4023_fffe_0b65_8b00n), hexToF64(0x4024_0002_149a_7c00n)] },  // ~10
+      { input: [kValue.f32.positive.max, 1], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.powInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 g.test('remainderInterval_f32')
   .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore

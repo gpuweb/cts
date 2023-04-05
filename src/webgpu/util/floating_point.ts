@@ -2872,14 +2872,16 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of pow(x, y) */
-  public powInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected powIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.PowIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of pow(x, y) */
+  public abstract readonly powInterval: (x: number | FPInterval, y: number | FPInterval) => FPInterval;
 
   // Once a full implementation of F16Interval exists, the correctlyRounded for
   // that can potentially be used instead of having a bespoke operation
@@ -3551,6 +3553,7 @@ class F32Traits extends FPTraits {
   public readonly minInterval = this.minIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
+  public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
