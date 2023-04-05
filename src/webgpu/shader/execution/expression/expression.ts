@@ -25,7 +25,6 @@ import {
   MatrixToMatrix,
   MatrixToScalar,
   MatrixVectorToVector,
-  ScalarToInterval,
   ScalarToVector,
   ScalarMatrixToMatrix,
   ScalarVectorToVector,
@@ -820,49 +819,6 @@ function packScalarsToVector(
 export type IntervalFilter =
   | 'finite' // Expected to be finite in the interval numeric space
   | 'unfiltered'; // No expectations
-
-/**
- * @returns a Case for the param and unary interval generator provided
- * The Case will use an interval comparator for matching results.
- * @param param the param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for an
- *            unary operation
- */
-function makeUnaryToF32IntervalCase(
-  param: number,
-  filter: IntervalFilter,
-  ...ops: ScalarToInterval[]
-): Case | undefined {
-  param = quantizeToF32(param);
-
-  const intervals = ops.map(o => o(param));
-  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
-    return undefined;
-  }
-  return { input: [f32(param)], expected: anyOf(...intervals) };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param params array of inputs to try
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for an
- *            unary operation
- */
-export function generateUnaryToF32IntervalCases(
-  params: number[],
-  filter: IntervalFilter,
-  ...ops: ScalarToInterval[]
-): Case[] {
-  return params.reduce((cases, e) => {
-    const c = makeUnaryToF32IntervalCase(e, filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array<Case>());
-}
 
 /**
  * @returns a Case for the params and binary interval generator provided
