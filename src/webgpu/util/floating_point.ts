@@ -2795,13 +2795,11 @@ abstract class FPTraits {
   public abstract readonly roundInterval: (n: number) => FPInterval;
 
   /**
-   * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
-   *
    * The definition of saturate does not specify which version of clamp to use.
    * Using min-max here, since it has wider acceptance intervals, that include
    * all of median's.
    */
-  public saturateInterval(n: number): FPInterval {
+  protected saturateIntervalImpl(n: number): FPInterval {
     return this.runScalarTripleToIntervalOp(
       this.toInterval(n),
       this.toInterval(0.0),
@@ -2809,6 +2807,9 @@ abstract class FPTraits {
       this.ClampMinMaxIntervalOp
     );
   }
+
+  /*** Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0) */
+  public abstract readonly saturateInterval: (n: number) => FPInterval;
 
   private readonly SignIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3281,6 +3282,7 @@ class F32Traits extends FPTraits {
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
+  public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
 }
 
 export const FP = {

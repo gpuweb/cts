@@ -42,7 +42,6 @@ import {
   reflectInterval,
   refractInterval,
   remainderInterval,
-  saturateInterval,
   signInterval,
   sinInterval,
   sinhInterval,
@@ -1908,44 +1907,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('saturateInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Normals
-      { input: 0, expected: 0 },
-      { input: 1, expected: 1.0 },
-      { input: -0.1, expected: 0 },
-      { input: -1, expected: 0 },
-      { input: -10, expected: 0 },
-      { input: 0.1, expected: [minusOneULP(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: 10, expected: 1.0 },
-      { input: 11.1, expected: 1.0 },
-      { input: kValue.f32.positive.max, expected: 1.0 },
-      { input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-      { input: kValue.f32.negative.max, expected: 0.0 },
-      { input: kValue.f32.negative.min, expected: 0.0 },
-
-      // Subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0.0, kValue.f32.subnormal.positive.min] },
-      { input: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0.0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
-
-      // Infinities
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = saturateInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('signInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
