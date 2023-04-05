@@ -2602,10 +2602,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of -x */
-  public negationInterval(n: number): FPInterval {
+  protected negationIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.NegationIntervalOp);
   }
+
+  /** Calculate an acceptance interval of -x */
+  public abstract readonly negationInterval: (n: number) => FPInterval;
 
   private readonly NormalizeIntervalOp: VectorToVectorOp = {
     impl: (n: number[]): FPVector => {
@@ -3269,6 +3271,7 @@ class F32Traits extends FPTraits {
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
+  public readonly negationInterval = this.negationIntervalImpl.bind(this);
 }
 
 export const FP = {

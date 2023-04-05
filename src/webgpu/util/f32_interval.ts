@@ -240,10 +240,6 @@ export function multiplicationVectorMatrixInterval(x: number[], y: number[][]): 
   return FP.f32.multiplicationVectorMatrixInterval(x, y);
 }
 
-export function negationInterval(n: number): FPInterval {
-  return FP.f32.negationInterval(n);
-}
-
 export function normalizeInterval(n: number[]): FPVector {
   return FP.f32.normalizeInterval(n);
 }
