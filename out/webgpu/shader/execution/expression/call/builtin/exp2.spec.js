@@ -11,10 +11,10 @@ Returns 2 raised to the power e (e.g. 2^e). Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { exp2Interval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -33,10 +33,10 @@ kValue.f32.negative.min, // Closest to returning 0 as possible
 
 export const d = makeCaseCache('exp2', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'finite', exp2Interval);
+    return FP.f32.generateScalarToIntervalCases(inputs, 'finite', FP.f32.exp2Interval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(inputs, 'unfiltered', exp2Interval);
+    return FP.f32.generateScalarToIntervalCases(inputs, 'unfiltered', FP.f32.exp2Interval);
   }
 });
 

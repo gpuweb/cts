@@ -11,10 +11,10 @@ Returns the reciprocal of sqrt(e). Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { inverseSqrtInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { biasedRange, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,7 +22,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('inverseSqrt', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(
+    return FP.f32.generateScalarToIntervalCases(
     [
     // 0 < x <= 1 linearly spread
     ...linearRange(kValue.f32.positive.min, 1, 100),
@@ -30,7 +30,7 @@ export const d = makeCaseCache('inverseSqrt', {
     ...biasedRange(1, 2 ** 32, 1000)],
 
     'unfiltered',
-    inverseSqrtInterval);
+    FP.f32.inverseSqrtInterval);
 
   }
 });

@@ -32,6 +32,11 @@ export const listing = [
   },
   {
     "file": [
+      "floating_point"
+    ]
+  },
+  {
+    "file": [
       "getStackTrace"
     ]
   },

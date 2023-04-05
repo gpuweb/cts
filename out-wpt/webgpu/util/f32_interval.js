@@ -50,20 +50,6 @@ export function ulpInterval(n, numULP) {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function acosInterval(n) {
-  return FP.f32.acosInterval(n);
-}
-
-export const acoshIntervals = FP.f32.acoshIntervals;
-
-export function acoshAlternativeInterval(x) {
-  return FP.f32.acoshAlternativeInterval(x);
-}
-
-export function acoshPrimaryInterval(x) {
-  return FP.f32.acoshPrimaryInterval(x);
-}
-
 export function additionInterval(x, y) {
   return FP.f32.additionInterval(x, y);
 }
@@ -72,28 +58,8 @@ export function additionMatrixInterval(x, y) {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export function asinInterval(n) {
-  return FP.f32.asinInterval(n);
-}
-
-export function asinhInterval(n) {
-  return FP.f32.asinhInterval(n);
-}
-
-export function atanInterval(n) {
-  return FP.f32.atanInterval(n);
-}
-
 export function atan2Interval(y, x) {
   return FP.f32.atan2Interval(y, x);
-}
-
-export function atanhInterval(n) {
-  return FP.f32.atanhInterval(n);
-}
-
-export function ceilInterval(n) {
-  return FP.f32.ceilInterval(n);
 }
 
 export const clampIntervals = FP.f32.clampIntervals;
@@ -106,20 +72,8 @@ export function clampMinMaxInterval(x, y, z) {
   return FP.f32.clampMinMaxInterval(x, y, z);
 }
 
-export function cosInterval(n) {
-  return FP.f32.cosInterval(n);
-}
-
-export function coshInterval(n) {
-  return FP.f32.coshInterval(n);
-}
-
 export function crossInterval(x, y) {
   return FP.f32.crossInterval(x, y);
-}
-
-export function degreesInterval(n) {
-  return FP.f32.degreesInterval(n);
 }
 
 export function determinantInterval(m) {
@@ -138,32 +92,12 @@ export function dotInterval(x, y) {
   return FP.f32.dotInterval(x, y);
 }
 
-export function expInterval(x) {
-  return FP.f32.expInterval(x);
-}
-
-export function exp2Interval(x) {
-  return FP.f32.exp2Interval(x);
-}
-
 export function faceForwardIntervals(x, y, z) {
   return FP.f32.faceForwardIntervals(x, y, z);
 }
 
-export function floorInterval(n) {
-  return FP.f32.floorInterval(n);
-}
-
 export function fmaInterval(x, y, z) {
   return FP.f32.fmaInterval(x, y, z);
-}
-
-export function fractInterval(n) {
-  return FP.f32.fractInterval(n);
-}
-
-export function inverseSqrtInterval(n) {
-  return FP.f32.inverseSqrtInterval(n);
 }
 
 export function ldexpInterval(e1, e2) {
@@ -172,14 +106,6 @@ export function ldexpInterval(e1, e2) {
 
 export function lengthInterval(n) {
   return FP.f32.lengthInterval(n);
-}
-
-export function logInterval(x) {
-  return FP.f32.logInterval(x);
-}
-
-export function log2Interval(x) {
-  return FP.f32.log2Interval(x);
 }
 
 export function maxInterval(x, y) {
@@ -228,24 +154,12 @@ export function multiplicationVectorMatrixInterval(x, y) {
   return FP.f32.multiplicationVectorMatrixInterval(x, y);
 }
 
-export function negationInterval(n) {
-  return FP.f32.negationInterval(n);
-}
-
 export function normalizeInterval(n) {
   return FP.f32.normalizeInterval(n);
 }
 
 export function powInterval(x, y) {
   return FP.f32.powInterval(x, y);
-}
-
-export function quantizeToF16Interval(n) {
-  return FP.f32.quantizeToF16Interval(n);
-}
-
-export function radiansInterval(n) {
-  return FP.f32.radiansInterval(n);
 }
 
 export function reflectInterval(x, y) {
@@ -260,32 +174,8 @@ export function remainderInterval(x, y) {
   return FP.f32.remainderInterval(x, y);
 }
 
-export function roundInterval(n) {
-  return FP.f32.roundInterval(n);
-}
-
-export function saturateInterval(n) {
-  return FP.f32.saturateInterval(n);
-}
-
-export function signInterval(n) {
-  return FP.f32.signInterval(n);
-}
-
-export function sinInterval(n) {
-  return FP.f32.sinInterval(n);
-}
-
-export function sinhInterval(n) {
-  return FP.f32.sinhInterval(n);
-}
-
 export function smoothStepInterval(low, high, x) {
   return FP.f32.smoothStepInterval(low, high, x);
-}
-
-export function sqrtInterval(n) {
-  return FP.f32.sqrtInterval(n);
 }
 
 export function stepInterval(edge, x) {
@@ -300,20 +190,8 @@ export function subtractionMatrixInterval(x, y) {
   return FP.f32.subtractionMatrixInterval(x, y);
 }
 
-export function tanInterval(n) {
-  return FP.f32.tanInterval(n);
-}
-
-export function tanhInterval(n) {
-  return FP.f32.tanhInterval(n);
-}
-
 export function transposeInterval(m) {
   return FP.f32.transposeInterval(m);
-}
-
-export function truncInterval(n) {
-  return FP.f32.truncInterval(n);
 }
 
 export function unpack2x16floatInterval(n) {

@@ -10,10 +10,10 @@ Returns the sign of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { i32, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
-import { signInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range, fullI32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -21,7 +21,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('sign', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', signInterval);
+    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.signInterval);
   },
   i32: () =>
   fullI32Range().map((i) => {

@@ -12,10 +12,10 @@ Returns the cosine of e. Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { cosInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -23,15 +23,15 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('cos', {
   f32: () => {
-    return generateUnaryToF32IntervalCases(
+    return FP.f32.generateScalarToIntervalCases(
       [
-        // Well defined accuracy range
+        // Well-defined accuracy range
         ...linearRange(-Math.PI, Math.PI, 1000),
         ...fullF32Range(),
       ],
 
       'unfiltered',
-      cosInterval
+      FP.f32.cosInterval
     );
   },
 });

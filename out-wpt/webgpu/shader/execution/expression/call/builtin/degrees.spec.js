@@ -11,10 +11,10 @@ Converts radians to degrees, approximating e1 × 180 ÷ π. Component-wise when 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { degreesInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateUnaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,10 +22,14 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('degrees', {
   f32_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'finite', degreesInterval);
+    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'finite', FP.f32.degreesInterval);
   },
   f32_non_const: () => {
-    return generateUnaryToF32IntervalCases(fullF32Range(), 'unfiltered', degreesInterval);
+    return FP.f32.generateScalarToIntervalCases(
+      fullF32Range(),
+      'unfiltered',
+      FP.f32.degreesInterval
+    );
   },
 });
 

@@ -30,11 +30,7 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('abs', {
   f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-    fullF32Range(),
-    'unfiltered',
-    FP.f32.absInterval.bind(FP.f32));
-
+    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.absInterval);
   }
 });
 
