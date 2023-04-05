@@ -46,7 +46,6 @@ import {
   stepInterval,
   subtractionInterval,
   subtractionMatrixInterval,
-  tanhInterval,
   toF32Interval,
   toF32Matrix,
   toF32Vector,
@@ -1902,31 +1901,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('tanhInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [hexToF64(0xbfe8_5efd_1000_0000n), hexToF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
-      { input: 0, expected: [hexToF64(0xbe8c_0000_b000_0000n), hexToF64(0x3e8c_0000_b000_0000n)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fe8_5ef8_9000_0000n), hexToF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = tanhInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('truncInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

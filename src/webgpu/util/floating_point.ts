@@ -2981,10 +2981,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of tanh(x) */
-  public tanhInterval(n: number): FPInterval {
+  protected tanhIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.TanhIntervalOp);
   }
+
+  /** Calculate an acceptance interval of tanh(x) */
+  public abstract readonly tanhInterval: (n: number) => FPInterval;
 
   private readonly TransposeIntervalOp: MatrixToMatrixOp = {
     impl: (m: Matrix<number>): FPMatrix => {
@@ -3298,6 +3300,7 @@ class F32Traits extends FPTraits {
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
+  public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
 }
 
 export const FP = {
