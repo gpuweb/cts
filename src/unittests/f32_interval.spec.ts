@@ -39,7 +39,6 @@ import {
   multiplicationVectorMatrixInterval,
   normalizeInterval,
   powInterval,
-  radiansInterval,
   reflectInterval,
   refractInterval,
   remainderInterval,
@@ -1910,36 +1909,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('radiansInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: -180, expected: [minusOneULP(kValue.f32.negative.pi.whole), plusOneULP(kValue.f32.negative.pi.whole)] },
-      { input: -135, expected: [minusOneULP(kValue.f32.negative.pi.three_quarters), plusOneULP(kValue.f32.negative.pi.three_quarters)] },
-      { input: -90, expected: [minusOneULP(kValue.f32.negative.pi.half), plusOneULP(kValue.f32.negative.pi.half)] },
-      { input: -60, expected: [minusOneULP(kValue.f32.negative.pi.third), plusOneULP(kValue.f32.negative.pi.third)] },
-      { input: -45, expected: [minusOneULP(kValue.f32.negative.pi.quarter), plusOneULP(kValue.f32.negative.pi.quarter)] },
-      { input: -30, expected: [minusOneULP(kValue.f32.negative.pi.sixth), plusOneULP(kValue.f32.negative.pi.sixth)] },
-      { input: 0, expected: 0 },
-      { input: 30, expected: [minusOneULP(kValue.f32.positive.pi.sixth), plusOneULP(kValue.f32.positive.pi.sixth)] },
-      { input: 45, expected: [minusOneULP(kValue.f32.positive.pi.quarter), plusOneULP(kValue.f32.positive.pi.quarter)] },
-      { input: 60, expected: [minusOneULP(kValue.f32.positive.pi.third), plusOneULP(kValue.f32.positive.pi.third)] },
-      { input: 90, expected: [minusOneULP(kValue.f32.positive.pi.half), plusOneULP(kValue.f32.positive.pi.half)] },
-      { input: 135, expected: [minusOneULP(kValue.f32.positive.pi.three_quarters), plusOneULP(kValue.f32.positive.pi.three_quarters)] },
-      { input: 180, expected: [minusOneULP(kValue.f32.positive.pi.whole), plusOneULP(kValue.f32.positive.pi.whole)] },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = radiansInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `radiansInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('roundInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

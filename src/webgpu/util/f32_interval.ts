@@ -248,10 +248,6 @@ export function powInterval(x: number | FPInterval, y: number | FPInterval): FPI
   return FP.f32.powInterval(x, y);
 }
 
-export function radiansInterval(n: number): FPInterval {
-  return FP.f32.radiansInterval(n);
-}
-
 export function reflectInterval(x: number[], y: number[]): FPVector {
   return FP.f32.reflectInterval(x, y);
 }

@@ -2663,10 +2663,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of radians(x) */
-  public radiansInterval(n: number): FPInterval {
+  protected radiansIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.RadiansIntervalOp);
   }
+
+  /** Calculate an acceptance interval of radians(x) */
+  public abstract readonly radiansInterval: (n: number) => FPInterval;
 
   private readonly ReflectIntervalOp: VectorPairToVectorOp = {
     impl: (x: number[], y: number[]): FPVector => {
@@ -3275,6 +3277,7 @@ class F32Traits extends FPTraits {
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
+  public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
 }
 
 export const FP = {
