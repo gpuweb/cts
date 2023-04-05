@@ -2968,10 +2968,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of tan(x) */
-  public tanInterval(n: number): FPInterval {
+  protected tanIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.TanIntervalOp);
   }
+
+  /** Calculate an acceptance interval of tan(x) */
+  public abstract readonly tanInterval: (n: number) => FPInterval;
 
   private readonly TanhIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3295,6 +3297,7 @@ class F32Traits extends FPTraits {
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
+  public readonly tanInterval = this.tanIntervalImpl.bind(this);
 }
 
 export const FP = {

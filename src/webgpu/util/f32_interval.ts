@@ -276,10 +276,6 @@ export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatri
   return FP.f32.subtractionMatrixInterval(x, y);
 }
 
-export function tanInterval(n: number): FPInterval {
-  return FP.f32.tanInterval(n);
-}
-
 export function tanhInterval(n: number): FPInterval {
   return FP.f32.tanhInterval(n);
 }

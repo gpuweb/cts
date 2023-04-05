@@ -1012,6 +1012,47 @@ g.test('sqrtInterval_f32')
     );
   });
 
+g.test('tanInterval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      // All of these are hard coded, since the error intervals are difficult to
+      // express in a closed human--readable form.
+      // Some easy looking cases like f(x = -π|π) = 0 are actually quite
+      // difficult. This is because the interval is calculated from the results
+      // of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is
+      // irrational, thus does not have an exact representation as a f32.
+      //
+      // Even at 0, which has a precise f32 value, there is still the problem
+      // that result of sin(0) and cos(0) will be intervals due to the inherited
+      // nature of errors, so the proper interval will be an interval calculated
+      // from dividing an interval by another interval and applying an error
+      // function to that.
+      //
+      // This complexity is why the entire interval framework was developed.
+      //
+      // The examples here have been manually traced to confirm the expectation
+      // values are correct.
+      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
+      { input: kValue.f32.negative.min, expected: kAnyBounds },
+      { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf40_02bc_9000_0000n), hexToF64(0x3f40_0144_f000_0000n)] },  // ~0.0
+      { input: kValue.f32.negative.pi.half, expected: kAnyBounds },
+      { input: 0, expected: [hexToF64(0xbf40_0200_b000_0000n), hexToF64(0x3f40_0200_b000_0000n)] },  // ~0.0
+      { input: kValue.f32.positive.pi.half, expected: kAnyBounds },
+      { input: kValue.f32.positive.pi.whole, expected: [hexToF64(0xbf40_0144_f000_0000n), hexToF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
+      { input: kValue.f32.positive.max, expected: kAnyBounds },
+      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.tanInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;
