@@ -2652,14 +2652,19 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of max(x, y) */
-  public maxInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected maxIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.MaxIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of max(x, y) */
+  public abstract readonly maxInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   private readonly MinIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -3537,6 +3542,7 @@ class F32Traits extends FPTraits {
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
+  public readonly maxInterval = this.maxIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
