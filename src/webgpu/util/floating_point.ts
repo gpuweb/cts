@@ -2405,10 +2405,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of log2(x) */
-  public log2Interval(x: number | FPInterval): FPInterval {
+  protected log2IntervalImpl(x: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(x), this.Log2IntervalOp);
   }
+
+  /** Calculate an acceptance interval of log2(x) */
+  public abstract readonly log2Interval: (x: number | FPInterval) => FPInterval;
 
   private readonly MaxIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -3266,6 +3268,7 @@ class F32Traits extends FPTraits {
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
+  public readonly log2Interval = this.log2IntervalImpl.bind(this);
 }
 
 export const FP = {

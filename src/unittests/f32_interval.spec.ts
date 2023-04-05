@@ -27,7 +27,6 @@ import {
   faceForwardIntervals,
   fmaInterval,
   ldexpInterval,
-  log2Interval,
   maxInterval,
   minInterval,
   mixImpreciseInterval,
@@ -1913,35 +1912,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('log2Interval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: -1, expected: kAnyBounds },
-      { input: 0, expected: kAnyBounds },
-      { input: 1, expected: 0 },
-      { input: 2, expected: 1 },
-      { input: kValue.f32.positive.max, expected: [minusOneULP(128), 128] },
-    ]
-  )
-  .fn(t => {
-    const error = (n: number): number => {
-      if (t.params.input >= 0.5 && t.params.input <= 2.0) {
-        return 2 ** -21;
-      }
-      return 3 * oneULPF32(n);
-    };
-
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = log2Interval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `log2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('negationInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

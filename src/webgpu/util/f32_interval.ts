@@ -194,14 +194,6 @@ export function lengthInterval(n: number | FPInterval | number[] | FPVector): FP
   return FP.f32.lengthInterval(n);
 }
 
-export function logInterval(x: number | FPInterval): FPInterval {
-  return FP.f32.logInterval(x);
-}
-
-export function log2Interval(x: number | FPInterval): FPInterval {
-  return FP.f32.log2Interval(x);
-}
-
 export function maxInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
   return FP.f32.maxInterval(x, y);
 }

@@ -1,5 +1,3 @@
-import { logInterval, toF32Interval } from '../webgpu/util/f32_interval';
-
 export const description = `
 Floating Point unit tests.
 `;
@@ -681,6 +679,35 @@ g.test('logInterval_f32')
     t.expect(
       objectEquals(expected, got),
       `f32.logInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('log2Interval_f32')
+  .paramsSubcasesOnly<ScalarToIntervalCase>(
+    // prettier-ignore
+    [
+      { input: -1, expected: kAnyBounds },
+      { input: 0, expected: kAnyBounds },
+      { input: 1, expected: 0 },
+      { input: 2, expected: 1 },
+      { input: kValue.f32.positive.max, expected: [minusOneULPF32(128), 128] },
+    ]
+  )
+  .fn(t => {
+    const error = (n: number): number => {
+      if (t.params.input >= 0.5 && t.params.input <= 2.0) {
+        return 2 ** -21;
+      }
+      return 3 * oneULPF32(n);
+    };
+
+    t.params.expected = applyError(t.params.expected, error);
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.log2Interval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.log2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
