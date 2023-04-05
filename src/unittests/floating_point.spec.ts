@@ -1418,6 +1418,56 @@ g.test('multiplicationInterval_f32')
     );
   });
 
+g.test('remainderInterval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // 32-bit normals
+      { input: [0, 1], expected: [0, 0] },
+      { input: [0, -1], expected: [0, 0] },
+      { input: [1, 1], expected: [0, 1] },
+      { input: [1, -1], expected: [0, 1] },
+      { input: [-1, 1], expected: [-1, 0] },
+      { input: [-1, -1], expected: [-1, 0] },
+      { input: [4, 2], expected: [0, 2] },
+      { input: [-4, 2], expected: [-2, 0] },
+      { input: [4, -2], expected: [0, 2] },
+      { input: [-4, -2], expected: [-2, 0] },
+      { input: [2, 4], expected: [2, 2] },
+      { input: [-2, 4], expected: [-2, -2] },
+      { input: [2, -4], expected: [2, 2] },
+      { input: [-2, -4], expected: [-2, -2] },
+
+      // 64-bit normals
+      { input: [0, 0.1], expected: [0, 0] },
+      { input: [0, -0.1], expected: [0, 0] },
+      { input: [1, 0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
+      { input: [-1, 0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
+      { input: [1, -0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
+      { input: [-1, -0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
+
+      // Denominator out of range
+      { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+      { input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+      { input: [1, 0], expected: kAnyBounds },
+      { input: [1, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.remainderInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 g.test('subtractionInterval_f32')
   .paramsSubcasesOnly<ScalarPairToIntervalCase>(
     // prettier-ignore

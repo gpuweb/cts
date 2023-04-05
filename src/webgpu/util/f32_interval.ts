@@ -232,10 +232,6 @@ export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
 }
 
-export function remainderInterval(x: number, y: number): FPInterval {
-  return FP.f32.remainderInterval(x, y);
-}
-
 export function smoothStepInterval(low: number, high: number, x: number): FPInterval {
   return FP.f32.smoothStepInterval(low, high, x);
 }

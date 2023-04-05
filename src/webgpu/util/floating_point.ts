@@ -2989,13 +2989,16 @@ abstract class FPTraits {
   };
 
   /** Calculate an acceptance interval for x % y */
-  public remainderInterval(x: number, y: number): FPInterval {
+  protected remainderIntervalImpl(x: number, y: number): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.RemainderIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval for x % y */
+  public abstract readonly remainderInterval: (x: number, y: number) => FPInterval;
 
   private readonly RoundIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3535,6 +3538,7 @@ class F32Traits extends FPTraits {
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);
