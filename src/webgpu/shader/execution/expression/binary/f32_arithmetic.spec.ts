@@ -9,18 +9,12 @@ import {
   F32Vector,
   multiplicationInterval,
   remainderInterval,
-  subtractionInterval,
   toF32Vector,
 } from '../../../../util/f32_interval.js';
 import { FP } from '../../../../util/floating_point.js';
 import { fullF32Range, sparseVectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import {
-  allInputSources,
-  generateF32VectorToVectorCases,
-  generateVectorF32ToVectorCases,
-  run,
-} from '../expression.js';
+import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
@@ -35,11 +29,11 @@ const additionScalarVectorInterval = (s: number, v: number[]): F32Vector => {
 };
 
 const subtractionVectorScalarInterval = (v: number[], s: number): F32Vector => {
-  return toF32Vector(v.map(e => subtractionInterval(e, s)));
+  return FP.f32.toVector(v.map(e => FP.f32.subtractionInterval(e, s)));
 };
 
 const subtractionScalarVectorInterval = (s: number, v: number[]): F32Vector => {
-  return toF32Vector(v.map(e => subtractionInterval(s, e)));
+  return FP.f32.toVector(v.map(e => FP.f32.subtractionInterval(s, e)));
 };
 
 const multiplicationVectorScalarInterval = (v: number[], s: number): F32Vector => {
@@ -186,7 +180,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       fullF32Range(),
       'finite',
-      subtractionInterval
+      FP.f32.subtractionInterval
     );
   },
   subtraction_non_const: () => {
@@ -194,11 +188,11 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       fullF32Range(),
       'unfiltered',
-      subtractionInterval
+      FP.f32.subtractionInterval
     );
   },
   subtraction_vec2_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'finite',
@@ -206,7 +200,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_vec2_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'unfiltered',
@@ -214,7 +208,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_vec3_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'finite',
@@ -222,7 +216,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_vec3_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'unfiltered',
@@ -230,7 +224,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_vec4_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'finite',
@@ -238,7 +232,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_vec4_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'unfiltered',
@@ -246,7 +240,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec2_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'finite',
@@ -254,7 +248,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec2_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'unfiltered',
@@ -262,7 +256,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec3_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'finite',
@@ -270,7 +264,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec3_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'unfiltered',
@@ -278,7 +272,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec4_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'finite',
@@ -286,7 +280,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   subtraction_scalar_vec4_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'unfiltered',
@@ -310,7 +304,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec2_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'finite',
@@ -318,7 +312,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec2_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'unfiltered',
@@ -326,7 +320,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec3_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'finite',
@@ -334,7 +328,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec3_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'unfiltered',
@@ -342,7 +336,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec4_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'finite',
@@ -350,7 +344,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_vec4_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'unfiltered',
@@ -358,7 +352,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec2_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'finite',
@@ -366,7 +360,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec2_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'unfiltered',
@@ -374,7 +368,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec3_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'finite',
@@ -382,7 +376,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec3_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'unfiltered',
@@ -390,7 +384,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec4_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'finite',
@@ -398,7 +392,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   multiplication_scalar_vec4_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'unfiltered',
@@ -534,7 +528,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec2_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'finite',
@@ -542,7 +536,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec2_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
       fullF32Range(),
       'unfiltered',
@@ -550,7 +544,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec3_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'finite',
@@ -558,7 +552,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec3_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
       fullF32Range(),
       'unfiltered',
@@ -566,7 +560,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec4_scalar_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'finite',
@@ -574,7 +568,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_vec4_scalar_non_const: () => {
-    return generateVectorF32ToVectorCases(
+    return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
       fullF32Range(),
       'unfiltered',
@@ -582,7 +576,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec2_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'finite',
@@ -590,7 +584,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec2_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(2),
       'unfiltered',
@@ -598,7 +592,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec3_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'finite',
@@ -606,7 +600,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec3_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(3),
       'unfiltered',
@@ -614,7 +608,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec4_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'finite',
@@ -622,7 +616,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
     );
   },
   remainder_scalar_vec4_non_const: () => {
-    return generateF32VectorToVectorCases(
+    return FP.f32.generateScalarVectorToVectorCases(
       fullF32Range(),
       sparseVectorF32Range(4),
       'unfiltered',

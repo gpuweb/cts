@@ -248,10 +248,6 @@ export function stepInterval(edge: number, x: number): FPInterval {
   return FP.f32.stepInterval(edge, x);
 }
 
-export function subtractionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.subtractionInterval(x, y);
-}
-
 export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.subtractionMatrixInterval(x, y);
 }

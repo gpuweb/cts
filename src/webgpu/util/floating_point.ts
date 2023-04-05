@@ -3169,14 +3169,19 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of x - y */
-  public subtractionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected subtractionIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.SubtractionIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of x - y */
+  public abstract readonly subtractionInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   /** Calculate an acceptance interval of x - y, when x and y are matrices */
   public subtractionMatrixInterval(x: Matrix<number>, y: Matrix<number>): FPMatrix {
@@ -3530,6 +3535,7 @@ class F32Traits extends FPTraits {
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
+  public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
