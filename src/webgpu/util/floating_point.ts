@@ -2903,10 +2903,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of sqrt(x) */
-  public sqrtInterval(n: number | FPInterval): FPInterval {
+  protected sqrtIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.SqrtIntervalOp);
   }
+
+  /** Calculate an acceptance interval of sqrt(x) */
+  public abstract readonly sqrtInterval: (n: number | FPInterval) => FPInterval;
 
   private readonly StepIntervalOp: ScalarPairToIntervalOp = {
     impl: (edge: number, x: number): FPInterval => {
@@ -3292,6 +3294,7 @@ class F32Traits extends FPTraits {
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
+  public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
 }
 
 export const FP = {
