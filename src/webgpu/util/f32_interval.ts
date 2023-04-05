@@ -196,10 +196,6 @@ export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval 
   return FP.f32.modfInterval(n);
 }
 
-export function multiplicationInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.multiplicationInterval(x, y);
-}
-
 export function multiplicationMatrixScalarInterval(mat: number[][], scalar: number): FPMatrix {
   return FP.f32.multiplicationMatrixScalarInterval(mat, scalar);
 }

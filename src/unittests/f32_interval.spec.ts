@@ -28,7 +28,6 @@ import {
   mixImpreciseInterval,
   mixPreciseInterval,
   modfInterval,
-  multiplicationInterval,
   multiplicationMatrixMatrixInterval,
   multiplicationMatrixScalarInterval,
   multiplicationMatrixVectorInterval,
@@ -2043,68 +2042,6 @@ g.test('minInterval')
     t.expect(
       objectEquals(expected, got),
       `minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
-    );
-  });
-
-g.test('multiplicationInterval')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // 32-bit normals
-      { input: [0, 0], expected: 0 },
-      { input: [1, 0], expected: 0 },
-      { input: [0, 1], expected: 0 },
-      { input: [-1, 0], expected: 0 },
-      { input: [0, -1], expected: 0 },
-      { input: [1, 1], expected: 1 },
-      { input: [1, -1], expected: -1 },
-      { input: [-1, 1], expected: -1 },
-      { input: [-1, -1], expected: 1 },
-      { input: [2, 1], expected: 2 },
-      { input: [1, -2], expected: -2 },
-      { input: [-2, 1], expected: -2 },
-      { input: [-2, -1], expected: 2 },
-      { input: [2, 2], expected: 4 },
-      { input: [2, -2], expected: -4 },
-      { input: [-2, 2], expected: -4 },
-      { input: [-2, -2], expected: 4 },
-
-      // 64-bit normals
-      { input: [0.1, 0], expected: 0 },
-      { input: [0, 0.1], expected: 0 },
-      { input: [-0.1, 0], expected: 0 },
-      { input: [0, -0.1], expected: 0 },
-      { input: [0.1, 0.1], expected: [minusNULP(hexToF32(0x3c23d70a), 2), plusOneULP(hexToF32(0x3c23d70a))] },  // ~0.01
-      { input: [0.1, -0.1], expected: [minusOneULP(hexToF32(0xbc23d70a)), plusNULP(hexToF32(0xbc23d70a), 2)] },  // ~-0.01
-      { input: [-0.1, 0.1], expected: [minusOneULP(hexToF32(0xbc23d70a)), plusNULP(hexToF32(0xbc23d70a), 2)] },  // ~-0.01
-      { input: [-0.1, -0.1], expected: [minusNULP(hexToF32(0x3c23d70a), 2), plusOneULP(hexToF32(0x3c23d70a))] },  // ~0.01
-
-      // Infinities
-      { input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [-1, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [-1, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
-
-      // Edge of f32
-      { input: [kValue.f32.positive.max, kValue.f32.positive.max], expected: kAnyBounds },
-      { input: [kValue.f32.negative.min, kValue.f32.negative.min], expected: kAnyBounds },
-      { input: [kValue.f32.positive.max, kValue.f32.negative.min], expected: kAnyBounds },
-      { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const [x, y] = t.params.input;
-    const expected = toF32Interval(t.params.expected);
-    const got = multiplicationInterval(x, y);
-    t.expect(
-      objectEquals(expected, got),
-      `multiplicationInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 

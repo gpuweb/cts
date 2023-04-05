@@ -2745,14 +2745,19 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of x * y */
-  public multiplicationInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected multiplicationIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.MultiplicationIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of x * y */
+  public abstract readonly multiplicationInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   /**
    * @returns the vector result of multiplying the given vector by the given
@@ -3526,6 +3531,7 @@ class F32Traits extends FPTraits {
   public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
+  public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);

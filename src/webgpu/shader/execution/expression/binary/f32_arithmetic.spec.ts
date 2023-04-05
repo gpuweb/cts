@@ -5,12 +5,7 @@ Execution Tests for the f32 arithmetic binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../util/conversion.js';
-import {
-  F32Vector,
-  multiplicationInterval,
-  remainderInterval,
-  toF32Vector,
-} from '../../../../util/f32_interval.js';
+import { F32Vector, remainderInterval, toF32Vector } from '../../../../util/f32_interval.js';
 import { FP } from '../../../../util/floating_point.js';
 import { fullF32Range, sparseVectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
@@ -37,11 +32,11 @@ const subtractionScalarVectorInterval = (s: number, v: number[]): F32Vector => {
 };
 
 const multiplicationVectorScalarInterval = (v: number[], s: number): F32Vector => {
-  return toF32Vector(v.map(e => multiplicationInterval(e, s)));
+  return FP.f32.toVector(v.map(e => FP.f32.multiplicationInterval(e, s)));
 };
 
 const multiplicationScalarVectorInterval = (s: number, v: number[]): F32Vector => {
-  return toF32Vector(v.map(e => multiplicationInterval(s, e)));
+  return FP.f32.toVector(v.map(e => FP.f32.multiplicationInterval(s, e)));
 };
 
 const divisionVectorScalarInterval = (v: number[], s: number): F32Vector => {
@@ -292,7 +287,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       fullF32Range(),
       'finite',
-      multiplicationInterval
+      FP.f32.multiplicationInterval
     );
   },
   multiplication_non_const: () => {
@@ -300,7 +295,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       fullF32Range(),
       'unfiltered',
-      multiplicationInterval
+      FP.f32.multiplicationInterval
     );
   },
   multiplication_vec2_scalar_const: () => {
