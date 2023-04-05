@@ -1782,14 +1782,19 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of atan2(y, x) */
-  public atan2Interval(y: number | FPInterval, x: number | FPInterval): FPInterval {
+  protected atan2IntervalImpl(y: number | FPInterval, x: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(y),
       this.toInterval(x),
       this.Atan2IntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of atan2(y, x) */
+  public abstract readonly atan2Interval: (
+    y: number | FPInterval,
+    x: number | FPInterval
+  ) => FPInterval;
 
   private readonly AtanhIntervalOp: ScalarToIntervalOp = {
     impl: (n: number) => {
@@ -3331,6 +3336,7 @@ class F32Traits extends FPTraits {
   public readonly asinInterval = this.asinIntervalImpl.bind(this);
   public readonly asinhInterval = this.asinhIntervalImpl.bind(this);
   public readonly atanInterval = this.atanIntervalImpl.bind(this);
+  public readonly atan2Interval = this.atan2IntervalImpl.bind(this);
   public readonly atanhInterval = this.atanhIntervalImpl.bind(this);
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly cosInterval = this.cosIntervalImpl.bind(this);

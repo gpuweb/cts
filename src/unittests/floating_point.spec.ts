@@ -1181,6 +1181,79 @@ g.test('additionInterval_f32')
     );
   });
 
+// Note: atan2's parameters are labelled (y, x) instead of (x, y)
+g.test('atan2Interval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+      //
+      // The positive x & y quadrant is tested in more detail, and the other
+      // quadrants are spot checked that values are pointing in the right
+      // direction.
+      //
+      // Some of the intervals appear slightly asymmetric,
+      // i.e. [π/4 - 4097 * ULPF32(π/4), π/4 + 4096 * ULPF32(π/4)],
+      // this is because π/4 is not precisely expressible as a f32, so the
+      // higher precision value can be rounded up or down when converting to
+      // f32. Thus, one option will be 1 ULP off of the constant value being
+      // used.
+
+      // positive y, positive x
+      { input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULPF32(kValue.f32.positive.pi.sixth, 4097), plusNULPF32(kValue.f32.positive.pi.sixth, 4096)] },  // x = √3
+      { input: [1, 1], expected: [minusNULPF32(kValue.f32.positive.pi.quarter, 4097), plusNULPF32(kValue.f32.positive.pi.quarter, 4096)] },
+      // { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0_bf52_0000_0000n), hexToF64(0x3ff0_c352_6000_0000n)] },  // y = √3
+      { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
+
+      // positive y, negative x
+      { input: [1, -1], expected: [minusNULPF32(kValue.f32.positive.pi.three_quarters, 4096), plusNULPF32(kValue.f32.positive.pi.three_quarters, 4097)] },
+      { input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
+
+      // negative y, negative x
+      { input: [-1, -1], expected: [minusNULPF32(kValue.f32.negative.pi.three_quarters, 4097), plusNULPF32(kValue.f32.negative.pi.three_quarters, 4096)] },
+      { input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
+
+      // negative y, positive x
+      { input: [-1, 1], expected: [minusNULPF32(kValue.f32.negative.pi.quarter, 4096), plusNULPF32(kValue.f32.negative.pi.quarter, 4097)] },
+      { input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
+
+      // Discontinuity @ origin (0,0)
+      { input: [0, 0], expected: kAnyBounds },
+      { input: [0, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
+      { input: [0, kValue.f32.subnormal.negative.min], expected: kAnyBounds },
+      { input: [0, kValue.f32.positive.min], expected: kAnyBounds },
+      { input: [0, kValue.f32.negative.max], expected: kAnyBounds },
+      { input: [0, kValue.f32.positive.max], expected: kAnyBounds },
+      { input: [0, kValue.f32.negative.min], expected: kAnyBounds },
+      { input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [0, 1], expected: kAnyBounds },
+      { input: [kValue.f32.subnormal.positive.max, 1], expected: kAnyBounds },
+      { input: [kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
+
+      // When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
+      {input: [hexToF32(0x80800000), hexToF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.negative.pi.whole, 4096), plusNULPF32(kValue.f32.negative.pi.whole, 4096)] },
+      {input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.positive.pi.whole, 4096), plusNULPF32(kValue.f32.positive.pi.whole, 4096)] },
+
+      // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
+      { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+      { input: [1, kValue.f32.positive.nearest_max], expected: kAnyBounds },
+      { input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+      { input: [1, kValue.f32.negative.nearest_min], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [y, x] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.atan2Interval(y, x);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.atan2Interval(${y}, ${x}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;
