@@ -260,10 +260,6 @@ export function remainderInterval(x: number, y: number): FPInterval {
   return FP.f32.remainderInterval(x, y);
 }
 
-export function sinInterval(n: number): FPInterval {
-  return FP.f32.sinInterval(n);
-}
-
 export function sinhInterval(n: number): FPInterval {
   return FP.f32.sinhInterval(n);
 }

@@ -42,7 +42,6 @@ import {
   reflectInterval,
   refractInterval,
   remainderInterval,
-  sinInterval,
   sinhInterval,
   smoothStepInterval,
   sqrtInterval,
@@ -1906,40 +1905,6 @@ interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-g.test('sinInterval')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // This test does not include some common cases, i.e. f(x = -π|π) = 0,
-      // because the difference between true x and x as a f32 is sufficiently
-      // large, such that the high slope of f @ x causes the results to be
-      // substantially different, so instead of getting 0 you get a value on the
-      // order of 10^-8 away from it, thus difficult to express in a
-      // human-readable manner.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: kValue.f32.negative.pi.half, expected: [-1, plusOneULP(-1)] },
-      { input: 0, expected: 0 },
-      { input: kValue.f32.positive.pi.half, expected: [minusOneULP(1), 1] },
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const error = (_: number): number => {
-      return 2 ** -11;
-    };
-
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = sinInterval(t.params.input);
-    t.expect(
-      objectEquals(expected, got),
-      `sinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('sinhInterval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(

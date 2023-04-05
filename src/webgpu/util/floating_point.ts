@@ -2840,10 +2840,12 @@ abstract class FPTraits {
     ),
   };
 
-  /** Calculate an acceptance interval of sin(x) */
-  public sinInterval(n: number): FPInterval {
+  protected sinIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.SinIntervalOp);
   }
+
+  /** Calculate an acceptance interval of sin(x) */
+  public abstract readonly sinInterval: (n: number) => FPInterval;
 
   private readonly SinhIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3286,6 +3288,7 @@ class F32Traits extends FPTraits {
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);
+  public readonly sinInterval = this.sinIntervalImpl.bind(this);
 }
 
 export const FP = {
