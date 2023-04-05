@@ -808,8 +808,7 @@ abstract class FPTraits {
    * @returns an array of Cases for operations over a range of inputs
    * @param params array of inputs to try
    * @param filter what interval filtering to apply
-   * @param ops callbacks that implement generating acceptance intervals for the
-   * operations
+   * @param ops callbacks that implement generating an acceptance interval
    */
   public generateScalarToIntervalCases(
     params: number[],
@@ -825,6 +824,54 @@ abstract class FPTraits {
     }, new Array<Case>());
   }
 
+  /**
+   * @returns a Case for the params and the interval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  private makeScalarPairToIntervalCase(
+    param0: number,
+    param1: number,
+    filter: IntervalFilter,
+    ...ops: ScalarPairToInterval[]
+  ): Case | undefined {
+    param0 = this.quantize(param0);
+    param1 = this.quantize(param1);
+
+    const intervals = ops.map(o => o(param0, param1));
+    if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
+      return undefined;
+    }
+    return {
+      input: [this.scalarBuilder(param0), this.scalarBuilder(param1)],
+      expected: anyOf(...intervals),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  public generateScalarPairToIntervalCases(
+    param0s: number[],
+    param1s: number[],
+    filter: IntervalFilter,
+    ...ops: ScalarPairToInterval[]
+  ): Case[] {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeScalarPairToIntervalCase(e[0], e[1], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
   /**
    * @returns a Case for the params and the interval generator provided.
    * The Case will use an interval comparator for matching results.
@@ -1625,14 +1672,18 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of x + y */
-  public additionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected additionIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.AdditionIntervalOp
     );
   }
+
+  public abstract readonly additionInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   /** Calculate an acceptance interval of x + y, when x and y are matrices */
   public additionMatrixInterval(x: Matrix<number>, y: Matrix<number>): FPMatrix {
@@ -3276,6 +3327,7 @@ class F32Traits extends FPTraits {
     this.acoshAlternativeInterval.bind(this),
     this.acoshPrimaryInterval.bind(this),
   ];
+  public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly asinInterval = this.asinIntervalImpl.bind(this);
   public readonly asinhInterval = this.asinhIntervalImpl.bind(this);
   public readonly atanInterval = this.atanIntervalImpl.bind(this);

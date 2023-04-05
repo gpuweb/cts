@@ -6,7 +6,6 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../util/conversion.js';
 import {
-  additionInterval,
   divisionInterval,
   F32Vector,
   multiplicationInterval,
@@ -14,6 +13,7 @@ import {
   subtractionInterval,
   toF32Vector,
 } from '../../../../util/f32_interval.js';
+import { FP } from '../../../../util/floating_point.js';
 import { fullF32Range, sparseVectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
@@ -28,12 +28,12 @@ import { binary, compoundBinary } from './binary.js';
 
 // Utility wrappers around the interval generators for the scalar-vector and
 // vector-scalar tests.
-const additionVectorScalarInterval = (v: number[], s: number): F32Vector => {
-  return toF32Vector(v.map(e => additionInterval(e, s)));
+const additionVectorScalarIntervalF32 = (v: number[], s: number): F32Vector => {
+  return toF32Vector(v.map(e => FP.f32.additionInterval(e, s)));
 };
 
-const additionScalarVectorInterval = (s: number, v: number[]): F32Vector => {
-  return toF32Vector(v.map(e => additionInterval(s, e)));
+const additionScalarVectorIntervalF32 = (s: number, v: number[]): F32Vector => {
+  return toF32Vector(v.map(e => FP.f32.additionInterval(s, e)));
 };
 
 const subtractionVectorScalarInterval = (v: number[], s: number): F32Vector => {
@@ -72,19 +72,19 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/f32_arithmetic', {
   addition_const: () => {
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
       fullF32Range(),
       fullF32Range(),
       'finite',
-      additionInterval
+      FP.f32.additionInterval
     );
   },
   addition_non_const: () => {
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
       fullF32Range(),
       fullF32Range(),
       'unfiltered',
-      additionInterval
+      FP.f32.additionInterval
     );
   },
   addition_vec2_scalar_const: () => {
@@ -92,7 +92,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(2),
       fullF32Range(),
       'finite',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_vec2_scalar_non_const: () => {
@@ -100,7 +100,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(2),
       fullF32Range(),
       'unfiltered',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_vec3_scalar_const: () => {
@@ -108,7 +108,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(3),
       fullF32Range(),
       'finite',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_vec3_scalar_non_const: () => {
@@ -116,7 +116,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(3),
       fullF32Range(),
       'unfiltered',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_vec4_scalar_const: () => {
@@ -124,7 +124,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(4),
       fullF32Range(),
       'finite',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_vec4_scalar_non_const: () => {
@@ -132,7 +132,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       sparseVectorF32Range(4),
       fullF32Range(),
       'unfiltered',
-      additionVectorScalarInterval
+      additionVectorScalarIntervalF32
     );
   },
   addition_scalar_vec2_const: () => {
@@ -140,7 +140,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(2),
       'finite',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   addition_scalar_vec2_non_const: () => {
@@ -148,7 +148,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(2),
       'unfiltered',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   addition_scalar_vec3_const: () => {
@@ -156,7 +156,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(3),
       'finite',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   addition_scalar_vec3_non_const: () => {
@@ -164,7 +164,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(3),
       'unfiltered',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   addition_scalar_vec4_const: () => {
@@ -172,7 +172,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(4),
       'finite',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   addition_scalar_vec4_non_const: () => {
@@ -180,7 +180,7 @@ export const d = makeCaseCache('binary/f32_arithmetic', {
       fullF32Range(),
       sparseVectorF32Range(4),
       'unfiltered',
-      additionScalarVectorInterval
+      additionScalarVectorIntervalF32
     );
   },
   subtraction_const: () => {

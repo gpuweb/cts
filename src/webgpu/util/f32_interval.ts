@@ -120,10 +120,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function additionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.additionInterval(x, y);
-}
-
 export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }

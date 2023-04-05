@@ -1118,6 +1118,69 @@ g.test('truncInterval_f32')
     );
   });
 
+interface ScalarPairToIntervalCase {
+  // input is a pair of independent values, not a range, so should not be
+  // converted to a FPInterval.
+  input: [number, number];
+  expected: number | IntervalBounds;
+}
+
+g.test('additionInterval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // 32-bit normals
+      { input: [0, 0], expected: 0 },
+      { input: [1, 0], expected: 1 },
+      { input: [0, 1], expected: 1 },
+      { input: [-1, 0], expected: -1 },
+      { input: [0, -1], expected: -1 },
+      { input: [1, 1], expected: 2 },
+      { input: [1, -1], expected: 0 },
+      { input: [-1, 1], expected: 0 },
+      { input: [-1, -1], expected: -2 },
+
+      // 64-bit normals
+      { input: [0.1, 0], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
+      { input: [0, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
+      { input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3e4ccccd)), hexToF32(0x3e4ccccd)] },  // ~0.2
+      { input: [0.1, -0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] }, // ~0
+      { input: [-0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] }, // ~0
+      { input: [-0.1, -0.1], expected: [hexToF32(0xbe4ccccd), plusOneULPF32(hexToF32(0xbe4ccccd))] },  // ~-0.2
+
+      // 32-bit subnormals
+      { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.min, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: [0, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
+      { input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
+
+      // Infinities
+      { input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.additionInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.additionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;
