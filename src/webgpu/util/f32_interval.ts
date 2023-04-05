@@ -260,10 +260,6 @@ export function remainderInterval(x: number, y: number): FPInterval {
   return FP.f32.remainderInterval(x, y);
 }
 
-export function roundInterval(n: number): FPInterval {
-  return FP.f32.roundInterval(n);
-}
-
 export function saturateInterval(n: number): FPInterval {
   return FP.f32.saturateInterval(n);
 }

@@ -2787,10 +2787,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of round(x) */
-  public roundInterval(n: number): FPInterval {
+  protected roundIntervalImpl(n: number): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.RoundIntervalOp);
   }
+
+  /** Calculate an acceptance interval of round(x) */
+  public abstract readonly roundInterval: (n: number) => FPInterval;
 
   /**
    * Calculate an acceptance interval of saturate(n) as clamp(n, 0.0, 1.0)
@@ -3278,6 +3280,7 @@ class F32Traits extends FPTraits {
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly roundInterval = this.roundIntervalImpl.bind(this);
 }
 
 export const FP = {
