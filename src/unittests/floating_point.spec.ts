@@ -1304,6 +1304,58 @@ g.test('distanceIntervalScalar_f32')
     );
   });
 
+g.test('divisionInterval_f32')
+  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
+    // prettier-ignore
+    [
+      // 32-bit normals
+      { input: [0, 1], expected: 0 },
+      { input: [0, -1], expected: 0 },
+      { input: [1, 1], expected: 1 },
+      { input: [1, -1], expected: -1 },
+      { input: [-1, 1], expected: -1 },
+      { input: [-1, -1], expected: 1 },
+      { input: [4, 2], expected: 2 },
+      { input: [-4, 2], expected: -2 },
+      { input: [4, -2], expected: -2 },
+      { input: [-4, -2], expected: 2 },
+
+      // 64-bit normals
+      { input: [0, 0.1], expected: 0 },
+      { input: [0, -0.1], expected: 0 },
+      { input: [1, 0.1], expected: [minusOneULPF32(10), plusOneULPF32(10)] },
+      { input: [-1, 0.1], expected: [minusOneULPF32(-10), plusOneULPF32(-10)] },
+      { input: [1, -0.1], expected: [minusOneULPF32(-10), plusOneULPF32(-10)] },
+      { input: [-1, -0.1], expected: [minusOneULPF32(10), plusOneULPF32(10)] },
+
+      // Denominator out of range
+      { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+      { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
+      { input: [1, kValue.f32.negative.min], expected: kAnyBounds },
+      { input: [1, 0], expected: kAnyBounds },
+      { input: [1, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const error = (n: number): number => {
+      return 2.5 * oneULPF32(n);
+    };
+
+    const [x, y] = t.params.input;
+    t.params.expected = applyError(t.params.expected, error);
+    const expected = FP.f32.toInterval(t.params.expected);
+
+    const got = FP.f32.divisionInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;

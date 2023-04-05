@@ -969,6 +969,112 @@ abstract class FPTraits {
     }, new Array<Case>());
   }
 
+  /**
+   * @returns a Case for the params and the interval vector generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param scalar the scalar param to pass in
+   * @param vector the vector param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance intervals
+   */
+  private makeScalarVectorToVectorCase(
+    scalar: number,
+    vector: number[],
+    filter: IntervalFilter,
+    ...ops: ScalarVectorToVector[]
+  ): Case | undefined {
+    scalar = this.quantize(scalar);
+    vector = vector.map(this.quantize);
+
+    const results = ops.map(o => o(scalar, vector));
+    if (filter === 'finite' && results.some(r => r.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [this.scalarBuilder(scalar), new Vector(vector.map(this.scalarBuilder))],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param scalars array of scalar inputs to try
+   * @param vectors array of vector inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance intervals
+   */
+  public generateScalarVectorToVectorCases(
+    scalars: number[],
+    vectors: number[][],
+    filter: IntervalFilter,
+    ...ops: ScalarVectorToVector[]
+  ): Case[] {
+    // Cannot use cartesianProduct here, due to heterogeneous types
+    const cases: Case[] = [];
+    scalars.forEach(scalar => {
+      vectors.forEach(vector => {
+        const c = this.makeScalarVectorToVectorCase(scalar, vector, filter, ...ops);
+        if (c !== undefined) {
+          cases.push(c);
+        }
+      });
+    });
+    return cases;
+  }
+
+  /**
+   * @returns a Case for the params and the interval vector generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param vector the vector param to pass in
+   * @param scalar the scalar param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance intervals
+   */
+  private makeVectorScalarToVectorCase(
+    vector: number[],
+    scalar: number,
+    filter: IntervalFilter,
+    ...ops: VectorScalarToVector[]
+  ): Case | undefined {
+    vector = vector.map(this.quantize);
+    scalar = this.quantize(scalar);
+
+    const results = ops.map(o => o(vector, scalar));
+    if (filter === 'finite' && results.some(r => r.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [new Vector(vector.map(this.scalarBuilder)), this.scalarBuilder(scalar)],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param vectors array of vector inputs to try
+   * @param scalars array of scalar inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance intervals
+   */
+  public generateVectorScalarToVectorCases(
+    vectors: number[][],
+    scalars: number[],
+    filter: IntervalFilter,
+    ...ops: VectorScalarToVector[]
+  ): Case[] {
+    // Cannot use cartesianProduct here, due to heterogeneous types
+    const cases: Case[] = [];
+    vectors.forEach(vector => {
+      scalars.forEach(scalar => {
+        const c = this.makeVectorScalarToVectorCase(vector, scalar, filter, ...ops);
+        if (c !== undefined) {
+          cases.push(c);
+        }
+      });
+    });
+    return cases;
+  }
+
   // Framework - Intervals
 
   /**
@@ -2239,14 +2345,19 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of x / y */
-  public divisionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
+  protected divisionIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
       this.DivisionIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of x / y */
+  public abstract readonly divisionInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   private readonly DotIntervalOp: VectorPairToIntervalOp = {
     impl: (x: number[], y: number[]): FPInterval => {
@@ -3401,6 +3512,7 @@ class F32Traits extends FPTraits {
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
+  public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);

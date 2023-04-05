@@ -150,10 +150,6 @@ export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
 }
 
-export function divisionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.divisionInterval(x, y);
-}
-
 export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
   return FP.f32.dotInterval(x, y);
 }

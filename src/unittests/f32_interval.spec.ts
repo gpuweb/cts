@@ -19,7 +19,6 @@ import {
   clampMinMaxInterval,
   correctlyRoundedInterval,
   crossInterval,
-  divisionInterval,
   dotInterval,
   faceForwardIntervals,
   fmaInterval,
@@ -89,23 +88,6 @@ function minusNULP(x: number, n: number): number {
 /** @returns a number one ULP less than the provided number */
 function minusOneULP(x: number): number {
   return minusNULP(x, 1);
-}
-
-/** @returns the expected IntervalBounds adjusted by the given error function
- *
- * @param expected the bounds to be adjusted
- * @param error error function to adjust the bounds via
- */
-function applyError(
-  expected: number | IntervalBounds,
-  error: (n: number) => number
-): IntervalBounds {
-  if (expected !== kAnyBounds) {
-    const interval = toF32Interval(expected);
-    expected = [interval.begin - error(interval.begin), interval.end + error(interval.end)];
-  }
-
-  return expected;
 }
 
 interface ConstructorCase {
@@ -1899,58 +1881,6 @@ interface ScalarPairToIntervalCase {
   input: [number, number];
   expected: number | IntervalBounds;
 }
-
-g.test('divisionInterval')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // 32-bit normals
-      { input: [0, 1], expected: 0 },
-      { input: [0, -1], expected: 0 },
-      { input: [1, 1], expected: 1 },
-      { input: [1, -1], expected: -1 },
-      { input: [-1, 1], expected: -1 },
-      { input: [-1, -1], expected: 1 },
-      { input: [4, 2], expected: 2 },
-      { input: [-4, 2], expected: -2 },
-      { input: [4, -2], expected: -2 },
-      { input: [-4, -2], expected: 2 },
-
-      // 64-bit normals
-      { input: [0, 0.1], expected: 0 },
-      { input: [0, -0.1], expected: 0 },
-      { input: [1, 0.1], expected: [minusOneULP(10), plusOneULP(10)] },
-      { input: [-1, 0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
-      { input: [1, -0.1], expected: [minusOneULP(-10), plusOneULP(-10)] },
-      { input: [-1, -0.1], expected: [minusOneULP(10), plusOneULP(10)] },
-
-      // Denominator out of range
-      { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [1, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
-      { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
-      { input: [1, kValue.f32.negative.min], expected: kAnyBounds },
-      { input: [1, 0], expected: kAnyBounds },
-      { input: [1, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
-    ]
-  )
-  .fn(t => {
-    const error = (n: number): number => {
-      return 2.5 * oneULPF32(n);
-    };
-
-    const [x, y] = t.params.input;
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = toF32Interval(t.params.expected);
-
-    const got = divisionInterval(x, y);
-    t.expect(
-      objectEquals(expected, got),
-      `divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
-    );
-  });
 
 g.test('ldexpInterval')
   .paramsSubcasesOnly<ScalarPairToIntervalCase>(
