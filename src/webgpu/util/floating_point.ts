@@ -872,6 +872,7 @@ abstract class FPTraits {
       return cases;
     }, new Array<Case>());
   }
+
   /**
    * @returns a Case for the params and the interval generator provided.
    * The Case will use an interval comparator for matching results.
@@ -909,6 +910,58 @@ abstract class FPTraits {
   ): Case[] {
     return params.reduce((cases, e) => {
       const c = this.makeVectorToIntervalCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  /**
+   * @returns a Case for the params and the interval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  private makeVectorPairToIntervalCase(
+    param0: number[],
+    param1: number[],
+    filter: IntervalFilter,
+    ...ops: VectorPairToInterval[]
+  ): Case | undefined {
+    param0 = param0.map(this.quantize);
+    param1 = param1.map(this.quantize);
+
+    const intervals = ops.map(o => o(param0, param1));
+    if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
+      return undefined;
+    }
+    return {
+      input: [
+        new Vector(param0.map(this.scalarBuilder)),
+        new Vector(param1.map(this.scalarBuilder)),
+      ],
+      expected: anyOf(...intervals),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  public generateVectorPairToIntervalCases(
+    param0s: number[][],
+    param1s: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorPairToInterval[]
+  ): Case[] {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeVectorPairToIntervalCase(e[0], e[1], filter, ...ops);
       if (c !== undefined) {
         cases.push(c);
       }
@@ -2135,8 +2188,7 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of distance(x, y) */
-  public distanceInterval(x: number | number[], y: number | number[]): FPInterval {
+  protected distanceIntervalImpl(x: number | number[], y: number | number[]): FPInterval {
     if (x instanceof Array && y instanceof Array) {
       assert(
         x.length === y.length,
@@ -2158,6 +2210,12 @@ abstract class FPTraits {
       `distanceInterval requires both params to both the same type, either scalars or vectors`
     );
   }
+
+  /** Calculate an acceptance interval of distance(x, y) */
+  public abstract readonly distanceInterval: (
+    x: number | number[],
+    y: number | number[]
+  ) => FPInterval;
 
   private readonly DivisionIntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
@@ -3342,6 +3400,7 @@ class F32Traits extends FPTraits {
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
+  public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
