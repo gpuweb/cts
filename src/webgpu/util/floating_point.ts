@@ -2881,7 +2881,10 @@ abstract class FPTraits {
   }
 
   /** Calculate an acceptance interval of pow(x, y) */
-  public abstract readonly powInterval: (x: number | FPInterval, y: number | FPInterval) => FPInterval;
+  public abstract readonly powInterval: (
+    x: number | FPInterval,
+    y: number | FPInterval
+  ) => FPInterval;
 
   // Once a full implementation of F16Interval exists, the correctlyRounded for
   // that can potentially be used instead of having a bespoke operation
@@ -3166,7 +3169,16 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance 'interval' for step(edge, x)
+  protected stepIntervalImpl(edge: number, x: number): FPInterval {
+    return this.runScalarPairToIntervalOp(
+      this.toInterval(edge),
+      this.toInterval(x),
+      this.StepIntervalOp
+    );
+  }
+
+  /**
+   * Calculate an acceptance 'interval' for step(edge, x)
    *
    * step only returns two possible values, so its interval requires special
    * interpretation in CTS tests.
@@ -3177,13 +3189,7 @@ abstract class FPTraits {
    * [-∞, +∞] is treated as any interval, since an undefined or infinite value
    * was passed in.
    */
-  public stepInterval(edge: number, x: number): FPInterval {
-    return this.runScalarPairToIntervalOp(
-      this.toInterval(edge),
-      this.toInterval(x),
-      this.StepIntervalOp
-    );
-  }
+  public abstract readonly stepInterval: (edge: number, x: number) => FPInterval;
 
   private readonly SubtractionIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -3563,6 +3569,7 @@ class F32Traits extends FPTraits {
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
+  public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
