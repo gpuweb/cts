@@ -170,10 +170,6 @@ export function lengthInterval(n: number | FPInterval | number[] | FPVector): FP
   return FP.f32.lengthInterval(n);
 }
 
-export function minInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.minInterval(x, y);
-}
-
 export const mixIntervals = FP.f32.mixIntervals;
 
 export function mixImpreciseInterval(x: number, y: number, z: number): FPInterval {
