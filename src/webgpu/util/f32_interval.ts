@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface ScalarPairToInterval {
-  (x: number, y: number): FPInterval;
-}
-
 export interface ScalarTripleToInterval {
   (x: number, y: number, z: number): FPInterval;
 }
@@ -120,16 +116,8 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function additionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.additionInterval(x, y);
-}
-
 export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
-}
-
-export function atan2Interval(y: number | FPInterval, x: number | FPInterval): FPInterval {
-  return FP.f32.atan2Interval(y, x);
 }
 
 export const clampIntervals = FP.f32.clampIntervals;
@@ -158,14 +146,6 @@ export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
 }
 
-export function distanceInterval(x: number | number[], y: number | number[]): FPInterval {
-  return FP.f32.distanceInterval(x, y);
-}
-
-export function divisionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.divisionInterval(x, y);
-}
-
 export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
   return FP.f32.dotInterval(x, y);
 }
@@ -182,20 +162,8 @@ export function fmaInterval(x: number, y: number, z: number): FPInterval {
   return FP.f32.fmaInterval(x, y, z);
 }
 
-export function ldexpInterval(e1: number, e2: number): FPInterval {
-  return FP.f32.ldexpInterval(e1, e2);
-}
-
 export function lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
   return FP.f32.lengthInterval(n);
-}
-
-export function maxInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.maxInterval(x, y);
-}
-
-export function minInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.minInterval(x, y);
 }
 
 export const mixIntervals = FP.f32.mixIntervals;
@@ -210,10 +178,6 @@ export function mixPreciseInterval(x: number, y: number, z: number): FPInterval 
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
   return FP.f32.modfInterval(n);
-}
-
-export function multiplicationInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.multiplicationInterval(x, y);
 }
 
 export function multiplicationMatrixScalarInterval(mat: number[][], scalar: number): FPMatrix {
@@ -240,10 +204,6 @@ export function normalizeInterval(n: number[]): FPVector {
   return FP.f32.normalizeInterval(n);
 }
 
-export function powInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.powInterval(x, y);
-}
-
 export function reflectInterval(x: number[], y: number[]): FPVector {
   return FP.f32.reflectInterval(x, y);
 }
@@ -252,20 +212,8 @@ export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
 }
 
-export function remainderInterval(x: number, y: number): FPInterval {
-  return FP.f32.remainderInterval(x, y);
-}
-
 export function smoothStepInterval(low: number, high: number, x: number): FPInterval {
   return FP.f32.smoothStepInterval(low, high, x);
-}
-
-export function stepInterval(edge: number, x: number): FPInterval {
-  return FP.f32.stepInterval(edge, x);
-}
-
-export function subtractionInterval(x: number | FPInterval, y: number | FPInterval): FPInterval {
-  return FP.f32.subtractionInterval(x, y);
 }
 
 export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
