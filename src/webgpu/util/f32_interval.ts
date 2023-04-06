@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface ScalarTripleToInterval {
-  (x: number, y: number, z: number): FPInterval;
-}
-
 export interface ScalarToVector {
   (n: number): FPVector;
 }
@@ -120,24 +116,6 @@ export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export const clampIntervals = FP.f32.clampIntervals;
-
-export function clampMedianInterval(
-  x: number | FPInterval,
-  y: number | FPInterval,
-  z: number | FPInterval
-): FPInterval {
-  return FP.f32.clampMedianInterval(x, y, z);
-}
-
-export function clampMinMaxInterval(
-  x: number | FPInterval,
-  y: number | FPInterval,
-  z: number | FPInterval
-): FPInterval {
-  return FP.f32.clampMinMaxInterval(x, y, z);
-}
-
 export function crossInterval(x: number[], y: number[]): FPVector {
   return FP.f32.crossInterval(x, y);
 }
@@ -158,22 +136,8 @@ export function faceForwardIntervals(
   return FP.f32.faceForwardIntervals(x, y, z);
 }
 
-export function fmaInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.fmaInterval(x, y, z);
-}
-
 export function lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
   return FP.f32.lengthInterval(n);
-}
-
-export const mixIntervals = FP.f32.mixIntervals;
-
-export function mixImpreciseInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.mixImpreciseInterval(x, y, z);
-}
-
-export function mixPreciseInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.mixPreciseInterval(x, y, z);
 }
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
@@ -210,10 +174,6 @@ export function reflectInterval(x: number[], y: number[]): FPVector {
 
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
-}
-
-export function smoothStepInterval(low: number, high: number, x: number): FPInterval {
-  return FP.f32.smoothStepInterval(low, high, x);
 }
 
 export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {

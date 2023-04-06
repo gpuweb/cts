@@ -66,10 +66,6 @@ import { FP } from './floating_point.js';
 
 
 
-
-
-
-
 // Utilities
 
 export function toF32Interval(n) {
@@ -120,24 +116,6 @@ export function additionMatrixInterval(x, y) {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export const clampIntervals = FP.f32.clampIntervals;
-
-export function clampMedianInterval(
-x,
-y,
-z)
-{
-  return FP.f32.clampMedianInterval(x, y, z);
-}
-
-export function clampMinMaxInterval(
-x,
-y,
-z)
-{
-  return FP.f32.clampMinMaxInterval(x, y, z);
-}
-
 export function crossInterval(x, y) {
   return FP.f32.crossInterval(x, y);
 }
@@ -158,22 +136,8 @@ z)
   return FP.f32.faceForwardIntervals(x, y, z);
 }
 
-export function fmaInterval(x, y, z) {
-  return FP.f32.fmaInterval(x, y, z);
-}
-
 export function lengthInterval(n) {
   return FP.f32.lengthInterval(n);
-}
-
-export const mixIntervals = FP.f32.mixIntervals;
-
-export function mixImpreciseInterval(x, y, z) {
-  return FP.f32.mixImpreciseInterval(x, y, z);
-}
-
-export function mixPreciseInterval(x, y, z) {
-  return FP.f32.mixPreciseInterval(x, y, z);
 }
 
 export function modfInterval(n) {
@@ -210,10 +174,6 @@ export function reflectInterval(x, y) {
 
 export function refractInterval(i, s, r) {
   return FP.f32.refractInterval(i, s, r);
-}
-
-export function smoothStepInterval(low, high, x) {
-  return FP.f32.smoothStepInterval(low, high, x);
 }
 
 export function subtractionMatrixInterval(x, y) {

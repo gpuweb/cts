@@ -756,50 +756,6 @@ function packScalarsToVector(parameterTypes, resultType, cases, vectorWidth) {
 // No expectations
 
 /**
- * @returns a Case for the params and ternary interval generator provided
- * The Case will use use an interval comparator for matching results.
- * @param param0 the first param to pass in
- * @param param1 the second param to pass in
- * @param param2 the third param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            ternary operation.
- */
-function makeTernaryToF32IntervalCase(param0, param1, param2, filter, ...ops) {
-  param0 = quantizeToF32(param0);
-  param1 = quantizeToF32(param1);
-  param2 = quantizeToF32(param2);
-
-  const intervals = ops.map(o => o(param0, param1, param2));
-  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
-    return undefined;
-  }
-  return {
-    input: [f32(param0), f32(param1), f32(param2)],
-    expected: anyOf(...intervals),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param param0s array of inputs to try for the first param
- * @param param1s array of inputs to try for the second param
- * @param param2s array of inputs to try for the third param
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            ternary operation.
- */
-export function generateTernaryToF32IntervalCases(param0s, param1s, param2s, filter, ...ops) {
-  return cartesianProduct(param0s, param1s, param2s).reduce((cases, e) => {
-    const c = makeTernaryToF32IntervalCase(e[0], e[1], e[2], filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array());
-}
-
-/**
  * @returns a Case for the param and vector interval generator provided
  * @param param the param to pass in
  * @param filter what interval filtering to apply

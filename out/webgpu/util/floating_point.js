@@ -876,6 +876,60 @@ class FPTraits {
   /**
    * @returns a Case for the params and the interval generator provided.
    * The Case will use an interval comparator for matching results.
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param param2 the third param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  makeScalarTripleToIntervalCase(
+  param0,
+  param1,
+  param2,
+  filter,
+  ...ops)
+  {
+    param0 = this.quantize(param0);
+    param1 = this.quantize(param1);
+    param2 = this.quantize(param2);
+
+    const intervals = ops.map((o) => o(param0, param1, param2));
+    if (filter === 'finite' && intervals.some((i) => !i.isFinite())) {
+      return undefined;
+    }
+    return {
+      input: [this.scalarBuilder(param0), this.scalarBuilder(param1), this.scalarBuilder(param2)],
+      expected: anyOf(...intervals)
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param param2s array of inputs to try for the third input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  generateScalarTripleToIntervalCases(
+  param0s,
+  param1s,
+  param2s,
+  filter,
+  ...ops)
+  {
+    return cartesianProduct(param0s, param1s, param2s).reduce((cases, e) => {
+      const c = this.makeScalarTripleToIntervalCase(e[0], e[1], e[2], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array());
+  }
+
+  /**
+   * @returns a Case for the params and the interval generator provided.
+   * The Case will use an interval comparator for matching results.
    * @param param the param to pass in
    * @param filter what interval filtering to apply
    * @param ops callbacks that implement generating an acceptance interval
@@ -1985,12 +2039,6 @@ class FPTraits {
   /** Calculate an acceptance interval of ceil(x) */
 
 
-  /** All acceptance interval functions for clamp(x, y, z) */
-  clampIntervals = [
-  this.clampMinMaxInterval.bind(this),
-  this.clampMedianInterval.bind(this)];
-
-
   ClampMedianIntervalOp = {
     impl: (x, y, z) => {
       return this.correctlyRoundedInterval(
@@ -2009,8 +2057,7 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
-  clampMedianInterval(
+  clampMedianIntervalImpl(
   x,
   y,
   z)
@@ -2023,14 +2070,20 @@ class FPTraits {
 
   }
 
+  /** Calculate an acceptance interval of clamp(x, y, z) via median(x, y, z) */
+
+
+
+
+
+
   ClampMinMaxIntervalOp = {
     impl: (x, low, high) => {
       return this.minInterval(this.maxInterval(x, low), high);
     }
   };
 
-  /** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
-  clampMinMaxInterval(
+  clampMinMaxIntervalImpl(
   x,
   low,
   high)
@@ -2042,6 +2095,16 @@ class FPTraits {
     this.ClampMinMaxIntervalOp);
 
   }
+
+  /** Calculate an acceptance interval of clamp(x, high, low) via min(max(x, low), high) */
+
+
+
+
+
+
+
+
 
   CosIntervalOp = {
     impl: this.limitScalarToIntervalDomain(
@@ -2491,8 +2554,7 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval for fma(x, y, z) */
-  fmaInterval(x, y, z) {
+  fmaIntervalImpl(x, y, z) {
     return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
@@ -2500,6 +2562,9 @@ class FPTraits {
     this.FmaIntervalOp);
 
   }
+
+  /** Calculate an acceptance interval for fma(x, y, z) */
+
 
   FractIntervalOp = {
     impl: (n) => {
@@ -2693,12 +2758,6 @@ class FPTraits {
 
 
 
-  /** All acceptance interval functions for mix(x, y, z) */
-  mixIntervals = [
-  this.mixImpreciseInterval.bind(this),
-  this.mixPreciseInterval.bind(this)];
-
-
   MixImpreciseIntervalOp = {
     impl: (x, y, z) => {
       // x + (y - x) * z =
@@ -2708,8 +2767,7 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
-  mixImpreciseInterval(x, y, z) {
+  mixImpreciseIntervalImpl(x, y, z) {
     return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
@@ -2717,6 +2775,9 @@ class FPTraits {
     this.MixImpreciseIntervalOp);
 
   }
+
+  /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
+
 
   MixPreciseIntervalOp = {
     impl: (x, y, z) => {
@@ -2728,8 +2789,7 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
-  mixPreciseInterval(x, y, z) {
+  mixPreciseIntervalImpl(x, y, z) {
     return this.runScalarTripleToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
@@ -2737,6 +2797,12 @@ class FPTraits {
     this.MixPreciseIntervalOp);
 
   }
+
+  /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
+
+
+
+
 
   /** Calculate an acceptance interval of modf(x) */
   modfInterval(n) {
@@ -3137,8 +3203,7 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of smoothStep(low, high, x) */
-  smoothStepInterval(low, high, x) {
+  smoothStepIntervalImpl(low, high, x) {
     return this.runScalarTripleToIntervalOp(
     this.toInterval(low),
     this.toInterval(high),
@@ -3146,6 +3211,9 @@ class FPTraits {
     this.SmoothStepOp);
 
   }
+
+  /** Calculate an acceptance interval of smoothStep(low, high, x) */
+
 
   SqrtIntervalOp = {
     impl: (n) => {
@@ -3530,10 +3598,7 @@ class F32Traits extends FPTraits {
   acosInterval = this.acosIntervalImpl.bind(this);
   acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
   acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
-  acoshIntervals = [
-  this.acoshAlternativeInterval.bind(this),
-  this.acoshPrimaryInterval.bind(this)];
-
+  acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   additionInterval = this.additionIntervalImpl.bind(this);
   asinInterval = this.asinIntervalImpl.bind(this);
   asinhInterval = this.asinhIntervalImpl.bind(this);
@@ -3541,6 +3606,9 @@ class F32Traits extends FPTraits {
   atan2Interval = this.atan2IntervalImpl.bind(this);
   atanhInterval = this.atanhIntervalImpl.bind(this);
   ceilInterval = this.ceilIntervalImpl.bind(this);
+  clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
+  clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
+  clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   cosInterval = this.cosIntervalImpl.bind(this);
   coshInterval = this.coshIntervalImpl.bind(this);
   degreesInterval = this.degreesIntervalImpl.bind(this);
@@ -3549,6 +3617,7 @@ class F32Traits extends FPTraits {
   expInterval = this.expIntervalImpl.bind(this);
   exp2Interval = this.exp2IntervalImpl.bind(this);
   floorInterval = this.floorIntervalImpl.bind(this);
+  fmaInterval = this.fmaIntervalImpl.bind(this);
   fractInterval = this.fractIntervalImpl.bind(this);
   inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   ldexpInterval = this.ldexpIntervalImpl.bind(this);
@@ -3557,6 +3626,9 @@ class F32Traits extends FPTraits {
   log2Interval = this.log2IntervalImpl.bind(this);
   maxInterval = this.maxIntervalImpl.bind(this);
   minInterval = this.minIntervalImpl.bind(this);
+  mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
+  mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
+  mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   negationInterval = this.negationIntervalImpl.bind(this);
   powInterval = this.powIntervalImpl.bind(this);
@@ -3568,6 +3640,7 @@ class F32Traits extends FPTraits {
   signInterval = this.signIntervalImpl.bind(this);
   sinInterval = this.sinIntervalImpl.bind(this);
   sinhInterval = this.sinhIntervalImpl.bind(this);
+  smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
   sqrtInterval = this.sqrtIntervalImpl.bind(this);
   stepInterval = this.stepIntervalImpl.bind(this);
   subtractionInterval = this.subtractionIntervalImpl.bind(this);

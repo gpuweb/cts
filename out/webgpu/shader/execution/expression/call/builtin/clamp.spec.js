@@ -26,10 +26,10 @@ TypeU32,
 u32,
 u32Bits } from
 '../../../../../util/conversion.js';
-import { clampIntervals } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateTernaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -67,21 +67,21 @@ export const d = makeCaseCache('clamp', {
     return generateIntegerTestCases(test_values);
   },
   f32_const: () => {
-    return generateTernaryToF32IntervalCases(
+    return FP.f32.generateScalarTripleToIntervalCases(
     sparseF32Range(),
     sparseF32Range(),
     sparseF32Range(),
     'finite',
-    ...clampIntervals);
+    ...FP.f32.clampIntervals);
 
   },
   f32_non_const: () => {
-    return generateTernaryToF32IntervalCases(
+    return FP.f32.generateScalarTripleToIntervalCases(
     sparseF32Range(),
     sparseF32Range(),
     sparseF32Range(),
     'unfiltered',
-    ...clampIntervals);
+    ...FP.f32.clampIntervals);
 
   }
 });
