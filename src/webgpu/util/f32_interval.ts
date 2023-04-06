@@ -120,24 +120,6 @@ export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export const clampIntervals = FP.f32.clampIntervals;
-
-export function clampMedianInterval(
-  x: number | FPInterval,
-  y: number | FPInterval,
-  z: number | FPInterval
-): FPInterval {
-  return FP.f32.clampMedianInterval(x, y, z);
-}
-
-export function clampMinMaxInterval(
-  x: number | FPInterval,
-  y: number | FPInterval,
-  z: number | FPInterval
-): FPInterval {
-  return FP.f32.clampMinMaxInterval(x, y, z);
-}
-
 export function crossInterval(x: number[], y: number[]): FPVector {
   return FP.f32.crossInterval(x, y);
 }

@@ -1797,6 +1797,111 @@ g.test('subtractionInterval_f32')
     );
   });
 
+interface ScalarTripleToIntervalCase {
+  input: [number, number, number];
+  expected: number | IntervalBounds;
+}
+
+g.test('clampMedianInterval_f32')
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
+    // prettier-ignore
+    [
+      // Normals
+      { input: [0, 0, 0], expected: 0 },
+      { input: [1, 0, 0], expected: 0 },
+      { input: [0, 1, 0], expected: 0 },
+      { input: [0, 0, 1], expected: 0 },
+      { input: [1, 0, 1], expected: 1 },
+      { input: [1, 1, 0], expected: 1 },
+      { input: [0, 1, 1], expected: 1 },
+      { input: [1, 1, 1], expected: 1 },
+      { input: [1, 10, 100], expected: 10 },
+      { input: [10, 1, 100], expected: 10 },
+      { input: [100, 1, 10], expected: 10 },
+      { input: [-10, 1, 100], expected: 1 },
+      { input: [10, 1, -100], expected: 1 },
+      { input: [-10, 1, -100], expected: -10 },
+      { input: [-10, -10, -10], expected: -10 },
+
+      // Subnormals
+      { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: 0 },
+      { input: [0, kValue.f32.subnormal.positive.max, 0], expected: 0 },
+      { input: [0, 0, kValue.f32.subnormal.positive.max], expected: 0 },
+      { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
+      { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kValue.f32.positive.max },
+
+      // Infinities
+      { input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.clampMedianInterval(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.clampMedianInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+g.test('clampMinMaxInterval_f32')
+  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
+    // prettier-ignore
+    [
+      // Normals
+      { input: [0, 0, 0], expected: 0 },
+      { input: [1, 0, 0], expected: 0 },
+      { input: [0, 1, 0], expected: 0 },
+      { input: [0, 0, 1], expected: 0 },
+      { input: [1, 0, 1], expected: 1 },
+      { input: [1, 1, 0], expected: 0 },
+      { input: [0, 1, 1], expected: 1 },
+      { input: [1, 1, 1], expected: 1 },
+      { input: [1, 10, 100], expected: 10 },
+      { input: [10, 1, 100], expected: 10 },
+      { input: [100, 1, 10], expected: 10 },
+      { input: [-10, 1, 100], expected: 1 },
+      { input: [10, 1, -100], expected: -100 },
+      { input: [-10, 1, -100], expected: -100 },
+      { input: [-10, -10, -10], expected: -10 },
+
+      // Subnormals
+      { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+      { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
+
+      // Infinities
+      { input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
+      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds },
+    ]
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.clampMinMaxInterval(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.clampMinMaxInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface VectorToIntervalCase {
   input: number[];
   expected: number | IntervalBounds;
