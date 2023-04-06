@@ -1031,6 +1031,51 @@ abstract class FPTraits {
   }
 
   /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  private makeVectorToVectorCase(
+    param: number[],
+    filter: IntervalFilter,
+    ...ops: VectorToVector[]
+  ): Case | undefined {
+    param = param.map(this.quantize);
+
+    const vectors = ops.map(o => o(param));
+    if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [new Vector(param.map(this.scalarBuilder))],
+      expected: anyOf(...vectors),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  public generateVectorToVectorCases(
+    params: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorToVector[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeVectorToVectorCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  /**
    * @returns a Case for the params and the interval vector generator provided.
    * The Case will use an interval comparator for matching results.
    * @param scalar the scalar param to pass in
@@ -2936,10 +2981,11 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of normalize(x) */
-  public normalizeInterval(n: number[]): FPVector {
+  protected normalizeIntervalImpl(n: number[]): FPVector {
     return this.runVectorToVectorOp(this.toVector(n), this.NormalizeIntervalOp);
   }
+
+  public abstract readonly normalizeInterval: (n: number[]) => FPVector;
 
   private readonly PowIntervalOp: ScalarPairToIntervalOp = {
     // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
@@ -3540,6 +3586,7 @@ class F32Traits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
+  public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);

@@ -2519,3 +2519,44 @@ g.test('dotInterval_f32')
       `f32.dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
     );
   });
+
+interface VectorToVectorCase {
+  input: number[];
+  expected: (number | IntervalBounds)[];
+}
+
+g.test('normalizeInterval_f32')
+  .paramsSubcasesOnly<VectorToVectorCase>(
+    // prettier-ignore
+    [
+      // vec2
+      {input: [1.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
+      {input: [-1.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [1.0, 1.0], expected: [[hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)], [hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
+
+      // vec3
+      {input: [1.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0], expected: [[hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+
+      // vec4
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [[hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+    ]
+  )
+  .fn(t => {
+    const x = t.params.input;
+    const expected = FP.f32.toVector(t.params.expected);
+    const got = FP.f32.normalizeInterval(x);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`
+    );
+  });
