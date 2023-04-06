@@ -2453,10 +2453,16 @@ abstract class FPTraits {
     },
   };
 
-  public dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
+  protected dotIntervalImpl(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
     assert(x.length === y.length, `dot not defined for vectors with different lengths`);
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
+
+  /** Calculated the acceptance interval for dot(x, y) */
+  public abstract readonly dotInterval: (
+    x: number[] | FPInterval[],
+    y: number[] | FPInterval[]
+  ) => FPInterval;
 
   private readonly ExpIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3516,6 +3522,7 @@ class F32Traits extends FPTraits {
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
+  public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);

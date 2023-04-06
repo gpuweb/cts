@@ -9,10 +9,10 @@ Returns the dot product of e1 and e2.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { dotInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { sparseVectorF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateVectorPairToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -22,51 +22,51 @@ export const g = makeTestGroup(GPUTest);
 // sparse vectors for them
 export const d = makeCaseCache('dot', {
   f32_vec2_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       vectorF32Range(2),
       vectorF32Range(2),
       'finite',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
   f32_vec2_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       vectorF32Range(2),
       vectorF32Range(2),
       'unfiltered',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
   f32_vec3_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       'finite',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
   f32_vec3_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       'unfiltered',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
   f32_vec4_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       'finite',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
   f32_vec4_non_const: () => {
-    return generateVectorPairToF32IntervalCases(
+    return FP.f32.generateVectorPairToIntervalCases(
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       'unfiltered',
-      dotInterval
+      FP.f32.dotInterval
     );
   },
 });

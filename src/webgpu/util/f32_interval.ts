@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface VectorPairToInterval {
-  (x: number[], y: number[]): FPInterval;
-}
-
 export interface VectorToVector {
   (x: number[]): FPVector;
 }
@@ -114,10 +110,6 @@ export function crossInterval(x: number[], y: number[]): FPVector {
 
 export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
-}
-
-export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
-  return FP.f32.dotInterval(x, y);
 }
 
 export function faceForwardIntervals(

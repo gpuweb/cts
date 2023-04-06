@@ -17,7 +17,6 @@ import {
   additionMatrixInterval,
   correctlyRoundedInterval,
   crossInterval,
-  dotInterval,
   faceForwardIntervals,
   modfInterval,
   multiplicationMatrixMatrixInterval,
@@ -1853,64 +1852,6 @@ g.test('ulpInterval')
     t.expect(
       objectEquals(expected, got),
       `ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`
-    );
-  });
-
-interface VectorPairToIntervalCase {
-  input: [number[], number[]];
-  expected: number | IntervalBounds;
-}
-
-g.test('dotInterval')
-  .paramsSubcasesOnly<VectorPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // vec2
-      { input: [[1.0, 0.0], [1.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 1.0], [0.0, 1.0]], expected: 1.0 },
-      { input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
-      { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
-      { input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
-      { input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
-
-      // vec3
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: 1.0 },
-      { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
-      { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
-      { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
-      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
-
-      // vec4
-      { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: 1.0 },
-      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: 1.0 },
-      { input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
-      { input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
-      { input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
-      { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
-
-      // Test that going out of bounds in the intermediate calculations is caught correctly.
-      { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-      { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-      { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-      { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-      { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-      { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kAnyBounds },
-
-      // https://github.com/gpuweb/cts/issues/2155
-      { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] },
-    ]
-  )
-  .fn(t => {
-    const [x, y] = t.params.input;
-    const expected = toF32Interval(t.params.expected);
-    const got = dotInterval(x, y);
-    t.expect(
-      objectEquals(expected, got),
-      `dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
     );
   });
 

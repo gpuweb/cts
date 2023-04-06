@@ -27,7 +27,6 @@ import {
   ScalarMatrixToMatrix,
   ScalarVectorToVector,
   VectorMatrixToVector,
-  VectorPairToInterval,
   VectorPairToVector,
   VectorScalarToVector,
   VectorToVector,
@@ -815,58 +814,6 @@ function packScalarsToVector(
 export type IntervalFilter =
   | 'finite' // Expected to be finite in the interval numeric space
   | 'unfiltered'; // No expectations
-
-/**
- * @returns a Case for the params and vector pair interval generator provided
- * @param param0 the first param to pass in
- * @param param1 the second param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            pair of vectors.
- */
-function makeVectorPairToF32IntervalCase(
-  param0: number[],
-  param1: number[],
-  filter: IntervalFilter,
-  ...ops: VectorPairToInterval[]
-): Case | undefined {
-  param0 = param0.map(quantizeToF32);
-  param1 = param1.map(quantizeToF32);
-  const param0_f32 = param0.map(f32);
-  const param1_f32 = param1.map(f32);
-
-  const intervals = ops.map(o => o(param0, param1));
-  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
-    return undefined;
-  }
-  return {
-    input: [new Vector(param0_f32), new Vector(param1_f32)],
-    expected: anyOf(...intervals),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param param0s array of inputs to try for the first input
- * @param param1s array of inputs to try for the second input
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            pair of vectors.
- */
-export function generateVectorPairToF32IntervalCases(
-  param0s: number[][],
-  param1s: number[][],
-  filter: IntervalFilter,
-  ...ops: VectorPairToInterval[]
-): Case[] {
-  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
-    const c = makeVectorPairToF32IntervalCase(e[0], e[1], filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array<Case>());
-}
 
 /**
  * @returns a Case for the param and vector of intervals generator provided
