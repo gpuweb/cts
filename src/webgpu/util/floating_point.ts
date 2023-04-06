@@ -2554,8 +2554,7 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval for fma(x, y, z) */
-  public fmaInterval(x: number, y: number, z: number): FPInterval {
+  protected fmaIntervalImpl(x: number, y: number, z: number): FPInterval {
     return this.runScalarTripleToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
@@ -2563,6 +2562,9 @@ abstract class FPTraits {
       this.FmaIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval for fma(x, y, z) */
+  public abstract readonly fmaInterval: (x: number, y: number, z: number) => FPInterval;
 
   private readonly FractIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3612,6 +3614,7 @@ class F32Traits extends FPTraits {
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
+  public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly ldexpInterval = this.ldexpIntervalImpl.bind(this);

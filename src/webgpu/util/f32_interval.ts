@@ -140,10 +140,6 @@ export function faceForwardIntervals(
   return FP.f32.faceForwardIntervals(x, y, z);
 }
 
-export function fmaInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.fmaInterval(x, y, z);
-}
-
 export function lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
   return FP.f32.lengthInterval(n);
 }
