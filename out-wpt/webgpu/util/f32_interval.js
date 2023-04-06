@@ -117,23 +117,3 @@ export function subtractionMatrixInterval(x, y) {
 export function transposeInterval(m) {
   return FP.f32.transposeInterval(m);
 }
-
-export function unpack2x16floatInterval(n) {
-  return FP.f32.unpack2x16floatInterval(n);
-}
-
-export function unpack2x16snormInterval(n) {
-  return FP.f32.unpack2x16snormInterval(n);
-}
-
-export function unpack2x16unormInterval(n) {
-  return FP.f32.unpack2x16unormInterval(n);
-}
-
-export function unpack4x8snormInterval(n) {
-  return FP.f32.unpack4x8snormInterval(n);
-}
-
-export function unpack4x8unormInterval(n) {
-  return FP.f32.unpack4x8unormInterval(n);
-}
