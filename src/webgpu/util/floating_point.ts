@@ -1181,6 +1181,58 @@ abstract class FPTraits {
     return cases;
   }
 
+  /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  private makeVectorPairToVectorCase(
+    param0: number[],
+    param1: number[],
+    filter: IntervalFilter,
+    ...ops: VectorPairToVector[]
+  ): Case | undefined {
+    param0 = param0.map(this.quantize);
+    param1 = param1.map(this.quantize);
+    const vectors = ops.map(o => o(param0, param1));
+    if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [
+        new Vector(param0.map(this.scalarBuilder)),
+        new Vector(param1.map(this.scalarBuilder)),
+      ],
+      expected: anyOf(...vectors),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  public generateVectorPairToVectorCases(
+    param0s: number[][],
+    param1s: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorPairToVector[]
+  ): Case[] {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
   // Framework - Intervals
 
   /**
@@ -2217,11 +2269,14 @@ abstract class FPTraits {
     },
   };
 
-  public crossInterval(x: number[], y: number[]): FPVector {
+  protected crossIntervalImpl(x: number[], y: number[]): FPVector {
     assert(x.length === 3, `Cross is only defined for vec3`);
     assert(y.length === 3, `Cross is only defined for vec3`);
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.CrossIntervalOp);
   }
+
+  /** Calculate a vector of acceptance intervals for cross(x, y) */
+  public abstract readonly crossInterval: (x: number[], y: number[]) => FPVector;
 
   private readonly DegreesIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3565,6 +3620,7 @@ class F32Traits extends FPTraits {
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
+  public readonly crossInterval = this.crossIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);

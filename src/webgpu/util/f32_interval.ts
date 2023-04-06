@@ -100,10 +100,6 @@ export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export function crossInterval(x: number[], y: number[]): FPVector {
-  return FP.f32.crossInterval(x, y);
-}
-
 export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
 }
@@ -114,10 +110,6 @@ export function faceForwardIntervals(
   z: number[]
 ): (FPVector | undefined)[] {
   return FP.f32.faceForwardIntervals(x, y, z);
-}
-
-export function lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
-  return FP.f32.lengthInterval(n);
 }
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {

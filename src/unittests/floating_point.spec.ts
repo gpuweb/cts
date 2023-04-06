@@ -2560,3 +2560,50 @@ g.test('normalizeInterval_f32')
       `f32.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`
     );
   });
+
+interface VectorPairToVectorCase {
+  input: [number[], number[]];
+  expected: (number | IntervalBounds)[];
+}
+
+g.test('crossInterval_f32')
+  .paramsSubcasesOnly<VectorPairToVectorCase>(
+    // prettier-ignore
+    [
+      // parallel vectors, AXB == 0
+      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+      { input: [[kValue.f32.subnormal.positive.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+
+      // non-parallel vectors, AXB != 0
+      // f32 normals
+      { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
+      { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
+
+      // f64 normals
+      { input: [[0.1, -0.1, -0.1], [-0.1, 0.1, -0.1]],
+        expected: [[hexToF32(0x3ca3d708), hexToF32(0x3ca3d70b)],  // ~0.02
+          [hexToF32(0x3ca3d708), hexToF32(0x3ca3d70b)],  // ~0.02
+          [hexToF32(0xb1400000), hexToF32(0x31400000)]] },  // ~0
+
+      // f32 subnormals
+      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
+          [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]],
+        expected: [[0.0, hexToF32(0x00000002)],  // ~0
+          [0.0, hexToF32(0x00000002)],  // ~0
+          [hexToF32(0x80000001), hexToF32(0x00000001)]] },  // ~0
+    ]
+  )
+  .fn(t => {
+    const [x, y] = t.params.input;
+    const expected = FP.f32.toVector(t.params.expected);
+    const got = FP.f32.crossInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+    );
+  });
