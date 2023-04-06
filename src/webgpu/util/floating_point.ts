@@ -4,7 +4,14 @@ import { Case, IntervalFilter } from '../shader/execution/expression/expression.
 
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
-import { f32, reinterpretF32AsU32, reinterpretU32AsF32, Scalar, Vector } from './conversion.js';
+import {
+  f32,
+  reinterpretF32AsU32,
+  reinterpretU32AsF32,
+  Scalar,
+  u32,
+  Vector,
+} from './conversion.js';
 import {
   calculatePermutations,
   cartesianProduct,
@@ -1333,7 +1340,7 @@ abstract class FPTraits {
    * Duplicate inputs are pruned before invoking op.impl.
    *
    * @param x first param to flush & round then invoke op.impl on
-   * @param x second param to flush & round then invoke op.impl on
+   * @param y second param to flush & round then invoke op.impl on
    * @param op operation defining the function being run
    * @returns a vector of spans for each output of op.impl
    */
@@ -1656,8 +1663,7 @@ abstract class FPTraits {
    * Calculate the matrix of acceptance intervals for a pair of matrix function over
    * given intervals
    *
-   * @param x input domain intervals matrix
-   * @param x input domain intervals matrix
+   * @param m input domain intervals matrix
    * @param op operation defining the function being run
    * @returns a matrix of spans over all the outputs of op.impl
    */
@@ -3053,12 +3059,11 @@ abstract class FPTraits {
     const k_sqrt = this.sqrtInterval(k);
     const t = this.additionInterval(dot_times_r, k_sqrt); // t = r * dot(i, s) + sqrt(k)
 
-    const result = this.runScalarPairToIntervalOpVectorComponentWise(
+    return this.runScalarPairToIntervalOpVectorComponentWise(
       this.multiplyVectorByScalar(i, r),
       this.multiplyVectorByScalar(s, t),
       this.SubtractionIntervalOp
     ); // (i * r) - (s * t)
-    return result;
   }
 
   private readonly RemainderIntervalOp: ScalarPairToIntervalOp = {
@@ -3346,109 +3351,6 @@ abstract class FPTraits {
 
   /** Calculate an acceptance interval of trunc(x) */
   public abstract readonly truncInterval: (n: number | FPInterval) => FPInterval;
-
-  /**
-   * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
-   * converting between numeric formats
-   *
-   * unpackData* is shared between all of the unpack*Interval functions, so to
-   * avoid re-entrancy problems, they should not call each other or themselves
-   * directly or indirectly.
-   */
-  private readonly unpackData = new ArrayBuffer(4);
-  private readonly unpackDataU32 = new Uint32Array(this.unpackData);
-  private readonly unpackDataU16 = new Uint16Array(this.unpackData);
-  private readonly unpackDataU8 = new Uint8Array(this.unpackData);
-  private readonly unpackDataI16 = new Int16Array(this.unpackData);
-  private readonly unpackDataI8 = new Int8Array(this.unpackData);
-  private readonly unpackDataF16 = new Float16Array(this.unpackData);
-
-  /** Calculate an acceptance interval vector for unpack2x16float(x) */
-  public unpack2x16floatInterval(n: number): FPVector {
-    assert(
-      n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16floatInterval only accepts values on the bounds of u32'
-    );
-    this.unpackDataU32[0] = n;
-    if (this.unpackDataF16.some(f => !isFiniteF16(f))) {
-      return [this.constants().anyInterval, this.constants().anyInterval];
-    }
-
-    const result: FPVector = [
-      this.quantizeToF16Interval(this.unpackDataF16[0]),
-      this.quantizeToF16Interval(this.unpackDataF16[1]),
-    ];
-
-    if (result.some(r => !r.isFinite())) {
-      return [this.constants().anyInterval, this.constants().anyInterval];
-    }
-    return result;
-  }
-
-  /** Calculate an acceptance interval vector for unpack2x16snorm(x) */
-  public unpack2x16snormInterval(n: number): FPVector {
-    assert(
-      n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16snormInterval only accepts values on the bounds of u32'
-    );
-    const op = (n: number): FPInterval => {
-      return this.maxInterval(this.divisionInterval(n, 32767), -1);
-    };
-
-    this.unpackDataU32[0] = n;
-    return [op(this.unpackDataI16[0]), op(this.unpackDataI16[1])];
-  }
-
-  /** Calculate an acceptance interval vector for unpack2x16unorm(x) */
-  public unpack2x16unormInterval(n: number): FPVector {
-    assert(
-      n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16unormInterval only accepts values on the bounds of u32'
-    );
-    const op = (n: number): FPInterval => {
-      return this.divisionInterval(n, 65535);
-    };
-
-    this.unpackDataU32[0] = n;
-    return [op(this.unpackDataU16[0]), op(this.unpackDataU16[1])];
-  }
-
-  /** Calculate an acceptance interval vector for unpack4x8snorm(x) */
-  public unpack4x8snormInterval(n: number): FPVector {
-    assert(
-      n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8snormInterval only accepts values on the bounds of u32'
-    );
-    const op = (n: number): FPInterval => {
-      return this.maxInterval(this.divisionInterval(n, 127), -1);
-    };
-    this.unpackDataU32[0] = n;
-    return [
-      op(this.unpackDataI8[0]),
-      op(this.unpackDataI8[1]),
-      op(this.unpackDataI8[2]),
-      op(this.unpackDataI8[3]),
-    ];
-  }
-
-  /** Calculate an acceptance interval vector for unpack4x8unorm(x) */
-  public unpack4x8unormInterval(n: number): FPVector {
-    assert(
-      n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8unormInterval only accepts values on the bounds of u32'
-    );
-    const op = (n: number): FPInterval => {
-      return this.divisionInterval(n, 255);
-    };
-
-    this.unpackDataU32[0] = n;
-    return [
-      op(this.unpackDataU8[0]),
-      op(this.unpackDataU8[1]),
-      op(this.unpackDataU8[2]),
-      op(this.unpackDataU8[3]),
-    ];
-  }
 }
 
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
@@ -3584,7 +3486,7 @@ class F32Traits extends FPTraits {
     return F32Traits._constants;
   }
 
-  // Overrides - Utilities
+  // Utilities - Overrides
   public readonly quantize = quantizeToF32;
   public readonly correctlyRounded = correctlyRoundedF32;
   public readonly isFinite = isFiniteF32;
@@ -3593,7 +3495,7 @@ class F32Traits extends FPTraits {
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
 
-  // Overrides - API
+  // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
   public readonly acosInterval = this.acosIntervalImpl.bind(this);
   public readonly acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
@@ -3647,6 +3549,168 @@ class F32Traits extends FPTraits {
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
+
+  // Framework - Cases
+
+  // U32 -> Interval is used for testing f32 specific unpack* functions
+  /**
+   * @returns a Case for the param and the interval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  private makeU32ToVectorCase(
+    param: number,
+    filter: IntervalFilter,
+    ...ops: ScalarToVector[]
+  ): Case | undefined {
+    param = Math.trunc(param);
+
+    const vectors = ops.map(o => o(param));
+    if (filter === 'finite' && vectors.some(v => !v.every(e => e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: u32(param),
+      expected: anyOf(...vectors),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating an acceptance interval
+   */
+  public generateU32ToIntervalCases(
+    params: number[],
+    filter: IntervalFilter,
+    ...ops: ScalarToVector[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeU32ToVectorCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  // Framework - API
+
+  /**
+   * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
+   * converting between numeric formats
+   *
+   * unpackData* is shared between all the unpack*Interval functions, so to
+   * avoid re-entrancy problems, they should not call each other or themselves
+   * directly or indirectly.
+   */
+  private readonly unpackData = new ArrayBuffer(4);
+  private readonly unpackDataU32 = new Uint32Array(this.unpackData);
+  private readonly unpackDataU16 = new Uint16Array(this.unpackData);
+  private readonly unpackDataU8 = new Uint8Array(this.unpackData);
+  private readonly unpackDataI16 = new Int16Array(this.unpackData);
+  private readonly unpackDataI8 = new Int8Array(this.unpackData);
+  private readonly unpackDataF16 = new Float16Array(this.unpackData);
+
+  private unpack2x16floatIntervalImpl(n: number): FPVector {
+    assert(
+      n >= kValue.u32.min && n <= kValue.u32.max,
+      'unpack2x16floatInterval only accepts values on the bounds of u32'
+    );
+    this.unpackDataU32[0] = n;
+    if (this.unpackDataF16.some(f => !isFiniteF16(f))) {
+      return [this.constants().anyInterval, this.constants().anyInterval];
+    }
+
+    const result: FPVector = [
+      this.quantizeToF16Interval(this.unpackDataF16[0]),
+      this.quantizeToF16Interval(this.unpackDataF16[1]),
+    ];
+
+    if (result.some(r => !r.isFinite())) {
+      return [this.constants().anyInterval, this.constants().anyInterval];
+    }
+    return result;
+  }
+
+  /** Calculate an acceptance interval vector for unpack2x16float(x) */
+  public readonly unpack2x16floatInterval = this.unpack2x16floatIntervalImpl.bind(this);
+
+  private unpack2x16snormIntervalImpl(n: number): FPVector {
+    assert(
+      n >= kValue.u32.min && n <= kValue.u32.max,
+      'unpack2x16snormInterval only accepts values on the bounds of u32'
+    );
+    const op = (n: number): FPInterval => {
+      return this.maxInterval(this.divisionInterval(n, 32767), -1);
+    };
+
+    this.unpackDataU32[0] = n;
+    return [op(this.unpackDataI16[0]), op(this.unpackDataI16[1])];
+  }
+
+  /** Calculate an acceptance interval vector for unpack2x16snorm(x) */
+  public readonly unpack2x16snormInterval = this.unpack2x16snormIntervalImpl.bind(this);
+
+  private unpack2x16unormIntervalImpl(n: number): FPVector {
+    assert(
+      n >= kValue.u32.min && n <= kValue.u32.max,
+      'unpack2x16unormInterval only accepts values on the bounds of u32'
+    );
+    const op = (n: number): FPInterval => {
+      return this.divisionInterval(n, 65535);
+    };
+
+    this.unpackDataU32[0] = n;
+    return [op(this.unpackDataU16[0]), op(this.unpackDataU16[1])];
+  }
+
+  /** Calculate an acceptance interval vector for unpack2x16unorm(x) */
+  public readonly unpack2x16unormInterval = this.unpack2x16unormIntervalImpl.bind(this);
+
+  private unpack4x8snormIntervalImpl(n: number): FPVector {
+    assert(
+      n >= kValue.u32.min && n <= kValue.u32.max,
+      'unpack4x8snormInterval only accepts values on the bounds of u32'
+    );
+    const op = (n: number): FPInterval => {
+      return this.maxInterval(this.divisionInterval(n, 127), -1);
+    };
+    this.unpackDataU32[0] = n;
+    return [
+      op(this.unpackDataI8[0]),
+      op(this.unpackDataI8[1]),
+      op(this.unpackDataI8[2]),
+      op(this.unpackDataI8[3]),
+    ];
+  }
+
+  /** Calculate an acceptance interval vector for unpack4x8snorm(x) */
+  public readonly unpack4x8snormInterval = this.unpack4x8snormIntervalImpl.bind(this);
+
+  private unpack4x8unormIntervalImpl(n: number): FPVector {
+    assert(
+      n >= kValue.u32.min && n <= kValue.u32.max,
+      'unpack4x8unormInterval only accepts values on the bounds of u32'
+    );
+    const op = (n: number): FPInterval => {
+      return this.divisionInterval(n, 255);
+    };
+
+    this.unpackDataU32[0] = n;
+    return [
+      op(this.unpackDataU8[0]),
+      op(this.unpackDataU8[1]),
+      op(this.unpackDataU8[2]),
+      op(this.unpackDataU8[3]),
+    ];
+  }
+
+  /** Calculate an acceptance interval vector for unpack4x8unorm(x) */
+  public readonly unpack4x8unormInterval = this.unpack4x8unormIntervalImpl.bind(this);
 }
 
 export const FP = {
