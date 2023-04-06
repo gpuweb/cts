@@ -24,7 +24,6 @@ import {
   MatrixToMatrix,
   MatrixToScalar,
   MatrixVectorToVector,
-  ScalarToVector,
   ScalarMatrixToMatrix,
   ScalarVectorToVector,
   VectorMatrixToVector,
@@ -1494,54 +1493,6 @@ export function generateVectorMatrixToVectorCases(
     });
   });
   return cases;
-}
-
-/**
- * @returns a Case for the param and vector of intervals generator provided
- * The input is treated as an unsigned int.
- * @param param the param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance
- *            interval for an unsigned int.
- */
-function makeU32ToVectorCase(
-  param: number,
-  filter: IntervalFilter,
-  ...ops: ScalarToVector[]
-): Case | undefined {
-  param = Math.trunc(param);
-  const param_u32 = u32(param);
-
-  const vectors = ops.map(o => o(param));
-  if (filter === 'finite' && vectors.some(v => !v.every(e => e.isFinite()))) {
-    return undefined;
-  }
-  return {
-    input: param_u32,
-    expected: anyOf(...vectors),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * The input is treated as an unsigned int.
- * @param params array of inputs to try
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance
- *            interval for an unsigned int.
- */
-export function generateU32ToVectorCases(
-  params: number[],
-  filter: IntervalFilter,
-  ...ops: ScalarToVector[]
-): Case[] {
-  return params.reduce((cases, e) => {
-    const c = makeU32ToVectorCase(e, filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array<Case>());
 }
 
 /**

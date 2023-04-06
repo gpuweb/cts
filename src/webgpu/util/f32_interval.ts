@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface ScalarToVector {
-  (n: number): FPVector;
-}
-
 export interface VectorToInterval {
   (x: number[]): FPInterval;
 }
@@ -182,24 +178,4 @@ export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatri
 
 export function transposeInterval(m: number[][]): FPMatrix {
   return FP.f32.transposeInterval(m);
-}
-
-export function unpack2x16floatInterval(n: number): FPVector {
-  return FP.f32.unpack2x16floatInterval(n);
-}
-
-export function unpack2x16snormInterval(n: number): FPVector {
-  return FP.f32.unpack2x16snormInterval(n);
-}
-
-export function unpack2x16unormInterval(n: number): FPVector {
-  return FP.f32.unpack2x16unormInterval(n);
-}
-
-export function unpack4x8snormInterval(n: number): FPVector {
-  return FP.f32.unpack4x8snormInterval(n);
-}
-
-export function unpack4x8unormInterval(n: number): FPVector {
-  return FP.f32.unpack4x8unormInterval(n);
 }
