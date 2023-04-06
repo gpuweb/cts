@@ -3117,14 +3117,16 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of reflect(x, y) */
-  public reflectInterval(x: number[], y: number[]): FPVector {
+  protected reflectIntervalImpl(x: number[], y: number[]): FPVector {
     assert(
       x.length === y.length,
       `reflect is only defined for vectors with the same number of elements`
     );
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.ReflectIntervalOp);
   }
+
+  /** Calculate an acceptance interval of reflect(x, y) */
+  public abstract readonly reflectInterval: (x: number[], y: number[]) => FPVector;
 
   /**
    * Calculate acceptance interval vectors of reflect(i, s, r)
@@ -3646,6 +3648,7 @@ class F32Traits extends FPTraits {
   public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
