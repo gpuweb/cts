@@ -35,7 +35,6 @@ MatrixType } from
 
 
 
-
 import { FPInterval } from '../../../util/floating_point.js';
 import {
 cartesianProduct,
@@ -819,54 +818,6 @@ vectorWidth)
 
 
 // No expectations
-
-/**
- * @returns a Case for the params and binary interval generator provided
- * The Case will use use an interval comparator for matching results.
- * @param param0 the first param or left hand side to pass in
- * @param param1 the second param or rhs hand side to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            binary operation
- */
-function makeBinaryToF32IntervalCase(
-param0,
-param1,
-filter,
-...ops)
-{
-  param0 = quantizeToF32(param0);
-  param1 = quantizeToF32(param1);
-
-  const intervals = ops.map((o) => o(param0, param1));
-  if (filter === 'finite' && intervals.some((i) => !i.isFinite())) {
-    return undefined;
-  }
-  return { input: [f32(param0), f32(param1)], expected: anyOf(...intervals) };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param param0s array of inputs to try for the first param
- * @param param1s array of inputs to try for the second param
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            binary operation
- */
-export function generateBinaryToF32IntervalCases(
-param0s,
-param1s,
-filter,
-...ops)
-{
-  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
-    const c = makeBinaryToF32IntervalCase(e[0], e[1], filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array());
-}
 
 /**
  * @returns a Case for the params and ternary interval generator provided

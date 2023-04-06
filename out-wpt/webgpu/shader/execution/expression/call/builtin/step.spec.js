@@ -11,9 +11,9 @@ Returns 1.0 if edge ≤ x, and 0.0 otherwise. Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
-import { f32, TypeF32 } from '../../../../../util/conversion.js';
-import { stepInterval, toF32Interval } from '../../../../../util/f32_interval.js';
-import { fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { TypeF32 } from '../../../../../util/conversion.js';
+import { FP } from '../../../../../util/floating_point.js';
+import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -23,25 +23,25 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('step', {
   f32: () => {
-    const zeroInterval = toF32Interval(0);
-    const oneInterval = toF32Interval(1);
+    const zeroInterval = FP.f32.toInterval(0);
+    const oneInterval = FP.f32.toInterval(1);
 
     // stepInterval's return value isn't always interpreted as an acceptance
     // interval, so makeBinaryToF32IntervalCase cannot be used here.
     // See the comment block on stepInterval for more details
     const makeCase = (edge, x) => {
-      edge = quantizeToF32(edge);
-      x = quantizeToF32(x);
-      const expected = stepInterval(edge, x);
+      edge = FP.f32.quantize(edge);
+      x = FP.f32.quantize(x);
+      const expected = FP.f32.stepInterval(edge, x);
 
       // [0, 0], [1, 1], or [-∞, +∞] cases
       if (expected.isPoint() || !expected.isFinite()) {
-        return { input: [f32(edge), f32(x)], expected };
+        return { input: [FP.f32.scalarBuilder(edge), FP.f32.scalarBuilder(x)], expected };
       }
 
       // [0, 1] case
       return {
-        input: [f32(edge), f32(x)],
+        input: [FP.f32.scalarBuilder(edge), FP.f32.scalarBuilder(x)],
         expected: anyOf(zeroInterval, oneInterval),
       };
     };

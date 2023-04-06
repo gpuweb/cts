@@ -11,10 +11,10 @@ Returns the arc tangent of e1 over e2. Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
-import { atan2Interval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { linearRange, sparseF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateBinaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -28,11 +28,11 @@ export const d = makeCaseCache('atan2', {
     ...sparseF32Range(),
     ...linearRange(kValue.f32.negative.max, kValue.f32.positive.min, 10)];
 
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
     numeric_range,
     numeric_range,
     'unfiltered',
-    atan2Interval);
+    FP.f32.atan2Interval);
 
   }
 });

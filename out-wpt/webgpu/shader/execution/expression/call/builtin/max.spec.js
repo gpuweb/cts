@@ -20,10 +20,10 @@ Component-wise when T is a vector.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
-import { maxInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateBinaryToF32IntervalCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -42,11 +42,11 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('max', {
   f32: () => {
-    return generateBinaryToF32IntervalCases(
+    return FP.f32.generateScalarPairToIntervalCases(
       fullF32Range(),
       fullF32Range(),
       'unfiltered',
-      maxInterval
+      FP.f32.maxInterval
     );
   },
 });
