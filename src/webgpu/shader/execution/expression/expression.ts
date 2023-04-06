@@ -30,7 +30,6 @@ import {
   VectorPairToInterval,
   VectorPairToVector,
   VectorScalarToVector,
-  VectorToInterval,
   VectorToVector,
 } from '../../../util/f32_interval.js';
 import { FPInterval } from '../../../util/floating_point.js';
@@ -816,52 +815,6 @@ function packScalarsToVector(
 export type IntervalFilter =
   | 'finite' // Expected to be finite in the interval numeric space
   | 'unfiltered'; // No expectations
-
-/**
- * @returns a Case for the param and vector interval generator provided
- * @param param the param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            vector.
- */
-function makeVectorToF32IntervalCase(
-  param: number[],
-  filter: IntervalFilter,
-  ...ops: VectorToInterval[]
-): Case | undefined {
-  param = param.map(quantizeToF32);
-  const param_f32 = param.map(f32);
-
-  const intervals = ops.map(o => o(param));
-  if (filter === 'finite' && intervals.some(i => !i.isFinite())) {
-    return undefined;
-  }
-  return {
-    input: [new Vector(param_f32)],
-    expected: anyOf(...intervals),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param params array of inputs to try
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an acceptance interval for a
- *            vector.
- */
-export function generateVectorToF32IntervalCases(
-  params: number[][],
-  filter: IntervalFilter,
-  ...ops: VectorToInterval[]
-): Case[] {
-  return params.reduce((cases, e) => {
-    const c = makeVectorToF32IntervalCase(e, filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array<Case>());
-}
 
 /**
  * @returns a Case for the params and vector pair interval generator provided

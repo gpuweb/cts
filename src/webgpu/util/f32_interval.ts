@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface VectorToInterval {
-  (x: number[]): FPInterval;
-}
-
 export interface VectorPairToInterval {
   (x: number[], y: number[]): FPInterval;
 }
