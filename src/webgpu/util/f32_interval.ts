@@ -144,16 +144,6 @@ export function lengthInterval(n: number | FPInterval | number[] | FPVector): FP
   return FP.f32.lengthInterval(n);
 }
 
-export const mixIntervals = FP.f32.mixIntervals;
-
-export function mixImpreciseInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.mixImpreciseInterval(x, y, z);
-}
-
-export function mixPreciseInterval(x: number, y: number, z: number): FPInterval {
-  return FP.f32.mixPreciseInterval(x, y, z);
-}
-
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
   return FP.f32.modfInterval(n);
 }

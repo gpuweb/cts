@@ -2758,12 +2758,6 @@ abstract class FPTraits {
     y: number | FPInterval
   ) => FPInterval;
 
-  /** All acceptance interval functions for mix(x, y, z) */
-  public readonly mixIntervals: ScalarTripleToInterval[] = [
-    this.mixImpreciseInterval.bind(this),
-    this.mixPreciseInterval.bind(this),
-  ];
-
   private readonly MixImpreciseIntervalOp: ScalarTripleToIntervalOp = {
     impl: (x: number, y: number, z: number): FPInterval => {
       // x + (y - x) * z =
@@ -2773,8 +2767,7 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
-  public mixImpreciseInterval(x: number, y: number, z: number): FPInterval {
+  protected mixImpreciseIntervalImpl(x: number, y: number, z: number): FPInterval {
     return this.runScalarTripleToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
@@ -2782,6 +2775,9 @@ abstract class FPTraits {
       this.MixImpreciseIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of mix(x, y, z) using x + (y - x) * z */
+  public abstract readonly mixImpreciseInterval: (x: number, y: number, z: number) => FPInterval;
 
   private readonly MixPreciseIntervalOp: ScalarTripleToIntervalOp = {
     impl: (x: number, y: number, z: number): FPInterval => {
@@ -2793,8 +2789,7 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
-  public mixPreciseInterval(x: number, y: number, z: number): FPInterval {
+  protected mixPreciseIntervalImpl(x: number, y: number, z: number): FPInterval {
     return this.runScalarTripleToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
@@ -2802,6 +2797,12 @@ abstract class FPTraits {
       this.MixPreciseIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of mix(x, y, z) using x * (1.0 - z) + y * z */
+  public abstract readonly mixPreciseInterval: (x: number, y: number, z: number) => FPInterval;
+
+  /** All acceptance interval functions for mix(x, y, z) */
+  public abstract readonly mixIntervals: ScalarTripleToInterval[];
 
   /** Calculate an acceptance interval of modf(x) */
   public modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
@@ -3623,6 +3624,9 @@ class F32Traits extends FPTraits {
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
   public readonly minInterval = this.minIntervalImpl.bind(this);
+  public readonly mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
+  public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
+  public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
