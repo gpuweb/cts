@@ -3203,8 +3203,7 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of smoothStep(low, high, x) */
-  public smoothStepInterval(low: number, high: number, x: number): FPInterval {
+  protected smoothStepIntervalImpl(low: number, high: number, x: number): FPInterval {
     return this.runScalarTripleToIntervalOp(
       this.toInterval(low),
       this.toInterval(high),
@@ -3212,6 +3211,9 @@ abstract class FPTraits {
       this.SmoothStepOp
     );
   }
+
+  /** Calculate an acceptance interval of smoothStep(low, high, x) */
+  public abstract readonly smoothStepInterval: (low: number, high: number, x: number) => FPInterval;
 
   private readonly SqrtIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3638,6 +3640,7 @@ class F32Traits extends FPTraits {
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.sinhIntervalImpl.bind(this);
+  public readonly smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);

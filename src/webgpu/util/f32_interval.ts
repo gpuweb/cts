@@ -180,10 +180,6 @@ export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
 }
 
-export function smoothStepInterval(low: number, high: number, x: number): FPInterval {
-  return FP.f32.smoothStepInterval(low, high, x);
-}
-
 export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.subtractionMatrixInterval(x, y);
 }
