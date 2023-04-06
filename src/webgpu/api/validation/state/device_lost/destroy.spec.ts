@@ -30,6 +30,11 @@ import {
   kAllCanvasTypes,
   kValidCanvasContextIds,
 } from '../../../../util/create_elements.js';
+import {
+  startPlayingAndWaitForVideo,
+  getVideoElement,
+  getVideoFrameFromVideoElement,
+} from '../../../../web_platform/util.js';
 import { ValidationTest } from '../../validation_test.js';
 
 const kCommandValidationStages = ['finish', 'submit'];
@@ -498,6 +503,53 @@ Tests creating query sets on destroyed device.
     await t.executeAfterDestroy(() => {
       t.device.createQuerySet({ type, count: 4 });
     }, awaitLost);
+  });
+
+g.test('importExternalTexture')
+  .desc(
+    `
+Tests import external texture on destroyed device. Tests valid combinations of:
+  - Various valid source type
+  `
+  )
+  .params(u =>
+    u
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
+      .beginSubcases()
+      .combine('awaitLost', [true, false])
+  )
+  .fn(async t => {
+    const { awaitLost, sourceType } = t.params;
+
+    const videoElement = getVideoElement(t, 'four-colors-vp9-bt601.webm');
+    if (!('requestVideoFrameCallback' in videoElement)) {
+      t.skip('HTMLVideoElement.requestVideoFrameCallback is not supported');
+    }
+
+    let source: HTMLVideoElement | VideoFrame;
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      source =
+        sourceType === 'VideoFrame'
+          ? await getVideoFrameFromVideoElement(t, videoElement)
+          : videoElement;
+
+      await t.executeAfterDestroy(() => {
+        t.device.createBindGroup({
+          layout: t.device.createBindGroupLayout({
+            entries: [{ binding: 0, visibility: GPUShaderStage.FRAGMENT, externalTexture: {} }],
+          }),
+          entries: [
+            {
+              binding: 0,
+              resource: t.device.importExternalTexture({
+                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+                source: source as any,
+              }),
+            },
+          ],
+        });
+      }, awaitLost);
+    });
   });
 
 g.test('command,copyBufferToBuffer')
