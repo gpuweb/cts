@@ -200,7 +200,7 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
     bindGroupTest,
     storageDefinitionWGSLSnippetFn,
     (numBindings, set) =>
-      `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')};`,
+      `${range(numBindings, i => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
     numBindings,
     extraWGSL
   );
@@ -618,41 +618,61 @@ export class LimitTestsImpl extends GPUTestBase {
     }
   }
 
+  _createRenderPipelineDescriptor(module) {
+    return {
+      layout: 'auto',
+      vertex: {
+        module,
+        entryPoint: 'mainVS',
+      },
+    };
+  }
+
+  _createRenderPipelineDescriptorWithFragmentShader(module) {
+    return {
+      layout: 'auto',
+      vertex: {
+        module,
+        entryPoint: 'mainVS',
+      },
+      fragment: {
+        module,
+        entryPoint: 'mainFS',
+        targets: [],
+      },
+      depthStencil: {
+        format: 'depth24plus-stencil8',
+        depthWriteEnabled: true,
+        depthCompare: 'always',
+      },
+    };
+  }
+
+  _createComputePipelineDescriptor(module) {
+    return {
+      layout: 'auto',
+      compute: {
+        module,
+        entryPoint: 'main',
+      },
+    };
+  }
+
   createPipeline(createPipelineType, module) {
     const { device } = this;
 
     switch (createPipelineType) {
       case 'createRenderPipeline':
-        return device.createRenderPipeline({
-          layout: 'auto',
-          vertex: {
-            module,
-            entryPoint: 'mainVS',
-          },
-        });
+        return device.createRenderPipeline(this._createRenderPipelineDescriptor(module));
         break;
       case 'createRenderPipelineWithFragmentStage':
-        return device.createRenderPipeline({
-          layout: 'auto',
-          vertex: {
-            module,
-            entryPoint: 'mainVS',
-          },
-          fragment: {
-            module,
-            entryPoint: 'mainFS',
-            targets: [{ format: 'rgba8unorm', writeMask: 0 }],
-          },
-        });
+        return device.createRenderPipeline(
+          this._createRenderPipelineDescriptorWithFragmentShader(module)
+        );
+
         break;
       case 'createComputePipeline':
-        return device.createComputePipeline({
-          layout: 'auto',
-          compute: {
-            module,
-            entryPoint: 'main',
-          },
-        });
+        return device.createComputePipeline(this._createComputePipelineDescriptor(module));
         break;
     }
   }
@@ -662,50 +682,30 @@ export class LimitTestsImpl extends GPUTestBase {
 
     switch (createPipelineType) {
       case 'createRenderPipeline':
-        return device.createRenderPipelineAsync({
-          layout: 'auto',
-          vertex: {
-            module,
-            entryPoint: 'mainVS',
-          },
-        });
+        return device.createRenderPipelineAsync(this._createRenderPipelineDescriptor(module));
       case 'createRenderPipelineWithFragmentStage':
-        return device.createRenderPipelineAsync({
-          layout: 'auto',
-          vertex: {
-            module,
-            entryPoint: 'mainVS',
-          },
-          fragment: {
-            module,
-            entryPoint: 'mainFS',
-            targets: [{ format: 'rgba8unorm', writeMask: 0 }],
-          },
-        });
+        return device.createRenderPipelineAsync(
+          this._createRenderPipelineDescriptorWithFragmentShader(module)
+        );
+
       case 'createComputePipeline':
-        return device.createComputePipelineAsync({
-          layout: 'auto',
-          compute: {
-            module,
-            entryPoint: 'main',
-          },
-        });
+        return device.createComputePipelineAsync(this._createComputePipelineDescriptor(module));
     }
   }
 
   async testCreatePipeline(createPipelineType, async, module, shouldError, msg = '') {
     if (async) {
-      await this.expectValidationError(
-        () => {
-          this.createPipeline(createPipelineType, module);
-        },
+      await this.shouldRejectConditionally(
+        'GPUPipelineError',
+        this.createPipelineAsync(createPipelineType, module),
         shouldError,
         msg
       );
     } else {
-      await this.shouldRejectConditionally(
-        'GPUPipelineError',
-        this.createPipelineAsync(createPipelineType, module),
+      await this.expectValidationError(
+        () => {
+          this.createPipeline(createPipelineType, module);
+        },
         shouldError,
         msg
       );
