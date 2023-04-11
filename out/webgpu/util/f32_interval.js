@@ -38,30 +38,6 @@ import { FP } from './floating_point.js';
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Utilities
 
 export function toF32Interval(n) {
@@ -112,16 +88,8 @@ export function additionMatrixInterval(x, y) {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export function crossInterval(x, y) {
-  return FP.f32.crossInterval(x, y);
-}
-
 export function determinantInterval(m) {
   return FP.f32.determinantInterval(m);
-}
-
-export function dotInterval(x, y) {
-  return FP.f32.dotInterval(x, y);
 }
 
 export function faceForwardIntervals(
@@ -130,10 +98,6 @@ y,
 z)
 {
   return FP.f32.faceForwardIntervals(x, y, z);
-}
-
-export function lengthInterval(n) {
-  return FP.f32.lengthInterval(n);
 }
 
 export function modfInterval(n) {
@@ -158,14 +122,6 @@ export function multiplicationMatrixVectorInterval(x, y) {
 
 export function multiplicationVectorMatrixInterval(x, y) {
   return FP.f32.multiplicationVectorMatrixInterval(x, y);
-}
-
-export function normalizeInterval(n) {
-  return FP.f32.normalizeInterval(n);
-}
-
-export function reflectInterval(x, y) {
-  return FP.f32.reflectInterval(x, y);
 }
 
 export function refractInterval(i, s, r) {

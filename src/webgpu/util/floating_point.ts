@@ -1031,6 +1031,51 @@ abstract class FPTraits {
   }
 
   /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  private makeVectorToVectorCase(
+    param: number[],
+    filter: IntervalFilter,
+    ...ops: VectorToVector[]
+  ): Case | undefined {
+    param = param.map(this.quantize);
+
+    const vectors = ops.map(o => o(param));
+    if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [new Vector(param.map(this.scalarBuilder))],
+      expected: anyOf(...vectors),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  public generateVectorToVectorCases(
+    params: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorToVector[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeVectorToVectorCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
+  /**
    * @returns a Case for the params and the interval vector generator provided.
    * The Case will use an interval comparator for matching results.
    * @param scalar the scalar param to pass in
@@ -1134,6 +1179,58 @@ abstract class FPTraits {
       });
     });
     return cases;
+  }
+
+  /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  private makeVectorPairToVectorCase(
+    param0: number[],
+    param1: number[],
+    filter: IntervalFilter,
+    ...ops: VectorPairToVector[]
+  ): Case | undefined {
+    param0 = param0.map(this.quantize);
+    param1 = param1.map(this.quantize);
+    const vectors = ops.map(o => o(param0, param1));
+    if (filter === 'finite' && vectors.some(v => v.some(e => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [
+        new Vector(param0.map(this.scalarBuilder)),
+        new Vector(param1.map(this.scalarBuilder)),
+      ],
+      expected: anyOf(...vectors),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  public generateVectorPairToVectorCases(
+    param0s: number[][],
+    param1s: number[][],
+    filter: IntervalFilter,
+    ...ops: VectorPairToVector[]
+  ): Case[] {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
   }
 
   // Framework - Intervals
@@ -2172,11 +2269,14 @@ abstract class FPTraits {
     },
   };
 
-  public crossInterval(x: number[], y: number[]): FPVector {
+  protected crossIntervalImpl(x: number[], y: number[]): FPVector {
     assert(x.length === 3, `Cross is only defined for vec3`);
     assert(y.length === 3, `Cross is only defined for vec3`);
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.CrossIntervalOp);
   }
+
+  /** Calculate a vector of acceptance intervals for cross(x, y) */
+  public abstract readonly crossInterval: (x: number[], y: number[]) => FPVector;
 
   private readonly DegreesIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -2453,10 +2553,16 @@ abstract class FPTraits {
     },
   };
 
-  public dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
+  protected dotIntervalImpl(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
     assert(x.length === y.length, `dot not defined for vectors with different lengths`);
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
+
+  /** Calculated the acceptance interval for dot(x, y) */
+  public abstract readonly dotInterval: (
+    x: number[] | FPInterval[],
+    y: number[] | FPInterval[]
+  ) => FPInterval;
 
   private readonly ExpIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -2930,10 +3036,11 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of normalize(x) */
-  public normalizeInterval(n: number[]): FPVector {
+  protected normalizeIntervalImpl(n: number[]): FPVector {
     return this.runVectorToVectorOp(this.toVector(n), this.NormalizeIntervalOp);
   }
+
+  public abstract readonly normalizeInterval: (n: number[]) => FPVector;
 
   private readonly PowIntervalOp: ScalarPairToIntervalOp = {
     // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
@@ -3010,14 +3117,16 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of reflect(x, y) */
-  public reflectInterval(x: number[], y: number[]): FPVector {
+  protected reflectIntervalImpl(x: number[], y: number[]): FPVector {
     assert(
       x.length === y.length,
       `reflect is only defined for vectors with the same number of elements`
     );
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.ReflectIntervalOp);
   }
+
+  /** Calculate an acceptance interval of reflect(x, y) */
+  public abstract readonly reflectInterval: (x: number[], y: number[]) => FPVector;
 
   /**
    * Calculate acceptance interval vectors of reflect(i, s, r)
@@ -3513,9 +3622,11 @@ class F32Traits extends FPTraits {
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
+  public readonly crossInterval = this.crossIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
+  public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
@@ -3533,9 +3644,11 @@ class F32Traits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
+  public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);

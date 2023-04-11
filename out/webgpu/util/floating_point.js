@@ -1031,6 +1031,51 @@ class FPTraits {
   }
 
   /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  makeVectorToVectorCase(
+  param,
+  filter,
+  ...ops)
+  {
+    param = param.map(this.quantize);
+
+    const vectors = ops.map((o) => o(param));
+    if (filter === 'finite' && vectors.some((v) => v.some((e) => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [new Vector(param.map(this.scalarBuilder))],
+      expected: anyOf(...vectors)
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  generateVectorToVectorCases(
+  params,
+  filter,
+  ...ops)
+  {
+    return params.reduce((cases, e) => {
+      const c = this.makeVectorToVectorCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array());
+  }
+
+  /**
    * @returns a Case for the params and the interval vector generator provided.
    * The Case will use an interval comparator for matching results.
    * @param scalar the scalar param to pass in
@@ -1134,6 +1179,58 @@ class FPTraits {
       });
     });
     return cases;
+  }
+
+  /**
+   * @returns a Case for the param and vector of intervals generator provided
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  makeVectorPairToVectorCase(
+  param0,
+  param1,
+  filter,
+  ...ops)
+  {
+    param0 = param0.map(this.quantize);
+    param1 = param1.map(this.quantize);
+    const vectors = ops.map((o) => o(param0, param1));
+    if (filter === 'finite' && vectors.some((v) => v.some((e) => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [
+      new Vector(param0.map(this.scalarBuilder)),
+      new Vector(param1.map(this.scalarBuilder))],
+
+      expected: anyOf(...vectors)
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a vector of acceptance
+   *            intervals.
+   */
+  generateVectorPairToVectorCases(
+  param0s,
+  param1s,
+  filter,
+  ...ops)
+  {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeVectorPairToVectorCase(e[0], e[1], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array());
   }
 
   // Framework - Intervals
@@ -2172,11 +2269,14 @@ class FPTraits {
     }
   };
 
-  crossInterval(x, y) {
+  crossIntervalImpl(x, y) {
     assert(x.length === 3, `Cross is only defined for vec3`);
     assert(y.length === 3, `Cross is only defined for vec3`);
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.CrossIntervalOp);
   }
+
+  /** Calculate a vector of acceptance intervals for cross(x, y) */
+
 
   DegreesIntervalOp = {
     impl: (n) => {
@@ -2453,10 +2553,16 @@ class FPTraits {
     }
   };
 
-  dotInterval(x, y) {
+  dotIntervalImpl(x, y) {
     assert(x.length === y.length, `dot not defined for vectors with different lengths`);
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
+
+  /** Calculated the acceptance interval for dot(x, y) */
+
+
+
+
 
   ExpIntervalOp = {
     impl: (n) => {
@@ -2930,10 +3036,11 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of normalize(x) */
-  normalizeInterval(n) {
+  normalizeIntervalImpl(n) {
     return this.runVectorToVectorOp(this.toVector(n), this.NormalizeIntervalOp);
   }
+
+
 
   PowIntervalOp = {
     // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
@@ -3010,14 +3117,16 @@ class FPTraits {
     }
   };
 
-  /** Calculate an acceptance interval of reflect(x, y) */
-  reflectInterval(x, y) {
+  reflectIntervalImpl(x, y) {
     assert(
     x.length === y.length,
     `reflect is only defined for vectors with the same number of elements`);
 
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.ReflectIntervalOp);
   }
+
+  /** Calculate an acceptance interval of reflect(x, y) */
+
 
   /**
    * Calculate acceptance interval vectors of reflect(i, s, r)
@@ -3513,9 +3622,11 @@ class F32Traits extends FPTraits {
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   cosInterval = this.cosIntervalImpl.bind(this);
   coshInterval = this.coshIntervalImpl.bind(this);
+  crossInterval = this.crossIntervalImpl.bind(this);
   degreesInterval = this.degreesIntervalImpl.bind(this);
   distanceInterval = this.distanceIntervalImpl.bind(this);
   divisionInterval = this.divisionIntervalImpl.bind(this);
+  dotInterval = this.dotIntervalImpl.bind(this);
   expInterval = this.expIntervalImpl.bind(this);
   exp2Interval = this.exp2IntervalImpl.bind(this);
   floorInterval = this.floorIntervalImpl.bind(this);
@@ -3533,9 +3644,11 @@ class F32Traits extends FPTraits {
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   negationInterval = this.negationIntervalImpl.bind(this);
+  normalizeInterval = this.normalizeIntervalImpl.bind(this);
   powInterval = this.powIntervalImpl.bind(this);
   quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   radiansInterval = this.radiansIntervalImpl.bind(this);
+  reflectInterval = this.reflectIntervalImpl.bind(this);
   remainderInterval = this.remainderIntervalImpl.bind(this);
   roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.saturateIntervalImpl.bind(this);
