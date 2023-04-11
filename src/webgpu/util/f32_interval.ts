@@ -6,30 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface VectorToInterval {
-  (x: number[]): FPInterval;
-}
-
-export interface VectorPairToInterval {
-  (x: number[], y: number[]): FPInterval;
-}
-
-export interface VectorToVector {
-  (x: number[]): FPVector;
-}
-
-export interface VectorPairToVector {
-  (x: number[], y: number[]): FPVector;
-}
-
-export interface VectorScalarToVector {
-  (x: number[], y: number): FPVector;
-}
-
-export interface ScalarVectorToVector {
-  (x: number, y: number[]): FPVector;
-}
-
 export interface MatrixToScalar {
   (m: number[][]): FPInterval;
 }
@@ -112,16 +88,8 @@ export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
 }
 
-export function crossInterval(x: number[], y: number[]): FPVector {
-  return FP.f32.crossInterval(x, y);
-}
-
 export function determinantInterval(m: number[][]): FPInterval {
   return FP.f32.determinantInterval(m);
-}
-
-export function dotInterval(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
-  return FP.f32.dotInterval(x, y);
 }
 
 export function faceForwardIntervals(
@@ -130,10 +98,6 @@ export function faceForwardIntervals(
   z: number[]
 ): (FPVector | undefined)[] {
   return FP.f32.faceForwardIntervals(x, y, z);
-}
-
-export function lengthInterval(n: number | FPInterval | number[] | FPVector): FPInterval {
-  return FP.f32.lengthInterval(n);
 }
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
@@ -158,14 +122,6 @@ export function multiplicationMatrixVectorInterval(x: number[][], y: number[]): 
 
 export function multiplicationVectorMatrixInterval(x: number[], y: number[][]): FPVector {
   return FP.f32.multiplicationVectorMatrixInterval(x, y);
-}
-
-export function normalizeInterval(n: number[]): FPVector {
-  return FP.f32.normalizeInterval(n);
-}
-
-export function reflectInterval(x: number[], y: number[]): FPVector {
-  return FP.f32.reflectInterval(x, y);
 }
 
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
