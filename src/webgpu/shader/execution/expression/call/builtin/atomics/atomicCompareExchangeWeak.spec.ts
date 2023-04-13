@@ -13,8 +13,8 @@ That is, the second component of the result vector may be false even if the firs
 component of the result vector equals cmp.
 `;
 
-import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { GPUTest } from '../../../../../gpu_test.js';
+import { makeTestGroup } from '../../../../../../../common/framework/test_group.js';
+import { GPUTest } from '../../../../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
