@@ -1935,6 +1935,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "bitcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "ceil"
     ]
   },
