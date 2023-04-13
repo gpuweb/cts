@@ -3758,7 +3758,7 @@ class F32Traits extends FPTraits {
       'unpack2x16snormInterval only accepts values on the bounds of u32'
     );
     const op = (n: number): FPInterval => {
-      return this.maxInterval(this.divisionInterval(n, 32767), -1);
+      return this.maxInterval(this.ulpInterval(n / 32767, 3), -1);
     };
 
     this.unpackDataU32[0] = n;
