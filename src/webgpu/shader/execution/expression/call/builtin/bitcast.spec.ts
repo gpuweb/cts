@@ -45,9 +45,11 @@ export const d = makeCaseCache('bitcast', {
   f32_to_u32: () => TODO_CASES,
 });
 
-// Returns a ShaderBuilder that generates a call to bitcast,
-// using appropriate destination type, which optionally can be
-// a WGSL type alias.
+/**
+ * @returns a ShaderBuilder that generates a call to bitcast,
+ * using appropriate destination type, which optionally can be
+ * a WGSL type alias.
+ */
 function bitcastBuilder(canonicalDestType: string, params: TestParams): ShaderBuilder {
   const destType = params.vectorize
     ? `vec${params.vectorize}<${canonicalDestType}>`
