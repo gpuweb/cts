@@ -11,10 +11,6 @@ import {
   getPipelineTypeForBindingCombination,
 } from './limit_utils.js';
 
-const kExtraLimits = {
-  maxFragmentCombinedOutputResources: 'adapterLimit',
-};
-
 const limit = 'maxStorageTexturesPerShaderStage';
 export const { g, description } = makeLimitTestGroup(limit);
 
@@ -35,7 +31,7 @@ g.test('createBindGroupLayout,at_over')
   .desc(
     `
   Test using at and over ${limit} limit in createBindGroupLayout
-  
+
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
   `
@@ -67,7 +63,7 @@ g.test('createPipelineLayout,at_over')
   .desc(
     `
   Test using at and over ${limit} limit in createPipelineLayout
-  
+
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
   `
@@ -105,7 +101,7 @@ g.test('createPipeline,at_over')
   .desc(
     `
   Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit
-  
+
   Note: We also test order to make sure the implementation isn't just looking
   at just the last entry.
   `
@@ -125,10 +121,7 @@ g.test('createPipeline,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
-        if (
-          bindingCombination === 'fragment' &&
-          testValue > device.limits.maxFragmentCombinedOutputResources
-        ) {
+        if (bindingCombination === 'fragment') {
           return;
         }
 
@@ -150,7 +143,6 @@ g.test('createPipeline,at_over')
           shouldError,
           `actualLimit: ${actualLimit}, testValue: ${testValue}\n:${code}`
         );
-      },
-      kExtraLimits
+      }
     );
   });

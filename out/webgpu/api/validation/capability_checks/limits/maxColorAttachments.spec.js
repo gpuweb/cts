@@ -111,15 +111,4 @@ fn((t) => {
   t.expect(defaultLimit <= minColorAttachmentBytesPerSample);
   t.expect(maximumLimit <= adapter.limits.maxColorAttachmentBytesPerSample);
 });
-
-g.test('validate,maxFragmentCombineOutputResources').
-desc(`Test ${limit} against maxFragmentCombineOutputResources`).
-fn((t) => {
-  const { adapter, defaultLimit, adapterLimit: maximumLimit } = t;
-  const minFragmentCombinedOutputResources = getDefaultLimit(
-  'maxFragmentCombinedOutputResources');
-
-  t.expect(defaultLimit <= minFragmentCombinedOutputResources);
-  t.expect(maximumLimit <= adapter.limits.maxFragmentCombinedOutputResources);
-});
 //# sourceMappingURL=maxColorAttachments.spec.js.map

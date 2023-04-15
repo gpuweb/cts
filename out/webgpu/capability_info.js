@@ -1068,7 +1068,6 @@ export const kLimitInfo = makeTable(
 
   'maxColorAttachments': [, 8],
   'maxColorAttachmentBytesPerSample': [, 32],
-  'maxFragmentCombinedOutputResources': [, 8],
 
   'maxComputeWorkgroupStorageSize': [, 16384],
   'maxComputeInvocationsPerWorkgroup': [, 256],

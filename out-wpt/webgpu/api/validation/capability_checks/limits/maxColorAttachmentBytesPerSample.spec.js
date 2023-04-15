@@ -125,7 +125,6 @@ function createTextures(t, targets) {
 
 const kExtraLimits = {
   maxColorAttachments: 'adapterLimit',
-  maxFragmentCombinedOutputResources: 'adapterLimit',
 };
 
 const limit = 'maxColorAttachmentBytesPerSample';
@@ -158,10 +157,7 @@ g.test('createRenderPipeline,at_over')
         }
         const { pipelineDescriptor, code } = result;
         const numTargets = pipelineDescriptor.fragment.targets.length;
-        if (
-          numTargets > device.limits.maxColorAttachments ||
-          numTargets > device.limits.maxFragmentCombinedOutputResources
-        ) {
+        if (numTargets > device.limits.maxColorAttachments) {
           return;
         }
 
@@ -185,10 +181,7 @@ g.test('beginRenderPass,at_over')
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
         const targets = getAttachments(interleaveFormat, testValue);
-        if (
-          targets.length > device.limits.maxColorAttachments ||
-          targets.length > device.limits.maxFragmentCombinedOutputResources
-        ) {
+        if (targets.length > device.limits.maxColorAttachments) {
           return;
         }
 

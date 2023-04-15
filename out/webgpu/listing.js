@@ -755,15 +755,6 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
-      "maxFragmentCombinedOutputResources"
-    ]
-  },
-  {
-    "file": [
-      "api",
-      "validation",
-      "capability_checks",
-      "limits",
       "maxInterStageShaderComponents"
     ]
   },
