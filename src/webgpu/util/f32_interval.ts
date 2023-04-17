@@ -64,10 +64,6 @@ export function correctlyRoundedInterval(n: number | FPInterval): FPInterval {
   return FP.f32.correctlyRoundedInterval(n);
 }
 
-export function correctlyRoundedMatrix(m: number[][]): FPMatrix {
-  return FP.f32.correctlyRoundedMatrix(m);
-}
-
 export function absoluteErrorInterval(n: number, error_range: number): FPInterval {
   return FP.f32.absoluteErrorInterval(n, error_range);
 }

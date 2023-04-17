@@ -1319,6 +1319,59 @@ abstract class FPTraits {
     }, new Array<Case>());
   }
 
+  /**
+   * @returns a Case for the params and matrix of intervals generator provided
+   * @param param0 the first param to pass in
+   * @param param1 the second param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  private makeMatrixPairToMatrixCase(
+    param0: number[][],
+    param1: number[][],
+    filter: IntervalFilter,
+    ...ops: MatrixPairToMatrix[]
+  ): Case | undefined {
+    param0 = map2DArray(param0, this.quantize);
+    param1 = map2DArray(param1, this.quantize);
+
+    const results = ops.map(o => o(param0, param1));
+    if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+      return undefined;
+    }
+    return {
+      input: [
+        new Matrix(map2DArray(param0, this.scalarBuilder)),
+        new Matrix(map2DArray(param1, this.scalarBuilder)),
+      ],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of inputs to try for the first input
+   * @param param1s array of inputs to try for the second input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  public generateMatrixPairToMatrixCases(
+    param0s: number[][][],
+    param1s: number[][][],
+    filter: IntervalFilter,
+    ...ops: MatrixPairToMatrix[]
+  ): Case[] {
+    return cartesianProduct(param0s, param1s).reduce((cases, e) => {
+      const c = this.makeMatrixPairToMatrixCase(e[0], e[1], filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
   // Framework - Intervals
 
   /**
@@ -2086,19 +2139,25 @@ abstract class FPTraits {
     );
   }
 
+  /** Calculate an acceptance interval of x + y, when x and y are both scalars */
   public abstract readonly additionInterval: (
     x: number | FPInterval,
     y: number | FPInterval
   ) => FPInterval;
 
-  /** Calculate an acceptance interval of x + y, when x and y are matrices */
-  public additionMatrixInterval(x: Array2D<number>, y: Array2D<number>): FPMatrix {
+  protected additionMatrixIntervalImpl(x: Array2D<number>, y: Array2D<number>): FPMatrix {
     return this.runScalarPairToIntervalOpMatrixComponentWise(
       this.toMatrix(x),
       this.toMatrix(y),
       this.AdditionIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of x + y, when x and y are matrices */
+  public abstract readonly additionMatrixInterval: (
+    x: Array2D<number>,
+    y: Array2D<number>
+  ) => FPMatrix;
 
   private readonly AsinIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
@@ -3704,6 +3763,7 @@ class F32Traits extends FPTraits {
   public readonly acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   public readonly additionInterval = this.additionIntervalImpl.bind(this);
+  public readonly additionMatrixInterval = this.additionMatrixIntervalImpl.bind(this);
   public readonly asinInterval = this.asinIntervalImpl.bind(this);
   public readonly asinhInterval = this.asinhIntervalImpl.bind(this);
   public readonly atanInterval = this.atanIntervalImpl.bind(this);
