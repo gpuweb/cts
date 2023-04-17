@@ -72,10 +72,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
-  return FP.f32.additionMatrixInterval(x, y);
-}
-
 export function faceForwardIntervals(
   x: number[],
   y: number[],
@@ -110,8 +106,4 @@ export function multiplicationVectorMatrixInterval(x: number[], y: number[][]): 
 
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
-}
-
-export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
-  return FP.f32.subtractionMatrixInterval(x, y);
 }

@@ -2933,11 +2933,11 @@ interface MatrixPairToMatrixCase {
   expected: (number | IntervalBounds)[][];
 }
 
-g.test('additionMatrixInterval_f32')
+g.test('additionMatrixMatrixInterval_f32')
   .paramsSubcasesOnly<MatrixPairToMatrixCase>([
     // Only testing that different shapes of matrices are handled correctly
     // here, to reduce test duplication.
-    // additionMatrixInterval uses AdditionIntervalOp for calculating intervals,
+    // additionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
     // so the testing for additionInterval covers the actual interval
     // calculations.
     {
@@ -3116,10 +3116,202 @@ g.test('additionMatrixInterval_f32')
     const x = t.params.input[0];
     const y = t.params.input[1];
     const expected = FP.f32.toMatrix(t.params.expected);
-    const got = FP.f32.additionMatrixInterval(x, y);
+    const got = FP.f32.additionMatrixMatrixInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.additionMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+      `f32.additionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+        y
+      )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+    );
+  });
+
+g.test('subtractionMatrixMatrixInterval_f32')
+  .paramsSubcasesOnly<MatrixPairToMatrixCase>([
+    // Only testing that different shapes of matrices are handled correctly
+    // here, to reduce test duplication.
+    // subtractionMatrixMatrixInterval uses SubtractionIntervalOp for calculating intervals,
+    // so the testing for subtractionInterval covers the actual interval
+    // calculations.
+    {
+      input: [
+        [
+          [-1, -2],
+          [-3, -4],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+        ],
+      ],
+      expected: [
+        [-11, -22],
+        [-33, -44],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2],
+          [-3, -4],
+          [-5, -6],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+        ],
+      ],
+      expected: [
+        [-11, -22],
+        [-33, -44],
+        [-55, -66],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2],
+          [-3, -4],
+          [-5, -6],
+          [-7, -8],
+        ],
+        [
+          [10, 20],
+          [30, 40],
+          [50, 60],
+          [70, 80],
+        ],
+      ],
+      expected: [
+        [-11, -22],
+        [-33, -44],
+        [-55, -66],
+        [-77, -88],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3],
+          [-4, -5, -6],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33],
+        [-44, -55, -66],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3],
+          [-4, -5, -6],
+          [-7, -8, -9],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33],
+        [-44, -55, -66],
+        [-77, -88, -99],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3],
+          [-4, -5, -6],
+          [-7, -8, -9],
+          [-10, -11, -12],
+        ],
+        [
+          [10, 20, 30],
+          [40, 50, 60],
+          [70, 80, 90],
+          [1000, 1100, 1200],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33],
+        [-44, -55, -66],
+        [-77, -88, -99],
+        [-1010, -1111, -1212],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3, -4],
+          [-5, -6, -7, -8],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33, -44],
+        [-55, -66, -77, -88],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3, -4],
+          [-5, -6, -7, -8],
+          [-9, -10, -11, -12],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 1000, 1100, 1200],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33, -44],
+        [-55, -66, -77, -88],
+        [-99, -1010, -1111, -1212],
+      ],
+    },
+    {
+      input: [
+        [
+          [-1, -2, -3, -4],
+          [-5, -6, -7, -8],
+          [-9, -10, -11, -12],
+          [-13, -14, -15, -16],
+        ],
+        [
+          [10, 20, 30, 40],
+          [50, 60, 70, 80],
+          [90, 1000, 1100, 1200],
+          [1300, 1400, 1500, 1600],
+        ],
+      ],
+      expected: [
+        [-11, -22, -33, -44],
+        [-55, -66, -77, -88],
+        [-99, -1010, -1111, -1212],
+        [-1313, -1414, -1515, -1616],
+      ],
+    },
+  ])
+  .fn(t => {
+    const x = t.params.input[0];
+    const y = t.params.input[1];
+    const expected = FP.f32.toMatrix(t.params.expected);
+    const got = FP.f32.subtractionMatrixMatrixInterval(x, y);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.subtractionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
         y
       )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
     );

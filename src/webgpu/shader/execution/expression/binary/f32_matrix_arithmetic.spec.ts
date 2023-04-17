@@ -11,7 +11,6 @@ import {
   multiplicationMatrixVectorInterval,
   multiplicationScalarMatrixInterval,
   multiplicationVectorMatrixInterval,
-  subtractionMatrixInterval,
 } from '../../../../util/f32_interval.js';
 import { FP } from '../../../../util/floating_point.js';
 import {
@@ -40,7 +39,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_2x2_non_const: () => {
@@ -48,7 +47,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_2x3_const: () => {
@@ -56,7 +55,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_2x3_non_const: () => {
@@ -64,7 +63,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_2x4_const: () => {
@@ -72,7 +71,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_2x4_non_const: () => {
@@ -80,7 +79,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x2_const: () => {
@@ -88,7 +87,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x2_non_const: () => {
@@ -96,7 +95,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x3_const: () => {
@@ -104,7 +103,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x3_non_const: () => {
@@ -112,7 +111,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x4_const: () => {
@@ -120,7 +119,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_3x4_non_const: () => {
@@ -128,7 +127,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x2_const: () => {
@@ -136,7 +135,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x2_non_const: () => {
@@ -144,7 +143,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x3_const: () => {
@@ -152,7 +151,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x3_non_const: () => {
@@ -160,7 +159,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x4_const: () => {
@@ -168,7 +167,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'finite',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   addition_4x4_non_const: () => {
@@ -176,7 +175,7 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'unfiltered',
-      FP.f32.additionMatrixInterval
+      FP.f32.additionMatrixMatrixInterval
     );
   },
   multiplication_2x2_2x2_const: () => {
@@ -1188,147 +1187,147 @@ export const d = makeCaseCache('binary/f32_matrix_arithmetic', {
     );
   },
   subtraction_2x2_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_2x2_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 2),
       sparseMatrixF32Range(2, 2),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_2x3_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_2x3_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 3),
       sparseMatrixF32Range(2, 3),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_2x4_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_2x4_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(2, 4),
       sparseMatrixF32Range(2, 4),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x2_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x2_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 2),
       sparseMatrixF32Range(3, 2),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x3_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x3_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 3),
       sparseMatrixF32Range(3, 3),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x4_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_3x4_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(3, 4),
       sparseMatrixF32Range(3, 4),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x2_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x2_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 2),
       sparseMatrixF32Range(4, 2),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x3_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x3_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 3),
       sparseMatrixF32Range(4, 3),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x4_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'finite',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
   subtraction_4x4_non_const: () => {
-    return generateMatrixPairToMatrixCases(
+    return FP.f32.generateMatrixPairToMatrixCases(
       sparseMatrixF32Range(4, 4),
       sparseMatrixF32Range(4, 4),
       'unfiltered',
-      subtractionMatrixInterval
+      FP.f32.subtractionMatrixMatrixInterval
     );
   },
 });

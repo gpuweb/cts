@@ -2145,7 +2145,7 @@ abstract class FPTraits {
     y: number | FPInterval
   ) => FPInterval;
 
-  protected additionMatrixIntervalImpl(x: Array2D<number>, y: Array2D<number>): FPMatrix {
+  protected additionMatrixMatrixIntervalImpl(x: Array2D<number>, y: Array2D<number>): FPMatrix {
     return this.runScalarPairToIntervalOpMatrixComponentWise(
       this.toMatrix(x),
       this.toMatrix(y),
@@ -2154,7 +2154,7 @@ abstract class FPTraits {
   }
 
   /** Calculate an acceptance interval of x + y, when x and y are matrices */
-  public abstract readonly additionMatrixInterval: (
+  public abstract readonly additionMatrixMatrixInterval: (
     x: Array2D<number>,
     y: Array2D<number>
   ) => FPMatrix;
@@ -3543,14 +3543,19 @@ abstract class FPTraits {
     y: number | FPInterval
   ) => FPInterval;
 
-  /** Calculate an acceptance interval of x - y, when x and y are matrices */
-  public subtractionMatrixInterval(x: Array2D<number>, y: Array2D<number>): FPMatrix {
+  protected subtractionMatrixMatrixIntervalImpl(x: Array2D<number>, y: Array2D<number>): FPMatrix {
     return this.runScalarPairToIntervalOpMatrixComponentWise(
       this.toMatrix(x),
       this.toMatrix(y),
       this.SubtractionIntervalOp
     );
   }
+
+  /** Calculate an acceptance interval of x - y, when x and y are matrices */
+  public abstract readonly subtractionMatrixMatrixInterval: (
+    x: Array2D<number>,
+    y: Array2D<number>
+  ) => FPMatrix;
 
   private readonly TanIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3763,7 +3768,7 @@ class F32Traits extends FPTraits {
   public readonly acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   public readonly additionInterval = this.additionIntervalImpl.bind(this);
-  public readonly additionMatrixInterval = this.additionMatrixIntervalImpl.bind(this);
+  public readonly additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
   public readonly asinInterval = this.asinIntervalImpl.bind(this);
   public readonly asinhInterval = this.asinhIntervalImpl.bind(this);
   public readonly atanInterval = this.atanIntervalImpl.bind(this);
@@ -3815,6 +3820,9 @@ class F32Traits extends FPTraits {
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
+  public readonly subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(
+    this
+  );
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
   public readonly transposeInterval = this.transposeIntervalImpl.bind(this);
