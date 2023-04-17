@@ -2668,3 +2668,118 @@ g.test('reflectInterval_f32')
       )}. Expected ${JSON.stringify(expected)}`
     );
   });
+
+interface MatrixToScalarCase {
+  input: number[][];
+  expected: number | IntervalBounds;
+}
+
+g.test('determinantInterval')
+  .paramsSubcasesOnly<MatrixToScalarCase>([
+    // Extrebe values, i.e. subnormals, very large magnitudes, and those lead to
+    // non-precise products, are intentionally not tested, since the accuracy of
+    // determinant is restricted to well behaving inputs. Handling all cases
+    // requires ~23! options to be calculated in the 4x4 case, so is not
+    // feasible.
+    {
+      input: [
+        [1, 2],
+        [3, 4],
+      ],
+      expected: -2,
+    },
+    {
+      input: [
+        [-1, 2],
+        [-3, 4],
+      ],
+      expected: 2,
+    },
+    {
+      input: [
+        [11, 22],
+        [33, 44],
+      ],
+      expected: -242,
+    },
+    {
+      input: [
+        [5, 6],
+        [8, 9],
+      ],
+      expected: -3,
+    },
+    {
+      input: [
+        [4, 6],
+        [7, 9],
+      ],
+      expected: -6,
+    },
+    {
+      input: [
+        [4, 5],
+        [7, 8],
+      ],
+      expected: -3,
+    },
+    {
+      input: [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [-1, 2, 3],
+        [-4, 5, 6],
+        [-7, 8, 9],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [11, 22, 33],
+        [44, 55, 66],
+        [77, 88, 99],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [4, 1, -1],
+        [-3, 0, 5],
+        [5, 3, 2],
+      ],
+      expected: -20,
+    },
+    {
+      input: [
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 16],
+      ],
+      expected: 0,
+    },
+    {
+      input: [
+        [4, 0, 0, 0],
+        [3, 1, -1, 3],
+        [2, -3, 3, 1],
+        [2, 3, 3, 1],
+      ],
+      expected: -240,
+    },
+  ])
+  .fn(t => {
+    const input = t.params.input;
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.determinantInterval(input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.determinantInterval([${JSON.stringify(input)}]) returned '${got}. Expected '${expected}'`
+    );
+  });

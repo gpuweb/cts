@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface MatrixToScalar {
-  (m: number[][]): FPInterval;
-}
-
 export interface MatrixToMatrix {
   (m: number[][]): FPMatrix;
 }
@@ -86,10 +82,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
 
 export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.additionMatrixInterval(x, y);
-}
-
-export function determinantInterval(m: number[][]): FPInterval {
-  return FP.f32.determinantInterval(m);
 }
 
 export function faceForwardIntervals(
