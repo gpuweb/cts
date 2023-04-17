@@ -3125,8 +3125,7 @@ abstract class FPTraits {
     return this.multiplicationMatrixScalarInterval(mat, scalar);
   }
 
-  /** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
-  public multiplicationMatrixMatrixInterval(
+  protected multiplicationMatrixMatrixIntervalImpl(
     mat_x: Array2D<number>,
     mat_y: Array2D<number>
   ): FPMatrix {
@@ -3147,6 +3146,12 @@ abstract class FPTraits {
 
     return result as FPMatrix;
   }
+
+  /** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
+  public abstract readonly multiplicationMatrixMatrixInterval: (
+    mat_x: Array2D<number>,
+    mat_y: Array2D<number>
+  ) => FPMatrix;
 
   /** Calculate an acceptance interval of x * y, when x is a matrix and y is a vector */
   public multiplicationMatrixVectorInterval(x: Array2D<number>, y: number[]): FPVector {
@@ -3804,6 +3809,9 @@ class F32Traits extends FPTraits {
   public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
+  public readonly multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
+    this
+  );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
