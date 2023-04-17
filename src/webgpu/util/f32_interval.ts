@@ -6,10 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface MatrixToMatrix {
-  (m: number[][]): FPMatrix;
-}
-
 export interface MatrixPairToMatrix {
   (x: number[][], y: number[][]): FPMatrix;
 }
@@ -122,8 +118,4 @@ export function refractInterval(i: number[], s: number[], r: number): FPVector {
 
 export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
   return FP.f32.subtractionMatrixInterval(x, y);
-}
-
-export function transposeInterval(m: number[][]): FPMatrix {
-  return FP.f32.transposeInterval(m);
 }

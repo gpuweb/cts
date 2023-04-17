@@ -21,7 +21,6 @@ import {
 import {
   MatrixPairToMatrix,
   MatrixScalarToMatrix,
-  MatrixToMatrix,
   MatrixVectorToVector,
   ScalarMatrixToMatrix,
   VectorMatrixToVector,
@@ -809,53 +808,6 @@ function packScalarsToVector(
 export type IntervalFilter =
   | 'finite' // Expected to be finite in the interval numeric space
   | 'unfiltered'; // No expectations
-
-/**
- * @returns a Case for the param and an array of interval generators provided
- * @param param the param to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating a matrix of acceptance
- *            intervals for a matrix.
- */
-function makeMatrixToMatrixCase(
-  param: number[][],
-  filter: IntervalFilter,
-  ...ops: MatrixToMatrix[]
-): Case | undefined {
-  param = map2DArray(param, quantizeToF32);
-  const param_f32 = map2DArray(param, f32);
-
-  const results = ops.map(o => o(param));
-  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
-    return undefined;
-  }
-
-  return {
-    input: [new Matrix(param_f32)],
-    expected: anyOf(...results),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param params array of inputs to try
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating a matrix of acceptance
- *            intervals for a matrix.
- */
-export function generateMatrixToMatrixCases(
-  params: number[][][],
-  filter: IntervalFilter,
-  ...ops: MatrixToMatrix[]
-): Case[] {
-  return params.reduce((cases, e) => {
-    const c = makeMatrixToMatrixCase(e, filter, ...ops);
-    if (c !== undefined) {
-      cases.push(c);
-    }
-    return cases;
-  }, new Array<Case>());
-}
 
 /**
  * @returns a Case for the params and matrix of intervals generator provided

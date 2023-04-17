@@ -1273,6 +1273,52 @@ abstract class FPTraits {
     }, new Array<Case>());
   }
 
+  /**
+   * @returns a Case for the param and an array of interval generators provided
+   * @param param the param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  private makeMatrixToMatrixCase(
+    param: number[][],
+    filter: IntervalFilter,
+    ...ops: MatrixToMatrix[]
+  ): Case | undefined {
+    param = map2DArray(param, this.quantize);
+
+    const results = ops.map(o => o(param));
+    if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+      return undefined;
+    }
+
+    return {
+      input: [new Matrix(map2DArray(param, this.scalarBuilder))],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param params array of inputs to try
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  public generateMatrixToMatrixCases(
+    params: number[][][],
+    filter: IntervalFilter,
+    ...ops: MatrixToMatrix[]
+  ): Case[] {
+    return params.reduce((cases, e) => {
+      const c = this.makeMatrixToMatrixCase(e, filter, ...ops);
+      if (c !== undefined) {
+        cases.push(c);
+      }
+      return cases;
+    }, new Array<Case>());
+  }
+
   // Framework - Intervals
 
   /**
@@ -1882,15 +1928,19 @@ abstract class FPTraits {
     },
   };
 
-  /** @returns an interval of the correctly rounded values around the point */
-  public correctlyRoundedInterval(n: number | FPInterval): FPInterval {
+  protected correctlyRoundedIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.CorrectlyRoundedIntervalOp);
   }
 
-  /** @returns a matrix of correctly rounded intervals for the provided matrix */
-  public correctlyRoundedMatrix(m: Array2D<number>): FPMatrix {
-    return this.toMatrix(map2DArray(m, this.correctlyRoundedInterval.bind(this)));
+  /** @returns an interval of the correctly rounded values around the point */
+  public abstract readonly correctlyRoundedInterval: (n: number | FPInterval) => FPInterval;
+
+  protected correctlyRoundedMatrixImpl(m: Array2D<number>): FPMatrix {
+    return this.toMatrix(map2DArray(m, this.correctlyRoundedInterval));
   }
+
+  /** @returns a matrix of correctly rounded intervals for the provided matrix */
+  public abstract readonly correctlyRoundedMatrix: (m: Array2D<number>) => FPMatrix;
 
   /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
   private AbsoluteErrorIntervalOp(error_range: number): ScalarToIntervalOp {
@@ -3484,10 +3534,12 @@ abstract class FPTraits {
     },
   };
 
-  /** Calculate an acceptance interval of transpose(m) */
-  public transposeInterval(m: Array2D<number>): FPMatrix {
+  protected transposeIntervalImpl(m: Array2D<number>): FPMatrix {
     return this.runMatrixToMatrixOp(this.toMatrix(m), this.TransposeIntervalOp);
   }
+
+  /** Calculate an acceptance interval of transpose(m) */
+  public abstract readonly transposeInterval: (m: Array2D<number>) => FPMatrix;
 
   private readonly TruncIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3661,6 +3713,8 @@ class F32Traits extends FPTraits {
   public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
+  public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
+  public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly crossInterval = this.crossIntervalImpl.bind(this);
@@ -3703,6 +3757,7 @@ class F32Traits extends FPTraits {
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.tanhIntervalImpl.bind(this);
+  public readonly transposeInterval = this.transposeIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
 
   // Framework - Cases
