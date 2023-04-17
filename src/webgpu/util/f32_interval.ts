@@ -4,16 +4,6 @@
 
 import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_point.js';
 
-// Interfaces
-
-export interface MatrixVectorToVector {
-  (x: number[][], y: number[]): FPVector;
-}
-
-export interface VectorMatrixToVector {
-  (x: number[], y: number[][]): FPVector;
-}
-
 // Containers
 
 export type F32Vector = FPVector;
@@ -70,14 +60,6 @@ export function faceForwardIntervals(
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
   return FP.f32.modfInterval(n);
-}
-
-export function multiplicationMatrixVectorInterval(x: number[][], y: number[]): FPVector {
-  return FP.f32.multiplicationMatrixVectorInterval(x, y);
-}
-
-export function multiplicationVectorMatrixInterval(x: number[], y: number[][]): FPVector {
-  return FP.f32.multiplicationVectorMatrixInterval(x, y);
 }
 
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
