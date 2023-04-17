@@ -6,14 +6,6 @@ import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_p
 
 // Interfaces
 
-export interface MatrixScalarToMatrix {
-  (x: number[][], y: number): FPMatrix;
-}
-
-export interface ScalarMatrixToMatrix {
-  (x: number, y: number[][]): FPMatrix;
-}
-
 export interface MatrixVectorToVector {
   (x: number[][], y: number[]): FPVector;
 }
@@ -78,14 +70,6 @@ export function faceForwardIntervals(
 
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
   return FP.f32.modfInterval(n);
-}
-
-export function multiplicationMatrixScalarInterval(mat: number[][], scalar: number): FPMatrix {
-  return FP.f32.multiplicationMatrixScalarInterval(mat, scalar);
-}
-
-export function multiplicationScalarMatrixInterval(scalar: number, mat: number[][]): FPMatrix {
-  return FP.f32.multiplicationScalarMatrixInterval(scalar, mat);
 }
 
 export function multiplicationMatrixVectorInterval(x: number[][], y: number[]): FPVector {

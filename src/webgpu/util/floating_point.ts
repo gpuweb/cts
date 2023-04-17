@@ -1372,6 +1372,114 @@ abstract class FPTraits {
     }, new Array<Case>());
   }
 
+  /**
+   * @returns a Case for the params and matrix of intervals generator provided
+   * @param mat the matrix param to pass in
+   * @param scalar the scalar to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  private makeMatrixScalarToMatrixCase(
+    mat: number[][],
+    scalar: number,
+    filter: IntervalFilter,
+    ...ops: MatrixScalarToMatrix[]
+  ): Case | undefined {
+    mat = map2DArray(mat, this.quantize);
+    scalar = this.quantize(scalar);
+
+    const results = ops.map(o => o(mat, scalar));
+    if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+      return undefined;
+    }
+    return {
+      input: [new Matrix(map2DArray(mat, this.scalarBuilder)), this.scalarBuilder(scalar)],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param mats array of inputs to try for the matrix input
+   * @param scalars array of inputs to try for the scalar input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  public generateMatrixScalarToMatrixCases(
+    mats: number[][][],
+    scalars: number[],
+    filter: IntervalFilter,
+    ...ops: MatrixScalarToMatrix[]
+  ): Case[] {
+    // Cannot use cartesianProduct here, due to heterogeneous types
+    const cases: Case[] = [];
+    mats.forEach(mat => {
+      scalars.forEach(scalar => {
+        const c = this.makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops);
+        if (c !== undefined) {
+          cases.push(c);
+        }
+      });
+    });
+    return cases;
+  }
+
+  /**
+   * @returns a Case for the params and matrix of intervals generator provided
+   * @param scalar the scalar to pass in
+   * @param mat the matrix param to pass in
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  private makeScalarMatrixToMatrixCase(
+    scalar: number,
+    mat: number[][],
+    filter: IntervalFilter,
+    ...ops: ScalarMatrixToMatrix[]
+  ): Case | undefined {
+    scalar = this.quantize(scalar);
+    mat = map2DArray(mat, this.quantize);
+
+    const results = ops.map(o => o(scalar, mat));
+    if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
+      return undefined;
+    }
+    return {
+      input: [this.scalarBuilder(scalar), new Matrix(map2DArray(mat, this.scalarBuilder))],
+      expected: anyOf(...results),
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param scalars array of inputs to try for the scalar input
+   * @param mats array of inputs to try for the matrix input
+   * @param filter what interval filtering to apply
+   * @param ops callbacks that implement generating a matrix of acceptance
+   *            intervals
+   */
+  public generateScalarMatrixToMatrixCases(
+    scalars: number[],
+    mats: number[][][],
+    filter: IntervalFilter,
+    ...ops: ScalarMatrixToMatrix[]
+  ): Case[] {
+    // Cannot use cartesianProduct here, due to heterogeneous types
+    const cases: Case[] = [];
+    mats.forEach(mat => {
+      scalars.forEach(scalar => {
+        const c = this.makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops);
+        if (c !== undefined) {
+          cases.push(c);
+        }
+      });
+    });
+    return cases;
+  }
+
   // Framework - Intervals
 
   /**
@@ -3107,8 +3215,7 @@ abstract class FPTraits {
     return this.toVector(v.map(x => this.multiplicationInterval(x, c)));
   }
 
-  /** Calculate an acceptance interval of x * y, when x is a matrix and y is a scalar */
-  public multiplicationMatrixScalarInterval(mat: Array2D<number>, scalar: number): FPMatrix {
+  protected multiplicationMatrixScalarIntervalImpl(mat: Array2D<number>, scalar: number): FPMatrix {
     const cols = mat.length;
     const rows = mat[0].length;
     return this.toMatrix(
@@ -3120,10 +3227,21 @@ abstract class FPTraits {
     );
   }
 
-  /** Calculate an acceptance interval of x * y, when x is a scalar and y is a matrix */
-  public multiplicationScalarMatrixInterval(scalar: number, mat: Array2D<number>): FPMatrix {
-    return this.multiplicationMatrixScalarInterval(mat, scalar);
+  /** Calculate an acceptance interval of x * y, when x is a matrix and y is a scalar */
+  public abstract readonly multiplicationMatrixScalarInterval: (
+    mat: Array2D<number>,
+    scalar: number
+  ) => FPMatrix;
+
+  protected multiplicationScalarMatrixIntervalImpl(scalar: number, mat: Array2D<number>): FPMatrix {
+    return this.multiplicationMatrixScalarIntervalImpl(mat, scalar);
   }
+
+  /** Calculate an acceptance interval of x * y, when x is a scalar and y is a matrix */
+  public abstract readonly multiplicationScalarMatrixInterval: (
+    scalar: number,
+    mat: Array2D<number>
+  ) => FPMatrix;
 
   protected multiplicationMatrixMatrixIntervalImpl(
     mat_x: Array2D<number>,
@@ -3810,6 +3928,12 @@ class F32Traits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
+    this
+  );
+  public readonly multiplicationMatrixScalarInterval = this.multiplicationMatrixScalarIntervalImpl.bind(
+    this
+  );
+  public readonly multiplicationScalarMatrixInterval = this.multiplicationScalarMatrixIntervalImpl.bind(
     this
   );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);

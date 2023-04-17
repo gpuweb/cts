@@ -18,12 +18,7 @@ import {
   MatrixType,
   ScalarBuilder,
 } from '../../../util/conversion.js';
-import {
-  MatrixScalarToMatrix,
-  MatrixVectorToVector,
-  ScalarMatrixToMatrix,
-  VectorMatrixToVector,
-} from '../../../util/f32_interval.js';
+import { MatrixVectorToVector, VectorMatrixToVector } from '../../../util/f32_interval.js';
 import { FPInterval } from '../../../util/floating_point.js';
 import {
   cartesianProduct,
@@ -807,118 +802,6 @@ function packScalarsToVector(
 export type IntervalFilter =
   | 'finite' // Expected to be finite in the interval numeric space
   | 'unfiltered'; // No expectations
-
-/**
- * @returns a Case for the params and matrix of intervals generator provided
- * @param mat the matrix param to pass in
- * @param scalar the scalar to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an matrix of acceptance
- *            intervals for a pair of matrices.
- */
-function makeMatrixScalarToMatrixCase(
-  mat: number[][],
-  scalar: number,
-  filter: IntervalFilter,
-  ...ops: MatrixScalarToMatrix[]
-): Case | undefined {
-  mat = map2DArray(mat, quantizeToF32);
-  scalar = quantizeToF32(scalar);
-  const mat_f32 = map2DArray(mat, f32);
-  const scalar_f32 = f32(scalar);
-
-  const results = ops.map(o => o(mat, scalar));
-  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
-    return undefined;
-  }
-  return {
-    input: [new Matrix(mat_f32), scalar_f32],
-    expected: anyOf(...results),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param mats array of inputs to try for the matrix input
- * @param scalars array of inputs to try for the scalar input
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an matrix of acceptance
- *            intervals for a pair of matrices.
- */
-export function generateMatrixScalarToMatrixCases(
-  mats: number[][][],
-  scalars: number[],
-  filter: IntervalFilter,
-  ...ops: MatrixScalarToMatrix[]
-): Case[] {
-  // Cannot use cartesianProduct here, due to heterogeneous types
-  const cases: Case[] = [];
-  mats.forEach(mat => {
-    scalars.forEach(scalar => {
-      const c = makeMatrixScalarToMatrixCase(mat, scalar, filter, ...ops);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
-  });
-  return cases;
-}
-
-/**
- * @returns a Case for the params and matrix of intervals generator provided
- * @param mat the matrix param to pass in
- * @param scalar the scalar to pass in
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an matrix of acceptance
- *            intervals for a pair of matrices.
- */
-function makeScalarMatrixToMatrixCase(
-  scalar: number,
-  mat: number[][],
-  filter: IntervalFilter,
-  ...ops: ScalarMatrixToMatrix[]
-): Case | undefined {
-  mat = map2DArray(mat, quantizeToF32);
-  scalar = quantizeToF32(scalar);
-  const mat_f32 = map2DArray(mat, f32);
-  const scalar_f32 = f32(scalar);
-
-  const results = ops.map(o => o(scalar, mat));
-  if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
-    return undefined;
-  }
-  return {
-    input: [scalar_f32, new Matrix(mat_f32)],
-    expected: anyOf(...results),
-  };
-}
-
-/**
- * @returns an array of Cases for operations over a range of inputs
- * @param scalars array of inputs to try for the scalar input
- * @param mats array of inputs to try for the matrix input
- * @param filter what interval filtering to apply
- * @param ops callbacks that implement generating an matrix of acceptance
- *            intervals for a pair of matrices.
- */
-export function generateScalarMatrixToMatrixCases(
-  scalars: number[],
-  mats: number[][][],
-  filter: IntervalFilter,
-  ...ops: ScalarMatrixToMatrix[]
-): Case[] {
-  // Cannot use cartesianProduct here, due to heterogeneous types
-  const cases: Case[] = [];
-  mats.forEach(mat => {
-    scalars.forEach(scalar => {
-      const c = makeScalarMatrixToMatrixCase(scalar, mat, filter, ...ops);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
-  });
-  return cases;
-}
 
 /**
  * @returns a Case for the params and the vector of intervals generator provided
