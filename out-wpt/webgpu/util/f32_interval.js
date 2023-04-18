@@ -45,15 +45,3 @@ export function absoluteErrorInterval(n, error_range) {
 export function ulpInterval(n, numULP) {
   return FP.f32.ulpInterval(n, numULP);
 }
-
-export function faceForwardIntervals(x, y, z) {
-  return FP.f32.faceForwardIntervals(x, y, z);
-}
-
-export function modfInterval(n) {
-  return FP.f32.modfInterval(n);
-}
-
-export function refractInterval(i, s, r) {
-  return FP.f32.refractInterval(i, s, r);
-}

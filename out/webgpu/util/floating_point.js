@@ -2948,8 +2948,6 @@ class FPTraits {
 
 
   /**
-   * Calculate the acceptance intervals for faceForward(x, y, z)
-   *
    * faceForward(x, y, z) = select(-x, x, dot(z, y) < 0.0)
    *
    * This builtin selects from two discrete results (delta rounding/flushing),
@@ -2959,7 +2957,11 @@ class FPTraits {
    * Thus, a bespoke implementation is used instead of
    * defining an Op and running that through the framework.
    */
-  faceForwardIntervals(x, y, z) {
+  faceForwardIntervalsImpl(
+  x,
+  y,
+  z)
+  {
     const x_vec = this.toVector(x);
     // Running vector through this.runScalarToIntervalOpComponentWise to make
     // sure that flushing/rounding is handled, since toVector does not perform
@@ -3003,6 +3005,13 @@ class FPTraits {
 
     return results;
   }
+
+  /** Calculate the acceptance intervals for faceForward(x, y, z) */
+
+
+
+
+
 
   FloorIntervalOp = {
     impl: (n) => {
@@ -3273,12 +3282,14 @@ class FPTraits {
 
 
 
-  /** Calculate an acceptance interval of modf(x) */
-  modfInterval(n) {
+  modfIntervalImpl(n) {
     const fract = this.correctlyRoundedInterval(n % 1.0);
     const whole = this.correctlyRoundedInterval(n - n % 1.0);
     return { fract, whole };
   }
+
+  /** Calculate an acceptance interval of modf(x) */
+
 
   MultiplicationInnerOp = {
     impl: (x, y) => {
@@ -3511,8 +3522,6 @@ class FPTraits {
 
 
   /**
-   * Calculate acceptance interval vectors of reflect(i, s, r)
-   *
    * refract is a singular function in the sense that it is the only builtin that
    * takes in (FPVector, FPVector, F32) and returns FPVector and is basically
    * defined in terms of other functions.
@@ -3521,7 +3530,7 @@ class FPTraits {
    * own operation type, etc, it instead has a bespoke implementation that is a
    * composition of other builtin functions that use the framework.
    */
-  refractInterval(i, s, r) {
+  refractIntervalImpl(i, s, r) {
     assert(
     i.length === s.length,
     `refract is only defined for vectors with the same number of elements`);
@@ -3556,6 +3565,9 @@ class FPTraits {
     this.SubtractionIntervalOp);
     // (i * r) - (s * t)
   }
+
+  /** Calculate acceptance interval vectors of reflect(i, s, r) */
+
 
   RemainderIntervalOp = {
     impl: (x, y) => {
@@ -4022,6 +4034,7 @@ class F32Traits extends FPTraits {
   dotInterval = this.dotIntervalImpl.bind(this);
   expInterval = this.expIntervalImpl.bind(this);
   exp2Interval = this.exp2IntervalImpl.bind(this);
+  faceForwardIntervals = this.faceForwardIntervalsImpl.bind(this);
   floorInterval = this.floorIntervalImpl.bind(this);
   fmaInterval = this.fmaIntervalImpl.bind(this);
   fractInterval = this.fractIntervalImpl.bind(this);
@@ -4035,6 +4048,7 @@ class F32Traits extends FPTraits {
   mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
   mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
+  modfInterval = this.modfIntervalImpl.bind(this);
   multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
   this);
@@ -4057,6 +4071,7 @@ class F32Traits extends FPTraits {
   quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   radiansInterval = this.radiansIntervalImpl.bind(this);
   reflectInterval = this.reflectIntervalImpl.bind(this);
+  refractInterval = this.refractIntervalImpl.bind(this);
   remainderInterval = this.remainderIntervalImpl.bind(this);
   roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.saturateIntervalImpl.bind(this);

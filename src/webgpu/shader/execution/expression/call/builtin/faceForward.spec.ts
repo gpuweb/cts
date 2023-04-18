@@ -9,9 +9,10 @@ Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
-import { f32, TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
-import { F32Vector, faceForwardIntervals } from '../../../../../util/f32_interval.js';
-import { cartesianProduct, quantizeToF32, sparseVectorF32Range } from '../../../../../util/math.js';
+import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { F32Vector } from '../../../../../util/f32_interval.js';
+import { FP, FPKind } from '../../../../../util/floating_point.js';
+import { cartesianProduct, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
@@ -29,26 +30,25 @@ export const g = makeTestGroup(GPUTest);
 
 /**
  * @returns a Case for `faceForward`
+ * @param kind what kind of floating point numbers being operated on
  * @param x the `x` param for the case
  * @param y the `y` param for the case
  * @param z the `z` param for the case
  * @param check what interval checking to apply
  * */
-function makeCaseF32(
+function makeCase(
+  kind: FPKind,
   x: number[],
   y: number[],
   z: number[],
   check: IntervalFilter
 ): Case | undefined {
-  x = x.map(quantizeToF32);
-  y = y.map(quantizeToF32);
-  z = z.map(quantizeToF32);
+  const fp = FP[kind];
+  x = x.map(fp.quantize);
+  y = y.map(fp.quantize);
+  z = z.map(fp.quantize);
 
-  const x_f32 = x.map(f32);
-  const y_f32 = y.map(f32);
-  const z_f32 = z.map(f32);
-
-  const results = faceForwardIntervals(x, y, z);
+  const results = FP.f32.faceForwardIntervals(x, y, z);
   if (check === 'finite' && results.some(r => r === undefined)) {
     return undefined;
   }
@@ -59,19 +59,25 @@ function makeCaseF32(
   const define_results = results.filter((r): r is F32Vector => r !== undefined);
 
   return {
-    input: [new Vector(x_f32), new Vector(y_f32), new Vector(z_f32)],
+    input: [
+      toVector(x, fp.scalarBuilder),
+      toVector(y, fp.scalarBuilder),
+      toVector(z, fp.scalarBuilder),
+    ],
     expected: anyOf(...define_results),
   };
 }
 
 /**
  * @returns an array of Cases for `faceForward`
+ * @param kind what kind of floating point numbers being operated on
  * @param xs array of inputs to try for the `x` param
  * @param ys array of inputs to try for the `y` param
  * @param zs array of inputs to try for the `z` param
  * @param check what interval checking to apply
  */
-function generateCasesF32(
+function generateCases(
+  kind: FPKind,
   xs: number[][],
   ys: number[][],
   zs: number[][],
@@ -79,13 +85,14 @@ function generateCasesF32(
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types
   return cartesianProduct(xs, ys, zs)
-    .map(e => makeCaseF32(e[0], e[1], e[2], check))
+    .map(e => makeCase('f32', e[0], e[1], e[2], check))
     .filter((c): c is Case => c !== undefined);
 }
 
 export const d = makeCaseCache('faceForward', {
   f32_vec2_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
@@ -93,7 +100,8 @@ export const d = makeCaseCache('faceForward', {
     );
   },
   f32_vec2_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
       sparseVectorF32Range(2),
@@ -101,7 +109,8 @@ export const d = makeCaseCache('faceForward', {
     );
   },
   f32_vec3_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
@@ -109,7 +118,8 @@ export const d = makeCaseCache('faceForward', {
     );
   },
   f32_vec3_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
       sparseVectorF32Range(3),
@@ -117,7 +127,8 @@ export const d = makeCaseCache('faceForward', {
     );
   },
   f32_vec4_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
@@ -125,7 +136,8 @@ export const d = makeCaseCache('faceForward', {
     );
   },
   f32_vec4_non_const: () => {
-    return generateCasesF32(
+    return generateCases(
+      'f32',
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
       sparseVectorF32Range(4),
