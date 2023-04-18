@@ -7,11 +7,11 @@ import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
   f32,
-  Matrix,
   reinterpretF32AsU32,
   reinterpretU32AsF32,
+  toMatrix,
+  toVector,
   u32,
-  Vector,
 } from './conversion.js';
 import {
   calculatePermutations,
@@ -489,7 +489,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [new Vector(param.map(this.scalarBuilder))],
+      input: [toVector(param, this.scalarBuilder)],
       expected: anyOf(...intervals),
     };
   }
@@ -527,11 +527,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [
-        new Vector(param0.map(this.scalarBuilder)),
-        new Vector(param1.map(this.scalarBuilder)),
-      ],
-
+      input: [toVector(param0, this.scalarBuilder), toVector(param1, this.scalarBuilder)],
       expected: anyOf(...intervals),
     };
   }
@@ -568,7 +564,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [new Vector(param.map(this.scalarBuilder))],
+      input: [toVector(param, this.scalarBuilder)],
       expected: anyOf(...vectors),
     };
   }
@@ -607,7 +603,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [this.scalarBuilder(scalar), new Vector(vector.map(this.scalarBuilder))],
+      input: [this.scalarBuilder(scalar), toVector(vector, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -650,7 +646,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [new Vector(vector.map(this.scalarBuilder)), this.scalarBuilder(scalar)],
+      input: [toVector(vector, this.scalarBuilder), this.scalarBuilder(scalar)],
       expected: anyOf(...results),
     };
   }
@@ -692,11 +688,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [
-        new Vector(param0.map(this.scalarBuilder)),
-        new Vector(param1.map(this.scalarBuilder)),
-      ],
-
+      input: [toVector(param0, this.scalarBuilder), toVector(param1, this.scalarBuilder)],
       expected: anyOf(...vectors),
     };
   }
@@ -734,7 +726,7 @@ class FPTraits {
     }
 
     return {
-      input: [new Matrix(map2DArray(param, this.scalarBuilder))],
+      input: [toMatrix(param, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -771,7 +763,7 @@ class FPTraits {
     }
 
     return {
-      input: [new Matrix(map2DArray(param, this.scalarBuilder))],
+      input: [toMatrix(param, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -810,11 +802,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [
-        new Matrix(map2DArray(param0, this.scalarBuilder)),
-        new Matrix(map2DArray(param1, this.scalarBuilder)),
-      ],
-
+      input: [toMatrix(param0, this.scalarBuilder), toMatrix(param1, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -854,7 +842,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [new Matrix(map2DArray(mat, this.scalarBuilder)), this.scalarBuilder(scalar)],
+      input: [toMatrix(mat, this.scalarBuilder), this.scalarBuilder(scalar)],
       expected: anyOf(...results),
     };
   }
@@ -898,7 +886,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [this.scalarBuilder(scalar), new Matrix(map2DArray(mat, this.scalarBuilder))],
+      input: [this.scalarBuilder(scalar), toMatrix(mat, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -942,11 +930,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [
-        new Matrix(map2DArray(mat, this.scalarBuilder)),
-        new Vector(vec.map(this.scalarBuilder)),
-      ],
-
+      input: [toMatrix(mat, this.scalarBuilder), toVector(vec, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
@@ -990,11 +974,7 @@ class FPTraits {
       return undefined;
     }
     return {
-      input: [
-        new Vector(vec.map(this.scalarBuilder)),
-        new Matrix(map2DArray(mat, this.scalarBuilder)),
-      ],
-
+      input: [toVector(vec, this.scalarBuilder), toMatrix(mat, this.scalarBuilder)],
       expected: anyOf(...results),
     };
   }
