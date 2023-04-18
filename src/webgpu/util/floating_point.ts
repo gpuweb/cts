@@ -2257,11 +2257,13 @@ abstract class FPTraits {
     return op;
   }
 
-  /** @returns an interval of N * ULP around the point */
-  public ulpInterval(n: number, numULP: number): FPInterval {
+  protected ulpIntervalImpl(n: number, numULP: number): FPInterval {
     numULP = Math.abs(numULP);
     return this.runScalarToIntervalOp(this.toInterval(n), this.ULPIntervalOp(numULP));
   }
+
+  /** @returns an interval of N * ULP around the point */
+  public abstract readonly ulpInterval: (n: number, numULP: number) => FPInterval;
 
   // API - Acceptance Intervals
 
@@ -4011,6 +4013,7 @@ class F32Traits extends FPTraits {
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
   public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
+  public readonly ulpInterval = this.ulpIntervalImpl.bind(this);
 
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);

@@ -16,13 +16,12 @@ import {
   toF32Interval,
   toF32Matrix,
   toF32Vector,
-  ulpInterval,
   isF32Vector,
   isF32Matrix,
   spanF32Intervals,
 } from '../webgpu/util/f32_interval.js';
 import { FPInterval, IntervalBounds } from '../webgpu/util/floating_point.js';
-import { hexToF64, map2DArray, oneULPF32 } from '../webgpu/util/math.js';
+import { map2DArray } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -33,26 +32,6 @@ const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_IN
 
 /** Interval from kAnyBounds */
 const kAnyInterval: FPInterval = toF32Interval(kAnyBounds);
-
-/** @returns a number N * ULP greater than the provided number */
-function plusNULP(x: number, n: number): number {
-  return x + n * oneULPF32(x);
-}
-
-/** @returns a number one ULP greater than the provided number */
-function plusOneULP(x: number): number {
-  return plusNULP(x, 1);
-}
-
-/** @returns a number N * ULP less than the provided number */
-function minusNULP(x: number, n: number): number {
-  return x - n * oneULPF32(x);
-}
-
-/** @returns a number one ULP less than the provided number */
-function minusOneULP(x: number): number {
-  return minusNULP(x, 1);
-}
 
 interface ConstructorCase {
   input: IntervalBounds;
@@ -1634,78 +1613,5 @@ g.test('toF32Matrix')
     t.expect(
       objectEquals(got, expected),
       `toF32Matrix([${input}]) returned [${got}]. Expected [${expected}]`
-    );
-  });
-
-interface ULPCase {
-  value: number;
-  num_ulp: number;
-  expected: number | IntervalBounds;
-}
-
-g.test('ulpInterval')
-  .paramsSubcasesOnly<ULPCase>(
-    // prettier-ignore
-    [
-      // Edge Cases
-      { value: kValue.f32.infinity.positive, num_ulp: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, num_ulp: 0, expected: kValue.f32.positive.max },
-      { value: kValue.f32.positive.max, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.positive.min, num_ulp: 0, expected: kValue.f32.positive.min },
-      { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULP(kValue.f32.positive.min)] },
-      { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULP(kValue.f32.positive.min, 4096)] },
-      { value: kValue.f32.negative.min, num_ulp: 0, expected: kValue.f32.negative.min },
-      { value: kValue.f32.negative.min, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.negative.min, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.negative.max, num_ulp: 0, expected: kValue.f32.negative.max },
-      { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.negative.max), 0] },
-      { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.negative.max, 4096), 0] },
-
-      // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.max)] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.max, 4096)] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.min), plusOneULP(0)] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.min, 4096), plusNULP(0, 4096)] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
-
-      // 64-bit subnormals
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULP(kValue.f32.subnormal.negative.max), plusOneULP(0)] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULP(kValue.f32.subnormal.negative.max, 4096), plusNULP(0, 4096)] },
-
-      // Zero
-      { value: 0, num_ulp: 0, expected: 0 },
-      { value: 0, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(0)] },
-      { value: 0, num_ulp: 4096, expected: [minusNULP(0, 4096), plusNULP(0, 4096)] },
-    ]
-  )
-  .fn(t => {
-    const expected = toF32Interval(t.params.expected);
-    const got = ulpInterval(t.params.value, t.params.num_ulp);
-    t.expect(
-      objectEquals(expected, got),
-      `ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`
     );
   });

@@ -35,9 +35,3 @@ export function isF32Matrix(
 export function toF32Matrix(m: (number | IntervalBounds | FPInterval)[][] | FPVector[]): FPMatrix {
   return FP.f32.toMatrix(m);
 }
-
-// Accuracy Interval
-
-export function ulpInterval(n: number, numULP: number): FPInterval {
-  return FP.f32.ulpInterval(n, numULP);
-}
