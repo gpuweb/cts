@@ -3297,12 +3297,14 @@ abstract class FPTraits {
   /** All acceptance interval functions for mix(x, y, z) */
   public abstract readonly mixIntervals: ScalarTripleToInterval[];
 
-  /** Calculate an acceptance interval of modf(x) */
-  public modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
+  protected modfIntervalImpl(n: number): { fract: FPInterval; whole: FPInterval } {
     const fract = this.correctlyRoundedInterval(n % 1.0);
     const whole = this.correctlyRoundedInterval(n - (n % 1.0));
     return { fract, whole };
   }
+
+  /** Calculate an acceptance interval of modf(x) */
+  public abstract readonly modfInterval: (n: number) => { fract: FPInterval; whole: FPInterval };
 
   private readonly MultiplicationInnerOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -4060,6 +4062,7 @@ class F32Traits extends FPTraits {
   public readonly mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
   public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
+  public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
     this

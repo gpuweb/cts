@@ -4178,6 +4178,8 @@ g.test('multiplicationVectorMatrixInterval_f32')
     );
   });
 
+// Builtins with bespoke implementations
+
 interface FaceForwardCase {
   input: [number[], number[], number[]];
   expected: ((number | IntervalBounds)[] | undefined)[];
@@ -4247,5 +4249,52 @@ g.test('faceForwardIntervals_f32')
     t.expect(
       objectEquals(expected, got),
       `f32.faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`
+    );
+  });
+
+interface ModfCase {
+  input: number;
+  fract: number | IntervalBounds;
+  whole: number | IntervalBounds;
+}
+
+g.test('modfInterval_f32')
+  .paramsSubcasesOnly<ModfCase>(
+    // prettier-ignore
+    [
+      // Normals
+      { input: 0, fract: 0, whole: 0 },
+      { input: 1, fract: 0, whole: 1 },
+      { input: -1, fract: 0, whole: -1 },
+      { input: 0.5, fract: 0.5, whole: 0 },
+      { input: -0.5, fract: -0.5, whole: 0 },
+      { input: 2.5, fract: 0.5, whole: 2 },
+      { input: -2.5, fract: -0.5, whole: -2 },
+      { input: 10.0, fract: 0, whole: 10 },
+      { input: -10.0, fract: 0, whole: -10 },
+
+      // Subnormals
+      { input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: 0 },
+      { input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: 0 },
+      { input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: 0 },
+      { input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: 0 },
+
+      // Boundaries
+      { input: kValue.f32.negative.min, fract: 0, whole: kValue.f32.negative.min },
+      { input: kValue.f32.negative.max, fract: kValue.f32.negative.max, whole: 0 },
+      { input: kValue.f32.positive.min, fract: kValue.f32.positive.min, whole: 0 },
+      { input: kValue.f32.positive.max, fract: 0, whole: kValue.f32.positive.max },
+    ]
+  )
+  .fn(t => {
+    const expected = {
+      fract: FP.f32.toInterval(t.params.fract),
+      whole: FP.f32.toInterval(t.params.whole),
+    };
+
+    const got = FP.f32.modfInterval(t.params.input);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
     );
   });

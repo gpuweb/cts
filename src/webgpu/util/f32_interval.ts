@@ -50,10 +50,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
-  return FP.f32.modfInterval(n);
-}
-
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
 }
