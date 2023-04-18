@@ -66,18 +66,16 @@ function makeVectorCaseWhole(kind: FPKind, v: number[]): Case {
 
 export const d = makeCaseCache('modf', {
   f32_fract: () => {
-    const fp = FP.f32;
     const makeCase = (n: number): Case => {
-      n = fp.quantize(n);
-      return { input: fp.scalarBuilder(n), expected: fp.modfInterval(n).fract };
+      n = FP.f32.quantize(n);
+      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).fract };
     };
     return fullF32Range().map(makeCase);
   },
   f32_whole: () => {
-    const fp = FP.f32;
     const makeCase = (n: number): Case => {
-      n = fp.quantize(n);
-      return { input: fp.scalarBuilder(n), expected: fp.modfInterval(n).whole };
+      n = FP.f32.quantize(n);
+      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).whole };
     };
     return fullF32Range().map(makeCase);
   },

@@ -4298,3 +4298,69 @@ g.test('modfInterval_f32')
       `f32.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
     );
   });
+
+interface RefractCase {
+  input: [number[], number[], number];
+  expected: (number | IntervalBounds)[];
+}
+
+// Scope for refractInterval tests so that they can have constants for magic
+// numbers that don't pollute the global namespace or have unwieldy long names.
+{
+  const kNegativeOneBounds: IntervalBounds = [
+    hexToF64(0xbff0_0000_c000_0000n),
+    hexToF64(0xbfef_ffff_4000_0000n),
+  ];
+
+  g.test('refractInterval_f32')
+    .paramsSubcasesOnly<RefractCase>(
+      // Some of these are hard coded, since the error intervals are difficult
+      // to express in a closed human-readable form due to the inherited nature
+      // of the errors.
+
+      // prettier-ignore
+      [
+        // k < 0
+        { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
+
+        // k contains 0
+        { input: [[1, 1], [0.1, 0], 1.005038], expected: [kAnyBounds, kAnyBounds] },
+
+        // k > 0
+        // vec2
+        { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, 1] },
+        { input: [[1, -2], [3, 4], 5], expected: [[hexToF32(0x40ce87a4), hexToF32(0x40ce8840)],  // ~6.454...
+            [hexToF32(0xc100fae8), hexToF32(0xc100fa80)]] },  // ~-8.061...
+
+        // vec3
+        { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1] },
+        { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[hexToF32(0x40d24480), hexToF32(0x40d24c00)],  // ~6.571...
+            [hexToF32(0xc1576f80), hexToF32(0xc1576ad0)],  // ~-13.464...
+            [hexToF32(0x41a2d9b0), hexToF32(0x41a2dc80)]] },  // ~20.356...
+
+        // vec4
+        { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1, 1] },
+        { input: [[1, -2, 3,-4], [-5, 6, -7, 8], 9], expected: [[hexToF32(0x410ae480), hexToF32(0x410af240)],  // ~8.680...
+            [hexToF32(0xc18cf7c0), hexToF32(0xc18cef80)],  // ~-17.620...
+            [hexToF32(0x41d46cc0), hexToF32(0x41d47660)],  // ~26.553...
+            [hexToF32(0xc20dfa80), hexToF32(0xc20df500)]] },  // ~-35.494...
+
+        // Test that dot going OOB bounds in the intermediate calculations propagates
+        { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+        { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+        { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+        { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+        { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+        { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
+      ]
+    )
+    .fn(t => {
+      const [i, s, r] = t.params.input;
+      const expected = FP.f32.toVector(t.params.expected);
+      const got = FP.f32.refractInterval(i, s, r);
+      t.expect(
+        objectEquals(expected, got),
+        `refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`
+      );
+    });
+}

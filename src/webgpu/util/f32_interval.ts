@@ -49,7 +49,3 @@ export function absoluteErrorInterval(n: number, error_range: number): FPInterva
 export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
-
-export function refractInterval(i: number[], s: number[], r: number): FPVector {
-  return FP.f32.refractInterval(i, s, r);
-}

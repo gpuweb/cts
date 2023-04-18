@@ -3537,8 +3537,6 @@ abstract class FPTraits {
   public abstract readonly reflectInterval: (x: number[], y: number[]) => FPVector;
 
   /**
-   * Calculate acceptance interval vectors of reflect(i, s, r)
-   *
    * refract is a singular function in the sense that it is the only builtin that
    * takes in (FPVector, FPVector, F32) and returns FPVector and is basically
    * defined in terms of other functions.
@@ -3547,7 +3545,7 @@ abstract class FPTraits {
    * own operation type, etc, it instead has a bespoke implementation that is a
    * composition of other builtin functions that use the framework.
    */
-  public refractInterval(i: number[], s: number[], r: number): FPVector {
+  protected refractIntervalImpl(i: number[], s: number[], r: number): FPVector {
     assert(
       i.length === s.length,
       `refract is only defined for vectors with the same number of elements`
@@ -3582,6 +3580,9 @@ abstract class FPTraits {
       this.SubtractionIntervalOp
     ); // (i * r) - (s * t)
   }
+
+  /** Calculate acceptance interval vectors of reflect(i, s, r) */
+  public abstract readonly refractInterval: (i: number[], s: number[], r: number) => FPVector;
 
   private readonly RemainderIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -4085,6 +4086,7 @@ class F32Traits extends FPTraits {
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
+  public readonly refractInterval = this.refractIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
