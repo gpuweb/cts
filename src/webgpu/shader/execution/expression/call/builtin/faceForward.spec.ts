@@ -9,7 +9,7 @@ Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
-import { TypeF32, TypeVec, Vector } from '../../../../../util/conversion.js';
+import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { F32Vector } from '../../../../../util/f32_interval.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
 import { cartesianProduct, sparseVectorF32Range } from '../../../../../util/math.js';
@@ -60,9 +60,9 @@ function makeCase(
 
   return {
     input: [
-      new Vector(x.map(fp.scalarBuilder)),
-      new Vector(y.map(fp.scalarBuilder)),
-      new Vector(z.map(fp.scalarBuilder)),
+      toVector(x, fp.scalarBuilder),
+      toVector(y, fp.scalarBuilder),
+      toVector(z, fp.scalarBuilder),
     ],
     expected: anyOf(...define_results),
   };
