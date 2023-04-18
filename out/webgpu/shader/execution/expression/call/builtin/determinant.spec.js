@@ -9,9 +9,9 @@ Returns the determinant of e.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeMat } from '../../../../../util/conversion.js';
-import { determinantInterval } from '../../../../../util/f32_interval.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, generateMatrixToScalarCases, run } from '../../expression.js';
+import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
@@ -66,45 +66,45 @@ const kDeterminantMatrixF32Values = {
 
 export const d = makeCaseCache('determinant', {
   f32_mat2x2_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[2],
     'finite',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   },
   f32_mat2x2_non_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[2],
     'unfiltered',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   },
   f32_mat3x3_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[3],
     'finite',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   },
   f32_mat3x3_non_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[3],
     'unfiltered',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   },
   f32_mat4x4_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[4],
     'finite',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   },
   f32_mat4x4_non_const: () => {
-    return generateMatrixToScalarCases(
+    return FP.f32.generateMatrixToScalarCases(
     kDeterminantMatrixF32Values[4],
     'unfiltered',
-    determinantInterval);
+    FP.f32.determinantInterval);
 
   }
 });

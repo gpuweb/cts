@@ -4,36 +4,6 @@
 
 import { FPInterval, FPMatrix, FPVector, IntervalBounds, FP } from './floating_point.js';
 
-// Interfaces
-
-export interface MatrixToScalar {
-  (m: number[][]): FPInterval;
-}
-
-export interface MatrixToMatrix {
-  (m: number[][]): FPMatrix;
-}
-
-export interface MatrixPairToMatrix {
-  (x: number[][], y: number[][]): FPMatrix;
-}
-
-export interface MatrixScalarToMatrix {
-  (x: number[][], y: number): FPMatrix;
-}
-
-export interface ScalarMatrixToMatrix {
-  (x: number, y: number[][]): FPMatrix;
-}
-
-export interface MatrixVectorToVector {
-  (x: number[][], y: number[]): FPVector;
-}
-
-export interface VectorMatrixToVector {
-  (x: number[], y: number[][]): FPVector;
-}
-
 // Containers
 
 export type F32Vector = FPVector;
@@ -72,24 +42,12 @@ export function correctlyRoundedInterval(n: number | FPInterval): FPInterval {
   return FP.f32.correctlyRoundedInterval(n);
 }
 
-export function correctlyRoundedMatrix(m: number[][]): FPMatrix {
-  return FP.f32.correctlyRoundedMatrix(m);
-}
-
 export function absoluteErrorInterval(n: number, error_range: number): FPInterval {
   return FP.f32.absoluteErrorInterval(n, error_range);
 }
 
 export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
-}
-
-export function additionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
-  return FP.f32.additionMatrixInterval(x, y);
-}
-
-export function determinantInterval(m: number[][]): FPInterval {
-  return FP.f32.determinantInterval(m);
 }
 
 export function faceForwardIntervals(
@@ -104,34 +62,6 @@ export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval 
   return FP.f32.modfInterval(n);
 }
 
-export function multiplicationMatrixScalarInterval(mat: number[][], scalar: number): FPMatrix {
-  return FP.f32.multiplicationMatrixScalarInterval(mat, scalar);
-}
-
-export function multiplicationScalarMatrixInterval(scalar: number, mat: number[][]): FPMatrix {
-  return FP.f32.multiplicationScalarMatrixInterval(scalar, mat);
-}
-
-export function multiplicationMatrixMatrixInterval(mat_x: number[][], mat_y: number[][]): FPMatrix {
-  return FP.f32.multiplicationMatrixMatrixInterval(mat_x, mat_y);
-}
-
-export function multiplicationMatrixVectorInterval(x: number[][], y: number[]): FPVector {
-  return FP.f32.multiplicationMatrixVectorInterval(x, y);
-}
-
-export function multiplicationVectorMatrixInterval(x: number[], y: number[][]): FPVector {
-  return FP.f32.multiplicationVectorMatrixInterval(x, y);
-}
-
 export function refractInterval(i: number[], s: number[], r: number): FPVector {
   return FP.f32.refractInterval(i, s, r);
-}
-
-export function subtractionMatrixInterval(x: number[][], y: number[][]): FPMatrix {
-  return FP.f32.subtractionMatrixInterval(x, y);
-}
-
-export function transposeInterval(m: number[][]): FPMatrix {
-  return FP.f32.transposeInterval(m);
 }
