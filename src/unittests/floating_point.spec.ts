@@ -73,6 +73,79 @@ function applyError(
 
 // API - Fundamental Error Intervals
 
+interface AbsoluteErrorCase {
+  value: number;
+  error: number;
+  expected: number | IntervalBounds;
+}
+
+g.test('absoluteErrorInterval_f32')
+  .paramsSubcasesOnly<AbsoluteErrorCase>(
+    // prettier-ignore
+    [
+      // Edge Cases
+      { value: kValue.f32.infinity.positive, error: 0, expected: kAnyBounds },
+      { value: kValue.f32.infinity.positive, error: 2 ** -11, expected: kAnyBounds },
+      { value: kValue.f32.infinity.positive, error: 1, expected: kAnyBounds },
+      { value: kValue.f32.infinity.negative, error: 0, expected: kAnyBounds },
+      { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAnyBounds },
+      { value: kValue.f32.infinity.negative, error: 1, expected: kAnyBounds },
+      { value: kValue.f32.positive.max, error: 0, expected: kValue.f32.positive.max },
+      { value: kValue.f32.positive.max, error: 2 ** -11, expected: kValue.f32.positive.max },
+      { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAnyBounds },
+      { value: kValue.f32.positive.min, error: 0, expected: kValue.f32.positive.min },
+      { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
+      { value: kValue.f32.negative.min, error: 0, expected: kValue.f32.negative.min },
+      { value: kValue.f32.negative.min, error: 2 ** -11, expected: kValue.f32.negative.min },
+      { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAnyBounds },
+      { value: kValue.f32.negative.max, error: 0, expected: kValue.f32.negative.max },
+      { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
+
+      // 32-bit subnormals
+      { value: kValue.f32.subnormal.positive.max, error: 0, expected: [0, kValue.f32.subnormal.positive.max] },
+      { value: kValue.f32.subnormal.positive.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.subnormal.positive.max, error: 1, expected: [-1, 1] },
+      { value: kValue.f32.subnormal.positive.min, error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: kValue.f32.subnormal.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.subnormal.positive.min, error: 1, expected: [-1, 1] },
+      { value: kValue.f32.subnormal.negative.min, error: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
+      { value: kValue.f32.subnormal.negative.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.subnormal.negative.min, error: 1, expected: [-1, 1] },
+      { value: kValue.f32.subnormal.negative.max, error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: kValue.f32.subnormal.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: kValue.f32.subnormal.negative.max, error: 1, expected: [-1, 1] },
+
+      // 64-bit subnormals
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
+
+      // Zero
+      { value: 0, error: 0, expected: 0 },
+      { value: 0, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: 0, error: 1, expected: [-1, 1] },
+    ]
+  )
+  .fn(t => {
+    const expected = FP.f32.toInterval(t.params.expected);
+    const got = FP.f32.absoluteErrorInterval(t.params.value, t.params.error);
+    t.expect(
+      objectEquals(expected, got),
+      `f32.absoluteErrorInterval(${t.params.value}, ${t.params.error}) returned ${got}. Expected ${expected}`
+    );
+  });
+
 interface CorrectlyRoundedCase {
   value: number;
   expected: number | IntervalBounds;

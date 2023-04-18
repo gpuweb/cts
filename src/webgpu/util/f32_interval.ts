@@ -38,10 +38,6 @@ export function toF32Matrix(m: (number | IntervalBounds | FPInterval)[][] | FPVe
 
 // Accuracy Interval
 
-export function absoluteErrorInterval(n: number, error_range: number): FPInterval {
-  return FP.f32.absoluteErrorInterval(n, error_range);
-}
-
 export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
