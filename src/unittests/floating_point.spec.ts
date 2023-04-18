@@ -2676,7 +2676,7 @@ interface MatrixToScalarCase {
 
 g.test('determinantInterval_f32')
   .paramsSubcasesOnly<MatrixToScalarCase>([
-    // Extrebe values, i.e. subnormals, very large magnitudes, and those lead to
+    // Extreme values, i.e. subnormals, very large magnitudes, and those lead to
     // non-precise products, are intentionally not tested, since the accuracy of
     // determinant is restricted to well behaving inputs. Handling all cases
     // requires ~23! options to be calculated in the 4x4 case, so is not

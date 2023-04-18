@@ -627,6 +627,7 @@ function buildPipeline(
 
   const source = shaderBuilder(parameterTypes, resultType, cases, inputSource);
 
+  console.log(`RHARRISON: ${source}`);
   switch (inputSource) {
     case 'const': {
       // build the shader module
