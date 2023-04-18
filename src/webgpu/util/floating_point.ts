@@ -2948,8 +2948,6 @@ abstract class FPTraits {
   public abstract readonly exp2Interval: (x: number | FPInterval) => FPInterval;
 
   /**
-   * Calculate the acceptance intervals for faceForward(x, y, z)
-   *
    * faceForward(x, y, z) = select(-x, x, dot(z, y) < 0.0)
    *
    * This builtin selects from two discrete results (delta rounding/flushing),
@@ -2959,7 +2957,11 @@ abstract class FPTraits {
    * Thus, a bespoke implementation is used instead of
    * defining an Op and running that through the framework.
    */
-  public faceForwardIntervals(x: number[], y: number[], z: number[]): (FPVector | undefined)[] {
+  protected faceForwardIntervalsImpl(
+    x: number[],
+    y: number[],
+    z: number[]
+  ): (FPVector | undefined)[] {
     const x_vec = this.toVector(x);
     // Running vector through this.runScalarToIntervalOpComponentWise to make
     // sure that flushing/rounding is handled, since toVector does not perform
@@ -3003,6 +3005,13 @@ abstract class FPTraits {
     );
     return results;
   }
+
+  /** Calculate the acceptance intervals for faceForward(x, y, z) */
+  public abstract readonly faceForwardIntervals: (
+    x: number[],
+    y: number[],
+    z: number[]
+  ) => (FPVector | undefined)[];
 
   private readonly FloorIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3273,12 +3282,14 @@ abstract class FPTraits {
   /** All acceptance interval functions for mix(x, y, z) */
   public abstract readonly mixIntervals: ScalarTripleToInterval[];
 
-  /** Calculate an acceptance interval of modf(x) */
-  public modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
+  protected modfIntervalImpl(n: number): { fract: FPInterval; whole: FPInterval } {
     const fract = this.correctlyRoundedInterval(n % 1.0);
     const whole = this.correctlyRoundedInterval(n - (n % 1.0));
     return { fract, whole };
   }
+
+  /** Calculate an acceptance interval of modf(x) */
+  public abstract readonly modfInterval: (n: number) => { fract: FPInterval; whole: FPInterval };
 
   private readonly MultiplicationInnerOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -3511,8 +3522,6 @@ abstract class FPTraits {
   public abstract readonly reflectInterval: (x: number[], y: number[]) => FPVector;
 
   /**
-   * Calculate acceptance interval vectors of reflect(i, s, r)
-   *
    * refract is a singular function in the sense that it is the only builtin that
    * takes in (FPVector, FPVector, F32) and returns FPVector and is basically
    * defined in terms of other functions.
@@ -3521,7 +3530,7 @@ abstract class FPTraits {
    * own operation type, etc, it instead has a bespoke implementation that is a
    * composition of other builtin functions that use the framework.
    */
-  public refractInterval(i: number[], s: number[], r: number): FPVector {
+  protected refractIntervalImpl(i: number[], s: number[], r: number): FPVector {
     assert(
       i.length === s.length,
       `refract is only defined for vectors with the same number of elements`
@@ -3556,6 +3565,9 @@ abstract class FPTraits {
       this.SubtractionIntervalOp
     ); // (i * r) - (s * t)
   }
+
+  /** Calculate acceptance interval vectors of reflect(i, s, r) */
+  public abstract readonly refractInterval: (i: number[], s: number[], r: number) => FPVector;
 
   private readonly RemainderIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -4022,6 +4034,7 @@ class F32Traits extends FPTraits {
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
+  public readonly faceForwardIntervals = this.faceForwardIntervalsImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
@@ -4035,6 +4048,7 @@ class F32Traits extends FPTraits {
   public readonly mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
   public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
+  public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
     this
@@ -4057,6 +4071,7 @@ class F32Traits extends FPTraits {
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
+  public readonly refractInterval = this.refractIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
