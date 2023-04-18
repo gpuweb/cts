@@ -50,14 +50,6 @@ export function ulpInterval(n: number, numULP: number): FPInterval {
   return FP.f32.ulpInterval(n, numULP);
 }
 
-export function faceForwardIntervals(
-  x: number[],
-  y: number[],
-  z: number[]
-): (FPVector | undefined)[] {
-  return FP.f32.faceForwardIntervals(x, y, z);
-}
-
 export function modfInterval(n: number): { fract: FPInterval; whole: FPInterval } {
   return FP.f32.modfInterval(n);
 }

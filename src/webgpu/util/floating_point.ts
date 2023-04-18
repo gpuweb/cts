@@ -2963,8 +2963,6 @@ abstract class FPTraits {
   public abstract readonly exp2Interval: (x: number | FPInterval) => FPInterval;
 
   /**
-   * Calculate the acceptance intervals for faceForward(x, y, z)
-   *
    * faceForward(x, y, z) = select(-x, x, dot(z, y) < 0.0)
    *
    * This builtin selects from two discrete results (delta rounding/flushing),
@@ -2974,7 +2972,11 @@ abstract class FPTraits {
    * Thus, a bespoke implementation is used instead of
    * defining an Op and running that through the framework.
    */
-  public faceForwardIntervals(x: number[], y: number[], z: number[]): (FPVector | undefined)[] {
+  protected faceForwardIntervalsImpl(
+    x: number[],
+    y: number[],
+    z: number[]
+  ): (FPVector | undefined)[] {
     const x_vec = this.toVector(x);
     // Running vector through this.runScalarToIntervalOpComponentWise to make
     // sure that flushing/rounding is handled, since toVector does not perform
@@ -3018,6 +3020,13 @@ abstract class FPTraits {
     );
     return results;
   }
+
+  /** Calculate the acceptance intervals for faceForward(x, y, z) */
+  public abstract readonly faceForwardIntervals: (
+    x: number[],
+    y: number[],
+    z: number[]
+  ) => (FPVector | undefined)[];
 
   private readonly FloorIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -4037,6 +4046,7 @@ class F32Traits extends FPTraits {
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
+  public readonly faceForwardIntervals = this.faceForwardIntervalsImpl.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
   public readonly fractInterval = this.fractIntervalImpl.bind(this);
