@@ -2177,6 +2177,35 @@ abstract class FPTraits {
 
   // API - Fundamental Error Intervals
 
+  /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
+  private AbsoluteErrorIntervalOp(error_range: number): ScalarToIntervalOp {
+    const op: ScalarToIntervalOp = {
+      impl: (_: number) => {
+        return this.constants().anyInterval;
+      },
+    };
+
+    if (isFiniteF32(error_range)) {
+      op.impl = (n: number) => {
+        assert(!Number.isNaN(n), `absolute error not defined for NaN`);
+        return this.toInterval([n - error_range, n + error_range]);
+      };
+    }
+
+    return op;
+  }
+
+  protected absoluteErrorIntervalImpl(n: number, error_range: number): FPInterval {
+    error_range = Math.abs(error_range);
+    return this.runScalarToIntervalOp(
+      this.toInterval(n),
+      this.AbsoluteErrorIntervalOp(error_range)
+    );
+  }
+
+  /** @returns an interval of the absolute error around the point */
+  public abstract readonly absoluteErrorInterval: (n: number, error_range: number) => FPInterval;
+
   /**
    * Defines a ScalarToIntervalOp for an interval of the correctly rounded values
    * around the point
@@ -2201,33 +2230,6 @@ abstract class FPTraits {
 
   /** @returns a matrix of correctly rounded intervals for the provided matrix */
   public abstract readonly correctlyRoundedMatrix: (m: Array2D<number>) => FPMatrix;
-
-  /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
-  private AbsoluteErrorIntervalOp(error_range: number): ScalarToIntervalOp {
-    const op: ScalarToIntervalOp = {
-      impl: (_: number) => {
-        return this.constants().anyInterval;
-      },
-    };
-
-    if (isFiniteF32(error_range)) {
-      op.impl = (n: number) => {
-        assert(!Number.isNaN(n), `absolute error not defined for NaN`);
-        return this.toInterval([n - error_range, n + error_range]);
-      };
-    }
-
-    return op;
-  }
-
-  /** @returns an interval of the absolute error around the point */
-  public absoluteErrorInterval(n: number, error_range: number): FPInterval {
-    error_range = Math.abs(error_range);
-    return this.runScalarToIntervalOp(
-      this.toInterval(n),
-      this.AbsoluteErrorIntervalOp(error_range)
-    );
-  }
 
   /** @returns a ScalarToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
   private ULPIntervalOp(numULP: number): ScalarToIntervalOp {
@@ -2255,11 +2257,13 @@ abstract class FPTraits {
     return op;
   }
 
-  /** @returns an interval of N * ULP around the point */
-  public ulpInterval(n: number, numULP: number): FPInterval {
+  protected ulpIntervalImpl(n: number, numULP: number): FPInterval {
     numULP = Math.abs(numULP);
     return this.runScalarToIntervalOp(this.toInterval(n), this.ULPIntervalOp(numULP));
   }
+
+  /** @returns an interval of N * ULP around the point */
+  public abstract readonly ulpInterval: (n: number, numULP: number) => FPInterval;
 
   // API - Acceptance Intervals
 
@@ -4005,6 +4009,12 @@ class F32Traits extends FPTraits {
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
 
+  // Framework - Fundamental Error Intervals - Overrides
+  public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
+  public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
+  public readonly ulpInterval = this.ulpIntervalImpl.bind(this);
+
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
   public readonly acosInterval = this.acosIntervalImpl.bind(this);
@@ -4022,8 +4032,6 @@ class F32Traits extends FPTraits {
   public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
-  public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly crossInterval = this.crossIntervalImpl.bind(this);

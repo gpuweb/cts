@@ -71,6 +71,212 @@ error)
   return [begin, end];
 }
 
+// API - Fundamental Error Intervals
+
+
+
+
+
+
+
+g.test('absoluteErrorInterval_f32').
+paramsSubcasesOnly(
+
+[
+// Edge Cases
+{ value: kValue.f32.infinity.positive, error: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, error: 2 ** -11, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, error: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, error: 1, expected: kAnyBounds },
+{ value: kValue.f32.positive.max, error: 0, expected: kValue.f32.positive.max },
+{ value: kValue.f32.positive.max, error: 2 ** -11, expected: kValue.f32.positive.max },
+{ value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAnyBounds },
+{ value: kValue.f32.positive.min, error: 0, expected: kValue.f32.positive.min },
+{ value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
+{ value: kValue.f32.negative.min, error: 0, expected: kValue.f32.negative.min },
+{ value: kValue.f32.negative.min, error: 2 ** -11, expected: kValue.f32.negative.min },
+{ value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAnyBounds },
+{ value: kValue.f32.negative.max, error: 0, expected: kValue.f32.negative.max },
+{ value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
+
+// 32-bit subnormals
+{ value: kValue.f32.subnormal.positive.max, error: 0, expected: [0, kValue.f32.subnormal.positive.max] },
+{ value: kValue.f32.subnormal.positive.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.subnormal.positive.max, error: 1, expected: [-1, 1] },
+{ value: kValue.f32.subnormal.positive.min, error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: kValue.f32.subnormal.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.subnormal.positive.min, error: 1, expected: [-1, 1] },
+{ value: kValue.f32.subnormal.negative.min, error: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
+{ value: kValue.f32.subnormal.negative.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.subnormal.negative.min, error: 1, expected: [-1, 1] },
+{ value: kValue.f32.subnormal.negative.max, error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: kValue.f32.subnormal.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: kValue.f32.subnormal.negative.max, error: 1, expected: [-1, 1] },
+
+// 64-bit subnormals
+{ value: hexToF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: hexToF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+{ value: hexToF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: hexToF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
+
+// Zero
+{ value: 0, error: 0, expected: 0 },
+{ value: 0, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+{ value: 0, error: 1, expected: [-1, 1] }]).
+
+
+fn((t) => {
+  const expected = FP.f32.toInterval(t.params.expected);
+  const got = FP.f32.absoluteErrorInterval(t.params.value, t.params.error);
+  t.expect(
+  objectEquals(expected, got),
+  `f32.absoluteErrorInterval(${t.params.value}, ${t.params.error}) returned ${got}. Expected ${expected}`);
+
+});
+
+
+
+
+
+
+g.test('correctlyRoundedInterval_f32').
+paramsSubcasesOnly(
+
+[
+// Edge Cases
+{ value: kValue.f32.infinity.positive, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, expected: kAnyBounds },
+{ value: kValue.f32.positive.max, expected: kValue.f32.positive.max },
+{ value: kValue.f32.negative.min, expected: kValue.f32.negative.min },
+{ value: kValue.f32.positive.min, expected: kValue.f32.positive.min },
+{ value: kValue.f32.negative.max, expected: kValue.f32.negative.max },
+
+// 32-bit subnormals
+{ value: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
+{ value: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0] },
+{ value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0] },
+
+// 64-bit subnormals
+{ value: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
+
+// 32-bit normals
+{ value: 0, expected: [0, 0] },
+{ value: hexToF32(0x03800000), expected: hexToF32(0x03800000) },
+{ value: hexToF32(0x03800001), expected: hexToF32(0x03800001) },
+{ value: hexToF32(0x83800000), expected: hexToF32(0x83800000) },
+{ value: hexToF32(0x83800001), expected: hexToF32(0x83800001) },
+
+// 64-bit normals
+{ value: hexToF64(0x3ff0_0000_0000_0001n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
+{ value: hexToF64(0x3ff0_0000_0000_0002n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
+{ value: hexToF64(0x3ff0_0010_0000_0010n), expected: [hexToF32(0x3f800080), hexToF32(0x3f800081)] },
+{ value: hexToF64(0x3ff0_0020_0000_0020n), expected: [hexToF32(0x3f800100), hexToF32(0x3f800101)] },
+{ value: hexToF64(0xbff0_0000_0000_0001n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
+{ value: hexToF64(0xbff0_0000_0000_0002n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
+{ value: hexToF64(0xbff0_0010_0000_0010n), expected: [hexToF32(0xbf800081), hexToF32(0xbf800080)] },
+{ value: hexToF64(0xbff0_0020_0000_0020n), expected: [hexToF32(0xbf800101), hexToF32(0xbf800100)] }]).
+
+
+fn((t) => {
+  const expected = FP.f32.toInterval(t.params.expected);
+  const got = FP.f32.correctlyRoundedInterval(t.params.value);
+  t.expect(
+  objectEquals(expected, got),
+  `f32.correctlyRoundedInterval(${t.params.value}) returned ${got}. Expected ${expected}`);
+
+});
+
+
+
+
+
+
+
+g.test('ulpInterval_f32').
+paramsSubcasesOnly(
+
+[
+// Edge Cases
+{ value: kValue.f32.infinity.positive, num_ulp: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.positive, num_ulp: 4096, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAnyBounds },
+{ value: kValue.f32.positive.max, num_ulp: 0, expected: kValue.f32.positive.max },
+{ value: kValue.f32.positive.max, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.positive.max, num_ulp: 4096, expected: kAnyBounds },
+{ value: kValue.f32.positive.min, num_ulp: 0, expected: kValue.f32.positive.min },
+{ value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULPF32(kValue.f32.positive.min)] },
+{ value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULPF32(kValue.f32.positive.min, 4096)] },
+{ value: kValue.f32.negative.min, num_ulp: 0, expected: kValue.f32.negative.min },
+{ value: kValue.f32.negative.min, num_ulp: 1, expected: kAnyBounds },
+{ value: kValue.f32.negative.min, num_ulp: 4096, expected: kAnyBounds },
+{ value: kValue.f32.negative.max, num_ulp: 0, expected: kValue.f32.negative.max },
+{ value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.negative.max), 0] },
+{ value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.negative.max, 4096), 0] },
+
+// 32-bit subnormals
+{ value: kValue.f32.subnormal.positive.max, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.max] },
+{ value: kValue.f32.subnormal.positive.max, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.max)] },
+{ value: kValue.f32.subnormal.positive.max, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.max, 4096)] },
+{ value: kValue.f32.subnormal.positive.min, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: kValue.f32.subnormal.positive.min, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
+{ value: kValue.f32.subnormal.positive.min, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
+{ value: kValue.f32.subnormal.negative.min, num_ulp: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
+{ value: kValue.f32.subnormal.negative.min, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.min), plusOneULPF32(0)] },
+{ value: kValue.f32.subnormal.negative.min, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.min, 4096), plusNULPF32(0, 4096)] },
+{ value: kValue.f32.subnormal.negative.max, num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: kValue.f32.subnormal.negative.max, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
+{ value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+
+// 64-bit subnormals
+{ value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
+{ value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
+{ value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+{ value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
+{ value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
+{ value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
+{ value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+
+// Zero
+{ value: 0, num_ulp: 0, expected: 0 },
+{ value: 0, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(0)] },
+{ value: 0, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(0, 4096)] }]).
+
+
+fn((t) => {
+  const expected = FP.f32.toInterval(t.params.expected);
+  const got = FP.f32.ulpInterval(t.params.value, t.params.num_ulp);
+  t.expect(
+  objectEquals(expected, got),
+  `f32.ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`);
+
+});
+
+// API - Acceptance Intervals
+
 
 
 
@@ -4178,7 +4384,7 @@ fn((t) => {
 
 });
 
-// Builtins with bespoke implementations
+// API - Acceptance Intervals w/ bespoke implementations
 
 
 

@@ -35,18 +35,4 @@ m)
 export function toF32Matrix(m) {
   return FP.f32.toMatrix(m);
 }
-
-// Accuracy Interval
-
-export function correctlyRoundedInterval(n) {
-  return FP.f32.correctlyRoundedInterval(n);
-}
-
-export function absoluteErrorInterval(n, error_range) {
-  return FP.f32.absoluteErrorInterval(n, error_range);
-}
-
-export function ulpInterval(n, numULP) {
-  return FP.f32.ulpInterval(n, numULP);
-}
 //# sourceMappingURL=f32_interval.js.map

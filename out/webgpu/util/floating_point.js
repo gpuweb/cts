@@ -2177,6 +2177,35 @@ class FPTraits {
 
   // API - Fundamental Error Intervals
 
+  /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
+  AbsoluteErrorIntervalOp(error_range) {
+    const op = {
+      impl: (_) => {
+        return this.constants().anyInterval;
+      }
+    };
+
+    if (isFiniteF32(error_range)) {
+      op.impl = (n) => {
+        assert(!Number.isNaN(n), `absolute error not defined for NaN`);
+        return this.toInterval([n - error_range, n + error_range]);
+      };
+    }
+
+    return op;
+  }
+
+  absoluteErrorIntervalImpl(n, error_range) {
+    error_range = Math.abs(error_range);
+    return this.runScalarToIntervalOp(
+    this.toInterval(n),
+    this.AbsoluteErrorIntervalOp(error_range));
+
+  }
+
+  /** @returns an interval of the absolute error around the point */
+
+
   /**
    * Defines a ScalarToIntervalOp for an interval of the correctly rounded values
    * around the point
@@ -2201,33 +2230,6 @@ class FPTraits {
 
   /** @returns a matrix of correctly rounded intervals for the provided matrix */
 
-
-  /** @returns a ScalarToIntervalOp for [n - error_range, n + error_range] */
-  AbsoluteErrorIntervalOp(error_range) {
-    const op = {
-      impl: (_) => {
-        return this.constants().anyInterval;
-      }
-    };
-
-    if (isFiniteF32(error_range)) {
-      op.impl = (n) => {
-        assert(!Number.isNaN(n), `absolute error not defined for NaN`);
-        return this.toInterval([n - error_range, n + error_range]);
-      };
-    }
-
-    return op;
-  }
-
-  /** @returns an interval of the absolute error around the point */
-  absoluteErrorInterval(n, error_range) {
-    error_range = Math.abs(error_range);
-    return this.runScalarToIntervalOp(
-    this.toInterval(n),
-    this.AbsoluteErrorIntervalOp(error_range));
-
-  }
 
   /** @returns a ScalarToIntervalOp for [n - numULP * ULP(n), n + numULP * ULP(n)] */
   ULPIntervalOp(numULP) {
@@ -2255,11 +2257,13 @@ class FPTraits {
     return op;
   }
 
-  /** @returns an interval of N * ULP around the point */
-  ulpInterval(n, numULP) {
+  ulpIntervalImpl(n, numULP) {
     numULP = Math.abs(numULP);
     return this.runScalarToIntervalOp(this.toInterval(n), this.ULPIntervalOp(numULP));
   }
+
+  /** @returns an interval of N * ULP around the point */
+
 
   // API - Acceptance Intervals
 
@@ -4005,6 +4009,12 @@ class F32Traits extends FPTraits {
   oneULP = oneULPF32;
   scalarBuilder = f32;
 
+  // Framework - Fundamental Error Intervals - Overrides
+  absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
+  correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
+  ulpInterval = this.ulpIntervalImpl.bind(this);
+
   // Framework - API - Overrides
   absInterval = this.absIntervalImpl.bind(this);
   acosInterval = this.acosIntervalImpl.bind(this);
@@ -4022,8 +4032,6 @@ class F32Traits extends FPTraits {
   clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
-  correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
   cosInterval = this.cosIntervalImpl.bind(this);
   coshInterval = this.coshIntervalImpl.bind(this);
   crossInterval = this.crossIntervalImpl.bind(this);

@@ -15,7 +15,6 @@ import {
   TypeU32,
   u32,
 } from '../../../../util/conversion.js';
-import { correctlyRoundedInterval } from '../../../../util/f32_interval.js';
 import { FP } from '../../../../util/floating_point.js';
 import {
   fullF32Range,
@@ -39,17 +38,17 @@ export const d = makeCaseCache('unary/f32_conversion', {
   },
   u32: () => {
     return fullU32Range().map(u => {
-      return { input: u32(u), expected: correctlyRoundedInterval(u) };
+      return { input: u32(u), expected: FP.f32.correctlyRoundedInterval(u) };
     });
   },
   i32: () => {
     return fullI32Range().map(i => {
-      return { input: i32(i), expected: correctlyRoundedInterval(i) };
+      return { input: i32(i), expected: FP.f32.correctlyRoundedInterval(i) };
     });
   },
   f32: () => {
     return fullF32Range().map(f => {
-      return { input: f32(f), expected: correctlyRoundedInterval(f) };
+      return { input: f32(f), expected: FP.f32.correctlyRoundedInterval(f) };
     });
   },
   f32_mat2x2_const: () => {
