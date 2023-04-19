@@ -24,6 +24,67 @@ export const kBit = {
     max: 0xffff_ffff,
   },
 
+  // Limits of f64
+  // Have to be stored as a BigInt hex value, since number is a f64 internally,
+  // so 64-bit hex values are not guaranteed to be precisely representable.
+  f64: {
+    positive: {
+      min: BigInt(0x0010_0000_0000_0000n),
+      max: BigInt(0x7fef_ffff_ffff_ffffn),
+      zero: BigInt(0x0000_0000_0000_0000n),
+      nearest_max: BigInt(0x7fef_ffff_ffff_fffen),
+      less_than_one: BigInt(0x3fef_ffff_ffff_ffffn),
+      pi: {
+        whole: BigInt(0x4009_21fb_5444_2d18n),
+        three_quarters: BigInt(0x4002_d97c_7f33_21d2n),
+        half: BigInt(0x3ff9_21fb_5444_2d18n),
+        third: BigInt(0x3ff0_c152_382d_7366n),
+        quarter: BigInt(0x3fe9_21fb_5444_2d18n),
+        sixth: BigInt(0x3fe0_c152_382d_7366n),
+      },
+      e: BigInt(0x4005_bf0a_8b14_5769n),
+    },
+    negative: {
+      max: BigInt(0x8010_0000_0000_0000n),
+      min: BigInt(0xffef_ffff_ffff_ffffn),
+      zero: BigInt(0x8000_0000_0000_0000n),
+      nearest_min: BigInt(0xffef_ffff_ffff_fffen),
+      less_than_one: BigInt(0xbfef_ffff_ffff_ffffn),
+      pi: {
+        whole: BigInt(0xc009_21fb_5444_2d18n),
+        three_quarters: BigInt(0xc002_d97c_7f33_21d2n),
+        half: BigInt(0xbff9_21fb_5444_2d18n),
+        third: BigInt(0xbff0_c152_382d_7366n),
+        quarter: BigInt(0xbfe9_21fb_5444_2d18n),
+        sixth: BigInt(0xbfe0_c152_382d_7366n),
+      },
+    },
+    subnormal: {
+      positive: {
+        min: BigInt(0x0000_0000_0000_0001n),
+        max: BigInt(0x000f_ffff_ffff_ffffn),
+      },
+      negative: {
+        max: BigInt(0x8000_0000_0000_0001n),
+        min: BigInt(0x800f_ffff_ffff_ffffn),
+      },
+    },
+    nan: {
+      negative: {
+        s: BigInt(0xfff0_0000_0000_0001n),
+        q: BigInt(0xfff8_0000_0000_0001n),
+      },
+      positive: {
+        s: BigInt(0x7ff0_0000_0000_0001n),
+        q: BigInt(0x7ff8_0000_0000_0001n),
+      },
+    },
+    infinity: {
+      positive: BigInt(0x7ff0_0000_0000_0000n),
+      negative: BigInt(0xfff0_0000_0000_0000n),
+    },
+  },
+
   // Limits of f32
   f32: {
     positive: {
@@ -33,7 +94,7 @@ export const kBit = {
       nearest_max: 0x7f7f_fffe,
       less_than_one: 0x3f7f_ffff,
       pi: {
-        whole: 0x404_90fdb,
+        whole: 0x4049_0fdb,
         three_quarters: 0x4016_cbe4,
         half: 0x3fc9_0fdb,
         third: 0x3f86_0a92,
@@ -51,8 +112,8 @@ export const kBit = {
       pi: {
         whole: 0xc04_90fdb,
         three_quarters: 0xc016_cbe4,
-        half: 0xbfc90fdb,
-        third: 0xbf860a92,
+        half: 0xbfc9_0fdb,
+        third: 0xbf86_0a92,
         quarter: 0xbf49_0fdb,
         sixth: 0xbf06_0a92,
       },
@@ -273,16 +334,6 @@ function hexToF64(hex: bigint): number {
 }
 
 /**
- * Converts a 64-bit float value to a 64-bit hex value
- *
- * Using a locally defined function here to avoid compile time dependency
- * issues.
- * */
-function f64ToHex(number: number): bigint {
-  return new BigUint64Array(new Float64Array([number]).buffer)[0];
-}
-
-/**
  * Converts a 32-bit hex value to a 32-bit float value
  *
  * Using a locally defined function here to avoid compile time dependency
@@ -321,6 +372,53 @@ export const kValue = {
     max: 4294967295,
   },
 
+  // Limits of f64
+  f64: {
+    positive: {
+      min: hexToF64(kBit.f64.positive.min),
+      max: hexToF64(kBit.f64.positive.max),
+      nearest_max: hexToF64(kBit.f64.positive.nearest_max),
+      less_than_one: hexToF64(kBit.f64.positive.less_than_one),
+      pi: {
+        whole: hexToF64(kBit.f64.positive.pi.whole),
+        three_quarters: hexToF64(kBit.f64.positive.pi.three_quarters),
+        half: hexToF64(kBit.f64.positive.pi.half),
+        third: hexToF64(kBit.f64.positive.pi.third),
+        quarter: hexToF64(kBit.f64.positive.pi.quarter),
+        sixth: hexToF64(kBit.f64.positive.pi.sixth),
+      },
+      e: hexToF64(kBit.f64.positive.e),
+    },
+    negative: {
+      max: hexToF64(kBit.f64.negative.max),
+      min: hexToF64(kBit.f64.negative.min),
+      nearest_min: hexToF64(kBit.f64.negative.nearest_min),
+      less_than_one: hexToF64(kBit.f64.negative.less_than_one), // -0.999999940395
+      pi: {
+        whole: hexToF64(kBit.f64.negative.pi.whole),
+        three_quarters: hexToF64(kBit.f64.negative.pi.three_quarters),
+        half: hexToF64(kBit.f64.negative.pi.half),
+        third: hexToF64(kBit.f64.negative.pi.third),
+        quarter: hexToF64(kBit.f64.negative.pi.quarter),
+        sixth: hexToF64(kBit.f64.negative.pi.sixth),
+      },
+    },
+    subnormal: {
+      positive: {
+        min: hexToF64(kBit.f64.subnormal.positive.min),
+        max: hexToF64(kBit.f64.subnormal.positive.max),
+      },
+      negative: {
+        max: hexToF64(kBit.f64.subnormal.negative.max),
+        min: hexToF64(kBit.f64.subnormal.negative.min),
+      },
+    },
+    infinity: {
+      positive: hexToF64(kBit.f64.infinity.positive),
+      negative: hexToF64(kBit.f64.infinity.negative),
+    },
+  },
+
   // Limits of f32
   f32: {
     positive: {
@@ -339,7 +437,7 @@ export const kValue = {
       e: hexToF32(kBit.f32.positive.e),
       first_f64_not_castable: hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
       last_f64_castable: hexToF64(
-        f64ToHex(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+        BigInt(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
@@ -357,7 +455,7 @@ export const kValue = {
       },
       first_f64_not_castable: -(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
       last_f64_castable: -hexToF64(
-        f64ToHex(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+        BigInt(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
@@ -402,7 +500,7 @@ export const kValue = {
       zero: hexToF16(kBit.f16.positive.zero),
       first_f64_not_castable: hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
       last_f64_castable: hexToF64(
-        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+        BigInt(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
@@ -411,7 +509,7 @@ export const kValue = {
       zero: hexToF16(kBit.f16.negative.zero),
       first_f64_not_castable: -(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
       last_f64_castable: -hexToF64(
-        f64ToHex(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+        BigInt(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
