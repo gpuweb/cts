@@ -10,8 +10,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { F32Vector } from '../../../../../util/f32_interval.js';
-import { FP, FPKind } from '../../../../../util/floating_point.js';
+import { FP, FPKind, FPVector } from '../../../../../util/floating_point.js';
 import { cartesianProduct, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
@@ -56,7 +55,7 @@ function makeCase(
   // Stripping the undefined results, since undefined is used to signal that an OOB
   // could occur within the calculation that isn't reflected in the result
   // intervals.
-  const define_results = results.filter((r): r is F32Vector => r !== undefined);
+  const define_results = results.filter((r): r is FPVector => r !== undefined);
 
   return {
     input: [

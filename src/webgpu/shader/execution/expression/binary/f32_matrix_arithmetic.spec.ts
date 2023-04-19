@@ -5,7 +5,6 @@ Execution Tests for the f32 matrix arithmetic binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeMat, TypeVec } from '../../../../util/conversion.js';
-import {} from '../../../../util/f32_interval.js';
 import { FP } from '../../../../util/floating_point.js';
 import {
   sparseF32Range,
