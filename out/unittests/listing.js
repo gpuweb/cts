@@ -27,11 +27,6 @@ export const listing = [
   },
   {
     "file": [
-      "f32_interval"
-    ]
-  },
-  {
-    "file": [
       "floating_point"
     ]
   },

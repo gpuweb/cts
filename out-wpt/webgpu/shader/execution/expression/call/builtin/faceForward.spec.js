@@ -11,7 +11,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-
 import { FP } from '../../../../../util/floating_point.js';
 import { cartesianProduct, sparseVectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
