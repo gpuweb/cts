@@ -223,10 +223,7 @@ g.test('createRenderBundle,at_over')
       testValueName,
       async ({ device, testValue, actualLimit, shouldError }) => {
         const targets = getAttachments(interleaveFormat, testValue);
-        if (
-          targets.length > device.limits.maxColorAttachments ||
-          targets.length > device.limits.maxFragmentCombinedOutputResources
-        ) {
+        if (targets.length > device.limits.maxColorAttachments) {
           return;
         }
 
