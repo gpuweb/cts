@@ -12,11 +12,17 @@ import { makeTestGroup } from '../../../../../../../common/framework/test_group.
 import { keysOf } from '../../../../../../../common/util/data_tables.js';
 import { GPUTest } from '../../../../../../gpu_test.js';
 
-import { dispatchSizes, workgroupSizes, runTest, kMapId } from './harness.js';
+import {
+  dispatchSizes,
+  workgroupSizes,
+  runStorageVariableTest,
+  runWorkgroupVariableTest,
+  kMapId,
+} from './harness.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('and')
+g.test('and_storage')
   .specURL('https://www.w3.org/TR/WGSL/#atomic-rmw')
   .desc(
     `
@@ -55,11 +61,65 @@ fn atomicAnd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       expected[Math.floor(i / 32)] &= ~(1 << i);
     }
 
-    runTest({
+    runStorageVariableTest({
       t,
       workgroupSize: t.params.workgroupSize,
       dispatchSize: t.params.dispatchSize,
       bufferNumElements,
+      initValue,
+      op,
+      expected,
+      extra,
+    });
+  });
+
+g.test('and_workgroup')
+  .specURL('https://www.w3.org/TR/WGSL/#atomic-rmw')
+  .desc(
+    `
+AS is storage or workgroup
+T is i32 or u32
+
+fn atomicAnd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
+`
+  )
+  .params(u =>
+    u
+      .combine('workgroupSize', workgroupSizes)
+      .combine('dispatchSize', dispatchSizes)
+      .combine('mapId', keysOf(kMapId))
+  )
+  .fn(t => {
+    const numInvocations = t.params.workgroupSize;
+
+    // Allocate workgroup array with bitsize of max invocations plus 1 for validation
+    const wgNumElements = Math.max(1, numInvocations / 32) + 1;
+
+    // Start with all bits high, then using atomicAnd to set mapped global id bit off.
+    // Note: Both WGSL and JS will shift left 1 by id modulo 32.
+    const initValue = 0xffffffff;
+
+    const mapId = kMapId[t.params.mapId];
+    const extra = mapId.wgsl(numInvocations); // Defines map_id()
+    const op = `
+      let i = map_id(id);
+      atomicAnd(&wg[i / 32], ~(1u << i))
+    `;
+
+    const expected = new Uint32Array(wgNumElements * t.params.dispatchSize).fill(initValue);
+    for (let d = 0; d < t.params.dispatchSize; ++d) {
+      for (let id = 0; id < numInvocations; ++id) {
+        const wg = expected.subarray(d * wgNumElements);
+        const i = mapId.f(id, numInvocations);
+        wg[Math.floor(i / 32)] &= ~(1 << i);
+      }
+    }
+
+    runWorkgroupVariableTest({
+      t,
+      workgroupSize: t.params.workgroupSize,
+      dispatchSize: t.params.dispatchSize,
+      wgNumElements,
       initValue,
       op,
       expected,
