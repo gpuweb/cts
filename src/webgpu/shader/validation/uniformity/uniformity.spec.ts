@@ -6,20 +6,20 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 export const kCollectiveOps = [
-  { op: 'textureSample',        stage: 'fragment' },
-  { op: 'textureSampleBias',    stage: 'fragment' },
+  { op: 'textureSample', stage: 'fragment' },
+  { op: 'textureSampleBias', stage: 'fragment' },
   { op: 'textureSampleCompare', stage: 'fragment' },
-  { op: 'dpdx',                 stage: 'fragment' },
-  { op: 'dpdxCoarse',           stage: 'fragment' },
-  { op: 'dpdxFine',             stage: 'fragment' },
-  { op: 'dpdy',                 stage: 'fragment' },
-  { op: 'dpdyCoarse',           stage: 'fragment' },
-  { op: 'dpdyFine',             stage: 'fragment' },
-  { op: 'fwidth',               stage: 'fragment' },
-  { op: 'fwidthCoarse',         stage: 'fragment' },
-  { op: 'fwidthFine',           stage: 'fragment' },
-  { op: 'storageBarrier',       stage: 'compute' },
-  { op: 'workgroupBarrier',     stage: 'compute' },
+  { op: 'dpdx', stage: 'fragment' },
+  { op: 'dpdxCoarse', stage: 'fragment' },
+  { op: 'dpdxFine', stage: 'fragment' },
+  { op: 'dpdy', stage: 'fragment' },
+  { op: 'dpdyCoarse', stage: 'fragment' },
+  { op: 'dpdyFine', stage: 'fragment' },
+  { op: 'fwidth', stage: 'fragment' },
+  { op: 'fwidthCoarse', stage: 'fragment' },
+  { op: 'fwidthFine', stage: 'fragment' },
+  { op: 'storageBarrier', stage: 'compute' },
+  { op: 'workgroupBarrier', stage: 'compute' },
   { op: 'workgroupUniformLoad', stage: 'compute' },
 ] as const;
 
@@ -73,7 +73,7 @@ export function generateCondition({
     }
     case 'uniform_const': {
       code += `c`;
-      break
+      break;
     }
     case 'uniform_override': {
       code += `o == 0`;
@@ -187,7 +187,7 @@ export function generateConditionalStatement({
   switch (statement) {
     case 'if': {
       code += `if `;
-      code += generateCondition({condition: condition});
+      code += generateCondition({ condition });
       code += ` {\n`;
       code += generateOp({op: op});
       code += `\n}\n`;
@@ -195,26 +195,26 @@ export function generateConditionalStatement({
     }
     case 'for': {
       code += `for (;`;
-      code += generateCondition({condition: condition});
+      code += generateCondition({ condition });
       code += `;) {\n`;
-      code += generateOp({op: op});
+      code += generateOp({ op });
       code += `\n}\n`;
       break;
     }
     case 'while': {
       code += `while `;
-      code += generateCondition({condition: condition});
+      code += generateCondition({ condition });
       code += ` {\n`;
-      code += generateOp({op: op});
+      code += generateOp({ op });
       code += `\n}\n`;
       break;
     }
     case 'switch': {
       code += `switch u32(`;
-      code += generateCondition({condition: condition});
+      code += generateCondition({ condition });
       code += `) {
         case 0: {\n`;
-      code += generateOp({op: op});
+      code += generateOp({ op });
       code += `\n}\ndefault: { }\n`;
       code += `}\n`;
       break;
@@ -230,7 +230,7 @@ export function generateConditionalStatement({
 
 g.test('basics')
   .desc(
-    `Test collective operations in simple uniform or non-uniform control flow.`
+   `Test collective operations in simple uniform or non-uniform control flow.`
   )
   .params(u =>
     u
@@ -261,13 +261,13 @@ g.test('basics')
  override o : f32;
 `;
 
-    if (t.params.stage == 'compute') {
+    if (t.params.stage === 'compute') {
       code += `var<workgroup> wg : f32;\n`;
       code += ` @workgroup_size(16, 1, 1)`;
     }
     code += `@${t.params.stage}`;
     code += `\nfn main(`;
-    if (t.params.stage == 'compute') {
+    if (t.params.stage === 'compute') {
       code += `@builtin(global_invocation_id) p : vec3<u32>`;
     } else {
       code += `@builtin(position) p : vec4<f32>`;
@@ -290,5 +290,3 @@ g.test('basics')
 
     t.expectCompileResult(t.params.expectation, code);
   });
-      
-
