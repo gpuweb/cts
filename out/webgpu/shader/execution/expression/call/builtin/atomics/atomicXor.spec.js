@@ -17,7 +17,8 @@ dispatchSizes,
 workgroupSizes,
 runStorageVariableTest,
 runWorkgroupVariableTest,
-kMapId } from
+kMapId,
+typedArrayCtor } from
 './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -36,7 +37,8 @@ params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
-combine('mapId', keysOf(kMapId))).
+combine('mapId', keysOf(kMapId)).
+combine('scalarKind', ['u32', 'i32'])).
 
 fn((t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -48,14 +50,15 @@ fn((t) => {
   // Note: Both WGSL and JS will shift left 1 by id modulo 32.
   const initValue = 0b11000011010110100000111100111100;
 
+  const scalarKind = t.params.scalarKind;
   const mapId = kMapId[t.params.mapId];
   const extra = mapId.wgsl(numInvocations); // Defines map_id()
   const op = `
-      let i = map_id(id);
-      atomicXor(&output[i / 32], 1u << i)
+    let i = map_id(u32(id));
+      atomicXor(&output[i / 32], ${scalarKind}(1) << i)
     `;
 
-  const expected = new Uint32Array(bufferNumElements).fill(initValue);
+  const expected = new (typedArrayCtor(scalarKind))(bufferNumElements).fill(initValue);
   for (let id = 0; id < numInvocations; ++id) {
     const i = mapId.f(id, numInvocations);
     expected[Math.floor(i / 32)] ^= 1 << i;
@@ -87,7 +90,8 @@ params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
-combine('mapId', keysOf(kMapId))).
+combine('mapId', keysOf(kMapId)).
+combine('scalarKind', ['u32', 'i32'])).
 
 fn((t) => {
   const numInvocations = t.params.workgroupSize;
@@ -99,14 +103,17 @@ fn((t) => {
   // Note: Both WGSL and JS will shift left 1 by id modulo 32.
   const initValue = 0b11000011010110100000111100111100;
 
+  const scalarKind = t.params.scalarKind;
   const mapId = kMapId[t.params.mapId];
   const extra = mapId.wgsl(numInvocations); // Defines map_id()
   const op = `
-      let i = map_id(id);
-      atomicXor(&wg[i / 32], 1u << i)
+      let i = map_id(u32(id));
+      atomicXor(&wg[i / 32], ${scalarKind}(1) << i)
     `;
 
-  const expected = new Uint32Array(wgNumElements * t.params.dispatchSize).fill(initValue);
+  const expected = new (typedArrayCtor(scalarKind))(wgNumElements * t.params.dispatchSize).fill(
+  initValue);
+
   for (let d = 0; d < t.params.dispatchSize; ++d) {
     for (let id = 0; id < numInvocations; ++id) {
       const wg = expected.subarray(d * wgNumElements);

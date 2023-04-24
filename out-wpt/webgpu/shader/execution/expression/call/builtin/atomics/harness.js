@@ -1,6 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../../../../../../common/util/util.js';
+
 export const workgroupSizes = [1, 2, 32, 64];
 export const dispatchSizes = [1, 4, 8, 16];
 export const kMapId = {
@@ -15,6 +16,18 @@ export const kMapId = {
   },
 };
 
+export function typedArrayCtor(scalarType) {
+  switch (scalarType) {
+    case 'u32':
+      return Uint32Array;
+    case 'i32':
+      return Int32Array;
+    default:
+      assert(false, 'Atomic variables can only by u32 or i32');
+      return Uint8Array;
+  }
+}
+
 export function runStorageVariableTest({
   t,
   workgroupSize, // Workgroup X-size
@@ -27,15 +40,18 @@ export function runStorageVariableTest({
 }) {
   assert(expected.length === bufferNumElements, "'expected' buffer size is incorrect");
 
+  const scalarType = expected instanceof Uint32Array ? 'u32' : 'i32';
+  const arrayType = typedArrayCtor(scalarType);
+
   const wgsl = `
     @group(0) @binding(0)
-    var<storage, read_write> output: array<atomic<u32>>;
+    var<storage, read_write> output: array<atomic<${scalarType}>>;
     
     @compute @workgroup_size(${workgroupSize})
     fn main(
         @builtin(global_invocation_id) global_invocation_id : vec3<u32>,
         ) {
-      let id = global_invocation_id[0];
+      let id = ${scalarType}(global_invocation_id[0]);
       ${op};
     }
     ${extra || ''}
@@ -50,13 +66,13 @@ export function runStorageVariableTest({
   });
 
   const outputBuffer = t.device.createBuffer({
-    size: bufferNumElements * Uint32Array.BYTES_PER_ELEMENT,
+    size: bufferNumElements * arrayType.BYTES_PER_ELEMENT,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     mappedAtCreation: true,
   });
   // Fill with initial value
   t.trackForCleanup(outputBuffer);
-  const data = new Uint32Array(outputBuffer.getMappedRange());
+  const data = new arrayType(outputBuffer.getMappedRange());
   data.fill(initValue);
   outputBuffer.unmap();
 
@@ -89,24 +105,27 @@ export function runWorkgroupVariableTest({
 }) {
   assert(expected.length === wgNumElements * dispatchSize, "'expected' buffer size is incorrect");
 
+  const scalarType = expected instanceof Uint32Array ? 'u32' : 'i32';
+  const arrayType = typedArrayCtor(scalarType);
+
   const wgsl = `
-    var<workgroup> wg: array<atomic<u32>, ${wgNumElements}>;
+    var<workgroup> wg: array<atomic<${scalarType}>, ${wgNumElements}>;
 
     // Result of each workgroup is written to output[workgroup_id.x]
     @group(0) @binding(0)
-    var<storage, read_write> output: array<u32, ${wgNumElements * dispatchSize}>;
+    var<storage, read_write> output: array<${scalarType}, ${wgNumElements * dispatchSize}>;
     
     @compute @workgroup_size(${workgroupSize})
     fn main(
         @builtin(local_invocation_index) local_invocation_index: u32,
         @builtin(workgroup_id) workgroup_id : vec3<u32>
         ) {
-      let id = local_invocation_index;
+      let id = ${scalarType}(local_invocation_index);
 
       // Initialize workgroup array
       if (local_invocation_index == 0) {
         for (var i = 0u; i < ${wgNumElements}; i++) {
-          atomicStore(&wg[i], ${initValue});
+          atomicStore(&wg[i], bitcast<${scalarType}>(${initValue}u));
         }
       }
       workgroupBarrier();
@@ -133,15 +152,9 @@ export function runWorkgroupVariableTest({
   });
 
   const outputBuffer = t.device.createBuffer({
-    size: wgNumElements * dispatchSize * Uint32Array.BYTES_PER_ELEMENT,
+    size: wgNumElements * dispatchSize * arrayType.BYTES_PER_ELEMENT,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    mappedAtCreation: true,
   });
-  // Fill with initial value
-  t.trackForCleanup(outputBuffer);
-  const data = new Uint32Array(outputBuffer.getMappedRange());
-  data.fill(initValue);
-  outputBuffer.unmap();
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
