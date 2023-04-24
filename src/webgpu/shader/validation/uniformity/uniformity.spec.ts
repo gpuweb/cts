@@ -43,9 +43,7 @@ export const kConditions = [
   { cond: 'nonuniform_func_var', expectation: false },
 ] as const;
 
-export function generateCondition({
-  condition
-}: {
+export function generateCondition({ condition }: {
   condition: string;
 }) {
   let code = ``;
@@ -127,9 +125,7 @@ export function generateCondition({
   return code;
 }
 
-export function generateOp({
-  op,
-}: {
+export function generateOp({ op }: {
   op: string;
 }) {
   let code = ``;
@@ -189,7 +185,7 @@ export function generateConditionalStatement({
       code += `if `;
       code += generateCondition({ condition });
       code += ` {\n`;
-      code += generateOp({op: op});
+      code += generateOp({ op });
       code += `\n}\n`;
       break;
     }
@@ -229,19 +225,12 @@ export function generateConditionalStatement({
 }
 
 g.test('basics')
-  .desc(
-   `Test collective operations in simple uniform or non-uniform control flow.`
-  )
+  .desc(`Test collective operations in simple uniform or non-uniform control flow.`)
   .params(u =>
     u
       .combineWithParams(kCollectiveOps)
       .combineWithParams(kConditions)
-      .combine('statement', [
-        'if',
-        'for',
-        'while',
-        'switch',
-      ] as const)
+      .combine('statement', [ 'if', 'for', 'while', 'switch', ] as const)
       .beginSubcases()
   )
   .fn(t => {
