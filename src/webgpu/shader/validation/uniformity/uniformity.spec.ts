@@ -43,9 +43,7 @@ export const kConditions = [
   { cond: 'nonuniform_func_var', expectation: false },
 ] as const;
 
-export function generateCondition({ condition }: {
-  condition: string;
-}) {
+export function generateCondition({ condition }: { condition: string; }) {
   let code = ``;
 
   switch (condition) {
@@ -125,9 +123,7 @@ export function generateCondition({ condition }: {
   return code;
 }
 
-export function generateOp({ op }: {
-  op: string;
-}) {
+export function generateOp({ op }: { op: string; }) {
   let code = ``;
 
   switch (op) {
@@ -230,7 +226,7 @@ g.test('basics')
     u
       .combineWithParams(kCollectiveOps)
       .combineWithParams(kConditions)
-      .combine('statement', [ 'if', 'for', 'while', 'switch', ] as const)
+      .combine('statement', [ 'if', 'for', 'while', 'switch' ] as const)
       .beginSubcases()
   )
   .fn(t => {
