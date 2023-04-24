@@ -18,6 +18,7 @@ import {
   runStorageVariableTest,
   runWorkgroupVariableTest,
   kMapId,
+  typedArrayCtor,
 } from './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -37,6 +38,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
+      .combine('scalarKind', ['u32', 'i32'])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -48,13 +50,14 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     // Note: Both WGSL and JS will shift left 1 by id modulo 32.
     const initValue = 0;
 
+    const scalarKind = t.params.scalarKind;
     const mapId = kMapId[t.params.mapId];
     const extra = mapId.wgsl(numInvocations); // Defines map_id()
     const op = `
-      let i = map_id(id);
-      atomicOr(&output[i / 32], 1u << i)
+    let i = map_id(u32(id));
+      atomicOr(&output[i / 32], ${scalarKind}(1) << i)
     `;
-    const expected = new Uint32Array(bufferNumElements);
+    const expected = new (typedArrayCtor(scalarKind))(bufferNumElements);
     for (let id = 0; id < numInvocations; ++id) {
       const i = mapId.f(id, numInvocations);
       expected[Math.floor(i / 32)] |= 1 << i;
@@ -87,6 +90,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
+      .combine('scalarKind', ['u32', 'i32'])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
@@ -98,13 +102,14 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     // Note: Both WGSL and JS will shift left 1 by id modulo 32.
     const initValue = 0;
 
+    const scalarKind = t.params.scalarKind;
     const mapId = kMapId[t.params.mapId];
     const extra = mapId.wgsl(numInvocations); // Defines map_id()
     const op = `
-      let i = map_id(id);
-      atomicOr(&wg[i / 32], 1u << i)
+    let i = map_id(u32(id));
+      atomicOr(&wg[i / 32], ${scalarKind}(1) << i)
     `;
-    const expected = new Uint32Array(wgNumElements * t.params.dispatchSize);
+    const expected = new (typedArrayCtor(scalarKind))(wgNumElements * t.params.dispatchSize);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       for (let id = 0; id < numInvocations; ++id) {
         const wg = expected.subarray(d * wgNumElements);

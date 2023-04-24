@@ -16,6 +16,7 @@ import {
   workgroupSizes,
   runStorageVariableTest,
   runWorkgroupVariableTest,
+  typedArrayCtor,
 } from './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -30,7 +31,12 @@ T is i32 or u32
 fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 `
   )
-  .params(u => u.combine('workgroupSize', workgroupSizes).combine('dispatchSize', dispatchSizes))
+  .params(u =>
+    u
+      .combine('workgroupSize', workgroupSizes)
+      .combine('dispatchSize', dispatchSizes)
+      .combine('scalarKind', ['u32', 'i32'])
+  )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
     // Allocate one extra element to ensure it doesn't get modified
@@ -38,7 +44,7 @@ fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 
     const initValue = 0;
     const op = `atomicAdd(&output[0], 1)`;
-    const expected = new Uint32Array(bufferNumElements);
+    const expected = new (typedArrayCtor(t.params.scalarKind))(bufferNumElements);
     expected[0] = numInvocations;
 
     runStorageVariableTest({
@@ -62,7 +68,12 @@ T is i32 or u32
 fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 `
   )
-  .params(u => u.combine('workgroupSize', workgroupSizes).combine('dispatchSize', dispatchSizes))
+  .params(u =>
+    u
+      .combine('workgroupSize', workgroupSizes)
+      .combine('dispatchSize', dispatchSizes)
+      .combine('scalarKind', ['u32', 'i32'])
+  )
   .fn(t => {
     // Allocate one extra element to ensure it doesn't get modified
     const wgNumElements = 2;
@@ -70,7 +81,9 @@ fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const initValue = 0;
     const op = `atomicAdd(&wg[0], 1)`;
 
-    const expected = new Uint32Array(wgNumElements * t.params.dispatchSize);
+    const expected = new (typedArrayCtor(t.params.scalarKind))(
+      wgNumElements * t.params.dispatchSize
+    );
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       const wg = expected.subarray(d * wgNumElements);
       wg[0] = t.params.workgroupSize;
