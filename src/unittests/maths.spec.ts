@@ -25,9 +25,9 @@ import {
   fullF16Range,
   fullF32Range,
   fullI32Range,
-  hexToF16,
-  hexToF32,
-  hexToF64,
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU64AsF64,
   lerp,
   linearRange,
   nextAfterF16,
@@ -129,16 +129,16 @@ g.test('nextAfterF64FlushToZero')
       // Normals
       { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.infinity.positive },
       { val: kValue.f64.positive.max, dir: 'negative', result: kValue.f64.positive.nearest_max },
-      { val: kValue.f64.positive.min, dir: 'positive', result: hexToF64(0x0010_0000_0000_0001n ) },
+      { val: kValue.f64.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0010_0000_0000_0001n ) },
       { val: kValue.f64.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f64.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f64.negative.max, dir: 'negative', result: hexToF64(0x8010_0000_0000_0001n) },
+      { val: kValue.f64.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8010_0000_0000_0001n) },
       { val: kValue.f64.negative.min, dir: 'positive', result: kValue.f64.negative.nearest_min },
       { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.infinity.negative },
-      { val: hexToF64(0x0380_0000_0000_0000n), dir: 'positive', result: hexToF64(0x0380_0000_0000_0001n) },
-      { val: hexToF64(0x0380_0000_0000_0000n), dir: 'negative', result: hexToF64(0x037f_ffff_ffff_ffffn) },
-      { val: hexToF64(0x8380_0000_0000_0000n), dir: 'positive', result: hexToF64(0x837f_ffff_ffff_ffffn) },
-      { val: hexToF64(0x8380_0000_0000_0000n), dir: 'negative', result: hexToF64(0x8380_0000_0000_0001n) },
+      { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x0380_0000_0000_0001n) },
+      { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x037f_ffff_ffff_ffffn) },
+      { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x837f_ffff_ffff_ffffn) },
+      { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x8380_0000_0000_0001n) },
     ]
   )
   .fn(t => {
@@ -171,28 +171,28 @@ g.test('nextAfterF64NoFlush')
       { val: -0, dir: 'negative', result: kValue.f64.subnormal.negative.max },
 
       // Subnormals
-      { val: kValue.f64.subnormal.positive.min, dir: 'positive', result: hexToF64(0x0000_0000_0000_0002n) },
+      { val: kValue.f64.subnormal.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0000_0000_0000_0002n) },
       { val: kValue.f64.subnormal.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f64.subnormal.positive.max, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.positive.max, dir: 'negative', result: hexToF64(0x000f_ffff_ffff_fffen) },
-      { val: kValue.f64.subnormal.negative.min, dir: 'positive', result: hexToF64(0x800f_ffff_ffff_fffen) },
+      { val: kValue.f64.subnormal.positive.max, dir: 'negative', result: reinterpretU64AsF64(0x000f_ffff_ffff_fffen) },
+      { val: kValue.f64.subnormal.negative.min, dir: 'positive', result: reinterpretU64AsF64(0x800f_ffff_ffff_fffen) },
       { val: kValue.f64.subnormal.negative.min, dir: 'negative', result: kValue.f64.negative.max },
       { val: kValue.f64.subnormal.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f64.subnormal.negative.max, dir: 'negative', result: hexToF64(0x8000_0000_0000_0002n) },
+      { val: kValue.f64.subnormal.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8000_0000_0000_0002n) },
 
       // Normals
       { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.infinity.positive },
       { val: kValue.f64.positive.max, dir: 'negative', result: kValue.f64.positive.nearest_max },
-      { val: kValue.f64.positive.min, dir: 'positive', result: hexToF64(0x0010_0000_0000_0001n ) },
-      { val: kValue.f64.positive.min, dir: 'negative', result: hexToF64(0x000f_ffff_ffff_ffffn) },
-      { val: kValue.f64.negative.max, dir: 'positive', result: hexToF64(0x800f_ffff_ffff_ffffn) },
-      { val: kValue.f64.negative.max, dir: 'negative', result: hexToF64(0x8010_0000_0000_0001n) },
+      { val: kValue.f64.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0010_0000_0000_0001n ) },
+      { val: kValue.f64.positive.min, dir: 'negative', result: reinterpretU64AsF64(0x000f_ffff_ffff_ffffn) },
+      { val: kValue.f64.negative.max, dir: 'positive', result: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn) },
+      { val: kValue.f64.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8010_0000_0000_0001n) },
       { val: kValue.f64.negative.min, dir: 'positive', result: kValue.f64.negative.nearest_min },
       { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.infinity.negative },
-      { val: hexToF64(0x0380_0000_0000_0000n), dir: 'positive', result: hexToF64(0x0380_0000_0000_0001n) },
-      { val: hexToF64(0x0380_0000_0000_0000n), dir: 'negative', result: hexToF64(0x037f_ffff_ffff_ffffn) },
-      { val: hexToF64(0x8380_0000_0000_0000n), dir: 'positive', result: hexToF64(0x837f_ffff_ffff_ffffn) },
-      { val: hexToF64(0x8380_0000_0000_0000n), dir: 'negative', result: hexToF64(0x8380_0000_0000_0001n) },
+      { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x0380_0000_0000_0001n) },
+      { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x037f_ffff_ffff_ffffn) },
+      { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x837f_ffff_ffff_ffffn) },
+      { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x8380_0000_0000_0001n) },
     ]
   )
   .fn(t => {
@@ -239,22 +239,22 @@ g.test('nextAfterF32FlushToZero')
     // Normals
     { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.infinity.positive },
     { val: kValue.f32.positive.max, dir: 'negative', result: kValue.f32.positive.nearest_max },
-    { val: kValue.f32.positive.min, dir: 'positive', result: hexToF32(0x00800001) },
+    { val: kValue.f32.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00800001) },
     { val: kValue.f32.positive.min, dir: 'negative', result: 0 },
     { val: kValue.f32.negative.max, dir: 'positive', result: 0 },
-    { val: kValue.f32.negative.max, dir: 'negative', result: hexToF32(0x80800001) },
-    { val: kValue.f32.negative.min, dir: 'positive', result: hexToF32(0xff7ffffe) },
+    { val: kValue.f32.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80800001) },
+    { val: kValue.f32.negative.min, dir: 'positive', result: reinterpretU32AsF32(0xff7ffffe) },
     { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.infinity.negative },
-    { val: hexToF32(0x03800000), dir: 'positive', result: hexToF32(0x03800001) },
-    { val: hexToF32(0x03800000), dir: 'negative', result: hexToF32(0x037fffff) },
-    { val: hexToF32(0x83800000), dir: 'positive', result: hexToF32(0x837fffff) },
-    { val: hexToF32(0x83800000), dir: 'negative', result: hexToF32(0x83800001) },
+    { val: reinterpretU32AsF32(0x03800000), dir: 'positive', result: reinterpretU32AsF32(0x03800001) },
+    { val: reinterpretU32AsF32(0x03800000), dir: 'negative', result: reinterpretU32AsF32(0x037fffff) },
+    { val: reinterpretU32AsF32(0x83800000), dir: 'positive', result: reinterpretU32AsF32(0x837fffff) },
+    { val: reinterpretU32AsF32(0x83800000), dir: 'negative', result: reinterpretU32AsF32(0x83800001) },
 
     // Not precisely expressible as f32
-    { val: 0.001, dir: 'positive', result: hexToF32(0x3a83126f) }, // positive normal
-    { val: 0.001, dir: 'negative', result: hexToF32(0x3a83126e) }, // positive normal
-    { val: -0.001, dir: 'positive', result: hexToF32(0xba83126e) }, // negative normal
-    { val: -0.001, dir: 'negative', result: hexToF32(0xba83126f) }, // negative normal
+    { val: 0.001, dir: 'positive', result: reinterpretU32AsF32(0x3a83126f) }, // positive normal
+    { val: 0.001, dir: 'negative', result: reinterpretU32AsF32(0x3a83126e) }, // positive normal
+    { val: -0.001, dir: 'positive', result: reinterpretU32AsF32(0xba83126e) }, // negative normal
+    { val: -0.001, dir: 'negative', result: reinterpretU32AsF32(0xba83126f) }, // negative normal
     { val: 2.82E-40, dir: 'positive', result: kValue.f32.positive.min }, // positive subnormal
     { val: 2.82E-40, dir: 'negative', result: kValue.f32.negative.max }, // positive subnormal
     { val: -2.82E-40, dir: 'positive', result: kValue.f32.positive.min }, // negative subnormal
@@ -291,38 +291,38 @@ g.test('nextAfterF32NoFlush')
     { val: -0, dir: 'negative', result: kValue.f32.subnormal.negative.max },
 
     // Subnormals
-    { val:kValue.f32.subnormal.positive.min, dir: 'positive', result: hexToF32(0x00000002) },
+    { val:kValue.f32.subnormal.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00000002) },
     { val:kValue.f32.subnormal.positive.min, dir: 'negative', result: 0 },
     { val:kValue.f32.subnormal.positive.max, dir: 'positive', result: kValue.f32.positive.min },
-    { val:kValue.f32.subnormal.positive.max, dir: 'negative', result: hexToF32(0x007ffffe) },
-    { val:kValue.f32.subnormal.negative.min, dir: 'positive', result: hexToF32(0x807ffffe) },
+    { val:kValue.f32.subnormal.positive.max, dir: 'negative', result: reinterpretU32AsF32(0x007ffffe) },
+    { val:kValue.f32.subnormal.negative.min, dir: 'positive', result: reinterpretU32AsF32(0x807ffffe) },
     { val:kValue.f32.subnormal.negative.min, dir: 'negative', result: kValue.f32.negative.max },
     { val:kValue.f32.subnormal.negative.max, dir: 'positive', result: 0 },
-    { val:kValue.f32.subnormal.negative.max, dir: 'negative', result: hexToF32(0x80000002) },
+    { val:kValue.f32.subnormal.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80000002) },
 
     // Normals
     { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.infinity.positive },
     { val: kValue.f32.positive.max, dir: 'negative', result: kValue.f32.positive.nearest_max },
-    { val: kValue.f32.positive.min, dir: 'positive', result: hexToF32(0x00800001) },
+    { val: kValue.f32.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00800001) },
     { val: kValue.f32.positive.min, dir: 'negative', result: kValue.f32.subnormal.positive.max },
     { val: kValue.f32.negative.max, dir: 'positive', result: kValue.f32.subnormal.negative.min },
-    { val: kValue.f32.negative.max, dir: 'negative', result: hexToF32(0x80800001) },
+    { val: kValue.f32.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80800001) },
     { val: kValue.f32.negative.min, dir: 'positive', result: kValue.f32.negative.nearest_min },
     { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.infinity.negative },
-    { val: hexToF32(0x03800000), dir: 'positive', result: hexToF32(0x03800001) },
-    { val: hexToF32(0x03800000), dir: 'negative', result: hexToF32(0x037fffff) },
-    { val: hexToF32(0x83800000), dir: 'positive', result: hexToF32(0x837fffff) },
-    { val: hexToF32(0x83800000), dir: 'negative', result: hexToF32(0x83800001) },
+    { val: reinterpretU32AsF32(0x03800000), dir: 'positive', result: reinterpretU32AsF32(0x03800001) },
+    { val: reinterpretU32AsF32(0x03800000), dir: 'negative', result: reinterpretU32AsF32(0x037fffff) },
+    { val: reinterpretU32AsF32(0x83800000), dir: 'positive', result: reinterpretU32AsF32(0x837fffff) },
+    { val: reinterpretU32AsF32(0x83800000), dir: 'negative', result: reinterpretU32AsF32(0x83800001) },
 
     // Not precisely expressible as f32
-    { val: 0.001, dir: 'positive', result: hexToF32(0x3a83126f) }, // positive normal
-    { val: 0.001, dir: 'negative', result: hexToF32(0x3a83126e) }, // positive normal
-    { val: -0.001, dir: 'positive', result: hexToF32(0xba83126e) }, // negative normal
-    { val: -0.001, dir: 'negative', result: hexToF32(0xba83126f) }, // negative normal
-    { val: 2.82E-40, dir: 'positive', result: hexToF32(0x0003121a) }, // positive subnormal
-    { val: 2.82E-40, dir: 'negative', result: hexToF32(0x00031219) }, // positive subnormal
-    { val: -2.82E-40, dir: 'positive', result: hexToF32(0x80031219) }, // negative subnormal
-    { val: -2.82E-40, dir: 'negative', result: hexToF32(0x8003121a) }, // negative subnormal
+    { val: 0.001, dir: 'positive', result: reinterpretU32AsF32(0x3a83126f) }, // positive normal
+    { val: 0.001, dir: 'negative', result: reinterpretU32AsF32(0x3a83126e) }, // positive normal
+    { val: -0.001, dir: 'positive', result: reinterpretU32AsF32(0xba83126e) }, // negative normal
+    { val: -0.001, dir: 'negative', result: reinterpretU32AsF32(0xba83126f) }, // negative normal
+    { val: 2.82E-40, dir: 'positive', result: reinterpretU32AsF32(0x0003121a) }, // positive subnormal
+    { val: 2.82E-40, dir: 'negative', result: reinterpretU32AsF32(0x00031219) }, // positive subnormal
+    { val: -2.82E-40, dir: 'positive', result: reinterpretU32AsF32(0x80031219) }, // negative subnormal
+    { val: -2.82E-40, dir: 'negative', result: reinterpretU32AsF32(0x8003121a) }, // negative subnormal
   ]
   )
   .fn(t => {
@@ -368,23 +368,23 @@ g.test('nextAfterF16FlushToZero')
 
       // Normals
       { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.infinity.positive },
-      { val: kValue.f16.positive.max, dir: 'negative', result: hexToF16(0x7bfe) },
-      { val: kValue.f16.positive.min, dir: 'positive', result: hexToF16(0x0401) },
+      { val: kValue.f16.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x7bfe) },
+      { val: kValue.f16.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0401) },
       { val: kValue.f16.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f16.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f16.negative.max, dir: 'negative', result: hexToF16(0x8401) },
-      { val: kValue.f16.negative.min, dir: 'positive', result: hexToF16(0xfbfe) },
+      { val: kValue.f16.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8401) },
+      { val: kValue.f16.negative.min, dir: 'positive', result: reinterpretU16AsF16(0xfbfe) },
       { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.infinity.negative },
-      { val: hexToF16(0x1380), dir: 'positive', result: hexToF16(0x1381) },
-      { val: hexToF16(0x1380), dir: 'negative', result: hexToF16(0x137f) },
-      { val: hexToF16(0x9380), dir: 'positive', result: hexToF16(0x937f) },
-      { val: hexToF16(0x9380), dir: 'negative', result: hexToF16(0x9381) },
+      { val: reinterpretU16AsF16(0x1380), dir: 'positive', result: reinterpretU16AsF16(0x1381) },
+      { val: reinterpretU16AsF16(0x1380), dir: 'negative', result: reinterpretU16AsF16(0x137f) },
+      { val: reinterpretU16AsF16(0x9380), dir: 'positive', result: reinterpretU16AsF16(0x937f) },
+      { val: reinterpretU16AsF16(0x9380), dir: 'negative', result: reinterpretU16AsF16(0x9381) },
 
       // Not precisely expressible as f16
-      { val: 0.01, dir: 'positive', result: hexToF16(0x211f) }, // positive normal
-      { val: 0.01, dir: 'negative', result: hexToF16(0x211e) }, // positive normal
-      { val: -0.01, dir: 'positive', result: hexToF16(0xa11e) }, // negative normal
-      { val: -0.01, dir: 'negative', result: hexToF16(0xa11f) }, // negative normal
+      { val: 0.01, dir: 'positive', result: reinterpretU16AsF16(0x211f) }, // positive normal
+      { val: 0.01, dir: 'negative', result: reinterpretU16AsF16(0x211e) }, // positive normal
+      { val: -0.01, dir: 'positive', result: reinterpretU16AsF16(0xa11e) }, // negative normal
+      { val: -0.01, dir: 'negative', result: reinterpretU16AsF16(0xa11f) }, // negative normal
       { val: 2.82E-40, dir: 'positive', result: kValue.f16.positive.min }, // positive subnormal
       { val: 2.82E-40, dir: 'negative', result: kValue.f16.negative.max }, // positive subnormal
       { val: -2.82E-40, dir: 'positive', result: kValue.f16.positive.min }, // negative subnormal
@@ -421,34 +421,34 @@ g.test('nextAfterF16NoFlush')
       { val: -0, dir: 'negative', result: kValue.f16.subnormal.negative.max },
 
       // Subnormals
-      { val: kValue.f16.subnormal.positive.min, dir: 'positive', result: hexToF16(0x0002) },
+      { val: kValue.f16.subnormal.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0002) },
       { val: kValue.f16.subnormal.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f16.subnormal.positive.max, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.positive.max, dir: 'negative', result: hexToF16(0x03fe) },
-      { val: kValue.f16.subnormal.negative.min, dir: 'positive', result: hexToF16(0x83fe) },
+      { val: kValue.f16.subnormal.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x03fe) },
+      { val: kValue.f16.subnormal.negative.min, dir: 'positive', result: reinterpretU16AsF16(0x83fe) },
       { val: kValue.f16.subnormal.negative.min, dir: 'negative', result: kValue.f16.negative.max },
       { val: kValue.f16.subnormal.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f16.subnormal.negative.max, dir: 'negative', result: hexToF16(0x8002) },
+      { val: kValue.f16.subnormal.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8002) },
 
       // Normals
       { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.infinity.positive },
-      { val: kValue.f16.positive.max, dir: 'negative', result: hexToF16(0x7bfe) },
-      { val: kValue.f16.positive.min, dir: 'positive', result: hexToF16(0x0401) },
+      { val: kValue.f16.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x7bfe) },
+      { val: kValue.f16.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0401) },
       { val: kValue.f16.positive.min, dir: 'negative', result: kValue.f16.subnormal.positive.max },
       { val: kValue.f16.negative.max, dir: 'positive', result: kValue.f16.subnormal.negative.min },
-      { val: kValue.f16.negative.max, dir: 'negative', result: hexToF16(0x8401) },
-      { val: kValue.f16.negative.min, dir: 'positive', result: hexToF16(0xfbfe) },
+      { val: kValue.f16.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8401) },
+      { val: kValue.f16.negative.min, dir: 'positive', result: reinterpretU16AsF16(0xfbfe) },
       { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.infinity.negative },
-      { val: hexToF16(0x1380), dir: 'positive', result: hexToF16(0x1381) },
-      { val: hexToF16(0x1380), dir: 'negative', result: hexToF16(0x137f) },
-      { val: hexToF16(0x9380), dir: 'positive', result: hexToF16(0x937f) },
-      { val: hexToF16(0x9380), dir: 'negative', result: hexToF16(0x9381) },
+      { val: reinterpretU16AsF16(0x1380), dir: 'positive', result: reinterpretU16AsF16(0x1381) },
+      { val: reinterpretU16AsF16(0x1380), dir: 'negative', result: reinterpretU16AsF16(0x137f) },
+      { val: reinterpretU16AsF16(0x9380), dir: 'positive', result: reinterpretU16AsF16(0x937f) },
+      { val: reinterpretU16AsF16(0x9380), dir: 'negative', result: reinterpretU16AsF16(0x9381) },
 
       // Not precisely expressible as f16
-      { val: 0.01, dir: 'positive', result: hexToF16(0x211f) }, // positive normal
-      { val: 0.01, dir: 'negative', result: hexToF16(0x211e) }, // positive normal
-      { val: -0.01, dir: 'positive', result: hexToF16(0xa11e) }, // negative normal
-      { val: -0.01, dir: 'negative', result: hexToF16(0xa11f) }, // negative normal
+      { val: 0.01, dir: 'positive', result: reinterpretU16AsF16(0x211f) }, // positive normal
+      { val: 0.01, dir: 'negative', result: reinterpretU16AsF16(0x211e) }, // positive normal
+      { val: -0.01, dir: 'positive', result: reinterpretU16AsF16(0xa11e) }, // negative normal
+      { val: -0.01, dir: 'negative', result: reinterpretU16AsF16(0xa11f) }, // negative normal
       { val: 2.82E-40, dir: 'positive', result: kValue.f16.subnormal.positive.min }, // positive subnormal
       { val: 2.82E-40, dir: 'negative', result: 0 }, // positive subnormal
       { val: -2.82E-40, dir: 'positive', result: 0 }, // negative subnormal
@@ -477,32 +477,44 @@ g.test('oneULPF64FlushToZero')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
 
     // Zeroes
-    { target: +0, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: -0, expect: hexToF64(0x0010_0000_0000_0000n) },
+    { target: +0, expect: reinterpretU64AsF64(0x0010_0000_0000_0000n) },
+    { target: -0, expect: reinterpretU64AsF64(0x0010_0000_0000_0000n) },
 
     // Subnormals
-    { target: kValue.f64.subnormal.positive.min, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.positive.max, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.negative.min, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.negative.max, expect: hexToF64(0x0010_0000_0000_0000n) },
+    {
+      target: kValue.f64.subnormal.positive.min,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.positive.max,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.min,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.max,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
 
     // Normals
-    { target: kValue.f64.positive.min, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: 1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: 2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: 4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: 1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.positive.max, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: kValue.f64.negative.max, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: -1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: -2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: -4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: -1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.negative.min, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.positive.min, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: 1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: 2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: 4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: 1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.positive.max, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.negative.max, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: -1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: -2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: -4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: -1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.negative.min, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
   ])
   .fn(t => {
     const target = t.params.target;
@@ -518,32 +530,44 @@ g.test('oneULPF64NoFlush')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
 
     // Zeroes
-    { target: +0, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: -0, expect: hexToF64(0x0000_0000_0000_0001n) },
+    { target: +0, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: -0, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
 
     // Subnormals
-    { target: kValue.f64.subnormal.positive.min, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: kValue.f64.subnormal.positive.max, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: kValue.f64.subnormal.negative.min, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: kValue.f64.subnormal.negative.max, expect: hexToF64(0x0000_0000_0000_0001n) },
+    {
+      target: kValue.f64.subnormal.positive.min,
+      expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
+    },
+    {
+      target: kValue.f64.subnormal.positive.max,
+      expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.min,
+      expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.max,
+      expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
+    },
 
     // Normals
-    { target: kValue.f64.positive.min, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: 1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: 2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: 4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: 1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.positive.max, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: kValue.f64.negative.max, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: -1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: -2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: -4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: -1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.negative.min, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.positive.min, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: 1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: 2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: 4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: 1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.positive.max, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.negative.max, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: -1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: -2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: -4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: -1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.negative.min, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
   ])
   .fn(t => {
     const target = t.params.target;
@@ -559,32 +583,44 @@ g.test('oneULPF64')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
 
     // Zeroes
-    { target: +0, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: -0, expect: hexToF64(0x0010_0000_0000_0000n) },
+    { target: +0, expect: reinterpretU64AsF64(0x0010_0000_0000_0000n) },
+    { target: -0, expect: reinterpretU64AsF64(0x0010_0000_0000_0000n) },
 
     // Subnormals
-    { target: kValue.f64.subnormal.positive.min, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.positive.max, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.negative.min, expect: hexToF64(0x0010_0000_0000_0000n) },
-    { target: kValue.f64.subnormal.negative.max, expect: hexToF64(0x0010_0000_0000_0000n) },
+    {
+      target: kValue.f64.subnormal.positive.min,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.positive.max,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.min,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
+    {
+      target: kValue.f64.subnormal.negative.max,
+      expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
+    },
 
     // Normals
-    { target: kValue.f64.positive.min, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: 1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: 2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: 4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: 1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.positive.max, expect: hexToF64(0x7ca0_0000_0000_0000n) },
-    { target: kValue.f64.negative.max, expect: hexToF64(0x0000_0000_0000_0001n) },
-    { target: -1, expect: hexToF64(0x3ca0_0000_0000_0000n) },
-    { target: -2, expect: hexToF64(0x3cb0_0000_0000_0000n) },
-    { target: -4, expect: hexToF64(0x3cc0_0000_0000_0000n) },
-    { target: -1000000, expect: hexToF64(0x3de0_0000_0000_0000n) },
-    { target: kValue.f64.negative.min, expect: hexToF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.positive.min, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: 1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: 2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: 4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: 1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.positive.max, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
+    { target: kValue.f64.negative.max, expect: reinterpretU64AsF64(0x0000_0000_0000_0001n) },
+    { target: -1, expect: reinterpretU64AsF64(0x3ca0_0000_0000_0000n) },
+    { target: -2, expect: reinterpretU64AsF64(0x3cb0_0000_0000_0000n) },
+    { target: -4, expect: reinterpretU64AsF64(0x3cc0_0000_0000_0000n) },
+    { target: -1000000, expect: reinterpretU64AsF64(0x3de0_0000_0000_0000n) },
+    { target: kValue.f64.negative.min, expect: reinterpretU64AsF64(0x7ca0_0000_0000_0000n) },
   ])
   .fn(t => {
     const target = t.params.target;
@@ -600,40 +636,40 @@ g.test('oneULPF32FlushToZero')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF32(0x73800000) },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
 
     // Zeroes
-    { target: +0, expect: hexToF32(0x00800000) },
-    { target: -0, expect: hexToF32(0x00800000) },
+    { target: +0, expect: reinterpretU32AsF32(0x00800000) },
+    { target: -0, expect: reinterpretU32AsF32(0x00800000) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.positive.min, expect: hexToF32(0x00800000) },
-    { target: 2.82e-40, expect: hexToF32(0x00800000) }, // positive subnormal
-    { target: kValue.f32.subnormal.positive.max, expect: hexToF32(0x00800000) },
-    { target: kValue.f32.subnormal.negative.min, expect: hexToF32(0x00800000) },
-    { target: -2.82e-40, expect: hexToF32(0x00800000) }, // negative subnormal
-    { target: kValue.f32.subnormal.negative.max, expect: hexToF32(0x00800000) },
+    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: 2.82e-40, expect: reinterpretU32AsF32(0x00800000) }, // positive subnormal
+    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: -2.82e-40, expect: reinterpretU32AsF32(0x00800000) }, // negative subnormal
+    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00800000) },
 
     // Normals
-    { target: kValue.f32.positive.min, expect: hexToF32(0x00000001) },
-    { target: 1, expect: hexToF32(0x33800000) },
-    { target: 2, expect: hexToF32(0x34000000) },
-    { target: 4, expect: hexToF32(0x34800000) },
-    { target: 1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.positive.max, expect: hexToF32(0x73800000) },
-    { target: kValue.f32.negative.max, expect: hexToF32(0x00000001) },
-    { target: -1, expect: hexToF32(0x33800000) },
-    { target: -2, expect: hexToF32(0x34000000) },
-    { target: -4, expect: hexToF32(0x34800000) },
-    { target: -1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.negative.min, expect: hexToF32(0x73800000) },
+    { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: 1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: 2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: 4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: 1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.positive.max, expect: reinterpretU32AsF32(0x73800000) },
+    { target: kValue.f32.negative.max, expect: reinterpretU32AsF32(0x00000001) },
+    { target: -1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: -2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: -4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: -1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.negative.min, expect: reinterpretU32AsF32(0x73800000) },
 
     // No precise f32 value
-    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
-    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
-    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
-    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
+    { target: 0.001, expect: reinterpretU32AsF32(0x2f000000) }, // positive normal
+    { target: -0.001, expect: reinterpretU32AsF32(0x2f000000) }, // negative normal
+    { target: 1e40, expect: reinterpretU32AsF32(0x73800000) }, // positive out of range
+    { target: -1e40, expect: reinterpretU32AsF32(0x73800000) }, // negative out of range
   ])
   .fn(t => {
     const target = t.params.target;
@@ -649,40 +685,40 @@ g.test('oneULPF32NoFlush')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF32(0x73800000) },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
 
     // Zeroes
-    { target: +0, expect: hexToF32(0x00000001) },
-    { target: -0, expect: hexToF32(0x00000001) },
+    { target: +0, expect: reinterpretU32AsF32(0x00000001) },
+    { target: -0, expect: reinterpretU32AsF32(0x00000001) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.positive.min, expect: hexToF32(0x00000001) },
-    { target: -2.82e-40, expect: hexToF32(0x00000001) }, // negative subnormal
-    { target: kValue.f32.subnormal.positive.max, expect: hexToF32(0x00000001) },
-    { target: kValue.f32.subnormal.negative.min, expect: hexToF32(0x00000001) },
-    { target: 2.82e-40, expect: hexToF32(0x00000001) }, // positive subnormal
-    { target: kValue.f32.subnormal.negative.max, expect: hexToF32(0x00000001) },
+    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: -2.82e-40, expect: reinterpretU32AsF32(0x00000001) }, // negative subnormal
+    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00000001) },
+    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: 2.82e-40, expect: reinterpretU32AsF32(0x00000001) }, // positive subnormal
+    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00000001) },
 
     // Normals
-    { target: kValue.f32.positive.min, expect: hexToF32(0x00000001) },
-    { target: 1, expect: hexToF32(0x33800000) },
-    { target: 2, expect: hexToF32(0x34000000) },
-    { target: 4, expect: hexToF32(0x34800000) },
-    { target: 1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.positive.max, expect: hexToF32(0x73800000) },
-    { target: kValue.f32.negative.max, expect: hexToF32(0x00000001) },
-    { target: -1, expect: hexToF32(0x33800000) },
-    { target: -2, expect: hexToF32(0x34000000) },
-    { target: -4, expect: hexToF32(0x34800000) },
-    { target: -1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.negative.min, expect: hexToF32(0x73800000) },
+    { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: 1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: 2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: 4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: 1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.positive.max, expect: reinterpretU32AsF32(0x73800000) },
+    { target: kValue.f32.negative.max, expect: reinterpretU32AsF32(0x00000001) },
+    { target: -1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: -2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: -4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: -1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.negative.min, expect: reinterpretU32AsF32(0x73800000) },
 
     // No precise f32 value
-    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
-    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
-    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
-    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
+    { target: 0.001, expect: reinterpretU32AsF32(0x2f000000) }, // positive normal
+    { target: -0.001, expect: reinterpretU32AsF32(0x2f000000) }, // negative normal
+    { target: 1e40, expect: reinterpretU32AsF32(0x73800000) }, // positive out of range
+    { target: -1e40, expect: reinterpretU32AsF32(0x73800000) }, // negative out of range
   ])
   .fn(t => {
     const target = t.params.target;
@@ -698,40 +734,40 @@ g.test('oneULPF32')
   .paramsSimple<OneULPCase>([
     // Edge Cases
     { target: Number.NaN, expect: Number.NaN },
-    { target: Number.NEGATIVE_INFINITY, expect: hexToF32(0x73800000) },
-    { target: Number.POSITIVE_INFINITY, expect: hexToF32(0x73800000) },
+    { target: Number.NEGATIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
+    { target: Number.POSITIVE_INFINITY, expect: reinterpretU32AsF32(0x73800000) },
 
     // Zeroes
-    { target: +0, expect: hexToF32(0x00800000) },
-    { target: -0, expect: hexToF32(0x00800000) },
+    { target: +0, expect: reinterpretU32AsF32(0x00800000) },
+    { target: -0, expect: reinterpretU32AsF32(0x00800000) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.negative.max, expect: hexToF32(0x00800000) },
-    { target: -2.82e-40, expect: hexToF32(0x00800000) },
-    { target: kValue.f32.subnormal.negative.min, expect: hexToF32(0x00800000) },
-    { target: kValue.f32.subnormal.positive.max, expect: hexToF32(0x00800000) },
-    { target: 2.82e-40, expect: hexToF32(0x00800000) },
-    { target: kValue.f32.subnormal.positive.min, expect: hexToF32(0x00800000) },
+    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: -2.82e-40, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: 2.82e-40, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00800000) },
 
     // Normals
-    { target: kValue.f32.positive.min, expect: hexToF32(0x00000001) },
-    { target: 1, expect: hexToF32(0x33800000) },
-    { target: 2, expect: hexToF32(0x34000000) },
-    { target: 4, expect: hexToF32(0x34800000) },
-    { target: 1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.positive.max, expect: hexToF32(0x73800000) },
-    { target: kValue.f32.negative.max, expect: hexToF32(0x000000001) },
-    { target: -1, expect: hexToF32(0x33800000) },
-    { target: -2, expect: hexToF32(0x34000000) },
-    { target: -4, expect: hexToF32(0x34800000) },
-    { target: -1000000, expect: hexToF32(0x3d800000) },
-    { target: kValue.f32.negative.min, expect: hexToF32(0x73800000) },
+    { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: 1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: 2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: 4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: 1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.positive.max, expect: reinterpretU32AsF32(0x73800000) },
+    { target: kValue.f32.negative.max, expect: reinterpretU32AsF32(0x000000001) },
+    { target: -1, expect: reinterpretU32AsF32(0x33800000) },
+    { target: -2, expect: reinterpretU32AsF32(0x34000000) },
+    { target: -4, expect: reinterpretU32AsF32(0x34800000) },
+    { target: -1000000, expect: reinterpretU32AsF32(0x3d800000) },
+    { target: kValue.f32.negative.min, expect: reinterpretU32AsF32(0x73800000) },
 
     // No precise f32 value
-    { target: -0.001, expect: hexToF32(0x2f000000) }, // negative normal
-    { target: -1e40, expect: hexToF32(0x73800000) }, // negative out of range
-    { target: 0.001, expect: hexToF32(0x2f000000) }, // positive normal
-    { target: 1e40, expect: hexToF32(0x73800000) }, // positive out of range
+    { target: -0.001, expect: reinterpretU32AsF32(0x2f000000) }, // negative normal
+    { target: -1e40, expect: reinterpretU32AsF32(0x73800000) }, // negative out of range
+    { target: 0.001, expect: reinterpretU32AsF32(0x2f000000) }, // positive normal
+    { target: 1e40, expect: reinterpretU32AsF32(0x73800000) }, // positive out of range
   ])
   .fn(t => {
     const target = t.params.target;
@@ -765,29 +801,29 @@ g.test('correctlyRoundedF32')
       { value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
 
       // 32-bit normals
       { value: 0, expected: [0] },
       { value: kValue.f32.positive.min, expected: [kValue.f32.positive.min] },
       { value: kValue.f32.negative.max, expected: [kValue.f32.negative.max] },
-      { value: hexToF32(0x03800000), expected: [hexToF32(0x03800000)] },
-      { value: hexToF32(0x03800001), expected: [hexToF32(0x03800001)] },
-      { value: hexToF32(0x83800000), expected: [hexToF32(0x83800000)] },
-      { value: hexToF32(0x83800001), expected: [hexToF32(0x83800001)] },
+      { value: reinterpretU32AsF32(0x03800000), expected: [reinterpretU32AsF32(0x03800000)] },
+      { value: reinterpretU32AsF32(0x03800001), expected: [reinterpretU32AsF32(0x03800001)] },
+      { value: reinterpretU32AsF32(0x83800000), expected: [reinterpretU32AsF32(0x83800000)] },
+      { value: reinterpretU32AsF32(0x83800001), expected: [reinterpretU32AsF32(0x83800001)] },
 
       // 64-bit normals
-      { value: hexToF64(0x3ff0_0000_0000_0001n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff0_0000_0000_0002n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff0_0010_0000_0010n), expected: [hexToF32(0x3f800080), hexToF32(0x3f800081)] },
-      { value: hexToF64(0x3ff0_0020_0000_0020n), expected: [hexToF32(0x3f800100), hexToF32(0x3f800101)] },
-      { value: hexToF64(0xbff0_0000_0000_0001n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff0_0000_0000_0002n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff0_0010_0000_0010n), expected: [hexToF32(0xbf800081), hexToF32(0xbf800080)] },
-      { value: hexToF64(0xbff0_0020_0000_0020n), expected: [hexToF32(0xbf800101), hexToF32(0xbf800100)] },
+      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+      { value: reinterpretU64AsF64(0x3ff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0x3f800080), reinterpretU32AsF32(0x3f800081)] },
+      { value: reinterpretU64AsF64(0x3ff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0x3f800100), reinterpretU32AsF32(0x3f800101)] },
+      { value: reinterpretU64AsF64(0xbff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+      { value: reinterpretU64AsF64(0xbff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+      { value: reinterpretU64AsF64(0xbff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0xbf800081), reinterpretU32AsF32(0xbf800080)] },
+      { value: reinterpretU64AsF64(0xbff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0xbf800101), reinterpretU32AsF32(0xbf800100)] },
     ]
   )
   .fn(t => {
@@ -829,16 +865,16 @@ g.test('correctlyRoundedF16')
       { value: 0, expected: [0] },
       { value: kValue.f16.positive.min, expected: [kValue.f16.positive.min] },
       { value: kValue.f16.negative.max, expected: [kValue.f16.negative.max] },
-      { value: hexToF16(0x1380), expected: [hexToF16(0x1380)] },
-      { value: hexToF16(0x1381), expected: [hexToF16(0x1381)] },
-      { value: hexToF16(0x9380), expected: [hexToF16(0x9380)] },
-      { value: hexToF16(0x9381), expected: [hexToF16(0x9381)] },
+      { value: reinterpretU16AsF16(0x1380), expected: [reinterpretU16AsF16(0x1380)] },
+      { value: reinterpretU16AsF16(0x1381), expected: [reinterpretU16AsF16(0x1381)] },
+      { value: reinterpretU16AsF16(0x9380), expected: [reinterpretU16AsF16(0x9380)] },
+      { value: reinterpretU16AsF16(0x9381), expected: [reinterpretU16AsF16(0x9381)] },
 
       // 32-bit normals
-      { value: hexToF32(0x3a700001), expected: [hexToF16(0x1380), hexToF16(0x1381)] },
-      { value: hexToF32(0x3a700002), expected: [hexToF16(0x1380), hexToF16(0x1381)] },
-      { value: hexToF32(0xba700001), expected: [hexToF16(0x9381), hexToF16(0x9380)] },
-      { value: hexToF32(0xba700002), expected: [hexToF16(0x9381), hexToF16(0x9380)] },
+      { value: reinterpretU32AsF32(0x3a700001), expected: [reinterpretU16AsF16(0x1380), reinterpretU16AsF16(0x1381)] },
+      { value: reinterpretU32AsF32(0x3a700002), expected: [reinterpretU16AsF16(0x1380), reinterpretU16AsF16(0x1381)] },
+      { value: reinterpretU32AsF32(0xba700001), expected: [reinterpretU16AsF16(0x9381), reinterpretU16AsF16(0x9380)] },
+      { value: reinterpretU32AsF32(0xba700002), expected: [reinterpretU16AsF16(0x9381), reinterpretU16AsF16(0x9380)] },
     ]
   )
   .fn(t => {
