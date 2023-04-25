@@ -933,6 +933,22 @@ export const True = bool(true);
 /** A 'false' literal value */
 export const False = bool(false);
 
+// Encoding to u32s, instead of BigInt, for serialization
+export function reinterpretF64AsU32s(f64: number): [number, number] {
+  const array = new Float64Array(1);
+  array[0] = f64;
+  const u32s = new Uint32Array(array.buffer);
+  return [u32s[0], u32s[1]];
+}
+
+// De-encoding from u32s, instead of BigInt, for serialization
+export function reinterpretU32sAsF64(u32s: [number, number]): number {
+  const array = new Uint32Array(2);
+  array[0] = u32s[0];
+  array[1] = u32s[1];
+  return new Float64Array(array.buffer)[0];
+}
+
 export function reinterpretF32AsU32(f32: number): number {
   const array = new Float32Array(1);
   array[0] = f32;
