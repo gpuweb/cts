@@ -1,8 +1,8 @@
 export const description = `Validation tests for uniformity analysis`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ShaderValidationTest } from '../shader_validation_test.js';
 import { unreachable } from '../../../../common/util/util.js';
+import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
@@ -44,7 +44,7 @@ const kConditions = [
   { cond: 'nonuniform_func_var', expectation: false },
 ];
 
-function generateCondition(condition : string) : string {
+function generateCondition(condition: string): string {
   switch (condition) {
     case 'uniform_storage_ro': {
       return `ro_buffer[0] == 0`;
@@ -103,7 +103,7 @@ function generateCondition(condition : string) : string {
   }
 }
 
-function generateOp(op : string ) : string {
+function generateOp(op: string): string {
   switch (op) {
     case 'textureSample': {
       return `let x = ${op}(tex, s, vec2(0,0));\n`;
@@ -138,12 +138,8 @@ function generateOp(op : string ) : string {
   }
 }
 
-function generateConditionalStatement(
-  statement: string,
-  condition: string,
-  op: string
-) : string {
-  let code = ``;
+function generateConditionalStatement(statement: string, condition: string, op: string): string {
+  const code = ``;
   switch (statement) {
     case 'if': {
       return `if ${generateCondition(condition)} {
@@ -225,11 +221,7 @@ g.test('basics')
     `;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement(
-      t.params.statement,
-      t.params.cond,
-      t.params.op,
-    );
+    code += generateConditionalStatement(t.params.statement, t.params.cond, t.params.op);
 
     code += `\n}\n`;
 
