@@ -2,10 +2,11 @@ export const description = `Validation tests for uniformity analysis`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
+import { unreachable } from '../../../../common/util/util.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-export const kCollectiveOps = [
+const kCollectiveOps = [
   { op: 'textureSample', stage: 'fragment' },
   { op: 'textureSampleBias', stage: 'fragment' },
   { op: 'textureSampleCompare', stage: 'fragment' },
@@ -21,9 +22,9 @@ export const kCollectiveOps = [
   { op: 'storageBarrier', stage: 'compute' },
   { op: 'workgroupBarrier', stage: 'compute' },
   { op: 'workgroupUniformLoad', stage: 'compute' },
-] as const;
+];
 
-export const kConditions = [
+const kConditions = [
   { cond: 'uniform_storage_ro', expectation: true },
   { cond: 'nonuniform_storage_ro', expectation: false },
   { cond: 'nonuniform_storage_rw', expectation: false },
@@ -41,112 +42,84 @@ export const kConditions = [
   { cond: 'nonuniform_and2', expectation: false },
   { cond: 'uniform_func_var', expectation: true },
   { cond: 'nonuniform_func_var', expectation: false },
-] as const;
+];
 
-export function generateCondition({ condition }: { condition: string }) {
-  let code = ``;
-
+function generateCondition(condition : string) : string {
   switch (condition) {
     case 'uniform_storage_ro': {
-      code += `ro_buffer[0] == 0`;
-      break;
+      return `ro_buffer[0] == 0`;
     }
     case 'nonuniform_storage_ro': {
-      code += `ro_buffer[priv_var[0]] == 0`;
-      break;
+      return `ro_buffer[priv_var[0]] == 0`;
     }
     case 'nonuniform_storage_rw': {
-      code += `rw_buffer[0] == 0`;
-      break;
+      return `rw_buffer[0] == 0`;
     }
     case 'nonuniform_builtin': {
-      code += `p.x == 0`;
-      break;
+      return `p.x == 0`;
     }
     case 'uniform_literal': {
-      code += `false`;
-      break;
+      return `false`;
     }
     case 'uniform_const': {
-      code += `c`;
-      break;
+      return `c`;
     }
     case 'uniform_override': {
-      code += `o == 0`;
-      break;
+      return `o == 0`;
     }
     case 'uniform_let': {
-      code += `u_let == 0`;
-      break;
+      return `u_let == 0`;
     }
     case 'nonuniform_let': {
-      code += `n_let == 0`;
-      break;
+      return `n_let == 0`;
     }
     case 'uniform_or': {
-      code += `u_let == 0 || uniform_buffer.y > 1`;
-      break;
+      return `u_let == 0 || uniform_buffer.y > 1`;
     }
     case 'nonuniform_or1': {
-      code += `u_let == 0 || n_let == 0`;
-      break;
+      return `u_let == 0 || n_let == 0`;
     }
     case 'nonuniform_or2': {
-      code += `n_let == 0 || u_let == 0`;
-      break;
+      return `n_let == 0 || u_let == 0`;
     }
     case 'uniform_and': {
-      code += `u_let == 0 && uniform_buffer.y > 1`;
-      break;
+      return `u_let == 0 && uniform_buffer.y > 1`;
     }
     case 'nonuniform_and1': {
-      code += `u_let == 0 && n_let == 0`;
-      break;
+      return `u_let == 0 && n_let == 0`;
     }
     case 'nonuniform_and2': {
-      code += `n_let == 0 && u_let == 0`;
-      break;
+      return `n_let == 0 && u_let == 0`;
     }
     case 'uniform_func_var': {
-      code += `u_f == 0`;
-      break;
+      return `u_f == 0`;
     }
     case 'nonuniform_func_var': {
-      code += `n_f == 0`;
-      break;
+      return `n_f == 0`;
     }
     default: {
-      break;
+      unreachable(`Unhandled condition`);
     }
   }
-
-  return code;
 }
 
-export function generateOp({ op }: { op: string }) {
-  let code = ``;
-
+function generateOp(op : string ) : string {
   switch (op) {
     case 'textureSample': {
-      code += `let x = ${op}(tex, s, vec2(0,0));\n`;
-      break;
+      return `let x = ${op}(tex, s, vec2(0,0));\n`;
     }
     case 'textureSampleBias': {
-      code += `let x = ${op}(tex, s, vec2(0,0), 0);\n`;
-      break;
+      return `let x = ${op}(tex, s, vec2(0,0), 0);\n`;
     }
     case 'textureSampleCompare': {
-      code += `let x = ${op}(tex_depth, s_comp, vec2(0,0), 0);\n`;
-      break;
+      return `let x = ${op}(tex_depth, s_comp, vec2(0,0), 0);\n`;
     }
     case 'storageBarrier':
     case 'workgroupBarrier': {
-      code += `${op}();\n`;
-      break;
+      return `${op}();\n`;
     }
     case 'workgroupUniformLoad': {
-      code += `let x = ${op}(&wg);`;
-      break;
+      return `let x = ${op}(&wg);`;
     }
     case 'dpdx':
     case 'dpdxCoarse':
@@ -156,64 +129,51 @@ export function generateOp({ op }: { op: string }) {
     case 'dpdyFine':
     case 'fwidth':
     case 'fwidthCoarse':
-    case 'fwidthFine':
+    case 'fwidthFine': {
+      return `let x = ${op}(0);\n`;
+    }
     default: {
-      code += `let x = ${op}(0);\n`;
-      break;
+      unreachable(`Unhandled op`);
     }
   }
-
-  return code;
 }
 
-export function generateConditionalStatement({
-  statement,
-  condition,
-  op,
-}: {
-  statement: string;
-  condition: string;
-  op: string;
-}) {
+function generateConditionalStatement(
+  statement: string,
+  condition: string,
+  op: string
+) : string {
   let code = ``;
   switch (statement) {
     case 'if': {
-      code += `if `;
-      code += generateCondition({ condition });
-      code += ` {\n`;
-      code += generateOp({ op });
-      code += `\n}\n`;
-      break;
+      return `if ${generateCondition(condition)} {
+        ${generateOp(op)};
+      }
+      `;
     }
     case 'for': {
-      code += `for (;`;
-      code += generateCondition({ condition });
-      code += `;) {\n`;
-      code += generateOp({ op });
-      code += `\n}\n`;
-      break;
+      return `for (; ${generateCondition(condition)};) {
+        ${generateOp(op)};
+      }
+      `;
     }
     case 'while': {
-      code += `while `;
-      code += generateCondition({ condition });
-      code += ` {\n`;
-      code += generateOp({ op });
-      code += `\n}\n`;
-      break;
+      return `while ${generateCondition(condition)} {
+        ${generateOp(op)};
+      }
+      `;
     }
     case 'switch': {
-      code += `switch u32(`;
-      code += generateCondition({ condition });
-      code += `) {
-        case 0: {\n`;
-      code += generateOp({ op });
-      code += `\n}\ndefault: { }\n`;
-      code += `}\n`;
-      break;
+      return `switch u32(${generateCondition(condition)}) {
+        case 0: {
+          ${generateOp(op)};
+        }
+        default: { }
+      }
+      `;
     }
-
     default: {
-      break;
+      unreachable(`Unhandled statement`);
     }
   }
 
@@ -265,11 +225,11 @@ g.test('basics')
     `;
 
     // Simple control statement containing the op.
-    code += generateConditionalStatement({
-      statement: t.params.statement,
-      condition: t.params.cond,
-      op: t.params.op,
-    });
+    code += generateConditionalStatement(
+      t.params.statement,
+      t.params.cond,
+      t.params.op,
+    );
 
     code += `\n}\n`;
 
