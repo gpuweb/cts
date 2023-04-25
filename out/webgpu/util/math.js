@@ -34,6 +34,16 @@ export function clamp(n, { min, max }) {
   return Math.min(Math.max(n, min), max);
 }
 
+/** @returns 0 if |val| is a subnormal f64 number, otherwise returns |val| */
+export function flushSubnormalNumberF64(val) {
+  return isSubnormalNumberF64(val) ? 0 : val;
+}
+
+/** @returns if number is within subnormal range of f64 */
+export function isSubnormalNumberF64(n) {
+  return n > kValue.f64.negative.max && n < kValue.f64.positive.min;
+}
+
 /** @returns 0 if |val| is a subnormal f32 number, otherwise returns |val| */
 export function flushSubnormalNumberF32(val) {
   return isSubnormalNumberF32(val) ? 0 : val;
@@ -74,11 +84,84 @@ export function isFiniteF16(n) {
  * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
  * converting between numeric formats
  *
+ * Usage of a once-allocated pattern like this makes nextAfterF64 non-reentrant,
+ * so cannot call itself directly or indirectly.
+ */
+const nextAfterF64Data = new ArrayBuffer(8);
+const nextAfterF64Int = new BigUint64Array(nextAfterF64Data);
+const nextAfterF64Float = new Float64Array(nextAfterF64Data);
+
+/**
+ * @returns the next f64 value after |val|, towards +inf or -inf as specified by |dir|.
+
+ * If |mode| is 'flush', all subnormal values will be flushed to 0,
+ * before processing and for -/+0 the nextAfterF64 will be the closest normal in
+ * the correct direction.
+
+ * If |mode| is 'no-flush', the next subnormal will be calculated when appropriate,
+ * and for -/+0 the nextAfterF64 will be the closest subnormal in the correct
+ * direction.
+ *
+ * val needs to be in [min f64, max f64]
+ */
+export function nextAfterF64(val, dir, mode) {
+  if (Number.isNaN(val)) {
+    return val;
+  }
+
+  if (val === Number.POSITIVE_INFINITY) {
+    return kValue.f64.infinity.positive;
+  }
+
+  if (val === Number.NEGATIVE_INFINITY) {
+    return kValue.f64.infinity.negative;
+  }
+
+  assert(
+  val <= kValue.f64.positive.max && val >= kValue.f64.negative.min,
+  `${val} is not in the range of f64`);
+
+
+  val = mode === 'flush' ? flushSubnormalNumberF64(val) : val;
+
+  // -/+0 === 0 returns true
+  if (val === 0) {
+    if (dir === 'positive') {
+      return mode === 'flush' ? kValue.f64.positive.min : kValue.f64.subnormal.positive.min;
+    } else {
+      return mode === 'flush' ? kValue.f64.negative.max : kValue.f64.subnormal.negative.max;
+    }
+  }
+
+  nextAfterF64Float[0] = val;
+  const is_positive = (nextAfterF64Int[0] & 0x8000_0000_0000_0000n) === 0n;
+  if (is_positive === (dir === 'positive')) {
+    nextAfterF64Int[0] += 1n;
+  } else {
+    nextAfterF64Int[0] -= 1n;
+  }
+
+  // Checking for overflow
+  if ((nextAfterF64Int[0] & 0x7ff0_0000_0000_0000n) === 0x7ff0_0000_0000_0000n) {
+    if (dir === 'positive') {
+      return kValue.f64.infinity.positive;
+    } else {
+      return kValue.f64.infinity.negative;
+    }
+  }
+
+  return mode === 'flush' ? flushSubnormalNumberF64(nextAfterF64Float[0]) : nextAfterF64Float[0];
+}
+
+/**
+ * Once-allocated ArrayBuffer/views to avoid overhead of allocation when
+ * converting between numeric formats
+ *
  * Usage of a once-allocated pattern like this makes nextAfterF32 non-reentrant,
  * so cannot call itself directly or indirectly.
  */
 const nextAfterF32Data = new ArrayBuffer(4);
-const nextAfterF32Hex = new Uint32Array(nextAfterF32Data);
+const nextAfterF32Int = new Uint32Array(nextAfterF32Data);
 const nextAfterF32Float = new Float32Array(nextAfterF32Data);
 
 /**
@@ -131,16 +214,16 @@ export function nextAfterF32(val, dir, mode) {
     // val is either f32 precise or quantizing rounded in the opposite direction
     // from what is needed, so need to calculate the value in the correct
     // direction.
-    const is_positive = (nextAfterF32Hex[0] & 0x80000000) === 0;
+    const is_positive = (nextAfterF32Int[0] & 0x80000000) === 0;
     if (is_positive === (dir === 'positive')) {
-      nextAfterF32Hex[0] += 1;
+      nextAfterF32Int[0] += 1;
     } else {
-      nextAfterF32Hex[0] -= 1;
+      nextAfterF32Int[0] -= 1;
     }
   }
 
   // Checking for overflow
-  if ((nextAfterF32Hex[0] & 0x7f800000) === 0x7f800000) {
+  if ((nextAfterF32Int[0] & 0x7f800000) === 0x7f800000) {
     if (dir === 'positive') {
       return kValue.f32.infinity.positive;
     } else {
@@ -233,6 +316,44 @@ export function nextAfterF16(val, dir, mode) {
 }
 
 /**
+ * @returns ulp(x), the unit of least precision for a specific number as a 64-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ * @param mode should FTZ occurring during calculation or not
+ */
+export function oneULPF64(target, mode = 'flush') {
+  if (Number.isNaN(target)) {
+    return Number.NaN;
+  }
+
+  target = mode === 'flush' ? flushSubnormalNumberF64(target) : target;
+
+  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // distance between the two nearest f64 representable numbers to the
+  // appropriate edge.
+  if (target === Number.POSITIVE_INFINITY || target >= kValue.f64.positive.max) {
+    return kValue.f64.positive.max - kValue.f64.positive.nearest_max;
+  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f64.negative.min) {
+    return kValue.f64.negative.nearest_min - kValue.f64.negative.min;
+  }
+
+  // ulp(x) is min(after - before), where
+  //     before <= x <= after
+  //     before =/= after
+  //     before and after are f64 representable
+  const before = nextAfterF64(target, 'negative', mode);
+  const after = nextAfterF64(target, 'positive', mode);
+  // Since number is internally a f64, |target| is always f64 representable, so
+  // either before or after will be x
+  return Math.min(target - before, after - target);
+}
+
+/**
  * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
  *
  * ulp(x) is the distance between the two floating point numbers nearest x.
@@ -241,7 +362,7 @@ export function nextAfterF16(val, dir, mode) {
  * for a more detailed/nuanced discussion of the definition of ulp(x).
  *
  * @param target number to calculate ULP for
- * @param mode should FTZ occuring during calculation or not
+ * @param mode should FTZ occurring during calculation or not
  */
 export function oneULPF32(target, mode = 'flush') {
   if (Number.isNaN(target)) {
@@ -250,8 +371,9 @@ export function oneULPF32(target, mode = 'flush') {
 
   target = mode === 'flush' ? flushSubnormalNumberF32(target) : target;
 
-  // For values at the edge of the range or beyond ulp(x) is defined as the distance between the two nearest
-  // f32 representable numbers to the appropriate edge.
+  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // distance between the two nearest f32 representable numbers to the
+  // appropriate edge.
   if (target === Number.POSITIVE_INFINITY || target >= kValue.f32.positive.max) {
     return kValue.f32.positive.max - kValue.f32.positive.nearest_max;
   } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f32.negative.min) {
@@ -272,6 +394,33 @@ export function oneULPF32(target, mode = 'flush') {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
     return after - before;
   }
+}
+
+/**
+ * Calculate the valid roundings when quantizing to 64-bit floats
+ *
+ * TS/JS's number type is internally a f64, so the supplied value will be
+ * quanitized by definition. The only corner cases occur if a non-finite value
+ * is provided, since the valid roundings include the appropriate min or max
+ * value.
+ *
+ * @param n number to be quantized
+ * @returns all of the acceptable roundings for quantizing to 64-bits in
+ *          ascending order.
+ */
+export function correctlyRoundedF64(n) {
+  assert(!Number.isNaN(n), `correctlyRoundedF32 not defined for NaN`);
+  // Above f64 range
+  if (n === Number.POSITIVE_INFINITY) {
+    return [kValue.f64.positive.max, Number.POSITIVE_INFINITY];
+  }
+
+  // Below f64 range
+  if (n === Number.NEGATIVE_INFINITY) {
+    return [Number.NEGATIVE_INFINITY, kValue.f64.negative.min];
+  }
+
+  return [n];
 }
 
 /**

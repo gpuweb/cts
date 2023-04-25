@@ -7,8 +7,11 @@ import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
   f32,
+  f64,
   reinterpretF32AsU32,
+  reinterpretF64AsU32s,
   reinterpretU32AsF32,
+  reinterpretU32sAsF64,
   toMatrix,
   toVector,
   u32,
@@ -18,14 +21,18 @@ import {
   cartesianProduct,
   correctlyRoundedF16,
   correctlyRoundedF32,
+  correctlyRoundedF64,
   flatten2DArray,
   flushSubnormalNumberF32,
+  flushSubnormalNumberF64,
   isFiniteF16,
   isFiniteF32,
   isSubnormalNumberF16,
   isSubnormalNumberF32,
+  isSubnormalNumberF64,
   map2DArray,
   oneULPF32,
+  oneULPF64,
   quantizeToF32,
   unflatten2DArray,
 } from './math.js';
@@ -108,27 +115,57 @@ export class FPInterval {
  * SerializedFPInterval holds the serialized form of a FPInterval.
  * This form can be safely encoded to JSON.
  */
-// When non-f32 traits are defined this will need to be extended to include a
-// kind entry to differentiate.
 
 /** serializeFPInterval() converts a FPInterval to a SerializedFPInterval */
 export function serializeFPInterval(i) {
-  // When non-f32 traits are defined this will need to be re-written to pull
-  // the kind from i to get the traits, and embed the kind in the serialized
-  // form
-  return i === FP['f32'].constants().anyInterval
-    ? 'any'
-    : { begin: reinterpretF32AsU32(i.begin), end: reinterpretF32AsU32(i.end) };
+  const traits = FP[i.kind];
+  switch (i.kind) {
+    case 'abstract': {
+      if (i === traits.constants().anyInterval) {
+        return { kind: 'abstract', any: true };
+      } else {
+        return {
+          kind: 'abstract',
+          any: false,
+          begin: reinterpretF64AsU32s(i.begin),
+          end: reinterpretF64AsU32s(i.end),
+        };
+      }
+    }
+    case 'f32': {
+      if (i === traits.constants().anyInterval) {
+        return { kind: 'abstract', any: true };
+      } else {
+        return {
+          kind: 'f32',
+          any: false,
+          begin: reinterpretF32AsU32(i.begin),
+          end: reinterpretF32AsU32(i.end),
+        };
+      }
+    }
+  }
+
+  unreachable(`Unable to serialize FPInterval ${i}`);
 }
 
 /** serializeFPInterval() converts a SerializedFPInterval to a FPInterval */
 export function deserializeFPInterval(data) {
-  // When non-f32 traits are defined this will need to be re-written to pull
-  // the kind from serialized data to get the traits and perform unpacking
-  const traits = FP['f32'];
-  return data === 'any'
-    ? traits.constants().anyInterval
-    : traits.toInterval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
+  const kind = data.kind;
+  const traits = FP[kind];
+  if (data.any) {
+    return traits.constants().anyInterval;
+  }
+  switch (kind) {
+    case 'abstract': {
+      return traits.toInterval([reinterpretU32sAsF64(data.begin), reinterpretU32sAsF64(data.end)]);
+    }
+    case 'f32': {
+      return traits.toInterval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
+    }
+  }
+
+  unreachable(`Unable to deserialize data ${data}`);
 }
 
 /**
@@ -3491,6 +3528,254 @@ class F32Traits extends FPTraits {
   unpack4x8unormInterval = this.unpack4x8unormIntervalImpl.bind(this);
 }
 
+// Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
+// executes before they are defined.
+const kAbstractAnyInterval = new FPInterval(
+  'abstract',
+  Number.NEGATIVE_INFINITY,
+  Number.POSITIVE_INFINITY
+);
+
+const kAbstractZeroInterval = new FPInterval('abstract', 0);
+
+class FPAbstractTraits extends FPTraits {
+  static _constants = {
+    positive: {
+      min: kValue.f64.positive.min,
+      max: kValue.f64.positive.max,
+      infinity: kValue.f64.infinity.positive,
+      nearest_max: kValue.f64.positive.nearest_max,
+      less_than_one: kValue.f64.positive.less_than_one,
+      subnormal: {
+        min: kValue.f64.subnormal.positive.min,
+        max: kValue.f64.subnormal.positive.max,
+      },
+      pi: {
+        whole: kValue.f64.positive.pi.whole,
+        three_quarters: kValue.f64.positive.pi.three_quarters,
+        half: kValue.f64.positive.pi.half,
+        third: kValue.f64.positive.pi.third,
+        quarter: kValue.f64.positive.pi.quarter,
+        sixth: kValue.f64.positive.pi.sixth,
+      },
+      e: kValue.f64.positive.e,
+    },
+    negative: {
+      min: kValue.f64.negative.min,
+      max: kValue.f64.negative.max,
+      infinity: kValue.f64.infinity.negative,
+      nearest_min: kValue.f64.negative.nearest_min,
+      less_than_one: kValue.f64.negative.less_than_one,
+      subnormal: {
+        min: kValue.f64.subnormal.negative.min,
+        max: kValue.f64.subnormal.negative.max,
+      },
+      pi: {
+        whole: kValue.f64.negative.pi.whole,
+        three_quarters: kValue.f64.negative.pi.three_quarters,
+        half: kValue.f64.negative.pi.half,
+        third: kValue.f64.negative.pi.third,
+        quarter: kValue.f64.negative.pi.quarter,
+        sixth: kValue.f64.negative.pi.sixth,
+      },
+    },
+    anyInterval: kAbstractAnyInterval,
+    zeroInterval: kAbstractZeroInterval,
+    // Have to use the constants.ts values here, because values defined in the
+    // initializer cannot be referenced in the initializer
+    negPiToPiInterval: new FPInterval(
+      'abstract',
+      kValue.f64.negative.pi.whole,
+      kValue.f64.positive.pi.whole
+    ),
+
+    greaterThanZeroInterval: new FPInterval(
+      'abstract',
+      kValue.f64.subnormal.positive.min,
+      kValue.f64.positive.max
+    ),
+
+    zeroVector: {
+      2: [kAbstractZeroInterval, kAbstractZeroInterval],
+      3: [kAbstractZeroInterval, kAbstractZeroInterval, kAbstractZeroInterval],
+      4: [
+        kAbstractZeroInterval,
+        kAbstractZeroInterval,
+        kAbstractZeroInterval,
+        kAbstractZeroInterval,
+      ],
+    },
+    anyVector: {
+      2: [kAbstractAnyInterval, kAbstractAnyInterval],
+      3: [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+      4: [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+    },
+    anyMatrix: {
+      2: {
+        2: [
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        3: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        4: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+      },
+      3: {
+        2: [
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        3: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        4: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+      },
+      4: {
+        2: [
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        3: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+
+        4: [
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+          [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
+        ],
+      },
+    },
+  };
+
+  constructor() {
+    super('abstract');
+  }
+
+  constants() {
+    return FPAbstractTraits._constants;
+  }
+
+  // Utilities - Overrides
+  // number is represented as a f64, so any number value is already quantized to f64
+  quantize = n => {
+    return n;
+  };
+  correctlyRounded = correctlyRoundedF64;
+  isFinite = Number.isFinite;
+  isSubnormal = isSubnormalNumberF64;
+  flushSubnormal = flushSubnormalNumberF64;
+  oneULP = oneULPF64;
+  scalarBuilder = f64;
+
+  // Framework - Fundamental Error Intervals - Overrides
+  absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
+  correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
+  ulpInterval = this.ulpIntervalImpl.bind(this);
+
+  // Framework - API - Overrides
+  absInterval = this.absIntervalImpl.bind(this);
+  acosInterval = this.acosIntervalImpl.bind(this);
+  acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
+  acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
+  acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
+  additionInterval = this.additionIntervalImpl.bind(this);
+  additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
+  asinInterval = this.asinIntervalImpl.bind(this);
+  asinhInterval = this.asinhIntervalImpl.bind(this);
+  atanInterval = this.atanIntervalImpl.bind(this);
+  atan2Interval = this.atan2IntervalImpl.bind(this);
+  atanhInterval = this.atanhIntervalImpl.bind(this);
+  ceilInterval = this.ceilIntervalImpl.bind(this);
+  clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
+  clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
+  clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
+  cosInterval = this.cosIntervalImpl.bind(this);
+  coshInterval = this.coshIntervalImpl.bind(this);
+  crossInterval = this.crossIntervalImpl.bind(this);
+  degreesInterval = this.degreesIntervalImpl.bind(this);
+  determinantInterval = this.determinantIntervalImpl.bind(this);
+  distanceInterval = this.distanceIntervalImpl.bind(this);
+  divisionInterval = this.divisionIntervalImpl.bind(this);
+  dotInterval = this.dotIntervalImpl.bind(this);
+  expInterval = this.expIntervalImpl.bind(this);
+  exp2Interval = this.exp2IntervalImpl.bind(this);
+  faceForwardIntervals = this.faceForwardIntervalsImpl.bind(this);
+  floorInterval = this.floorIntervalImpl.bind(this);
+  fmaInterval = this.fmaIntervalImpl.bind(this);
+  fractInterval = this.fractIntervalImpl.bind(this);
+  inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
+  ldexpInterval = this.ldexpIntervalImpl.bind(this);
+  lengthInterval = this.lengthIntervalImpl.bind(this);
+  logInterval = this.logIntervalImpl.bind(this);
+  log2Interval = this.log2IntervalImpl.bind(this);
+  maxInterval = this.maxIntervalImpl.bind(this);
+  minInterval = this.minIntervalImpl.bind(this);
+  mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
+  mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
+  mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
+  modfInterval = this.modfIntervalImpl.bind(this);
+  multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
+  multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+
+  multiplicationMatrixScalarInterval = this.multiplicationMatrixScalarIntervalImpl.bind(this);
+
+  multiplicationScalarMatrixInterval = this.multiplicationScalarMatrixIntervalImpl.bind(this);
+
+  multiplicationMatrixVectorInterval = this.multiplicationMatrixVectorIntervalImpl.bind(this);
+
+  multiplicationVectorMatrixInterval = this.multiplicationVectorMatrixIntervalImpl.bind(this);
+
+  negationInterval = this.negationIntervalImpl.bind(this);
+  normalizeInterval = this.normalizeIntervalImpl.bind(this);
+  powInterval = this.powIntervalImpl.bind(this);
+  quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
+  radiansInterval = this.radiansIntervalImpl.bind(this);
+  reflectInterval = this.reflectIntervalImpl.bind(this);
+  refractInterval = this.refractIntervalImpl.bind(this);
+  remainderInterval = this.remainderIntervalImpl.bind(this);
+  roundInterval = this.roundIntervalImpl.bind(this);
+  saturateInterval = this.saturateIntervalImpl.bind(this);
+  signInterval = this.signIntervalImpl.bind(this);
+  sinInterval = this.sinIntervalImpl.bind(this);
+  sinhInterval = this.sinhIntervalImpl.bind(this);
+  smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
+  sqrtInterval = this.sqrtIntervalImpl.bind(this);
+  stepInterval = this.stepIntervalImpl.bind(this);
+  subtractionInterval = this.subtractionIntervalImpl.bind(this);
+  subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(this);
+
+  tanInterval = this.tanIntervalImpl.bind(this);
+  tanhInterval = this.tanhIntervalImpl.bind(this);
+  transposeInterval = this.transposeIntervalImpl.bind(this);
+  truncInterval = this.truncIntervalImpl.bind(this);
+}
+
 export const FP = {
   f32: new F32Traits(),
+  abstract: new FPAbstractTraits(),
 };
