@@ -36,7 +36,7 @@ function clone<T extends GPUTextureDescriptor>(descriptor: T): T {
 
 export const g = makeTestGroup(ValidationTest);
 
-const kStorageTextureFormats = kAllTextureFormats.filter(f => kTextureFormatInfo[f].storage);
+const kStorageTextureFormats = kAllTextureFormats.filter(f => kTextureFormatInfo[f].color?.storage);
 
 g.test('binding_count_mismatch')
   .desc('Test that the number of entries must match the number of entries in the BindGroupLayout.')

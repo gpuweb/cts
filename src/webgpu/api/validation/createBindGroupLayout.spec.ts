@@ -454,5 +454,5 @@ g.test('storage_texture,formats')
           },
         ],
       });
-    }, !info.storage);
+    }, !info.color?.storage);
   });

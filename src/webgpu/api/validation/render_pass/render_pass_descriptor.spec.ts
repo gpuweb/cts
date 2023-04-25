@@ -202,8 +202,8 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
-      info.renderTargetPixelByteCost === undefined ||
-      info.renderTargetPixelByteCost * attachmentCount >
+      info.colorRender === undefined ||
+      info.colorRender.byteCost * attachmentCount >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.tryRenderPass(!shouldError, { colorAttachments });
@@ -959,13 +959,15 @@ g.test('resolveTarget,format_supports_resolve')
   )
   .fn(t => {
     const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+
     const multisampledColorTexture = t.createTexture({ format, sampleCount: 4 });
     const resolveTarget = t.createTexture({ format });
 
     const colorAttachment = t.getColorAttachment(multisampledColorTexture);
     colorAttachment.resolveTarget = resolveTarget.createView();
 
-    t.tryRenderPass(kTextureFormatInfo[format].resolve, {
+    t.tryRenderPass(!!info.colorRender?.resolve, {
       colorAttachments: [colorAttachment],
     });
   });

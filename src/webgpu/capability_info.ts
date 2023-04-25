@@ -87,135 +87,1083 @@ export const kGeneratableErrorScopeFilters = kErrorScopeFilters.filter(
 
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
 
-// Note that we repeat the header multiple times in order to make it easier to read.
-const kRegularTextureFormatInfo = /* prettier-ignore */ makeTable(
-                           ['renderable', 'multisample', 'resolve', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst',         'sampleType', 'bytesPerBlock', 'blockWidth', 'blockHeight', 'renderTargetPixelByteCost', 'renderTargetComponentAlignment',                  'feature',       'baseFormat'] as const,
-                           [            ,              ,          ,    true,   false,     false,          ,      true,      true,                     ,                ,            1,             1,                   undefined,                        undefined,                           ,          undefined] as const, {
-  // 8-bit formats
-  'r8unorm':               [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               1,             ,              ,                           1,                                1],
-  'r8snorm':               [       false,         false,     false,        ,        ,          ,     false,          ,          ,              'float',               1],
-  'r8uint':                [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'uint',               1,             ,              ,                           1,                                1],
-  'r8sint':                [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'sint',               1,             ,              ,                           1,                                1],
-  // 16-bit formats
-  'r16uint':               [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'uint',               2,             ,              ,                           2,                                2],
-  'r16sint':               [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'sint',               2,             ,              ,                           2,                                2],
-  'r16float':              [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               2,             ,              ,                           2,                                2],
-  'rg8unorm':              [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               2,             ,              ,                           2,                                1],
-  'rg8snorm':              [       false,         false,     false,        ,        ,          ,     false,          ,          ,              'float',               2],
-  'rg8uint':               [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'uint',               2,             ,              ,                           2,                                1],
-  'rg8sint':               [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'sint',               2,             ,              ,                           2,                                1],
-  // 32-bit formats
-  'r32uint':               [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'uint',               4,             ,              ,                           4,                                4],
-  'r32sint':               [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'sint',               4,             ,              ,                           4,                                4],
-  'r32float':              [        true,          true,     false,        ,        ,          ,      true,          ,          , 'unfilterable-float',               4,             ,              ,                           4,                                4],
-  'rg16uint':              [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'uint',               4,             ,              ,                           4,                                2],
-  'rg16sint':              [        true,          true,     false,        ,        ,          ,     false,          ,          ,               'sint',               4,             ,              ,                           4,                                2],
-  'rg16float':             [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           4,                                2],
-  'rgba8unorm':            [        true,          true,      true,        ,        ,          ,      true,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'rgba8unorm'],
-  'rgba8unorm-srgb':       [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'rgba8unorm'],
-  'rgba8snorm':            [       false,         false,     false,        ,        ,          ,      true,          ,          ,              'float',               4],
-  'rgba8uint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'uint',               4,             ,              ,                           4,                                1],
-  'rgba8sint':             [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'sint',               4,             ,              ,                           4,                                1],
-  'bgra8unorm':            [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
-  'bgra8unorm-srgb':       [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                1,                           ,       'bgra8unorm'],
-  // Packed 32-bit formats
-  'rgb10a2unorm':          [        true,          true,      true,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                4],
-  'rg11b10ufloat':         [       false,         false,     false,        ,        ,          ,     false,          ,          ,              'float',               4,             ,              ,                           8,                                4],
-  'rgb9e5ufloat':          [       false,         false,     false,        ,        ,          ,     false,          ,          ,              'float',               4],
-  // 64-bit formats
-  'rg32uint':              [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'uint',               8,             ,              ,                           8,                                4],
-  'rg32sint':              [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'sint',               8,             ,              ,                           8,                                4],
-  'rg32float':             [        true,         false,     false,        ,        ,          ,      true,          ,          , 'unfilterable-float',               8,             ,              ,                           8,                                4],
-  'rgba16uint':            [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'uint',               8,             ,              ,                           8,                                2],
-  'rgba16sint':            [        true,          true,     false,        ,        ,          ,      true,          ,          ,               'sint',               8,             ,              ,                           8,                                2],
-  'rgba16float':           [        true,          true,      true,        ,        ,          ,      true,          ,          ,              'float',               8,             ,              ,                           8,                                2],
-  // 128-bit formats
-  'rgba32uint':            [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'uint',              16,             ,              ,                          16,                                4],
-  'rgba32sint':            [        true,         false,     false,        ,        ,          ,      true,          ,          ,               'sint',              16,             ,              ,                          16,                                4],
-  'rgba32float':           [        true,         false,     false,        ,        ,          ,      true,          ,          , 'unfilterable-float',              16,             ,              ,                          16,                                4],
-} as const);
-/* prettier-ignore */
-const kTexFmtInfoHeader =  ['renderable', 'multisample', 'resolve', 'color', 'depth', 'stencil', 'storage', 'copySrc', 'copyDst',         'sampleType', 'bytesPerBlock', 'blockWidth', 'blockHeight', 'renderTargetPixelByteCost', 'renderTargetComponentAlignment',                  'feature',       'baseFormat'] as const;
-const kSizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
-                           [        true,          true,     false,   false,        ,          ,     false,          ,          ,                     ,                ,            1,             1,                   undefined,                        undefined,                           ,          undefined] as const, {
-  'depth32float':          [            ,              ,          ,        ,    true,     false,          ,      true,     false,              'depth',               4],
-  'depth16unorm':          [            ,              ,          ,        ,    true,     false,          ,      true,      true,              'depth',               2],
-  'stencil8':              [            ,              ,          ,        ,   false,      true,          ,      true,      true,               'uint',               1],
+/**
+ * Defaults applied to all tables automatically. Used only inside `tableWithDefaults`.
+ * This ensures keys are never missing, always explicitly `undefined`.
+ *
+ * All top-level keys must be defined here, or they won't be exposed.
+ */
+const kUniversalDefaults = {
+  blockWidth: undefined,
+  blockHeight: undefined,
+  color: undefined,
+  depth: undefined,
+  stencil: undefined,
+  colorRender: undefined,
+  multisample: undefined,
+  feature: undefined,
+  baseFormat: undefined,
+
+  sampleType: undefined,
+  copySrc: undefined,
+  copyDst: undefined,
+  bytesPerBlock: undefined,
+  renderable: false,
+  renderTargetPixelByteCost: undefined,
+  renderTargetComponentAlignment: undefined,
+
+  // IMPORTANT:
+  // Add new top-level keys both here and in TextureFormatInfo_TypeCheck.
+} as const;
+/**
+ * Takes `table` and applies `defaults` to every row, i.e. for each row,
+ * `{ ... kUniversalDefaults, ...defaults, ...row }`.
+ * This only operates at the first level; it doesn't support defaults in nested objects.
+ */
+function tableWithDefaults<Defaults extends {}, Table extends { readonly [K: string]: {} }>({
+  defaults,
+  table,
+}: {
+  defaults: Defaults;
+  table: Table;
+}): {
+  readonly [F in keyof Table]: {
+    readonly [K in keyof typeof kUniversalDefaults]: K extends keyof Table[F]
+      ? Table[F][K]
+      : K extends keyof Defaults
+      ? Defaults[K]
+      : typeof kUniversalDefaults[K];
+  };
+} {
+  return Object.fromEntries(
+    Object.entries(table).map(([k, row]) => [k, { ...kUniversalDefaults, ...defaults, ...row }])
+    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+  ) as any;
+}
+
+/** "plain color formats", plus rgb9e5ufloat. */
+const kRegularTextureFormatInfo = tableWithDefaults({
+  defaults: { blockWidth: 1, blockHeight: 1 },
+  table: {
+    // plain, 8 bits per component
+
+    r8unorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      colorRender: { blend: true, resolve: true, byteCost: 1, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r8snorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r8uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      colorRender: { blend: false, resolve: false, byteCost: 1, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r8sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      colorRender: { blend: false, resolve: false, byteCost: 1, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rg8unorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg8snorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg8uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg8sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rgba8unorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      baseFormat: 'rgba8unorm',
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'rgba8unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      baseFormat: 'rgba8unorm',
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba8snorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba8uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba8sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    bgra8unorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      baseFormat: 'bgra8unorm',
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bgra8unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 1 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      baseFormat: 'bgra8unorm',
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    // plain, 16 bits per component
+
+    r16uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r16sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: false, resolve: false, byteCost: 2, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r16float: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      colorRender: { blend: true, resolve: true, byteCost: 2, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rg16uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg16sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg16float: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 4, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rgba16uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba16sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba16float: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 2 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    // plain, 32 bits per component
+
+    r32uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r32sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    r32float: {
+      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 4, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rg32uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg32sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg32float: {
+      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 8 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    rgba32uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba32sint: {
+      color: { type: 'sint', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rgba32float: {
+      color: { type: 'unfilterable-float', copySrc: true, copyDst: true, storage: true, bytes: 16 },
+      colorRender: { blend: false, resolve: false, byteCost: 16, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    // plain, mixed component width, 32 bits per texel
+
+    rgb10a2unorm: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    rg11b10ufloat: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+      renderTargetPixelByteCost: 8,
+      renderTargetComponentAlignment: 4,
+    },
+
+    // packed
+
+    rgb9e5ufloat: {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      multisample: false,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+  },
 } as const);
 
-// Multi aspect sample type are now set to their first aspect
-const kUnsizedDepthStencilFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
-                           [        true,          true,     false,   false,        ,          ,     false,     false,     false,                     ,       undefined,            1,             1,                            ,                                 ,                           ,          undefined] as const, {
-  'depth24plus':           [            ,              ,          ,        ,    true,     false,          ,          ,          ,              'depth'],
-  'depth24plus-stencil8':  [            ,              ,          ,        ,    true,      true,          ,          ,          ,              'depth'],
-  // MAINTENANCE_TODO: These should really be sized formats; see below MAINTENANCE_TODO about multi-aspect formats.
-  'depth32float-stencil8': [            ,              ,          ,        ,    true,      true,          ,          ,          ,              'depth',                ,             ,              ,                            ,                                 ,    'depth32float-stencil8'],
+// MAINTENANCE_TODO: Distinguishing "sized" and "unsized" depth stencil formats doesn't make sense
+// because one aspect can be sized and one can be unsized. This should be cleaned up, but is kept
+// this way during a migration phase.
+const kSizedDepthStencilFormatInfo = tableWithDefaults({
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
+  table: {
+    stencil8: {
+      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      sampleType: 'uint',
+      copySrc: true,
+      copyDst: true,
+      bytesPerBlock: 1,
+      renderable: true,
+    },
+    depth16unorm: {
+      depth: { type: 'depth', copySrc: true, copyDst: true, storage: false, bytes: 2 },
+      sampleType: 'depth',
+      copySrc: true,
+      copyDst: true,
+      bytesPerBlock: 2,
+      renderable: true,
+    },
+    depth32float: {
+      depth: { type: 'depth', copySrc: true, copyDst: false, storage: false, bytes: 4 },
+      sampleType: 'depth',
+      copySrc: true,
+      copyDst: false,
+      bytesPerBlock: 4,
+      renderable: true,
+    },
+  },
+} as const);
+const kUnsizedDepthStencilFormatInfo = tableWithDefaults({
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true },
+  table: {
+    depth24plus: {
+      depth: { type: 'depth', copySrc: false, copyDst: false, storage: false, bytes: undefined },
+      copySrc: false,
+      copyDst: false,
+      bytesPerBlock: undefined,
+      sampleType: 'depth',
+      renderable: true,
+    },
+    'depth24plus-stencil8': {
+      depth: { type: 'depth', copySrc: false, copyDst: false, storage: false, bytes: undefined },
+      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      copySrc: false,
+      copyDst: false,
+      bytesPerBlock: undefined,
+      sampleType: 'depth',
+      renderable: true,
+    },
+    'depth32float-stencil8': {
+      depth: { type: 'depth', copySrc: true, copyDst: false, storage: false, bytes: 4 },
+      stencil: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 1 },
+      feature: 'depth32float-stencil8',
+      copySrc: false,
+      copyDst: false,
+      sampleType: 'depth',
+      renderable: true,
+    },
+  },
 } as const);
 
-// Separated compressed formats by type
-const kBCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
-                           [       false,         false,     false,    true,   false,     false,     false,      true,      true,                     ,                ,            4,             4,                            ,                                 ,                           ,          undefined] as const, {
-  // Block Compression (BC) formats
-  'bc1-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc1-rgba-unorm'],
-  'bc1-rgba-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc1-rgba-unorm'],
-  'bc2-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc2-rgba-unorm'],
-  'bc2-rgba-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc2-rgba-unorm'],
-  'bc3-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc3-rgba-unorm'],
-  'bc3-rgba-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc3-rgba-unorm'],
-  'bc4-r-unorm':           [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc4-r-snorm':           [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc5-rg-unorm':          [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc5-rg-snorm':          [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc6h-rgb-ufloat':       [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc6h-rgb-float':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc'],
-  'bc7-rgba-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc7-rgba-unorm'],
-  'bc7-rgba-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 ,   'texture-compression-bc',   'bc7-rgba-unorm'],
+const kBCTextureFormatInfo = tableWithDefaults({
+  defaults: {
+    blockWidth: 4,
+    blockHeight: 4,
+    multisample: false,
+    feature: 'texture-compression-bc',
+  },
+  table: {
+    'bc1-rgba-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'bc1-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc1-rgba-unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'bc1-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc2-rgba-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc2-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc2-rgba-unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc2-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc3-rgba-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc3-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc3-rgba-unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc3-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc4-r-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc4-r-snorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc5-rg-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc5-rg-snorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc6h-rgb-ufloat': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc6h-rgb-float': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'bc7-rgba-unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc7-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'bc7-rgba-unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'bc7-rgba-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+  },
 } as const);
-const kETC2TextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
-                           [       false,         false,     false,    true,   false,     false,     false,      true,      true,                     ,                ,            4,             4,                            ,                                 ,                           ,          undefined] as const, {
-  // Ericsson Compression (ETC2) formats
-  'etc2-rgb8unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2',   'etc2-rgb8unorm'],
-  'etc2-rgb8unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2',   'etc2-rgb8unorm'],
-  'etc2-rgb8a1unorm':      [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2', 'etc2-rgb8a1unorm'],
-  'etc2-rgb8a1unorm-srgb': [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2', 'etc2-rgb8a1unorm'],
-  'etc2-rgba8unorm':       [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-etc2',  'etc2-rgba8unorm'],
-  'etc2-rgba8unorm-srgb':  [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-etc2',  'etc2-rgba8unorm'],
-  'eac-r11unorm':          [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2'],
-  'eac-r11snorm':          [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',               8,            4,             4,                            ,                                 , 'texture-compression-etc2'],
-  'eac-rg11unorm':         [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-etc2'],
-  'eac-rg11snorm':         [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-etc2'],
+
+const kETC2TextureFormatInfo = tableWithDefaults({
+  defaults: {
+    blockWidth: 4,
+    blockHeight: 4,
+    multisample: false,
+    feature: 'texture-compression-etc2',
+  },
+  table: {
+    'etc2-rgb8unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'etc2-rgb8unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'etc2-rgb8unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'etc2-rgb8unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'etc2-rgb8a1unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'etc2-rgb8a1unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'etc2-rgb8a1unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      baseFormat: 'etc2-rgb8a1unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'etc2-rgba8unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'etc2-rgba8unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'etc2-rgba8unorm-srgb': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'etc2-rgba8unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'eac-r11unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'eac-r11snorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 8 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'eac-rg11unorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'eac-rg11snorm': {
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+  },
 } as const);
-const kASTCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader,
-                           [       false,         false,     false,    true,   false,     false,     false,      true,      true,                     ,                ,             ,              ,                            ,                                 ,                           ,          undefined] as const, {
-  // Adaptable Scalable Compression (ASTC) formats
-  'astc-4x4-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-astc',   'astc-4x4-unorm'],
-  'astc-4x4-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            4,             4,                            ,                                 , 'texture-compression-astc',   'astc-4x4-unorm'],
-  'astc-5x4-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            5,             4,                            ,                                 , 'texture-compression-astc',   'astc-5x4-unorm'],
-  'astc-5x4-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            5,             4,                            ,                                 , 'texture-compression-astc',   'astc-5x4-unorm'],
-  'astc-5x5-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            5,             5,                            ,                                 , 'texture-compression-astc',   'astc-5x5-unorm'],
-  'astc-5x5-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            5,             5,                            ,                                 , 'texture-compression-astc',   'astc-5x5-unorm'],
-  'astc-6x5-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            6,             5,                            ,                                 , 'texture-compression-astc',   'astc-6x5-unorm'],
-  'astc-6x5-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            6,             5,                            ,                                 , 'texture-compression-astc',   'astc-6x5-unorm'],
-  'astc-6x6-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            6,             6,                            ,                                 , 'texture-compression-astc',   'astc-6x6-unorm'],
-  'astc-6x6-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            6,             6,                            ,                                 , 'texture-compression-astc',   'astc-6x6-unorm'],
-  'astc-8x5-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             5,                            ,                                 , 'texture-compression-astc',   'astc-8x5-unorm'],
-  'astc-8x5-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             5,                            ,                                 , 'texture-compression-astc',   'astc-8x5-unorm'],
-  'astc-8x6-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             6,                            ,                                 , 'texture-compression-astc',   'astc-8x6-unorm'],
-  'astc-8x6-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             6,                            ,                                 , 'texture-compression-astc',   'astc-8x6-unorm'],
-  'astc-8x8-unorm':        [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             8,                            ,                                 , 'texture-compression-astc',   'astc-8x8-unorm'],
-  'astc-8x8-unorm-srgb':   [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,            8,             8,                            ,                                 , 'texture-compression-astc',   'astc-8x8-unorm'],
-  'astc-10x5-unorm':       [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             5,                            ,                                 , 'texture-compression-astc',  'astc-10x5-unorm'],
-  'astc-10x5-unorm-srgb':  [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             5,                            ,                                 , 'texture-compression-astc',  'astc-10x5-unorm'],
-  'astc-10x6-unorm':       [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             6,                            ,                                 , 'texture-compression-astc',  'astc-10x6-unorm'],
-  'astc-10x6-unorm-srgb':  [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             6,                            ,                                 , 'texture-compression-astc',  'astc-10x6-unorm'],
-  'astc-10x8-unorm':       [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             8,                            ,                                 , 'texture-compression-astc',  'astc-10x8-unorm'],
-  'astc-10x8-unorm-srgb':  [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,             8,                            ,                                 , 'texture-compression-astc',  'astc-10x8-unorm'],
-  'astc-10x10-unorm':      [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,            10,                            ,                                 , 'texture-compression-astc', 'astc-10x10-unorm'],
-  'astc-10x10-unorm-srgb': [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           10,            10,                            ,                                 , 'texture-compression-astc', 'astc-10x10-unorm'],
-  'astc-12x10-unorm':      [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           12,            10,                            ,                                 , 'texture-compression-astc', 'astc-12x10-unorm'],
-  'astc-12x10-unorm-srgb': [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           12,            10,                            ,                                 , 'texture-compression-astc', 'astc-12x10-unorm'],
-  'astc-12x12-unorm':      [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           12,            12,                            ,                                 , 'texture-compression-astc', 'astc-12x12-unorm'],
-  'astc-12x12-unorm-srgb': [            ,              ,          ,        ,        ,          ,          ,          ,          ,              'float',              16,           12,            12,                            ,                                 , 'texture-compression-astc', 'astc-12x12-unorm'],
+
+const kASTCTextureFormatInfo = tableWithDefaults({
+  defaults: {
+    multisample: false,
+    feature: 'texture-compression-astc',
+  },
+  table: {
+    'astc-4x4-unorm': {
+      blockWidth: 4,
+      blockHeight: 4,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-4x4-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-4x4-unorm-srgb': {
+      blockWidth: 4,
+      blockHeight: 4,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-4x4-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-5x4-unorm': {
+      blockWidth: 5,
+      blockHeight: 4,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-5x4-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-5x4-unorm-srgb': {
+      blockWidth: 5,
+      blockHeight: 4,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-5x4-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-5x5-unorm': {
+      blockWidth: 5,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-5x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-5x5-unorm-srgb': {
+      blockWidth: 5,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-5x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-6x5-unorm': {
+      blockWidth: 6,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-6x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-6x5-unorm-srgb': {
+      blockWidth: 6,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-6x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-6x6-unorm': {
+      blockWidth: 6,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-6x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-6x6-unorm-srgb': {
+      blockWidth: 6,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-6x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-8x5-unorm': {
+      blockWidth: 8,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-8x5-unorm-srgb': {
+      blockWidth: 8,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-8x6-unorm': {
+      blockWidth: 8,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-8x6-unorm-srgb': {
+      blockWidth: 8,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-8x8-unorm': {
+      blockWidth: 8,
+      blockHeight: 8,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x8-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-8x8-unorm-srgb': {
+      blockWidth: 8,
+      blockHeight: 8,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-8x8-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-10x5-unorm': {
+      blockWidth: 10,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-10x5-unorm-srgb': {
+      blockWidth: 10,
+      blockHeight: 5,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x5-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-10x6-unorm': {
+      blockWidth: 10,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-10x6-unorm-srgb': {
+      blockWidth: 10,
+      blockHeight: 6,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x6-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-10x8-unorm': {
+      blockWidth: 10,
+      blockHeight: 8,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x8-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-10x8-unorm-srgb': {
+      blockWidth: 10,
+      blockHeight: 8,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x8-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-10x10-unorm': {
+      blockWidth: 10,
+      blockHeight: 10,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x10-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-10x10-unorm-srgb': {
+      blockWidth: 10,
+      blockHeight: 10,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-10x10-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-12x10-unorm': {
+      blockWidth: 12,
+      blockHeight: 10,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-12x10-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-12x10-unorm-srgb': {
+      blockWidth: 12,
+      blockHeight: 10,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-12x10-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+
+    'astc-12x12-unorm': {
+      blockWidth: 12,
+      blockHeight: 12,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-12x12-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+    'astc-12x12-unorm-srgb': {
+      blockWidth: 12,
+      blockHeight: 12,
+      color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 16 },
+      baseFormat: 'astc-12x12-unorm',
+      sampleType: 'float',
+      copySrc: true,
+      copyDst: true,
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
+  },
 } as const);
 
 // Definitions for use locally. To access the table entries, use `kTextureFormatInfo`.
@@ -264,7 +1212,7 @@ const kASTCTextureFormatInfo = /* prettier-ignore */ makeTable(kTexFmtInfoHeader
 
 // CompressedTextureFormat are unrenderable so filter from RegularTextureFormats for color targets is enough
 export const kRenderableColorTextureFormats = kRegularTextureFormats.filter(
-  v => kColorTextureFormatInfo[v].renderable
+  v => kColorTextureFormatInfo[v].colorRender
 );
 assert(
   kRenderableColorTextureFormats.every(
@@ -295,56 +1243,124 @@ export const kCanvasColorSpacesInfo: {
 };
 export const kCanvasColorSpaces = keysOf(kCanvasColorSpacesInfo);
 
-/** Per-GPUTextureFormat info. */
-// Exists just for documentation. Otherwise could be inferred by `makeTable`.
-// MAINTENANCE_TODO: Refactor this to separate per-aspect data for multi-aspect formats. In particular:
-// - bytesPerBlock only makes sense on a per-aspect basis. But this table can't express that.
-//   So we put depth32float-stencil8 to be an unsized format for now.
-export type TextureFormatInfo = {
-  /** Whether the format can be used as `RENDER_ATTACHMENT`. */
-  renderable: boolean;
+/** Per-GPUTextureFormat-per-aspect info. */
+interface TextureFormatAspectInfo {
+  /** Whether the aspect can be used as `COPY_SRC`. */
+  copySrc: boolean;
+  /** Whether the aspect can be used as `COPY_DST`. */
+  copyDst: boolean;
+  /** Whether the aspect can be used as `STORAGE`. */
+  storage: boolean;
+  /** The "texel block copy footprint" of one texel block; `undefined` if the aspect is unsized. */
+  bytes: number | undefined;
+}
+/** Per GPUTextureFormat-per-aspect info for color aspects. */
+interface TextureFormatColorAspectInfo extends TextureFormatAspectInfo {
+  bytes: number;
+  /** "Best" sample type of the format. "float" also implies "unfilterable-float". */
+  type: 'float' | 'uint' | 'sint' | 'unfilterable-float';
+}
+/** Per GPUTextureFormat-per-aspect info for depth aspects. */
+interface TextureFormatDepthAspectInfo extends TextureFormatAspectInfo {
+  /** "depth" also implies "unfilterable-float". */
+  type: 'depth';
+}
+/** Per GPUTextureFormat-per-aspect info for stencil aspects. */
+interface TextureFormatStencilAspectInfo extends TextureFormatAspectInfo {
+  bytes: 1;
+  type: 'uint';
+}
+
+/**
+ * Per-GPUTextureFormat info.
+ * This is not actually the type of values in kTextureFormatInfo; that type is fully const
+ * so that it can be narrowed very precisely at usage sites by the compiler.
+ * This type exists only a type check on the inferred type of kTextureFormatInfo.
+ * Documentation is also written here, but not actually visible to the IDE.
+ */
+type TextureFormatInfo_TypeCheck = {
+  /** Texel block width. */
+  blockWidth: number;
+  /** Texel block height. */
+  blockHeight: number;
   /** Whether the format can be used in a multisample texture. */
   multisample: boolean;
-  /** Whether the texture with the format can be used as a resolve target. */
-  resolve: boolean;
-  /** Whether the format has a color aspect. */
-  color: boolean;
-  /** Whether the format has a depth aspect. */
-  depth: boolean;
-  /** Whether the format has a stencil aspect. */
-  stencil: boolean;
-  /** Whether the format can be used as `STORAGE`. */
-  storage: boolean;
-  /** Whether the format can be used as `COPY_SRC`. */
-  copySrc: boolean;
-  /** Whether the format can be used as `COPY_DST`. */
-  copyDst: boolean;
-  /** Byte size of one texel block, or `undefined` if the format is unsized. */
-  bytesPerBlock: number | undefined;
-  /** Width, in texels, of one texel block. */
-  blockWidth: number;
-  /** Height, in texels, of one texel block. */
-  blockHeight: number;
-  /** The raw, unaligned, byte cost towards the color attachment bytes per sample.
-   *  (See https://www.w3.org/TR/webgpu/#abstract-opdef-calculating-color-attachment-bytes-per-sample). */
-  renderTargetPixelByteCost: number | undefined;
-  /** The alignment used for the format when computing the color attachment bytes per sample. */
-  renderTargetComponentAlignment: number | undefined;
+  /** The base format for srgb formats. Specified on both srgb and equivalent non-srgb formats. */
+  baseFormat: GPUTextureFormat | undefined;
   /** Optional feature required to use this format, or `undefined` if none. */
   feature: GPUFeatureName | undefined;
-  // Add fields as needed
-};
+
+  /** @deprecated */
+  sampleType: GPUTextureSampleType;
+  /** @deprecated */
+  copySrc: boolean;
+  /** @deprecated */
+  copyDst: boolean;
+  /** @deprecated */
+  bytesPerBlock: number | undefined;
+  /** @deprecated */
+  renderable: boolean;
+  /** @deprecated */
+  renderTargetPixelByteCost: number | undefined;
+  /** @deprecated */
+  renderTargetComponentAlignment: number | undefined;
+
+  // IMPORTANT:
+  // Add new top-level keys both here and in kUniversalDefaults.
+} & (
+  | {
+      /** Color aspect info. */
+      color: TextureFormatColorAspectInfo;
+      /** Defined if the format is a color format that can be used as `RENDER_ATTACHMENT`. */
+      colorRender:
+        | undefined
+        | {
+            /** Whether the format is blendable. */
+            blend: boolean;
+            /** Whether the format can be a multisample resolve target. */
+            resolve: boolean;
+            /** The "render target pixel byte cost" of the format. */
+            byteCost: number;
+            /** The "render target component alignment" of the format. */
+            alignment: number;
+          };
+    }
+  | (
+      | {
+          /** Depth aspect info. */
+          depth: TextureFormatDepthAspectInfo;
+          /** Stencil aspect info. */
+          stencil: undefined | TextureFormatStencilAspectInfo;
+          multisample: true;
+        }
+      | {
+          /** Stencil aspect info. */
+          stencil: TextureFormatStencilAspectInfo;
+          multisample: true;
+        }
+    )
+);
+
 /** Per-GPUTextureFormat info. */
-export const kTextureFormatInfo: {
-  readonly [k in GPUTextureFormat]: TextureFormatInfo &
-    // TextureFormatInfo exists just for documentation (and verification of the table data types).
-    // The next line constrains the types so that accessing kTextureFormatInfo with
-    // a subtype of GPUTextureFormat actually returns nicely a constrained info type
-    // (e.g. with `bytesPerBlock: number` instead of `bytesPerBlock: number | undefined`).
-    typeof kAllTextureFormatInfo[k];
-} = kAllTextureFormatInfo;
+export const kTextureFormatInfo = {
+  ...kRegularTextureFormatInfo,
+  ...kSizedDepthStencilFormatInfo,
+  ...kUnsizedDepthStencilFormatInfo,
+  ...kBCTextureFormatInfo,
+  ...kETC2TextureFormatInfo,
+  ...kASTCTextureFormatInfo,
+} as const;
+export type TextureFormatInfo<
+  Format extends GPUTextureFormat = GPUTextureFormat
+> = typeof kTextureFormatInfo[Format];
+
+/** Dummy variable to verify the type of kTextureFormatInfo2. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const kTextureFormatInfo_TypeCheck: {
+  readonly [F in GPUTextureFormat]: TextureFormatInfo_TypeCheck;
+} = kTextureFormatInfo;
 /** List of all GPUTextureFormat values. */
-/* prettier-ignore */ export const kTextureFormats: readonly GPUTextureFormat[] = keysOf(kAllTextureFormatInfo);
+export const kTextureFormats: readonly GPUTextureFormat[] = keysOf(kAllTextureFormatInfo);
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [
@@ -512,7 +1528,7 @@ export function resolvePerAspectFormat(
   if (aspect === 'all' || aspect === undefined) {
     return format;
   }
-  assert(kTextureFormatInfo[format].depth || kTextureFormatInfo[format].stencil);
+  assert(!!kTextureFormatInfo[format].depth || !!kTextureFormatInfo[format].stencil);
   const resolved = kDepthStencilFormatResolvedAspect[format as DepthStencilFormat][aspect ?? 'all'];
   assert(resolved !== undefined);
   return resolved;
