@@ -1,10 +1,5 @@
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
-// MAINTENANCE_TODO(sarahM0): Perhaps instead of kBit and kValue tables we could have one table
-// where every value is a Scalar instead of either bits or value?
-// Then tests wouldn't need most of the Scalar.fromX calls,
-// and you would probably need fewer table entries in total
-// (since each Scalar has both bits and value).
 export const kBit = {
   // Limits of int32
   i32: {
@@ -69,16 +64,6 @@ export const kBit = {
         min: BigInt(0x800f_ffff_ffff_ffffn),
       },
     },
-    nan: {
-      negative: {
-        s: BigInt(0xfff0_0000_0000_0001n),
-        q: BigInt(0xfff8_0000_0000_0001n),
-      },
-      positive: {
-        s: BigInt(0x7ff0_0000_0000_0001n),
-        q: BigInt(0x7ff8_0000_0000_0001n),
-      },
-    },
     infinity: {
       positive: BigInt(0x7ff0_0000_0000_0000n),
       negative: BigInt(0xfff0_0000_0000_0000n),
@@ -128,16 +113,6 @@ export const kBit = {
         min: 0x807f_ffff,
       },
     },
-    nan: {
-      negative: {
-        s: 0xff80_0001,
-        q: 0xffc0_0001,
-      },
-      positive: {
-        s: 0x7f80_0001,
-        q: 0x7fc0_0001,
-      },
-    },
     infinity: {
       positive: 0x7f80_0000,
       negative: 0xff80_0000,
@@ -164,16 +139,6 @@ export const kBit = {
       negative: {
         max: 0x8001,
         min: 0x83ff,
-      },
-    },
-    nan: {
-      negative: {
-        s: 0xfc01,
-        q: 0xfe01,
-      },
-      positive: {
-        s: 0x7c01,
-        q: 0x7e01,
       },
     },
     infinity: {

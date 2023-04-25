@@ -88,7 +88,7 @@ export type NextDirection = 'positive' | 'negative';
  * so cannot call itself directly or indirectly.
  */
 const nextAfterF64Data = new ArrayBuffer(8);
-const nextAfterF64Hex = new BigUint64Array(nextAfterF64Data);
+const nextAfterF64Int = new BigUint64Array(nextAfterF64Data);
 const nextAfterF64Float = new Float64Array(nextAfterF64Data);
 
 /**
@@ -134,15 +134,15 @@ export function nextAfterF64(val: number, dir: NextDirection, mode: FlushMode): 
   }
 
   nextAfterF64Float[0] = val;
-  const is_positive = (nextAfterF64Hex[0] & 0x8000_0000_0000_0000n) === 0n;
+  const is_positive = (nextAfterF64Int[0] & 0x8000_0000_0000_0000n) === 0n;
   if (is_positive === (dir === 'positive')) {
-    nextAfterF64Hex[0] += 1n;
+    nextAfterF64Int[0] += 1n;
   } else {
-    nextAfterF64Hex[0] -= 1n;
+    nextAfterF64Int[0] -= 1n;
   }
 
   // Checking for overflow
-  if ((nextAfterF64Hex[0] & 0x7ff0_0000_0000_0000n) === 0x7ff0_0000_0000_0000n) {
+  if ((nextAfterF64Int[0] & 0x7ff0_0000_0000_0000n) === 0x7ff0_0000_0000_0000n) {
     if (dir === 'positive') {
       return kValue.f64.infinity.positive;
     } else {
@@ -161,7 +161,7 @@ export function nextAfterF64(val: number, dir: NextDirection, mode: FlushMode): 
  * so cannot call itself directly or indirectly.
  */
 const nextAfterF32Data = new ArrayBuffer(4);
-const nextAfterF32Hex = new Uint32Array(nextAfterF32Data);
+const nextAfterF32Int = new Uint32Array(nextAfterF32Data);
 const nextAfterF32Float = new Float32Array(nextAfterF32Data);
 
 /**
@@ -214,16 +214,16 @@ export function nextAfterF32(val: number, dir: NextDirection, mode: FlushMode): 
     // val is either f32 precise or quantizing rounded in the opposite direction
     // from what is needed, so need to calculate the value in the correct
     // direction.
-    const is_positive = (nextAfterF32Hex[0] & 0x80000000) === 0;
+    const is_positive = (nextAfterF32Int[0] & 0x80000000) === 0;
     if (is_positive === (dir === 'positive')) {
-      nextAfterF32Hex[0] += 1;
+      nextAfterF32Int[0] += 1;
     } else {
-      nextAfterF32Hex[0] -= 1;
+      nextAfterF32Int[0] -= 1;
     }
   }
 
   // Checking for overflow
-  if ((nextAfterF32Hex[0] & 0x7f800000) === 0x7f800000) {
+  if ((nextAfterF32Int[0] & 0x7f800000) === 0x7f800000) {
     if (dir === 'positive') {
       return kValue.f32.infinity.positive;
     } else {

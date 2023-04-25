@@ -95,6 +95,9 @@ g.test('constructor_f32')
       { input: [0], expected: [0] },
       { input: [10], expected: [10] },
       { input: [-5], expected: [-5] },
+      { input: [2.5], expected: [2.5] },
+      { input: [-1.375], expected: [-1.375] },
+      { input: [-1.375, 2.5], expected: [-1.375, 2.5] },
 
       // Edges
       { input: [0, kValue.f32.positive.max], expected: [0, kValue.f32.positive.max] },
@@ -131,6 +134,9 @@ g.test('constructor_abstract')
       { input: [0], expected: [0] },
       { input: [10], expected: [10] },
       { input: [-5], expected: [-5] },
+      { input: [2.5], expected: [2.5] },
+      { input: [-1.375], expected: [-1.375] },
+      { input: [-1.375, 2.5], expected: [-1.375, 2.5] },
 
       // Edges
       { input: [0, kValue.f64.positive.max], expected: [0, kValue.f64.positive.max] },
@@ -142,8 +148,10 @@ g.test('constructor_abstract')
       { input: [kValue.f64.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
       { input: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: kAnyBounds },
 
-      // Note: Out of range values are infinities for abstract float, due to abstract float and 'number' both being f64.
-      // So there is no seperate OOR tests, the testing framework considers them duplicates.
+      // Note: Out of range values are limited to infinities for abstract float,
+      // due to abstract float and 'number' both being f64.
+      // So there is no  separate OOR tests, the testing framework considers
+      // them duplicates.
     ]
   )
   .fn(t => {
@@ -178,6 +186,9 @@ g.test('contains_number_f32')
       { bounds: [-5, 10], value: -6, expected: false },
       { bounds: [-5, 10], value: 50, expected: false },
       { bounds: [-5, 10], value: -10, expected: false },
+      { bounds: [-1.375, 2.5], value: -10, expected: false },
+      { bounds: [-1.375, 2.5], value: 0.5, expected: true },
+      { bounds: [-1.375, 2.5], value: 10, expected: false },
 
       // Point
       { bounds: 0, value: 0, expected: true },
@@ -291,6 +302,9 @@ g.test('contains_number_abstract')
       { bounds: [-5, 10], value: -6, expected: false },
       { bounds: [-5, 10], value: 50, expected: false },
       { bounds: [-5, 10], value: -10, expected: false },
+      { bounds: [-1.375, 2.5], value: -10, expected: false },
+      { bounds: [-1.375, 2.5], value: 0.5, expected: true },
+      { bounds: [-1.375, 2.5], value: 10, expected: false },
 
       // Point
       { bounds: 0, value: 0, expected: true },
@@ -342,8 +356,10 @@ g.test('contains_number_abstract')
       { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.negative.max, expected: true },
       { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.infinity.negative, expected: false },
 
-      // Note: Out of range values are infinities for abstract float, due to abstract float and 'number' both being f64.
-      // So there is no separate OOR tests, the testing framework considers them duplicates.
+      // Note: Out of range values are limited to infinities for abstract float,
+      // due to abstract float and 'number' both being f64.
+      // So there is no separate OOR tests, the testing framework considers them
+      // duplicates.
 
       // Subnormals
       { bounds: [0, kValue.f64.positive.min], value: kValue.f64.subnormal.positive.min, expected: true },
@@ -527,8 +543,10 @@ g.test('contains_interval_abstract')
       { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.infinity.negative, -100 ], expected: false },
       { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: false },
 
-      // Note: Out of range values are infinities for abstract float, due to abstract float and 'number' both being f64.
-      // So there is no separate OOR tests, the testing framework considers them duplicates.
+      // Note: Out of range values are limited to infinities for abstract float,
+      // due to abstract float and 'number' both being f64.
+      // So there is no separate OOR tests, the testing framework considers them
+      // duplicates.
     ]
   )
   .fn(t => {
