@@ -50,7 +50,14 @@ g.test('blankspace')
   });
 
 g.test('bom')
-  .desc(`Tests that including a BOM causes a shader compile error`)
+  .desc(
+    `Tests that including a BOM causes a shader compile error.
+
+Note, per RFC 2632, for protocols which forbit the use of U+FEFF then the BOM is treated as a
+"ZERO WIDTH NO-BREAK SPACE". The "ZERO WIDTH NO-BREAK SPACE" is not a valid WGSL blankspace code
+point, so the BOM ends up as a shader compilation error.
+    `
+  )
   .params(u => u.combine('include_bom', [true, false]))
   .fn(t => {
     const code = `${t.params.include_bom ? '\uFEFF' : ''}const name : i32 = 0;`;
