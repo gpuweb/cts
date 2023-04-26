@@ -16,6 +16,7 @@ import {
   Matrix,
   MatrixType,
   ScalarBuilder,
+  scalarTypeOf,
 } from '../../../util/conversion.js';
 import { FPInterval } from '../../../util/floating_point.js';
 import {
@@ -424,6 +425,18 @@ function wgslInputVar(inputSource: InputSource, count: number) {
 }
 
 /**
+ * Helper that returns the WGSL header before any other declaration, currently include f16
+ * enable directive if necessary.
+ */
+function wgslHeader(parameterTypes: Array<Type>, resultType: Type) {
+  const usedF16 =
+    scalarTypeOf(resultType).kind === 'f16' ||
+    parameterTypes.some((ty: Type) => scalarTypeOf(ty).kind === 'f16');
+  const header = usedF16 ? 'enable f16;\n' : '';
+  return header;
+}
+
+/**
  * ExpressionBuilder returns the WGSL used to evaluate an expression with the
  * given input values.
  */
@@ -455,6 +468,8 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
       }
 
       return `
+${wgslHeader(parameterTypes, resultType)}
+
 ${wgslOutputs(resultType, cases.length)}
 
 const values = array(
@@ -479,6 +494,8 @@ ${body}
       const expr = toStorage(resultType, expressionBuilder(parameterTypes.map(paramExpr)));
 
       return `
+${wgslHeader(parameterTypes, resultType)}
+
 struct Input {
 ${parameterTypes
   .map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`)
@@ -550,6 +567,7 @@ export function compoundAssignmentBuilder(op: string): ShaderBuilder {
       const values = cases.map(c => (c.input as Value[]).map(v => v.wgsl()));
 
       return `
+${wgslHeader(parameterTypes, resultType)}
 ${wgslOutputs(resultType, cases.length)}
 
 const lhs = array(
@@ -568,6 +586,7 @@ ${body}
       // Runtime eval
       //////////////////////////////////////////////////////////////////////////
       return `
+${wgslHeader(parameterTypes, resultType)}
 ${wgslOutputs(resultType, cases.length)}
 
 struct Input {
