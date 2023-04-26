@@ -476,19 +476,11 @@ export const kValue = {
       min: reinterpretU16AsF16(kBit.f16.positive.min),
       max: reinterpretU16AsF16(kBit.f16.positive.max),
       zero: reinterpretU16AsF16(kBit.f16.positive.zero),
-      first_webidl_not_castable: reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
-      last_webidl_castable: reinterpretU64AsF64(
-        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
-      ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: reinterpretU16AsF16(kBit.f16.negative.max),
       min: reinterpretU16AsF16(kBit.f16.negative.min),
       zero: reinterpretU16AsF16(kBit.f16.negative.zero),
-      first_webidl_not_castable: -(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
-      last_webidl_castable: -reinterpretU64AsF64(
-        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
-      ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
       positive: {
