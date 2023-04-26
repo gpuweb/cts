@@ -672,7 +672,7 @@ export function fullF32Range(counts = { pos_sub: 10, pos_norm: 50 }) {
 
     ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
   ].map(Math.trunc);
-  return bit_fields.map(hexToF32);
+  return bit_fields.map(reinterpretU32AsF32);
 }
 
 /**
@@ -731,7 +731,7 @@ export function fullF16Range(counts = { pos_sub: 10, pos_norm: 50 }) {
 
     ...linearRange(kBit.f16.positive.min, kBit.f16.positive.max, counts.pos_norm),
   ].map(Math.trunc);
-  return bit_fields.map(hexToF16);
+  return bit_fields.map(reinterpretU16AsF16);
 }
 
 /** Short list of i32 values of interest to test against */
@@ -1205,19 +1205,28 @@ export function lcm(a, b) {
   return (a * b) / gcd(a, b);
 }
 
-/** Converts a 32-bit hex value to a 32-bit float value */
-export function hexToF32(hex) {
-  return floatBitsToNumber(hex, kFloat32Format);
+/**
+ * @returns a 64-bit float value via interpreting the input as the bit
+ * representation as a 64-bit integer
+ */
+export function reinterpretU64AsF64(input) {
+  return new Float64Array(new BigInt64Array([input]).buffer)[0];
 }
 
-/** Converts a 16-bit hex value to a 16-bit float value */
-export function hexToF16(hex) {
+/**
+ * @returns a 32-bit float value via interpreting the input as the bit
+ * representation as a 32-bit integer
+ */
+export function reinterpretU32AsF32(input) {
+  return floatBitsToNumber(input, kFloat32Format);
+}
+
+/**
+ * @returns a 16-bit float value via interpreting the input as the bit
+ * representation as a 16-bit integer
+ */
+export function reinterpretU16AsF16(hex) {
   return floatBitsToNumber(hex, kFloat16Format);
-}
-
-/** Converts 64-bit hex value to a 64-bit float value */
-export function hexToF64(hex) {
-  return new Float64Array(new BigInt64Array([hex]).buffer)[0];
 }
 
 /** @returns the cross of an array with the intermediate result of cartesianProduct

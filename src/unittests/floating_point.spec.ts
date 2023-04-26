@@ -6,7 +6,12 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, FPInterval, IntervalBounds } from '../webgpu/util/floating_point.js';
-import { hexToF32, hexToF64, map2DArray, oneULPF32 } from '../webgpu/util/math.js';
+import {
+  reinterpretU32AsF32,
+  reinterpretU64AsF64,
+  map2DArray,
+  oneULPF32,
+} from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -3454,18 +3459,18 @@ g.test('absoluteErrorInterval_f32')
       { value: kValue.f32.subnormal.negative.max, error: 1, expected: [-1, 1] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
 
       // Zero
       { value: 0, error: 0, expected: 0 },
@@ -3506,27 +3511,27 @@ g.test('correctlyRoundedInterval_f32')
       { value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
 
       // 32-bit normals
       { value: 0, expected: [0, 0] },
-      { value: hexToF32(0x03800000), expected: hexToF32(0x03800000) },
-      { value: hexToF32(0x03800001), expected: hexToF32(0x03800001) },
-      { value: hexToF32(0x83800000), expected: hexToF32(0x83800000) },
-      { value: hexToF32(0x83800001), expected: hexToF32(0x83800001) },
+      { value: reinterpretU32AsF32(0x03800000), expected: reinterpretU32AsF32(0x03800000) },
+      { value: reinterpretU32AsF32(0x03800001), expected: reinterpretU32AsF32(0x03800001) },
+      { value: reinterpretU32AsF32(0x83800000), expected: reinterpretU32AsF32(0x83800000) },
+      { value: reinterpretU32AsF32(0x83800001), expected: reinterpretU32AsF32(0x83800001) },
 
       // 64-bit normals
-      { value: hexToF64(0x3ff0_0000_0000_0001n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff0_0000_0000_0002n), expected: [hexToF32(0x3f800000), hexToF32(0x3f800001)] },
-      { value: hexToF64(0x3ff0_0010_0000_0010n), expected: [hexToF32(0x3f800080), hexToF32(0x3f800081)] },
-      { value: hexToF64(0x3ff0_0020_0000_0020n), expected: [hexToF32(0x3f800100), hexToF32(0x3f800101)] },
-      { value: hexToF64(0xbff0_0000_0000_0001n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff0_0000_0000_0002n), expected: [hexToF32(0xbf800001), hexToF32(0xbf800000)] },
-      { value: hexToF64(0xbff0_0010_0000_0010n), expected: [hexToF32(0xbf800081), hexToF32(0xbf800080)] },
-      { value: hexToF64(0xbff0_0020_0000_0020n), expected: [hexToF32(0xbf800101), hexToF32(0xbf800100)] },
+      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+      { value: reinterpretU64AsF64(0x3ff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0x3f800080), reinterpretU32AsF32(0x3f800081)] },
+      { value: reinterpretU64AsF64(0x3ff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0x3f800100), reinterpretU32AsF32(0x3f800101)] },
+      { value: reinterpretU64AsF64(0xbff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+      { value: reinterpretU64AsF64(0xbff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+      { value: reinterpretU64AsF64(0xbff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0xbf800081), reinterpretU32AsF32(0xbf800080)] },
+      { value: reinterpretU64AsF64(0xbff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0xbf800101), reinterpretU32AsF32(0xbf800100)] },
     ]
   )
   .fn(t => {
@@ -3583,18 +3588,18 @@ g.test('ulpInterval_f32')
       { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
 
       // 64-bit subnormals
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
-      { value: hexToF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
-      { value: hexToF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
-      { value: hexToF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
 
       // Zero
       { value: 0, num_ulp: 0, expected: 0 },
@@ -3625,8 +3630,8 @@ g.test('absInterval_f32')
       // Common usages
       { input: 1, expected: 1 },
       { input: -1, expected: 1 },
-      { input: 0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
-      { input: -0.1, expected: [hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)] },
+      { input: 0.1, expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
+      { input: -0.1, expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
 
       // Edge cases
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -3643,8 +3648,8 @@ g.test('absInterval_f32')
       { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
 
       // 64-bit subnormals
-      { input: hexToF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: hexToF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
+      { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
 
       // Zero
       { input: 0, expected: 0 },
@@ -3676,10 +3681,10 @@ g.test('acosInterval_f32')
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
       { input: -1, expected: kAnyBounds },
-      { input: -1/2, expected: [hexToF32(0x4005fa91), hexToF32(0x40061a94)] },  // ~2π/3
+      { input: -1/2, expected: [reinterpretU32AsF32(0x4005fa91), reinterpretU32AsF32(0x40061a94)] },  // ~2π/3
       { input: 0, expected: kAnyBounds },
-      { input: 1/2, expected: [hexToF32(0x3f85fa8f), hexToF32(0x3f861a94)] },  // ~π/3
-      { input: minusOneULPF32(1), expected: [hexToF64(0x3f2f_fdff_6000_0000n), hexToF64(0x3f3b_106f_c933_4fb9n)] },  // ~0.0003
+      { input: 1/2, expected: [reinterpretU32AsF32(0x3f85fa8f), reinterpretU32AsF32(0x3f861a94)] },  // ~π/3
+      { input: minusOneULPF32(1), expected: [reinterpretU64AsF64(0x3f2f_fdff_6000_0000n), reinterpretU64AsF64(0x3f3b_106f_c933_4fb9n)] },  // ~0.0003
       { input: 1, expected: kAnyBounds },
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -3706,8 +3711,8 @@ g.test('acoshAlternativeInterval_f32')
       { input: -1, expected: kAnyBounds },
       { input: 0, expected: kAnyBounds },
       { input: 1, expected: kAnyBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [hexToF64(0x3fdc_6368_8000_0000n), hexToF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
-      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -3733,8 +3738,8 @@ g.test('acoshPrimaryInterval_f32')
       { input: -1, expected: kAnyBounds },
       { input: 0, expected: kAnyBounds },
       { input: 1, expected: kAnyBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [hexToF64(0x3fdc_6368_2000_0000n), hexToF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
-      { input: 10, expected: [hexToF64(0x4007_f21e_4000_0000n), hexToF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
+      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -3764,11 +3769,11 @@ g.test('asinInterval_f32')
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
       { input: -1, expected: kAnyBounds },
-      { input: -1/2, expected: [hexToF64(0xbfe0_c352_c000_0000n), hexToF64(0xbfe0_bf51_c000_0000n)] },  // ~-π/6
+      { input: -1/2, expected: [reinterpretU64AsF64(0xbfe0_c352_c000_0000n), reinterpretU64AsF64(0xbfe0_bf51_c000_0000n)] },  // ~-π/6
       { input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] },  // ~0
       { input: 0, expected: kAnyBounds },
       { input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] },  // ~0
-      { input: 1/2, expected: [hexToF64(0x3fe0_bf51_c000_0000n), hexToF64(0x3fe0_c352_c000_0000n)] },  // ~π/6
+      { input: 1/2, expected: [reinterpretU64AsF64(0x3fe0_bf51_c000_0000n), reinterpretU64AsF64(0x3fe0_c352_c000_0000n)] },  // ~π/6
       { input: 1, expected: kAnyBounds },  // ~π/2
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -3792,9 +3797,9 @@ g.test('asinhInterval_f32')
       // of the errors.
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [hexToF64(0xbfec_343a_8000_0000n), hexToF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
-      { input: 0, expected: [hexToF64(0xbeaa_0000_2000_0000n), hexToF64(0x3eb1_ffff_d000_0000n)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fec_3435_4000_0000n), hexToF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
+      { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
+      { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] },  // ~0
+      { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -3813,13 +3818,13 @@ g.test('atanInterval_f32')
     // prettier-ignore
     [
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: hexToF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULPF32(kValue.f32.negative.pi.third)] }, // x = -√3
+      { input: reinterpretU32AsF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULPF32(kValue.f32.negative.pi.third)] }, // x = -√3
       { input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULPF32(kValue.f32.negative.pi.quarter)] },
-      { input: hexToF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULPF32(kValue.f32.negative.pi.sixth)] },  // x = -1/√3
+      { input: reinterpretU32AsF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULPF32(kValue.f32.negative.pi.sixth)] },  // x = -1/√3
       { input: 0, expected: 0 },
-      { input: hexToF32(0x3f13cd3a), expected: [minusOneULPF32(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = 1/√3
+      { input: reinterpretU32AsF32(0x3f13cd3a), expected: [minusOneULPF32(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },  // x = 1/√3
       { input: 1, expected: [minusOneULPF32(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
-      { input: hexToF32(0x3fddb3d7), expected: [minusOneULPF32(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
+      { input: reinterpretU32AsF32(0x3fddb3d7), expected: [minusOneULPF32(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
   )
@@ -3847,9 +3852,9 @@ g.test('atanhInterval_f32')
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
       { input: -1, expected: kAnyBounds },
-      { input: -0.1, expected: [hexToF64(0xbfb9_af9a_6000_0000n), hexToF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
-      { input: 0, expected: [hexToF64(0xbe96_0000_2000_0000n), hexToF64(0x3e98_0000_0000_0000n)] },  // ~0
-      { input: 0.1, expected: [hexToF64(0x3fb9_af8b_8000_0000n), hexToF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
+      { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
+      { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] },  // ~0
+      { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
       { input: 1, expected: kAnyBounds },
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -3951,9 +3956,9 @@ g.test('coshInterval_f32')
       // of the errors.
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [ hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] },  // ~1.1543...
-      { input: 0, expected: [hexToF32(0x3f7ffffd), hexToF32(0x3f800002)] },  // ~1
-      { input: 1, expected: [ hexToF32(0x3fc583a4), hexToF32(0x3fc583b1)] },  // ~1.1543...
+      { input: -1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
+      { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] },  // ~1
+      { input: 1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -4099,14 +4104,14 @@ g.test('fractInterval_f32')
     // prettier-ignore
     [
       { input: 0, expected: 0 },
-      { input: 0.1, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
-      { input: 0.9, expected: [hexToF32(0x3f666666), plusOneULPF32(hexToF32(0x3f666666))] },  // ~0.9
+      { input: 0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+      { input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), plusOneULPF32(reinterpretU32AsF32(0x3f666666))] },  // ~0.9
       { input: 1.0, expected: 0 },
-      { input: 1.1, expected: [hexToF64(0x3fb9_9998_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-      { input: -0.1, expected: [hexToF32(0x3f666666), plusOneULPF32(hexToF32(0x3f666666))] },  // ~0.9
-      { input: -0.9, expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
+      { input: 1.1, expected: [reinterpretU64AsF64(0x3fb9_9998_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
+      { input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), plusOneULPF32(reinterpretU32AsF32(0x3f666666))] },  // ~0.9
+      { input: -0.9, expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
       { input: -1.0, expected: 0 },
-      { input: -1.1, expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
+      { input: -1.1, expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
 
       // Edge cases
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -4134,8 +4139,8 @@ g.test('inverseSqrtInterval_f32')
       { input: 0, expected: kAnyBounds },
       { input: 0.04, expected: [minusOneULPF32(5), plusOneULPF32(5)] },
       { input: 1, expected: 1 },
-      { input: 100, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: kValue.f32.positive.max, expected: [hexToF32(0x1f800000), plusNULPF32(hexToF32(0x1f800000), 2)] },  // ~5.421...e-20, i.e. 1/√max f32
+      { input: 100, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: kValue.f32.positive.max, expected: [reinterpretU32AsF32(0x1f800000), plusNULPF32(reinterpretU32AsF32(0x1f800000), 2)] },  // ~5.421...e-20, i.e. 1/√max f32
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
   )
@@ -4164,12 +4169,12 @@ g.test('lengthIntervalScalar_f32')
       //
       // length(0) = kAnyBounds, because length uses sqrt, which is defined as 1/inversesqrt
       {input: 0, expected: kAnyBounds },
-      {input: 1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: -1.0, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: 0.1, expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      {input: -0.1, expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      {input: 10.0, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
-      {input: -10.0, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      {input: 1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: -1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: -0.1, expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: 10.0, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+      {input: -10.0, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
 
       // Subnormal Cases
       { input: kValue.f32.subnormal.negative.min, expected: kAnyBounds },
@@ -4203,7 +4208,7 @@ g.test('logInterval_f32')
       { input: 0, expected: kAnyBounds },
       { input: 1, expected: 0 },
       { input: kValue.f32.positive.e, expected: [minusOneULPF32(1), 1] },
-      { input: kValue.f32.positive.max, expected: [minusOneULPF32(hexToF32(0x42b17218)), hexToF32(0x42b17218)] },  // ~88.72...
+      { input: kValue.f32.positive.max, expected: [minusOneULPF32(reinterpretU32AsF32(0x42b17218)), reinterpretU32AsF32(0x42b17218)] },  // ~88.72...
     ]
   )
   .fn(t => {
@@ -4258,12 +4263,12 @@ g.test('negationInterval_f32')
     // prettier-ignore
     [
       { input: 0, expected: 0 },
-      { input: 0.1, expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] }, // ~-0.1
+      { input: 0.1, expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
       { input: 1.0, expected: -1.0 },
-      { input: 1.9, expected: [hexToF32(0xbff33334), plusOneULPF32(hexToF32(0xbff33334))] },  // ~-1.9
-      { input: -0.1, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] }, // ~0.1
+      { input: 1.9, expected: [reinterpretU32AsF32(0xbff33334), plusOneULPF32(reinterpretU32AsF32(0xbff33334))] },  // ~-1.9
+      { input: -0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
       { input: -1.0, expected: 1 },
-      { input: -1.9, expected: [minusOneULPF32(hexToF32(0x3ff33334)), hexToF32(0x3ff33334)] },  // ~1.9
+      { input: -1.9, expected: [minusOneULPF32(reinterpretU32AsF32(0x3ff33334)), reinterpretU32AsF32(0x3ff33334)] },  // ~1.9
 
       // Edge cases
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -4297,7 +4302,7 @@ g.test('quantizeToF16Interval_f32')
       { input: kValue.f32.negative.min, expected: kAnyBounds },
       { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
       { input: -1, expected: -1 },
-      { input: -0.1, expected: [hexToF32(0xbdcce000), hexToF32(0xbdccc000)] },  // ~-0.1
+      { input: -0.1, expected: [reinterpretU32AsF32(0xbdcce000), reinterpretU32AsF32(0xbdccc000)] },  // ~-0.1
       { input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
       { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
       { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
@@ -4307,7 +4312,7 @@ g.test('quantizeToF16Interval_f32')
       { input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
       { input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
       { input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
-      { input: 0.1, expected: [hexToF32(0x3dccc000), hexToF32(0x3dcce000)] },  // ~0.1
+      { input: 0.1, expected: [reinterpretU32AsF32(0x3dccc000), reinterpretU32AsF32(0x3dcce000)] },  // ~0.1
       { input: 1, expected: 1 },
       { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
       { input: kValue.f32.positive.max, expected: kAnyBounds },
@@ -4410,7 +4415,7 @@ g.test('saturateInterval_f32')
       { input: -0.1, expected: 0 },
       { input: -1, expected: 0 },
       { input: -10, expected: 0 },
-      { input: 0.1, expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
+      { input: 0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
       { input: 10, expected: 1.0 },
       { input: 11.1, expected: 1.0 },
       { input: kValue.f32.positive.max, expected: 1.0 },
@@ -4513,9 +4518,9 @@ g.test('sinhInterval_f32')
       // of the errors.
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [ hexToF32(0xbf966d05), hexToF32(0xbf966cf8)] },  // ~-1.175...
-      { input: 0, expected: [hexToF32(0xb4600000), hexToF32(0x34600000)] },  // ~0
-      { input: 1, expected: [ hexToF32(0x3f966cf8), hexToF32(0x3f966d05)] },  // ~1.175...
+      { input: -1, expected: [ reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] },  // ~-1.175...
+      { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] },  // ~0
+      { input: 1, expected: [ reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] },  // ~1.175...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -4538,10 +4543,10 @@ g.test('sqrtInterval_f32')
       // of the errors.
       { input: -1, expected: kAnyBounds },
       { input: 0, expected: kAnyBounds },
-      { input: 0.01, expected: [hexToF64(0x3fb9_9998_b000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: 1, expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: 4, expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: 100, expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: 0.01, expected: [reinterpretU64AsF64(0x3fb9_9998_b000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: 1, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: 4, expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: 100, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
   )
@@ -4577,11 +4582,11 @@ g.test('tanInterval_f32')
       // values are correct.
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: kValue.f32.negative.pi.whole, expected: [hexToF64(0xbf40_02bc_9000_0000n), hexToF64(0x3f40_0144_f000_0000n)] },  // ~0.0
+      { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] },  // ~0.0
       { input: kValue.f32.negative.pi.half, expected: kAnyBounds },
-      { input: 0, expected: [hexToF64(0xbf40_0200_b000_0000n), hexToF64(0x3f40_0200_b000_0000n)] },  // ~0.0
+      { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] },  // ~0.0
       { input: kValue.f32.positive.pi.half, expected: kAnyBounds },
-      { input: kValue.f32.positive.pi.whole, expected: [hexToF64(0xbf40_0144_f000_0000n), hexToF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
+      { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -4604,9 +4609,9 @@ g.test('tanhInterval_f32')
       // of the errors.
       { input: kValue.f32.infinity.negative, expected: kAnyBounds },
       { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: -1, expected: [hexToF64(0xbfe8_5efd_1000_0000n), hexToF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
-      { input: 0, expected: [hexToF64(0xbe8c_0000_b000_0000n), hexToF64(0x3e8c_0000_b000_0000n)] },  // ~0
-      { input: 1, expected: [hexToF64(0x3fe8_5ef8_9000_0000n), hexToF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
+      { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
+      { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] },  // ~0
+      { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
       { input: kValue.f32.positive.max, expected: kAnyBounds },
       { input: kValue.f32.infinity.positive, expected: kAnyBounds },
     ]
@@ -4683,14 +4688,14 @@ g.test('additionInterval_f32')
       { input: [-1, -1], expected: -2 },
 
       // 64-bit normals
-      { input: [0.1, 0], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [0, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3e4ccccd)), hexToF32(0x3e4ccccd)] },  // ~0.2
-      { input: [0.1, -0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] }, // ~0
-      { input: [-0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] }, // ~0
-      { input: [-0.1, -0.1], expected: [hexToF32(0xbe4ccccd), plusOneULPF32(hexToF32(0xbe4ccccd))] },  // ~-0.2
+      { input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] },  // ~0.2
+      { input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
+      { input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
+      { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), plusOneULPF32(reinterpretU32AsF32(0xbe4ccccd))] },  // ~-0.2
 
       // 32-bit subnormals
       { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -4744,9 +4749,9 @@ g.test('atan2Interval_f32')
       // used.
 
       // positive y, positive x
-      { input: [1, hexToF32(0x3fddb3d7)], expected: [minusNULPF32(kValue.f32.positive.pi.sixth, 4097), plusNULPF32(kValue.f32.positive.pi.sixth, 4096)] },  // x = √3
+      { input: [1, reinterpretU32AsF32(0x3fddb3d7)], expected: [minusNULPF32(kValue.f32.positive.pi.sixth, 4097), plusNULPF32(kValue.f32.positive.pi.sixth, 4096)] },  // x = √3
       { input: [1, 1], expected: [minusNULPF32(kValue.f32.positive.pi.quarter, 4097), plusNULPF32(kValue.f32.positive.pi.quarter, 4096)] },
-      // { input: [hexToF32(0x3fddb3d7), 1], expected: [hexToF64(0x3ff0_bf52_0000_0000n), hexToF64(0x3ff0_c352_6000_0000n)] },  // y = √3
+      { input: [reinterpretU32AsF32(0x3fddb3d7), 1], expected: [reinterpretU64AsF64(0x3ff0_bf52_2000_0000n), reinterpretU64AsF64(0x3ff0_c352_4000_0000n)] },  // y = √3
       { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
 
       // positive y, negative x
@@ -4776,8 +4781,8 @@ g.test('atan2Interval_f32')
       { input: [kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
 
       // When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
-      {input: [hexToF32(0x80800000), hexToF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.negative.pi.whole, 4096), plusNULPF32(kValue.f32.negative.pi.whole, 4096)] },
-      {input: [hexToF32(0x00800000), hexToF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.positive.pi.whole, 4096), plusNULPF32(kValue.f32.positive.pi.whole, 4096)] },
+      {input: [reinterpretU32AsF32(0x80800000), reinterpretU32AsF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.negative.pi.whole, 4096), plusNULPF32(kValue.f32.negative.pi.whole, 4096)] },
+      {input: [reinterpretU32AsF32(0x00800000), reinterpretU32AsF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.positive.pi.whole, 4096), plusNULPF32(kValue.f32.positive.pi.whole, 4096)] },
 
       // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
       { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
@@ -4792,7 +4797,7 @@ g.test('atan2Interval_f32')
     const got = FP.f32.atan2Interval(y, x);
     t.expect(
       objectEquals(expected, got),
-      `f32.atan2Interval(${y}, ${x}) returned ${got}. Expected ${expected}`
+      `f32.atan2Interval(${y}, ${x}) returned ${got}]. Expected ${expected}`
     );
   });
 
@@ -4807,20 +4812,20 @@ g.test('distanceIntervalScalar_f32')
       // distance(x, y), where x - y = 0 has an acceptance interval of kAnyBounds,
       // because distance(x, y) = length(x - y), and length(0) = kAnyBounds
       { input: [0, 0], expected: kAnyBounds },
-      { input: [1.0, 0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [1.0, 0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
       { input: [1.0, 1.0], expected: kAnyBounds },
-      { input: [-0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [0.0, -1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [-0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
       { input: [-1.0, -1.0], expected: kAnyBounds },
-      { input: [0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [0, 0.1], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [-0.1, 0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [0, -0.1], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [10.0, 0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [0, 10.0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [-10.0, 0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [0, -10.0], expected: [hexToF64(0x4023_ffff_7000_0000n), hexToF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [-0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [0, -0.1], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [10.0, 0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [0, 10.0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [-10.0, 0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+      { input: [0, -10.0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
 
       // Subnormal Cases
       { input: [kValue.f32.subnormal.negative.min, 0], expected: kAnyBounds },
@@ -4962,14 +4967,14 @@ g.test('maxInterval_f32')
       { input: [-1, -1], expected: -1 },
 
       // 64-bit normals
-      { input: [0.1, 0], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
+      { input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
       { input: [-0.1, 0], expected: 0 },
       { input: [0, -0.1], expected: 0 },
-      { input: [0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0.1, -0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [-0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [-0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
 
       // 32-bit subnormals
       { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -5022,12 +5027,12 @@ g.test('minInterval_f32')
       // 64-bit normals
       { input: [0.1, 0], expected: 0 },
       { input: [0, 0.1], expected: 0 },
-      { input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [0, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [-0.1, 0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [-0.1, -0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
+      { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
 
       // 32-bit subnormals
       { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -5090,10 +5095,10 @@ g.test('multiplicationInterval_f32')
       { input: [0, 0.1], expected: 0 },
       { input: [-0.1, 0], expected: 0 },
       { input: [0, -0.1], expected: 0 },
-      { input: [0.1, 0.1], expected: [minusNULPF32(hexToF32(0x3c23d70a), 2), plusOneULPF32(hexToF32(0x3c23d70a))] },  // ~0.01
-      { input: [0.1, -0.1], expected: [minusOneULPF32(hexToF32(0xbc23d70a)), plusNULPF32(hexToF32(0xbc23d70a), 2)] },  // ~-0.01
-      { input: [-0.1, 0.1], expected: [minusOneULPF32(hexToF32(0xbc23d70a)), plusNULPF32(hexToF32(0xbc23d70a), 2)] },  // ~-0.01
-      { input: [-0.1, -0.1], expected: [minusNULPF32(hexToF32(0x3c23d70a), 2), plusOneULPF32(hexToF32(0x3c23d70a))] },  // ~0.01
+      { input: [0.1, 0.1], expected: [minusNULPF32(reinterpretU32AsF32(0x3c23d70a), 2), plusOneULPF32(reinterpretU32AsF32(0x3c23d70a))] },  // ~0.01
+      { input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0xbc23d70a)), plusNULPF32(reinterpretU32AsF32(0xbc23d70a), 2)] },  // ~-0.01
+      { input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0xbc23d70a)), plusNULPF32(reinterpretU32AsF32(0xbc23d70a), 2)] },  // ~-0.01
+      { input: [-0.1, -0.1], expected: [minusNULPF32(reinterpretU32AsF32(0x3c23d70a), 2), plusOneULPF32(reinterpretU32AsF32(0x3c23d70a))] },  // ~0.01
 
       // Infinities
       { input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
@@ -5133,17 +5138,17 @@ g.test('powInterval_f32')
       // of the errors.
       { input: [-1, 0], expected: kAnyBounds },
       { input: [0, 0], expected: kAnyBounds },
-      { input: [1, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
-      { input: [2, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
-      { input: [kValue.f32.positive.max, 0], expected: [minusNULPF32(1, 3), hexToF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [1, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [2, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
+      { input: [kValue.f32.positive.max, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
       { input: [0, 1], expected: kAnyBounds },
-      { input: [1, 1], expected: [hexToF64(0x3fef_fffe_dfff_fe00n), hexToF64(0x3ff0_0000_c000_0200n)] },  // ~1
-      { input: [1, 100], expected: [hexToF64(0x3fef_ffba_3fff_3800n), hexToF64(0x3ff0_0023_2000_c800n)] },  // ~1
+      { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_fffe_dfff_fe00n), reinterpretU64AsF64(0x3ff0_0000_c000_0200n)] },  // ~1
+      { input: [1, 100], expected: [reinterpretU64AsF64(0x3fef_ffba_3fff_3800n), reinterpretU64AsF64(0x3ff0_0023_2000_c800n)] },  // ~1
       { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
-      { input: [2, 1], expected: [hexToF64(0x3fff_fffe_a000_0200n), hexToF64(0x4000_0001_0000_0200n)] },  // ~2
-      { input: [2, 2], expected: [hexToF64(0x400f_fffd_a000_0400n), hexToF64(0x4010_0001_a000_0400n)] },  // ~4
-      { input: [10, 10], expected: [hexToF64(0x4202_a04f_51f7_7000n), hexToF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
-      { input: [10, 1], expected: [hexToF64(0x4023_fffe_0b65_8b00n), hexToF64(0x4024_0002_149a_7c00n)] },  // ~10
+      { input: [2, 1], expected: [reinterpretU64AsF64(0x3fff_fffe_a000_0200n), reinterpretU64AsF64(0x4000_0001_0000_0200n)] },  // ~2
+      { input: [2, 2], expected: [reinterpretU64AsF64(0x400f_fffd_a000_0400n), reinterpretU64AsF64(0x4010_0001_a000_0400n)] },  // ~4
+      { input: [10, 10], expected: [reinterpretU64AsF64(0x4202_a04f_51f7_7000n), reinterpretU64AsF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
+      { input: [10, 1], expected: [reinterpretU64AsF64(0x4023_fffe_0b65_8b00n), reinterpretU64AsF64(0x4024_0002_149a_7c00n)] },  // ~10
       { input: [kValue.f32.positive.max, 1], expected: kAnyBounds },
     ]
   )
@@ -5180,10 +5185,10 @@ g.test('remainderInterval_f32')
       // 64-bit normals
       { input: [0, 0.1], expected: [0, 0] },
       { input: [0, -0.1], expected: [0, 0] },
-      { input: [1, 0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
-      { input: [-1, 0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
-      { input: [1, -0.1], expected: [hexToF32(0xb4000000), hexToF32(0x3dccccd8)] }, // ~[0, 0.1]
-      { input: [-1, -0.1], expected: [hexToF32(0xbdccccd8), hexToF32(0x34000000)] }, // ~[-0.1, 0]
+      { input: [1, 0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
+      { input: [-1, 0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
+      { input: [1, -0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
+      { input: [-1, -0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
 
       // Denominator out of range
       { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
@@ -5299,14 +5304,14 @@ g.test('subtractionInterval_f32')
       { input: [-1, -1], expected: 0 },
 
       // 64-bit normals
-      { input: [0.1, 0], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0, 0.1], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [-0.1, 0], expected: [hexToF32(0xbdcccccd), plusOneULPF32(hexToF32(0xbdcccccd))] },  // ~-0.1
-      { input: [0, -0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)), hexToF32(0x3dcccccd)] },  // ~0.1
-      { input: [0.1, 0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] },  // ~0.0
-      { input: [0.1, -0.1], expected: [minusOneULPF32(hexToF32(0x3e4ccccd)), hexToF32(0x3e4ccccd)] }, // ~0.2
-      { input: [-0.1, 0.1], expected: [hexToF32(0xbe4ccccd), plusOneULPF32(hexToF32(0xbe4ccccd))] },  // ~-0.2
-      { input: [-0.1, -0.1], expected: [minusOneULPF32(hexToF32(0x3dcccccd)) - hexToF32(0x3dcccccd), hexToF32(0x3dcccccd) - minusOneULPF32(hexToF32(0x3dcccccd))] }, // ~0
+      { input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
+      { input: [0, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
+      { input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] },  // ~0.0
+      { input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] }, // ~0.2
+      { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), plusOneULPF32(reinterpretU32AsF32(0xbe4ccccd))] },  // ~-0.2
+      { input: [-0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
 
       // // 32-bit normals
       { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -5474,7 +5479,7 @@ g.test('fmaInterval_f32')
       { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
       { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.positive.min] },
       { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [hexToF32(0x80000002), 0] },
+      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [reinterpretU32AsF32(0x80000002), 0] },
 
       // Infinities
       { input: [0, 1, kValue.f32.infinity.positive], expected: kAnyBounds },
@@ -5504,45 +5509,45 @@ g.test('mixImpreciseInterval_f32')
       // [0.0, 1.0] cases
       { input: [0.0, 1.0, -1.0], expected: -1.0 },
       { input: [0.0, 1.0, 0.0], expected: 0.0 },
-      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
+      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
       { input: [0.0, 1.0, 0.5], expected: 0.5 },
-      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [0.0, 1.0, 1.0], expected: 1.0 },
       { input: [0.0, 1.0, 2.0], expected: 2.0 },
 
       // [1.0, 0.0] cases
       { input: [1.0, 0.0, -1.0], expected: 2.0 },
       { input: [1.0, 0.0, 0.0], expected: 1.0 },
-      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [1.0, 0.0, 0.5], expected: 0.5 },
-      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
+      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
       { input: [1.0, 0.0, 1.0], expected: 0.0 },
       { input: [1.0, 0.0, 2.0], expected: -1.0 },
 
       // [0.0, 10.0] cases
       { input: [0.0, 10.0, -1.0], expected: -10.0 },
       { input: [0.0, 10.0, 0.0], expected: 0.0 },
-      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] },  // ~1
+      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
       { input: [0.0, 10.0, 0.5], expected: 5.0 },
-      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] },  // ~9
+      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
       { input: [0.0, 10.0, 1.0], expected: 10.0 },
       { input: [0.0, 10.0, 2.0], expected: 20.0 },
 
       // [2.0, 10.0] cases
       { input: [2.0, 10.0, -1.0], expected: -6.0 },
       { input: [2.0, 10.0, 0.0], expected: 2.0 },
-      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_6000_0000n), hexToF64(0x4006_6666_8000_0000n)] },  // ~2.8
+      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_6000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
       { input: [2.0, 10.0, 0.5], expected: 6.0 },
-      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_6000_0000n), hexToF64(0x4022_6666_8000_0000n)] },  // ~9.2
+      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_6000_0000n), reinterpretU64AsF64(0x4022_6666_8000_0000n)] },  // ~9.2
       { input: [2.0, 10.0, 1.0], expected: 10.0 },
       { input: [2.0, 10.0, 2.0], expected: 18.0 },
 
       // [-1.0, 1.0] cases
       { input: [-1.0, 1.0, -2.0], expected: -5.0 },
       { input: [-1.0, 1.0, 0.0], expected: -1.0 },
-      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_a000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_a000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
       { input: [-1.0, 1.0, 0.5], expected: 0.0 },
-      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
+      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
       { input: [-1.0, 1.0, 1.0], expected: 1.0 },
       { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
@@ -5583,45 +5588,45 @@ g.test('mixPreciseInterval_f32')
       // [0.0, 1.0] cases
       { input: [0.0, 1.0, -1.0], expected: -1.0 },
       { input: [0.0, 1.0, 0.0], expected: 0.0 },
-      { input: [0.0, 1.0, 0.1], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
+      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
       { input: [0.0, 1.0, 0.5], expected: 0.5 },
-      { input: [0.0, 1.0, 0.9], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [0.0, 1.0, 1.0], expected: 1.0 },
       { input: [0.0, 1.0, 2.0], expected: 2.0 },
 
       // [1.0, 0.0] cases
       { input: [1.0, 0.0, -1.0], expected: 2.0 },
       { input: [1.0, 0.0, 0.0], expected: 1.0 },
-      { input: [1.0, 0.0, 0.1], expected: [hexToF64(0x3fec_cccc_c000_0000n), hexToF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
       { input: [1.0, 0.0, 0.5], expected: 0.5 },
-      { input: [1.0, 0.0, 0.9], expected: [hexToF64(0x3fb9_9999_0000_0000n), hexToF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
+      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
       { input: [1.0, 0.0, 1.0], expected: 0.0 },
       { input: [1.0, 0.0, 2.0], expected: -1.0 },
 
       // [0.0, 10.0] cases
       { input: [0.0, 10.0, -1.0], expected: -10.0 },
       { input: [0.0, 10.0, 0.0], expected: 0.0 },
-      { input: [0.0, 10.0, 0.1], expected: [hexToF64(0x3fef_ffff_e000_0000n), hexToF64(0x3ff0_0000_2000_0000n)] },  // ~1
+      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
       { input: [0.0, 10.0, 0.5], expected: 5.0 },
-      { input: [0.0, 10.0, 0.9], expected: [hexToF64(0x4021_ffff_e000_0000n), hexToF64(0x4022_0000_2000_0000n)] },  // ~9
+      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
       { input: [0.0, 10.0, 1.0], expected: 10.0 },
       { input: [0.0, 10.0, 2.0], expected: 20.0 },
 
       // [2.0, 10.0] cases
       { input: [2.0, 10.0, -1.0], expected: -6.0 },
       { input: [2.0, 10.0, 0.0], expected: 2.0 },
-      { input: [2.0, 10.0, 0.1], expected: [hexToF64(0x4006_6666_4000_0000n), hexToF64(0x4006_6666_8000_0000n)] },  // ~2.8
+      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_4000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
       { input: [2.0, 10.0, 0.5], expected: 6.0 },
-      { input: [2.0, 10.0, 0.9], expected: [hexToF64(0x4022_6666_4000_0000n), hexToF64(0x4022_6666_a000_0000n)] },  // ~9.2
+      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] },  // ~9.2
       { input: [2.0, 10.0, 1.0], expected: 10.0 },
       { input: [2.0, 10.0, 2.0], expected: 18.0 },
 
       // [-1.0, 1.0] cases
       { input: [-1.0, 1.0, -2.0], expected: -5.0 },
       { input: [-1.0, 1.0, 0.0], expected: -1.0 },
-      { input: [-1.0, 1.0, 0.1], expected: [hexToF64(0xbfe9_9999_c000_0000n), hexToF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
       { input: [-1.0, 1.0, 0.5], expected: 0.0 },
-      { input: [-1.0, 1.0, 0.9], expected: [hexToF64(0x3fe9_9999_8000_0000n), hexToF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
+      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
       { input: [-1.0, 1.0, 1.0], expected: 1.0 },
       { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
@@ -5661,27 +5666,27 @@ g.test('smoothStepInterval_f32')
 
       // Normals
       { input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, 1, 1], expected: [hexToF32(0x3f7ffffa), hexToF32(0x3f800003)] },  // ~1
+      { input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] },  // ~1
       { input: [0, 1, 10], expected: 1 },
       { input: [0, 1, -10], expected: 0 },
-      { input: [0, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [0, 2, 0.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] },  // ~0.15625...
-      { input: [2, 0, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [2, 0, 1.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] },  // ~0.15625...
-      { input: [0, 100, 50], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [0, 100, 25], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] },  // ~0.15625...
-      { input: [0, -2, -1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [0, -2, -0.5], expected: [hexToF32(0x3e1ffffb), hexToF32(0x3e200007)] },  // ~0.15625...
+      { input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+      { input: [2, 0, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [2, 0, 1.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+      { input: [0, 100, 50], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [0, 100, 25], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+      { input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
 
       // Subnormals
       { input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
       { input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
       { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
       { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [hexToF32(0x3efffff8), hexToF32(0x3f000007)] },  // ~0.5
+      { input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+      { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
       { input: [0, kValue.f32.subnormal.positive.max, 1], expected: kAnyBounds },
       { input: [0, kValue.f32.subnormal.positive.min, 1], expected: kAnyBounds },
       { input: [0, kValue.f32.subnormal.negative.max, 1], expected: kAnyBounds },
@@ -5714,27 +5719,30 @@ interface ScalarToVectorCase {
 // Scope for unpack* tests so that they can have constants for magic numbers
 // that don't pollute the global namespace or have unwieldy long names.
 {
-  const kZeroBounds: IntervalBounds = [hexToF32(0x81200000), hexToF32(0x01200000)];
+  const kZeroBounds: IntervalBounds = [
+    reinterpretU32AsF32(0x81200000),
+    reinterpretU32AsF32(0x01200000),
+  ];
   const kOneBoundsSnorm: IntervalBounds = [
-    hexToF64(0x3fef_ffff_a000_0000n),
-    hexToF64(0x3ff0_0000_4000_0000n),
+    reinterpretU64AsF64(0x3fef_ffff_a000_0000n),
+    reinterpretU64AsF64(0x3ff0_0000_4000_0000n),
   ];
   const kOneBoundsUnorm: IntervalBounds = [
-    hexToF64(0x3fef_ffff_b000_0000n),
-    hexToF64(0x3ff0_0000_2800_0000n),
+    reinterpretU64AsF64(0x3fef_ffff_b000_0000n),
+    reinterpretU64AsF64(0x3ff0_0000_2800_0000n),
   ];
   const kNegOneBoundsSnorm: IntervalBounds = [
-    hexToF64(0xbff0_0000_0000_0000n),
-    hexToF64(0xbfef_ffff_a000_0000n),
+    reinterpretU64AsF64(0xbff0_0000_0000_0000n),
+    reinterpretU64AsF64(0xbfef_ffff_a000_0000n),
   ];
 
   const kHalfBounds2x16snorm: IntervalBounds = [
-    hexToF64(0x3fe0_001f_a000_0000n),
-    hexToF64(0x3fe0_0020_8000_0000n),
+    reinterpretU64AsF64(0x3fe0_001f_a000_0000n),
+    reinterpretU64AsF64(0x3fe0_0020_8000_0000n),
   ]; // ~0.5..., due to lack of precision in i16
   const kNegHalfBounds2x16snorm: IntervalBounds = [
-    hexToF64(0xbfdf_ffc0_6000_0000n),
-    hexToF64(0xbfdf_ffbf_8000_0000n),
+    reinterpretU64AsF64(0xbfdf_ffc0_6000_0000n),
+    reinterpretU64AsF64(0xbfdf_ffbf_8000_0000n),
   ]; // ~-0.5..., due to lack of precision in i16
 
   g.test('unpack2x16snormInterval')
@@ -5794,8 +5802,8 @@ interface ScalarToVectorCase {
     });
 
   const kHalfBounds2x16unorm: IntervalBounds = [
-    hexToF64(0x3fe0_000f_b000_0000n),
-    hexToF64(0x3fe0_0010_7000_0000n),
+    reinterpretU64AsF64(0x3fe0_000f_b000_0000n),
+    reinterpretU64AsF64(0x3fe0_0010_7000_0000n),
   ]; // ~0.5..., due to lack of precision in u16
 
   g.test('unpack2x16unormInterval')
@@ -5819,12 +5827,12 @@ interface ScalarToVectorCase {
     });
 
   const kHalfBounds4x8snorm: IntervalBounds = [
-    hexToF64(0x3fe0_2040_2000_0000n),
-    hexToF64(0x3fe0_2041_0000_0000n),
+    reinterpretU64AsF64(0x3fe0_2040_2000_0000n),
+    reinterpretU64AsF64(0x3fe0_2041_0000_0000n),
   ]; // ~0.50196..., due to lack of precision in i8
   const kNegHalfBounds4x8snorm: IntervalBounds = [
-    hexToF64(0xbfdf_bf7f_6000_0000n),
-    hexToF64(0xbfdf_bf7e_8000_0000n),
+    reinterpretU64AsF64(0xbfdf_bf7f_6000_0000n),
+    reinterpretU64AsF64(0xbfdf_bf7e_8000_0000n),
   ]; // ~-0.49606..., due to lack of precision in i8
 
   g.test('unpack4x8snormInterval')
@@ -5856,8 +5864,8 @@ interface ScalarToVectorCase {
     });
 
   const kHalfBounds4x8unorm: IntervalBounds = [
-    hexToF64(0x3fe0_100f_b000_0000n),
-    hexToF64(0x3fe0_1010_7000_0000n),
+    reinterpretU64AsF64(0x3fe0_100f_b000_0000n),
+    reinterpretU64AsF64(0x3fe0_1010_7000_0000n),
   ]; // ~0.50196..., due to lack of precision in u8
 
   g.test('unpack4x8unormInterval')
@@ -5901,31 +5909,31 @@ g.test('lengthIntervalVector_f32')
       // of the errors.
 
       // vec2
-      {input: [1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [-1.0, -1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [-1.0, 1.0], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [0.1, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: [1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [-1.0, -1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [-1.0, 1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      {input: [0.1, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec3
-      {input: [1.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0, 1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [-1.0, -1.0, -1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [1.0, -1.0, -1.0], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [0.1, 0.0, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: [1.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0, 1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [-1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      {input: [0.1, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [-1.0, -1.0, -1.0, -1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [-1.0, 1.0, -1.0, 1.0], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [0.1, 0.0, 0.0, 0.0], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [-1.0, -1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [-1.0, 1.0, -1.0, 1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      {input: [0.1, 0.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // Test that dot going OOB bounds in the intermediate calculations propagates
       { input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kAnyBounds },
@@ -5960,44 +5968,44 @@ g.test('distanceIntervalVector_f32')
 
       // vec2
       { input: [[1.0, 0.0], [1.0, 0.0]], expected: kAnyBounds },
-      { input: [[1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0], [-1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0], [-1.0, 0.0]], expected: [hexToF64(0x3ff6_a09d_b000_0000n), hexToF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      { input: [[0.1, 0.0], [0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0], [1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0], [-1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0], [-1.0, 0.0]], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
+      { input: [[0.1, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec3
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kAnyBounds },
-      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: [hexToF64(0x3ffb_b67a_1000_0000n), hexToF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
+      { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
 
       // vec4
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kAnyBounds },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [hexToF64(0x3fef_ffff_7000_0000n), hexToF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: [hexToF64(0x3fff_ffff_7000_0000n), hexToF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9998_9000_0000n), hexToF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
+      { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
+      { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+      { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
     ]
   )
   .fn(t => {
@@ -6019,7 +6027,7 @@ g.test('dotInterval_f32')
       { input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
       { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
       { input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
-      { input: [[0.1, 0.0], [1.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
+      { input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // vec3
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
@@ -6028,7 +6036,7 @@ g.test('dotInterval_f32')
       { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
       { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
       { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
-      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
+      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // vec4
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
@@ -6038,7 +6046,7 @@ g.test('dotInterval_f32')
       { input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
       { input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
       { input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
-      { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [hexToF64(0x3fb9_9999_8000_0000n), hexToF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
+      { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)]},  // ~0.1
 
       // Test that going out of bounds in the intermediate calculations is caught correctly.
       { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kAnyBounds },
@@ -6072,25 +6080,25 @@ g.test('normalizeInterval_f32')
     // prettier-ignore
     [
       // vec2
-      {input: [1.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
-      {input: [-1.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [1.0, 1.0], expected: [[hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)], [hexToF64(0x3fe6_a09d_5000_0000n), hexToF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
+      {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
+      {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+      {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)], [reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
 
       // vec3
-      {input: [1.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0], expected: [[hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)], [hexToF64(0x3fe2_79a6_5000_0000n), hexToF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+      {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
 
       // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [[hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF64(0x3fef_fffe_7000_0000n), hexToF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[hexToF64(0xbff0_0000_b000_0000n), hexToF64(0xbfef_fffe_7000_0000n)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)], [hexToF32(0x81200000), hexToF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [[hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)], [hexToF64(0x3fdf_fffe_7000_0000n), hexToF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+      {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+      {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+      {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+      {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
     ]
   )
   .fn(t => {
@@ -6128,16 +6136,16 @@ g.test('crossInterval_f32')
 
       // f64 normals
       { input: [[0.1, -0.1, -0.1], [-0.1, 0.1, -0.1]],
-        expected: [[hexToF32(0x3ca3d708), hexToF32(0x3ca3d70b)],  // ~0.02
-          [hexToF32(0x3ca3d708), hexToF32(0x3ca3d70b)],  // ~0.02
-          [hexToF32(0xb1400000), hexToF32(0x31400000)]] },  // ~0
+        expected: [[reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
+          [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
+          [reinterpretU32AsF32(0xb1400000), reinterpretU32AsF32(0x31400000)]] },  // ~0
 
       // f32 subnormals
       { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
           [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]],
-        expected: [[0.0, hexToF32(0x00000002)],  // ~0
-          [0.0, hexToF32(0x00000002)],  // ~0
-          [hexToF32(0x80000001), hexToF32(0x00000001)]] },  // ~0
+        expected: [[0.0, reinterpretU32AsF32(0x00000002)],  // ~0
+          [0.0, reinterpretU32AsF32(0x00000002)],  // ~0
+          [reinterpretU32AsF32(0x80000001), reinterpretU32AsF32(0x00000001)]] },  // ~0
     ]
   )
   .fn(t => {
@@ -6161,8 +6169,8 @@ g.test('reflectInterval_f32')
       { input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
       { input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
       { input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
-      { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[hexToF32(0xbe99999a), hexToF32(0xbe999998)], [hexToF32(0xbe99999a), hexToF32(0xbe999998)]] },  // [~-0.3, ~-0.3]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)]] },  // [~0.0, ~0.0]
+      { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] },  // [~-0.3, ~-0.3]
+      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0]
 
       // vec3s
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
@@ -6172,8 +6180,8 @@ g.test('reflectInterval_f32')
       { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
       { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
       { input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
-      { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[hexToF32(0xbf000001), hexToF32(0xbefffffe)], [hexToF32(0xbf000001), hexToF32(0xbefffffe)], [hexToF32(0xbf000001), hexToF32(0xbefffffe)]] },  // [~-0.5, ~-0.5, ~-0.5]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
+      { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] },  // [~-0.5, ~-0.5, ~-0.5]
+      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
 
       // vec4s
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
@@ -6184,8 +6192,8 @@ g.test('reflectInterval_f32')
       { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
       { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
       { input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
-      { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)], [hexToF32(0xbf333335), hexToF32(0xbf333332)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[hexToF32(0x80fffffe), hexToF32(0x00800001)], [hexToF32(0x80ffffff), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)], [hexToF32(0x80fffffe), hexToF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+      { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
+      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
 
       // Test that dot going OOB bounds in the intermediate calculations propagates
       { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },
@@ -7740,10 +7748,10 @@ g.test('faceForwardIntervals_f32')
       { input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[10.0, 0.0]] },
       { input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[10.0, 0.0]] },
       { input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[-10.0, 0.0]] },
-      { input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0]] },
-      { input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0]] },
-      { input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0]] },
-      { input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0]] },
+      { input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0]] },
+      { input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0]] },
+      { input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0]] },
+      { input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0]] },
 
       // vec3
       { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
@@ -7754,10 +7762,10 @@ g.test('faceForwardIntervals_f32')
       { input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
       { input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
       { input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0]] },
+      { input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0]] },
+      { input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0]] },
+      { input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0]] },
+      { input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0]] },
 
       // vec4
       { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
@@ -7768,10 +7776,10 @@ g.test('faceForwardIntervals_f32')
       { input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
       { input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
       { input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0x3dcccccc), hexToF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[hexToF32(0xbdcccccd), hexToF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
+      { input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
+      { input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
+      { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
+      { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
 
       // dot(y, z) === 0
       { input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected:  [[-1.0, -1.0]] },
@@ -7850,8 +7858,8 @@ interface RefractCase {
 // numbers that don't pollute the global namespace or have unwieldy long names.
 {
   const kNegativeOneBounds: IntervalBounds = [
-    hexToF64(0xbff0_0000_c000_0000n),
-    hexToF64(0xbfef_ffff_4000_0000n),
+    reinterpretU64AsF64(0xbff0_0000_c000_0000n),
+    reinterpretU64AsF64(0xbfef_ffff_4000_0000n),
   ];
 
   g.test('refractInterval_f32')
@@ -7871,21 +7879,21 @@ interface RefractCase {
         // k > 0
         // vec2
         { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, 1] },
-        { input: [[1, -2], [3, 4], 5], expected: [[hexToF32(0x40ce87a4), hexToF32(0x40ce8840)],  // ~6.454...
-            [hexToF32(0xc100fae8), hexToF32(0xc100fa80)]] },  // ~-8.061...
+        { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU32AsF32(0x40ce87a4), reinterpretU32AsF32(0x40ce8840)],  // ~6.454...
+            [reinterpretU32AsF32(0xc100fae8), reinterpretU32AsF32(0xc100fa80)]] },  // ~-8.061...
 
         // vec3
         { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1] },
-        { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[hexToF32(0x40d24480), hexToF32(0x40d24c00)],  // ~6.571...
-            [hexToF32(0xc1576f80), hexToF32(0xc1576ad0)],  // ~-13.464...
-            [hexToF32(0x41a2d9b0), hexToF32(0x41a2dc80)]] },  // ~20.356...
+        { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU32AsF32(0x40d24480), reinterpretU32AsF32(0x40d24c00)],  // ~6.571...
+            [reinterpretU32AsF32(0xc1576f80), reinterpretU32AsF32(0xc1576ad0)],  // ~-13.464...
+            [reinterpretU32AsF32(0x41a2d9b0), reinterpretU32AsF32(0x41a2dc80)]] },  // ~20.356...
 
         // vec4
         { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1, 1] },
-        { input: [[1, -2, 3,-4], [-5, 6, -7, 8], 9], expected: [[hexToF32(0x410ae480), hexToF32(0x410af240)],  // ~8.680...
-            [hexToF32(0xc18cf7c0), hexToF32(0xc18cef80)],  // ~-17.620...
-            [hexToF32(0x41d46cc0), hexToF32(0x41d47660)],  // ~26.553...
-            [hexToF32(0xc20dfa80), hexToF32(0xc20df500)]] },  // ~-35.494...
+        { input: [[1, -2, 3,-4], [-5, 6, -7, 8], 9], expected: [[reinterpretU32AsF32(0x410ae480), reinterpretU32AsF32(0x410af240)],  // ~8.680...
+            [reinterpretU32AsF32(0xc18cf7c0), reinterpretU32AsF32(0xc18cef80)],  // ~-17.620...
+            [reinterpretU32AsF32(0x41d46cc0), reinterpretU32AsF32(0x41d47660)],  // ~26.553...
+            [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] },  // ~-35.494...
 
         // Test that dot going OOB bounds in the intermediate calculations propagates
         { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kAnyBounds, kAnyBounds, kAnyBounds] },

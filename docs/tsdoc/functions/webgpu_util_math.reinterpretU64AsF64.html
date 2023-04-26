@@ -1,4 +1,4 @@
-<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>hexToF64 | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
+<!DOCTYPE html><html class="default" lang="en"><head><meta charSet="utf-8"/><meta http-equiv="x-ua-compatible" content="IE=edge"/><title>reinterpretU64AsF64 | @webgpu/cts</title><meta name="description" content="Documentation for @webgpu/cts"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="stylesheet" href="../assets/style.css"/><link rel="stylesheet" href="../assets/highlight.css"/><script async src="../assets/search.js" id="search-script"></script></head><body><script>document.documentElement.dataset.theme = localStorage.getItem("tsd-theme") || "os"</script><header class="tsd-page-toolbar">
 <div class="tsd-toolbar-contents container">
 <div class="table-cell" id="tsd-search" data-base="..">
 <div class="field"><label for="tsd-search-field" class="tsd-widget tsd-toolbar-icon search no-caption"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.7824 13.833L12.6666 10.7177C12.5259 10.5771 12.3353 10.499 12.1353 10.499H11.6259C12.4884 9.39596 13.001 8.00859 13.001 6.49937C13.001 2.90909 10.0914 0 6.50048 0C2.90959 0 0 2.90909 0 6.49937C0 10.0896 2.90959 12.9987 6.50048 12.9987C8.00996 12.9987 9.39756 12.4863 10.5008 11.6239V12.1332C10.5008 12.3332 10.5789 12.5238 10.7195 12.6644L13.8354 15.7797C14.1292 16.0734 14.6042 16.0734 14.8948 15.7797L15.7793 14.8954C16.0731 14.6017 16.0731 14.1267 15.7824 13.833ZM6.50048 10.499C4.29094 10.499 2.50018 8.71165 2.50018 6.49937C2.50018 4.29021 4.28781 2.49976 6.50048 2.49976C8.71001 2.49976 10.5008 4.28708 10.5008 6.49937C10.5008 8.70852 8.71314 10.499 6.50048 10.499Z" fill="var(--color-text)"></path></svg></label><input type="text" id="tsd-search-field" aria-label="Search"/></div>
@@ -14,22 +14,24 @@
 <ul class="tsd-breadcrumb">
 <li><a href="../modules.html">@webgpu/cts</a></li>
 <li><a href="../modules/webgpu_util_math.html">webgpu/util/math</a></li>
-<li><a href="webgpu_util_math.hexToF64.html">hexToF64</a></li></ul>
-<h1>Function hexToF64</h1></div>
+<li><a href="webgpu_util_math.reinterpretU64AsF64.html">reinterpretU64AsF64</a></li></ul>
+<h1>Function reinterpretU64AsF64</h1></div>
 <section class="tsd-panel">
 <ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
-<li class="tsd-signature tsd-anchor-link" id="hexToF64">hex<wbr/>To<wbr/>F64<span class="tsd-signature-symbol">(</span>hex<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#hexToF64" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></li>
+<li class="tsd-signature tsd-anchor-link" id="reinterpretU64AsF64">reinterpret<wbr/>U64<wbr/>As<wbr/>F64<span class="tsd-signature-symbol">(</span>input<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">bigint</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><a href="#reinterpretU64AsF64" aria-label="Permalink" class="tsd-anchor-icon"><svg class="icon icon-tabler icon-tabler-link" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" id="icon-anchor-a"></path><path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" id="icon-anchor-b"></path><path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" id="icon-anchor-c"></path></svg></a></li>
 <li class="tsd-description">
-<div class="tsd-comment tsd-typography"><p>Converts 64-bit hex value to a 64-bit float value</p>
+<div class="tsd-comment tsd-typography">
+<h3>Returns</h3><p>a 64-bit float value via interpreting the input as the bit
+representation as a 64-bit integer</p>
 </div>
 <div class="tsd-parameters">
 <h4 class="tsd-parameters-title">Parameters</h4>
 <ul class="tsd-parameter-list">
 <li>
-<h5>hex: <span class="tsd-signature-type">bigint</span></h5></li></ul></div>
+<h5>input: <span class="tsd-signature-type">bigint</span></h5></li></ul></div>
 <h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/f899718/src/webgpu/util/math.ts#L1222">src/webgpu/util/math.ts:1222</a></li></ul></aside></li></ul></section></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/a75df21/src/webgpu/util/math.ts#L1215">src/webgpu/util/math.ts:1215</a></li></ul></aside></li></ul></section></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">
@@ -150,9 +152,6 @@
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.fullI32Range.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>full<wbr/>I32<wbr/>Range</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.fullU32Range.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>full<wbr/>U32<wbr/>Range</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.gcd.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>gcd</a></li>
-<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.hexToF16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>hex<wbr/>To<wbr/>F16</a></li>
-<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.hexToF32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>hex<wbr/>To<wbr/>F32</a></li>
-<li class="current tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.hexToF64.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>hex<wbr/>To<wbr/>F64</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.isFiniteF16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>is<wbr/>Finite<wbr/>F16</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.isFiniteF32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>is<wbr/>Finite<wbr/>F32</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.isPowerOfTwo.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>is<wbr/>Power<wbr/>Of<wbr/>Two</a></li>
@@ -172,6 +171,9 @@
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.quantizeToF32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>quantize<wbr/>To<wbr/>F32</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.quantizeToI32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>quantize<wbr/>To<wbr/>I32</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.quantizeToU32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>quantize<wbr/>To<wbr/>U32</a></li>
+<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.reinterpretU16AsF16.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>reinterpret<wbr/>U16<wbr/>As<wbr/>F16</a></li>
+<li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.reinterpretU32AsF32.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>reinterpret<wbr/>U32<wbr/>As<wbr/>F32</a></li>
+<li class="current tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.reinterpretU64AsF64.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>reinterpret<wbr/>U64<wbr/>As<wbr/>F64</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.roundDown.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>round<wbr/>Down</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.signExtend.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>sign<wbr/>Extend</a></li>
 <li class="tsd-kind-function tsd-parent-kind-module"><a href="webgpu_util_math.sourceFilteredF32Range.html" class="tsd-index-link"><svg class="tsd-kind-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#icon-64-path"></use><use href="#icon-64-text"></use></svg>source<wbr/>Filtered<wbr/>F32<wbr/>Range</a></li>

@@ -290,33 +290,36 @@ export const kBit = {
 };
 
 /**
- * Converts a 64-bit hex value to a 64-bit float value
+ * @returns a 64-bit float value via interpreting the input as the bit
+ * representation as a 64-bit integer
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
  * */
-function hexToF64(hex) {
-  return new Float64Array(new BigInt64Array([hex]).buffer)[0];
+function reinterpretU64AsF64(input) {
+  return new Float64Array(new BigInt64Array([input]).buffer)[0];
 }
 
 /**
- * Converts a 32-bit hex value to a 32-bit float value
+ * @returns a 32-bit float value via interpreting the input as the bit
+ * representation as a 32-bit integer
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
  * */
-function hexToF32(hex) {
-  return new Float32Array(new Uint32Array([hex]).buffer)[0];
+function reinterpretU32AsF32(input) {
+  return new Float32Array(new Uint32Array([input]).buffer)[0];
 }
 
 /**
- * Converts a 16-bit hex value to a 16-bit float value
+ * @returns a 16-bit float value via interpreting the input as the bit
+ * representation as a 64-bit integer
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
  * */
-function hexToF16(hex) {
-  return new Float16Array(new Uint16Array([hex]).buffer)[0];
+function reinterpretU16AsF16(input) {
+  return new Float16Array(new Uint16Array([input]).buffer)[0];
 }
 
 export const kValue = {
@@ -341,104 +344,104 @@ export const kValue = {
   // Limits of f64
   f64: {
     positive: {
-      min: hexToF64(kBit.f64.positive.min),
-      max: hexToF64(kBit.f64.positive.max),
-      nearest_max: hexToF64(kBit.f64.positive.nearest_max),
-      less_than_one: hexToF64(kBit.f64.positive.less_than_one),
+      min: reinterpretU64AsF64(kBit.f64.positive.min),
+      max: reinterpretU64AsF64(kBit.f64.positive.max),
+      nearest_max: reinterpretU64AsF64(kBit.f64.positive.nearest_max),
+      less_than_one: reinterpretU64AsF64(kBit.f64.positive.less_than_one),
       pi: {
-        whole: hexToF64(kBit.f64.positive.pi.whole),
-        three_quarters: hexToF64(kBit.f64.positive.pi.three_quarters),
-        half: hexToF64(kBit.f64.positive.pi.half),
-        third: hexToF64(kBit.f64.positive.pi.third),
-        quarter: hexToF64(kBit.f64.positive.pi.quarter),
-        sixth: hexToF64(kBit.f64.positive.pi.sixth),
+        whole: reinterpretU64AsF64(kBit.f64.positive.pi.whole),
+        three_quarters: reinterpretU64AsF64(kBit.f64.positive.pi.three_quarters),
+        half: reinterpretU64AsF64(kBit.f64.positive.pi.half),
+        third: reinterpretU64AsF64(kBit.f64.positive.pi.third),
+        quarter: reinterpretU64AsF64(kBit.f64.positive.pi.quarter),
+        sixth: reinterpretU64AsF64(kBit.f64.positive.pi.sixth),
       },
-      e: hexToF64(kBit.f64.positive.e),
+      e: reinterpretU64AsF64(kBit.f64.positive.e),
     },
     negative: {
-      max: hexToF64(kBit.f64.negative.max),
-      min: hexToF64(kBit.f64.negative.min),
-      nearest_min: hexToF64(kBit.f64.negative.nearest_min),
-      less_than_one: hexToF64(kBit.f64.negative.less_than_one), // -0.999999940395
+      max: reinterpretU64AsF64(kBit.f64.negative.max),
+      min: reinterpretU64AsF64(kBit.f64.negative.min),
+      nearest_min: reinterpretU64AsF64(kBit.f64.negative.nearest_min),
+      less_than_one: reinterpretU64AsF64(kBit.f64.negative.less_than_one), // -0.999999940395
       pi: {
-        whole: hexToF64(kBit.f64.negative.pi.whole),
-        three_quarters: hexToF64(kBit.f64.negative.pi.three_quarters),
-        half: hexToF64(kBit.f64.negative.pi.half),
-        third: hexToF64(kBit.f64.negative.pi.third),
-        quarter: hexToF64(kBit.f64.negative.pi.quarter),
-        sixth: hexToF64(kBit.f64.negative.pi.sixth),
+        whole: reinterpretU64AsF64(kBit.f64.negative.pi.whole),
+        three_quarters: reinterpretU64AsF64(kBit.f64.negative.pi.three_quarters),
+        half: reinterpretU64AsF64(kBit.f64.negative.pi.half),
+        third: reinterpretU64AsF64(kBit.f64.negative.pi.third),
+        quarter: reinterpretU64AsF64(kBit.f64.negative.pi.quarter),
+        sixth: reinterpretU64AsF64(kBit.f64.negative.pi.sixth),
       },
     },
     subnormal: {
       positive: {
-        min: hexToF64(kBit.f64.subnormal.positive.min),
-        max: hexToF64(kBit.f64.subnormal.positive.max),
+        min: reinterpretU64AsF64(kBit.f64.subnormal.positive.min),
+        max: reinterpretU64AsF64(kBit.f64.subnormal.positive.max),
       },
       negative: {
-        max: hexToF64(kBit.f64.subnormal.negative.max),
-        min: hexToF64(kBit.f64.subnormal.negative.min),
+        max: reinterpretU64AsF64(kBit.f64.subnormal.negative.max),
+        min: reinterpretU64AsF64(kBit.f64.subnormal.negative.min),
       },
     },
     infinity: {
-      positive: hexToF64(kBit.f64.infinity.positive),
-      negative: hexToF64(kBit.f64.infinity.negative),
+      positive: reinterpretU64AsF64(kBit.f64.infinity.positive),
+      negative: reinterpretU64AsF64(kBit.f64.infinity.negative),
     },
   },
 
   // Limits of f32
   f32: {
     positive: {
-      min: hexToF32(kBit.f32.positive.min),
-      max: hexToF32(kBit.f32.positive.max),
-      nearest_max: hexToF32(kBit.f32.positive.nearest_max),
-      less_than_one: hexToF32(kBit.f32.positive.less_than_one),
+      min: reinterpretU32AsF32(kBit.f32.positive.min),
+      max: reinterpretU32AsF32(kBit.f32.positive.max),
+      nearest_max: reinterpretU32AsF32(kBit.f32.positive.nearest_max),
+      less_than_one: reinterpretU32AsF32(kBit.f32.positive.less_than_one),
       pi: {
-        whole: hexToF32(kBit.f32.positive.pi.whole),
-        three_quarters: hexToF32(kBit.f32.positive.pi.three_quarters),
-        half: hexToF32(kBit.f32.positive.pi.half),
-        third: hexToF32(kBit.f32.positive.pi.third),
-        quarter: hexToF32(kBit.f32.positive.pi.quarter),
-        sixth: hexToF32(kBit.f32.positive.pi.sixth),
+        whole: reinterpretU32AsF32(kBit.f32.positive.pi.whole),
+        three_quarters: reinterpretU32AsF32(kBit.f32.positive.pi.three_quarters),
+        half: reinterpretU32AsF32(kBit.f32.positive.pi.half),
+        third: reinterpretU32AsF32(kBit.f32.positive.pi.third),
+        quarter: reinterpretU32AsF32(kBit.f32.positive.pi.quarter),
+        sixth: reinterpretU32AsF32(kBit.f32.positive.pi.sixth),
       },
-      e: hexToF32(kBit.f32.positive.e),
-      first_f64_not_castable: hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
-      last_f64_castable: hexToF64(
-        BigInt(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      e: reinterpretU32AsF32(kBit.f32.positive.e),
+      first_f64_not_castable: reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
+      last_f64_castable: reinterpretU64AsF64(
+        BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
       ),
       // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
-      max: hexToF32(kBit.f32.negative.max),
-      min: hexToF32(kBit.f32.negative.min),
-      nearest_min: hexToF32(kBit.f32.negative.nearest_min),
-      less_than_one: hexToF32(kBit.f32.negative.less_than_one), // -0.999999940395
+      max: reinterpretU32AsF32(kBit.f32.negative.max),
+      min: reinterpretU32AsF32(kBit.f32.negative.min),
+      nearest_min: reinterpretU32AsF32(kBit.f32.negative.nearest_min),
+      less_than_one: reinterpretU32AsF32(kBit.f32.negative.less_than_one), // -0.999999940395
       pi: {
-        whole: hexToF32(kBit.f32.negative.pi.whole),
-        three_quarters: hexToF32(kBit.f32.negative.pi.three_quarters),
-        half: hexToF32(kBit.f32.negative.pi.half),
-        third: hexToF32(kBit.f32.negative.pi.third),
-        quarter: hexToF32(kBit.f32.negative.pi.quarter),
-        sixth: hexToF32(kBit.f32.negative.pi.sixth),
+        whole: reinterpretU32AsF32(kBit.f32.negative.pi.whole),
+        three_quarters: reinterpretU32AsF32(kBit.f32.negative.pi.three_quarters),
+        half: reinterpretU32AsF32(kBit.f32.negative.pi.half),
+        third: reinterpretU32AsF32(kBit.f32.negative.pi.third),
+        quarter: reinterpretU32AsF32(kBit.f32.negative.pi.quarter),
+        sixth: reinterpretU32AsF32(kBit.f32.negative.pi.sixth),
       },
-      first_f64_not_castable: -(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
-      last_f64_castable: -hexToF64(
-        BigInt(hexToF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      first_f64_not_castable: -(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
+      last_f64_castable: -reinterpretU64AsF64(
+        BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
       ),
       // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
       positive: {
-        min: hexToF32(kBit.f32.subnormal.positive.min),
-        max: hexToF32(kBit.f32.subnormal.positive.max),
+        min: reinterpretU32AsF32(kBit.f32.subnormal.positive.min),
+        max: reinterpretU32AsF32(kBit.f32.subnormal.positive.max),
       },
       negative: {
-        max: hexToF32(kBit.f32.subnormal.negative.max),
-        min: hexToF32(kBit.f32.subnormal.negative.min),
+        max: reinterpretU32AsF32(kBit.f32.subnormal.negative.max),
+        min: reinterpretU32AsF32(kBit.f32.subnormal.negative.min),
       },
     },
     infinity: {
-      positive: hexToF32(kBit.f32.infinity.positive),
-      negative: hexToF32(kBit.f32.infinity.negative),
+      positive: reinterpretU32AsF32(kBit.f32.infinity.positive),
+      negative: reinterpretU32AsF32(kBit.f32.infinity.negative),
     },
   },
 
@@ -463,38 +466,38 @@ export const kValue = {
   // Limits of f16
   f16: {
     positive: {
-      min: hexToF16(kBit.f16.positive.min),
-      max: hexToF16(kBit.f16.positive.max),
-      zero: hexToF16(kBit.f16.positive.zero),
-      first_f64_not_castable: hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
-      last_f64_castable: hexToF64(
-        BigInt(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      min: reinterpretU16AsF16(kBit.f16.positive.min),
+      max: reinterpretU16AsF16(kBit.f16.positive.max),
+      zero: reinterpretU16AsF16(kBit.f16.positive.zero),
+      first_f64_not_castable: reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
+      last_f64_castable: reinterpretU64AsF64(
+        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ),
       // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
-      max: hexToF16(kBit.f16.negative.max),
-      min: hexToF16(kBit.f16.negative.min),
-      zero: hexToF16(kBit.f16.negative.zero),
-      first_f64_not_castable: -(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
-      last_f64_castable: -hexToF64(
-        BigInt(hexToF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      max: reinterpretU16AsF16(kBit.f16.negative.max),
+      min: reinterpretU16AsF16(kBit.f16.negative.min),
+      zero: reinterpretU16AsF16(kBit.f16.negative.zero),
+      first_f64_not_castable: -(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
+      last_f64_castable: -reinterpretU64AsF64(
+        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ),
       // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     subnormal: {
       positive: {
-        min: hexToF16(kBit.f16.subnormal.positive.min),
-        max: hexToF16(kBit.f16.subnormal.positive.max),
+        min: reinterpretU16AsF16(kBit.f16.subnormal.positive.min),
+        max: reinterpretU16AsF16(kBit.f16.subnormal.positive.max),
       },
       negative: {
-        max: hexToF16(kBit.f16.subnormal.negative.max),
-        min: hexToF16(kBit.f16.subnormal.negative.min),
+        max: reinterpretU16AsF16(kBit.f16.subnormal.negative.max),
+        min: reinterpretU16AsF16(kBit.f16.subnormal.negative.min),
       },
     },
     infinity: {
-      positive: hexToF16(kBit.f16.infinity.positive),
-      negative: hexToF16(kBit.f16.infinity.negative),
+      positive: reinterpretU16AsF16(kBit.f16.infinity.positive),
+      negative: reinterpretU16AsF16(kBit.f16.infinity.negative),
     },
   },
 
