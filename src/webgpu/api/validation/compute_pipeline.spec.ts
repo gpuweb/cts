@@ -432,9 +432,9 @@ TODO(#2060): test with last_f64_castable.
         { constants: { ci: kValue.i32.positive.max }, _success: true },
         { constants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { constants: { cf: kValue.f32.negative.min }, _success: true },
-        { constants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
+        { constants: { cf: kValue.f32.negative.first_webidl_not_castable }, _success: false },
         { constants: { cf: kValue.f32.positive.max }, _success: true },
-        { constants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
+        { constants: { cf: kValue.f32.positive.first_webidl_not_castable }, _success: false },
         // Conversion to boolean can't fail
         { constants: { cb: Number.MAX_VALUE }, _success: true },
         { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -481,13 +481,13 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
       .combine('isAsync', [true, false])
       .combineWithParams([
         { constants: { cf16: kValue.f16.negative.min }, _success: true },
-        { constants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f16.negative.first_webidl_not_castable }, _success: false },
         { constants: { cf16: kValue.f16.positive.max }, _success: true },
-        { constants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f16.positive.first_webidl_not_castable }, _success: false },
         { constants: { cf16: kValue.f32.negative.min }, _success: false },
         { constants: { cf16: kValue.f32.positive.max }, _success: false },
-        { constants: { cf16: kValue.f32.negative.first_f64_not_castable }, _success: false },
-        { constants: { cf16: kValue.f32.positive.first_f64_not_castable }, _success: false },
+        { constants: { cf16: kValue.f32.negative.first_webidl_not_castable }, _success: false },
+        { constants: { cf16: kValue.f32.positive.first_webidl_not_castable }, _success: false },
       ] as const)
   )
   .beforeAllSubcases(t => {

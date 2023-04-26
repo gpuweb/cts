@@ -403,10 +403,15 @@ export const kValue = {
         sixth: reinterpretU32AsF32(kBit.f32.positive.pi.sixth),
       },
       e: reinterpretU32AsF32(kBit.f32.positive.e),
-      first_f64_not_castable: reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
-      last_f64_castable: reinterpretU64AsF64(
+      // The positive number/f64 with the smallest magnitude which when cast to
+      // f32 will produce infinity, per the rounding rules of WebIDL.
+      first_webidl_not_castable: reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127,
+      // The positive number/f64 with the largest magnitude which when cast to
+      // f32 will not produce infinity, instead rounding to FLT_MAX, per
+      // the rounding rules of WebIDL
+      last_webidl_castable: reinterpretU64AsF64(
         BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
-      ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
+      ),
     },
     negative: {
       max: reinterpretU32AsF32(kBit.f32.negative.max),
@@ -421,10 +426,15 @@ export const kValue = {
         quarter: reinterpretU32AsF32(kBit.f32.negative.pi.quarter),
         sixth: reinterpretU32AsF32(kBit.f32.negative.pi.sixth),
       },
-      first_f64_not_castable: -(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
-      last_f64_castable: -reinterpretU64AsF64(
+      // The negative number/f64 with the smallest magnitude which when cast to
+      // f32 will produce infinity, per the rounding rules of WebIDL.
+      first_webidl_not_castable: -(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127),
+      // The negative number/f64 with the largest magnitude which when cast to
+      // f32 will not produce infinity, instead rounding to FLT_MIN, per
+      // the rounding rules of WebIDL.
+      last_webidl_castable: -reinterpretU64AsF64(
         BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
-      ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
+      ),
     },
     subnormal: {
       positive: {
@@ -466,8 +476,8 @@ export const kValue = {
       min: reinterpretU16AsF16(kBit.f16.positive.min),
       max: reinterpretU16AsF16(kBit.f16.positive.max),
       zero: reinterpretU16AsF16(kBit.f16.positive.zero),
-      first_f64_not_castable: reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
-      last_f64_castable: reinterpretU64AsF64(
+      first_webidl_not_castable: reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
+      last_webidl_castable: reinterpretU64AsF64(
         BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
@@ -475,8 +485,8 @@ export const kValue = {
       max: reinterpretU16AsF16(kBit.f16.negative.max),
       min: reinterpretU16AsF16(kBit.f16.negative.min),
       zero: reinterpretU16AsF16(kBit.f16.negative.zero),
-      first_f64_not_castable: -(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
-      last_f64_castable: -reinterpretU64AsF64(
+      first_webidl_not_castable: -(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
+      last_webidl_castable: -reinterpretU64AsF64(
         BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
       ), // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
