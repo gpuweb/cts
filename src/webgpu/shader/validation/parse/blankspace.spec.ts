@@ -48,3 +48,11 @@ g.test('blankspace')
     const code = `const${t.params.blankspace[0]}ident : i32 = 0;`;
     t.expectCompileResult(true, code);
   });
+
+g.test('bom')
+  .desc(`Tests that including a BOM causes a shader compile error`)
+  .params(u => u.combine('include_bom', [true, false]))
+  .fn(t => {
+    const code = `${t.params.include_bom ? '\uFEFF' : ''}const name : i32 = 0;`;
+    t.expectCompileResult(!t.params.include_bom, code);
+  });
