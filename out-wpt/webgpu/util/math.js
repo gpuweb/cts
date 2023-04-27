@@ -1132,6 +1132,257 @@ export function sparseMatrixF32Range(c, r) {
   return kSparseMatrixF32Values[c][r];
 }
 
+/** Short list of f16 values of interest to test against */
+const kInterestingF16Values = [
+  kValue.f16.negative.min,
+  -10.0,
+  -1.0,
+  kValue.f16.negative.max,
+  kValue.f16.subnormal.negative.min,
+  kValue.f16.subnormal.negative.max,
+  0.0,
+  kValue.f16.subnormal.positive.min,
+  kValue.f16.subnormal.positive.max,
+  kValue.f16.positive.min,
+  1.0,
+  10.0,
+  kValue.f16.positive.max,
+];
+
+/** @returns minimal f16 values that cover the entire range of f16 behaviours
+ *
+ * Has specially selected values that cover edge cases, normals, and subnormals.
+ * This is used instead of fullF16Range when the number of test cases being
+ * generated is a super linear function of the length of f16 values which is
+ * leading to time outs.
+ *
+ * These values have been chosen to attempt to test the widest range of f16
+ * behaviours in the lowest number of entries, so may potentially miss function
+ * specific values of interest. If there are known values of interest they
+ * should be appended to this list in the test generation code.
+ */
+export function sparseF16Range() {
+  return kInterestingF16Values;
+}
+
+const kVectorF16Values = {
+  2: sparseF16Range().flatMap(f => [
+    [f, 1.0],
+    [1.0, f],
+    [f, -1.0],
+    [-1.0, f],
+  ]),
+
+  3: sparseF16Range().flatMap(f => [
+    [f, 1.0, 2.0],
+    [1.0, f, 2.0],
+    [1.0, 2.0, f],
+    [f, -1.0, -2.0],
+    [-1.0, f, -2.0],
+    [-1.0, -2.0, f],
+  ]),
+
+  4: sparseF16Range().flatMap(f => [
+    [f, 1.0, 2.0, 3.0],
+    [1.0, f, 2.0, 3.0],
+    [1.0, 2.0, f, 3.0],
+    [1.0, 2.0, 3.0, f],
+    [f, -1.0, -2.0, -3.0],
+    [-1.0, f, -2.0, -3.0],
+    [-1.0, -2.0, f, -3.0],
+    [-1.0, -2.0, -3.0, f],
+  ]),
+};
+
+/**
+ * Returns set of vectors, indexed by dimension containing interesting f16
+ * values.
+ *
+ * The tests do not do the simple option for coverage of computing the cartesian
+ * product of all of the interesting float values N times for vecN tests,
+ * because that creates a huge number of tests for vec3 and vec4, leading to
+ * time outs.
+ *
+ * Instead they insert the interesting f16 values into each location of the
+ * vector to get a spread of testing over the entire range. This reduces the
+ * number of cases being run substantially, but maintains coverage.
+ */
+export function vectorF16Range(dim) {
+  assert(dim === 2 || dim === 3 || dim === 4, 'vectorF16Range only accepts dimensions 2, 3, and 4');
+  return kVectorF16Values[dim];
+}
+
+const kSparseVectorF16Values = {
+  2: sparseF16Range().map((f, idx) => [idx % 2 === 0 ? f : idx, idx % 2 === 1 ? f : -idx]),
+  3: sparseF16Range().map((f, idx) => [
+    idx % 3 === 0 ? f : idx,
+    idx % 3 === 1 ? f : -idx,
+    idx % 3 === 2 ? f : idx,
+  ]),
+
+  4: sparseF16Range().map((f, idx) => [
+    idx % 4 === 0 ? f : idx,
+    idx % 4 === 1 ? f : -idx,
+    idx % 4 === 2 ? f : idx,
+    idx % 4 === 3 ? f : -idx,
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting f16
+ * values.
+ *
+ * This is an even more stripped down version of `vectorF16Range` for when
+ * pairs of vectors are being tested.
+ * All of the interesting floats from sparseF16 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseVectorF16Range(dim) {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorF16Range only accepts dimensions 2, 3, and 4'
+  );
+
+  return kSparseVectorF16Values[dim];
+}
+
+const kSparseMatrixF16Values = {
+  2: {
+    2: kInterestingF16Values.map((f, idx) => [
+      [idx % 4 === 0 ? f : idx, idx % 4 === 1 ? f : -idx],
+      [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx],
+    ]),
+
+    3: kInterestingF16Values.map((f, idx) => [
+      [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx, idx % 6 === 2 ? f : idx],
+      [idx % 6 === 3 ? f : -idx, idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx],
+    ]),
+
+    4: kInterestingF16Values.map((f, idx) => [
+      [
+        idx % 8 === 0 ? f : idx,
+        idx % 8 === 1 ? f : -idx,
+        idx % 8 === 2 ? f : idx,
+        idx % 8 === 3 ? f : -idx,
+      ],
+
+      [
+        idx % 8 === 4 ? f : -idx,
+        idx % 8 === 5 ? f : idx,
+        idx % 8 === 6 ? f : -idx,
+        idx % 8 === 7 ? f : idx,
+      ],
+    ]),
+  },
+  3: {
+    2: kInterestingF16Values.map((f, idx) => [
+      [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx],
+      [idx % 6 === 2 ? f : -idx, idx % 6 === 3 ? f : idx],
+      [idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx],
+    ]),
+
+    3: kInterestingF16Values.map((f, idx) => [
+      [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
+      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
+      [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx],
+    ]),
+
+    4: kInterestingF16Values.map((f, idx) => [
+      [
+        idx % 12 === 0 ? f : idx,
+        idx % 12 === 1 ? f : -idx,
+        idx % 12 === 2 ? f : idx,
+        idx % 12 === 3 ? f : -idx,
+      ],
+
+      [
+        idx % 12 === 4 ? f : -idx,
+        idx % 12 === 5 ? f : idx,
+        idx % 12 === 6 ? f : -idx,
+        idx % 12 === 7 ? f : idx,
+      ],
+
+      [
+        idx % 12 === 8 ? f : idx,
+        idx % 12 === 9 ? f : -idx,
+        idx % 12 === 10 ? f : idx,
+        idx % 12 === 11 ? f : -idx,
+      ],
+    ]),
+  },
+  4: {
+    2: kInterestingF16Values.map((f, idx) => [
+      [idx % 8 === 0 ? f : idx, idx % 8 === 1 ? f : -idx],
+      [idx % 8 === 2 ? f : -idx, idx % 8 === 3 ? f : idx],
+      [idx % 8 === 4 ? f : idx, idx % 8 === 5 ? f : -idx],
+      [idx % 8 === 6 ? f : -idx, idx % 8 === 7 ? f : idx],
+    ]),
+
+    3: kInterestingF16Values.map((f, idx) => [
+      [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
+      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, idx % 12 === 5 ? f : -idx],
+      [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
+      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, idx % 12 === 11 ? f : -idx],
+    ]),
+
+    4: kInterestingF16Values.map((f, idx) => [
+      [
+        idx % 16 === 0 ? f : idx,
+        idx % 16 === 1 ? f : -idx,
+        idx % 16 === 2 ? f : idx,
+        idx % 16 === 3 ? f : -idx,
+      ],
+
+      [
+        idx % 16 === 4 ? f : -idx,
+        idx % 16 === 5 ? f : idx,
+        idx % 16 === 6 ? f : -idx,
+        idx % 16 === 7 ? f : idx,
+      ],
+
+      [
+        idx % 16 === 8 ? f : idx,
+        idx % 16 === 9 ? f : -idx,
+        idx % 16 === 10 ? f : idx,
+        idx % 16 === 11 ? f : -idx,
+      ],
+
+      [
+        idx % 16 === 12 ? f : -idx,
+        idx % 16 === 13 ? f : idx,
+        idx % 16 === 14 ? f : -idx,
+        idx % 16 === 15 ? f : idx,
+      ],
+    ]),
+  },
+};
+
+/**
+ * Returns a minimal set of matrices, indexed by dimension containing interesting
+ * f16 values.
+ *
+ * This is the matrix analogue of `sparseVectorF16Range`, so it is producing a
+ * minimal coverage set of matrices that test all of the interesting f16 values.
+ * There is not a more expansive set of matrices, since matrices are even more
+ * expensive than vectors for increasing runtime with coverage.
+ *
+ * All of the interesting floats from sparseF16 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseMatrixF16Range(c, r) {
+  assert(
+    c === 2 || c === 3 || c === 4,
+    'sparseMatrixF16Range only accepts column counts of 2, 3, and 4'
+  );
+
+  assert(
+    r === 2 || r === 3 || r === 4,
+    'sparseMatrixF16Range only accepts row counts of 2, 3, and 4'
+  );
+
+  return kSparseMatrixF16Values[c][r];
+}
+
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
