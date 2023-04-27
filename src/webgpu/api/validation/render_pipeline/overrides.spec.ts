@@ -299,9 +299,15 @@ TODO(#2060): test with last_f64_castable.
         { vertexConstants: { ci: kValue.i32.positive.max }, _success: true },
         { vertexConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { vertexConstants: { cf: kValue.f32.negative.min }, _success: true },
-        { vertexConstants: { cf: kValue.f32.negative.first_webidl_not_castable }, _success: false },
+        {
+          vertexConstants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
+          _success: false,
+        },
         { vertexConstants: { cf: kValue.f32.positive.max }, _success: true },
-        { vertexConstants: { cf: kValue.f32.positive.first_webidl_not_castable }, _success: false },
+        {
+          vertexConstants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
+          _success: false,
+        },
         // Conversion to boolean can't fail
         { vertexConstants: { cb: Number.MAX_VALUE }, _success: true },
         { vertexConstants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -364,12 +370,12 @@ TODO(#2060): test with last_f64_castable.
         { fragmentConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { fragmentConstants: { cf: kValue.f32.negative.min }, _success: true },
         {
-          fragmentConstants: { cf: kValue.f32.negative.first_webidl_not_castable },
+          fragmentConstants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
           _success: false,
         },
         { fragmentConstants: { cf: kValue.f32.positive.max }, _success: true },
         {
-          fragmentConstants: { cf: kValue.f32.positive.first_webidl_not_castable },
+          fragmentConstants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
           _success: false,
         },
         // Conversion to boolean can't fail
@@ -416,22 +422,22 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
       .combineWithParams([
         { vertexConstants: { cf16: kValue.f16.negative.min }, _success: true },
         {
-          vertexConstants: { cf16: kValue.f16.negative.first_webidl_not_castable },
+          vertexConstants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
           _success: false,
         },
         { vertexConstants: { cf16: kValue.f16.positive.max }, _success: true },
         {
-          vertexConstants: { cf16: kValue.f16.positive.first_webidl_not_castable },
+          vertexConstants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
           _success: false,
         },
         { vertexConstants: { cf16: kValue.f32.negative.min }, _success: false },
         { vertexConstants: { cf16: kValue.f32.positive.max }, _success: false },
         {
-          vertexConstants: { cf16: kValue.f32.negative.first_webidl_not_castable },
+          vertexConstants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
           _success: false,
         },
         {
-          vertexConstants: { cf16: kValue.f32.positive.first_webidl_not_castable },
+          vertexConstants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
           _success: false,
         },
       ] as const)
@@ -488,22 +494,22 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
       .combineWithParams([
         { fragmentConstants: { cf16: kValue.f16.negative.min }, _success: true },
         {
-          fragmentConstants: { cf16: kValue.f16.negative.first_webidl_not_castable },
+          fragmentConstants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
           _success: false,
         },
         { fragmentConstants: { cf16: kValue.f16.positive.max }, _success: true },
         {
-          fragmentConstants: { cf16: kValue.f16.positive.first_webidl_not_castable },
+          fragmentConstants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
           _success: false,
         },
         { fragmentConstants: { cf16: kValue.f32.negative.min }, _success: false },
         { fragmentConstants: { cf16: kValue.f32.positive.max }, _success: false },
         {
-          fragmentConstants: { cf16: kValue.f32.negative.first_webidl_not_castable },
+          fragmentConstants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
           _success: false,
         },
         {
-          fragmentConstants: { cf16: kValue.f32.positive.first_webidl_not_castable },
+          fragmentConstants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
           _success: false,
         },
       ] as const)
