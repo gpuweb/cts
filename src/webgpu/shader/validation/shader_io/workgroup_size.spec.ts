@@ -96,6 +96,51 @@ const kWorkgroupSizeTests = {
     src: `@workgroup_size(8, 8, 8,)`,
     pass: true,
   },
+
+  // Mixed abstract is ok
+  mixed_abstract_signed: {
+    src: `@workgroup_size(8, 8i)`,
+    pass: true,
+  },
+  mixed_abstract_unsigned: {
+    src: `@workgroup_size(8u, 8)`,
+    pass: true,
+  },
+  // Mixed signed and unsigned is not
+  mixed_signed_unsigned: {
+    src: `@workgroup_size(8i, 8i, 8u)`,
+    pass: false,
+  },
+
+  zero_x: {
+    src: `@workgroup_size(0)`,
+    pass: false,
+  },
+  zero_y: {
+    src: `@workgroup_size(8, 0)`,
+    pass: false,
+  },
+  zero_z: {
+    src: `@workgroup_size(8, 8, 0)`,
+    pass: false,
+  },
+  negative_x: {
+    src: `@workgroup_size(-8)`,
+    pass: false,
+  },
+  negative_y: {
+    src: `@workgroup_size(8, -8)`,
+    pass: false,
+  },
+  negative_z: {
+    src: `@workgroup_size(8, 8, -8)`,
+    pass: false,
+  },
+
+  max_values: {
+    src: `@workgroup_size(256, 256, 64)`,
+    pass: true,
+  },
 };
 g.test('workgroup_size')
   .desc(`Test validation of workgroup_size`)
