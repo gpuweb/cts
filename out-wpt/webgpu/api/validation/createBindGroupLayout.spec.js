@@ -9,6 +9,7 @@ import { kUnitCaseParamsBuilder } from '../../../common/framework/params_builder
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
   kAllTextureFormats,
+  kLimitInfo,
   kShaderStages,
   kShaderStageCombinations,
   kStorageTextureAccessValues,
@@ -54,10 +55,6 @@ g.test('duplicate_bindings')
     }, !_valid);
   });
 
-// MAINTENANCE_TODO: Move this into kLimits with the proper name after the spec PR lands.
-// https://github.com/gpuweb/gpuweb/pull/3318
-const kMaxBindingsPerBindGroup = 640;
-
 g.test('maximum_binding_limit')
   .desc(
     `
@@ -68,7 +65,14 @@ g.test('maximum_binding_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('binding', [1, 4, 8, 256, kMaxBindingsPerBindGroup - 1, kMaxBindingsPerBindGroup])
+      .combine('binding', [
+        1,
+        4,
+        8,
+        256,
+        kLimitInfo.maxBindingsPerBindGroup.default - 1,
+        kLimitInfo.maxBindingsPerBindGroup.default,
+      ])
   )
   .fn(t => {
     const { binding } = t.params;
@@ -80,7 +84,7 @@ g.test('maximum_binding_limit')
       buffer: { type: 'storage' },
     });
 
-    const success = binding < kMaxBindingsPerBindGroup;
+    const success = binding < kLimitInfo.maxBindingsPerBindGroup.default;
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
@@ -294,7 +298,7 @@ const kMaxResourcesCases = kUnitCaseParamsBuilder
   .combine('extraVisibility', kShaderStages)
   .filter(p => (bindingTypeInfo(p.extraEntry).validStages & p.extraVisibility) !== 0);
 
-// Should never fail unless kMaxBindingsPerBindGroup is exceeded, because the validation for
+// Should never fail unless kLimitInfo.maxBindingsPerBindGroup.default is exceeded, because the validation for
 // resources-of-type-per-stage is in pipeline layout creation.
 g.test('max_resources_per_stage,in_bind_group_layout')
   .desc(
