@@ -936,24 +936,50 @@ export function reinterpretU32sAsF64(u32s) {
   return new Float64Array(array.buffer)[0];
 }
 
+/**
+ * @returns a number representing the u32 interpretation
+ * of the bits of a number assumed to be an f32 value.
+ */
 export function reinterpretF32AsU32(f32) {
   const array = new Float32Array(1);
   array[0] = f32;
   return new Uint32Array(array.buffer)[0];
 }
 
+/**
+ * @returns a number representing the i32 interpretation
+ * of the bits of a number assumed to be an f32 value.
+ */
+export function reinterpretF32AsI32(f32) {
+  const array = new Float32Array(1);
+  array[0] = f32;
+  return new Int32Array(array.buffer)[0];
+}
+
+/**
+ * @returns a number representing the f32 interpretation
+ * of the bits of a number assumed to be an u32 value.
+ */
 export function reinterpretU32AsF32(u32) {
   const array = new Uint32Array(1);
   array[0] = u32;
   return new Float32Array(array.buffer)[0];
 }
 
+/**
+ * @returns a number representing the i32 interpretation
+ * of the bits of a number assumed to be an u32 value.
+ */
 export function reinterpretU32AsI32(u32) {
   const array = new Uint32Array(1);
   array[0] = u32;
   return new Int32Array(array.buffer)[0];
 }
 
+/**
+ * @returns a number representing the u32 interpretation
+ * of the bits of a number assumed to be an i32 value.
+ */
 export function reinterpretI32AsU32(i32) {
   const array = new Int32Array(1);
   array[0] = i32;
