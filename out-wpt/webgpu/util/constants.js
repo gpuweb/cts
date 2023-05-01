@@ -295,9 +295,19 @@ export const kBit = {
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
- * */
+ */
 function reinterpretU64AsF64(input) {
   return new Float64Array(new BigInt64Array([input]).buffer)[0];
+}
+
+/**
+ * @returns the 64-bit integer bit representation of 64-bit float value
+ *
+ * Using a locally defined function here to avoid compile time dependency
+ * issues.
+ */
+function reinterpretF64AsU64(input) {
+  return new BigInt64Array(new Float64Array([input]).buffer)[0];
 }
 
 /**
@@ -306,7 +316,7 @@ function reinterpretU64AsF64(input) {
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
- * */
+ */
 function reinterpretU32AsF32(input) {
   return new Float32Array(new Uint32Array([input]).buffer)[0];
 }
@@ -317,7 +327,7 @@ function reinterpretU32AsF32(input) {
  *
  * Using a locally defined function here to avoid compile time dependency
  * issues.
- * */
+ */
 function reinterpretU16AsF16(input) {
   return new Float16Array(new Uint16Array([input]).buffer)[0];
 }
@@ -404,11 +414,17 @@ export const kValue = {
         sixth: reinterpretU32AsF32(kBit.f32.positive.pi.sixth),
       },
       e: reinterpretU32AsF32(kBit.f32.positive.e),
-      first_f64_not_castable: reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127, // mid point of 2**128 and largest f32
-      last_f64_castable: reinterpretU64AsF64(
-        BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      // The positive pipeline-overridable constant with the smallest magnitude
+      // which when cast to f32 will produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      first_non_castable_pipeline_override:
+        reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127,
+      // The positive pipeline-overridable constant with the largest magnitude
+      // which when cast to f32 will not produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL
+      last_castable_pipeline_override: reinterpretU64AsF64(
+        reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
       ),
-      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: reinterpretU32AsF32(kBit.f32.negative.max),
@@ -423,11 +439,20 @@ export const kValue = {
         quarter: reinterpretU32AsF32(kBit.f32.negative.pi.quarter),
         sixth: reinterpretU32AsF32(kBit.f32.negative.pi.sixth),
       },
-      first_f64_not_castable: -(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127), // mid point of -2**128 and largest f32
-      last_f64_castable: -reinterpretU64AsF64(
-        BigInt(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      // The negative pipeline-overridable constant with the smallest magnitude
+      // which when cast to f32 will produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      first_non_castable_pipeline_override: -(
+        reinterpretU32AsF32(kBit.f32.positive.max) / 2 +
+        2 ** 127
       ),
-      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
+
+      // The negative pipeline-overridable constant with the largest magnitude
+      // which when cast to f32 will not produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      last_castable_pipeline_override: -reinterpretU64AsF64(
+        reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      ),
     },
     subnormal: {
       positive: {
@@ -469,21 +494,36 @@ export const kValue = {
       min: reinterpretU16AsF16(kBit.f16.positive.min),
       max: reinterpretU16AsF16(kBit.f16.positive.max),
       zero: reinterpretU16AsF16(kBit.f16.positive.zero),
-      first_f64_not_castable: reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16, // mid point of 2**16 and largest f16
-      last_f64_castable: reinterpretU64AsF64(
-        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      // The positive pipeline-overridable constant with the smallest magnitude
+      // which when cast to f16 will produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      first_non_castable_pipeline_override:
+        reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15,
+      // The positive pipeline-overridable constant with the largest magnitude
+      // which when cast to f16 will not produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL
+      last_castable_pipeline_override: reinterpretU64AsF64(
+        reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1)
       ),
-      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
     },
     negative: {
       max: reinterpretU16AsF16(kBit.f16.negative.max),
       min: reinterpretU16AsF16(kBit.f16.negative.min),
       zero: reinterpretU16AsF16(kBit.f16.negative.zero),
-      first_f64_not_castable: -(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16), // mid point of -2**16 and largest f16
-      last_f64_castable: -reinterpretU64AsF64(
-        BigInt(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 16) - BigInt(1)
+      // The negative pipeline-overridable constant with the smallest magnitude
+      // which when cast to f16 will produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      first_non_castable_pipeline_override: -(
+        reinterpretU16AsF16(kBit.f16.positive.max) / 2 +
+        2 ** 15
       ),
-      // first_f64_not_castable minus one fraction bit of the 64 bit float representation
+
+      // The negative pipeline-overridable constant with the largest magnitude
+      // which when cast to f16 will not produce infinity. This comes from WGSL
+      // conversion rules and the rounding rules of WebIDL.
+      last_castable_pipeline_override: -reinterpretU64AsF64(
+        reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1)
+      ),
     },
     subnormal: {
       positive: {

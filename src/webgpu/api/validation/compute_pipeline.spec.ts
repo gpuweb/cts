@@ -416,7 +416,7 @@ g.test('overrides,value,validation_error')
     `
 Tests calling createComputePipeline(Async) validation for unrepresentable constant values in compute stage.
 
-TODO(#2060): test with last_f64_castable.
+TODO(#2060): test with last_castable_pipeline_override.
 `
   )
   .params(u =>
@@ -432,9 +432,15 @@ TODO(#2060): test with last_f64_castable.
         { constants: { ci: kValue.i32.positive.max }, _success: true },
         { constants: { ci: kValue.i32.positive.max + 1 }, _success: false },
         { constants: { cf: kValue.f32.negative.min }, _success: true },
-        { constants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
+        {
+          constants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
+          _success: false,
+        },
         { constants: { cf: kValue.f32.positive.max }, _success: true },
-        { constants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
+        {
+          constants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
+          _success: false,
+        },
         // Conversion to boolean can't fail
         { constants: { cb: Number.MAX_VALUE }, _success: true },
         { constants: { cb: kValue.i32.negative.min - 1 }, _success: true },
@@ -442,7 +448,6 @@ TODO(#2060): test with last_f64_castable.
   )
   .fn(t => {
     const { isAsync, constants, _success } = t.params;
-
     const descriptor = {
       layout: 'auto' as const,
       compute: {
@@ -473,7 +478,7 @@ g.test('overrides,value,validation_error,f16')
 Tests calling createComputePipeline(Async) validation for unrepresentable f16 constant values in compute stage.
 
 TODO(#2060): Tighten the cases around the valid/invalid boundary once we have WGSL spec
-clarity on whether values like f16.positive.last_f64_castable would be valid. See issue.
+clarity on whether values like f16.positive.last_castable_pipeline_override would be valid. See issue.
 `
   )
   .params(u =>
@@ -481,13 +486,25 @@ clarity on whether values like f16.positive.last_f64_castable would be valid. Se
       .combine('isAsync', [true, false])
       .combineWithParams([
         { constants: { cf16: kValue.f16.negative.min }, _success: true },
-        { constants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
+        {
+          constants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
+          _success: false,
+        },
         { constants: { cf16: kValue.f16.positive.max }, _success: true },
-        { constants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+        {
+          constants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
+          _success: false,
+        },
         { constants: { cf16: kValue.f32.negative.min }, _success: false },
         { constants: { cf16: kValue.f32.positive.max }, _success: false },
-        { constants: { cf16: kValue.f32.negative.first_f64_not_castable }, _success: false },
-        { constants: { cf16: kValue.f32.positive.first_f64_not_castable }, _success: false },
+        {
+          constants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
+          _success: false,
+        },
+        {
+          constants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
+          _success: false,
+        },
       ] as const)
   )
   .beforeAllSubcases(t => {

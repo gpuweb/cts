@@ -299,9 +299,15 @@ combineWithParams([
 { vertexConstants: { ci: kValue.i32.positive.max }, _success: true },
 { vertexConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
 { vertexConstants: { cf: kValue.f32.negative.min }, _success: true },
-{ vertexConstants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
+{
+  vertexConstants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
+  _success: false
+},
 { vertexConstants: { cf: kValue.f32.positive.max }, _success: true },
-{ vertexConstants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
+{
+  vertexConstants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
+  _success: false
+},
 // Conversion to boolean can't fail
 { vertexConstants: { cb: Number.MAX_VALUE }, _success: true },
 { vertexConstants: { cb: kValue.i32.negative.min - 1 }, _success: true }])).
@@ -363,9 +369,15 @@ combineWithParams([
 { fragmentConstants: { ci: kValue.i32.positive.max }, _success: true },
 { fragmentConstants: { ci: kValue.i32.positive.max + 1 }, _success: false },
 { fragmentConstants: { cf: kValue.f32.negative.min }, _success: true },
-{ fragmentConstants: { cf: kValue.f32.negative.first_f64_not_castable }, _success: false },
+{
+  fragmentConstants: { cf: kValue.f32.negative.first_non_castable_pipeline_override },
+  _success: false
+},
 { fragmentConstants: { cf: kValue.f32.positive.max }, _success: true },
-{ fragmentConstants: { cf: kValue.f32.positive.first_f64_not_castable }, _success: false },
+{
+  fragmentConstants: { cf: kValue.f32.positive.first_non_castable_pipeline_override },
+  _success: false
+},
 // Conversion to boolean can't fail
 { fragmentConstants: { cb: Number.MAX_VALUE }, _success: true },
 { fragmentConstants: { cb: kValue.i32.negative.min - 1 }, _success: true }])).
@@ -409,13 +421,25 @@ u //
 .combine('isAsync', [true, false]).
 combineWithParams([
 { vertexConstants: { cf16: kValue.f16.negative.min }, _success: true },
-{ vertexConstants: { cf16: kValue.f16.negative.first_f64_not_castable }, _success: false },
+{
+  vertexConstants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
+  _success: false
+},
 { vertexConstants: { cf16: kValue.f16.positive.max }, _success: true },
-{ vertexConstants: { cf16: kValue.f16.positive.first_f64_not_castable }, _success: false },
+{
+  vertexConstants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
+  _success: false
+},
 { vertexConstants: { cf16: kValue.f32.negative.min }, _success: false },
 { vertexConstants: { cf16: kValue.f32.positive.max }, _success: false },
-{ vertexConstants: { cf16: kValue.f32.negative.first_f64_not_castable }, _success: false },
-{ vertexConstants: { cf16: kValue.f32.positive.first_f64_not_castable }, _success: false }])).
+{
+  vertexConstants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
+  _success: false
+},
+{
+  vertexConstants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
+  _success: false
+}])).
 
 
 beforeAllSubcases((t) => {
@@ -470,22 +494,22 @@ u //
 combineWithParams([
 { fragmentConstants: { cf16: kValue.f16.negative.min }, _success: true },
 {
-  fragmentConstants: { cf16: kValue.f16.negative.first_f64_not_castable },
+  fragmentConstants: { cf16: kValue.f16.negative.first_non_castable_pipeline_override },
   _success: false
 },
 { fragmentConstants: { cf16: kValue.f16.positive.max }, _success: true },
 {
-  fragmentConstants: { cf16: kValue.f16.positive.first_f64_not_castable },
+  fragmentConstants: { cf16: kValue.f16.positive.first_non_castable_pipeline_override },
   _success: false
 },
 { fragmentConstants: { cf16: kValue.f32.negative.min }, _success: false },
 { fragmentConstants: { cf16: kValue.f32.positive.max }, _success: false },
 {
-  fragmentConstants: { cf16: kValue.f32.negative.first_f64_not_castable },
+  fragmentConstants: { cf16: kValue.f32.negative.first_non_castable_pipeline_override },
   _success: false
 },
 {
-  fragmentConstants: { cf16: kValue.f32.positive.first_f64_not_castable },
+  fragmentConstants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
   _success: false
 }])).
 
