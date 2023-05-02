@@ -241,8 +241,10 @@ export class Fixture {
   }
 
   /**
-   * Expect that the provided function throws.
-   * If an `expectedName` is provided, expect that the throw exception has that name.
+   * Expect that the provided function throws (if `true` or `string`) or not (if `false`).
+   * If a string is provided, expect that the throw exception has that name.
+   *
+   * MAINTENANCE_TODO: Change to `string | false` so the exception name is always checked.
    */
   shouldThrow(expectedError, fn, msg) {
     const m = msg ? ': ' + msg : '';
