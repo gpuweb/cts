@@ -71,15 +71,15 @@ fn((t) => {
   const ctx = canvas.getContext('webgpu');
   assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-  // Calling configure without a device should throw.
-  t.shouldThrow(true, () => {
+  // Calling configure without a device should throw a TypeError.
+  t.shouldThrow('TypeError', () => {
     ctx.configure({
       format: 'rgba8unorm'
     });
   });
 
-  // Device is not configured, so getCurrentTexture will throw.
-  t.shouldThrow(true, () => {
+  // Device is not configured, so getCurrentTexture will throw an InvalidStateError.
+  t.shouldThrow('InvalidStateError', () => {
     ctx.getCurrentTexture();
   });
 
@@ -94,7 +94,7 @@ fn((t) => {
 
   // Unconfiguring should cause the device to be cleared.
   ctx.unconfigure();
-  t.shouldThrow(true, () => {
+  t.shouldThrow('InvalidStateError', () => {
     ctx.getCurrentTexture();
   });
 
