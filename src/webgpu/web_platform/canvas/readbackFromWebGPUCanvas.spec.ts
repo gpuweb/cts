@@ -448,7 +448,9 @@ g.test('transferToImageBitmap_unconfigured_nonzero_size')
 
 g.test('transferToImageBitmap_zero_size')
   .desc(
-    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.`
+    `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.
+
+    TODO: Spec and expect a particular Exception type here.`
   )
   .params(u => u.combine('configure', [true, false]))
   .fn(t => {
