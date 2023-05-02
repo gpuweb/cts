@@ -59,8 +59,8 @@ g.test('configured')
     const ctx = canvas.getContext('webgpu');
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
-    // Calling getCurrentTexture prior to configuration should throw an exception.
-    t.shouldThrow(true, () => {
+    // Calling getCurrentTexture prior to configuration should throw an InvalidStateError exception.
+    t.shouldThrow('InvalidStateError', () => {
       ctx.getCurrentTexture();
     });
 
@@ -92,10 +92,10 @@ g.test('configured')
     t.expect(prevTexture !== currentTexture);
     prevTexture = currentTexture;
 
-    // Calling getCurrentTexture after calling unconfigure should throw an exception.
+    // Calling getCurrentTexture after calling unconfigure should throw an InvalidStateError exception.
     ctx.unconfigure();
 
-    t.shouldThrow(true, () => {
+    t.shouldThrow('InvalidStateError', () => {
       ctx.getCurrentTexture();
     });
   });
