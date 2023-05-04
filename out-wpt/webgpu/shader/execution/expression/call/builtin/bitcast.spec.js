@@ -42,7 +42,6 @@ import {
   linearRange,
   isSubnormalNumberF32,
 } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -72,9 +71,9 @@ const f32RangeWithInfAndNaN = [
   ].map(u => reinterpretU32AsF32(u)),
 ];
 
-const anyF32 = v => ({ matched: true, got: `$v`, expected: 'any f32' });
-const anyI32 = v => ({ matched: true, got: `$v`, expected: 'any i32' });
-const anyU32 = v => ({ matched: true, got: `$v`, expected: 'any u32' });
+const anyF32 = v => ({ matched: true, got: `${v}`, expected: 'any f32' });
+const anyI32 = v => ({ matched: true, got: `${v}`, expected: 'any i32' });
+const anyU32 = v => ({ matched: true, got: `${v}`, expected: 'any u32' });
 
 function f32CanMapToZero(f) {
   return f === 0 || isSubnormalNumberF32(f);
@@ -137,26 +136,59 @@ function bitcastF32ToI32Comparator(f) {
   });
 }
 
-const TODO_CASES = [];
-export const d = makeCaseCache('bitcast', {
-  // Identity cases
-  i32_to_i32: () => fullI32Range().map(e => ({ input: i32(e), expected: i32(e) })),
-  u32_to_u32: () => fullU32Range().map(e => ({ input: u32(e), expected: u32(e) })),
-  f32_inf_nan_to_f32: () =>
-    f32RangeWithInfAndNaN.map(e => ({ input: f32(e), expected: bitcastF32ToF32Comparator(e) })),
-  f32_to_f32: () => f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToF32Comparator(e) })),
-  // i32,u32,f32 to different i32,u32,f32
-  i32_to_u32: () => fullI32Range().map(e => ({ input: i32(e), expected: u32(e) })),
-  i32_to_f32: () => TODO_CASES,
-  u32_to_i32: () => fullU32Range().map(e => ({ input: u32(e), expected: i32(e) })),
-  u32_to_f32: () => TODO_CASES,
-  f32_inf_nan_to_i32: () =>
-    f32RangeWithInfAndNaN.map(e => ({ input: f32(e), expected: bitcastF32ToI32Comparator(e) })),
-  f32_to_i32: () => f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToI32Comparator(e) })),
-  f32_inf_nan_to_u32: () =>
-    f32RangeWithInfAndNaN.map(e => ({ input: f32(e), expected: bitcastF32ToU32Comparator(e) })),
-  f32_to_u32: () => f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToU32Comparator(e) })),
-});
+// Use of the CaseCache has been intentionally removed, because serialization
+// does not exist for these custom comparators, so they break the cache.
+
+// const TODO_CASES: CaseList = [];
+
+// Identity Cases
+function i32_to_i32() {
+  return fullI32Range().map(e => ({ input: i32(e), expected: i32(e) }));
+}
+function u32_to_u32() {
+  return fullU32Range().map(e => ({ input: u32(e), expected: u32(e) }));
+}
+function f32_inf_nan_to_f32() {
+  return f32RangeWithInfAndNaN.map(e => ({
+    input: f32(e),
+    expected: bitcastF32ToF32Comparator(e),
+  }));
+}
+function f32_to_f32() {
+  return f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToF32Comparator(e) }));
+}
+
+// i32,u32,f32 to different i32,u32,f32
+function i32_to_u32() {
+  return fullI32Range().map(e => ({ input: i32(e), expected: u32(e) }));
+}
+// function i32_to_f32() {
+//   return TODO_CASES;
+// }
+function u32_to_i32() {
+  return fullU32Range().map(e => ({ input: u32(e), expected: i32(e) }));
+}
+// function u32_to_f32() {
+//   return TODO_CASES;
+// }
+function f32_inf_nan_to_i32() {
+  return f32RangeWithInfAndNaN.map(e => ({
+    input: f32(e),
+    expected: bitcastF32ToI32Comparator(e),
+  }));
+}
+function f32_to_i32() {
+  return f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToI32Comparator(e) }));
+}
+function f32_inf_nan_to_u32() {
+  return f32RangeWithInfAndNaN.map(e => ({
+    input: f32(e),
+    expected: bitcastF32ToU32Comparator(e),
+  }));
+}
+function f32_to_u32() {
+  return f32Range.map(e => ({ input: f32(e), expected: bitcastF32ToU32Comparator(e) }));
+}
 
 /**
  * @returns a ShaderBuilder that generates a call to bitcast,
@@ -187,7 +219,7 @@ g.test('i32_to_i32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get('i32_to_i32');
+    const cases = i32_to_i32();
     await run(t, bitcastBuilder('i32', t.params), [TypeI32], TypeI32, t.params, cases);
   });
 
@@ -201,7 +233,7 @@ g.test('u32_to_u32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get('u32_to_u32');
+    const cases = u32_to_u32();
     await run(t, bitcastBuilder('u32', t.params), [TypeU32], TypeU32, t.params, cases);
   });
 
@@ -215,11 +247,8 @@ g.test('f32_to_f32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get(
-      // Infinities and NaNs are errors in const-eval.
-      t.params.inputSource === 'const' ? 'f32_to_f32' : 'f32_inf_nan_to_f32'
-    );
-
+    // Infinities and NaNs are errors in const-eval.
+    const cases = t.params.inputSource === 'const' ? f32_to_f32() : f32_inf_nan_to_f32();
     await run(t, bitcastBuilder('f32', t.params), [TypeF32], TypeF32, t.params, cases);
   });
 
@@ -234,7 +263,7 @@ g.test('u32_to_i32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get('u32_to_i32');
+    const cases = u32_to_i32();
     await run(t, bitcastBuilder('i32', t.params), [TypeU32], TypeI32, t.params, cases);
   });
 
@@ -248,11 +277,8 @@ g.test('f32_to_i32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get(
-      // Infinities and NaNs are errors in const-eval.
-      t.params.inputSource === 'const' ? 'f32_to_i32' : 'f32_inf_nan_to_i32'
-    );
-
+    // Infinities and NaNs are errors in const-eval.
+    const cases = t.params.inputSource === 'const' ? f32_to_i32() : f32_inf_nan_to_i32();
     await run(t, bitcastBuilder('i32', t.params), [TypeF32], TypeI32, t.params, cases);
   });
 
@@ -267,7 +293,7 @@ g.test('i32_to_u32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get('i32_to_u32');
+    const cases = i32_to_u32();
     await run(t, bitcastBuilder('u32', t.params), [TypeI32], TypeU32, t.params, cases);
   });
 
@@ -281,11 +307,8 @@ g.test('f32_to_u32')
       .combine('alias', [false, true])
   )
   .fn(async t => {
-    const cases = await d.get(
-      // Infinities and NaNs are errors in const-eval.
-      t.params.inputSource === 'const' ? 'f32_to_u32' : 'f32_inf_nan_to_u32'
-    );
-
+    // Infinities and NaNs are errors in const-eval.
+    const cases = t.params.inputSource === 'const' ? f32_to_u32() : f32_inf_nan_to_u32();
     await run(t, bitcastBuilder('u32', t.params), [TypeF32], TypeU32, t.params, cases);
   });
 

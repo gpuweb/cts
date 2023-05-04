@@ -52,9 +52,9 @@ export function serializeExpectation(e) {
         return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
       }
     }
-    throw 'cannot serialize comparator';
+    throw `cannot serialize comparator ${e}`;
   }
-  throw 'cannot serialize expectation';
+  throw `cannot serialize expectation ${e}`;
 }
 
 /** deserializeExpectation() converts a SerializedExpectation to a Expectation */
