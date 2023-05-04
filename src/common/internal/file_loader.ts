@@ -25,6 +25,7 @@ export interface ImportInfo {
 
 interface TestFileLoaderEventMap {
   import: MessageEvent<ImportInfo>;
+  imported: MessageEvent<ImportInfo>;
   finish: MessageEvent<void>;
 }
 
@@ -56,12 +57,16 @@ export abstract class TestFileLoader extends EventTarget {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
 
-  importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
+  async importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
     const url = `${suite}/${path.join('/')}.spec.js`;
     this.dispatchEvent(
       new MessageEvent<ImportInfo>('import', { data: { url } })
     );
-    return this.import(url);
+    const ret = await this.import(url);
+    this.dispatchEvent(
+      new MessageEvent<ImportInfo>('imported', { data: { url } })
+    );
+    return ret;
   }
 
   async loadTree(query: TestQuery, subqueriesToExpand: string[] = []): Promise<TestTree> {

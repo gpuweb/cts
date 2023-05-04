@@ -624,6 +624,9 @@ void (async () => {
   loader.addEventListener('import', ev => {
     $('#info')[0].textContent = `loading: ${ev.data.url}`;
   });
+  loader.addEventListener('imported', ev => {
+    $('#info')[0].textContent = `imported: ${ev.data.url}`;
+  });
   loader.addEventListener('finish', () => {
     $('#info')[0].textContent = '';
   });

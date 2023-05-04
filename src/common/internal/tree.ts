@@ -253,6 +253,9 @@ export async function loadTreeForQuery(
   let foundCase = false;
   // L0 is suite:*
   const subtreeL0 = makeTreeForSuite(suite, isCollapsible);
+
+  const imports_start = performance.now();
+  const pImportedSpecFiles = []; // Promise<{file,spec}>[]
   for (const entry of specs) {
     if (entry.file.length === 0 && 'readme' in entry) {
       // Suite-level readme.
@@ -285,8 +288,26 @@ export async function loadTreeForQuery(
       continue;
     }
     // Entry is a spec file.
+    // We're going to be fetching+importing a bunch of things, so do it in async.
+    const pImportedSpecFile = (async () => {
+      const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
+      return {
+        file: entry.file,
+        spec: spec,
+      };
+    })();
+    const SERIALIZE_IMPORTING = false;
+    if (SERIALIZE_IMPORTING) {
+      await pImportedSpecFile;
+    }
+    pImportedSpecFiles.push(pImportedSpecFile);
+  }
+  const importedSpecFiles = await Promise.all(pImportedSpecFiles);
+  const imported_time = performance.now() - imports_start;
+  console.log(`Imported importedSpecFiles[${importedSpecFiles.length}] in ${imported_time}ms.`);
 
-    const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
+  for (const entry of importedSpecFiles) {
+    const spec = entry.spec;
     // subtreeL1 is suite:a,b:*
     const subtreeL1: TestSubtree<TestQueryMultiTest> = addSubtreeForFilePath(
       subtreeL0,
