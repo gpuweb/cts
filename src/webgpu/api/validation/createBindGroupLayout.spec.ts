@@ -286,7 +286,7 @@ function* pickExtraBindingTypesForPerStage(entry: BGLEntry, extraTypeSame: boole
   }
 }
 
-const kMaxResourcesCases = kUnitCaseParamsBuilder
+const kMaxResourcesPerStageCases = kUnitCaseParamsBuilder
   .combine('maxedEntry', allBindingEntries(false))
   .beginSubcases()
   .combine('maxedVisibility', kShaderStages)
@@ -298,8 +298,9 @@ const kMaxResourcesCases = kUnitCaseParamsBuilder
   .combine('extraVisibility', kShaderStages)
   .filter(p => (bindingTypeInfo(p.extraEntry).validStages & p.extraVisibility) !== 0);
 
-// Should never fail unless kLimitInfo.maxBindingsPerBindGroup.default is exceeded, because the validation for
-// resources-of-type-per-stage is in pipeline layout creation.
+// One bind group layout can have a maximum number of each type of binding *per stage* (which is
+// different for each type). Test that the max works, then add one more entry of same-or-different
+// type and same-or-different visibility.
 g.test('max_resources_per_stage,in_bind_group_layout')
   .desc(
     `
@@ -307,10 +308,9 @@ g.test('max_resources_per_stage,in_bind_group_layout')
     single bind group layout.
     - Test each binding type.
     - Test that creation of a bind group layout using the maximum number of bindings works.
-    - Test that creation of a bind group layout using the maximum number of bindings + 1 fails.
-    - TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.`
+    - Test that creation of a bind group layout using the maximum number of bindings + 1 fails.`
   )
-  .params(kMaxResourcesCases)
+  .params(kMaxResourcesPerStageCases)
   .fn(t => {
     const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = bindingTypeInfo(maxedEntry);
@@ -361,7 +361,7 @@ g.test('max_resources_per_stage,in_pipeline_layout')
     - Test that creation of a pipeline using the maximum number of bindings + 1 fails.
   `
   )
-  .params(kMaxResourcesCases)
+  .params(kMaxResourcesPerStageCases)
   .fn(t => {
     const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = bindingTypeInfo(maxedEntry);
@@ -400,6 +400,118 @@ g.test('max_resources_per_stage,in_pipeline_layout')
     t.expectValidationError(() => {
       t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout, extraLayout] });
     }, newBindingCountsTowardSamePerStageLimit);
+  });
+
+const kMaxResourcesPerPipelineCases = kUnitCaseParamsBuilder
+  .combine('maxedType', kBufferBindingTypes)
+  .beginSubcases()
+  .combine('maxedVisibility', kShaderStages)
+  .filter(p => (bufferBindingTypeInfo({ type: p.maxedType }).validStages & p.maxedVisibility) !== 0)
+  .combine('extraType', kBufferBindingTypes)
+  .combine('extraVisibility', kShaderStages)
+  .filter(
+    p => (bufferBindingTypeInfo({ type: p.extraType }).validStages & p.extraVisibility) !== 0
+  );
+
+// One bind group layout can have a maximum number of each type of dynamic buffer per pipeline. Test
+// that the max works, then add one more buffer of the same-or-different type and same-or-different
+// visibility.
+g.test('max_dynamic_buffers_per_pipeline,in_bind_group_layout')
+  .desc(
+    `
+    Test that the maximum number of bindings of a given dynamic buffer type per-pipeline cannot be
+    exceeded in a single bind group layout.
+    - Test each binding dynamic buffer type.
+    - Test that creation of a bind group layout using the maximum number of bindings works.
+    - Test that creation of a bind group layout using the maximum number of bindings + 1 fails.`
+  )
+  .params(kMaxResourcesPerPipelineCases)
+  .fn(t => {
+    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
+    const maxedEntry: BGLEntry = { buffer: { type: maxedType, hasDynamicOffset: true } };
+    const perPipelineLimit = bindingTypeInfo(maxedEntry).perPipelineLimitClass;
+
+    const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
+    for (let i = 0; i < perPipelineLimit.maxDynamic; i++) {
+      maxResourceBindings.push({
+        binding: i,
+        visibility: maxedVisibility,
+        ...maxedEntry,
+      });
+    }
+
+    const goodDescriptor = { entries: maxResourceBindings };
+
+    // Control
+    t.device.createBindGroupLayout(goodDescriptor);
+
+    // Add an entry that may count towards the same limit. If it does, it should produce a
+    // validation error.
+    const extraEntry: BGLEntry = { buffer: { type: extraType, hasDynamicOffset: true } };
+    const newDescriptor = clone(goodDescriptor);
+    newDescriptor.entries.push({
+      binding: perPipelineLimit.maxDynamic,
+      visibility: extraVisibility,
+      ...extraEntry,
+    });
+
+    const newBindingCountsTowardSamePerPipelineLimit =
+      perPipelineLimit.class === bindingTypeInfo(extraEntry).perPipelineLimitClass.class;
+    t.expectValidationError(() => {
+      t.device.createBindGroupLayout(newDescriptor);
+    }, newBindingCountsTowardSamePerPipelineLimit);
+  });
+
+// One pipeline layout can have a maximum number of each type of dynamic buffer per pipeline. Test
+// that the max works, then add one more bind group layout with a buffer of the same-or-different
+// type and same-or-different visibility.
+g.test('max_dynamic_buffers_per_pipeline,in_pipeline_layout')
+  .desc(
+    `
+    Test that the maximum number of bindings of a given dynamic buffer type per-pipeline cannot be
+    exceeded across multiple bind group layouts when creating a pipeline layout.
+    - Test each binding dynamic buffer type.
+    - Test that creation of a pipeline layout using the maximum number of bindings works.
+    - Test that creation of a pipeline layout using the maximum number of bindings + 1 fails.`
+  )
+  .params(kMaxResourcesPerPipelineCases)
+  .fn(t => {
+    const { maxedType, extraType, maxedVisibility, extraVisibility } = t.params;
+    const maxedEntry: BGLEntry = { buffer: { type: maxedType, hasDynamicOffset: true } };
+    const perPipelineLimit = bindingTypeInfo(maxedEntry).perPipelineLimitClass;
+
+    const maxResourceBindings: GPUBindGroupLayoutEntry[] = [];
+    for (let i = 0; i < perPipelineLimit.maxDynamic; i++) {
+      maxResourceBindings.push({
+        binding: i,
+        visibility: maxedVisibility,
+        ...maxedEntry,
+      });
+    }
+
+    const goodLayout = t.device.createBindGroupLayout({ entries: maxResourceBindings });
+
+    // Control
+    t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout] });
+
+    // Add an entry bind group layout that has a binding that may count towards the same limit. If
+    // it does, it should produce a validation error.
+    const extraEntry: BGLEntry = { buffer: { type: extraType, hasDynamicOffset: true } };
+    const extraLayout = t.device.createBindGroupLayout({
+      entries: [
+        {
+          binding: 0,
+          visibility: extraVisibility,
+          ...extraEntry,
+        },
+      ],
+    });
+
+    const newBindingCountsTowardSamePerPipelineLimit =
+      perPipelineLimit.class === bindingTypeInfo(extraEntry).perPipelineLimitClass.class;
+    t.expectValidationError(() => {
+      t.device.createPipelineLayout({ bindGroupLayouts: [goodLayout, extraLayout] });
+    }, newBindingCountsTowardSamePerPipelineLimit);
   });
 
 g.test('storage_texture,layout_dimension')
