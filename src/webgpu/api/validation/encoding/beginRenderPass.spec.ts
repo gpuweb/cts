@@ -22,6 +22,7 @@ Notes:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { kQueryTypes } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
@@ -182,10 +183,14 @@ g.test('timestamp_query_set,device_mismatch')
     const { mismatched } = t.params;
     const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-    const timestampWrite = {
-      querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
-      queryIndex: 0,
-      location: 'beginning' as const,
+    const timestampQuerySet = sourceDevice.createQuerySet({
+      type: 'timestamp',
+      count: 1,
+    });
+
+    const timestampWrites = {
+      querySet: timestampQuerySet,
+      beginningOfPassWriteIndex: 0,
     };
 
     const colorTexture = t.device.createTexture({
@@ -203,7 +208,7 @@ g.test('timestamp_query_set,device_mismatch')
           storeOp: 'store',
         },
       ],
-      timestampWrites: [timestampWrite],
+      timestampWrites,
     });
     pass.end();
 
