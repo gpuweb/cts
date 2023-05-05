@@ -32,10 +32,7 @@ g.test('timestampWrites,query_set_type')
       .combine('queryType', kQueryTypes)
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceForQueryTypeOrSkipTestCase([
-      'timestamp',
-      t.params.queryType,
-    ]);
+    t.selectDeviceForQueryTypeOrSkipTestCase(['timestamp', t.params.queryType]);
   })
   .fn(t => {
     const { queryType } = t.params;
@@ -82,8 +79,10 @@ g.test('timestampWrites,invalid_query_set')
   });
 
 g.test('timestampWrites,query_index')
-  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
-         query indexes are unique.`)
+  .desc(
+    `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
+         query indexes are unique.`
+  )
   .paramsSubcasesOnly(u =>
     u //
       .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3] as const)
@@ -103,9 +102,10 @@ g.test('timestampWrites,query_index')
       endOfPassWriteIndex,
     };
 
-    const isValid = (beginningOfPassWriteIndex !== endOfPassWriteIndex) &&
-                    (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
-                    (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount)
+    const isValid =
+      beginningOfPassWriteIndex !== endOfPassWriteIndex &&
+      (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
+      (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount);
 
     const descriptor = {
       timestampWrites,

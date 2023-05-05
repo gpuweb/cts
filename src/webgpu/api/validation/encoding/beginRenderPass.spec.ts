@@ -22,7 +22,6 @@ Notes:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kQueryTypes } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);
