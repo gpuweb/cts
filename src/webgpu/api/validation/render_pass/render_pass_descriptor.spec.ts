@@ -979,7 +979,7 @@ g.test('timestampWrites,query_set_type')
   )
   .params(u =>
     u //
-    .combine('queryType', kQueryTypes)
+      .combine('queryType', kQueryTypes)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
@@ -1005,8 +1005,10 @@ g.test('timestampWrites,query_set_type')
   });
 
 g.test('timestampWrite,query_index')
-  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
-         query indexes are unique.`)
+  .desc(
+    `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
+         query indexes are unique.`
+  )
   .paramsSubcasesOnly(u =>
     u //
       .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3] as const)
@@ -1026,9 +1028,10 @@ g.test('timestampWrite,query_index')
       endOfPassWriteIndex,
     };
 
-    const isValid = (beginningOfPassWriteIndex !== endOfPassWriteIndex) &&
-                    (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
-                    (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount)
+    const isValid =
+      beginningOfPassWriteIndex !== endOfPassWriteIndex &&
+      (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
+      (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount);
 
     const colorTexture = t.createTexture();
     const descriptor = {
