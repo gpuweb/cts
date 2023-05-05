@@ -182,10 +182,14 @@ fn((t) => {
   const { mismatched } = t.params;
   const sourceDevice = mismatched ? t.mismatchedDevice : t.device;
 
-  const timestampWrite = {
-    querySet: sourceDevice.createQuerySet({ type: 'timestamp', count: 1 }),
-    queryIndex: 0,
-    location: 'beginning'
+  const timestampQuerySet = sourceDevice.createQuerySet({
+    type: 'timestamp',
+    count: 1
+  });
+
+  const timestampWrites = {
+    querySet: timestampQuerySet,
+    beginningOfPassWriteIndex: 0
   };
 
   const colorTexture = t.device.createTexture({
@@ -203,7 +207,7 @@ fn((t) => {
       storeOp: 'store'
     }],
 
-    timestampWrites: [timestampWrite]
+    timestampWrites
   });
   pass.end();
 
