@@ -367,16 +367,16 @@ g.test('mappedAtCreation,mapState')
   .desc('Test that exposed map state of buffer created with mappedAtCreation has expected values.')
   .params(u =>
     u
-      .combine('usageType', ['invalid', 'MAP_READ', 'MAP_WRITE'])
+      .combine('usageType', ['invalid', 'read', 'write'])
       .combine('afterUnmap', [false, true])
       .combine('afterDestroy', [false, true])
   )
   .fn(t => {
     const { usageType, afterUnmap, afterDestroy } = t.params;
     const usage =
-      usageType === 'MAP_READ'
+      usageType === 'read'
         ? GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-        : usageType === 'MAP_WRITE'
+        : usageType === 'write'
         ? GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
         : 0;
     const validationError = usage === 0;
@@ -414,8 +414,8 @@ g.test('mapAsync,mapState')
   .desc('Test that exposed map state of buffer mapped with mapAsync has expected values.')
   .params(u =>
     u
-      .combine('usageType', ['invalid', 'MAP_READ', 'MAP_WRITE'])
-      .combine('mapModeType', ['READ', 'WRITE'])
+      .combine('usageType', ['invalid', 'read', 'write'])
+      .combine('mapModeType', ['READ', 'WRITE'] as const)
       .combine('beforeUnmap', [false, true])
       .combine('beforeDestroy', [false, true])
       .combine('afterUnmap', [false, true])
@@ -433,9 +433,9 @@ g.test('mapAsync,mapState')
     const size = 8;
     const range = [0, 8];
     const usage =
-      usageType === 'MAP_READ'
+      usageType === 'read'
         ? GPUBufferUsage.COPY_DST | GPUBufferUsage.MAP_READ
-        : usageType === 'MAP_WRITE'
+        : usageType === 'write'
         ? GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
         : 0;
     const bufferCreationValidationError = usage === 0;
