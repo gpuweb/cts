@@ -1,6 +1,0 @@
-#!/usr/bin/env node
-
-// FIXME delete this file
-
-require('../src/common/tools/setup-ts-in-node.js');
-require('../src/webgpu/FIXME_old_texture_info_for_verification.ts');
