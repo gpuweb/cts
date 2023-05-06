@@ -439,7 +439,7 @@ g.test('mapAsync,mapState')
         ? GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE
         : 0;
     const bufferCreationValidationError = usage === 0;
-    const mapMode = mapModeType === 'READ' ? GPUMapMode.READ : GPUMapMode.WRITE;
+    const mapMode = GPUMapMode[mapModeType];
 
     let buffer: GPUBuffer;
     t.expectValidationError(() => {
