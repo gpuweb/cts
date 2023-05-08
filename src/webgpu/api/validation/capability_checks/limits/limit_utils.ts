@@ -255,7 +255,8 @@ export function getLimitValue(
     case 'underDefault':
       return defaultLimit - 1;
     case 'betweenDefaultAndMaximum':
-      return ((defaultLimit + maximumLimit) / 2) | 0;
+      // The result can be larger than maximum i32.
+      return Math.floor((defaultLimit + maximumLimit) / 2);
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':

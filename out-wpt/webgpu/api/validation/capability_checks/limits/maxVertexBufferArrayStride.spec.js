@@ -42,7 +42,7 @@ function getDeviceLimitToRequest(limitValueTest, defaultLimit, maximumLimit) {
     case 'betweenDefaultAndMaximum':
       return Math.min(
         defaultLimit,
-        roundDown(((defaultLimit + maximumLimit) / 2) | 0, kMinAttributeStride)
+        roundDown(Math.floor((defaultLimit + maximumLimit) / 2), kMinAttributeStride)
       );
 
     case 'atMaximum':
