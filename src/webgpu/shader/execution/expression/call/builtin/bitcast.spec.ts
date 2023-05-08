@@ -74,9 +74,18 @@ const f32RangeWithInfAndNaN: number[] = [
   ].map(u => reinterpretU32AsF32(u)),
 ];
 
-const anyF32: Comparator = v => ({ matched: true, got: `${v}`, expected: 'any f32' });
-const anyI32: Comparator = v => ({ matched: true, got: `${v}`, expected: 'any i32' });
-const anyU32: Comparator = v => ({ matched: true, got: `${v}`, expected: 'any u32' });
+const anyF32: Comparator = {
+  impl: v => ({ matched: true, got: `${v}`, expected: 'any f32' }),
+  kind: 'bitcast',
+};
+const anyI32: Comparator = {
+  impl: v => ({ matched: true, got: `${v}`, expected: 'any i32' }),
+  kind: 'bitcast',
+};
+const anyU32: Comparator = {
+  impl: v => ({ matched: true, got: `${v}`, expected: 'any u32' }),
+  kind: 'bitcast',
+};
 
 function f32CanMapToZero(f: number): boolean {
   return f === 0 || isSubnormalNumberF32(f);
@@ -96,11 +105,14 @@ function bitcastF32ToF32Comparator(f: number): Comparator {
   if (!isFinite(f)) return anyF32;
   const acceptable: number[] = [f, ...(f32CanMapToZero(f) ? f32Zeros : [])];
   const match = (x: number): boolean => x === f || (f32CanMapToZero(f) && x === 0);
-  return (e: Value): Comparison => ({
-    matched: match((e as Scalar).value as number),
-    got: `${e}`,
-    expected: `${acceptable.join(' ')}`,
-  });
+  return {
+    impl: (e: Value): Comparison => ({
+      matched: match((e as Scalar).value as number),
+      got: `${e}`,
+      expected: `${acceptable.join(' ')}`,
+    }),
+    kind: 'bitcast',
+  };
 }
 
 /**
@@ -116,11 +128,14 @@ function bitcastF32ToU32Comparator(f: number): Comparator {
   const match = (x: number): boolean =>
     x === reinterpretF32AsU32(f) ||
     (f32CanMapToZero(f) && (x === f32ZerosInU32[0] || x === f32ZerosInU32[1]));
-  return (e: Value): Comparison => ({
-    matched: match((e as Scalar).value as number),
-    got: `${e}`,
-    expected: `${acceptable.join(' ')}`,
-  });
+  return {
+    impl: (e: Value): Comparison => ({
+      matched: match((e as Scalar).value as number),
+      got: `${e}`,
+      expected: `${acceptable.join(' ')}`,
+    }),
+    kind: 'bitcast',
+  };
 }
 
 /**
@@ -136,11 +151,14 @@ function bitcastF32ToI32Comparator(f: number): Comparator {
   const match = (x: number): boolean =>
     x === reinterpretF32AsI32(f) ||
     (f32CanMapToZero(f) && (x === f32ZerosInI32[0] || x === f32ZerosInI32[1]));
-  return (e: Value): Comparison => ({
-    matched: match((e as Scalar).value as number),
-    got: `${e}`,
-    expected: `${acceptable.join(' ')}`,
-  });
+  return {
+    impl: (e: Value): Comparison => ({
+      matched: match((e as Scalar).value as number),
+      got: `${e}`,
+      expected: `${acceptable.join(' ')}`,
+    }),
+    kind: 'bitcast',
+  };
 }
 
 // Use of the CaseCache has been intentionally removed, because serialization
