@@ -28,23 +28,16 @@ export interface Comparison {
 // error.
 // 'value' and 'packed' should never be used in .spec.ts files.
 //
-// 'bitcast' is a legacy type for specific tests that exist to allow those
-// tests to use the testing framework without the CaseCache. It is intended to
-// be removed.
-export type SerializableComparatorKind = 'anyOf' | 'skipUndefined';
+export type SerializableComparatorKind = 'anyOf' | 'skipUndefined' | 'alwaysPass';
 type InternalComparatorKind = 'value' | 'packed';
-type LegacyComparatorKind = 'bitcast';
-export type ComparatorKind =
-  | SerializableComparatorKind
-  | InternalComparatorKind
-  | LegacyComparatorKind;
+export type ComparatorKind = SerializableComparatorKind | InternalComparatorKind;
 export type ComparatorImpl = (got: Value) => Comparison;
 
 /** Comparator is a function that compares whether the provided value matches an expectation. */
 export interface Comparator {
   compare: ComparatorImpl;
   kind: ComparatorKind;
-  data?: Expectation | Expectation[];
+  data?: Expectation | Expectation[] | string;
 }
 
 /**
@@ -369,6 +362,27 @@ export function skipUndefined(expectation: Expectation | undefined): Comparator 
   return c;
 }
 
+/**
+ * @returns a Comparator that always passes, used to test situations where the
+ * result of computation doesn't matter, but the fact it finishes is being
+ * tested.
+ */
+export function alwaysPass(msg: string = 'always pass'): Comparator {
+  const c: Comparator = {
+    compare: (got: Value) => {
+      return { matched: true, got: got.toString(), expected: msg };
+    },
+    kind: 'alwaysPass',
+  };
+
+  if (getIsBuildingDataCache()) {
+    // If there's an active DataCache, and it supports storing, then append the
+    // message string to the result, so it can be serialized.
+    c.data = msg;
+  }
+  return c;
+}
+
 /** SerializedComparatorAnyOf is the serialized type of `anyOf` comparator. */
 type SerializedComparatorAnyOf = {
   kind: 'anyOf';
@@ -381,12 +395,20 @@ type SerializedComparatorSkipUndefined = {
   data?: SerializedExpectation;
 };
 
-// Serialized forms of 'value', 'packed', and 'bitcast' are intentionally
-// omitted, so should not be put into the cache. Attempting to will cause a
-// runtime assert.
+/** SerializedComparatorAlwaysPass is the serialized type of `alwaysPass` comparator. */
+type SerializedComparatorAlwaysPass = {
+  kind: 'alwaysPass';
+  data: string;
+};
+
+// Serialized forms of 'value' and 'packed' are intentionally omitted, so should
+// not be put into the cache. Attempting to will cause a runtime assert.
 
 /** SerializedComparator is a union of all the possible serialized comparator types. */
-export type SerializedComparator = SerializedComparatorAnyOf | SerializedComparatorSkipUndefined;
+export type SerializedComparator =
+  | SerializedComparatorAnyOf
+  | SerializedComparatorSkipUndefined
+  | SerializedComparatorAlwaysPass;
 
 /**
  * Serializes a Comparator to a SerializedComparator.
@@ -406,9 +428,12 @@ export function serializeComparator(c: Comparator): SerializedComparator {
       }
       return { kind: 'skipUndefined', data: undefined };
     }
+    case 'alwaysPass': {
+      const d = c.data as string;
+      return { kind: 'alwaysPass', data: d };
+    }
     case 'value':
-    case 'packed':
-    case 'bitcast': {
+    case 'packed': {
       unreachable(`Serializing '${c.kind}' comparators is not allowed (${c})`);
       break;
     }
@@ -428,6 +453,9 @@ export function deserializeComparator(s: SerializedComparator): Comparator {
     }
     case 'skipUndefined': {
       return skipUndefined(s.data !== undefined ? deserializeExpectation(s.data) : undefined);
+    }
+    case 'alwaysPass': {
+      return alwaysPass(s.data);
     }
   }
   unreachable(`Unable deserialize comparator '${s}'`);
