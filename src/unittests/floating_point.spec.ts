@@ -46,6 +46,23 @@ function minusOneULPF32(x: number): number {
   return minusNULPF32(x, 1);
 }
 
+/** Group ULP functions of different FP traits */
+const plusNULPFunctions = {
+  f32: plusNULPF32,
+};
+
+const plusOneULPFunctions = {
+  f32: plusOneULPF32,
+};
+
+const minusNULPFunctions = {
+  f32: minusNULPF32,
+};
+
+const minusOneULPFunctions = {
+  f32: minusOneULPF32,
+};
+
 /** @returns the expected IntervalBounds adjusted by the given error function
  *
  * @param expected the bounds to be adjusted
@@ -1822,70 +1839,91 @@ interface AbsoluteErrorCase {
   expected: number | IntervalBounds;
 }
 
+// Special values used for testing absolute error interval
+const kAbsoluteErrorValue = {
+  f32: 2 ** -11, // Builtin cos and sin has a absolute error 2**-11 for f32
+};
+
 g.test('absoluteErrorInterval_f32')
-  .paramsSubcasesOnly<AbsoluteErrorCase>(
-    // prettier-ignore
-    [
-      // Edge Cases
-      { value: kValue.f32.infinity.positive, error: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, error: 2 ** -11, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, error: 1, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, error: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, error: 2 ** -11, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, error: 1, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, error: 0, expected: kValue.f32.positive.max },
-      { value: kValue.f32.positive.max, error: 2 ** -11, expected: kValue.f32.positive.max },
-      { value: kValue.f32.positive.max, error: kValue.f32.positive.max, expected: kAnyBounds },
-      { value: kValue.f32.positive.min, error: 0, expected: kValue.f32.positive.min },
-      { value: kValue.f32.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.positive.min, error: 1, expected: [-1, 1] },
-      { value: kValue.f32.negative.min, error: 0, expected: kValue.f32.negative.min },
-      { value: kValue.f32.negative.min, error: 2 ** -11, expected: kValue.f32.negative.min },
-      { value: kValue.f32.negative.min, error: kValue.f32.positive.max, expected: kAnyBounds },
-      { value: kValue.f32.negative.max, error: 0, expected: kValue.f32.negative.max },
-      { value: kValue.f32.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.negative.max, error: 1, expected: [-1, 1] },
+  .params(u =>
+    u
+      .combine('trait', ['f32'] as const)
+      .beginSubcases()
+      .expandWithParams<AbsoluteErrorCase>(p => {
+        const constants = FP[p.trait].constants();
+        const absErrorValue = kAbsoluteErrorValue[p.trait];
+        // prettier-ignore
+        return [
+          // Edge Cases
+          { value: constants.positive.infinity, error: 0, expected: kAnyBounds },
+          { value: constants.positive.infinity, error: absErrorValue, expected: kAnyBounds },
+          { value: constants.positive.infinity, error: 1, expected: kAnyBounds },
+          { value: constants.negative.infinity, error: 0, expected: kAnyBounds },
+          { value: constants.negative.infinity, error: absErrorValue, expected: kAnyBounds },
+          { value: constants.negative.infinity, error: 1, expected: kAnyBounds },
+          { value: constants.positive.max, error: 0, expected: constants.positive.max },
+          { value: constants.positive.max, error: absErrorValue, expected: constants.positive.max },
+          { value: constants.positive.max, error: constants.positive.max, expected: kAnyBounds },
+          { value: constants.positive.min, error: 0, expected: constants.positive.min },
+          { value: constants.positive.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.positive.min, error: 1, expected: [-1, 1] },
+          { value: constants.negative.min, error: 0, expected: constants.negative.min },
+          { value: constants.negative.min, error: absErrorValue, expected: constants.negative.min },
+          { value: constants.negative.min, error: constants.positive.max, expected: kAnyBounds },
+          { value: constants.negative.max, error: 0, expected: constants.negative.max },
+          { value: constants.negative.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.negative.max, error: 1, expected: [-1, 1] },
 
-      // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.max, error: 0, expected: [0, kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.positive.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.subnormal.positive.max, error: 1, expected: [-1, 1] },
-      { value: kValue.f32.subnormal.positive.min, error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.subnormal.positive.min, error: 1, expected: [-1, 1] },
-      { value: kValue.f32.subnormal.negative.min, error: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
-      { value: kValue.f32.subnormal.negative.min, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.subnormal.negative.min, error: 1, expected: [-1, 1] },
-      { value: kValue.f32.subnormal.negative.max, error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: kValue.f32.subnormal.negative.max, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: kValue.f32.subnormal.negative.max, error: 1, expected: [-1, 1] },
+          // Subnormals
+          { value: constants.positive.subnormal.max, error: 0, expected: [0, constants.positive.subnormal.max] },
+          { value: constants.positive.subnormal.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.positive.subnormal.max, error: 1, expected: [-1, 1] },
+          { value: constants.positive.subnormal.min, error: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: constants.positive.subnormal.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.positive.subnormal.min, error: 1, expected: [-1, 1] },
+          { value: constants.negative.subnormal.min, error: 0, expected: [constants.negative.subnormal.min, 0] },
+          { value: constants.negative.subnormal.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.negative.subnormal.min, error: 1, expected: [-1, 1] },
+          { value: constants.negative.subnormal.max, error: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: constants.negative.subnormal.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: constants.negative.subnormal.max, error: 1, expected: [-1, 1] },
 
-      // 64-bit subnormals
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
+          // 64-bit subnormals
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
 
-      // Zero
-      { value: 0, error: 0, expected: 0 },
-      { value: 0, error: 2 ** -11, expected: [-(2 ** -11), 2 ** -11] },
-      { value: 0, error: 1, expected: [-1, 1] },
-    ]
+          // Zero
+          { value: 0, error: 0, expected: 0 },
+          { value: 0, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+          { value: 0, error: 1, expected: [-1, 1] },
+
+          // Two
+          { value: 2, error: 0, expected: 2 },
+          { value: 2, error: absErrorValue, expected: [2 - absErrorValue, 2 + absErrorValue] },
+          { value: 2, error: 1, expected: [1, 3] },
+          { value: -2, error: 0, expected: -2 },
+          { value: -2, error: absErrorValue, expected: [-2 - absErrorValue, -2 + absErrorValue] },
+          { value: -2, error: 1, expected: [-3, -1] },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.absoluteErrorInterval(t.params.value, t.params.error);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.absoluteErrorInterval(t.params.value, t.params.error);
     t.expect(
       objectEquals(expected, got),
-      `f32.absoluteErrorInterval(${t.params.value}, ${t.params.error}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.absoluteErrorInterval(${t.params.value}, ${t.params.error}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -1894,54 +1932,98 @@ interface CorrectlyRoundedCase {
   expected: number | IntervalBounds;
 }
 
+// Correctly rounded cases that input values are exactly representable normal values of target type
+// prettier-ignore
+const kCorrectlyRoundedNormalCases = {
+  f32: [
+    { value: 0, expected: [0, 0] },
+    { value: reinterpretU32AsF32(0x03800000), expected: reinterpretU32AsF32(0x03800000) },
+    { value: reinterpretU32AsF32(0x03800001), expected: reinterpretU32AsF32(0x03800001) },
+    { value: reinterpretU32AsF32(0x83800000), expected: reinterpretU32AsF32(0x83800000) },
+    { value: reinterpretU32AsF32(0x83800001), expected: reinterpretU32AsF32(0x83800001) },
+  ] as CorrectlyRoundedCase[],
+};
+
+// 64-bit normals that fall between two conjunction normal values in target type
+const kCorrectlyRoundedF64NormalCases = [
+  {
+    value: reinterpretU64AsF64(0x3ff0_0000_0000_0001n),
+    expected: { f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+  },
+  {
+    value: reinterpretU64AsF64(0x3ff0_0000_0000_0002n),
+    expected: { f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+  },
+  {
+    value: reinterpretU64AsF64(0x3ff0_0800_0000_0010n),
+    expected: { f32: [reinterpretU32AsF32(0x3f804000), reinterpretU32AsF32(0x3f804001)] },
+  },
+  {
+    value: reinterpretU64AsF64(0x3ff0_1000_0000_0020n),
+    expected: { f32: [reinterpretU32AsF32(0x3f808000), reinterpretU32AsF32(0x3f808001)] },
+  },
+  {
+    value: reinterpretU64AsF64(0xbff0_0000_0000_0001n),
+    expected: { f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+  },
+  {
+    value: reinterpretU64AsF64(0xbff0_0000_0000_0002n),
+    expected: { f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+  },
+  {
+    value: reinterpretU64AsF64(0xbff0_0800_0000_0010n),
+    expected: { f32: [reinterpretU32AsF32(0xbf804001), reinterpretU32AsF32(0xbf804000)] },
+  },
+  {
+    value: reinterpretU64AsF64(0xbff0_1000_0000_0020n),
+    expected: { f32: [reinterpretU32AsF32(0xbf808001), reinterpretU32AsF32(0xbf808000)] },
+  },
+] as const;
+
 g.test('correctlyRoundedInterval_f32')
-  .paramsSubcasesOnly<CorrectlyRoundedCase>(
-    // prettier-ignore
-    [
-      // Edge Cases
-      { value: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { value: kValue.f32.negative.min, expected: kValue.f32.negative.min },
-      { value: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-      { value: kValue.f32.negative.max, expected: kValue.f32.negative.max },
+  .params(u =>
+    u
+      .combine('trait', ['f32'] as const)
+      .beginSubcases()
+      .expandWithParams<CorrectlyRoundedCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          // Edge Cases
+          { value: constants.positive.infinity, expected: kAnyBounds },
+          { value: constants.negative.infinity, expected: kAnyBounds },
+          { value: constants.positive.max, expected: constants.positive.max },
+          { value: constants.negative.min, expected: constants.negative.min },
+          { value: constants.positive.min, expected: constants.positive.min },
+          { value: constants.negative.max, expected: constants.negative.max },
 
-      // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0] },
-      { value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0] },
+          // Subnormals
+          { value: constants.positive.subnormal.min, expected: [0, constants.positive.subnormal.min] },
+          { value: constants.positive.subnormal.max, expected: [0, constants.positive.subnormal.max] },
+          { value: constants.negative.subnormal.min, expected: [constants.negative.subnormal.min, 0] },
+          { value: constants.negative.subnormal.max, expected: [constants.negative.subnormal.max, 0] },
 
-      // 64-bit subnormals
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
+          // 64-bit subnormals should be rounded down to 0 or up to smallest subnormal
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [constants.negative.subnormal.max, 0] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [constants.negative.subnormal.max, 0] },
 
-      // 32-bit normals
-      { value: 0, expected: [0, 0] },
-      { value: reinterpretU32AsF32(0x03800000), expected: reinterpretU32AsF32(0x03800000) },
-      { value: reinterpretU32AsF32(0x03800001), expected: reinterpretU32AsF32(0x03800001) },
-      { value: reinterpretU32AsF32(0x83800000), expected: reinterpretU32AsF32(0x83800000) },
-      { value: reinterpretU32AsF32(0x83800001), expected: reinterpretU32AsF32(0x83800001) },
+          // Normals
+          ...kCorrectlyRoundedNormalCases[p.trait],
 
-      // 64-bit normals
-      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
-      { value: reinterpretU64AsF64(0x3ff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
-      { value: reinterpretU64AsF64(0x3ff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0x3f800080), reinterpretU32AsF32(0x3f800081)] },
-      { value: reinterpretU64AsF64(0x3ff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0x3f800100), reinterpretU32AsF32(0x3f800101)] },
-      { value: reinterpretU64AsF64(0xbff0_0000_0000_0001n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
-      { value: reinterpretU64AsF64(0xbff0_0000_0000_0002n), expected: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
-      { value: reinterpretU64AsF64(0xbff0_0010_0000_0010n), expected: [reinterpretU32AsF32(0xbf800081), reinterpretU32AsF32(0xbf800080)] },
-      { value: reinterpretU64AsF64(0xbff0_0020_0000_0020n), expected: [reinterpretU32AsF32(0xbf800101), reinterpretU32AsF32(0xbf800100)] },
-    ]
+          // 64-bit normals that fall between two conjunction normal values in target type
+          ...kCorrectlyRoundedF64NormalCases.map(t => { return {value: t.value, expected: t.expected[p.trait]} as CorrectlyRoundedCase;}),
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.correctlyRoundedInterval(t.params.value);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.correctlyRoundedInterval(t.params.value);
     t.expect(
       objectEquals(expected, got),
-      `f32.correctlyRoundedInterval(${t.params.value}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.correctlyRoundedInterval(${t.params.value}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -1951,70 +2033,87 @@ interface ULPCase {
   expected: number | IntervalBounds;
 }
 
+// Special values used for testing ULP error interval
+const kULPErrorValue = {
+  f32: 4096, // 4096 ULP is required for atan accuracy on f32
+};
+
 g.test('ulpInterval_f32')
-  .paramsSubcasesOnly<ULPCase>(
-    // prettier-ignore
-    [
-      // Edge Cases
-      { value: kValue.f32.infinity.positive, num_ulp: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.infinity.positive, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 0, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.infinity.negative, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, num_ulp: 0, expected: kValue.f32.positive.max },
-      { value: kValue.f32.positive.max, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.positive.max, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.positive.min, num_ulp: 0, expected: kValue.f32.positive.min },
-      { value: kValue.f32.positive.min, num_ulp: 1, expected: [0, plusOneULPF32(kValue.f32.positive.min)] },
-      { value: kValue.f32.positive.min, num_ulp: 4096, expected: [0, plusNULPF32(kValue.f32.positive.min, 4096)] },
-      { value: kValue.f32.negative.min, num_ulp: 0, expected: kValue.f32.negative.min },
-      { value: kValue.f32.negative.min, num_ulp: 1, expected: kAnyBounds },
-      { value: kValue.f32.negative.min, num_ulp: 4096, expected: kAnyBounds },
-      { value: kValue.f32.negative.max, num_ulp: 0, expected: kValue.f32.negative.max },
-      { value: kValue.f32.negative.max, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.negative.max), 0] },
-      { value: kValue.f32.negative.max, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.negative.max, 4096), 0] },
+  .params(u =>
+    u
+      .combine('trait', ['f32'] as const)
+      .beginSubcases()
+      .expandWithParams<ULPCase>(p => {
+        const constants = FP[p.trait].constants();
+        const ULPValue = kULPErrorValue[p.trait];
+        const plusOneULP = plusOneULPFunctions[p.trait];
+        const plusNULP = plusNULPFunctions[p.trait];
+        const minusOneULP = minusOneULPFunctions[p.trait];
+        const minusNULP = minusNULPFunctions[p.trait];
+        // prettier-ignore
+        return [
+          // Edge Cases
+          { value: constants.positive.infinity, num_ulp: 0, expected: kAnyBounds },
+          { value: constants.positive.infinity, num_ulp: 1, expected: kAnyBounds },
+          { value: constants.positive.infinity, num_ulp: ULPValue, expected: kAnyBounds },
+          { value: constants.negative.infinity, num_ulp: 0, expected: kAnyBounds },
+          { value: constants.negative.infinity, num_ulp: 1, expected: kAnyBounds },
+          { value: constants.negative.infinity, num_ulp: ULPValue, expected: kAnyBounds },
+          { value: constants.positive.max, num_ulp: 0, expected: constants.positive.max },
+          { value: constants.positive.max, num_ulp: 1, expected: kAnyBounds },
+          { value: constants.positive.max, num_ulp: ULPValue, expected: kAnyBounds },
+          { value: constants.positive.min, num_ulp: 0, expected: constants.positive.min },
+          { value: constants.positive.min, num_ulp: 1, expected: [0, plusOneULP(constants.positive.min)] },
+          { value: constants.positive.min, num_ulp: ULPValue, expected: [0, plusNULP(constants.positive.min, ULPValue)] },
+          { value: constants.negative.min, num_ulp: 0, expected: constants.negative.min },
+          { value: constants.negative.min, num_ulp: 1, expected: kAnyBounds },
+          { value: constants.negative.min, num_ulp: ULPValue, expected: kAnyBounds },
+          { value: constants.negative.max, num_ulp: 0, expected: constants.negative.max },
+          { value: constants.negative.max, num_ulp: 1, expected: [minusOneULP(constants.negative.max), 0] },
+          { value: constants.negative.max, num_ulp: ULPValue, expected: [minusNULP(constants.negative.max, ULPValue), 0] },
 
-      // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.max)] },
-      { value: kValue.f32.subnormal.positive.max, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.max, 4096)] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
-      { value: kValue.f32.subnormal.positive.min, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 0, expected: [kValue.f32.subnormal.negative.min, 0] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.min), plusOneULPF32(0)] },
-      { value: kValue.f32.subnormal.negative.min, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.min, 4096), plusNULPF32(0, 4096)] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
-      { value: kValue.f32.subnormal.negative.max, num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+          // Subnormals
+          { value: constants.positive.subnormal.max, num_ulp: 0, expected: [0, constants.positive.subnormal.max] },
+          { value: constants.positive.subnormal.max, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(constants.positive.subnormal.max)] },
+          { value: constants.positive.subnormal.max, num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(constants.positive.subnormal.max, ULPValue)] },
+          { value: constants.positive.subnormal.min, num_ulp: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: constants.positive.subnormal.min, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(constants.positive.subnormal.min)] },
+          { value: constants.positive.subnormal.min, num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(constants.positive.subnormal.min, ULPValue)] },
+          { value: constants.negative.subnormal.min, num_ulp: 0, expected: [constants.negative.subnormal.min, 0] },
+          { value: constants.negative.subnormal.min, num_ulp: 1, expected: [minusOneULP(constants.negative.subnormal.min), plusOneULP(0)] },
+          { value: constants.negative.subnormal.min, num_ulp: ULPValue, expected: [minusNULP(constants.negative.subnormal.min, ULPValue), plusNULP(0, ULPValue)] },
+          { value: constants.negative.subnormal.max, num_ulp: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: constants.negative.subnormal.max, num_ulp: 1, expected: [minusOneULP(constants.negative.subnormal.max), plusOneULP(0)] },
+          { value: constants.negative.subnormal.max, num_ulp: ULPValue, expected: [minusNULP(constants.negative.subnormal.max, ULPValue), plusNULP(0, ULPValue)] },
 
-      // 64-bit subnormals
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(kValue.f32.subnormal.positive.min)] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(kValue.f32.subnormal.positive.min, 4096)] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULPF32(kValue.f32.subnormal.negative.max), plusOneULPF32(0)] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 4096, expected: [minusNULPF32(kValue.f32.subnormal.negative.max, 4096), plusNULPF32(0, 4096)] },
+          // 64-bit subnormals
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(constants.positive.subnormal.min)] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(constants.positive.subnormal.min, ULPValue)] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: 1, expected: [minusOneULP(0), plusOneULP(constants.positive.subnormal.min)] },
+          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(constants.positive.subnormal.min, ULPValue)] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: 1, expected: [minusOneULP(constants.negative.subnormal.max), plusOneULP(0)] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), num_ulp: ULPValue, expected: [minusNULP(constants.negative.subnormal.max, ULPValue), plusNULP(0, ULPValue)] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: 1, expected: [minusOneULP(constants.negative.subnormal.max), plusOneULP(0)] },
+          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), num_ulp: ULPValue, expected: [minusNULP(constants.negative.subnormal.max, ULPValue), plusNULP(0, ULPValue)] },
 
-      // Zero
-      { value: 0, num_ulp: 0, expected: 0 },
-      { value: 0, num_ulp: 1, expected: [minusOneULPF32(0), plusOneULPF32(0)] },
-      { value: 0, num_ulp: 4096, expected: [minusNULPF32(0, 4096), plusNULPF32(0, 4096)] },
-    ]
+          // Zero
+          { value: 0, num_ulp: 0, expected: 0 },
+          { value: 0, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(0)] },
+          { value: 0, num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(0, ULPValue)] },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.ulpInterval(t.params.value, t.params.num_ulp);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.ulpInterval(t.params.value, t.params.num_ulp);
     t.expect(
       objectEquals(expected, got),
-      `f32.ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`
     );
   });
 
