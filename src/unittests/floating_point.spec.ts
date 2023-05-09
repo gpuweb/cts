@@ -20,11 +20,11 @@ export const g = makeTestGroup(UnitTest);
 /** Bounds indicating an expectation of an interval of all possible values */
 const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
-/** Interval from kAnyBounds for f32 */
-const kAnyIntervalF32: FPInterval = FP.f32.toInterval(kAnyBounds);
-
-/** Interval from kAnyBounds for abstract floats */
-const kAnyIntervalAbstract: FPInterval = FP.abstract.toInterval(kAnyBounds);
+/** Interval from kAnyBounds */
+const kAnyInterval = {
+  f32: FP.f32.toInterval(kAnyBounds),
+  abstract: FP.abstract.toInterval(kAnyBounds),
+};
 
 /** @returns a number N * ULP greater than the provided number, treats input as f32 */
 function plusNULPF32(x: number, n: number): number {
@@ -89,81 +89,58 @@ interface ConstructorCase {
   expected: IntervalBounds;
 }
 
-g.test('constructor_f32')
-  .paramsSubcasesOnly<ConstructorCase>(
-    // prettier-ignore
-    [
-      // Common cases
-      { input: [0, 10], expected: [0, 10] },
-      { input: [-5, 0], expected: [-5, 0] },
-      { input: [-5, 10], expected: [-5, 10] },
-      { input: [0], expected: [0] },
-      { input: [10], expected: [10] },
-      { input: [-5], expected: [-5] },
-      { input: [2.5], expected: [2.5] },
-      { input: [-1.375], expected: [-1.375] },
-      { input: [-1.375, 2.5], expected: [-1.375, 2.5] },
+g.test('constructor_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ConstructorCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        const cases: ConstructorCase[] = [
+          // Common cases
+          { input: [0, 10], expected: [0, 10] },
+          { input: [-5, 0], expected: [-5, 0] },
+          { input: [-5, 10], expected: [-5, 10] },
+          { input: [0], expected: [0] },
+          { input: [10], expected: [10] },
+          { input: [-5], expected: [-5] },
+          { input: [2.5], expected: [2.5] },
+          { input: [-1.375], expected: [-1.375] },
+          { input: [-1.375, 2.5], expected: [-1.375, 2.5] },
 
-      // Edges
-      { input: [0, kValue.f32.positive.max], expected: [0, kValue.f32.positive.max] },
-      { input: [kValue.f32.negative.min, 0], expected: [kValue.f32.negative.min, 0] },
-      { input: [kValue.f32.negative.min, kValue.f32.positive.max], expected: [kValue.f32.negative.min, kValue.f32.positive.max] },
+          // Edges
+          { input: [0, constants.positive.max], expected: [0, constants.positive.max] },
+          { input: [constants.negative.min, 0], expected: [constants.negative.min, 0] },
+          { input: [constants.negative.min, constants.positive.max], expected: [constants.negative.min, constants.positive.max] },
 
-      // Out of range
-      { input: [0, 2 * kValue.f32.positive.max], expected: [0, 2 * kValue.f32.positive.max] },
-      { input: [2 * kValue.f32.negative.min, 0], expected: [2 * kValue.f32.negative.min, 0] },
-      { input: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max], expected: [2 * kValue.f32.negative.min, 2 * kValue.f32.positive.max] },
+          // Infinities
+          { input: [0, constants.positive.infinity], expected: [0, Number.POSITIVE_INFINITY] },
+          { input: [constants.negative.infinity, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
+          { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
+        ];
 
-      // Infinities
-      { input: [0, kValue.f32.infinity.positive], expected: [0, Number.POSITIVE_INFINITY] },
-      { input: [kValue.f32.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
-    ]
+        // Note: Out of range values are limited to infinities for abstract float, due to abstract
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
+        if (p.trait !== 'abstract') {
+          // prettier-ignore
+          cases.push(...[
+            // Out of range
+            { input: [0, 2 * constants.positive.max], expected: [0, 2 * constants.positive.max] },
+            { input: [2 * constants.negative.min, 0], expected: [2 * constants.negative.min, 0] },
+            { input: [2 * constants.negative.min, 2 * constants.positive.max], expected: [2 * constants.negative.min, 2 * constants.positive.max] },
+          ] as ConstructorCase[]);
+        }
+
+        return cases;
+      })
   )
   .fn(t => {
-    const i = new FPInterval('f32', ...t.params.input);
+    const i = new FPInterval(t.params.trait, ...t.params.input);
     t.expect(
       objectEquals(i.bounds(), t.params.expected),
-      `new FPInterval('f32', [${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`
-    );
-  });
-
-g.test('constructor_abstract')
-  .paramsSubcasesOnly<ConstructorCase>(
-    // prettier-ignore
-    [
-      // Common cases
-      { input: [0, 10], expected: [0, 10] },
-      { input: [-5, 0], expected: [-5, 0] },
-      { input: [-5, 10], expected: [-5, 10] },
-      { input: [0], expected: [0] },
-      { input: [10], expected: [10] },
-      { input: [-5], expected: [-5] },
-      { input: [2.5], expected: [2.5] },
-      { input: [-1.375], expected: [-1.375] },
-      { input: [-1.375, 2.5], expected: [-1.375, 2.5] },
-
-      // Edges
-      { input: [0, kValue.f64.positive.max], expected: [0, kValue.f64.positive.max] },
-      { input: [kValue.f64.negative.min, 0], expected: [kValue.f64.negative.min, 0] },
-      { input: [kValue.f64.negative.min, kValue.f64.positive.max], expected: [kValue.f64.negative.min, kValue.f64.positive.max] },
-
-      // Infinities
-      { input: [0, kValue.f64.infinity.positive], expected: [0, Number.POSITIVE_INFINITY] },
-      { input: [kValue.f64.infinity.negative, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
-      { input: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: kAnyBounds },
-
-      // Note: Out of range values are limited to infinities for abstract float,
-      // due to abstract float and 'number' both being f64.
-      // So there is no  separate OOR tests, the testing framework considers
-      // them duplicates.
-    ]
-  )
-  .fn(t => {
-    const i = new FPInterval('abstract', ...t.params.input);
-    t.expect(
-      objectEquals(i.bounds(), t.params.expected),
-      `new FPInterval('abstract', [${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`
+      `new FPInterval('${t.params.trait}', [${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`
     );
   });
 
@@ -173,220 +150,132 @@ interface ContainsNumberCase {
   expected: boolean;
 }
 
-g.test('contains_number_f32')
-  .paramsSubcasesOnly<ContainsNumberCase>(
-    // prettier-ignore
-    [
-      // Common usage
-      { bounds: [0, 10], value: 0, expected: true },
-      { bounds: [0, 10], value: 10, expected: true },
-      { bounds: [0, 10], value: 5, expected: true },
-      { bounds: [0, 10], value: -5, expected: false },
-      { bounds: [0, 10], value: 50, expected: false },
-      { bounds: [0, 10], value: Number.NaN, expected: false },
-      { bounds: [-5, 10], value: 0, expected: true },
-      { bounds: [-5, 10], value: 10, expected: true },
-      { bounds: [-5, 10], value: 5, expected: true },
-      { bounds: [-5, 10], value: -5, expected: true },
-      { bounds: [-5, 10], value: -6, expected: false },
-      { bounds: [-5, 10], value: 50, expected: false },
-      { bounds: [-5, 10], value: -10, expected: false },
-      { bounds: [-1.375, 2.5], value: -10, expected: false },
-      { bounds: [-1.375, 2.5], value: 0.5, expected: true },
-      { bounds: [-1.375, 2.5], value: 10, expected: false },
+g.test('contains_number_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ContainsNumberCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        const cases: ContainsNumberCase[] = [
+          // Common usage
+          { bounds: [0, 10], value: 0, expected: true },
+          { bounds: [0, 10], value: 10, expected: true },
+          { bounds: [0, 10], value: 5, expected: true },
+          { bounds: [0, 10], value: -5, expected: false },
+          { bounds: [0, 10], value: 50, expected: false },
+          { bounds: [0, 10], value: Number.NaN, expected: false },
+          { bounds: [-5, 10], value: 0, expected: true },
+          { bounds: [-5, 10], value: 10, expected: true },
+          { bounds: [-5, 10], value: 5, expected: true },
+          { bounds: [-5, 10], value: -5, expected: true },
+          { bounds: [-5, 10], value: -6, expected: false },
+          { bounds: [-5, 10], value: 50, expected: false },
+          { bounds: [-5, 10], value: -10, expected: false },
+          { bounds: [-1.375, 2.5], value: -10, expected: false },
+          { bounds: [-1.375, 2.5], value: 0.5, expected: true },
+          { bounds: [-1.375, 2.5], value: 10, expected: false },
 
-      // Point
-      { bounds: 0, value: 0, expected: true },
-      { bounds: 0, value: 10, expected: false },
-      { bounds: 0, value: -1000, expected: false },
-      { bounds: 10, value: 10, expected: true },
-      { bounds: 10, value: 0, expected: false },
-      { bounds: 10, value: -10, expected: false },
-      { bounds: 10, value: 11, expected: false },
+          // Point
+          { bounds: 0, value: 0, expected: true },
+          { bounds: 0, value: 10, expected: false },
+          { bounds: 0, value: -1000, expected: false },
+          { bounds: 10, value: 10, expected: true },
+          { bounds: 10, value: 0, expected: false },
+          { bounds: 10, value: -10, expected: false },
+          { bounds: 10, value: 11, expected: false },
 
-      // Upper infinity
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.positive.min, expected: true },
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.positive.max, expected: true },
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.infinity.positive, expected: true },
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.negative.min, expected: false },
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.negative.max, expected: false },
-      { bounds: [0, kValue.f32.infinity.positive], value: kValue.f32.infinity.negative, expected: false },
+          // Upper infinity
+          { bounds: [0, constants.positive.infinity], value: constants.positive.min, expected: true },
+          { bounds: [0, constants.positive.infinity], value: constants.positive.max, expected: true },
+          { bounds: [0, constants.positive.infinity], value: constants.positive.infinity, expected: true },
+          { bounds: [0, constants.positive.infinity], value: constants.negative.min, expected: false },
+          { bounds: [0, constants.positive.infinity], value: constants.negative.max, expected: false },
+          { bounds: [0, constants.positive.infinity], value: constants.negative.infinity, expected: false },
 
-      // Lower infinity
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.positive.min, expected: false },
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.positive.max, expected: false },
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.infinity.positive, expected: false },
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.negative.min, expected: true },
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.negative.max, expected: true },
-      { bounds: [kValue.f32.infinity.negative, 0], value: kValue.f32.infinity.negative, expected: true },
+          // Lower infinity
+          { bounds: [constants.negative.infinity, 0], value: constants.positive.min, expected: false },
+          { bounds: [constants.negative.infinity, 0], value: constants.positive.max, expected: false },
+          { bounds: [constants.negative.infinity, 0], value: constants.positive.infinity, expected: false },
+          { bounds: [constants.negative.infinity, 0], value: constants.negative.min, expected: true },
+          { bounds: [constants.negative.infinity, 0], value: constants.negative.max, expected: true },
+          { bounds: [constants.negative.infinity, 0], value: constants.negative.infinity, expected: true },
 
-      // Full infinity
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.positive.min, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.positive.max, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.infinity.positive, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.negative.min, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.negative.max, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: kValue.f32.infinity.negative, expected: true },
-      { bounds: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], value: Number.NaN, expected: true },
+          // Full infinity
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.positive.min, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.positive.max, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.positive.infinity, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.negative.min, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.negative.max, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: constants.negative.infinity, expected: true },
+          { bounds: [constants.negative.infinity, constants.positive.infinity], value: Number.NaN, expected: true },
 
-      // Maximum f32 boundary
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.positive.min, expected: true },
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.positive.max, expected: true },
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.infinity.positive, expected: false },
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.negative.min, expected: false },
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.negative.max, expected: false },
-      { bounds: [0, kValue.f32.positive.max], value: kValue.f32.infinity.negative, expected: false },
+          // Maximum f32 boundary
+          { bounds: [0, constants.positive.max], value: constants.positive.min, expected: true },
+          { bounds: [0, constants.positive.max], value: constants.positive.max, expected: true },
+          { bounds: [0, constants.positive.max], value: constants.positive.infinity, expected: false },
+          { bounds: [0, constants.positive.max], value: constants.negative.min, expected: false },
+          { bounds: [0, constants.positive.max], value: constants.negative.max, expected: false },
+          { bounds: [0, constants.positive.max], value: constants.negative.infinity, expected: false },
 
-      // Minimum f32 boundary
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.positive.min, expected: false },
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.positive.max, expected: false },
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.infinity.positive, expected: false },
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.negative.min, expected: true },
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.negative.max, expected: true },
-      { bounds: [kValue.f32.negative.min, 0], value: kValue.f32.infinity.negative, expected: false },
+          // Minimum f32 boundary
+          { bounds: [constants.negative.min, 0], value: constants.positive.min, expected: false },
+          { bounds: [constants.negative.min, 0], value: constants.positive.max, expected: false },
+          { bounds: [constants.negative.min, 0], value: constants.positive.infinity, expected: false },
+          { bounds: [constants.negative.min, 0], value: constants.negative.min, expected: true },
+          { bounds: [constants.negative.min, 0], value: constants.negative.max, expected: true },
+          { bounds: [constants.negative.min, 0], value: constants.negative.infinity, expected: false },
 
-      // Out of range high
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.min, expected: true },
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.positive.max, expected: true },
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.infinity.positive, expected: false },
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.min, expected: false },
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.negative.max, expected: false },
-      { bounds: [0, 2 * kValue.f32.positive.max], value: kValue.f32.infinity.negative, expected: false },
+          // Subnormals
+          { bounds: [0, constants.positive.min], value: constants.positive.subnormal.min, expected: true },
+          { bounds: [0, constants.positive.min], value: constants.positive.subnormal.max, expected: true },
+          { bounds: [0, constants.positive.min], value: constants.negative.subnormal.min, expected: false },
+          { bounds: [0, constants.positive.min], value: constants.negative.subnormal.max, expected: false },
+          { bounds: [constants.negative.max, 0], value: constants.positive.subnormal.min, expected: false },
+          { bounds: [constants.negative.max, 0], value: constants.positive.subnormal.max, expected: false },
+          { bounds: [constants.negative.max, 0], value: constants.negative.subnormal.min, expected: true },
+          { bounds: [constants.negative.max, 0], value: constants.negative.subnormal.max, expected: true },
+          { bounds: [0, constants.positive.subnormal.min], value: constants.positive.subnormal.min, expected: true },
+          { bounds: [0, constants.positive.subnormal.min], value: constants.positive.subnormal.max, expected: false },
+          { bounds: [0, constants.positive.subnormal.min], value: constants.negative.subnormal.min, expected: false },
+          { bounds: [0, constants.positive.subnormal.min], value: constants.negative.subnormal.max, expected: false },
+          { bounds: [constants.negative.subnormal.max, 0], value: constants.positive.subnormal.min, expected: false },
+          { bounds: [constants.negative.subnormal.max, 0], value: constants.positive.subnormal.max, expected: false },
+          { bounds: [constants.negative.subnormal.max, 0], value: constants.negative.subnormal.min, expected: false },
+          { bounds: [constants.negative.subnormal.max, 0], value: constants.negative.subnormal.max, expected: true },
+        ];
 
-      // Out of range low
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.positive.min, expected: false },
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.positive.max, expected: false },
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.infinity.positive, expected: false },
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.min, expected: true },
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.negative.max, expected: true },
-      { bounds: [2 * kValue.f32.negative.min, 0], value: kValue.f32.infinity.negative, expected: false },
+        // Note: Out of range values are limited to infinities for abstract float, due to abstract
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
+        if (p.trait !== 'abstract') {
+          // prettier-ignore
+          cases.push(...[
+            // Out of range high
+            { bounds: [0, 2 * constants.positive.max], value: constants.positive.min, expected: true },
+            { bounds: [0, 2 * constants.positive.max], value: constants.positive.max, expected: true },
+            { bounds: [0, 2 * constants.positive.max], value: constants.positive.infinity, expected: false },
+            { bounds: [0, 2 * constants.positive.max], value: constants.negative.min, expected: false },
+            { bounds: [0, 2 * constants.positive.max], value: constants.negative.max, expected: false },
+            { bounds: [0, 2 * constants.positive.max], value: constants.negative.infinity, expected: false },
 
-      // Subnormals
-      { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.positive.min, expected: true },
-      { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.positive.max, expected: true },
-      { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.negative.min, expected: false },
-      { bounds: [0, kValue.f32.positive.min], value: kValue.f32.subnormal.negative.max, expected: false },
-      { bounds: [kValue.f32.negative.max, 0], value: kValue.f32.subnormal.positive.min, expected: false },
-      { bounds: [kValue.f32.negative.max, 0], value: kValue.f32.subnormal.positive.max, expected: false },
-      { bounds: [kValue.f32.negative.max, 0], value: kValue.f32.subnormal.negative.min, expected: true },
-      { bounds: [kValue.f32.negative.max, 0], value: kValue.f32.subnormal.negative.max, expected: true },
-      { bounds: [0, kValue.f32.subnormal.positive.min], value: kValue.f32.subnormal.positive.min, expected: true },
-      { bounds: [0, kValue.f32.subnormal.positive.min], value: kValue.f32.subnormal.positive.max, expected: false },
-      { bounds: [0, kValue.f32.subnormal.positive.min], value: kValue.f32.subnormal.negative.min, expected: false },
-      { bounds: [0, kValue.f32.subnormal.positive.min], value: kValue.f32.subnormal.negative.max, expected: false },
-      { bounds: [kValue.f32.subnormal.negative.max, 0], value: kValue.f32.subnormal.positive.min, expected: false },
-      { bounds: [kValue.f32.subnormal.negative.max, 0], value: kValue.f32.subnormal.positive.max, expected: false },
-      { bounds: [kValue.f32.subnormal.negative.max, 0], value: kValue.f32.subnormal.negative.min, expected: false },
-      { bounds: [kValue.f32.subnormal.negative.max, 0], value: kValue.f32.subnormal.negative.max, expected: true },
-    ]
+            // Out of range low
+            { bounds: [2 * constants.negative.min, 0], value: constants.positive.min, expected: false },
+            { bounds: [2 * constants.negative.min, 0], value: constants.positive.max, expected: false },
+            { bounds: [2 * constants.negative.min, 0], value: constants.positive.infinity, expected: false },
+            { bounds: [2 * constants.negative.min, 0], value: constants.negative.min, expected: true },
+            { bounds: [2 * constants.negative.min, 0], value: constants.negative.max, expected: true },
+            { bounds: [2 * constants.negative.min, 0], value: constants.negative.infinity, expected: false },
+          ] as ContainsNumberCase[]);
+        }
+
+        return cases;
+      })
   )
   .fn(t => {
-    const i = FP.f32.toInterval(t.params.bounds);
-    const value = t.params.value;
-    const expected = t.params.expected;
-
-    const got = i.contains(value);
-    t.expect(expected === got, `${i}.contains(${value}) returned ${got}. Expected ${expected}`);
-  });
-
-g.test('contains_number_abstract')
-  .paramsSubcasesOnly<ContainsNumberCase>(
-    // prettier-ignore
-    [
-      // Common usage
-      { bounds: [0, 10], value: 0, expected: true },
-      { bounds: [0, 10], value: 10, expected: true },
-      { bounds: [0, 10], value: 5, expected: true },
-      { bounds: [0, 10], value: -5, expected: false },
-      { bounds: [0, 10], value: 50, expected: false },
-      { bounds: [0, 10], value: Number.NaN, expected: false },
-      { bounds: [-5, 10], value: 0, expected: true },
-      { bounds: [-5, 10], value: 10, expected: true },
-      { bounds: [-5, 10], value: 5, expected: true },
-      { bounds: [-5, 10], value: -5, expected: true },
-      { bounds: [-5, 10], value: -6, expected: false },
-      { bounds: [-5, 10], value: 50, expected: false },
-      { bounds: [-5, 10], value: -10, expected: false },
-      { bounds: [-1.375, 2.5], value: -10, expected: false },
-      { bounds: [-1.375, 2.5], value: 0.5, expected: true },
-      { bounds: [-1.375, 2.5], value: 10, expected: false },
-
-      // Point
-      { bounds: 0, value: 0, expected: true },
-      { bounds: 0, value: 10, expected: false },
-      { bounds: 0, value: -1000, expected: false },
-      { bounds: 10, value: 10, expected: true },
-      { bounds: 10, value: 0, expected: false },
-      { bounds: 10, value: -10, expected: false },
-      { bounds: 10, value: 11, expected: false },
-
-      // Upper infinity
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.positive.min, expected: true },
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.positive.max, expected: true },
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.infinity.positive, expected: true },
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.negative.min, expected: false },
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.negative.max, expected: false },
-      { bounds: [0, kValue.f64.infinity.positive], value: kValue.f64.infinity.negative, expected: false },
-
-      // Lower infinity
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.positive.min, expected: false },
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.positive.max, expected: false },
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.infinity.positive, expected: false },
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.negative.min, expected: true },
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.negative.max, expected: true },
-      { bounds: [kValue.f64.infinity.negative, 0], value: kValue.f64.infinity.negative, expected: true },
-
-      // Full infinity
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.positive.min, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.positive.max, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.infinity.positive, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.negative.min, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.negative.max, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: kValue.f64.infinity.negative, expected: true },
-      { bounds: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], value: Number.NaN, expected: true },
-
-      // Maximum abstract boundary
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.positive.min, expected: true },
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.positive.max, expected: true },
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.infinity.positive, expected: false },
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.negative.min, expected: false },
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.negative.max, expected: false },
-      { bounds: [0, kValue.f64.positive.max], value: kValue.f64.infinity.negative, expected: false },
-
-      // Minimum abstract boundary
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.positive.min, expected: false },
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.positive.max, expected: false },
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.infinity.positive, expected: false },
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.negative.min, expected: true },
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.negative.max, expected: true },
-      { bounds: [kValue.f64.negative.min, 0], value: kValue.f64.infinity.negative, expected: false },
-
-      // Note: Out of range values are limited to infinities for abstract float,
-      // due to abstract float and 'number' both being f64.
-      // So there is no separate OOR tests, the testing framework considers them
-      // duplicates.
-
-      // Subnormals
-      { bounds: [0, kValue.f64.positive.min], value: kValue.f64.subnormal.positive.min, expected: true },
-      { bounds: [0, kValue.f64.positive.min], value: kValue.f64.subnormal.positive.max, expected: true },
-      { bounds: [0, kValue.f64.positive.min], value: kValue.f64.subnormal.negative.min, expected: false },
-      { bounds: [0, kValue.f64.positive.min], value: kValue.f64.subnormal.negative.max, expected: false },
-      { bounds: [kValue.f64.negative.max, 0], value: kValue.f64.subnormal.positive.min, expected: false },
-      { bounds: [kValue.f64.negative.max, 0], value: kValue.f64.subnormal.positive.max, expected: false },
-      { bounds: [kValue.f64.negative.max, 0], value: kValue.f64.subnormal.negative.min, expected: true },
-      { bounds: [kValue.f64.negative.max, 0], value: kValue.f64.subnormal.negative.max, expected: true },
-      { bounds: [0, kValue.f64.subnormal.positive.min], value: kValue.f64.subnormal.positive.min, expected: true },
-      { bounds: [0, kValue.f64.subnormal.positive.min], value: kValue.f64.subnormal.positive.max, expected: false },
-      { bounds: [0, kValue.f64.subnormal.positive.min], value: kValue.f64.subnormal.negative.min, expected: false },
-      { bounds: [0, kValue.f64.subnormal.positive.min], value: kValue.f64.subnormal.negative.max, expected: false },
-      { bounds: [kValue.f64.subnormal.negative.max, 0], value: kValue.f64.subnormal.positive.min, expected: false },
-      { bounds: [kValue.f64.subnormal.negative.max, 0], value: kValue.f64.subnormal.positive.max, expected: false },
-      { bounds: [kValue.f64.subnormal.negative.max, 0], value: kValue.f64.subnormal.negative.min, expected: false },
-      { bounds: [kValue.f64.subnormal.negative.max, 0], value: kValue.f64.subnormal.negative.max, expected: true },
-    ]
-  )
-  .fn(t => {
-    const i = FP.abstract.toInterval(t.params.bounds);
+    const trait = FP[t.params.trait];
+    const i = trait.toInterval(t.params.bounds);
     const value = t.params.value;
     const expected = t.params.expected;
 
@@ -400,163 +289,105 @@ interface ContainsIntervalCase {
   expected: boolean;
 }
 
-g.test('contains_interval_f32')
-  .paramsSubcasesOnly<ContainsIntervalCase>(
-    // prettier-ignore
-    [
-      // Common usage
-      { lhs: [-10, 10], rhs: 0, expected: true },
-      { lhs: [-10, 10], rhs: [-1, 0], expected: true },
-      { lhs: [-10, 10], rhs: [0, 2], expected: true },
-      { lhs: [-10, 10], rhs: [-1, 2], expected: true },
-      { lhs: [-10, 10], rhs: [0, 10], expected: true },
-      { lhs: [-10, 10], rhs: [-10, 2], expected: true },
-      { lhs: [-10, 10], rhs: [-10, 10], expected: true },
-      { lhs: [-10, 10], rhs: [-100, 10], expected: false },
+g.test('contains_interval_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ContainsIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        const cases: ContainsIntervalCase[] = [
+          // Common usage
+          { lhs: [-10, 10], rhs: 0, expected: true },
+          { lhs: [-10, 10], rhs: [-1, 0], expected: true },
+          { lhs: [-10, 10], rhs: [0, 2], expected: true },
+          { lhs: [-10, 10], rhs: [-1, 2], expected: true },
+          { lhs: [-10, 10], rhs: [0, 10], expected: true },
+          { lhs: [-10, 10], rhs: [-10, 2], expected: true },
+          { lhs: [-10, 10], rhs: [-10, 10], expected: true },
+          { lhs: [-10, 10], rhs: [-100, 10], expected: false },
 
-      // Upper infinity
-      { lhs: [0, kValue.f32.infinity.positive], rhs: 0, expected: true },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [-1, 0], expected: false },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [0, 1], expected: true },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [0, kValue.f32.positive.max], expected: true },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [0, kValue.f32.infinity.positive], expected: true },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [100, kValue.f32.infinity.positive], expected: true },
-      { lhs: [0, kValue.f32.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, kValue.f32.infinity.positive], expected: false },
+          // Upper infinity
+          { lhs: [0, constants.positive.infinity], rhs: 0, expected: true },
+          { lhs: [0, constants.positive.infinity], rhs: [-1, 0], expected: false },
+          { lhs: [0, constants.positive.infinity], rhs: [0, 1], expected: true },
+          { lhs: [0, constants.positive.infinity], rhs: [0, constants.positive.max], expected: true },
+          { lhs: [0, constants.positive.infinity], rhs: [0, constants.positive.infinity], expected: true },
+          { lhs: [0, constants.positive.infinity], rhs: [100, constants.positive.infinity], expected: true },
+          { lhs: [0, constants.positive.infinity], rhs: [Number.NEGATIVE_INFINITY, constants.positive.infinity], expected: false },
 
-      // Lower infinity
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: 0, expected: true },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.negative.min, 0], expected: true },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [0, 1], expected: false },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, 0], expected: true },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, -100 ], expected: true },
-      { lhs: [kValue.f32.infinity.negative, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
+          // Lower infinity
+          { lhs: [constants.negative.infinity, 0], rhs: 0, expected: true },
+          { lhs: [constants.negative.infinity, 0], rhs: [-1, 0], expected: true },
+          { lhs: [constants.negative.infinity, 0], rhs: [constants.negative.min, 0], expected: true },
+          { lhs: [constants.negative.infinity, 0], rhs: [0, 1], expected: false },
+          { lhs: [constants.negative.infinity, 0], rhs: [constants.negative.infinity, 0], expected: true },
+          { lhs: [constants.negative.infinity, 0], rhs: [constants.negative.infinity, -100 ], expected: true },
+          { lhs: [constants.negative.infinity, 0], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false },
 
-      // Full infinity
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: 0, expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, 1], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [0, kValue.f32.infinity.positive], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [100, kValue.f32.infinity.positive], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, 0], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, -100 ], expected: true },
-      { lhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: true },
+          // Full infinity
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: 0, expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [-1, 0], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [0, 1], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [0, constants.positive.infinity], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [100, constants.positive.infinity], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [constants.negative.infinity, 0], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [constants.negative.infinity, -100 ], expected: true },
+          { lhs: [constants.negative.infinity, constants.positive.infinity], rhs: [constants.negative.infinity, constants.positive.infinity], expected: true },
 
-      // Maximum f32 boundary
-      { lhs: [0, kValue.f32.positive.max], rhs: 0, expected: true },
-      { lhs: [0, kValue.f32.positive.max], rhs: [-1, 0], expected: false },
-      { lhs: [0, kValue.f32.positive.max], rhs: [0, 1], expected: true },
-      { lhs: [0, kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true },
-      { lhs: [0, kValue.f32.positive.max], rhs: [0, kValue.f32.infinity.positive], expected: false },
-      { lhs: [0, kValue.f32.positive.max], rhs: [100, kValue.f32.infinity.positive], expected: false },
-      { lhs: [0, kValue.f32.positive.max], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
+          // Maximum boundary
+          { lhs: [0, constants.positive.max], rhs: 0, expected: true },
+          { lhs: [0, constants.positive.max], rhs: [-1, 0], expected: false },
+          { lhs: [0, constants.positive.max], rhs: [0, 1], expected: true },
+          { lhs: [0, constants.positive.max], rhs: [0, constants.positive.max], expected: true },
+          { lhs: [0, constants.positive.max], rhs: [0, constants.positive.infinity], expected: false },
+          { lhs: [0, constants.positive.max], rhs: [100, constants.positive.infinity], expected: false },
+          { lhs: [0, constants.positive.max], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false },
 
-      // Minimum f32 boundary
-      { lhs: [kValue.f32.negative.min, 0], rhs: [0, 0], expected: true },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [0, 1], expected: false },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, 0], expected: false },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, -100 ], expected: false },
-      { lhs: [kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
+          // Minimum boundary
+          { lhs: [constants.negative.min, 0], rhs: [0, 0], expected: true },
+          { lhs: [constants.negative.min, 0], rhs: [-1, 0], expected: true },
+          { lhs: [constants.negative.min, 0], rhs: [constants.negative.min, 0], expected: true },
+          { lhs: [constants.negative.min, 0], rhs: [0, 1], expected: false },
+          { lhs: [constants.negative.min, 0], rhs: [constants.negative.infinity, 0], expected: false },
+          { lhs: [constants.negative.min, 0], rhs: [constants.negative.infinity, -100 ], expected: false },
+          { lhs: [constants.negative.min, 0], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false },
+        ];
 
-      // Out of range high
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: 0, expected: true },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [-1, 0], expected: false },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, 1], expected: true },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, kValue.f32.positive.max], expected: true },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [0, kValue.f32.infinity.positive], expected: false },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [100, kValue.f32.infinity.positive], expected: false },
-      { lhs: [0, 2 * kValue.f32.positive.max], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
+        // Note: Out of range values are limited to infinities for abstract float, due to abstract
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
+        if (p.trait !== 'abstract') {
+          // prettier-ignore
+          cases.push(...[
+            // Out of range high
+            { lhs: [0, 2 * constants.positive.max], rhs: 0, expected: true },
+            { lhs: [0, 2 * constants.positive.max], rhs: [-1, 0], expected: false },
+            { lhs: [0, 2 * constants.positive.max], rhs: [0, 1], expected: true },
+            { lhs: [0, 2 * constants.positive.max], rhs: [0, constants.positive.max], expected: true },
+            { lhs: [0, 2 * constants.positive.max], rhs: [0, constants.positive.infinity], expected: false },
+            { lhs: [0, 2 * constants.positive.max], rhs: [100, constants.positive.infinity], expected: false },
+            { lhs: [0, 2 * constants.positive.max], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false },
 
-      // Out of range low
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: 0, expected: true },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [-1, 0], expected: true },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.negative.min, 0], expected: true },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [0, 1], expected: false },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, 0], expected: false },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, -100 ], expected: false },
-      { lhs: [2 * kValue.f32.negative.min, 0], rhs: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: false },
-    ]
+            // Out of range low
+            { lhs: [2 * constants.negative.min, 0], rhs: 0, expected: true },
+            { lhs: [2 * constants.negative.min, 0], rhs: [-1, 0], expected: true },
+            { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.min, 0], expected: true },
+            { lhs: [2 * constants.negative.min, 0], rhs: [0, 1], expected: false },
+            { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, 0], expected: false },
+            { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, -100 ], expected: false },
+            { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false },
+          ] as ContainsIntervalCase[]);
+        }
+
+        return cases;
+      })
   )
   .fn(t => {
-    const lhs = FP.f32.toInterval(t.params.lhs);
-    const rhs = FP.f32.toInterval(t.params.rhs);
-    const expected = t.params.expected;
-
-    const got = lhs.contains(rhs);
-    t.expect(expected === got, `${lhs}.contains(${rhs}) returned ${got}. Expected ${expected}`);
-  });
-
-g.test('contains_interval_abstract')
-  .paramsSubcasesOnly<ContainsIntervalCase>(
-    // prettier-ignore
-    [
-      // Common usage
-      { lhs: [-10, 10], rhs: 0, expected: true },
-      { lhs: [-10, 10], rhs: [-1, 0], expected: true },
-      { lhs: [-10, 10], rhs: [0, 2], expected: true },
-      { lhs: [-10, 10], rhs: [-1, 2], expected: true },
-      { lhs: [-10, 10], rhs: [0, 10], expected: true },
-      { lhs: [-10, 10], rhs: [-10, 2], expected: true },
-      { lhs: [-10, 10], rhs: [-10, 10], expected: true },
-      { lhs: [-10, 10], rhs: [-100, 10], expected: false },
-
-      // Upper infinity
-      { lhs: [0, kValue.f64.infinity.positive], rhs: 0, expected: true },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [-1, 0], expected: false },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [0, 1], expected: true },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [0, kValue.f64.positive.max], expected: true },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [0, kValue.f64.infinity.positive], expected: true },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [100, kValue.f64.infinity.positive], expected: true },
-      { lhs: [0, kValue.f64.infinity.positive], rhs: [Number.NEGATIVE_INFINITY, kValue.f64.infinity.positive], expected: false },
-
-      // Lower infinity
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: 0, expected: true },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [kValue.f64.negative.min, 0], expected: true },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [0, 1], expected: false },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [kValue.f64.infinity.negative, 0], expected: true },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [kValue.f64.infinity.negative, -100 ], expected: true },
-      { lhs: [kValue.f64.infinity.negative, 0], rhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: false },
-
-      // Full infinity
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: 0, expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [0, 1], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [0, kValue.f64.infinity.positive], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [100, kValue.f64.infinity.positive], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [kValue.f64.infinity.negative, 0], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [kValue.f64.infinity.negative, -100 ], expected: true },
-      { lhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], rhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: true },
-
-      // Maximum abstract boundary
-      { lhs: [0, kValue.f64.positive.max], rhs: 0, expected: true },
-      { lhs: [0, kValue.f64.positive.max], rhs: [-1, 0], expected: false },
-      { lhs: [0, kValue.f64.positive.max], rhs: [0, 1], expected: true },
-      { lhs: [0, kValue.f64.positive.max], rhs: [0, kValue.f64.positive.max], expected: true },
-      { lhs: [0, kValue.f64.positive.max], rhs: [0, kValue.f64.infinity.positive], expected: false },
-      { lhs: [0, kValue.f64.positive.max], rhs: [100, kValue.f64.infinity.positive], expected: false },
-      { lhs: [0, kValue.f64.positive.max], rhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: false },
-
-      // Minimum abstract boundary
-      { lhs: [kValue.f64.negative.min, 0], rhs: [0, 0], expected: true },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [-1, 0], expected: true },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.negative.min, 0], expected: true },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [0, 1], expected: false },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.infinity.negative, 0], expected: false },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.infinity.negative, -100 ], expected: false },
-      { lhs: [kValue.f64.negative.min, 0], rhs: [kValue.f64.infinity.negative, kValue.f64.infinity.positive], expected: false },
-
-      // Note: Out of range values are limited to infinities for abstract float,
-      // due to abstract float and 'number' both being f64.
-      // So there is no separate OOR tests, the testing framework considers them
-      // duplicates.
-    ]
-  )
-  .fn(t => {
-    const lhs = FP.abstract.toInterval(t.params.lhs);
-    const rhs = FP.abstract.toInterval(t.params.rhs);
+    const trait = FP[t.params.trait];
+    const lhs = trait.toInterval(t.params.lhs);
+    const rhs = trait.toInterval(t.params.rhs);
     const expected = t.params.expected;
 
     const got = lhs.contains(rhs);
@@ -570,87 +401,52 @@ interface SpanIntervalsCase {
   expected: number | IntervalBounds;
 }
 
-g.test('spanIntervals_f32')
-  .paramsSubcasesOnly<SpanIntervalsCase>(
-    // prettier-ignore
-    [
-      // Single Intervals
-      { intervals: [[0, 10]], expected: [0, 10] },
-      { intervals: [[0, kValue.f32.positive.max]], expected: [0, kValue.f32.positive.max] },
-      { intervals: [[0, kValue.f32.positive.nearest_max]], expected: [0, kValue.f32.positive.nearest_max] },
-      { intervals: [[0, kValue.f32.infinity.positive]], expected: [0, Number.POSITIVE_INFINITY] },
-      { intervals: [[kValue.f32.negative.min, 0]], expected: [kValue.f32.negative.min, 0] },
-      { intervals: [[kValue.f32.negative.nearest_min, 0]], expected: [kValue.f32.negative.nearest_min, 0] },
-      { intervals: [[kValue.f32.infinity.negative, 0]], expected: [Number.NEGATIVE_INFINITY, 0] },
+g.test('spanIntervals_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<SpanIntervalsCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          // Single Intervals
+          { intervals: [[0, 10]], expected: [0, 10] },
+          { intervals: [[0, constants.positive.max]], expected: [0, constants.positive.max] },
+          { intervals: [[0, constants.positive.nearest_max]], expected: [0, constants.positive.nearest_max] },
+          { intervals: [[0, constants.positive.infinity]], expected: [0, Number.POSITIVE_INFINITY] },
+          { intervals: [[constants.negative.min, 0]], expected: [constants.negative.min, 0] },
+          { intervals: [[constants.negative.nearest_min, 0]], expected: [constants.negative.nearest_min, 0] },
+          { intervals: [[constants.negative.infinity, 0]], expected: [Number.NEGATIVE_INFINITY, 0] },
 
-      // Double Intervals
-      { intervals: [[0, 1], [2, 5]], expected: [0, 5] },
-      { intervals: [[2, 5], [0, 1]], expected: [0, 5] },
-      { intervals: [[0, 2], [1, 5]], expected: [0, 5] },
-      { intervals: [[0, 5], [1, 2]], expected: [0, 5] },
-      { intervals: [[kValue.f32.infinity.negative, 0], [0, kValue.f32.infinity.positive]], expected: kAnyBounds },
+          // Double Intervals
+          { intervals: [[0, 1], [2, 5]], expected: [0, 5] },
+          { intervals: [[2, 5], [0, 1]], expected: [0, 5] },
+          { intervals: [[0, 2], [1, 5]], expected: [0, 5] },
+          { intervals: [[0, 5], [1, 2]], expected: [0, 5] },
+          { intervals: [[constants.negative.infinity, 0], [0, constants.positive.infinity]], expected: kAnyBounds },
 
-      // Multiple Intervals
-      { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
-      { intervals: [[0, 1], [4, 5], [2, 3]], expected: [0, 5] },
-      { intervals: [[0, 1], [0, 1], [0, 1]], expected: [0, 1] },
+          // Multiple Intervals
+          { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
+          { intervals: [[0, 1], [4, 5], [2, 3]], expected: [0, 5] },
+          { intervals: [[0, 1], [0, 1], [0, 1]], expected: [0, 1] },
 
-      // Point Intervals
-      { intervals: [1], expected: 1 },
-      { intervals: [1, 2], expected: [1, 2] },
-      { intervals: [-10, 2], expected: [-10, 2] },
-    ]
+          // Point Intervals
+          { intervals: [1], expected: 1 },
+          { intervals: [1, 2], expected: [1, 2] },
+          { intervals: [-10, 2], expected: [-10, 2] },
+        ];
+      })
   )
   .fn(t => {
-    const intervals = t.params.intervals.map(i => FP.f32.toInterval(i));
-    const expected = FP.f32.toInterval(t.params.expected);
+    const trait = FP[t.params.trait];
+    const intervals = t.params.intervals.map(i => trait.toInterval(i));
+    const expected = trait.toInterval(t.params.expected);
 
-    const got = FP.f32.spanIntervals(...intervals);
+    const got = trait.spanIntervals(...intervals);
     t.expect(
       objectEquals(got, expected),
-      `f32.span({${intervals}}) returned ${got}. Expected ${expected}`
-    );
-  });
-
-g.test('spanIntervals_abstract')
-  .paramsSubcasesOnly<SpanIntervalsCase>(
-    // prettier-ignore
-    [
-      // Single Intervals
-      { intervals: [[0, 10]], expected: [0, 10] },
-      { intervals: [[0, kValue.f64.positive.max]], expected: [0, kValue.f64.positive.max] },
-      { intervals: [[0, kValue.f64.positive.nearest_max]], expected: [0, kValue.f64.positive.nearest_max] },
-      { intervals: [[0, kValue.f64.infinity.positive]], expected: [0, Number.POSITIVE_INFINITY] },
-      { intervals: [[kValue.f64.negative.min, 0]], expected: [kValue.f64.negative.min, 0] },
-      { intervals: [[kValue.f64.negative.nearest_min, 0]], expected: [kValue.f64.negative.nearest_min, 0] },
-      { intervals: [[kValue.f64.infinity.negative, 0]], expected: [Number.NEGATIVE_INFINITY, 0] },
-
-      // Double Intervals
-      { intervals: [[0, 1], [2, 5]], expected: [0, 5] },
-      { intervals: [[2, 5], [0, 1]], expected: [0, 5] },
-      { intervals: [[0, 2], [1, 5]], expected: [0, 5] },
-      { intervals: [[0, 5], [1, 2]], expected: [0, 5] },
-      { intervals: [[kValue.f64.infinity.negative, 0], [0, kValue.f64.infinity.positive]], expected: kAnyBounds },
-
-      // Multiple Intervals
-      { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
-      { intervals: [[0, 1], [4, 5], [2, 3]], expected: [0, 5] },
-      { intervals: [[0, 1], [0, 1], [0, 1]], expected: [0, 1] },
-
-      // Point Intervals
-      { intervals: [1], expected: 1 },
-      { intervals: [1, 2], expected: [1, 2] },
-      { intervals: [-10, 2], expected: [-10, 2] },
-    ]
-  )
-  .fn(t => {
-    const intervals = t.params.intervals.map(i => FP.abstract.toInterval(i));
-    const expected = FP.abstract.toInterval(t.params.expected);
-
-    const got = FP.abstract.spanIntervals(...intervals);
-    t.expect(
-      objectEquals(got, expected),
-      `abstract.span({${intervals}}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.span({${intervals}}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -659,202 +455,109 @@ interface isVectorCase {
   expected: boolean;
 }
 
-g.test('isVector_f32')
-  .paramsSubcasesOnly<isVectorCase>([
-    // numbers
-    { input: [1, 2], expected: false },
-    { input: [1, 2, 3], expected: false },
-    { input: [1, 2, 3, 4], expected: false },
+g.test('isVector_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<isVectorCase>(p => {
+        const trait = FP[p.trait];
+        return [
+          // numbers
+          { input: [1, 2], expected: false },
+          { input: [1, 2, 3], expected: false },
+          { input: [1, 2, 3, 4], expected: false },
 
-    // IntervalBounds
-    { input: [[1], [2]], expected: false },
-    { input: [[1], [2], [3]], expected: false },
-    { input: [[1], [2], [3], [4]], expected: false },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-      expected: false,
-    },
+          // IntervalBounds
+          { input: [[1], [2]], expected: false },
+          { input: [[1], [2], [3]], expected: false },
+          { input: [[1], [2], [3], [4]], expected: false },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+              [4, 5],
+            ],
+            expected: false,
+          },
 
-    // F32Interval, valid dimensions
-    { input: [FP.f32.toInterval([1]), FP.f32.toInterval([2])], expected: true },
-    { input: [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])], expected: true },
-    {
-      input: [FP.f32.toInterval([1]), FP.f32.toInterval([2]), FP.f32.toInterval([3])],
-      expected: true,
-    },
-    {
-      input: [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-      expected: true,
-    },
-    {
-      input: [
-        FP.f32.toInterval([1]),
-        FP.f32.toInterval([2]),
-        FP.f32.toInterval([3]),
-        FP.f32.toInterval([4]),
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        FP.f32.toInterval([1, 2]),
-        FP.f32.toInterval([2, 3]),
-        FP.f32.toInterval([3, 4]),
-        FP.f32.toInterval([4, 5]),
-      ],
-      expected: true,
-    },
+          // FPInterval, valid dimensions
+          { input: [trait.toInterval([1]), trait.toInterval([2])], expected: true },
+          { input: [trait.toInterval([1, 2]), trait.toInterval([2, 3])], expected: true },
+          {
+            input: [trait.toInterval([1]), trait.toInterval([2]), trait.toInterval([3])],
+            expected: true,
+          },
+          {
+            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+            expected: true,
+          },
+          {
+            input: [
+              trait.toInterval([1]),
+              trait.toInterval([2]),
+              trait.toInterval([3]),
+              trait.toInterval([4]),
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              trait.toInterval([1, 2]),
+              trait.toInterval([2, 3]),
+              trait.toInterval([3, 4]),
+              trait.toInterval([4, 5]),
+            ],
+            expected: true,
+          },
 
-    // FPInterval, invalid dimensions
-    { input: [FP.f32.toInterval([1])], expected: false },
-    {
-      input: [
-        FP.f32.toInterval([1]),
-        FP.f32.toInterval([2]),
-        FP.f32.toInterval([3]),
-        FP.f32.toInterval([4]),
-        FP.f32.toInterval([5]),
-      ],
-      expected: false,
-    },
+          // FPInterval, invalid dimensions
+          { input: [trait.toInterval([1])], expected: false },
+          {
+            input: [
+              trait.toInterval([1]),
+              trait.toInterval([2]),
+              trait.toInterval([3]),
+              trait.toInterval([4]),
+              trait.toInterval([5]),
+            ],
+            expected: false,
+          },
 
-    // Mixed
-    { input: [1, [2]], expected: false },
-    { input: [1, [2], FP.f32.toInterval([3])], expected: false },
-    { input: [1, FP.f32.toInterval([2]), [3], 4], expected: false },
-    { input: [FP.f32.toInterval(1), 2], expected: false },
-    { input: [FP.f32.toInterval(1), [2]], expected: false },
-  ])
+          // Mixed
+          { input: [1, [2]], expected: false },
+          { input: [1, [2], trait.toInterval([3])], expected: false },
+          { input: [1, trait.toInterval([2]), [3], 4], expected: false },
+          { input: [trait.toInterval(1), 2], expected: false },
+          { input: [trait.toInterval(1), [2]], expected: false },
+        ];
+      })
+  )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const input = t.params.input;
     const expected = t.params.expected;
 
-    const got = FP.f32.isVector(input);
-    t.expect(got === expected, `f32.isVector([${input}]) returned ${got}. Expected ${expected}`);
-  });
-
-g.test('isVector_abstract')
-  .paramsSubcasesOnly<isVectorCase>([
-    // numbers
-    { input: [1, 2], expected: false },
-    { input: [1, 2, 3], expected: false },
-    { input: [1, 2, 3, 4], expected: false },
-
-    // IntervalBounds
-    { input: [[1], [2]], expected: false },
-    { input: [[1], [2], [3]], expected: false },
-    { input: [[1], [2], [3], [4]], expected: false },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-      expected: false,
-    },
-
-    // abstractInterval, valid dimensions
-    { input: [FP.abstract.toInterval([1]), FP.abstract.toInterval([2])], expected: true },
-    { input: [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])], expected: true },
-    {
-      input: [
-        FP.abstract.toInterval([1]),
-        FP.abstract.toInterval([2]),
-        FP.abstract.toInterval([3]),
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1, 2]),
-        FP.abstract.toInterval([2, 3]),
-        FP.abstract.toInterval([3, 4]),
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1]),
-        FP.abstract.toInterval([2]),
-        FP.abstract.toInterval([3]),
-        FP.abstract.toInterval([4]),
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1, 2]),
-        FP.abstract.toInterval([2, 3]),
-        FP.abstract.toInterval([3, 4]),
-        FP.abstract.toInterval([4, 5]),
-      ],
-      expected: true,
-    },
-
-    // FPInterval, invalid dimensions
-    { input: [FP.abstract.toInterval([1])], expected: false },
-    {
-      input: [
-        FP.abstract.toInterval([1]),
-        FP.abstract.toInterval([2]),
-        FP.abstract.toInterval([3]),
-        FP.abstract.toInterval([4]),
-        FP.abstract.toInterval([5]),
-      ],
-      expected: false,
-    },
-
-    // Mixed
-    { input: [1, [2]], expected: false },
-    { input: [1, [2], FP.abstract.toInterval([3])], expected: false },
-    { input: [1, FP.abstract.toInterval([2]), [3], 4], expected: false },
-    { input: [FP.abstract.toInterval(1), 2], expected: false },
-    { input: [FP.abstract.toInterval(1), [2]], expected: false },
-  ])
-  .fn(t => {
-    const input = t.params.input;
-    const expected = t.params.expected;
-
-    const got = FP.abstract.isVector(input);
+    const got = trait.isVector(input);
     t.expect(
       got === expected,
-      `abstract.isVector([${input}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.isVector([${input}]) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -863,237 +566,125 @@ interface toVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('toVector_f32')
-  .paramsSubcasesOnly<toVectorCase>([
-    // numbers
-    { input: [1, 2], expected: [1, 2] },
-    { input: [1, 2, 3], expected: [1, 2, 3] },
-    { input: [1, 2, 3, 4], expected: [1, 2, 3, 4] },
+g.test('toVector_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<toVectorCase>(p => {
+        const trait = FP[p.trait];
+        return [
+          // numbers
+          { input: [1, 2], expected: [1, 2] },
+          { input: [1, 2, 3], expected: [1, 2, 3] },
+          { input: [1, 2, 3, 4], expected: [1, 2, 3, 4] },
 
-    // IntervalBounds
-    { input: [[1], [2]], expected: [1, 2] },
-    { input: [[1], [2], [3]], expected: [1, 2, 3] },
-    { input: [[1], [2], [3], [4]], expected: [1, 2, 3, 4] },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-    },
+          // IntervalBounds
+          { input: [[1], [2]], expected: [1, 2] },
+          { input: [[1], [2], [3]], expected: [1, 2, 3] },
+          { input: [[1], [2], [3], [4]], expected: [1, 2, 3, 4] },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+            ],
+            expected: [
+              [1, 2],
+              [2, 3],
+            ],
+          },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+            ],
+            expected: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+              [4, 5],
+            ],
+            expected: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+              [4, 5],
+            ],
+          },
 
-    // F32Interval
-    { input: [FP.f32.toInterval([1]), FP.f32.toInterval([2])], expected: [1, 2] },
-    {
-      input: [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-      expected: [
-        [1, 2],
-        [2, 3],
-      ],
-    },
-    {
-      input: [FP.f32.toInterval([1]), FP.f32.toInterval([2]), FP.f32.toInterval([3])],
-      expected: [1, 2, 3],
-    },
-    {
-      input: [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        FP.f32.toInterval([1]),
-        FP.f32.toInterval([2]),
-        FP.f32.toInterval([3]),
-        FP.f32.toInterval([4]),
-      ],
-      expected: [1, 2, 3, 4],
-    },
-    {
-      input: [
-        FP.f32.toInterval([1, 2]),
-        FP.f32.toInterval([2, 3]),
-        FP.f32.toInterval([3, 4]),
-        FP.f32.toInterval([4, 5]),
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-    },
+          // FPInterval
+          { input: [trait.toInterval([1]), trait.toInterval([2])], expected: [1, 2] },
+          {
+            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+            expected: [
+              [1, 2],
+              [2, 3],
+            ],
+          },
+          {
+            input: [trait.toInterval([1]), trait.toInterval([2]), trait.toInterval([3])],
+            expected: [1, 2, 3],
+          },
+          {
+            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+            expected: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              trait.toInterval([1]),
+              trait.toInterval([2]),
+              trait.toInterval([3]),
+              trait.toInterval([4]),
+            ],
+            expected: [1, 2, 3, 4],
+          },
+          {
+            input: [
+              trait.toInterval([1, 2]),
+              trait.toInterval([2, 3]),
+              trait.toInterval([3, 4]),
+              trait.toInterval([4, 5]),
+            ],
+            expected: [
+              [1, 2],
+              [2, 3],
+              [3, 4],
+              [4, 5],
+            ],
+          },
 
-    // Mixed
-    { input: [1, [2]], expected: [1, 2] },
-    { input: [1, [2], FP.f32.toInterval([3])], expected: [1, 2, 3] },
-    { input: [1, FP.f32.toInterval([2]), [3], 4], expected: [1, 2, 3, 4] },
-    {
-      input: [1, [2], [2, 3], kAnyIntervalF32],
-      expected: [1, 2, [2, 3], kAnyBounds],
-    },
-  ])
+          // Mixed
+          { input: [1, [2]], expected: [1, 2] },
+          { input: [1, [2], trait.toInterval([3])], expected: [1, 2, 3] },
+          { input: [1, trait.toInterval([2]), [3], 4], expected: [1, 2, 3, 4] },
+          {
+            input: [1, [2], [2, 3], kAnyInterval[p.trait]],
+            expected: [1, 2, [2, 3], kAnyBounds],
+          },
+        ];
+      })
+  )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const input = t.params.input;
-    const expected = t.params.expected.map(e => FP.f32.toInterval(e));
+    const expected = t.params.expected.map(e => trait.toInterval(e));
 
-    const got = FP.f32.toVector(input);
+    const got = trait.toVector(input);
     t.expect(
       objectEquals(got, expected),
-      `f32.toVector([${input}]) returned [${got}]. Expected [${expected}]`
-    );
-  });
-
-g.test('toVector_abstract')
-  .paramsSubcasesOnly<toVectorCase>([
-    // numbers
-    { input: [1, 2], expected: [1, 2] },
-    { input: [1, 2, 3], expected: [1, 2, 3] },
-    { input: [1, 2, 3, 4], expected: [1, 2, 3, 4] },
-
-    // IntervalBounds
-    { input: [[1], [2]], expected: [1, 2] },
-    { input: [[1], [2], [3]], expected: [1, 2, 3] },
-    { input: [[1], [2], [3], [4]], expected: [1, 2, 3, 4] },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-    },
-
-    // abstractInterval
-    { input: [FP.abstract.toInterval([1]), FP.abstract.toInterval([2])], expected: [1, 2] },
-    {
-      input: [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-      expected: [
-        [1, 2],
-        [2, 3],
-      ],
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1]),
-        FP.abstract.toInterval([2]),
-        FP.abstract.toInterval([3]),
-      ],
-      expected: [1, 2, 3],
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1, 2]),
-        FP.abstract.toInterval([2, 3]),
-        FP.abstract.toInterval([3, 4]),
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1]),
-        FP.abstract.toInterval([2]),
-        FP.abstract.toInterval([3]),
-        FP.abstract.toInterval([4]),
-      ],
-      expected: [1, 2, 3, 4],
-    },
-    {
-      input: [
-        FP.abstract.toInterval([1, 2]),
-        FP.abstract.toInterval([2, 3]),
-        FP.abstract.toInterval([3, 4]),
-        FP.abstract.toInterval([4, 5]),
-      ],
-      expected: [
-        [1, 2],
-        [2, 3],
-        [3, 4],
-        [4, 5],
-      ],
-    },
-
-    // Mixed
-    { input: [1, [2]], expected: [1, 2] },
-    { input: [1, [2], FP.abstract.toInterval([3])], expected: [1, 2, 3] },
-    { input: [1, FP.abstract.toInterval([2]), [3], 4], expected: [1, 2, 3, 4] },
-    {
-      input: [1, [2], [2, 3], kAnyIntervalAbstract],
-      expected: [1, 2, [2, 3], kAnyBounds],
-    },
-  ])
-  .fn(t => {
-    const input = t.params.input;
-    const expected = t.params.expected.map(e => FP.abstract.toInterval(e));
-
-    const got = FP.abstract.toVector(input);
-    t.expect(
-      objectEquals(got, expected),
-      `abstract.toVector([${input}]) returned [${got}]. Expected [${expected}]`
+      `${t.params.trait}.toVector([${input}]) returned [${got}]. Expected [${expected}]`
     );
   });
 
@@ -1102,928 +693,448 @@ interface isMatrixCase {
   expected: boolean;
 }
 
-g.test('isMatrix_f32')
-  .paramsSubcasesOnly<isMatrixCase>([
-    // numbers
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-      expected: false,
-    },
+g.test('isMatrix_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<isMatrixCase>(p => {
+        const trait = FP[p.trait];
+        return [
+          // numbers
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+            expected: false,
+          },
 
-    // IntervalBounds
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-        [[7], [8]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-        [[10], [11], [12]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-        [[13], [14], [15], [16]],
-      ],
-      expected: false,
-    },
+          // IntervalBounds
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+              [[5], [6]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+              [[5], [6]],
+              [[7], [8]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+              [[7], [8], [9]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+              [[7], [8], [9]],
+              [[10], [11], [12]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+              [[9], [10], [11], [12]],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+              [[9], [10], [11], [12]],
+              [[13], [14], [15], [16]],
+            ],
+            expected: false,
+          },
 
-    // FPInterval, valid dimensions
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8), FP.f32.toInterval(9)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8), FP.f32.toInterval(9)],
-        [FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-        [FP.f32.toInterval(9), FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-        [FP.f32.toInterval(9), FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-        [
-          FP.f32.toInterval(13),
-          FP.f32.toInterval(14),
-          FP.f32.toInterval(15),
-          FP.f32.toInterval(16),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-        [FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-        [FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9]), FP.f32.toInterval([9, 10])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9]), FP.f32.toInterval([9, 10])],
-        [FP.f32.toInterval([10, 11]), FP.f32.toInterval([11, 12]), FP.f32.toInterval([12, 13])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-        [
-          FP.f32.toInterval([9, 10]),
-          FP.f32.toInterval([10, 11]),
-          FP.f32.toInterval([11, 12]),
-          FP.f32.toInterval([12, 13]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-        [
-          FP.f32.toInterval([9, 10]),
-          FP.f32.toInterval([10, 11]),
-          FP.f32.toInterval([11, 12]),
-          FP.f32.toInterval([12, 13]),
-        ],
-        [
-          FP.f32.toInterval([13, 14]),
-          FP.f32.toInterval([14, 15]),
-          FP.f32.toInterval([15, 16]),
-          FP.f32.toInterval([16, 17]),
-        ],
-      ],
-      expected: true,
-    },
+          // FPInterval, valid dimensions
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+              [trait.toInterval(10), trait.toInterval(11), trait.toInterval(12)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [
+                trait.toInterval(9),
+                trait.toInterval(10),
+                trait.toInterval(11),
+                trait.toInterval(12),
+              ],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [
+                trait.toInterval(9),
+                trait.toInterval(10),
+                trait.toInterval(11),
+                trait.toInterval(12),
+              ],
+              [
+                trait.toInterval(13),
+                trait.toInterval(14),
+                trait.toInterval(15),
+                trait.toInterval(16),
+              ],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+              [trait.toInterval([10, 11]), trait.toInterval([11, 12]), trait.toInterval([12, 13])],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+              [
+                trait.toInterval([9, 10]),
+                trait.toInterval([10, 11]),
+                trait.toInterval([11, 12]),
+                trait.toInterval([12, 13]),
+              ],
+            ],
+            expected: true,
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+              [
+                trait.toInterval([9, 10]),
+                trait.toInterval([10, 11]),
+                trait.toInterval([11, 12]),
+                trait.toInterval([12, 13]),
+              ],
+              [
+                trait.toInterval([13, 14]),
+                trait.toInterval([14, 15]),
+                trait.toInterval([15, 16]),
+                trait.toInterval([16, 17]),
+              ],
+            ],
+            expected: true,
+          },
 
-    // FPInterval, invalid dimensions
-    { input: [[FP.f32.toInterval(1)]], expected: false },
-    {
-      input: [[FP.f32.toInterval(1)], [FP.f32.toInterval(3), FP.f32.toInterval(4)]],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4), FP.f32.toInterval(5)],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5)],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8)],
-        [FP.f32.toInterval(9), FP.f32.toInterval(10)],
-      ],
-      expected: false,
-    },
+          // FPInterval, invalid dimensions
+          { input: [[trait.toInterval(1)]], expected: false },
+          {
+            input: [[trait.toInterval(1)], [trait.toInterval(3), trait.toInterval(4)]],
+            expected: false,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4), trait.toInterval(5)],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5)],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8)],
+              [trait.toInterval(9), trait.toInterval(10)],
+            ],
+            expected: false,
+          },
 
-    // Mixed
-    {
-      input: [
-        [1, [2]],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [FP.f32.toInterval([3]), 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], FP.f32.toInterval([2])],
-        [FP.f32.toInterval([3]), FP.f32.toInterval([4])],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), [2]],
-        [3, 4],
-      ],
-      expected: false,
-    },
-  ])
+          // Mixed
+          {
+            input: [
+              [1, [2]],
+              [3, 4],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], 4],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [1, 2],
+              [trait.toInterval([3]), 4],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [[1], trait.toInterval([2])],
+              [trait.toInterval([3]), trait.toInterval([4])],
+            ],
+            expected: false,
+          },
+          {
+            input: [
+              [trait.toInterval(1), [2]],
+              [3, 4],
+            ],
+            expected: false,
+          },
+        ];
+      })
+  )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const input = t.params.input;
     const expected = t.params.expected;
 
-    const got = FP.f32.isMatrix(input);
-    t.expect(got === expected, `f32.isMatrix([${input}]) returned ${got}. Expected ${expected}`);
-  });
-
-g.test('isMatrix_abstract')
-  .paramsSubcasesOnly<isMatrixCase>([
-    // numbers
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-      expected: false,
-    },
-
-    // IntervalBounds
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-        [[7], [8]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-        [[10], [11], [12]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-        [[13], [14], [15], [16]],
-      ],
-      expected: false,
-    },
-
-    // FPInterval, valid dimensions
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8), FP.abstract.toInterval(9)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8), FP.abstract.toInterval(9)],
-        [FP.abstract.toInterval(10), FP.abstract.toInterval(11), FP.abstract.toInterval(12)],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-        [
-          FP.abstract.toInterval(9),
-          FP.abstract.toInterval(10),
-          FP.abstract.toInterval(11),
-          FP.abstract.toInterval(12),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-        [
-          FP.abstract.toInterval(9),
-          FP.abstract.toInterval(10),
-          FP.abstract.toInterval(11),
-          FP.abstract.toInterval(12),
-        ],
-        [
-          FP.abstract.toInterval(13),
-          FP.abstract.toInterval(14),
-          FP.abstract.toInterval(15),
-          FP.abstract.toInterval(16),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-        [FP.abstract.toInterval([5, 6]), FP.abstract.toInterval([6, 7])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-        [FP.abstract.toInterval([5, 6]), FP.abstract.toInterval([6, 7])],
-        [FP.abstract.toInterval([7, 8]), FP.abstract.toInterval([8, 9])],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-        [
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-          FP.abstract.toInterval([9, 10]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-        [
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-          FP.abstract.toInterval([9, 10]),
-        ],
-        [
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-        [
-          FP.abstract.toInterval([9, 10]),
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-      ],
-      expected: true,
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-        [
-          FP.abstract.toInterval([9, 10]),
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-        [
-          FP.abstract.toInterval([13, 14]),
-          FP.abstract.toInterval([14, 15]),
-          FP.abstract.toInterval([15, 16]),
-          FP.abstract.toInterval([16, 17]),
-        ],
-      ],
-      expected: true,
-    },
-
-    // FPInterval, invalid dimensions
-    { input: [[FP.abstract.toInterval(1)]], expected: false },
-    {
-      input: [[FP.abstract.toInterval(1)], [FP.abstract.toInterval(3), FP.abstract.toInterval(4)]],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4), FP.abstract.toInterval(5)],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5)],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8)],
-        [FP.abstract.toInterval(9), FP.abstract.toInterval(10)],
-      ],
-      expected: false,
-    },
-
-    // Mixed
-    {
-      input: [
-        [1, [2]],
-        [3, 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [1, 2],
-        [FP.abstract.toInterval([3]), 4],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [[1], FP.abstract.toInterval([2])],
-        [FP.abstract.toInterval([3]), FP.abstract.toInterval([4])],
-      ],
-      expected: false,
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), [2]],
-        [3, 4],
-      ],
-      expected: false,
-    },
-  ])
-  .fn(t => {
-    const input = t.params.input;
-    const expected = t.params.expected;
-
-    const got = FP.abstract.isMatrix(input);
+    const got = trait.isMatrix(input);
     t.expect(
       got === expected,
-      `abstract.isMatrix([${input}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.isMatrix([${input}]) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2032,1383 +1143,674 @@ interface toMatrixCase {
   expected: (number | IntervalBounds)[][];
 }
 
-g.test('toMatrix_f32')
-  .paramsSubcasesOnly<toMatrixCase>([
-    // numbers
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
+g.test('toMatrix_f32af')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<toMatrixCase>(p => {
+        const trait = FP[p.trait];
+        return [
+          // numbers
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+          },
+          {
+            input: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+          },
 
-    // IntervalBounds
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-        [[7], [8]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-        [[10], [11], [12]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-        [[13], [14], [15], [16]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
+          // IntervalBounds
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+              [[5], [6]],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], [4]],
+              [[5], [6]],
+              [[7], [8]],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+              [[7], [8], [9]],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3]],
+              [[4], [5], [6]],
+              [[7], [8], [9]],
+              [[10], [11], [12]],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+              [[9], [10], [11], [12]],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [[1], [2], [3], [4]],
+              [[5], [6], [7], [8]],
+              [[9], [10], [11], [12]],
+              [[13], [14], [15], [16]],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+          },
 
-    // FPInterval
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2)],
-        [FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8), FP.f32.toInterval(9)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3)],
-        [FP.f32.toInterval(4), FP.f32.toInterval(5), FP.f32.toInterval(6)],
-        [FP.f32.toInterval(7), FP.f32.toInterval(8), FP.f32.toInterval(9)],
-        [FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-        [FP.f32.toInterval(9), FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval(1), FP.f32.toInterval(2), FP.f32.toInterval(3), FP.f32.toInterval(4)],
-        [FP.f32.toInterval(5), FP.f32.toInterval(6), FP.f32.toInterval(7), FP.f32.toInterval(8)],
-        [FP.f32.toInterval(9), FP.f32.toInterval(10), FP.f32.toInterval(11), FP.f32.toInterval(12)],
-        [
-          FP.f32.toInterval(13),
-          FP.f32.toInterval(14),
-          FP.f32.toInterval(15),
-          FP.f32.toInterval(16),
-        ],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
+          // FPInterval
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6)],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2)],
+              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8)],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
+              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+              [trait.toInterval(10), trait.toInterval(11), trait.toInterval(12)],
+            ],
+            expected: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [
+                trait.toInterval(9),
+                trait.toInterval(10),
+                trait.toInterval(11),
+                trait.toInterval(12),
+              ],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
+              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [
+                trait.toInterval(9),
+                trait.toInterval(10),
+                trait.toInterval(11),
+                trait.toInterval(12),
+              ],
+              [
+                trait.toInterval(13),
+                trait.toInterval(14),
+                trait.toInterval(15),
+                trait.toInterval(16),
+              ],
+            ],
+            expected: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+          },
 
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-        [FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3])],
-        [FP.f32.toInterval([3, 4]), FP.f32.toInterval([4, 5])],
-        [FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9]), FP.f32.toInterval([9, 10])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-          [9, 10],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.f32.toInterval([1, 2]), FP.f32.toInterval([2, 3]), FP.f32.toInterval([3, 4])],
-        [FP.f32.toInterval([4, 5]), FP.f32.toInterval([5, 6]), FP.f32.toInterval([6, 7])],
-        [FP.f32.toInterval([7, 8]), FP.f32.toInterval([8, 9]), FP.f32.toInterval([9, 10])],
-        [FP.f32.toInterval([10, 11]), FP.f32.toInterval([11, 12]), FP.f32.toInterval([12, 13])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-          [9, 10],
-        ],
-        [
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-        [
-          FP.f32.toInterval([9, 10]),
-          FP.f32.toInterval([10, 11]),
-          FP.f32.toInterval([11, 12]),
-          FP.f32.toInterval([12, 13]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-        [
-          [9, 10],
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.f32.toInterval([1, 2]),
-          FP.f32.toInterval([2, 3]),
-          FP.f32.toInterval([3, 4]),
-          FP.f32.toInterval([4, 5]),
-        ],
-        [
-          FP.f32.toInterval([5, 6]),
-          FP.f32.toInterval([6, 7]),
-          FP.f32.toInterval([7, 8]),
-          FP.f32.toInterval([8, 9]),
-        ],
-        [
-          FP.f32.toInterval([9, 10]),
-          FP.f32.toInterval([10, 11]),
-          FP.f32.toInterval([11, 12]),
-          FP.f32.toInterval([12, 13]),
-        ],
-        [
-          FP.f32.toInterval([13, 14]),
-          FP.f32.toInterval([14, 15]),
-          FP.f32.toInterval([15, 16]),
-          FP.f32.toInterval([16, 17]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-        [
-          [9, 10],
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-        [
-          [13, 14],
-          [14, 15],
-          [15, 16],
-          [16, 17],
-        ],
-      ],
-    },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+              ],
+              [
+                [3, 4],
+                [4, 5],
+              ],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+              ],
+              [
+                [3, 4],
+                [4, 5],
+              ],
+              [
+                [5, 6],
+                [6, 7],
+              ],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+              ],
+              [
+                [3, 4],
+                [4, 5],
+              ],
+              [
+                [5, 6],
+                [6, 7],
+              ],
+              [
+                [7, 8],
+                [8, 9],
+              ],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+              ],
+              [
+                [4, 5],
+                [5, 6],
+                [6, 7],
+              ],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+              ],
+              [
+                [4, 5],
+                [5, 6],
+                [6, 7],
+              ],
+              [
+                [7, 8],
+                [8, 9],
+                [9, 10],
+              ],
+            ],
+          },
+          {
+            input: [
+              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+              [trait.toInterval([10, 11]), trait.toInterval([11, 12]), trait.toInterval([12, 13])],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+              ],
+              [
+                [4, 5],
+                [5, 6],
+                [6, 7],
+              ],
+              [
+                [7, 8],
+                [8, 9],
+                [9, 10],
+              ],
+              [
+                [10, 11],
+                [11, 12],
+                [12, 13],
+              ],
+            ],
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [4, 5],
+              ],
+              [
+                [5, 6],
+                [6, 7],
+                [7, 8],
+                [8, 9],
+              ],
+            ],
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+              [
+                trait.toInterval([9, 10]),
+                trait.toInterval([10, 11]),
+                trait.toInterval([11, 12]),
+                trait.toInterval([12, 13]),
+              ],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [4, 5],
+              ],
+              [
+                [5, 6],
+                [6, 7],
+                [7, 8],
+                [8, 9],
+              ],
+              [
+                [9, 10],
+                [10, 11],
+                [11, 12],
+                [12, 13],
+              ],
+            ],
+          },
+          {
+            input: [
+              [
+                trait.toInterval([1, 2]),
+                trait.toInterval([2, 3]),
+                trait.toInterval([3, 4]),
+                trait.toInterval([4, 5]),
+              ],
+              [
+                trait.toInterval([5, 6]),
+                trait.toInterval([6, 7]),
+                trait.toInterval([7, 8]),
+                trait.toInterval([8, 9]),
+              ],
+              [
+                trait.toInterval([9, 10]),
+                trait.toInterval([10, 11]),
+                trait.toInterval([11, 12]),
+                trait.toInterval([12, 13]),
+              ],
+              [
+                trait.toInterval([13, 14]),
+                trait.toInterval([14, 15]),
+                trait.toInterval([15, 16]),
+                trait.toInterval([16, 17]),
+              ],
+            ],
+            expected: [
+              [
+                [1, 2],
+                [2, 3],
+                [3, 4],
+                [4, 5],
+              ],
+              [
+                [5, 6],
+                [6, 7],
+                [7, 8],
+                [8, 9],
+              ],
+              [
+                [9, 10],
+                [10, 11],
+                [11, 12],
+                [12, 13],
+              ],
+              [
+                [13, 14],
+                [14, 15],
+                [15, 16],
+                [16, 17],
+              ],
+            ],
+          },
 
-    // Mixed
-    {
-      input: [
-        [1, [2]],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [FP.f32.toInterval([3]), 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], FP.f32.toInterval([2])],
-        [FP.f32.toInterval([3]), FP.f32.toInterval([4])],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-  ])
+          // Mixed
+          {
+            input: [
+              [1, [2]],
+              [3, 4],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [[1], [2]],
+              [[3], 4],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [1, 2],
+              [trait.toInterval([3]), 4],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+          {
+            input: [
+              [[1], trait.toInterval([2])],
+              [trait.toInterval([3]), trait.toInterval([4])],
+            ],
+            expected: [
+              [1, 2],
+              [3, 4],
+            ],
+          },
+        ];
+      })
+  )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const input = t.params.input;
-    const expected = map2DArray(t.params.expected, e => FP.f32.toInterval(e));
+    const expected = map2DArray(t.params.expected, e => trait.toInterval(e));
 
-    const got = FP.f32.toMatrix(input);
+    const got = trait.toMatrix(input);
     t.expect(
       objectEquals(got, expected),
-      `f32.toMatrix([${input}]) returned [${got}]. Expected [${expected}]`
-    );
-  });
-
-g.test('toMatrix_abstract')
-  .paramsSubcasesOnly<toMatrixCase>([
-    // numbers
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
-
-    // IntervalBounds
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], [4]],
-        [[5], [6]],
-        [[7], [8]],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3]],
-        [[4], [5], [6]],
-        [[7], [8], [9]],
-        [[10], [11], [12]],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [[1], [2], [3], [4]],
-        [[5], [6], [7], [8]],
-        [[9], [10], [11], [12]],
-        [[13], [14], [15], [16]],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
-
-    // FPInterval
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2)],
-        [FP.abstract.toInterval(3), FP.abstract.toInterval(4)],
-        [FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8)],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-        [5, 6],
-        [7, 8],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8), FP.abstract.toInterval(9)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval(1), FP.abstract.toInterval(2), FP.abstract.toInterval(3)],
-        [FP.abstract.toInterval(4), FP.abstract.toInterval(5), FP.abstract.toInterval(6)],
-        [FP.abstract.toInterval(7), FP.abstract.toInterval(8), FP.abstract.toInterval(9)],
-        [FP.abstract.toInterval(10), FP.abstract.toInterval(11), FP.abstract.toInterval(12)],
-      ],
-      expected: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-        [
-          FP.abstract.toInterval(9),
-          FP.abstract.toInterval(10),
-          FP.abstract.toInterval(11),
-          FP.abstract.toInterval(12),
-        ],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval(1),
-          FP.abstract.toInterval(2),
-          FP.abstract.toInterval(3),
-          FP.abstract.toInterval(4),
-        ],
-        [
-          FP.abstract.toInterval(5),
-          FP.abstract.toInterval(6),
-          FP.abstract.toInterval(7),
-          FP.abstract.toInterval(8),
-        ],
-        [
-          FP.abstract.toInterval(9),
-          FP.abstract.toInterval(10),
-          FP.abstract.toInterval(11),
-          FP.abstract.toInterval(12),
-        ],
-        [
-          FP.abstract.toInterval(13),
-          FP.abstract.toInterval(14),
-          FP.abstract.toInterval(15),
-          FP.abstract.toInterval(16),
-        ],
-      ],
-      expected: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-    },
-
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-        [FP.abstract.toInterval([5, 6]), FP.abstract.toInterval([6, 7])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-        ],
-      ],
-    },
-    {
-      input: [
-        [FP.abstract.toInterval([1, 2]), FP.abstract.toInterval([2, 3])],
-        [FP.abstract.toInterval([3, 4]), FP.abstract.toInterval([4, 5])],
-        [FP.abstract.toInterval([5, 6]), FP.abstract.toInterval([6, 7])],
-        [FP.abstract.toInterval([7, 8]), FP.abstract.toInterval([8, 9])],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-        ],
-        [
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-        [
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-          FP.abstract.toInterval([9, 10]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-          [9, 10],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-        ],
-        [
-          FP.abstract.toInterval([4, 5]),
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-        ],
-        [
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-          FP.abstract.toInterval([9, 10]),
-        ],
-        [
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-        ],
-        [
-          [4, 5],
-          [5, 6],
-          [6, 7],
-        ],
-        [
-          [7, 8],
-          [8, 9],
-          [9, 10],
-        ],
-        [
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-        [
-          FP.abstract.toInterval([9, 10]),
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-        [
-          [9, 10],
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-      ],
-    },
-    {
-      input: [
-        [
-          FP.abstract.toInterval([1, 2]),
-          FP.abstract.toInterval([2, 3]),
-          FP.abstract.toInterval([3, 4]),
-          FP.abstract.toInterval([4, 5]),
-        ],
-        [
-          FP.abstract.toInterval([5, 6]),
-          FP.abstract.toInterval([6, 7]),
-          FP.abstract.toInterval([7, 8]),
-          FP.abstract.toInterval([8, 9]),
-        ],
-        [
-          FP.abstract.toInterval([9, 10]),
-          FP.abstract.toInterval([10, 11]),
-          FP.abstract.toInterval([11, 12]),
-          FP.abstract.toInterval([12, 13]),
-        ],
-        [
-          FP.abstract.toInterval([13, 14]),
-          FP.abstract.toInterval([14, 15]),
-          FP.abstract.toInterval([15, 16]),
-          FP.abstract.toInterval([16, 17]),
-        ],
-      ],
-      expected: [
-        [
-          [1, 2],
-          [2, 3],
-          [3, 4],
-          [4, 5],
-        ],
-        [
-          [5, 6],
-          [6, 7],
-          [7, 8],
-          [8, 9],
-        ],
-        [
-          [9, 10],
-          [10, 11],
-          [11, 12],
-          [12, 13],
-        ],
-        [
-          [13, 14],
-          [14, 15],
-          [15, 16],
-          [16, 17],
-        ],
-      ],
-    },
-
-    // Mixed
-    {
-      input: [
-        [1, [2]],
-        [3, 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], [2]],
-        [[3], 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [1, 2],
-        [FP.abstract.toInterval([3]), 4],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-    {
-      input: [
-        [[1], FP.abstract.toInterval([2])],
-        [FP.abstract.toInterval([3]), FP.abstract.toInterval([4])],
-      ],
-      expected: [
-        [1, 2],
-        [3, 4],
-      ],
-    },
-  ])
-  .fn(t => {
-    const input = t.params.input;
-    const expected = map2DArray(t.params.expected, e => FP.abstract.toInterval(e));
-
-    const got = FP.abstract.toMatrix(input);
-    t.expect(
-      objectEquals(got, expected),
-      `abstract.toMatrix([${input}]) returned [${got}]. Expected [${expected}]`
+      `${t.params.trait}.toMatrix([${input}]) returned [${got}]. Expected [${expected}]`
     );
   });
 
