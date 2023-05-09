@@ -121,8 +121,8 @@ g.test('constructor_f32af')
         ];
 
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
-        // float and 'number' both being f64. So there is no separate OOR tests for abstract float,
-        // the testing framework considers them duplicates.
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
         if (p.trait !== 'abstract') {
           // prettier-ignore
           cases.push(...[
@@ -247,8 +247,8 @@ g.test('contains_number_f32af')
         ];
 
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
-        // float and 'number' both being f64. So there is no separate OOR tests for abstract float,
-        // the testing framework considers them duplicates.
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
         if (p.trait !== 'abstract') {
           // prettier-ignore
           cases.push(...[
@@ -356,8 +356,8 @@ g.test('contains_interval_f32af')
         ];
 
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
-        // float and 'number' both being f64. So there is no separate OOR tests for abstract float,
-        // the testing framework considers them duplicates.
+        // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
+        // otherwise the testing framework will consider them duplicated.
         if (p.trait !== 'abstract') {
           // prettier-ignore
           cases.push(...[
