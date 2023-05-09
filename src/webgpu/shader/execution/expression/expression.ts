@@ -45,7 +45,7 @@ export function toComparator(input: Expectation): Comparator {
     return input;
   }
 
-  return { impl: got => compare(got, input as Value), kind: 'value' };
+  return { compare: got => compare(got, input as Value), kind: 'value' };
 }
 
 /** Case is a single expression test case. */
@@ -351,7 +351,7 @@ function submitBatch(
       for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
         const c = cases[caseIdx];
         const got = outputs[caseIdx];
-        const cmp = toComparator(c.expected).impl(got);
+        const cmp = toComparator(c.expected).compare(got);
         if (!cmp.matched) {
           errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -779,10 +779,10 @@ function packScalarsToVector(
     // Gather the comparators for the packed cases
     const cmp_impls = new Array<ComparatorImpl>(vectorWidth);
     for (let i = 0; i < vectorWidth; i++) {
-      cmp_impls[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected).impl;
+      cmp_impls[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected).compare;
     }
     const comparators: Comparator = {
-      impl: (got: Value) => {
+      compare: (got: Value) => {
         let matched = true;
         const gElements = new Array<string>(vectorWidth);
         const eElements = new Array<string>(vectorWidth);

@@ -42,7 +42,7 @@ export type ComparatorImpl = (got: Value) => Comparison;
 
 /** Comparator is a function that compares whether the provided value matches an expectation. */
 export interface Comparator {
-  impl: ComparatorImpl;
+  compare: ComparatorImpl;
   kind: ComparatorKind;
   data?: Expectation | Expectation[];
 }
@@ -327,10 +327,10 @@ export function compare(
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
 export function anyOf(...expectations: Expectation[]): Comparator {
   const c: Comparator = {
-    impl: (got: Value) => {
+    compare: (got: Value) => {
       const failed = new Set<string>();
       for (const e of expectations) {
-        const cmp = toComparator(e).impl(got);
+        const cmp = toComparator(e).compare(got);
         if (cmp.matched) {
           return cmp;
         }
@@ -352,9 +352,9 @@ export function anyOf(...expectations: Expectation[]): Comparator {
 /** @returns a Comparator that skips the test if the expectation is undefined */
 export function skipUndefined(expectation: Expectation | undefined): Comparator {
   const c: Comparator = {
-    impl: (got: Value) => {
+    compare: (got: Value) => {
       if (expectation !== undefined) {
-        return toComparator(expectation).impl(got);
+        return toComparator(expectation).compare(got);
       }
       return { matched: true, got: got.toString(), expected: `Treating 'undefined' as Any` };
     },

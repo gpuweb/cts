@@ -325,8 +325,8 @@ g.test('anyOf').fn(t => {
       const serialized = serializeComparator(c.comparator);
       const deserialized = deserializeComparator(serialized);
       for (const val of c.testCases) {
-        const got = deserialized.impl(val);
-        const expect = c.comparator.impl(val);
+        const got = deserialized.compare(val);
+        const expect = c.comparator.compare(val);
         t.expect(
           got.matched === expect.matched,
           `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
@@ -351,8 +351,8 @@ g.test('skipUndefined').fn(t => {
       const serialized = serializeComparator(c.comparator);
       const deserialized = deserializeComparator(serialized);
       for (const val of c.testCases) {
-        const got = deserialized.impl(val);
-        const expect = c.comparator.impl(val);
+        const got = deserialized.compare(val);
+        const expect = c.comparator.compare(val);
         t.expect(
           got.matched === expect.matched,
           `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
