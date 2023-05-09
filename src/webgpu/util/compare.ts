@@ -398,7 +398,7 @@ type SerializedComparatorSkipUndefined = {
 /** SerializedComparatorAlwaysPass is the serialized type of `alwaysPass` comparator. */
 type SerializedComparatorAlwaysPass = {
   kind: 'alwaysPass';
-  data: string;
+  reason: string;
 };
 
 // Serialized forms of 'value' and 'packed' are intentionally omitted, so should
@@ -430,7 +430,7 @@ export function serializeComparator(c: Comparator): SerializedComparator {
     }
     case 'alwaysPass': {
       const d = c.data as string;
-      return { kind: 'alwaysPass', data: d };
+      return { kind: 'alwaysPass', reason: d };
     }
     case 'value':
     case 'packed': {
@@ -455,7 +455,7 @@ export function deserializeComparator(s: SerializedComparator): Comparator {
       return skipUndefined(s.data !== undefined ? deserializeExpectation(s.data) : undefined);
     }
     case 'alwaysPass': {
-      return alwaysPass(s.data);
+      return alwaysPass(s.reason);
     }
   }
   unreachable(`Unable deserialize comparator '${s}'`);
