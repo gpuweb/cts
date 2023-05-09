@@ -333,6 +333,27 @@ export function skipUndefined(expectation) {
   return c;
 }
 
+/**
+ * @returns a Comparator that always passes, used to test situations where the
+ * result of computation doesn't matter, but the fact it finishes is being
+ * tested.
+ */
+export function alwaysPass(msg = 'always pass') {
+  const c = {
+    compare: got => {
+      return { matched: true, got: got.toString(), expected: msg };
+    },
+    kind: 'alwaysPass',
+  };
+
+  if (getIsBuildingDataCache()) {
+    // If there's an active DataCache, and it supports storing, then append the
+    // message string to the result, so it can be serialized.
+    c.data = msg;
+  }
+  return c;
+}
+
 /** SerializedComparatorAnyOf is the serialized type of `anyOf` comparator. */
 
 /**
@@ -353,9 +374,12 @@ export function serializeComparator(c) {
       }
       return { kind: 'skipUndefined', data: undefined };
     }
+    case 'alwaysPass': {
+      const d = c.data;
+      return { kind: 'alwaysPass', reason: d };
+    }
     case 'value':
-    case 'packed':
-    case 'bitcast': {
+    case 'packed': {
       unreachable(`Serializing '${c.kind}' comparators is not allowed (${c})`);
       break;
     }
@@ -376,6 +400,9 @@ export function deserializeComparator(s) {
     }
     case 'skipUndefined': {
       return skipUndefined(s.data !== undefined ? deserializeExpectation(s.data) : undefined);
+    }
+    case 'alwaysPass': {
+      return alwaysPass(s.reason);
     }
   }
 
