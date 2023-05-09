@@ -19,8 +19,8 @@ import {
 import { FPInterval } from '../../../util/floating_point.js';
 import { cartesianProduct, quantizeToI32, quantizeToU32 } from '../../../util/math.js';
 
-/** Is this expectation actually a Comparator */
-function isComparator(e) {
+/** @returns if this Expectation actually a Comparator */
+export function isComparator(e) {
   return !(
     e instanceof FPInterval ||
     e instanceof Scalar ||
@@ -30,12 +30,13 @@ function isComparator(e) {
   );
 }
 
-/** Helper for converting Values to Comparators */
+/** @returns the input if it is already a Comparator, otherwise wraps it in a 'value' comparator */
 export function toComparator(input) {
-  if (!isComparator(input)) {
-    return got => compare(got, input);
+  if (isComparator(input)) {
+    return input;
   }
-  return input;
+
+  return { compare: got => compare(got, input), kind: 'value' };
 }
 
 /** Case is a single expression test case. */
@@ -320,7 +321,7 @@ function submitBatch(
       for (let caseIdx = 0; caseIdx < cases.length; caseIdx++) {
         const c = cases[caseIdx];
         const got = outputs[caseIdx];
-        const cmp = toComparator(c.expected)(got);
+        const cmp = toComparator(c.expected).compare(got);
         if (!cmp.matched) {
           errs.push(`(${c.input instanceof Array ? c.input.join(', ') : c.input})
     returned: ${cmp.got}
@@ -725,29 +726,32 @@ function packScalarsToVector(parameterTypes, resultType, cases, vectorWidth) {
     }
 
     // Gather the comparators for the packed cases
-    const comparators = new Array(vectorWidth);
+    const cmp_impls = new Array(vectorWidth);
     for (let i = 0; i < vectorWidth; i++) {
-      comparators[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected);
+      cmp_impls[i] = toComparator(cases[clampCaseIdx(caseIdx + i)].expected).compare;
     }
-    const packedComparator = got => {
-      let matched = true;
-      const gElements = new Array(vectorWidth);
-      const eElements = new Array(vectorWidth);
-      for (let i = 0; i < vectorWidth; i++) {
-        const d = comparators[i](got.elements[i]);
-        matched = matched && d.matched;
-        gElements[i] = d.got;
-        eElements[i] = d.expected;
-      }
-      return {
-        matched,
-        got: `${packedResultType}(${gElements.join(', ')})`,
-        expected: `${packedResultType}(${eElements.join(', ')})`,
-      };
+    const comparators = {
+      compare: got => {
+        let matched = true;
+        const gElements = new Array(vectorWidth);
+        const eElements = new Array(vectorWidth);
+        for (let i = 0; i < vectorWidth; i++) {
+          const d = cmp_impls[i](got.elements[i]);
+          matched = matched && d.matched;
+          gElements[i] = d.got;
+          eElements[i] = d.expected;
+        }
+        return {
+          matched,
+          got: `${packedResultType}(${gElements.join(', ')})`,
+          expected: `${packedResultType}(${eElements.join(', ')})`,
+        };
+      },
+      kind: 'packed',
     };
 
     // Append the new packed case
-    packedCases.push({ input: packedInputs, expected: packedComparator });
+    packedCases.push({ input: packedInputs, expected: comparators });
     caseIdx += vectorWidth;
   }
 

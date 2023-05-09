@@ -2,7 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { getIsBuildingDataCache } from '../../common/framework/data_cache.js';
 import { Colors } from '../../common/util/colors.js';
-import { assert } from '../../common/util/util.js';
+import { assert, unreachable } from '../../common/util/util.js';
 import {
   deserializeExpectation,
   serializeExpectation,
@@ -290,65 +290,94 @@ export function compare(got, expected) {
 
 /** @returns a Comparator that checks whether a test value matches any of the provided options */
 export function anyOf(...expectations) {
-  const comparator = got => {
-    const failed = new Set();
-    for (const e of expectations) {
-      const cmp = toComparator(e)(got);
-      if (cmp.matched) {
-        return cmp;
+  const c = {
+    compare: got => {
+      const failed = new Set();
+      for (const e of expectations) {
+        const cmp = toComparator(e).compare(got);
+        if (cmp.matched) {
+          return cmp;
+        }
+        failed.add(cmp.expected);
       }
-      failed.add(cmp.expected);
-    }
-    return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
+      return { matched: false, got: got.toString(), expected: [...failed].join(' or ') };
+    },
+    kind: 'anyOf',
   };
 
   if (getIsBuildingDataCache()) {
     // If there's an active DataCache, and it supports storing, then append the
-    // comparator kind and serialized expectations to the comparator, so it can
-    // be serialized.
-    comparator.kind = 'anyOf';
-    comparator.data = expectations.map(e => serializeExpectation(e));
+    // Expectations to the result, so it can be serialized.
+    c.data = expectations;
   }
-  return comparator;
+  return c;
 }
 
 /** @returns a Comparator that skips the test if the expectation is undefined */
 export function skipUndefined(expectation) {
-  const comparator = got => {
-    if (expectation !== undefined) {
-      return toComparator(expectation)(got);
-    }
-    return { matched: true, got: got.toString(), expected: `Treating 'undefined' as Any` };
+  const c = {
+    compare: got => {
+      if (expectation !== undefined) {
+        return toComparator(expectation).compare(got);
+      }
+      return { matched: true, got: got.toString(), expected: `Treating 'undefined' as Any` };
+    },
+    kind: 'skipUndefined',
   };
 
-  if (getIsBuildingDataCache()) {
+  if (expectation !== undefined && getIsBuildingDataCache()) {
     // If there's an active DataCache, and it supports storing, then append the
-    // comparator kind and serialized expectations to the comparator, so it can
-    // be serialized.
-    comparator.kind = 'skipUndefined';
-    if (expectation !== undefined) {
-      comparator.data = serializeExpectation(expectation);
-    }
+    // Expectation to the result, so it can be serialized.
+    c.data = expectation;
   }
-  return comparator;
+  return c;
 }
 
-/** SerializedComparatorAnyOf is the serialized type of an `anyOf` comparator. */
+/** SerializedComparatorAnyOf is the serialized type of `anyOf` comparator. */
 
 /**
- * Deserializes a comparator from a SerializedComparator.
- * @param data the SerializedComparator
- * @returns the deserialized Comparator.
+ * Serializes a Comparator to a SerializedComparator.
+ * @param c the Comparator
+ * @returns a serialized comparator
  */
-export function deserializeComparator(data) {
-  switch (data.kind) {
+export function serializeComparator(c) {
+  switch (c.kind) {
     case 'anyOf': {
-      return anyOf(...data.data.map(e => deserializeExpectation(e)));
+      const d = c.data;
+      return { kind: 'anyOf', data: d.map(serializeExpectation) };
     }
     case 'skipUndefined': {
-      return skipUndefined(data.data !== undefined ? deserializeExpectation(data.data) : undefined);
+      if (c.data !== undefined) {
+        const d = c.data;
+        return { kind: 'skipUndefined', data: serializeExpectation(d) };
+      }
+      return { kind: 'skipUndefined', data: undefined };
+    }
+    case 'value':
+    case 'packed':
+    case 'bitcast': {
+      unreachable(`Serializing '${c.kind}' comparators is not allowed (${c})`);
+      break;
     }
   }
 
-  throw `unhandled comparator kind`;
+  unreachable(`Unable serialize comparator '${c}'`);
+}
+
+/**
+ * Deserializes a Comparator from a SerializedComparator.
+ * @param s the SerializedComparator
+ * @returns the deserialized comparator.
+ */
+export function deserializeComparator(s) {
+  switch (s.kind) {
+    case 'anyOf': {
+      return anyOf(...s.data.map(e => deserializeExpectation(e)));
+    }
+    case 'skipUndefined': {
+      return skipUndefined(s.data !== undefined ? deserializeExpectation(s.data) : undefined);
+    }
+  }
+
+  unreachable(`Unable deserialize comparator '${s}'`);
 }

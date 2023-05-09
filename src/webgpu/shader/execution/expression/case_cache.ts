@@ -1,5 +1,9 @@
 import { Cacheable, dataCache } from '../../../../common/framework/data_cache.js';
-import { SerializedComparator, deserializeComparator } from '../../../util/compare.js';
+import {
+  SerializedComparator,
+  deserializeComparator,
+  serializeComparator,
+} from '../../../util/compare.js';
 import {
   Scalar,
   Vector,
@@ -16,7 +20,7 @@ import {
 } from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { Case, CaseList, Expectation } from './expression.js';
+import { Case, CaseList, Expectation, isComparator } from './expression.js';
 
 /**
  * SerializedExpectationValue holds the serialized form of an Expectation when
@@ -106,21 +110,10 @@ export function serializeExpectation(e: Expectation): SerializedExpectation {
       return { kind: 'intervals', value: e.map(serializeFPInterval) };
     }
   }
-  if (e instanceof Function) {
-    const comp = (e as unknown) as SerializedComparator;
-    if (comp !== undefined) {
-      // if blocks used to refine the type of comp.kind, otherwise it is
-      // actually the union of the string values
-      if (comp.kind === 'anyOf') {
-        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
-      }
-      if (comp.kind === 'skipUndefined') {
-        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
-      }
-    }
-    throw `cannot serialize comparator ${e}`;
+  if (isComparator(e)) {
+    return { kind: 'comparator', value: serializeComparator(e) };
   }
-  throw `cannot serialize expectation ${e}`;
+  throw `cannot serialize Expectation ${e}`;
 }
 
 /** deserializeExpectation() converts a SerializedExpectation to a Expectation */

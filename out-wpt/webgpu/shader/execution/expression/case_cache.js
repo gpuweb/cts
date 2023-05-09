@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { dataCache } from '../../../../common/framework/data_cache.js';
-import { deserializeComparator } from '../../../util/compare.js';
+import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
   Scalar,
   Vector,
@@ -15,6 +15,14 @@ import {
   serializeFPInterval,
 } from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
+
+import { isComparator } from './expression.js';
+
+/**
+ * SerializedExpectationValue holds the serialized form of an Expectation when
+ * the Expectation is a Value
+ * This form can be safely encoded to JSON.
+ */
 
 /** serializeExpectation() converts an Expectation to a SerializedExpectation */
 export function serializeExpectation(e) {
@@ -40,21 +48,10 @@ export function serializeExpectation(e) {
       return { kind: 'intervals', value: e.map(serializeFPInterval) };
     }
   }
-  if (e instanceof Function) {
-    const comp = e;
-    if (comp !== undefined) {
-      // if blocks used to refine the type of comp.kind, otherwise it is
-      // actually the union of the string values
-      if (comp.kind === 'anyOf') {
-        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
-      }
-      if (comp.kind === 'skipUndefined') {
-        return { kind: 'comparator', value: { kind: comp.kind, data: comp.data } };
-      }
-    }
-    throw `cannot serialize comparator ${e}`;
+  if (isComparator(e)) {
+    return { kind: 'comparator', value: serializeComparator(e) };
   }
-  throw `cannot serialize expectation ${e}`;
+  throw `cannot serialize Expectation ${e}`;
 }
 
 /** deserializeExpectation() converts a SerializedExpectation to a Expectation */
