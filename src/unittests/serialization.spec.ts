@@ -10,7 +10,7 @@ import {
 import {
   anyOf,
   deserializeComparator,
-  SerializedComparator,
+  serializeComparator,
   skipUndefined,
 } from '../webgpu/util/compare.js';
 import { kValue } from '../webgpu/util/constants.js';
@@ -322,11 +322,11 @@ g.test('anyOf').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const serialized = c.comparator as SerializedComparator;
+      const serialized = serializeComparator(c.comparator);
       const deserialized = deserializeComparator(serialized);
       for (const val of c.testCases) {
-        const got = deserialized(val);
-        const expect = c.comparator(val);
+        const got = deserialized.compare(val);
+        const expect = c.comparator.compare(val);
         t.expect(
           got.matched === expect.matched,
           `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
@@ -348,11 +348,11 @@ g.test('skipUndefined').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const serialized = c.comparator as SerializedComparator;
+      const serialized = serializeComparator(c.comparator);
       const deserialized = deserializeComparator(serialized);
       for (const val of c.testCases) {
-        const got = deserialized(val);
-        const expect = c.comparator(val);
+        const got = deserialized.compare(val);
+        const expect = c.comparator.compare(val);
         t.expect(
           got.matched === expect.matched,
           `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
