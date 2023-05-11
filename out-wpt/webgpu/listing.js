@@ -1651,7 +1651,7 @@ export const listing = [
       "execution",
       "expression",
       "binary",
-      "f32_arithmetic"
+      "f32_addition"
     ]
   },
   {
@@ -1669,7 +1669,43 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "f32_division"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "f32_matrix_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
+      "f32_multiplication"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
+      "f32_remainder"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
+      "f32_subtraction"
     ]
   },
   {
