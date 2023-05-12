@@ -42,6 +42,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, memcpy, TypedArrayBufferView, unreachable } from '../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
+  ColorTextureFormat,
   kDepthStencilFormats,
   kMinDynamicBufferOffsetAlignment,
   kBufferSizeAlignment,
@@ -51,7 +52,6 @@ import {
   kTextureDimensions,
   textureDimensionAndFormatCompatible,
   kColorTextureFormats,
-  ColorTextureFormat,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';

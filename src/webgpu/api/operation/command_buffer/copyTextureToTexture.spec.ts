@@ -5,6 +5,7 @@ import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
   kTextureFormatInfo,
   kRegularTextureFormats,
+  ColorTextureFormat,
   kCompressedTextureFormats,
   depthStencilFormatAspectSize,
   DepthStencilFormat,
@@ -13,7 +14,6 @@ import {
   kMinDynamicBufferOffsetAlignment,
   kTextureDimensions,
   textureDimensionAndFormatCompatible,
-  ColorTextureFormat,
 } from '../../../capability_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
