@@ -17,16 +17,15 @@ import {
 } from '../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
+import { kTextureAspects, kTextureDimensions } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import {
   kTextureFormatInfo,
-  kTextureAspects,
   kUncompressedTextureFormats,
-  EncodableTextureFormat,
-  UncompressedTextureFormat,
   textureDimensionAndFormatCompatible,
-  kTextureDimensions,
-} from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
+  UncompressedTextureFormat,
+  EncodableTextureFormat,
+} from '../../../format_info.js';
 import { GPUTest, GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 import { virtualMipSize } from '../../../util/texture/base.js';
 import { createTextureUploadBuffer } from '../../../util/texture/layout.js';
