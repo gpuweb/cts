@@ -1,5 +1,5 @@
 import { globalTestConfig } from '../../../../common/framework/test_config.js';
-import { objectEquals, unreachable } from '../../../../common/util/util.js';
+import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, ComparatorImpl } from '../../../util/compare.js';
 import {
@@ -251,12 +251,32 @@ export async function run(
   // A cache to hold built shader pipelines.
   const pipelineCache = new Map<String, GPUComputePipeline>();
 
-  // Submit all the cases in batches, each in a separate error scope.
-  const checkResults: Array<Promise<void>> = [];
+  // Submit all the cases in batches, rate-limiting to ensure not too many
+  // batches are in flight simultaneously.
+  const maxBatchesInFlight = 5;
+  let batchesInFlight = 0;
+  let resolvePromiseBlockingBatch: (() => void) | undefined = undefined;
+  const batchFinishedCallback = () => {
+    batchesInFlight -= 1;
+    // If there is any batch waiting on a previous batch to finish,
+    // unblock it now, and clear the resolve callback.
+    if (resolvePromiseBlockingBatch) {
+      resolvePromiseBlockingBatch();
+      resolvePromiseBlockingBatch = undefined;
+    }
+  };
+
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
 
-    t.device.pushErrorScope('validation');
+    if (batchesInFlight > maxBatchesInFlight) {
+      await new Promise<void>(resolve => {
+        // There should only be one batch waiting at a time.
+        assert(resolvePromiseBlockingBatch === undefined);
+        resolvePromiseBlockingBatch = resolve;
+      });
+    }
+    batchesInFlight += 1;
 
     const checkBatch = submitBatch(
       t,
@@ -267,21 +287,9 @@ export async function run(
       cfg.inputSource,
       pipelineCache
     );
-
-    checkResults.push(
-      // Check GPU validation (shader compilation, pipeline creation, etc) before checking the batch results.
-      t.device.popErrorScope().then(error => {
-        if (error === null) {
-          checkBatch();
-        } else {
-          t.fail(error.message);
-        }
-      })
-    );
+    checkBatch();
+    t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   }
-
-  // Check the results
-  await Promise.all(checkResults);
 }
 
 /**
