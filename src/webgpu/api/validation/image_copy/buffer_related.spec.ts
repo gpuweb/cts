@@ -170,7 +170,9 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
       // Depth/stencil format copies must copy the whole subresource.
       .unless(p => {
         const info = kTextureFormatInfo[p.format];
-        return (info.depth || info.stencil) && p.copyHeightInBlocks !== p._textureHeightInBlocks;
+        return (
+          (!!info.depth || !!info.stencil) && p.copyHeightInBlocks !== p._textureHeightInBlocks
+        );
       })
       // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
       // Note that we are copying one single block on each row in this test.

@@ -138,11 +138,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'unorm');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'unorm';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
@@ -170,11 +167,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'snorm');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'snorm';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
@@ -205,11 +199,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'uint');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'uint';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
@@ -237,11 +228,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'sint');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'sint';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
@@ -275,11 +263,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'float');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'float';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {
@@ -315,11 +300,8 @@ params((u) =>
 u.
 combine('format', kEncodableTextureFormats).
 filter(({ format }) => {
-  return (
-    kTextureFormatInfo[format].copyDst &&
-    kTextureFormatInfo[format].color &&
-    getSingleDataType(format) === 'ufloat');
-
+  const info = kTextureFormatInfo[format];
+  return !!info.color && info.color.copyDst && getSingleDataType(format) === 'ufloat';
 }).
 beginSubcases().
 expand('componentData', ({ format }) => {

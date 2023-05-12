@@ -454,6 +454,6 @@ fn((t) => {
       }]
 
     });
-  }, !info.storage);
+  }, !info.color?.storage);
 });
 //# sourceMappingURL=createBindGroupLayout.spec.js.map

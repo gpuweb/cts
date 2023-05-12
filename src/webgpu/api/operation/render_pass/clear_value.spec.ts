@@ -51,7 +51,7 @@ g.test('stencil_clear_value')
       .combine('stencilFormat', kDepthStencilFormats)
       .combine('stencilClearValue', [0, 1, 0xff, 0x100 + 2, 0x10000 + 3])
       .combine('applyStencilClearValueAsStencilReferenceValue', [true, false])
-      .filter(t => kTextureFormatInfo[t.stencilFormat].stencil)
+      .filter(t => !!kTextureFormatInfo[t.stencilFormat].stencil)
   )
   .beforeAllSubcases(t => {
     const { stencilFormat } = t.params;

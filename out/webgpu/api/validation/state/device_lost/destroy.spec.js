@@ -158,8 +158,8 @@ combine('awaitLost', [true, false]).
 filter(({ format, usageType }) => {
   const info = kTextureFormatInfo[format];
   return !(
-  !info.renderable && usageType === 'render' ||
-  !info.storage && usageType === 'storage');
+  !info.colorRender && usageType === 'render' ||
+  !info.color.storage && usageType === 'storage');
 
 })).
 
@@ -193,8 +193,8 @@ combine('awaitLost', [true, false]).
 filter(({ format, usageType }) => {
   const info = kTextureFormatInfo[format];
   return !(
-  !info.renderable && usageType === 'render' ||
-  !info.storage && usageType === 'storage');
+  !info.colorRender && usageType === 'render' ||
+  !info.color.storage && usageType === 'storage');
 
 })).
 
@@ -232,8 +232,8 @@ combine('awaitLost', [true, false]).
 filter(({ format, usageType }) => {
   const info = kTextureFormatInfo[format];
   return !(
-  !info.renderable && usageType === 'render' ||
-  !info.storage && usageType === 'storage');
+  !info.colorRender && usageType === 'render' ||
+  !info.color.storage && usageType === 'storage');
 
 })).
 
@@ -268,8 +268,8 @@ combine('awaitLost', [true, false]).
 filter(({ format, usageType }) => {
   const info = kTextureFormatInfo[format];
   return !(
-  !info.renderable && usageType === 'render' ||
-  !info.storage && usageType === 'storage');
+  !info.colorRender && usageType === 'render' ||
+  !info.color.storage && usageType === 'storage');
 
 })).
 
@@ -592,7 +592,11 @@ u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost'
 fn(async (t) => {
   const { stage, awaitLost } = t.params;
   const format = 'rgba32uint';
-  const { bytesPerBlock, blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const {
+    color: { bytes: bytesPerBlock },
+    blockWidth,
+    blockHeight
+  } = kTextureFormatInfo[format];
   const src = {
     buffer: t.device.createBuffer({
       size: bytesPerBlock,
@@ -627,7 +631,11 @@ u.beginSubcases().combine('stage', kCommandValidationStages).combine('awaitLost'
 fn(async (t) => {
   const { stage, awaitLost } = t.params;
   const format = 'rgba32uint';
-  const { bytesPerBlock, blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const {
+    color: { bytes: bytesPerBlock },
+    blockWidth,
+    blockHeight
+  } = kTextureFormatInfo[format];
   const src = {
     texture: t.device.createTexture({
       size: { width: blockWidth, height: blockHeight },
@@ -890,7 +898,11 @@ u.combine('format', kRegularTextureFormats).beginSubcases().combine('awaitLost',
 
 fn(async (t) => {
   const { format, awaitLost } = t.params;
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const {
+    blockWidth,
+    blockHeight,
+    color: { bytes: bytesPerBlock }
+  } = kTextureFormatInfo[format];
   const data = new Uint8Array(bytesPerBlock);
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },
@@ -925,7 +937,11 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const { format, awaitLost } = t.params;
-  const { blockWidth, blockHeight, bytesPerBlock } = kTextureFormatInfo[format];
+  const {
+    blockWidth,
+    blockHeight,
+    color: { bytes: bytesPerBlock }
+  } = kTextureFormatInfo[format];
   const data = new Uint8Array(bytesPerBlock);
   const texture = t.device.createTexture({
     size: { width: blockWidth, height: blockHeight },

@@ -34,7 +34,7 @@ g.test('format')
       depthStencil: { format, depthWriteEnabled: false, depthCompare: 'always' },
     });
 
-    t.doCreateRenderPipelineTest(isAsync, info.depth || info.stencil, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !!info.depth || !!info.stencil, descriptor);
   });
 
 g.test('depth_test')
@@ -61,7 +61,7 @@ g.test('depth_test')
     });
 
     const depthTestEnabled = depthCompare !== undefined && depthCompare !== 'always';
-    t.doCreateRenderPipelineTest(isAsync, !depthTestEnabled || info.depth, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !depthTestEnabled || !!info.depth, descriptor);
   });
 
 g.test('depth_write')
@@ -86,7 +86,7 @@ g.test('depth_write')
     const descriptor = t.getDescriptor({
       depthStencil: { format, depthWriteEnabled, depthCompare: 'always' },
     });
-    t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || info.depth, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !depthWriteEnabled || !!info.depth, descriptor);
   });
 
 g.test('depth_write,frag_depth')
@@ -116,7 +116,7 @@ g.test('depth_write,frag_depth')
       ),
     });
 
-    const hasDepth = format ? kTextureFormatInfo[format].depth : false;
+    const hasDepth = format ? !!kTextureFormatInfo[format].depth : false;
     t.doCreateRenderPipelineTest(isAsync, hasDepth, descriptor);
   });
 
@@ -162,7 +162,7 @@ g.test('stencil_test')
     }
 
     const stencilTestEnabled = compare !== undefined && compare !== 'always';
-    t.doCreateRenderPipelineTest(isAsync, !stencilTestEnabled || info.stencil, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !stencilTestEnabled || !!info.stencil, descriptor);
   });
 
 g.test('stencil_write')
@@ -224,5 +224,5 @@ g.test('stencil_write')
     const descriptor = t.getDescriptor({ depthStencil });
 
     const stencilWriteEnabled = op !== undefined && op !== 'keep';
-    t.doCreateRenderPipelineTest(isAsync, !stencilWriteEnabled || info.stencil, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !stencilWriteEnabled || !!info.stencil, descriptor);
   });

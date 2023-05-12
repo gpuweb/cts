@@ -154,10 +154,9 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-const kColorAttachmentFormats = kRegularTextureFormats.filter(format => {
-  const info = kTextureFormatInfo[format];
-  return info.color && info.renderable;
-});
+const kColorAttachmentFormats = kRegularTextureFormats.filter(
+  format => !!kTextureFormatInfo[format].colorRender
+);
 
 g.test('render_pass_and_bundle,color_format')
   .desc('Test that color attachment formats in render passes and bundles must match.')

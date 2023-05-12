@@ -30,11 +30,9 @@ function getAttachments(interleaveFormat, testValue) {
   const targets = [];
 
   const addTexture = (format) => {
-    const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
-    format];
-
+    const info = kTextureFormatInfo[format];
     const newBytesPerSample =
-    align(bytesPerSample, renderTargetComponentAlignment) + renderTargetPixelByteCost;
+    align(bytesPerSample, info.colorRender.alignment) + info.colorRender.byteCost;
     if (newBytesPerSample > testValue) {
       return false;
     }
@@ -71,16 +69,12 @@ targets)
     let offset = 0;
     return targets.
     map(({ format }) => {
-      const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
-      format];
-
-      offset = align(offset, renderTargetComponentAlignment);
-      const s = `//   ${format.padEnd(11)} (offset: ${offset.
-      toString().
-      padStart(
-      2)
-      }, align: ${renderTargetComponentAlignment}, size: ${renderTargetPixelByteCost})`;
-      offset += renderTargetPixelByteCost;
+      const info = kTextureFormatInfo[format];
+      offset = align(offset, info.colorRender.alignment);
+      const s = `//   ${format.padEnd(11)} (offset: ${offset.toString().padStart(2)}, align: ${
+      info.colorRender.alignment
+      }, size: ${info.colorRender.byteCost})`;
+      offset += info.colorRender.byteCost;
       return s;
     }).
     join('\n    ');

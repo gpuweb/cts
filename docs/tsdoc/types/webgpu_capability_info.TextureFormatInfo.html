@@ -15,76 +15,15 @@
 <li><a href="../modules.html">@webgpu/cts</a></li>
 <li><a href="../modules/webgpu_capability_info.html">webgpu/capability_info</a></li>
 <li><a href="webgpu_capability_info.TextureFormatInfo.html">TextureFormatInfo</a></li></ul>
-<h1>Type alias TextureFormatInfo</h1></div>
-<div class="tsd-signature">Texture<wbr/>Format<wbr/>Info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span><br/><span>    </span>blockHeight<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>blockWidth<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>bytesPerBlock<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>color<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>copyDst<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>copySrc<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>depth<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>feature<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUFeatureName</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>multisample<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>renderTargetComponentAlignment<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>renderTargetPixelByteCost<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>renderable<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>resolve<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>stencil<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span>    </span>storage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">; </span><br/><span class="tsd-signature-symbol">}</span></div>
-<div class="tsd-comment tsd-typography"><p>Per-GPUTextureFormat info.</p>
-</div>
-<div class="tsd-type-declaration">
-<h4>Type declaration</h4>
-<ul class="tsd-parameters">
-<li class="tsd-parameter">
-<h5>block<wbr/>Height<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
-<div class="tsd-comment tsd-typography"><p>Height, in texels, of one texel block.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>block<wbr/>Width<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
-<div class="tsd-comment tsd-typography"><p>Width, in texels, of one texel block.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>bytes<wbr/>Per<wbr/>Block<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-<div class="tsd-comment tsd-typography"><p>Byte size of one texel block, or <code>undefined</code> if the format is unsized.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>color<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format has a color aspect.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>copy<wbr/>Dst<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format can be used as <code>COPY_DST</code>.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>copy<wbr/>Src<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format can be used as <code>COPY_SRC</code>.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>depth<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format has a depth aspect.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>feature<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">GPUFeatureName</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-<div class="tsd-comment tsd-typography"><p>Optional feature required to use this format, or <code>undefined</code> if none.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>multisample<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format can be used in a multisample texture.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>render<wbr/>Target<wbr/>Component<wbr/>Alignment<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-<div class="tsd-comment tsd-typography"><p>The alignment used for the format when computing the color attachment bytes per sample.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>render<wbr/>Target<wbr/>Pixel<wbr/>Byte<wbr/>Cost<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">undefined</span></h5>
-<div class="tsd-comment tsd-typography"><p>The raw, unaligned, byte cost towards the color attachment bytes per sample.
- (See <a href="https://www.w3.org/TR/webgpu/#abstract-opdef-calculating-color-attachment-bytes-per-sample">https://www.w3.org/TR/webgpu/#abstract-opdef-calculating-color-attachment-bytes-per-sample</a>).</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>renderable<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format can be used as <code>RENDER_ATTACHMENT</code>.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>resolve<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the texture with the format can be used as a resolve target.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>stencil<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format has a stencil aspect.</p>
-</div></li>
-<li class="tsd-parameter">
-<h5>storage<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></h5>
-<div class="tsd-comment tsd-typography"><p>Whether the format can be used as <code>STORAGE</code>.</p>
-</div></li></ul></div><aside class="tsd-sources">
+<h1>Type alias TextureFormatInfo&lt;Format&gt;</h1></div>
+<div class="tsd-signature">Texture<wbr/>Format<wbr/>Info<span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">Format</span><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">typeof </span><a href="../variables/webgpu_capability_info.kTextureFormatInfo.html" class="tsd-signature-type" data-tsd-kind="Variable">kTextureFormatInfo</a><span class="tsd-signature-symbol">[</span><span class="tsd-signature-type" data-tsd-kind="Type parameter">Format</span><span class="tsd-signature-symbol">]</span></div>
+<section class="tsd-panel tsd-type-parameters">
+<h4>Type Parameters</h4>
+<ul class="tsd-type-parameters">
+<li>
+<h4>Format<span class="tsd-signature-symbol"> extends </span><span class="tsd-signature-type">GPUTextureFormat</span> = <span class="tsd-signature-type">GPUTextureFormat</span></h4></li></ul></section><aside class="tsd-sources">
 <ul>
-<li>Defined in <a href="https://github.com/gpuweb/cts/blob/3002357/src/webgpu/capability_info.ts#L303">src/webgpu/capability_info.ts:303</a></li></ul></aside></div>
+<li>Defined in <a href="https://github.com/gpuweb/cts/blob/40cf087/src/webgpu/capability_info.ts#L1129">src/webgpu/capability_info.ts:1129</a></li></ul></aside></div>
 <div class="col-4 col-menu menu-sticky-wrap menu-highlight">
 <div class="tsd-navigation settings">
 <details class="tsd-index-accordion"><summary class="tsd-accordion-summary">

@@ -33,7 +33,7 @@ have unexpected values then get drawn to the color buffer, which is later checke
   .params(u =>
     u //
       .combine('format', kDepthStencilFormats)
-      .filter(p => kTextureFormatInfo[p.format].depth)
+      .filter(p => !!kTextureFormatInfo[p.format].depth)
       .combine('unclippedDepth', [undefined, false, true])
       .combine('writeDepth', [false, true])
       .combine('multisampled', [false, true])
@@ -351,7 +351,7 @@ to be empty.`
   .params(u =>
     u //
       .combine('format', kDepthStencilFormats)
-      .filter(p => kTextureFormatInfo[p.format].depth)
+      .filter(p => !!kTextureFormatInfo[p.format].depth)
       .combine('unclippedDepth', [false, true])
       .combine('multisampled', [false, true])
   )

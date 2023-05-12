@@ -553,8 +553,8 @@ g.test('subresources_and_binding_types_combination_for_aspect')
       .unless(
         // Can't sample a multiplanar texture without selecting an aspect.
         p =>
-          kTextureFormatInfo[p.format].depth &&
-          kTextureFormatInfo[p.format].stencil &&
+          !!kTextureFormatInfo[p.format].depth &&
+          !!kTextureFormatInfo[p.format].stencil &&
           ((p.aspect0 === 'all' && p.type0 === 'sampled-texture') ||
             (p.aspect1 === 'all' && p.type1 === 'sampled-texture'))
       )
@@ -574,8 +574,8 @@ g.test('subresources_and_binding_types_combination_for_aspect')
           // Depth-stencil attachment views must encompass all aspects of the texture. Invalid
           // cases are for depth-stencil textures when the aspect is not 'all'.
           p.type1 === 'render-target' &&
-          kTextureFormatInfo[p.format].depth &&
-          kTextureFormatInfo[p.format].stencil &&
+          !!kTextureFormatInfo[p.format].depth &&
+          !!kTextureFormatInfo[p.format].stencil &&
           p.aspect1 !== 'all'
       )
   )

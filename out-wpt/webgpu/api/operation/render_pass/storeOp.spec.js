@@ -145,10 +145,7 @@ g.test('render_pass_store_op,color_attachment_only')
     u
       .combine('colorFormat', kEncodableTextureFormats)
       // Filter out any non-renderable formats
-      .filter(({ colorFormat }) => {
-        const info = kTextureFormatInfo[colorFormat];
-        return info.color && info.renderable;
-      })
+      .filter(({ colorFormat }) => !!kTextureFormatInfo[colorFormat].colorRender)
       .combine('storeOperation', kStoreOps)
       .beginSubcases()
       .combine('mipLevel', kMipLevel)

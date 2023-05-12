@@ -174,7 +174,7 @@ expand('offset', (p) => {
   if (info.depth || info.stencil) {
     return [p._offsetMultiplier * 4];
   }
-  return [p._offsetMultiplier * info.bytesPerBlock];
+  return [p._offsetMultiplier * info.color.bytes];
 })).
 
 beforeAllSubcases((t) => {
@@ -311,7 +311,7 @@ fn((t) => {
   if (info.depth || info.stencil) {
     if (offset % 4 === 0) success = true;
   } else {
-    if (offset % info.bytesPerBlock === 0) success = true;
+    if (offset % info.color.bytes === 0) success = true;
   }
 
   t.testRun({ texture }, { offset, bytesPerRow: 256 }, size, {
@@ -459,8 +459,8 @@ fn((t) => {
 
   const format = 'rgba8unorm';
   const info = kTextureFormatInfo[format];
-  const offset = offsetInBlocks * info.bytesPerBlock;
-  const dataSize = dataSizeInBlocks * info.bytesPerBlock;
+  const offset = offsetInBlocks * info.color.bytes;
+  const dataSize = dataSizeInBlocks * info.color.bytes;
 
   const texture = t.device.createTexture({
     size: { width: 4, height: 4, depthOrArrayLayers: 1 },

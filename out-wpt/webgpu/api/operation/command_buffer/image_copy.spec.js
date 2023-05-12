@@ -109,7 +109,7 @@ class ImageCopyTest extends GPUTest {
       offset +
       (texel.z - origin.z) * bytesPerImage +
       ((texel.y - origin.y) / info.blockHeight) * bytesPerRow +
-      ((texel.x - origin.x) / info.blockWidth) * info.bytesPerBlock
+      ((texel.x - origin.x) / info.blockWidth) * info.color.bytes
     );
   }
 
@@ -937,7 +937,7 @@ class ImageCopyTest extends GPUTest {
     copyMipLevel,
     initialData
   ) {
-    assert(kTextureFormatInfo[depthFormat].depth);
+    assert(!!kTextureFormatInfo[depthFormat].depth);
 
     const inputTexture = this.device.createTexture({
       size: copySize,
@@ -1157,7 +1157,7 @@ class ImageCopyTest extends GPUTest {
  * [3]: Modify this after introducing tests with rendering.
  */
 function formatCanBeTested({ format }) {
-  return kTextureFormatInfo[format].copyDst && kTextureFormatInfo[format].copySrc;
+  return kTextureFormatInfo[format].color.copyDst && kTextureFormatInfo[format].color.copySrc;
 }
 
 export const g = makeTestGroup(ImageCopyTest);
@@ -1347,7 +1347,7 @@ works for every format with 2d and 2d-array textures.
     } = t.params;
     const info = kTextureFormatInfo[format];
 
-    const offset = offsetInBlocks * info.bytesPerBlock;
+    const offset = offsetInBlocks * info.color.bytes;
     const copySize = {
       width: 3 * info.blockWidth,
       height: 3 * info.blockHeight,
@@ -1460,7 +1460,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
     ];
 
     const rowsPerImage = copySizeBlocks[1];
-    const bytesPerRow = align(copySizeBlocks[0] * info.bytesPerBlock, 256);
+    const bytesPerRow = align(copySizeBlocks[0] * info.color.bytes, 256);
 
     const dataSize = dataBytesForCopyOrFail({
       layout: { offset: 0, bytesPerRow, rowsPerImage },
@@ -1726,9 +1726,9 @@ g.test('undefined_params')
 function CopyMethodSupportedWithDepthStencilFormat(aspect, format, copyMethod) {
   {
     return (
-      (aspect === 'stencil-only' && kTextureFormatInfo[format].stencil) ||
+      (aspect === 'stencil-only' && !!kTextureFormatInfo[format].stencil) ||
       (aspect === 'depth-only' &&
-        kTextureFormatInfo[format].depth &&
+        !!kTextureFormatInfo[format].depth &&
         copyMethod === 'CopyT2B' &&
         depthStencilBufferTextureCopySupported('CopyT2B', format, aspect))
     );

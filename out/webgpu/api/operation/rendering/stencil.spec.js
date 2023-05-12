@@ -553,7 +553,7 @@ fn((t) => {
     passOp: 'keep'
   };
 
-  const hasDepth = kTextureFormatInfo[format].depth;
+  const hasDepth = !!kTextureFormatInfo[format].depth;
 
   const baseState = {
     format,

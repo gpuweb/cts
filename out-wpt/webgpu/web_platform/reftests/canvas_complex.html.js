@@ -32,7 +32,7 @@ export function run(format, targets) {
 
     function copyBufferToTexture(ctx) {
       const rows = ctx.canvas.height;
-      const bytesPerPixel = kTextureFormatInfo[format].bytesPerBlock;
+      const bytesPerPixel = kTextureFormatInfo[format].color.bytes;
       if (bytesPerPixel === undefined) {
         unreachable();
       }

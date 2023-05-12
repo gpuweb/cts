@@ -33,7 +33,7 @@ class F extends GPUTest {
   mipLevel)
   {
     const textureSizeAtLevel = physicalMipSize(textureSize, format, dimension, mipLevel);
-    const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
+    const bytesPerBlock = kTextureFormatInfo[format].color.bytes;
     const blockWidthInTexel = kTextureFormatInfo[format].blockWidth;
     const blockHeightInTexel = kTextureFormatInfo[format].blockHeight;
     const blocksPerSubresource =
@@ -108,7 +108,7 @@ class F extends GPUTest {
     dimension,
     srcCopyLevel);
 
-    const bytesPerBlock = kTextureFormatInfo[srcFormat].bytesPerBlock;
+    const bytesPerBlock = kTextureFormatInfo[srcFormat].color.bytes;
     const blockWidth = kTextureFormatInfo[srcFormat].blockWidth;
     const blockHeight = kTextureFormatInfo[srcFormat].blockHeight;
     const srcBlocksPerRow = srcTextureSizeAtLevel.width / blockWidth;

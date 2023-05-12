@@ -54,7 +54,7 @@ g.test('color,attachments')
       .combine('attachmentCount', [2, 3, 4])
       .filter(t => {
         // We only need to test formats that have a valid color attachment bytes per sample.
-        const pixelByteCost = kTextureFormatInfo[t.format].renderTargetPixelByteCost;
+        const pixelByteCost = kTextureFormatInfo[t.format].colorRender?.byteCost;
         return (
           pixelByteCost !== undefined &&
           pixelByteCost * t.attachmentCount <= kLimitInfo.maxColorAttachmentBytesPerSample.default
@@ -72,7 +72,7 @@ g.test('color,attachments')
     const info = kTextureFormatInfo[format];
 
     const writeValues =
-      info.sampleType === 'sint' || info.sampleType === 'uint'
+      info.color.type === 'sint' || info.color.type === 'uint'
         ? attachmentsIntWriteValues
         : attachmentsFloatWriteValues;
 
@@ -106,7 +106,7 @@ g.test('color,attachments')
                       writeValues[i].A,
                     ],
 
-                    plainType: getPlainTypeInfo(info.sampleType),
+                    plainType: getPlainTypeInfo(info.color.type),
                     componentCount,
                   }
             )
@@ -188,7 +188,7 @@ g.test('color,component_count')
           code: getFragmentShaderCodeWithOutput([
             {
               values,
-              plainType: getPlainTypeInfo(info.sampleType),
+              plainType: getPlainTypeInfo(info.color.type),
               componentCount,
             },
           ]),
@@ -399,7 +399,7 @@ The attachment has a load value of [1, 0, 0, 1]
           code: getFragmentShaderCodeWithOutput([
             {
               values: output,
-              plainType: getPlainTypeInfo(info.sampleType),
+              plainType: getPlainTypeInfo(info.color.type),
               componentCount,
             },
           ]),

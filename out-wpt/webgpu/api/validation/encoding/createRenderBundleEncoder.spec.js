@@ -54,8 +54,8 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,aligned')
     const { format, colorFormatCount } = t.params;
     const info = kTextureFormatInfo[format];
     const shouldError =
-      info.renderTargetPixelByteCost === undefined ||
-      info.renderTargetPixelByteCost * colorFormatCount >
+      !info.colorRender ||
+      info.colorRender.byteCost * colorFormatCount >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.expectValidationError(() => {
@@ -135,8 +135,7 @@ g.test('valid_texture_formats')
   .fn(t => {
     const { format, attachment } = t.params;
 
-    const colorRenderable =
-      kTextureFormatInfo[format].renderable && kTextureFormatInfo[format].color;
+    const colorRenderable = kTextureFormatInfo[format].colorRender;
 
     const depthStencil = kTextureFormatInfo[format].depth || kTextureFormatInfo[format].stencil;
 

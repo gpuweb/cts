@@ -60,7 +60,7 @@ fn((t) => {
 
   const descriptor = t.getDescriptor({ targets: [{ format }] });
 
-  t.doCreateRenderPipelineTest(isAsync, info.renderable && info.color, descriptor);
+  t.doCreateRenderPipelineTest(isAsync, !!info.colorRender, descriptor);
 });
 
 g.test('limits,maxColorAttachments').
@@ -113,8 +113,8 @@ fn((t) => {
     })
   });
   const shouldError =
-  info.renderTargetPixelByteCost === undefined ||
-  info.renderTargetPixelByteCost * attachmentCount >
+  info.colorRender === undefined ||
+  info.colorRender.byteCost * attachmentCount >
   t.device.limits.maxColorAttachmentBytesPerSample;
 
   t.doCreateRenderPipelineTest(isAsync, !shouldError, descriptor);
@@ -171,7 +171,12 @@ fn((t) => {
 });
 
 g.test('targets_format_filterable').
-desc(`Tests that color target state format must be filterable if blend is not undefined.`).
+desc(
+`
+  Tests that color target state format must be filterable if blend is not undefined.
+
+  TODO: info.colorRender.blend now directly says whether the format is blendable. Use that.`).
+
 params((u) =>
 u.
 combine('isAsync', [false, true]).
@@ -197,7 +202,7 @@ fn((t) => {
 
   });
 
-  t.doCreateRenderPipelineTest(isAsync, !hasBlend || info.sampleType === 'float', descriptor);
+  t.doCreateRenderPipelineTest(isAsync, !hasBlend || info.color.type === 'float', descriptor);
 });
 
 g.test('targets_blend').
@@ -317,7 +322,7 @@ fn((t) => {
       // The shader outputs to the color target
       const info = kTextureFormatInfo[format];
       success =
-      shaderOutput.scalar === getPlainTypeInfo(info.sampleType) &&
+      shaderOutput.scalar === getPlainTypeInfo(info.color.type) &&
       shaderOutput.count >= kTexelRepresentationInfo[format].componentOrder.length;
     } else {
       // The shader does not output to the color target
@@ -385,7 +390,7 @@ fn((t) => {
   colorSrcFactor?.includes('src-alpha') || colorDstFactor?.includes('src-alpha');
   const meetsExtraBlendingRequirement = !colorBlendReadsSrcAlpha || componentCount === 4;
   const _success =
-  info.sampleType === sampleType &&
+  info.color.type === sampleType &&
   componentCount >= kTexelRepresentationInfo[format].componentOrder.length &&
   meetsExtraBlendingRequirement;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);

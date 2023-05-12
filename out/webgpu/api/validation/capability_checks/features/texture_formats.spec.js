@@ -233,7 +233,7 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter((t) => kTextureFormatInfo[t.format].storage).
+filter((t) => !!kTextureFormatInfo[t.format].color?.storage).
 combine('enable_required_feature', [true, false])).
 
 beforeAllSubcases((t) => {
@@ -274,7 +274,7 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
+filter((t) => !!kTextureFormatInfo[t.format].colorRender).
 combine('enable_required_feature', [true, false])).
 
 beforeAllSubcases((t) => {
@@ -326,11 +326,7 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter(
-(t) =>
-kTextureFormatInfo[t.format].renderable && (
-kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
-
+filter((t) => !!(kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 combine('enable_required_feature', [true, false])).
 
 beforeAllSubcases((t) => {
@@ -389,7 +385,7 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter((t) => kTextureFormatInfo[t.format].renderable && kTextureFormatInfo[t.format].color).
+filter((t) => !!kTextureFormatInfo[t.format].colorRender).
 combine('enable_required_feature', [true, false])).
 
 beforeAllSubcases((t) => {
@@ -420,11 +416,7 @@ desc(
 params((u) =>
 u.
 combine('format', kOptionalTextureFormats).
-filter(
-(t) =>
-kTextureFormatInfo[t.format].renderable && (
-kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
-
+filter((t) => !!(kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 combine('enable_required_feature', [true, false])).
 
 beforeAllSubcases((t) => {

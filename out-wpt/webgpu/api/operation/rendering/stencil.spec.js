@@ -544,7 +544,7 @@ g.test('stencil_reference_initialized')
       passOp: 'keep',
     };
 
-    const hasDepth = kTextureFormatInfo[format].depth;
+    const hasDepth = !!kTextureFormatInfo[format].depth;
 
     const baseState = {
       format,

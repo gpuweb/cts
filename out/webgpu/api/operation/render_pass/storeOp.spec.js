@@ -144,10 +144,7 @@ params((u) =>
 u.
 combine('colorFormat', kEncodableTextureFormats)
 // Filter out any non-renderable formats
-.filter(({ colorFormat }) => {
-  const info = kTextureFormatInfo[colorFormat];
-  return info.color && info.renderable;
-}).
+.filter(({ colorFormat }) => !!kTextureFormatInfo[colorFormat].colorRender).
 combine('storeOperation', kStoreOps).
 beginSubcases().
 combine('mipLevel', kMipLevel).
