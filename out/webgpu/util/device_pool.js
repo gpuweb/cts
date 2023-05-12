@@ -312,8 +312,9 @@ class DeviceHolder {
   /** Push error scopes that surround test execution. */
   beginTestScope() {
     assert(this.state === 'acquired');
-    this.device.pushErrorScope('out-of-memory');
     this.device.pushErrorScope('validation');
+    this.device.pushErrorScope('internal');
+    this.device.pushErrorScope('out-of-memory');
   }
 
   /** Mark the DeviceHolder as expecting a device loss when the test scope ends. */
@@ -341,6 +342,7 @@ class DeviceHolder {
 
   async attemptEndTestScope() {
     let gpuValidationError;
+    let gpuInternalError;
     let gpuOutOfMemoryError;
 
     // Submit to the queue to attempt to force a GPU flush.
@@ -348,7 +350,8 @@ class DeviceHolder {
 
     try {
       // May reject if the device was lost.
-      [gpuValidationError, gpuOutOfMemoryError] = await Promise.all([
+      [gpuOutOfMemoryError, gpuInternalError, gpuValidationError] = await Promise.all([
+      this.device.popErrorScope(),
       this.device.popErrorScope(),
       this.device.popErrorScope()]);
 
@@ -367,17 +370,24 @@ class DeviceHolder {
     'There was an extra error scope on the stack after a test');
 
 
+    if (gpuOutOfMemoryError !== null) {
+      assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
+      // Don't allow the device to be reused; unexpected OOM could break the device.
+      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
+    }
+    if (gpuInternalError !== null) {
+      assert(gpuInternalError instanceof GPUInternalError);
+      // Allow the device to be reused.
+      throw new TestFailedButDeviceReusable(
+      `Unexpected internal error occurred: ${gpuInternalError.message}`);
+
+    }
     if (gpuValidationError !== null) {
       assert(gpuValidationError instanceof GPUValidationError);
       // Allow the device to be reused.
       throw new TestFailedButDeviceReusable(
       `Unexpected validation error occurred: ${gpuValidationError.message}`);
 
-    }
-    if (gpuOutOfMemoryError !== null) {
-      assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);
-      // Don't allow the device to be reused; unexpected OOM could break the device.
-      throw new TestOOMedShouldAttemptGC('Unexpected out-of-memory error occurred');
     }
   }
 
