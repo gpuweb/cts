@@ -6,7 +6,7 @@ import {
   kEncodableTextureFormats,
   kTextureFormatInfo,
   EncodableTextureFormat,
-} from '../../capability_info.js';
+} from '../../format_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
 import {
