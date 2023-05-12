@@ -4,12 +4,12 @@
 copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { skipTestCase } from '../../../common/util/util.js';
+import { kCanvasAlphaModes } from '../../capability_info.js';
 import {
-kCanvasAlphaModes,
 kTextureFormatInfo,
 kValidTextureFormatsForCopyE2T } from
 
-'../../capability_info.js';
+'../../format_info.js';
 import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
 import { kAllCanvasTypes, createCanvas } from '../../util/create_elements.js';
 

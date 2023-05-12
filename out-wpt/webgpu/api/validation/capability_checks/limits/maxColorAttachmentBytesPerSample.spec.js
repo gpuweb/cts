@@ -1,7 +1,8 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../../../../common/util/util.js';
-import { kTextureSampleCounts, kTextureFormatInfo } from '../../../../capability_info.js';
+import { kTextureSampleCounts } from '../../../../capability_info.js';
+import { kTextureFormatInfo } from '../../../../format_info.js';
 import { align } from '../../../../util/math.js';
 
 import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';

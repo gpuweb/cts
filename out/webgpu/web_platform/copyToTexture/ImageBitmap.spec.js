@@ -15,7 +15,7 @@ import {
 kTextureFormatInfo,
 kValidTextureFormatsForCopyE2T } from
 
-'../../capability_info.js';
+'../../format_info.js';
 import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { TexelView } from '../../util/texture/texel_view.js';

@@ -3,17 +3,16 @@
 **/export const description = `
 copyTextureToTexture tests.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { kTextureUsages, kTextureDimensions } from '../../../../capability_info.js';
 import {
 kTextureFormatInfo,
 kTextureFormats,
 kCompressedTextureFormats,
 kDepthStencilFormats,
-kTextureUsages,
-textureDimensionAndFormatCompatible,
-kTextureDimensions,
 kFeaturesForFormats,
-filterFormatsByFeature } from
-'../../../../capability_info.js';
+filterFormatsByFeature,
+textureDimensionAndFormatCompatible } from
+'../../../../format_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import { align, lcm } from '../../../../util/math.js';
 import { ValidationTest } from '../../validation_test.js';

@@ -4,7 +4,7 @@
   'Test helpers for texel data produce the expected data in the shader';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
-import { kEncodableTextureFormats, kTextureFormatInfo } from '../../capability_info.js';
+import { kEncodableTextureFormats, kTextureFormatInfo } from '../../format_info.js';
 import { GPUTest } from '../../gpu_test.js';
 
 import {

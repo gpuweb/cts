@@ -12,7 +12,7 @@ TODO: Test ImageBitmap generated from all possible ImageBitmapSource, relevant I
 TODO: Test zero-sized copies from all sources (just make sure params cover it) (e.g. 0x0, 0x4, 4x0).
 `;
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../capability_info.js';
+import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
 import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
 
 import { TexelView } from '../../util/texture/texel_view.js';

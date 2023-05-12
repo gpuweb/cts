@@ -4,7 +4,8 @@
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder } from '../../../../../common/util/util.js';
-import { kLimitInfo, kTextureFormatInfo } from '../../../../capability_info.js';
+import { kLimitInfo } from '../../../../capability_info.js';
+import { kTextureFormatInfo } from '../../../../format_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 

@@ -6,7 +6,7 @@ Test coverage:
 Test all culling combinations of GPUFrontFace and GPUCullMode show the correct output.
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { kTextureFormatInfo } from '../../../capability_info.js';
+import { kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
 function faceIsCulled(face, frontFace, cullMode) {

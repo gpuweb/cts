@@ -4,12 +4,12 @@
 
 TODO check if the tests need to be updated to support aspects of depth-stencil textures`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
+import { kTextureDimensions } from '../../../capability_info.js';
 import {
 kTextureFormatInfo,
 kSizedTextureFormats,
-textureDimensionAndFormatCompatible,
-kTextureDimensions } from
-'../../../capability_info.js';
+textureDimensionAndFormatCompatible } from
+'../../../format_info.js';
 import { align } from '../../../util/math.js';
 import {
 bytesInACompleteRow,

@@ -4,11 +4,8 @@
 - Test pipeline outputs with different color attachment number, formats, component counts, etc.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import {
-kLimitInfo,
-kRenderableColorTextureFormats,
-kTextureFormatInfo } from
-'../../../capability_info.js';
+import { kLimitInfo } from '../../../capability_info.js';
+import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';

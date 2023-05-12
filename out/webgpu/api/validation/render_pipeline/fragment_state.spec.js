@@ -4,14 +4,12 @@
 This test dedicatedly tests validation of GPUFragmentState of createRenderPipeline.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
+import { kBlendFactors, kBlendOperations, kMaxColorAttachments } from '../../../capability_info.js';
 import {
 kTextureFormats,
 kRenderableColorTextureFormats,
-kTextureFormatInfo,
-kBlendFactors,
-kBlendOperations,
-kMaxColorAttachments } from
-'../../../capability_info.js';
+kTextureFormatInfo } from
+'../../../format_info.js';
 import {
 getFragmentShaderCodeWithOutput,
 getPlainTypeInfo,

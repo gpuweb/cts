@@ -33,7 +33,7 @@ import {
   kTextureFormatInfo,
   kEncodableTextureFormats,
   kSizedDepthStencilFormats,
-} from '../../../capability_info.js';
+} from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 // Test with a zero and non-zero mip.

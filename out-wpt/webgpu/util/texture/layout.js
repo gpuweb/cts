@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert, memcpy } from '../../../common/util/util.js';
-import { kTextureFormatInfo, resolvePerAspectFormat } from '../../capability_info.js';
+import { kTextureFormatInfo, resolvePerAspectFormat } from '../../format_info.js';
 import { align } from '../math.js';
 import { reifyExtent3D } from '../unions.js';
 

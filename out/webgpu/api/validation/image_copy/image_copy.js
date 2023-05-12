@@ -1,9 +1,9 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { kTextureFormatInfo,
+**/import { depthStencilFormatCopyableAspects,
 
-depthStencilFormatCopyableAspects } from
-'../../../capability_info.js';
+kTextureFormatInfo } from
+'../../../format_info.js';
 import { align } from '../../../util/math.js';
 
 import { ValidationTest } from '../validation_test.js';

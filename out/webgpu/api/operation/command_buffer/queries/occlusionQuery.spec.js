@@ -27,6 +27,7 @@ range,
 unreachable } from
 '../../../../../common/util/util.js';
 import { kMaxQueryCount } from '../../../../capability_info.js';
+
 import { GPUTest } from '../../../../gpu_test.js';
 
 const kRequiredQueryBufferOffsetAlignment = 256;

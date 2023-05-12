@@ -4,13 +4,13 @@
 createRenderBundleEncoder validation tests.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
+import { kMaxColorAttachments } from '../../../capability_info.js';
 import {
 kAllTextureFormats,
 kDepthStencilFormats,
 kTextureFormatInfo,
-kMaxColorAttachments,
 kRenderableColorTextureFormats } from
-'../../../capability_info.js';
+'../../../format_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 export const g = makeTestGroup(ValidationTest);

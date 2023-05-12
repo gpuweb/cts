@@ -3,12 +3,12 @@
  **/ import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';
 import { assert, range, unreachable } from '../common/util/util.js';
 
+import { kQueryTypeInfo } from './capability_info.js';
 import {
   kTextureFormatInfo,
-  kQueryTypeInfo,
-  resolvePerAspectFormat,
   kEncodableTextureFormats,
-} from './capability_info.js';
+  resolvePerAspectFormat,
+} from './format_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker } from './util/command_buffer_maker.js';

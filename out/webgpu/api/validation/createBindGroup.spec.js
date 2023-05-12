@@ -11,20 +11,19 @@ allBindingEntries,
 bindingTypeInfo,
 bufferBindingEntries,
 bufferBindingTypeInfo,
-kAllTextureFormats,
 kBindableResources,
 kBufferBindingTypes,
 kBufferUsages,
 kCompareFunctions,
 kLimitInfo,
 kSamplerBindingTypes,
-kTextureFormatInfo,
 kTextureUsages,
 kTextureViewDimensions,
 sampledAndStorageBindingEntries,
 texBindingTypeInfo } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
+import { kAllTextureFormats, kTextureFormatInfo } from '../../format_info.js';
 import { kResourceStates } from '../../gpu_test.js';
 import { getTextureDimensionFromView } from '../../util/texture/base.js';
 

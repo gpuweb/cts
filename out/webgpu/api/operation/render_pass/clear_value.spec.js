@@ -8,7 +8,7 @@ import {
 kTextureFormatInfo,
 kDepthStencilFormats,
 depthStencilFormatAspectSize } from
-'../../../capability_info.js';
+'../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);

@@ -3,18 +3,20 @@
 **/export const description = `copyTextureToTexture operation tests`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
+kBufferSizeAlignment,
+kMinDynamicBufferOffsetAlignment,
+kTextureDimensions } from
+'../../../capability_info.js';
+import {
 kTextureFormatInfo,
 kRegularTextureFormats,
-
 kCompressedTextureFormats,
-depthStencilFormatAspectSize,
-
-kBufferSizeAlignment,
 kDepthStencilFormats,
-kMinDynamicBufferOffsetAlignment,
-kTextureDimensions,
-textureDimensionAndFormatCompatible } from
-'../../../capability_info.js';
+textureDimensionAndFormatCompatible,
+depthStencilFormatAspectSize } from
+
+
+'../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
 import { checkElementsEqual, checkElementsEqualEither } from '../../../util/check_contents.js';

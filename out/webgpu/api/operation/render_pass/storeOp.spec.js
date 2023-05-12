@@ -32,7 +32,7 @@ import {
 kTextureFormatInfo,
 kEncodableTextureFormats,
 kSizedDepthStencilFormats } from
-'../../../capability_info.js';
+'../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
 

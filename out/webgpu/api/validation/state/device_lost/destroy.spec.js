@@ -13,17 +13,19 @@ kBufferUsageKeys,
 kBufferUsageInfo,
 kBufferUsageCopy,
 kBufferUsageCopyInfo,
-kCompressedTextureFormats,
 kQueryTypes,
 kTextureUsageType,
 kTextureUsageTypeInfo,
 kTextureUsageCopy,
 kTextureUsageCopyInfo,
+kShaderStageKeys } from
+'../../../../capability_info.js';
+import {
+kCompressedTextureFormats,
 kRegularTextureFormats,
 kRenderableColorTextureFormats,
-kShaderStageKeys,
 kTextureFormatInfo } from
-'../../../../capability_info.js';
+'../../../../format_info.js';
 
 import {
 createCanvas,

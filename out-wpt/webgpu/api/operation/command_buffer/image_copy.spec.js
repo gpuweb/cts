@@ -42,16 +42,18 @@ TODO: Fix this test for the various skipped formats [2]:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
-  kTextureFormatInfo,
-  kDepthStencilFormats,
   kMinDynamicBufferOffsetAlignment,
   kBufferSizeAlignment,
-  depthStencilBufferTextureCopySupported,
-  depthStencilFormatAspectSize,
   kTextureDimensions,
-  textureDimensionAndFormatCompatible,
-  kColorTextureFormats,
 } from '../../../capability_info.js';
+import {
+  kTextureFormatInfo,
+  kDepthStencilFormats,
+  kColorTextureFormats,
+  depthStencilBufferTextureCopySupported,
+  textureDimensionAndFormatCompatible,
+  depthStencilFormatAspectSize,
+} from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
 import { align } from '../../../util/math.js';
