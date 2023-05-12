@@ -81,11 +81,9 @@ function getWGSLBindings(
 export function computeBytesPerSample(targets: GPUColorTargetState[]) {
   let bytesPerSample = 0;
   for (const { format } of targets) {
-    const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
-      format
-    ];
-    const alignedBytesPerSample = align(bytesPerSample, renderTargetComponentAlignment!);
-    bytesPerSample = alignedBytesPerSample + renderTargetPixelByteCost!;
+    const info = kTextureFormatInfo[format];
+    const alignedBytesPerSample = align(bytesPerSample, info.colorRender!.alignment);
+    bytesPerSample = alignedBytesPerSample + info.colorRender!.byteCost;
   }
   return bytesPerSample;
 }
