@@ -20,6 +20,10 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
       },
+      validate: {
+        cmd: 'node',
+        args: ['tools/validate', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+      },
       'generate-wpt-cts-html': {
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'out-wpt/cts.https.html', 'src/common/templates/cts.https.html'],
@@ -155,23 +159,16 @@ module.exports = function (grunt) {
     helpMessageTasks.push({ name, desc });
   }
 
-  grunt.registerTask('set-quiet-mode', () => {
-    grunt.log.write('Running tasks');
-    require('quiet-grunt');
-  });
-
-  grunt.registerTask('build-standalone', 'Build out/ (no checks, no WPT)', [
+  grunt.registerTask('build-standalone', 'Build out/ (no listings, no checks, no WPT)', [
     'run:build-out',
     'run:copy-assets',
     'run:generate-version',
-    'run:generate-listings',
   ]);
-  grunt.registerTask('build-wpt', 'Build out/ (no checks)', [
+  grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-listings)', [
     'run:build-out-wpt',
     'run:copy-assets-wpt',
     'run:autoformat-out-wpt',
     'run:generate-version',
-    'run:generate-listings',
     'copy:out-wpt-generated',
     'copy:out-wpt-htmlfiles',
     'run:generate-wpt-cts-html',
@@ -181,8 +178,9 @@ module.exports = function (grunt) {
   });
 
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
-    'set-quiet-mode',
     'clean',
+    'run:generate-listings',
+    'run:validate',
     'build-standalone',
     'build-wpt',
     'run:build-out-node',
@@ -194,15 +192,17 @@ module.exports = function (grunt) {
     'run:tsdoc-treatWarningsAsErrors',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
-    'set-quiet-mode',
+    'run:generate-listings',
     'build-standalone',
     'build-done-message',
+    'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'set-quiet-mode',
+    'run:generate-listings',
     'build-wpt',
     'build-done-message',
+    'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('unittest', 'Build standalone, typecheck, and unittest', [
@@ -210,7 +210,6 @@ module.exports = function (grunt) {
     'run:unittest',
   ]);
   registerTaskAndAddToHelp('check', 'Just typecheck', [
-    'set-quiet-mode',
     'ts:check',
   ]);
 

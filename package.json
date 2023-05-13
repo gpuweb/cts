@@ -68,7 +68,6 @@
     "pngjs": "^6.0.0",
     "portfinder": "^1.0.32",
     "prettier": "~2.1.2",
-    "quiet-grunt": "^0.2.3",
     "screenshot-ftw": "^1.0.5",
     "serve-index": "^1.9.1",
     "ts-node": "^9.0.0",
