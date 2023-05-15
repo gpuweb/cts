@@ -17,6 +17,8 @@ module.exports = function (grunt) {
         args: ['tools/gen_version'],
       },
       'generate-listings': {
+        // Overwrites the listings.js files in out/. Must run before copy:out-wpt-generated;
+        // must not run before run:build-out (if it is run).
         cmd: 'node',
         args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
       },
@@ -37,6 +39,7 @@ module.exports = function (grunt) {
         args: ['tools/run_node', 'unittests:*'],
       },
       'build-out': {
+        // Must run before run:generate-listings, which will overwrite some files.
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
@@ -124,6 +127,7 @@ module.exports = function (grunt) {
     copy: {
       'out-wpt-generated': {
         files: [
+          // Must run after run:generate-version and run:generate-listings.
           { expand: true, cwd: 'out', src: 'common/internal/version.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
         ],
@@ -179,9 +183,9 @@ module.exports = function (grunt) {
 
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
     'clean',
-    'run:generate-listings',
     'run:validate',
     'build-standalone',
+    'run:generate-listings',
     'build-wpt',
     'run:build-out-node',
     'build-done-message',
@@ -192,15 +196,15 @@ module.exports = function (grunt) {
     'run:tsdoc-treatWarningsAsErrors',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
-    'run:generate-listings',
     'build-standalone',
+    'run:generate-listings',
     'build-done-message',
     'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'run:generate-listings',
     'build-wpt',
+    'run:generate-listings',
     'build-done-message',
     'run:validate',
     'ts:check',
