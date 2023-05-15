@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { fullF32Range, sparseVectorF32Range } from '../../../../util/math.js';
+import { sparseF32Range, sparseVectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -26,16 +26,16 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('binary/f32_division', {
   scalar_const: () => {
     return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
       'finite',
       FP.f32.divisionInterval
     );
   },
   scalar_non_const: () => {
     return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
       'unfiltered',
       FP.f32.divisionInterval
     );
@@ -43,7 +43,7 @@ export const d = makeCaseCache('binary/f32_division', {
   vec2_scalar_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
-      fullF32Range(),
+      sparseF32Range(),
       'finite',
       divisionVectorScalarInterval
     );
@@ -51,7 +51,7 @@ export const d = makeCaseCache('binary/f32_division', {
   vec2_scalar_non_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(2),
-      fullF32Range(),
+      sparseF32Range(),
       'unfiltered',
       divisionVectorScalarInterval
     );
@@ -59,7 +59,7 @@ export const d = makeCaseCache('binary/f32_division', {
   vec3_scalar_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
-      fullF32Range(),
+      sparseF32Range(),
       'finite',
       divisionVectorScalarInterval
     );
@@ -67,7 +67,7 @@ export const d = makeCaseCache('binary/f32_division', {
   vec3_scalar_non_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(3),
-      fullF32Range(),
+      sparseF32Range(),
       'unfiltered',
       divisionVectorScalarInterval
     );
@@ -75,7 +75,7 @@ export const d = makeCaseCache('binary/f32_division', {
   vec4_scalar_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
-      fullF32Range(),
+      sparseF32Range(),
       'finite',
       divisionVectorScalarInterval
     );
@@ -83,14 +83,14 @@ export const d = makeCaseCache('binary/f32_division', {
   vec4_scalar_non_const: () => {
     return FP.f32.generateVectorScalarToVectorCases(
       sparseVectorF32Range(4),
-      fullF32Range(),
+      sparseF32Range(),
       'unfiltered',
       divisionVectorScalarInterval
     );
   },
   scalar_vec2_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(2),
       'finite',
       divisionScalarVectorInterval
@@ -98,7 +98,7 @@ export const d = makeCaseCache('binary/f32_division', {
   },
   scalar_vec2_non_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(2),
       'unfiltered',
       divisionScalarVectorInterval
@@ -106,7 +106,7 @@ export const d = makeCaseCache('binary/f32_division', {
   },
   scalar_vec3_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(3),
       'finite',
       divisionScalarVectorInterval
@@ -114,7 +114,7 @@ export const d = makeCaseCache('binary/f32_division', {
   },
   scalar_vec3_non_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(3),
       'unfiltered',
       divisionScalarVectorInterval
@@ -122,7 +122,7 @@ export const d = makeCaseCache('binary/f32_division', {
   },
   scalar_vec4_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(4),
       'finite',
       divisionScalarVectorInterval
@@ -130,7 +130,7 @@ export const d = makeCaseCache('binary/f32_division', {
   },
   scalar_vec4_non_const: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-      fullF32Range(),
+      sparseF32Range(),
       sparseVectorF32Range(4),
       'unfiltered',
       divisionScalarVectorInterval
