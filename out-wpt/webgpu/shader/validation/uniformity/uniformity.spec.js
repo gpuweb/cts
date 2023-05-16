@@ -228,3 +228,132 @@ g.test('basics')
 
     t.expectCompileResult(t.params.expectation, code);
   });
+
+const kFragmentBuiltinValues = [
+  {
+    builtin: `position`,
+    type: `vec4<f32>`,
+  },
+  {
+    builtin: `front_facing`,
+    type: `bool`,
+  },
+  {
+    builtin: `sample_index`,
+    type: `u32`,
+  },
+  {
+    builtin: `sample_mask`,
+    type: `u32`,
+  },
+];
+
+g.test('fragment_builtin_values')
+  .desc(`Test uniformity of fragment built-in values`)
+  .params(u => u.combineWithParams(kFragmentBuiltinValues).beginSubcases())
+  .fn(t => {
+    let cond = ``;
+    switch (t.params.type) {
+      case `u32`:
+      case `i32`:
+      case `f32`: {
+        cond = `p > 0`;
+        break;
+      }
+      case `vec4<u32>`:
+      case `vec4<i32>`:
+      case `vec4<f32>`: {
+        cond = `p.x > 0`;
+        break;
+      }
+      case `bool`: {
+        cond = `p`;
+        break;
+      }
+      default: {
+        unreachable(`Unhandled type`);
+      }
+    }
+
+    const code = `
+@group(0) @binding(0) var s : sampler;
+@group(0) @binding(1) var tex : texture_2d<f32>;
+
+@fragment
+fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
+  if ${cond} {
+    let texel = textureSample(tex, s, vec2<f32>(0,0));
+  }
+}
+`;
+
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+    t.expectCompileResult(false, code);
+  });
+
+const kComputeBuiltinValues = [
+  {
+    builtin: `local_invocation_id`,
+    type: `vec3<f32>`,
+    uniform: false,
+  },
+  {
+    builtin: `local_invocation_index`,
+    type: `u32`,
+    uniform: false,
+  },
+  {
+    builtin: `global_invocation_id`,
+    type: `vec3<u32>`,
+    uniform: false,
+  },
+  {
+    builtin: `workgroup_id`,
+    type: `vec3<u32>`,
+    uniform: true,
+  },
+  {
+    builtin: `num_workgroups`,
+    type: `vec3<u32>`,
+    uniform: true,
+  },
+];
+
+g.test('compute_builtin_values')
+  .desc(`Test uniformity of compute built-in values`)
+  .params(u => u.combineWithParams(kComputeBuiltinValues).beginSubcases())
+  .fn(t => {
+    let cond = ``;
+    switch (t.params.type) {
+      case `u32`:
+      case `i32`:
+      case `f32`: {
+        cond = `p > 0`;
+        break;
+      }
+      case `vec3<u32>`:
+      case `vec3<i32>`:
+      case `vec3<f32>`: {
+        cond = `p.x > 0`;
+        break;
+      }
+      case `bool`: {
+        cond = `p`;
+        break;
+      }
+      default: {
+        unreachable(`Unhandled type`);
+      }
+    }
+
+    const code = `
+@compute @workgroup_size(16,1,1)
+fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
+  if ${cond} {
+    workgroupBarrier();
+  }
+}
+`;
+
+    t.expectCompileResult(t.params.uniform, code);
+  });
