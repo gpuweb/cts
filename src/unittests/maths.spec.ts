@@ -36,6 +36,8 @@ import {
   NextDirection,
   oneULPF32,
   oneULPF64,
+  lerpBigInt,
+  linearRangeBigInt,
 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
@@ -1104,11 +1106,91 @@ g.test('lerp')
     );
   });
 
+interface lerpBigIntCase {
+  a: bigint;
+  b: bigint;
+  idx: number;
+  steps: number;
+  result: bigint;
+}
+
+g.test('lerpBigInt')
+  .paramsSimple<lerpBigIntCase>([
+    // [0n, 1000n] cases
+    { a: 0n, b: 1000n, idx: 0, steps: 1, result: 0n },
+    { a: 0n, b: 1000n, idx: 0, steps: 2, result: 0n },
+    { a: 0n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+    { a: 0n, b: 1000n, idx: 0, steps: 1000, result: 0n },
+    { a: 0n, b: 1000n, idx: 500, steps: 1000, result: 500n },
+    { a: 0n, b: 1000n, idx: 999, steps: 1000, result: 1000n },
+
+    // [1000n, 0n] cases
+    { a: 1000n, b: 0n, idx: 0, steps: 1, result: 1000n },
+    { a: 1000n, b: 0n, idx: 0, steps: 2, result: 1000n },
+    { a: 1000n, b: 0n, idx: 1, steps: 2, result: 0n },
+    { a: 1000n, b: 0n, idx: 0, steps: 1000, result: 1000n },
+    { a: 1000n, b: 0n, idx: 500, steps: 1000, result: 500n },
+    { a: 1000n, b: 0n, idx: 999, steps: 1000, result: 0n },
+
+    // [0n, -1000n] cases
+    { a: 0n, b: -1000n, idx: 0, steps: 1, result: 0n },
+    { a: 0n, b: -1000n, idx: 0, steps: 2, result: 0n },
+    { a: 0n, b: -1000n, idx: 1, steps: 2, result: -1000n },
+    { a: 0n, b: -1000n, idx: 0, steps: 1000, result: 0n },
+    { a: 0n, b: -1000n, idx: 500, steps: 1000, result: -500n },
+    { a: 0n, b: -1000n, idx: 999, steps: 1000, result: -1000n },
+
+    // [-1000n, 0n] cases
+    { a: -1000n, b: 0n, idx: 0, steps: 1, result: -1000n },
+    { a: -1000n, b: 0n, idx: 0, steps: 2, result: -1000n },
+    { a: -1000n, b: 0n, idx: 1, steps: 2, result: 0n },
+    { a: -1000n, b: 0n, idx: 0, steps: 1000, result: -1000n },
+    { a: -1000n, b: 0n, idx: 500, steps: 1000, result: -500n },
+    { a: -1000n, b: 0n, idx: 999, steps: 1000, result: 0n },
+
+    // [100n, 1000n] cases
+    { a: 100n, b: 1000n, idx: 0, steps: 1, result: 100n },
+    { a: 100n, b: 1000n, idx: 0, steps: 2, result: 100n },
+    { a: 100n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+    { a: 100n, b: 1000n, idx: 0, steps: 9, result: 100n },
+    { a: 100n, b: 1000n, idx: 4, steps: 9, result: 550n },
+    { a: 100n, b: 1000n, idx: 8, steps: 9, result: 1000n },
+
+    // [1000n, 100n] cases
+    { a: 1000n, b: 100n, idx: 0, steps: 1, result: 1000n },
+    { a: 1000n, b: 100n, idx: 0, steps: 2, result: 1000n },
+    { a: 1000n, b: 100n, idx: 1, steps: 2, result: 100n },
+    { a: 1000n, b: 100n, idx: 0, steps: 9, result: 1000n },
+    { a: 1000n, b: 100n, idx: 4, steps: 9, result: 550n },
+    { a: 1000n, b: 100n, idx: 8, steps: 9, result: 100n },
+
+    // [01000n, 1000n] cases
+    { a: -1000n, b: 1000n, idx: 0, steps: 1, result: -1000n },
+    { a: -1000n, b: 1000n, idx: 0, steps: 2, result: -1000n },
+    { a: -1000n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+    { a: -1000n, b: 1000n, idx: 0, steps: 9, result: -1000n },
+    { a: -1000n, b: 1000n, idx: 4, steps: 9, result: 0n },
+    { a: -1000n, b: 1000n, idx: 8, steps: 9, result: 1000n },
+  ])
+  .fn(test => {
+    const a = test.params.a;
+    const b = test.params.b;
+    const idx = test.params.idx;
+    const steps = test.params.steps;
+    const got = lerpBigInt(a, b, idx, steps);
+    const expect = test.params.result;
+
+    test.expect(
+      got === expect,
+      `lerpBigInt(${a}, ${b}, ${idx}, ${steps}) returned ${got}. Expected ${expect}`
+    );
+  });
+
 interface rangeCase {
   a: number;
   b: number;
   num_steps: number;
-  result: Array<number>;
+  result: number[];
 }
 
 g.test('linearRange')
@@ -1158,31 +1240,31 @@ g.test('biasedRange')
   .paramsSimple<rangeCase>(
     // prettier-ignore
     [
-    { a: 0.0, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: Number.POSITIVE_INFINITY, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: Number.NEGATIVE_INFINITY, b: 1.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: 1.0, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: Number.NEGATIVE_INFINITY, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
-    { a: 0.0, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(0.0) },
-    { a: 10.0, b: 10.0, num_steps: 10, result: new Array<number>(10).fill(10.0) },
-    { a: 0.0, b: 10.0, num_steps: 1, result: [0.0] },
-    { a: 10.0, b: 0.0, num_steps: 1, result: [10.0] },
-    { a: 0.0, b: 10.0, num_steps: 11, result: [0.0, 0.1, 0.4, 0.9, 1.6, 2.5, 3.6, 4.9, 6.4, 8.1, 10.0] },
-    { a: 10.0, b: 0.0, num_steps: 11, result: [10.0, 9.9, 9.6, 9.1, 8.4, 7.5, 6.4, 5.1, 3.6, 1.9, 0.0] },
-    { a: 0.0, b: 1000.0, num_steps: 11, result: [0.0, 10.0, 40.0, 90.0, 160.0, 250.0, 360.0, 490.0, 640.0, 810.0, 1000.0] },
-    { a: 1000.0, b: 0.0, num_steps: 11, result: [1000.0, 990.0, 960.0, 910.0, 840.0, 750.0, 640.0, 510.0, 360.0, 190.0, 0.0] },
-    { a: 1.0, b: 5.0, num_steps: 5, result: [1.0, 1.25, 2.0, 3.25, 5.0] },
-    { a: 5.0, b: 1.0, num_steps: 5, result: [5.0, 4.75, 4.0, 2.75, 1.0] },
-    { a: 0.0, b: 1.0, num_steps: 11, result: [0.0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1.0] },
-    { a: 1.0, b: 0.0, num_steps: 11, result: [1.0, 0.99, 0.96, 0.91, 0.84, 0.75, 0.64, 0.51, 0.36, 0.19, 0.0] },
-    { a: 0.0, b: 1.0, num_steps: 5, result: [0.0, 0.0625, 0.25, 0.5625, 1.0] },
-    { a: 1.0, b: 0.0, num_steps: 5, result: [1.0, 0.9375, 0.75, 0.4375, 0.0] },
-    { a: -1.0, b: 1.0, num_steps: 11, result: [-1.0, -0.98, -0.92, -0.82, -0.68, -0.5, -0.28 ,-0.02, 0.28, 0.62, 1.0] },
-    { a: 1.0, b: -1.0, num_steps: 11, result: [1.0, 0.98, 0.92, 0.82, 0.68, 0.5, 0.28 ,0.02, -0.28, -0.62, -1.0] },
-    { a: -1.0, b: 0, num_steps: 11, result: [-1.0 , -0.99, -0.96, -0.91, -0.84, -0.75, -0.64, -0.51, -0.36, -0.19, 0.0] },
-    { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.01, -0.04, -0.09, -0.16, -0.25, -0.36, -0.49, -0.64, -0.81, -1.0] },
-  ]
+      { a: 0.0, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: Number.POSITIVE_INFINITY, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: Number.NEGATIVE_INFINITY, b: 1.0, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: 1.0, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: Number.NEGATIVE_INFINITY, b: Number.POSITIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: Number.POSITIVE_INFINITY, b: Number.NEGATIVE_INFINITY, num_steps: 10, result: new Array<number>(10).fill(Number.NaN) },
+      { a: 0.0, b: 0.0, num_steps: 10, result: new Array<number>(10).fill(0.0) },
+      { a: 10.0, b: 10.0, num_steps: 10, result: new Array<number>(10).fill(10.0) },
+      { a: 0.0, b: 10.0, num_steps: 1, result: [0.0] },
+      { a: 10.0, b: 0.0, num_steps: 1, result: [10.0] },
+      { a: 0.0, b: 10.0, num_steps: 11, result: [0.0, 0.1, 0.4, 0.9, 1.6, 2.5, 3.6, 4.9, 6.4, 8.1, 10.0] },
+      { a: 10.0, b: 0.0, num_steps: 11, result: [10.0, 9.9, 9.6, 9.1, 8.4, 7.5, 6.4, 5.1, 3.6, 1.9, 0.0] },
+      { a: 0.0, b: 1000.0, num_steps: 11, result: [0.0, 10.0, 40.0, 90.0, 160.0, 250.0, 360.0, 490.0, 640.0, 810.0, 1000.0] },
+      { a: 1000.0, b: 0.0, num_steps: 11, result: [1000.0, 990.0, 960.0, 910.0, 840.0, 750.0, 640.0, 510.0, 360.0, 190.0, 0.0] },
+      { a: 1.0, b: 5.0, num_steps: 5, result: [1.0, 1.25, 2.0, 3.25, 5.0] },
+      { a: 5.0, b: 1.0, num_steps: 5, result: [5.0, 4.75, 4.0, 2.75, 1.0] },
+      { a: 0.0, b: 1.0, num_steps: 11, result: [0.0, 0.01, 0.04, 0.09, 0.16, 0.25, 0.36, 0.49, 0.64, 0.81, 1.0] },
+      { a: 1.0, b: 0.0, num_steps: 11, result: [1.0, 0.99, 0.96, 0.91, 0.84, 0.75, 0.64, 0.51, 0.36, 0.19, 0.0] },
+      { a: 0.0, b: 1.0, num_steps: 5, result: [0.0, 0.0625, 0.25, 0.5625, 1.0] },
+      { a: 1.0, b: 0.0, num_steps: 5, result: [1.0, 0.9375, 0.75, 0.4375, 0.0] },
+      { a: -1.0, b: 1.0, num_steps: 11, result: [-1.0, -0.98, -0.92, -0.82, -0.68, -0.5, -0.28 ,-0.02, 0.28, 0.62, 1.0] },
+      { a: 1.0, b: -1.0, num_steps: 11, result: [1.0, 0.98, 0.92, 0.82, 0.68, 0.5, 0.28 ,0.02, -0.28, -0.62, -1.0] },
+      { a: -1.0, b: 0, num_steps: 11, result: [-1.0 , -0.99, -0.96, -0.91, -0.84, -0.75, -0.64, -0.51, -0.36, -0.19, 0.0] },
+      { a: 0.0, b: -1.0, num_steps: 11, result: [0.0, -0.01, -0.04, -0.09, -0.16, -0.25, -0.36, -0.49, -0.64, -0.81, -1.0] },
+    ]
   )
   .fn(test => {
     const a = test.params.a;
@@ -1194,6 +1276,48 @@ g.test('biasedRange')
     test.expect(
       compareArrayOfNumbersF32(got, expect, 'no-flush'),
       `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
+    );
+  });
+
+interface rangeBigIntCase {
+  a: bigint;
+  b: bigint;
+  num_steps: number;
+  result: bigint[];
+}
+
+g.test('linearRangeBigInt')
+  .paramsSimple<rangeBigIntCase>(
+    // prettier-ignore
+    [
+      { a: 0n, b: 0n, num_steps: 10, result: new Array<bigint>(10).fill(0n) },
+      { a: 10n, b: 10n, num_steps: 10, result: new Array<bigint>(10).fill(10n) },
+      { a: 0n, b: 10n, num_steps: 1, result: [0n] },
+      { a: 10n, b: 0n, num_steps: 1, result: [10n] },
+      { a: 0n, b: 10n, num_steps: 11, result: [0n, 1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n] },
+      { a: 10n, b: 0n, num_steps: 11, result: [10n, 9n, 8n, 7n, 6n, 5n, 4n, 3n, 2n, 1n, 0n] },
+      { a: 0n, b: 1000n, num_steps: 11, result: [0n, 100n, 200n, 300n, 400n, 500n, 600n, 700n, 800n, 900n, 1000n] },
+      { a: 1000n, b: 0n, num_steps: 11, result: [1000n, 900n, 800n, 700n, 600n, 500n, 400n, 300n, 200n, 100n, 0n] },
+      { a: 1n, b: 5n, num_steps: 5, result: [1n, 2n, 3n, 4n, 5n] },
+      { a: 5n, b: 1n, num_steps: 5, result: [5n, 4n, 3n, 2n, 1n] },
+      { a: 0n, b: 10n, num_steps: 5, result: [0n, 2n, 5n, 7n, 10n] },
+      { a: 10n, b: 0n, num_steps: 5, result: [10n, 8n, 5n, 3n, 0n] },
+      { a: -10n, b: 10n, num_steps: 11, result: [-10n, -8n, -6n, -4n, -2n, 0n, 2n, 4n, 6n, 8n, 10n] },
+      { a: 10n, b: -10n, num_steps: 11, result: [10n, 8n, 6n, 4n, 2n, 0n, -2n, -4n, -6n, -8n, -10n] },
+      { a: -10n, b: 0n, num_steps: 11, result: [-10n, -9n, -8n, -7n, -6n, -5n, -4n, -3n, -2n, -1n, 0n] },
+      { a: 0n, b: -10n, num_steps: 11, result: [0n, -1n, -2n, -3n, -4n, -5n, -6n, -7n, -8n, -9n, -10n] },
+    ]
+  )
+  .fn(test => {
+    const a = test.params.a;
+    const b = test.params.b;
+    const num_steps = test.params.num_steps;
+    const got = linearRangeBigInt(a, b, num_steps);
+    const expect = test.params.result;
+
+    test.expect(
+      objectEquals(got, expect),
+      `linearRangeBigInt(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`
     );
   });
 

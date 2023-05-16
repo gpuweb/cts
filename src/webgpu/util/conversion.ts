@@ -779,6 +779,8 @@ export class Scalar {
     };
     if (isFinite(this.value as number)) {
       switch (this.type.kind) {
+        case 'f64':
+          return `${withPoint(this.value as number)}`;
         case 'f32':
           return `${withPoint(this.value as number)}f`;
         case 'f16':

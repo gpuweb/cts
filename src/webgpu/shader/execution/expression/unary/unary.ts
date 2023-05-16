@@ -4,3 +4,7 @@ import { basicExpressionBuilder, ShaderBuilder } from '../expression.js';
 export function unary(op: string): ShaderBuilder {
   return basicExpressionBuilder(value => `${op}(${value})`);
 }
+
+export function assignment(): ShaderBuilder {
+  return basicExpressionBuilder(value => `${value}`);
+}

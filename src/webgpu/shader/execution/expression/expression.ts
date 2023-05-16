@@ -147,11 +147,13 @@ function storageType(ty: Type): Type {
 // Helper for converting a value of the type 'ty' from the storage type.
 function fromStorage(ty: Type, expr: string): string {
   if (ty instanceof ScalarType) {
+    assert(ty.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
     if (ty.kind === 'bool') {
       return `${expr} != 0u`;
     }
   }
   if (ty instanceof VectorType) {
+    assert(ty.elementType.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
     if (ty.elementType.kind === 'bool') {
       return `${expr} != vec${ty.width}<u32>(0u)`;
     }
@@ -162,11 +164,13 @@ function fromStorage(ty: Type, expr: string): string {
 // Helper for converting a value of the type 'ty' to the storage type.
 function toStorage(ty: Type, expr: string): string {
   if (ty instanceof ScalarType) {
+    assert(ty.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
     if (ty.kind === 'bool') {
       return `select(0u, 1u, ${expr})`;
     }
   }
   if (ty instanceof VectorType) {
+    assert(ty.elementType.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
     if (ty.elementType.kind === 'bool') {
       return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
@@ -419,6 +423,27 @@ struct Output {
 }
 
 /**
+ * Helper that returns the WGSL to declare the values array for a shader
+ */
+function wgslValuesArray(
+  parameterTypes: Array<Type>,
+  resultType: Type,
+  cases: CaseList,
+  expressionBuilder: ExpressionBuilder
+): string {
+  // f64/AbstractFloat values cannot be stored in an array
+  if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'f64')) {
+    return '';
+  }
+  return `
+const values = array(
+  ${cases
+    .map(c => toStorage(resultType, expressionBuilder(map(c.input, v => v.wgsl()))))
+    .join(',\n  ')}
+);`;
+}
+
+/**
  * Helper that returns the WGSL 'var' declaration for the given input source
  */
 function wgslInputVar(inputSource: InputSource, count: number) {
@@ -467,7 +492,19 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
       // Constant eval
       //////////////////////////////////////////////////////////////////////////
       let body = '';
-      if (globalTestConfig.unrollConstEvalLoops) {
+      if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'f64')) {
+        // Directly assign the expression to the output, to avoid an
+        // intermediate store, which will concretize the value earlier
+        body = cases
+          .map(
+            (c, i) =>
+              `  outputs[${i}].value = ${toStorage(
+                resultType,
+                expressionBuilder(map(c.input, v => v.wgsl()))
+              )};`
+          )
+          .join('\n  ');
+      } else if (globalTestConfig.unrollConstEvalLoops) {
         body = cases.map((_, i) => `  outputs[${i}].value = values[${i}];`).join('\n  ');
       } else {
         body = `
@@ -481,11 +518,7 @@ ${wgslHeader(parameterTypes, resultType)}
 
 ${wgslOutputs(resultType, cases.length)}
 
-const values = array(
-  ${cases
-    .map(c => toStorage(resultType, expressionBuilder(map(c.input, v => v.wgsl()))))
-    .join(',\n  ')}
-);
+${wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder)}
 
 @compute @workgroup_size(1)
 fn main() {
