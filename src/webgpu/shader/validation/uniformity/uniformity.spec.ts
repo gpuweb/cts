@@ -280,11 +280,12 @@ g.test('fragment_builtin_values')
 @fragment
 fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
   if ${cond} {
-    textureSample(tex, s, vec2<f32>(0,0));
+    let texel = textureSample(tex, s, vec2<f32>(0,0));
   }
 }
 `;
 
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
     t.expectCompileResult(false, code);
   });
 
