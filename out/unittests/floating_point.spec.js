@@ -1840,8 +1840,20 @@ fn((t) => {
 
 
 // Special values used for testing absolute error interval
-const kAbsoluteErrorValue = {
+// A small absolute error value is a representable value x that much smaller than 1.0,
+// but 1.0 +/- x is still exactly representable.
+const kSmallAbsoluteErrorValue = {
   f32: 2 ** -11 // Builtin cos and sin has a absolute error 2**-11 for f32
+};
+// A large absolute error value is a representable value x that much smaller than maximum
+// positive, but positive.max - x is still exactly representable.
+const kLargeAbsoluteErrorValue = {
+  f32: 2 ** 110 // f32.positive.max - 2**110 = 3.4028104e+38 = 0x7f7fffbf in f32
+};
+// A subnormal absolute error value is a subnormal representable value x of kind, which ensures
+// that positive.subnormal.min +/- x is still exactly representable.
+const kSubnormalAbsoluteErrorValue = {
+  f32: 2 ** -140 // f32 0x00000200
 };
 
 g.test('absoluteErrorInterval_f32').
@@ -1850,69 +1862,79 @@ u.
 combine('trait', ['f32']).
 beginSubcases().
 expandWithParams((p) => {
-  const constants = FP[p.trait].constants();
-  const absErrorValue = kAbsoluteErrorValue[p.trait];
+  const trait = FP[p.trait];
+  const constants = trait.constants();
+  const smallErr = kSmallAbsoluteErrorValue[p.trait];
+  const largeErr = kLargeAbsoluteErrorValue[p.trait];
+  const subnormalErr = kSubnormalAbsoluteErrorValue[p.trait];
 
   return [
   // Edge Cases
+  // 1. Interval around infinity would be kAnyBounds
   { value: constants.positive.infinity, error: 0, expected: kAnyBounds },
-  { value: constants.positive.infinity, error: absErrorValue, expected: kAnyBounds },
+  { value: constants.positive.infinity, error: largeErr, expected: kAnyBounds },
   { value: constants.positive.infinity, error: 1, expected: kAnyBounds },
   { value: constants.negative.infinity, error: 0, expected: kAnyBounds },
-  { value: constants.negative.infinity, error: absErrorValue, expected: kAnyBounds },
+  { value: constants.negative.infinity, error: largeErr, expected: kAnyBounds },
   { value: constants.negative.infinity, error: 1, expected: kAnyBounds },
+  // 2. Interval around largest finite positive/negative
   { value: constants.positive.max, error: 0, expected: constants.positive.max },
-  { value: constants.positive.max, error: absErrorValue, expected: constants.positive.max },
+  { value: constants.positive.max, error: largeErr, expected: kAnyBounds },
   { value: constants.positive.max, error: constants.positive.max, expected: kAnyBounds },
-  { value: constants.positive.min, error: 0, expected: constants.positive.min },
-  { value: constants.positive.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.positive.min, error: 1, expected: [-1, 1] },
   { value: constants.negative.min, error: 0, expected: constants.negative.min },
-  { value: constants.negative.min, error: absErrorValue, expected: constants.negative.min },
+  { value: constants.negative.min, error: largeErr, expected: kAnyBounds },
   { value: constants.negative.min, error: constants.positive.max, expected: kAnyBounds },
+  // 3. Interval around small but normal center, center should not get flushed.
+  { value: constants.positive.min, error: 0, expected: constants.positive.min },
+  { value: constants.positive.min, error: smallErr, expected: [constants.positive.min - smallErr, constants.positive.min + smallErr] },
+  { value: constants.positive.min, error: 1, expected: [constants.positive.min - 1, constants.positive.min + 1] },
   { value: constants.negative.max, error: 0, expected: constants.negative.max },
-  { value: constants.negative.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.negative.max, error: 1, expected: [-1, 1] },
-
-  // Subnormals
+  { value: constants.negative.max, error: smallErr, expected: [constants.negative.max - smallErr, constants.negative.max + smallErr] },
+  { value: constants.negative.max, error: 1, expected: [constants.negative.max - 1, constants.negative.max + 1] },
+  // 4. Subnormals, center can be flushed to 0.0
   { value: constants.positive.subnormal.max, error: 0, expected: [0, constants.positive.subnormal.max] },
-  { value: constants.positive.subnormal.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.positive.subnormal.max, error: 1, expected: [-1, 1] },
+  { value: constants.positive.subnormal.max, error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.max + subnormalErr] },
+  { value: constants.positive.subnormal.max, error: smallErr, expected: [-smallErr, constants.positive.subnormal.max + smallErr] },
+  { value: constants.positive.subnormal.max, error: 1, expected: [-1, constants.positive.subnormal.max + 1] },
   { value: constants.positive.subnormal.min, error: 0, expected: [0, constants.positive.subnormal.min] },
-  { value: constants.positive.subnormal.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.positive.subnormal.min, error: 1, expected: [-1, 1] },
+  { value: constants.positive.subnormal.min, error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
+  { value: constants.positive.subnormal.min, error: smallErr, expected: [-smallErr, constants.positive.subnormal.min + smallErr] },
+  { value: constants.positive.subnormal.min, error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
   { value: constants.negative.subnormal.min, error: 0, expected: [constants.negative.subnormal.min, 0] },
-  { value: constants.negative.subnormal.min, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.negative.subnormal.min, error: 1, expected: [-1, 1] },
+  { value: constants.negative.subnormal.min, error: subnormalErr, expected: [constants.negative.subnormal.min - subnormalErr, subnormalErr] },
+  { value: constants.negative.subnormal.min, error: smallErr, expected: [constants.negative.subnormal.min - smallErr, smallErr] },
+  { value: constants.negative.subnormal.min, error: 1, expected: [constants.negative.subnormal.min - 1, 1] },
   { value: constants.negative.subnormal.max, error: 0, expected: [constants.negative.subnormal.max, 0] },
-  { value: constants.negative.subnormal.max, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: constants.negative.subnormal.max, error: 1, expected: [-1, 1] },
+  { value: constants.negative.subnormal.max, error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
+  { value: constants.negative.subnormal.max, error: smallErr, expected: [constants.negative.subnormal.max - smallErr, smallErr] },
+  { value: constants.negative.subnormal.max, error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
 
-  // 64-bit subnormals
+  // 64-bit subnormals, expected to be treated as 0.0 or smallest subnormal of kind.
   { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, constants.positive.subnormal.min] },
-  { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, 1] },
+  { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
+  // Note that f32 minimum subnormal is so smaller than 1.0, adding them together may result in the f64 results 1.0.
+  { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
   { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, constants.positive.subnormal.min] },
-  { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, 1] },
+  { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
+  { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
   { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [constants.negative.subnormal.max, 0] },
-  { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [-1, 1] },
+  { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
+  { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
   { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [constants.negative.subnormal.max, 0] },
-  { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
-  { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [-1, 1] },
+  { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
+  { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
 
   // Zero
   { value: 0, error: 0, expected: 0 },
-  { value: 0, error: absErrorValue, expected: [-absErrorValue, absErrorValue] },
+  { value: 0, error: smallErr, expected: [-smallErr, smallErr] },
   { value: 0, error: 1, expected: [-1, 1] },
 
   // Two
   { value: 2, error: 0, expected: 2 },
-  { value: 2, error: absErrorValue, expected: [2 - absErrorValue, 2 + absErrorValue] },
+  { value: 2, error: smallErr, expected: [2 - smallErr, 2 + smallErr] },
   { value: 2, error: 1, expected: [1, 3] },
   { value: -2, error: 0, expected: -2 },
-  { value: -2, error: absErrorValue, expected: [-2 - absErrorValue, -2 + absErrorValue] },
+  { value: -2, error: smallErr, expected: [-2 - smallErr, -2 + smallErr] },
   { value: -2, error: 1, expected: [-3, -1] }];
 
 })).
@@ -1923,7 +1945,9 @@ fn((t) => {
   const got = trait.absoluteErrorInterval(t.params.value, t.params.error);
   t.expect(
   objectEquals(expected, got),
-  `${t.params.trait}.absoluteErrorInterval(${t.params.value}, ${t.params.error}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.absoluteErrorInterval(${t.params.value}, ${
+  t.params.error
+  }) returned ${got} (${got.begin.toExponential()}, ${got.end.toExponential()}). Expected ${expected}`);
 
 });
 

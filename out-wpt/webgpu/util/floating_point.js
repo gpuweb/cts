@@ -1609,9 +1609,18 @@ class FPTraits {
       },
     };
 
-    if (isFiniteF32(error_range)) {
+    assert(
+      error_range >= 0,
+      `absoluteErrorInterval must have non-negative error range, get ${error_range}`
+    );
+
+    if (this.isFinite(error_range)) {
       op.impl = n => {
         assert(!Number.isNaN(n), `absolute error not defined for NaN`);
+        // Return anyInterval if given center n is infinity.
+        if (!this.isFinite(n)) {
+          return this.constants().anyInterval;
+        }
         return this.toInterval([n - error_range, n + error_range]);
       };
     }
