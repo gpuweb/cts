@@ -1840,18 +1840,18 @@ interface AbsoluteErrorCase {
 }
 
 // Special values used for testing absolute error interval
-// A small absolute error value is representable values x that much more smaller than 1.0,
-// but 1.0 +- x is still exactly representable.
+// A small absolute error value is a representable value x that much smaller than 1.0,
+// but 1.0 +/- x is still exactly representable.
 const kSmallAbsoluteErrorValue = {
   f32: 2 ** -11, // Builtin cos and sin has a absolute error 2**-11 for f32
 } as const;
-// A large absolute error value is representable values x that much more smaller than maximum
+// A large absolute error value is a representable value x that much smaller than maximum
 // positive, but positive.max - x is still exactly representable.
 const kLargeAbsoluteErrorValue = {
   f32: 2 ** 110, // f32.positive.max - 2**110 = 3.4028104e+38 = 0x7f7fffbf in f32
 } as const;
-// A subnormal absolute error value is subnormal representable values x of kind, which ensures
-// that positive.subnormal.min +- x is still exactly representable.
+// A subnormal absolute error value is a subnormal representable value x of kind, which ensures
+// that positive.subnormal.min +/- x is still exactly representable.
 const kSubnormalAbsoluteErrorValue = {
   f32: 2 ** -140, // f32 0x00000200
 } as const;
@@ -1893,15 +1893,19 @@ g.test('absoluteErrorInterval_f32')
           { value: constants.negative.max, error: 1, expected: [constants.negative.max - 1, constants.negative.max + 1] },
           // 4. Subnormals, center can be flushed to 0.0
           { value: constants.positive.subnormal.max, error: 0, expected: [0, constants.positive.subnormal.max] },
+          { value: constants.positive.subnormal.max, error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.max + subnormalErr]},
           { value: constants.positive.subnormal.max, error: smallErr, expected: [-smallErr, constants.positive.subnormal.max + smallErr]},
           { value: constants.positive.subnormal.max, error: 1, expected: [-1, constants.positive.subnormal.max + 1]},
           { value: constants.positive.subnormal.min, error: 0, expected: [0, constants.positive.subnormal.min] },
+          { value: constants.positive.subnormal.min, error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr]},
           { value: constants.positive.subnormal.min, error: smallErr, expected: [-smallErr, constants.positive.subnormal.min + smallErr]},
           { value: constants.positive.subnormal.min, error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
           { value: constants.negative.subnormal.min, error: 0, expected: [constants.negative.subnormal.min, 0] },
+          { value: constants.negative.subnormal.min, error: subnormalErr, expected: [constants.negative.subnormal.min - subnormalErr, subnormalErr] },
           { value: constants.negative.subnormal.min, error: smallErr, expected: [constants.negative.subnormal.min - smallErr, smallErr] },
           { value: constants.negative.subnormal.min, error: 1, expected: [constants.negative.subnormal.min - 1, 1] },
           { value: constants.negative.subnormal.max, error: 0, expected: [constants.negative.subnormal.max, 0] },
+          { value: constants.negative.subnormal.max, error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
           { value: constants.negative.subnormal.max, error: smallErr, expected: [constants.negative.subnormal.max - smallErr, smallErr] },
           { value: constants.negative.subnormal.max, error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
 
