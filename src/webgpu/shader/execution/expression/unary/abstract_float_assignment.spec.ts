@@ -4,9 +4,10 @@ Execution Tests for assignment of AbstractFloats to concrete data types
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { abstractFloat, TypeAbstractFloat, TypeF32 } from '../../../../util/conversion.js';
+import { kValue } from '../../../../util/constants.js';
+import { abstractFloat, TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { f32FilteredF64Range } from '../../../../util/math.js';
+import { filteredF64Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -16,8 +17,13 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('unary/abstract_float_assignment', {
   f32: () => {
-    return f32FilteredF64Range().map(f => {
+    return filteredF64Range(kValue.f32.negative.min, kValue.f32.positive.max).map(f => {
       return { input: abstractFloat(f), expected: FP.f32.correctlyRoundedInterval(f) };
+    });
+  },
+  f16: () => {
+    return filteredF64Range(kValue.f16.negative.min, kValue.f16.positive.max).map(f => {
+      return { input: abstractFloat(f), expected: FP.f16.correctlyRoundedInterval(f) };
     });
   },
 });
@@ -42,5 +48,11 @@ g.test('f16')
 concretizing to f16
 `
   )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
   .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('f16');
+    await run(t, assignment(), [TypeAbstractFloat], TypeF16, t.params, cases);
+  });
