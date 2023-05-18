@@ -147,13 +147,16 @@ function storageType(ty: Type): Type {
 // Helper for converting a value of the type 'ty' from the storage type.
 function fromStorage(ty: Type, expr: string): string {
   if (ty instanceof ScalarType) {
-    assert(ty.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
+    assert(ty.kind !== 'abstract-float', `No storage type defined for AbstractFloat values`);
     if (ty.kind === 'bool') {
       return `${expr} != 0u`;
     }
   }
   if (ty instanceof VectorType) {
-    assert(ty.elementType.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
+    assert(
+      ty.elementType.kind !== 'abstract-float',
+      `No storage type defined for AbstractFloat values`
+    );
     if (ty.elementType.kind === 'bool') {
       return `${expr} != vec${ty.width}<u32>(0u)`;
     }
@@ -164,13 +167,16 @@ function fromStorage(ty: Type, expr: string): string {
 // Helper for converting a value of the type 'ty' to the storage type.
 function toStorage(ty: Type, expr: string): string {
   if (ty instanceof ScalarType) {
-    assert(ty.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
+    assert(ty.kind !== 'abstract-float', `No storage type defined for AbstractFloat values`);
     if (ty.kind === 'bool') {
       return `select(0u, 1u, ${expr})`;
     }
   }
   if (ty instanceof VectorType) {
-    assert(ty.elementType.kind !== 'f64', `No storage type defined for AbstractFloat(f64) values`);
+    assert(
+      ty.elementType.kind !== 'abstract-float',
+      `No storage type defined for AbstractFloat values`
+    );
     if (ty.elementType.kind === 'bool') {
       return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
@@ -431,15 +437,13 @@ function wgslValuesArray(
   cases: CaseList,
   expressionBuilder: ExpressionBuilder
 ): string {
-  // f64/AbstractFloat values cannot be stored in an array
-  if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'f64')) {
+  // AbstractFloat values cannot be stored in an array
+  if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')) {
     return '';
   }
   return `
 const values = array(
-  ${cases
-    .map(c => toStorage(resultType, expressionBuilder(map(c.input, v => v.wgsl()))))
-    .join(',\n  ')}
+  ${cases.map(c => expressionBuilder(map(c.input, v => v.wgsl()))).join(',\n  ')}
 );`;
 }
 
@@ -492,20 +496,21 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
       // Constant eval
       //////////////////////////////////////////////////////////////////////////
       let body = '';
-      if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'f64')) {
+      if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')) {
         // Directly assign the expression to the output, to avoid an
-        // intermediate store, which will concretize the value earlier
+        // intermediate store, which will concretize the value early
         body = cases
           .map(
-            (c, i) =>
-              `  outputs[${i}].value = ${toStorage(
-                resultType,
-                expressionBuilder(map(c.input, v => v.wgsl()))
-              )};`
+            (c, i) => `  outputs[${i}].value = ${expressionBuilder(map(c.input, v => v.wgsl()))};`
           )
           .join('\n  ');
       } else if (globalTestConfig.unrollConstEvalLoops) {
-        body = cases.map((_, i) => `  outputs[${i}].value = values[${i}];`).join('\n  ');
+        body = cases
+          .map((_, i) => {
+            const value = `values[${i}]`;
+            return `  outputs[${i}].value = ${toStorage(resultType, value)};`;
+          })
+          .join('\n  ');
       } else {
         body = `
   for (var i = 0u; i < ${cases.length}; i++) {

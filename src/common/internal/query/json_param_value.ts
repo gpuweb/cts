@@ -14,7 +14,7 @@ const jsNegativeInfinityMagicValue = '_neginfinity_';
 const jsNegativeZeroMagicValue = '_negzero_';
 
 // bigint values are not defined in JSON, so need to wrap them up as strings
-const jsBigIntMagicPattern = /_(\d+)n_/;
+const jsBigIntMagicPattern = /^(\d+)n$/;
 
 const toStringMagicValue = new Map<unknown, string>([
   [undefined, jsUndefinedMagicValue],
@@ -57,7 +57,7 @@ function stringifyFilter(k: string, v: unknown): unknown {
   }
 
   if (typeof v === 'bigint') {
-    return `_${v}n_`;
+    return `${v}n`;
   }
 
   return toStringMagicValue.has(v) ? toStringMagicValue.get(v) : v;
