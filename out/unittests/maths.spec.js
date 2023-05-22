@@ -35,7 +35,9 @@ nextAfterF32,
 nextAfterF64,
 
 oneULPF32,
-oneULPF64 } from
+oneULPF64,
+lerpBigInt,
+linearRangeBigInt } from
 '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
@@ -1111,6 +1113,86 @@ fn((test) => {
 
 
 
+
+g.test('lerpBigInt').
+paramsSimple([
+// [0n, 1000n] cases
+{ a: 0n, b: 1000n, idx: 0, steps: 1, result: 0n },
+{ a: 0n, b: 1000n, idx: 0, steps: 2, result: 0n },
+{ a: 0n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+{ a: 0n, b: 1000n, idx: 0, steps: 1000, result: 0n },
+{ a: 0n, b: 1000n, idx: 500, steps: 1000, result: 500n },
+{ a: 0n, b: 1000n, idx: 999, steps: 1000, result: 1000n },
+
+// [1000n, 0n] cases
+{ a: 1000n, b: 0n, idx: 0, steps: 1, result: 1000n },
+{ a: 1000n, b: 0n, idx: 0, steps: 2, result: 1000n },
+{ a: 1000n, b: 0n, idx: 1, steps: 2, result: 0n },
+{ a: 1000n, b: 0n, idx: 0, steps: 1000, result: 1000n },
+{ a: 1000n, b: 0n, idx: 500, steps: 1000, result: 500n },
+{ a: 1000n, b: 0n, idx: 999, steps: 1000, result: 0n },
+
+// [0n, -1000n] cases
+{ a: 0n, b: -1000n, idx: 0, steps: 1, result: 0n },
+{ a: 0n, b: -1000n, idx: 0, steps: 2, result: 0n },
+{ a: 0n, b: -1000n, idx: 1, steps: 2, result: -1000n },
+{ a: 0n, b: -1000n, idx: 0, steps: 1000, result: 0n },
+{ a: 0n, b: -1000n, idx: 500, steps: 1000, result: -500n },
+{ a: 0n, b: -1000n, idx: 999, steps: 1000, result: -1000n },
+
+// [-1000n, 0n] cases
+{ a: -1000n, b: 0n, idx: 0, steps: 1, result: -1000n },
+{ a: -1000n, b: 0n, idx: 0, steps: 2, result: -1000n },
+{ a: -1000n, b: 0n, idx: 1, steps: 2, result: 0n },
+{ a: -1000n, b: 0n, idx: 0, steps: 1000, result: -1000n },
+{ a: -1000n, b: 0n, idx: 500, steps: 1000, result: -500n },
+{ a: -1000n, b: 0n, idx: 999, steps: 1000, result: 0n },
+
+// [100n, 1000n] cases
+{ a: 100n, b: 1000n, idx: 0, steps: 1, result: 100n },
+{ a: 100n, b: 1000n, idx: 0, steps: 2, result: 100n },
+{ a: 100n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+{ a: 100n, b: 1000n, idx: 0, steps: 9, result: 100n },
+{ a: 100n, b: 1000n, idx: 4, steps: 9, result: 550n },
+{ a: 100n, b: 1000n, idx: 8, steps: 9, result: 1000n },
+
+// [1000n, 100n] cases
+{ a: 1000n, b: 100n, idx: 0, steps: 1, result: 1000n },
+{ a: 1000n, b: 100n, idx: 0, steps: 2, result: 1000n },
+{ a: 1000n, b: 100n, idx: 1, steps: 2, result: 100n },
+{ a: 1000n, b: 100n, idx: 0, steps: 9, result: 1000n },
+{ a: 1000n, b: 100n, idx: 4, steps: 9, result: 550n },
+{ a: 1000n, b: 100n, idx: 8, steps: 9, result: 100n },
+
+// [01000n, 1000n] cases
+{ a: -1000n, b: 1000n, idx: 0, steps: 1, result: -1000n },
+{ a: -1000n, b: 1000n, idx: 0, steps: 2, result: -1000n },
+{ a: -1000n, b: 1000n, idx: 1, steps: 2, result: 1000n },
+{ a: -1000n, b: 1000n, idx: 0, steps: 9, result: -1000n },
+{ a: -1000n, b: 1000n, idx: 4, steps: 9, result: 0n },
+{ a: -1000n, b: 1000n, idx: 8, steps: 9, result: 1000n }]).
+
+fn((test) => {
+  const a = test.params.a;
+  const b = test.params.b;
+  const idx = test.params.idx;
+  const steps = test.params.steps;
+  const got = lerpBigInt(a, b, idx, steps);
+  const expect = test.params.result;
+
+  test.expect(
+  got === expect,
+  `lerpBigInt(${a}, ${b}, ${idx}, ${steps}) returned ${got}. Expected ${expect}`);
+
+});
+
+
+
+
+
+
+
+
 g.test('linearRange').
 paramsSimple(
 
@@ -1194,6 +1276,48 @@ fn((test) => {
   test.expect(
   compareArrayOfNumbersF32(got, expect, 'no-flush'),
   `biasedRange(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`);
+
+});
+
+
+
+
+
+
+
+
+g.test('linearRangeBigInt').
+paramsSimple(
+
+[
+{ a: 0n, b: 0n, num_steps: 10, result: new Array(10).fill(0n) },
+{ a: 10n, b: 10n, num_steps: 10, result: new Array(10).fill(10n) },
+{ a: 0n, b: 10n, num_steps: 1, result: [0n] },
+{ a: 10n, b: 0n, num_steps: 1, result: [10n] },
+{ a: 0n, b: 10n, num_steps: 11, result: [0n, 1n, 2n, 3n, 4n, 5n, 6n, 7n, 8n, 9n, 10n] },
+{ a: 10n, b: 0n, num_steps: 11, result: [10n, 9n, 8n, 7n, 6n, 5n, 4n, 3n, 2n, 1n, 0n] },
+{ a: 0n, b: 1000n, num_steps: 11, result: [0n, 100n, 200n, 300n, 400n, 500n, 600n, 700n, 800n, 900n, 1000n] },
+{ a: 1000n, b: 0n, num_steps: 11, result: [1000n, 900n, 800n, 700n, 600n, 500n, 400n, 300n, 200n, 100n, 0n] },
+{ a: 1n, b: 5n, num_steps: 5, result: [1n, 2n, 3n, 4n, 5n] },
+{ a: 5n, b: 1n, num_steps: 5, result: [5n, 4n, 3n, 2n, 1n] },
+{ a: 0n, b: 10n, num_steps: 5, result: [0n, 2n, 5n, 7n, 10n] },
+{ a: 10n, b: 0n, num_steps: 5, result: [10n, 8n, 5n, 3n, 0n] },
+{ a: -10n, b: 10n, num_steps: 11, result: [-10n, -8n, -6n, -4n, -2n, 0n, 2n, 4n, 6n, 8n, 10n] },
+{ a: 10n, b: -10n, num_steps: 11, result: [10n, 8n, 6n, 4n, 2n, 0n, -2n, -4n, -6n, -8n, -10n] },
+{ a: -10n, b: 0n, num_steps: 11, result: [-10n, -9n, -8n, -7n, -6n, -5n, -4n, -3n, -2n, -1n, 0n] },
+{ a: 0n, b: -10n, num_steps: 11, result: [0n, -1n, -2n, -3n, -4n, -5n, -6n, -7n, -8n, -9n, -10n] }]).
+
+
+fn((test) => {
+  const a = test.params.a;
+  const b = test.params.b;
+  const num_steps = test.params.num_steps;
+  const got = linearRangeBigInt(a, b, num_steps);
+  const expect = test.params.result;
+
+  test.expect(
+  objectEquals(got, expect),
+  `linearRangeBigInt(${a}, ${b}, ${num_steps}) returned ${got}. Expected ${expect}`);
 
 });
 

@@ -13,6 +13,9 @@ const jsNegativeInfinityMagicValue = '_neginfinity_';
 // being used, the differentiation from +0 is desired.
 const jsNegativeZeroMagicValue = '_negzero_';
 
+// bigint values are not defined in JSON, so need to wrap them up as strings
+const jsBigIntMagicPattern = /^(\d+)n$/;
+
 const toStringMagicValue = new Map([
 [undefined, jsUndefinedMagicValue],
 [NaN, jsNaNMagicValue],
@@ -42,10 +45,19 @@ function stringifyFilter(k, v) {
     v !== jsNegativeZeroMagicValue,
     `${v} is a magic value for stringification, so cannot be used`);
 
+
+    assert(
+    v.match(jsBigIntMagicPattern) === null,
+    `${v} matches bigint magic pattern for stringification, so cannot be used`);
+
   }
 
   if (Object.is(v, -0)) {
     return jsNegativeZeroMagicValue;
+  }
+
+  if (typeof v === 'bigint') {
+    return `${v}n`;
   }
 
   return toStringMagicValue.has(v) ? toStringMagicValue.get(v) : v;
@@ -73,6 +85,14 @@ export function stringifyParamValueUniquely(value) {
 function parseParamValueReviver(k, v) {
   if (fromStringMagicValue.has(v)) {
     return fromStringMagicValue.get(v);
+  }
+
+  if (typeof v === 'string') {
+    const match = v.match(jsBigIntMagicPattern);
+    if (match !== null) {
+      // [0] is the entire match, and following entries are the capture groups
+      return BigInt(match[1]);
+    }
   }
 
   return v;

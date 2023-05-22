@@ -4,3 +4,7 @@
 export function unary(op) {
   return basicExpressionBuilder(value => `${op}(${value})`);
 }
+
+export function assignment() {
+  return basicExpressionBuilder(value => `${value}`);
+}

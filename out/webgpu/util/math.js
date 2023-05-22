@@ -599,10 +599,55 @@ export function lerp(a, b, t) {
   return t > 1.0 === b > a ? Math.max(b, x) : Math.min(b, x);
 }
 
+/**
+ * Version of lerp that operates on bigint values
+ *
+ * lerp was not made into a generic or to take in (number|bigint), because that
+ * introduces a bunch of complexity overhead related to type differentiation
+ */
+export function lerpBigInt(a, b, idx, steps) {
+  assert(Math.trunc(idx) === idx);
+  assert(Math.trunc(steps) === steps);
+
+  // This constrains t to [0.0, 1.0]
+  assert(idx >= 0);
+  assert(steps > 0);
+  assert(idx < steps);
+
+  if (steps === 1) {
+    return a;
+  }
+  if (idx === 0) {
+    return a;
+  }
+  if (idx === steps - 1) {
+    return b;
+  }
+
+  const min = (x, y) => {
+    return x < y ? x : y;
+  };
+  const max = (x, y) => {
+    return x > y ? x : y;
+  };
+
+  // For number the variable t is used, there t = idx / (steps - 1),
+  // but that is a fraction on [0, 1], so becomes either 0 or 1 when converted
+  // to bigint, so need to expand things out.
+  const big_idx = BigInt(idx);
+  const big_steps = BigInt(steps);
+  if (a <= 0n && b >= 0n || a >= 0n && b <= 0n) {
+    return b * big_idx / (big_steps - 1n) + (a - a * big_idx / (big_steps - 1n));
+  }
+
+  const x = a + b * big_idx / (big_steps - 1n) - a * big_idx / (big_steps - 1n);
+  return !(b > a) ? max(b, x) : min(b, x);
+}
+
 /** @returns a linear increasing range of numbers. */
 export function linearRange(a, b, num_steps) {
   if (num_steps <= 0) {
-    return Array();
+    return [];
   }
 
   // Avoid division by 0
@@ -611,6 +656,26 @@ export function linearRange(a, b, num_steps) {
   }
 
   return Array.from(Array(num_steps).keys()).map((i) => lerp(a, b, i / (num_steps - 1)));
+}
+
+/**
+ * Version of linearRange that operates on bigint values
+ *
+ * linearRange was not made into a generic or to take in (number|bigint),
+ * because that introduces a bunch of complexity overhead related to type
+ * differentiation
+ */
+export function linearRangeBigInt(a, b, num_steps) {
+  if (num_steps <= 0) {
+    return [];
+  }
+
+  // Avoid division by 0
+  if (num_steps === 1) {
+    return [a];
+  }
+
+  return Array.from(Array(num_steps).keys()).map((i) => lerpBigInt(a, b, i, num_steps));
 }
 
 /**
@@ -624,7 +689,7 @@ export function linearRange(a, b, num_steps) {
 export function biasedRange(a, b, num_steps) {
   const c = 2;
   if (num_steps <= 0) {
-    return Array();
+    return [];
   }
 
   // Avoid division by 0
@@ -745,6 +810,106 @@ counts =
   ...linearRange(kBit.f16.positive.min, kBit.f16.positive.max, counts.pos_norm)].
   map(Math.trunc);
   return bit_fields.map(reinterpretU16AsF16);
+}
+
+/**
+ * @returns an ascending sorted array of numbers spread over the entire range of 64-bit floats
+ *
+ * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f64 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the f64 range.
+ *
+ * This function is intended to provide dense coverage of the f64 range, for a minimal list of values to use to cover
+ * f64 behaviour, use sparseF64Range instead.
+ *
+ * @param counts structure param with 4 entries indicating the number of entries to be generated each region, entries
+ *               must be 0 or greater.
+ */
+export function fullF64Range(
+counts =
+
+
+
+
+{ pos_sub: 10, pos_norm: 50 })
+{
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
+
+  // Generating bit fields first and then converting to f64, so that the spread across the possible f64 values is more
+  // even. Generating against the bounds of f64 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+  ...linearRangeBigInt(kBit.f64.negative.min, kBit.f64.negative.max, counts.neg_norm),
+  ...linearRangeBigInt(
+  kBit.f64.subnormal.negative.min,
+  kBit.f64.subnormal.negative.max,
+  counts.neg_sub),
+
+  0n,
+  ...linearRangeBigInt(
+  kBit.f64.subnormal.positive.min,
+  kBit.f64.subnormal.positive.max,
+  counts.pos_sub),
+
+  ...linearRangeBigInt(kBit.f64.positive.min, kBit.f64.positive.max, counts.pos_norm)];
+
+  return bit_fields.map(reinterpretU64AsF64);
+}
+
+/**
+ * @returns an ascending sorted array of f64 values spread over the entire range of 32-bit floats
+ *
+ * This function is intended to provide dense coverage of f64 values that fit into the f32 range.
+ *
+ * Numbers are divided into 4 regions: negative 64-bit normals, negative 64-bit subnormals, positive 64-bit subnormals &
+ * positive 64-bit normals.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f64 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the range.
+ *
+ * @param counts structure param with 4 entries indicating the number of entries
+ *               to be generated each region, entries must be 0 or greater.
+ */
+export function f32FilteredF64Range(
+counts =
+
+
+
+
+{ pos_sub: 10, pos_norm: 50 })
+{
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
+
+  // f32 limits as f64 bitfields
+  const f32_max = 0x47efffffe0000000n;
+  const f32_min = 0xc7efffffe0000000n;
+
+  // Generating bit fields first and then converting to f64, so that the spread across the possible f64 values is more
+  // even. Generating against the bounds of f64 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+  ...linearRangeBigInt(f32_min, kBit.f64.negative.max, counts.neg_norm),
+  ...linearRangeBigInt(
+  kBit.f64.subnormal.negative.min,
+  kBit.f64.subnormal.negative.max,
+  counts.neg_sub),
+
+  0n,
+  ...linearRangeBigInt(
+  kBit.f64.subnormal.positive.min,
+  kBit.f64.subnormal.positive.max,
+  counts.pos_sub),
+
+  ...linearRangeBigInt(kBit.f64.positive.min, f32_max, counts.pos_norm)];
+
+  return bit_fields.map(reinterpretU64AsF64);
 }
 
 /** Short list of i32 values of interest to test against */
