@@ -586,6 +586,20 @@ export const kShaderStageCombinationsWithStage: readonly GPUShaderStageFlags[] =
  */
 export const kTextureSampleCounts = [1, 4] as const;
 
+// Sampler info
+
+/** List of all filter modes. */
+export const kFilterModes: readonly GPUFilterMode[] = ['nearest', 'linear'];
+assertTypeTrue<TypeEqual<GPUFilterMode, typeof kFilterModes[number]>>();
+
+/** List of address modes. */
+export const kAddressModes: readonly GPUAddressMode[] = [
+  'clamp-to-edge',
+  'repeat',
+  'mirror-repeat',
+];
+assertTypeTrue<TypeEqual<GPUAddressMode, typeof kAddressModes[number]>>();
+
 // Blend factors and Blend components
 
 /** List of all GPUBlendFactor values. */
