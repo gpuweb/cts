@@ -861,9 +861,7 @@ counts =
 }
 
 /**
- * @returns an ascending sorted array of f64 values spread over the entire range of 32-bit floats
- *
- * This function is intended to provide dense coverage of f64 values that fit into the f32 range.
+ * @returns an ascending sorted array of f64 values spread over specific range of f64 normal floats
  *
  * Numbers are divided into 4 regions: negative 64-bit normals, negative 64-bit subnormals, positive 64-bit subnormals &
  * positive 64-bit normals.
@@ -873,29 +871,35 @@ counts =
  * means that number of precise f64 values between each returned value in a region should be about the same. This allows
  * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the range.
  *
+ * @param begin a negative f64 normal float value
+ * @param end a positive f64 normal float value
  * @param counts structure param with 4 entries indicating the number of entries
  *               to be generated each region, entries must be 0 or greater.
  */
-export function f32FilteredF64Range(
-counts =
-
-
-
-
-{ pos_sub: 10, pos_norm: 50 })
+export function filteredF64Range(
+begin,
+end,
+counts = {
+  pos_sub: 10,
+  pos_norm: 50
+})
 {
+  assert(
+  begin <= kValue.f64.negative.max,
+  `Beginning of range ${begin} must be negative f64 normal`);
+
+  assert(end >= kValue.f64.positive.min, `Ending of range ${end} must be positive f64 normal`);
+
   counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
   counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
 
-  // f32 limits as f64 bitfields
-  const f32_max = 0x47efffffe0000000n;
-  const f32_min = 0xc7efffffe0000000n;
-
+  const u64_begin = reinterpretF64AsU64(begin);
+  const u64_end = reinterpretF64AsU64(end);
   // Generating bit fields first and then converting to f64, so that the spread across the possible f64 values is more
   // even. Generating against the bounds of f64 values directly results in the values being extremely biased towards the
   // extremes, since they are so much larger.
   const bit_fields = [
-  ...linearRangeBigInt(f32_min, kBit.f64.negative.max, counts.neg_norm),
+  ...linearRangeBigInt(u64_begin, kBit.f64.negative.max, counts.neg_norm),
   ...linearRangeBigInt(
   kBit.f64.subnormal.negative.min,
   kBit.f64.subnormal.negative.max,
@@ -907,7 +911,7 @@ counts =
   kBit.f64.subnormal.positive.max,
   counts.pos_sub),
 
-  ...linearRangeBigInt(kBit.f64.positive.min, f32_max, counts.pos_norm)];
+  ...linearRangeBigInt(kBit.f64.positive.min, u64_end, counts.pos_norm)];
 
   return bit_fields.map(reinterpretU64AsF64);
 }
@@ -1607,11 +1611,19 @@ export function lcm(a, b) {
 }
 
 /**
+ * @returns the bit representation as a 64-integer, via interpreting the input
+ * as a 64-bit float value
+ */
+export function reinterpretF64AsU64(input) {
+  return new BigUint64Array(new Float64Array([input]).buffer)[0];
+}
+
+/**
  * @returns a 64-bit float value via interpreting the input as the bit
  * representation as a 64-bit integer
  */
 export function reinterpretU64AsF64(input) {
-  return new Float64Array(new BigInt64Array([input]).buffer)[0];
+  return new Float64Array(new BigUint64Array([input]).buffer)[0];
 }
 
 /**

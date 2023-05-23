@@ -296,7 +296,7 @@
  * issues.
  */
 function reinterpretU64AsF64(input) {
-  return new Float64Array(new BigInt64Array([input]).buffer)[0];
+  return new Float64Array(new BigUint64Array([input]).buffer)[0];
 }
 
 /**
@@ -306,7 +306,7 @@ function reinterpretU64AsF64(input) {
  * issues.
  */
 function reinterpretF64AsU64(input) {
-  return new BigInt64Array(new Float64Array([input]).buffer)[0];
+  return new BigUint64Array(new Float64Array([input]).buffer)[0];
 }
 
 /**

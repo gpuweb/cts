@@ -6,6 +6,7 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
+  f16,
   f32,
   f64,
   reinterpretF32AsU32,
@@ -387,6 +388,116 @@ class FPTraits {
 
       return impl(x, y);
     };
+  }
+
+  /** Stub for scalar to interval generator */
+  unimplementedScalarToInterval(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for scalar pair to interval generator */
+  unimplementedScalarPairToInterval(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for scalar triple to interval generator */
+  unimplementedScalarTripleToInterval(_x, _y, _z) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for scalar to vector generator */
+  unimplementedScalarToVector(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector to interval generator */
+  unimplementedVectorToInterval(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector pair to interval generator */
+  unimplementedVectorPairToInterval(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector to vector generator */
+  unimplementedVectorToVector(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector pair to vector generator */
+  unimplementedVectorPairToVector(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector-scalar to vector generator */
+  unimplementedVectorScalarToVector(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for scalar-vector to vector generator */
+  unimplementedScalarVectorToVector(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for matrix to interval generator */
+  unimplementedMatrixToInterval(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for matrix to matix generator */
+  unimplementedMatrixToMatrix(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for matrix pair to matrix generator */
+  unimplementedMatrixPairToMatrix(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for matrix-scalar to matrix generator  */
+  unimplementedMatrixScalarToMatrix(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for scalar-matrix to matrix generator  */
+  unimplementedScalarMatrixToMatrix(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for matrix-vector to vector generator  */
+  unimplementedMatrixVectorToVector(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for vector-matrix to vector generator  */
+  unimplementedVectorMatrixToVector(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for distance generator */
+  unimplementedDistance(_x, _y) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for faceForward */
+  unimplementedFaceForward(_x, _y, _z) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for length generator */
+  unimplementedLength(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for modf generator */
+  unimplementedModf(_x) {
+    unreachable(`Not yet implemented for ${this.kind}`);
+  }
+
+  /** Stub for refract generator */
+  unimplementedRefract(_i, _s, _r) {
+    unreachable(`Not yet implemented for ${this.kind}`);
   }
 
   // Utilities - Defined by subclass
@@ -3547,6 +3658,7 @@ const kAbstractAnyInterval = new FPInterval(
 
 const kAbstractZeroInterval = new FPInterval('abstract', 0);
 
+// This is implementation is incomplete
 class FPAbstractTraits extends FPTraits {
   static _constants = {
     positive: {
@@ -3707,84 +3819,324 @@ class FPAbstractTraits extends FPTraits {
   ulpInterval = this.ulpIntervalImpl.bind(this);
 
   // Framework - API - Overrides
-  absInterval = this.absIntervalImpl.bind(this);
-  acosInterval = this.acosIntervalImpl.bind(this);
-  acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
-  acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
+  absInterval = this.unimplementedScalarToInterval.bind(this);
+  acosInterval = this.unimplementedScalarToInterval.bind(this);
+  acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
+  acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  additionInterval = this.additionIntervalImpl.bind(this);
-  additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
-  asinInterval = this.asinIntervalImpl.bind(this);
-  asinhInterval = this.asinhIntervalImpl.bind(this);
-  atanInterval = this.atanIntervalImpl.bind(this);
-  atan2Interval = this.atan2IntervalImpl.bind(this);
-  atanhInterval = this.atanhIntervalImpl.bind(this);
-  ceilInterval = this.ceilIntervalImpl.bind(this);
-  clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
-  clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
+  additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
+  asinInterval = this.unimplementedScalarToInterval.bind(this);
+  asinhInterval = this.unimplementedScalarToInterval.bind(this);
+  atanInterval = this.unimplementedScalarToInterval.bind(this);
+  atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
+  atanhInterval = this.unimplementedScalarToInterval.bind(this);
+  ceilInterval = this.unimplementedScalarToInterval.bind(this);
+  clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  cosInterval = this.cosIntervalImpl.bind(this);
-  coshInterval = this.coshIntervalImpl.bind(this);
-  crossInterval = this.crossIntervalImpl.bind(this);
-  degreesInterval = this.degreesIntervalImpl.bind(this);
-  determinantInterval = this.determinantIntervalImpl.bind(this);
-  distanceInterval = this.distanceIntervalImpl.bind(this);
-  divisionInterval = this.divisionIntervalImpl.bind(this);
-  dotInterval = this.dotIntervalImpl.bind(this);
-  expInterval = this.expIntervalImpl.bind(this);
-  exp2Interval = this.exp2IntervalImpl.bind(this);
-  faceForwardIntervals = this.faceForwardIntervalsImpl.bind(this);
-  floorInterval = this.floorIntervalImpl.bind(this);
-  fmaInterval = this.fmaIntervalImpl.bind(this);
-  fractInterval = this.fractIntervalImpl.bind(this);
-  inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
-  ldexpInterval = this.ldexpIntervalImpl.bind(this);
-  lengthInterval = this.lengthIntervalImpl.bind(this);
-  logInterval = this.logIntervalImpl.bind(this);
-  log2Interval = this.log2IntervalImpl.bind(this);
-  maxInterval = this.maxIntervalImpl.bind(this);
-  minInterval = this.minIntervalImpl.bind(this);
-  mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
-  mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
+  cosInterval = this.unimplementedScalarToInterval.bind(this);
+  coshInterval = this.unimplementedScalarToInterval.bind(this);
+  crossInterval = this.unimplementedVectorPairToVector.bind(this);
+  degreesInterval = this.unimplementedScalarToInterval.bind(this);
+  determinantInterval = this.unimplementedMatrixToInterval.bind(this);
+  distanceInterval = this.unimplementedDistance.bind(this);
+  divisionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  dotInterval = this.unimplementedVectorPairToInterval.bind(this);
+  expInterval = this.unimplementedScalarToInterval.bind(this);
+  exp2Interval = this.unimplementedScalarToInterval.bind(this);
+  faceForwardIntervals = this.unimplementedFaceForward.bind(this);
+  floorInterval = this.unimplementedScalarToInterval.bind(this);
+  fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  fractInterval = this.unimplementedScalarToInterval.bind(this);
+  inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
+  lengthInterval = this.unimplementedLength.bind(this);
+  logInterval = this.unimplementedScalarToInterval.bind(this);
+  log2Interval = this.unimplementedScalarToInterval.bind(this);
+  maxInterval = this.unimplementedScalarPairToInterval.bind(this);
+  minInterval = this.unimplementedScalarPairToInterval.bind(this);
+  mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
-  modfInterval = this.modfIntervalImpl.bind(this);
-  multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
-  multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+  modfInterval = this.unimplementedModf.bind(this);
+  multiplicationInterval = this.unimplementedScalarPairToInterval.bind(this);
+  multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
 
-  multiplicationMatrixScalarInterval = this.multiplicationMatrixScalarIntervalImpl.bind(this);
+  multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(this);
 
-  multiplicationScalarMatrixInterval = this.multiplicationScalarMatrixIntervalImpl.bind(this);
+  multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(this);
 
-  multiplicationMatrixVectorInterval = this.multiplicationMatrixVectorIntervalImpl.bind(this);
+  multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(this);
 
-  multiplicationVectorMatrixInterval = this.multiplicationVectorMatrixIntervalImpl.bind(this);
+  multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(this);
 
-  negationInterval = this.negationIntervalImpl.bind(this);
-  normalizeInterval = this.normalizeIntervalImpl.bind(this);
-  powInterval = this.powIntervalImpl.bind(this);
-  quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
-  radiansInterval = this.radiansIntervalImpl.bind(this);
-  reflectInterval = this.reflectIntervalImpl.bind(this);
-  refractInterval = this.refractIntervalImpl.bind(this);
-  remainderInterval = this.remainderIntervalImpl.bind(this);
-  roundInterval = this.roundIntervalImpl.bind(this);
-  saturateInterval = this.saturateIntervalImpl.bind(this);
-  signInterval = this.signIntervalImpl.bind(this);
-  sinInterval = this.sinIntervalImpl.bind(this);
-  sinhInterval = this.sinhIntervalImpl.bind(this);
-  smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
-  sqrtInterval = this.sqrtIntervalImpl.bind(this);
-  stepInterval = this.stepIntervalImpl.bind(this);
-  subtractionInterval = this.subtractionIntervalImpl.bind(this);
-  subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(this);
+  negationInterval = this.unimplementedScalarToInterval.bind(this);
+  normalizeInterval = this.unimplementedVectorToVector.bind(this);
+  powInterval = this.unimplementedScalarPairToInterval.bind(this);
+  quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
+  radiansInterval = this.unimplementedScalarToInterval.bind(this);
+  reflectInterval = this.unimplementedVectorPairToVector.bind(this);
+  refractInterval = this.unimplementedRefract.bind(this);
+  remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
+  roundInterval = this.unimplementedScalarToInterval.bind(this);
+  saturateInterval = this.unimplementedScalarToInterval.bind(this);
+  signInterval = this.unimplementedScalarToInterval.bind(this);
+  sinInterval = this.unimplementedScalarToInterval.bind(this);
+  sinhInterval = this.unimplementedScalarToInterval.bind(this);
+  smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  sqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  stepInterval = this.unimplementedScalarPairToInterval.bind(this);
+  subtractionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
+  tanInterval = this.unimplementedScalarToInterval.bind(this);
+  tanhInterval = this.unimplementedScalarToInterval.bind(this);
+  transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
+  truncInterval = this.unimplementedScalarToInterval.bind(this);
+}
 
-  tanInterval = this.tanIntervalImpl.bind(this);
-  tanhInterval = this.tanhIntervalImpl.bind(this);
-  transposeInterval = this.transposeIntervalImpl.bind(this);
-  truncInterval = this.truncIntervalImpl.bind(this);
+// Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
+// executes before they are defined.
+const kF16AnyInterval = new FPInterval(
+  'abstract',
+  Number.NEGATIVE_INFINITY,
+  Number.POSITIVE_INFINITY
+);
+
+const kF16ZeroInterval = new FPInterval('f16', 0);
+
+// This is implementation is incomplete
+class F16Traits extends FPTraits {
+  static _constants = {
+    positive: {
+      min: kValue.f16.positive.min,
+      max: kValue.f16.positive.max,
+      infinity: kValue.f16.infinity.positive,
+      nearest_max: 0xffff, // Replace with correct value
+      less_than_one: 0xffff, // Replace with correct value
+      subnormal: {
+        min: kValue.f16.subnormal.positive.min,
+        max: kValue.f16.subnormal.positive.max,
+      },
+      pi: {
+        whole: 0xffff, // Replace with correct value
+        three_quarters: 0xffff, // Replace with correct value
+        half: 0xffff, // Replace with correct value
+        third: 0xffff, // Replace with correct value
+        quarter: 0xffff, // Replace with correct value
+        sixth: 0xffff, // Replace with correct value
+      },
+      e: 0xffff, // Replace with correct value
+    },
+    negative: {
+      min: kValue.f16.negative.min,
+      max: kValue.f16.negative.max,
+      infinity: kValue.f16.infinity.negative,
+      nearest_min: 0xffff, // Replace with correct value
+      less_than_one: 0xffff, // Replace with correct value
+      subnormal: {
+        min: kValue.f16.subnormal.negative.min,
+        max: kValue.f16.subnormal.negative.max,
+      },
+      pi: {
+        whole: 0xffff, // Replace with correct value
+        three_quarters: 0xffff, // Replace with correct value
+        half: 0xffff, // Replace with correct value
+        third: 0xffff, // Replace with correct value
+        quarter: 0xffff, // Replace with correct value
+        sixth: 0xffff, // Replace with correct value
+      },
+    },
+    anyInterval: kF16AnyInterval,
+    zeroInterval: kF16ZeroInterval,
+    // Have to use the constants.ts values here, because values defined in the
+    // initializer cannot be referenced in the initializer
+    negPiToPiInterval: new FPInterval(
+      'f16',
+      0xffff, // Replace with correct value
+      0xffff // Replace with correct value
+    ),
+    greaterThanZeroInterval: new FPInterval(
+      'f16',
+      0xffff, // Replace with correct value
+      0xffff // Replace with correct value
+    ),
+    zeroVector: {
+      2: [kF16ZeroInterval, kF16ZeroInterval],
+      3: [kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval],
+      4: [kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval],
+    },
+    anyVector: {
+      2: [kF16AnyInterval, kF16AnyInterval],
+      3: [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+      4: [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+    },
+    anyMatrix: {
+      2: {
+        2: [
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        3: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        4: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+      },
+      3: {
+        2: [
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        3: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        4: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+      },
+      4: {
+        2: [
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        3: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+
+        4: [
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+          [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
+        ],
+      },
+    },
+  };
+
+  constructor() {
+    super('f16');
+  }
+
+  constants() {
+    return F16Traits._constants;
+  }
+
+  // Utilities - Overrides
+  // number is represented as a f16, so any number value is already quantized to f16
+  quantize = n => {
+    return n;
+  };
+  correctlyRounded = correctlyRoundedF64;
+  isFinite = Number.isFinite;
+  isSubnormal = isSubnormalNumberF64;
+  flushSubnormal = flushSubnormalNumberF64;
+  oneULP = oneULPF64;
+  scalarBuilder = f16;
+
+  // Framework - Fundamental Error Intervals - Overrides
+  absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
+  correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
+  ulpInterval = this.ulpIntervalImpl.bind(this);
+
+  // Framework - API - Overrides
+  absInterval = this.unimplementedScalarToInterval.bind(this);
+  acosInterval = this.unimplementedScalarToInterval.bind(this);
+  acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
+  acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
+  acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
+  additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
+  asinInterval = this.unimplementedScalarToInterval.bind(this);
+  asinhInterval = this.unimplementedScalarToInterval.bind(this);
+  atanInterval = this.unimplementedScalarToInterval.bind(this);
+  atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
+  atanhInterval = this.unimplementedScalarToInterval.bind(this);
+  ceilInterval = this.unimplementedScalarToInterval.bind(this);
+  clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
+  cosInterval = this.unimplementedScalarToInterval.bind(this);
+  coshInterval = this.unimplementedScalarToInterval.bind(this);
+  crossInterval = this.unimplementedVectorPairToVector.bind(this);
+  degreesInterval = this.unimplementedScalarToInterval.bind(this);
+  determinantInterval = this.unimplementedMatrixToInterval.bind(this);
+  distanceInterval = this.unimplementedDistance.bind(this);
+  divisionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  dotInterval = this.unimplementedVectorPairToInterval.bind(this);
+  expInterval = this.unimplementedScalarToInterval.bind(this);
+  exp2Interval = this.unimplementedScalarToInterval.bind(this);
+  faceForwardIntervals = this.unimplementedFaceForward.bind(this);
+  floorInterval = this.unimplementedScalarToInterval.bind(this);
+  fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  fractInterval = this.unimplementedScalarToInterval.bind(this);
+  inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
+  lengthInterval = this.unimplementedLength.bind(this);
+  logInterval = this.unimplementedScalarToInterval.bind(this);
+  log2Interval = this.unimplementedScalarToInterval.bind(this);
+  maxInterval = this.unimplementedScalarPairToInterval.bind(this);
+  minInterval = this.unimplementedScalarPairToInterval.bind(this);
+  mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
+  modfInterval = this.unimplementedModf.bind(this);
+  multiplicationInterval = this.unimplementedScalarPairToInterval.bind(this);
+  multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
+
+  multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(this);
+
+  multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(this);
+
+  multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(this);
+
+  multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(this);
+
+  negationInterval = this.unimplementedScalarToInterval.bind(this);
+  normalizeInterval = this.unimplementedVectorToVector.bind(this);
+  powInterval = this.unimplementedScalarPairToInterval.bind(this);
+  quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
+  radiansInterval = this.unimplementedScalarToInterval.bind(this);
+  reflectInterval = this.unimplementedVectorPairToVector.bind(this);
+  refractInterval = this.unimplementedRefract.bind(this);
+  remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
+  roundInterval = this.unimplementedScalarToInterval.bind(this);
+  saturateInterval = this.unimplementedScalarToInterval.bind(this);
+  signInterval = this.unimplementedScalarToInterval.bind(this);
+  sinInterval = this.unimplementedScalarToInterval.bind(this);
+  sinhInterval = this.unimplementedScalarToInterval.bind(this);
+  smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  sqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  stepInterval = this.unimplementedScalarPairToInterval.bind(this);
+  subtractionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
+  tanInterval = this.unimplementedScalarToInterval.bind(this);
+  tanhInterval = this.unimplementedScalarToInterval.bind(this);
+  transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
+  truncInterval = this.unimplementedScalarToInterval.bind(this);
 }
 
 export const FP = {
   f32: new F32Traits(),
   abstract: new FPAbstractTraits(),
+  f16: new F16Traits(),
 };
