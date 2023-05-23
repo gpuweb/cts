@@ -91,7 +91,7 @@ function float64ToUint64(value: number): bigint {
 
 /** @returns the numeric representation of a f64, from its hex value representation */
 function uint64ToFloat64(bits: bigint): number {
-  return new Float64Array(new BigInt64Array([bits]).buffer)[0];
+  return new Float64Array(new BigUint64Array([bits]).buffer)[0];
 }
 
 interface nextAfterCase {
