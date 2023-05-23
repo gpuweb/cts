@@ -58,13 +58,18 @@ module.exports = function (grunt) {
           '--delete-dir-on-start',
           '--out-dir=out-wpt/',
           'src/',
-          '--only=src/common/framework/',
-          '--only=src/common/runtime/helper/',
-          '--only=src/common/runtime/wpt.ts',
+          '--only=src/common/',
+          '--only=src/external/',
           '--only=src/webgpu/',
           // These files will be generated, instead of compiled from TypeScript.
           '--ignore=src/common/internal/version.ts',
           '--ignore=src/webgpu/listing.ts',
+          // These files are only used by non-WPT builds.
+          '--ignore=src/common/runtime/cmdline.ts',
+          '--ignore=src/common/runtime/server.ts',
+          '--ignore=src/common/runtime/standalone.ts',
+          '--ignore=src/common/runtime/helper/sys.ts',
+          '--ignore=src/common/tools',
         ],
       },
       'build-out-node': {
