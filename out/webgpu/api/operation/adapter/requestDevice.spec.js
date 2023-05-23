@@ -157,7 +157,7 @@ fn(async (t) => {
   kTimeoutMS,
   'adapter was not stale');
 
-  t.expect(lost.reason === undefined);
+  t.expect(lost.reason === 'unknown');
 
   // Make sure to destroy the valid device after trying to get a second one. Otherwise, the second
   // device may fail because the adapter is put into an invalid state from the destroy.
