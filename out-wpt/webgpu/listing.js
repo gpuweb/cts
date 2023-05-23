@@ -1575,6 +1575,14 @@ export const listing = [
       "api",
       "validation",
       "texture",
+      "float32_filterable"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "texture",
       "rg11b10ufloat_renderable"
     ]
   },
