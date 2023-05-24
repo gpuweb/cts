@@ -919,11 +919,15 @@ export function filteredF64Range(
 /** Short list of i32 values of interest to test against */
 const kInterestingI32Values: number[] = [
   kValue.i32.negative.max,
-  kValue.i32.negative.max / 2,
+  Math.trunc(kValue.i32.negative.max / 2),
+  -256,
+  -10,
   -1,
   0,
   1,
-  kValue.i32.positive.max / 2,
+  10,
+  256,
+  Math.trunc(kValue.i32.positive.max / 2),
   kValue.i32.positive.max,
 ];
 
@@ -1005,7 +1009,14 @@ export function fullI32Range(
 }
 
 /** Short list of u32 values of interest to test against */
-const kInterestingU32Values: number[] = [0, 1, kValue.u32.max / 2, kValue.u32.max];
+const kInterestingU32Values: number[] = [
+  0,
+  1,
+  10,
+  256,
+  Math.trunc(kValue.u32.max / 2),
+  kValue.u32.max,
+];
 
 /** @returns minimal u32 values that cover the entire range of u32 behaviours
  *
