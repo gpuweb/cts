@@ -46,7 +46,7 @@ const [
 ] = process.argv;
 
 (async () => {
-  let argsPrefixes = [''];
+  let argsPrefixes = ['?q='];
   let expectationLines = new Set<string>();
 
   if (process.argv.length >= 7) {
