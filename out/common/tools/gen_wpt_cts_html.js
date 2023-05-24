@@ -46,7 +46,7 @@ suite = 'webgpu'] =
 process.argv;
 
 (async () => {
-  let argsPrefixes = [''];
+  let argsPrefixes = ['?q='];
   let expectationLines = new Set();
 
   if (process.argv.length >= 7) {
