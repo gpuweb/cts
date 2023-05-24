@@ -514,7 +514,7 @@ export function basicExpressionBuilder(expressionBuilder) {
       } else {
         body = `
   for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = values[i];
+    outputs[i].value = ${toStorage(resultType, `values[i]`)};
   }`;
       }
 
