@@ -163,7 +163,7 @@ export function serializeFPInterval(i: FPInterval): SerializedFPInterval {
     }
     case 'f32': {
       if (i === traits.constants().anyInterval) {
-        return { kind: 'abstract', any: true };
+        return { kind: 'f32', any: true };
       } else {
         return {
           kind: 'f32',
@@ -175,7 +175,7 @@ export function serializeFPInterval(i: FPInterval): SerializedFPInterval {
     }
     case 'f16': {
       if (i === traits.constants().anyInterval) {
-        return { kind: 'abstract', any: true };
+        return { kind: 'f16', any: true };
       } else {
         return {
           kind: 'f16',
@@ -2064,7 +2064,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarToIntervalOp(x: FPInterval, op: ScalarToIntervalOp): FPInterval {
+  protected runScalarToIntervalOp(x: FPInterval, op: ScalarToIntervalOp): FPInterval {
     if (!x.isFinite()) {
       return this.constants().anyInterval;
     }
@@ -2090,7 +2090,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarPairToIntervalOp(
+  protected runScalarPairToIntervalOp(
     x: FPInterval,
     y: FPInterval,
     op: ScalarPairToIntervalOp
@@ -2123,7 +2123,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarTripleToIntervalOp(
+  protected runScalarTripleToIntervalOp(
     x: FPInterval,
     y: FPInterval,
     z: FPInterval,
@@ -2154,7 +2154,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runVectorToIntervalOp(x: FPVector, op: VectorToIntervalOp): FPInterval {
+  protected runVectorToIntervalOp(x: FPVector, op: VectorToIntervalOp): FPInterval {
     if (x.some(e => !e.isFinite())) {
       return this.constants().anyInterval;
     }
@@ -2179,7 +2179,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runVectorPairToIntervalOp(
+  protected runVectorPairToIntervalOp(
     x: FPVector,
     y: FPVector,
     op: VectorPairToIntervalOp
@@ -2210,7 +2210,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a vector of spans over all the outputs of op.impl
    */
-  private runVectorToVectorOp(x: FPVector, op: VectorToVectorOp): FPVector {
+  protected runVectorToVectorOp(x: FPVector, op: VectorToVectorOp): FPVector {
     if (x.some(e => !e.isFinite())) {
       return this.constants().anyVector[x.length];
     }
@@ -2239,7 +2239,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  private runScalarToIntervalOpComponentWise(x: FPVector, op: ScalarToIntervalOp): FPVector {
+  protected runScalarToIntervalOpComponentWise(x: FPVector, op: ScalarToIntervalOp): FPVector {
     return this.toVector(x.map(e => this.runScalarToIntervalOp(e, op)));
   }
 
@@ -2252,7 +2252,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a vector of spans over all the outputs of op.impl
    */
-  private runVectorPairToVectorOp(x: FPVector, y: FPVector, op: VectorPairToVectorOp): FPVector {
+  protected runVectorPairToVectorOp(x: FPVector, y: FPVector, op: VectorPairToVectorOp): FPVector {
     if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
       return this.constants().anyVector[x.length];
     }
@@ -2285,7 +2285,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  private runScalarPairToIntervalOpVectorComponentWise(
+  protected runScalarPairToIntervalOpVectorComponentWise(
     x: FPVector,
     y: FPVector,
     op: ScalarPairToIntervalOp
@@ -2310,7 +2310,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a matrix of spans over all the outputs of op.impl
    */
-  private runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
+  protected runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
     const num_cols = m.length;
     const num_rows = m[0].length;
     if (m.some(c => c.some(r => !r.isFinite()))) {
@@ -2349,7 +2349,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a matrix of intervals with the outputs of op.impl
    */
-  private runScalarPairToIntervalOpMatrixComponentWise(
+  protected runScalarPairToIntervalOpMatrixComponentWise(
     x: FPMatrix,
     y: FPMatrix,
     op: ScalarPairToIntervalOp
@@ -3676,24 +3676,6 @@ abstract class FPTraits {
     y: number | FPInterval
   ) => FPInterval;
 
-  // Once a full implementation of F16Interval exists, the correctlyRounded for
-  // that can potentially be used instead of having a bespoke operation
-  // implementation.
-  private readonly QuantizeToF16IntervalOp: ScalarToIntervalOp = {
-    impl: (n: number): FPInterval => {
-      const rounded = correctlyRoundedF16(n);
-      const flushed = addFlushedIfNeededF16(rounded);
-      return this.spanIntervals(...flushed.map(f => this.toInterval(f)));
-    },
-  };
-
-  protected quantizeToF16IntervalImpl(n: number): FPInterval {
-    return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
-  }
-
-  /** Calculate an acceptance interval of quantizeToF16(x) */
-  public abstract readonly quantizeToF16Interval: (n: number) => FPInterval;
-
   private readonly RadiansIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
       return this.multiplicationInterval(n, 0.017453292519943295474);
@@ -4290,7 +4272,6 @@ class F32Traits extends FPTraits {
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
-  public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
   public readonly refractInterval = this.refractIntervalImpl.bind(this);
@@ -4473,6 +4454,21 @@ class F32Traits extends FPTraits {
 
   /** Calculate an acceptance interval vector for unpack4x8unorm(x) */
   public readonly unpack4x8unormInterval = this.unpack4x8unormIntervalImpl.bind(this);
+
+  private readonly QuantizeToF16IntervalOp: ScalarToIntervalOp = {
+    impl: (n: number): FPInterval => {
+      const rounded = correctlyRoundedF16(n);
+      const flushed = addFlushedIfNeededF16(rounded);
+      return this.spanIntervals(...flushed.map(f => this.toInterval(f)));
+    },
+  };
+
+  protected quantizeToF16IntervalImpl(n: number): FPInterval {
+    return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
+  }
+
+  /** Calculate an acceptance interval of quantizeToF16(x) */
+  public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
 }
 
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this

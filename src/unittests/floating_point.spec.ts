@@ -133,7 +133,7 @@ interface ConstructorCase {
   expected: IntervalBounds;
 }
 
-g.test('constructor_f32f16af')
+g.test('constructor')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -194,7 +194,7 @@ interface ContainsNumberCase {
   expected: boolean;
 }
 
-g.test('contains_number_f32f16af')
+g.test('contains_number')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -333,7 +333,7 @@ interface ContainsIntervalCase {
   expected: boolean;
 }
 
-g.test('contains_interval_f32f16af')
+g.test('contains_interval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -445,7 +445,7 @@ interface SpanIntervalsCase {
   expected: number | IntervalBounds;
 }
 
-g.test('spanIntervals_f32f16af')
+g.test('spanIntervals')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -499,7 +499,7 @@ interface isVectorCase {
   expected: boolean;
 }
 
-g.test('isVector_f32f16af')
+g.test('isVector')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -610,7 +610,7 @@ interface toVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('toVector_f32f16af')
+g.test('toVector')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -737,7 +737,7 @@ interface isMatrixCase {
   expected: boolean;
 }
 
-g.test('isMatrix_f32f16af')
+g.test('isMatrix')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -1187,7 +1187,7 @@ interface toMatrixCase {
   expected: (number | IntervalBounds)[][];
 }
 
-g.test('toMatrix_f32f16af')
+g.test('toMatrix')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
@@ -1886,7 +1886,7 @@ const kSubnormalAbsoluteErrorValue = {
   f16: 2 ** -20, // f16 0x0010
 } as const;
 
-g.test('absoluteErrorInterval_f32f16')
+g.test('absoluteErrorInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
@@ -2065,7 +2065,7 @@ const kCorrectlyRoundedF64NormalCases = [
   },
 ] as const;
 
-g.test('correctlyRoundedInterval_f32f16')
+g.test('correctlyRoundedInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
@@ -2124,7 +2124,7 @@ const kULPErrorValue = {
   f16: 5, // 5 ULP is required for atan accuracy on f16
 };
 
-g.test('ulpInterval_f32f16')
+g.test('ulpInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
