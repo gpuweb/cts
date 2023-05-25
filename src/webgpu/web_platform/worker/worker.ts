@@ -1,8 +1,7 @@
-import { getGPU } from '../../../common/util/navigator_gpu.js';
 import { assert, objectEquals, iterRange } from '../../../common/util/util.js';
 
 async function basicTest() {
-  const adapter = await getGPU().requestAdapter();
+  const adapter = await navigator.gpu.requestAdapter();
   assert(adapter !== null, 'Failed to get adapter.');
 
   const device = await adapter.requestDevice();

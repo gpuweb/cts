@@ -1,6 +1,8 @@
 /// <reference types="@webgpu/types" />
 
-import { assert } from './util.js';
+import { TestCaseRecorder } from '../framework/fixture.js';
+
+import { ErrorWithExtra, assert } from './util.js';
 
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
@@ -45,7 +47,7 @@ export function setDefaultRequestAdapterOptions(options: GPURequestAdapterOption
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
  * Throws an exception if not found.
  */
-export function getGPU(): GPU {
+export function getGPU(recorder: TestCaseRecorder): GPU {
   if (impl) {
     return impl;
   }
@@ -62,8 +64,8 @@ export function getGPU(): GPU {
       void promise.then(async adapter => {
         if (adapter) {
           const info = await adapter.requestAdapterInfo();
-          // eslint-disable-next-line no-console
-          console.log(info);
+          const infoString = `Adapter: ${info.vendor} / ${info.architecture} / ${info.device}`;
+          recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo: info })));
         }
       });
       return promise;
