@@ -411,7 +411,7 @@ fn((t) => {
 g.test('texture_size,default_value_and_smallest_size,uncompressed_format').
 desc(
 `Test default values for height and depthOrArrayLayers for every dimension type and every uncompressed format.
-	  It also tests smallest size (lower bound) for every dimension type and every uncompressed format, while other texture_size tests are testing the upper bound.`).
+    It also tests smallest size (lower bound) for every dimension type and every uncompressed format, while other texture_size tests are testing the upper bound.`).
 
 params((u) =>
 u.
@@ -443,7 +443,7 @@ fn((t) => {
 g.test('texture_size,default_value_and_smallest_size,compressed_format').
 desc(
 `Test default values for height and depthOrArrayLayers for every dimension type and every compressed format.
-	  It also tests smallest size (lower bound) for every dimension type and every compressed format, while other texture_size tests are testing the upper bound.`).
+    It also tests smallest size (lower bound) for every dimension type and every compressed format, while other texture_size tests are testing the upper bound.`).
 
 params((u) =>
 u

@@ -88,13 +88,13 @@ fn(async (t) => {
       override c8: u32;               // type: uint32
       override c9: u32 = 0u;          // default override
       override c10: u32 = 10u;        // default
-      
+
       struct Buf {
           data : array<u32, ${count}>
       }
-      
+
       @group(0) @binding(0) var<storage, read_write> buf : Buf;
-      
+
       @compute @workgroup_size(1) fn main() {
           buf.data[0] = u32(c0);
           buf.data[1] = u32(c1);
@@ -130,13 +130,13 @@ fn(async (t) => {
         @id(1001) override c1: u32;            // some big numeric id
         @id(1) override c2: u32 = 0u;          // id == 1 might collide with some generated constant id
         @id(1003) override c3: u32 = 3u;       // default
-        
+
         struct Buf {
             data : array<u32, 3>
         }
-        
+
         @group(0) @binding(0) var<storage, read_write> buf : Buf;
-        
+
         @compute @workgroup_size(1) fn main() {
             buf.data[0] = c1;
             buf.data[1] = c2;
@@ -165,13 +165,13 @@ fn(async (t) => {
   `
         override c1: f32;
         override c2: f32;
-        
+
         struct Buf {
             data : array<f32, 2>
         }
-        
+
         @group(0) @binding(0) var<storage, read_write> buf : Buf;
-        
+
         @compute @workgroup_size(1) fn main() {
             buf.data[0] = c1;
             buf.data[1] = c2;
@@ -206,9 +206,9 @@ fn(async (t) => {
         struct Buf {
             data : array<u32, 1>
         }
-        
+
         @group(0) @binding(0) var<storage, read_write> buf : Buf;
-        
+
         @compute @workgroup_size(${workgroup_size_str}) fn main(
             @builtin(local_invocation_id) local_invocation_id : vec3<u32>
         ) {
@@ -233,9 +233,9 @@ fn(async (t) => {
       struct Buf {
           data : array<u32, 1>
       }
-      
+
       @group(0) @binding(0) var<storage, read_write> buf : Buf;
-      
+
       @compute @workgroup_size(1) fn main() {
           buf.data[0] = a;
       }`
@@ -334,21 +334,21 @@ fn(async (t) => {
     override c1: u32;
     override c2: u32;
     override c3: u32;
-    
+
     struct Buf {
         data : array<u32, 1>
     }
-    
+
     @group(0) @binding(0) var<storage, read_write> buf : Buf;
-    
+
     @compute @workgroup_size(1) fn main1() {
         buf.data[0] = c1;
     }
-    
+
     @compute @workgroup_size(1) fn main2() {
         buf.data[0] = c2;
     }
-    
+
     @compute @workgroup_size(c3) fn main3() {
         buf.data[0] = 3u;
     }`
