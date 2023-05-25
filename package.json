@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/gpuweb/cts#readme",
   "devDependencies": {
+    "eslint-plugin-gpuweb-cts": "file:./tools/eslint-plugin-gpuweb-cts",
     "@babel/cli": "^7.19.3",
     "@babel/core": "^7.20.5",
     "@babel/preset-typescript": "^7.18.6",
