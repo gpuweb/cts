@@ -126,11 +126,32 @@ export const kBit = {
       min: 0x0400,
       max: 0x7bff,
       zero: 0x0000,
+      nearest_max: 0x7bfe,
+      less_than_one: 0x3bff,
+      pi: {
+        whole: 0x4248,
+        three_quarters: 0x40b6,
+        half: 0x3e48,
+        third: 0x3c30,
+        quarter: 0x3a48,
+        sixth: 0x3830,
+      },
+      e: 0x416f,
     },
     negative: {
       max: 0x8400,
       min: 0xfbff,
       zero: 0x8000,
+      nearest_min: 0xfbfe,
+      less_than_one: 0xbbff,
+      pi: {
+        whole: 0xc248,
+        three_quarters: 0xc0b6,
+        half: 0xbe48,
+        third: 0xbc30,
+        quarter: 0xba48,
+        sixth: 0xb830,
+      },
     },
     subnormal: {
       positive: {
@@ -494,6 +515,17 @@ export const kValue = {
       min: reinterpretU16AsF16(kBit.f16.positive.min),
       max: reinterpretU16AsF16(kBit.f16.positive.max),
       zero: reinterpretU16AsF16(kBit.f16.positive.zero),
+      nearest_max: reinterpretU16AsF16(kBit.f16.positive.nearest_max),
+      less_than_one: reinterpretU16AsF16(kBit.f16.positive.less_than_one),
+      pi: {
+        whole: reinterpretU16AsF16(kBit.f16.positive.pi.whole),
+        three_quarters: reinterpretU16AsF16(kBit.f16.positive.pi.three_quarters),
+        half: reinterpretU16AsF16(kBit.f16.positive.pi.half),
+        third: reinterpretU16AsF16(kBit.f16.positive.pi.third),
+        quarter: reinterpretU16AsF16(kBit.f16.positive.pi.quarter),
+        sixth: reinterpretU16AsF16(kBit.f16.positive.pi.sixth),
+      },
+      e: reinterpretU16AsF16(kBit.f16.positive.e),
       // The positive pipeline-overridable constant with the smallest magnitude
       // which when cast to f16 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
@@ -510,6 +542,16 @@ export const kValue = {
       max: reinterpretU16AsF16(kBit.f16.negative.max),
       min: reinterpretU16AsF16(kBit.f16.negative.min),
       zero: reinterpretU16AsF16(kBit.f16.negative.zero),
+      nearest_min: reinterpretU16AsF16(kBit.f16.negative.nearest_min),
+      less_than_one: reinterpretU16AsF16(kBit.f16.negative.less_than_one), // -0.9996
+      pi: {
+        whole: reinterpretU16AsF16(kBit.f16.negative.pi.whole),
+        three_quarters: reinterpretU16AsF16(kBit.f16.negative.pi.three_quarters),
+        half: reinterpretU16AsF16(kBit.f16.negative.pi.half),
+        third: reinterpretU16AsF16(kBit.f16.negative.pi.third),
+        quarter: reinterpretU16AsF16(kBit.f16.negative.pi.quarter),
+        sixth: reinterpretU16AsF16(kBit.f16.negative.pi.sixth),
+      },
       // The negative pipeline-overridable constant with the smallest magnitude
       // which when cast to f16 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.

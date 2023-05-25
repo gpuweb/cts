@@ -2,7 +2,15 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { kBit, kValue } from './constants.js';
-import { f32, floatBitsToNumber, i32, kFloat16Format, kFloat32Format, u32 } from './conversion.js';
+import {
+f32,
+f16,
+floatBitsToNumber,
+i32,
+kFloat16Format,
+kFloat32Format,
+u32 } from
+'./conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -386,12 +394,55 @@ export function oneULPF32(target, mode = 'flush') {
   //     before and after are f32 representable
   const before = nextAfterF32(target, 'negative', mode);
   const after = nextAfterF32(target, 'positive', mode);
-  const converted = new Float32Array([target])[0];
+  const converted = quantizeToF32(target);
   if (converted === target) {
     // |target| is f32 representable, so either before or after will be x
     return Math.min(target - before, after - target);
   } else {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
+    return after - before;
+  }
+}
+
+/**
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ * @param mode should FTZ occurring during calculation or not
+ */
+export function oneULPF16(target, mode = 'flush') {
+  if (Number.isNaN(target)) {
+    return Number.NaN;
+  }
+
+  target = mode === 'flush' ? flushSubnormalNumberF16(target) : target;
+
+  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // distance between the two nearest f16 representable numbers to the
+  // appropriate edge.
+  if (target === Number.POSITIVE_INFINITY || target >= kValue.f16.positive.max) {
+    return kValue.f16.positive.max - kValue.f16.positive.nearest_max;
+  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f16.negative.min) {
+    return kValue.f16.negative.nearest_min - kValue.f16.negative.min;
+  }
+
+  // ulp(x) is min(after - before), where
+  //     before <= x <= after
+  //     before =/= after
+  //     before and after are f16 representable
+  const before = nextAfterF16(target, 'negative', mode);
+  const after = nextAfterF16(target, 'positive', mode);
+  const converted = quantizeToF16(target);
+  if (converted === target) {
+    // |target| is f16 representable, so either before or after will be x
+    return Math.min(target - before, after - target);
+  } else {
+    // |target| is not f16 representable so taking distance of neighbouring f16s.
     return after - before;
   }
 }
@@ -1571,6 +1622,11 @@ export function signExtend(n, bits) {
 /** @returns the closest 32-bit floating point value to the input */
 export function quantizeToF32(num) {
   return f32(num).value;
+}
+
+/** @returns the closest 16-bit floating point value to the input */
+export function quantizeToF16(num) {
+  return f16(num).value;
 }
 
 /** @returns the closest 32-bit signed integer value to the input */

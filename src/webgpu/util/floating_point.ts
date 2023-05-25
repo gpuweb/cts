@@ -8,8 +8,10 @@ import {
   f16,
   f32,
   f64,
+  reinterpretF16AsU16,
   reinterpretF32AsU32,
   reinterpretF64AsU32s,
+  reinterpretU16AsF16,
   reinterpretU32AsF32,
   reinterpretU32sAsF64,
   Scalar,
@@ -25,6 +27,7 @@ import {
   correctlyRoundedF64,
   flatten2DArray,
   FlushMode,
+  flushSubnormalNumberF16,
   flushSubnormalNumberF32,
   flushSubnormalNumberF64,
   isFiniteF16,
@@ -33,9 +36,11 @@ import {
   isSubnormalNumberF32,
   isSubnormalNumberF64,
   map2DArray,
+  oneULPF16,
   oneULPF32,
   oneULPF64,
   quantizeToF32,
+  quantizeToF16,
   unflatten2DArray,
 } from './math.js';
 
@@ -117,7 +122,7 @@ export class FPInterval {
     return this.begin === this.end;
   }
 
-  /** @returns if this interval only contains f32 finite values */
+  /** @returns if this interval only contains finite values */
   public isFinite(): boolean {
     return this.traits().isFinite(this.begin) && this.traits().isFinite(this.end);
   }
@@ -135,6 +140,8 @@ export class FPInterval {
 export type SerializedFPInterval =
   | { kind: 'f32'; any: false; begin: number; end: number }
   | { kind: 'f32'; any: true }
+  | { kind: 'f16'; any: false; begin: number; end: number }
+  | { kind: 'f16'; any: true }
   | { kind: 'abstract'; any: false; begin: [number, number]; end: [number, number] }
   | { kind: 'abstract'; any: true };
 
@@ -156,13 +163,25 @@ export function serializeFPInterval(i: FPInterval): SerializedFPInterval {
     }
     case 'f32': {
       if (i === traits.constants().anyInterval) {
-        return { kind: 'abstract', any: true };
+        return { kind: 'f32', any: true };
       } else {
         return {
           kind: 'f32',
           any: false,
           begin: reinterpretF32AsU32(i.begin),
           end: reinterpretF32AsU32(i.end),
+        };
+      }
+    }
+    case 'f16': {
+      if (i === traits.constants().anyInterval) {
+        return { kind: 'f16', any: true };
+      } else {
+        return {
+          kind: 'f16',
+          any: false,
+          begin: reinterpretF16AsU16(i.begin),
+          end: reinterpretF16AsU16(i.end),
         };
       }
     }
@@ -183,6 +202,9 @@ export function deserializeFPInterval(data: SerializedFPInterval): FPInterval {
     }
     case 'f32': {
       return traits.toInterval([reinterpretU32AsF32(data.begin), reinterpretU32AsF32(data.end)]);
+    }
+    case 'f16': {
+      return traits.toInterval([reinterpretU16AsF16(data.begin), reinterpretU16AsF16(data.end)]);
     }
   }
   unreachable(`Unable to deserialize data ${data}`);
@@ -2042,7 +2064,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarToIntervalOp(x: FPInterval, op: ScalarToIntervalOp): FPInterval {
+  protected runScalarToIntervalOp(x: FPInterval, op: ScalarToIntervalOp): FPInterval {
     if (!x.isFinite()) {
       return this.constants().anyInterval;
     }
@@ -2068,7 +2090,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarPairToIntervalOp(
+  protected runScalarPairToIntervalOp(
     x: FPInterval,
     y: FPInterval,
     op: ScalarPairToIntervalOp
@@ -2101,7 +2123,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runScalarTripleToIntervalOp(
+  protected runScalarTripleToIntervalOp(
     x: FPInterval,
     y: FPInterval,
     z: FPInterval,
@@ -2132,7 +2154,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runVectorToIntervalOp(x: FPVector, op: VectorToIntervalOp): FPInterval {
+  protected runVectorToIntervalOp(x: FPVector, op: VectorToIntervalOp): FPInterval {
     if (x.some(e => !e.isFinite())) {
       return this.constants().anyInterval;
     }
@@ -2157,7 +2179,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private runVectorPairToIntervalOp(
+  protected runVectorPairToIntervalOp(
     x: FPVector,
     y: FPVector,
     op: VectorPairToIntervalOp
@@ -2188,7 +2210,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a vector of spans over all the outputs of op.impl
    */
-  private runVectorToVectorOp(x: FPVector, op: VectorToVectorOp): FPVector {
+  protected runVectorToVectorOp(x: FPVector, op: VectorToVectorOp): FPVector {
     if (x.some(e => !e.isFinite())) {
       return this.constants().anyVector[x.length];
     }
@@ -2217,7 +2239,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  private runScalarToIntervalOpComponentWise(x: FPVector, op: ScalarToIntervalOp): FPVector {
+  protected runScalarToIntervalOpComponentWise(x: FPVector, op: ScalarToIntervalOp): FPVector {
     return this.toVector(x.map(e => this.runScalarToIntervalOp(e, op)));
   }
 
@@ -2230,7 +2252,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a vector of spans over all the outputs of op.impl
    */
-  private runVectorPairToVectorOp(x: FPVector, y: FPVector, op: VectorPairToVectorOp): FPVector {
+  protected runVectorPairToVectorOp(x: FPVector, y: FPVector, op: VectorPairToVectorOp): FPVector {
     if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
       return this.constants().anyVector[x.length];
     }
@@ -2263,7 +2285,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a vector of intervals with the outputs of op.impl
    */
-  private runScalarPairToIntervalOpVectorComponentWise(
+  protected runScalarPairToIntervalOpVectorComponentWise(
     x: FPVector,
     y: FPVector,
     op: ScalarPairToIntervalOp
@@ -2288,7 +2310,7 @@ abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a matrix of spans over all the outputs of op.impl
    */
-  private runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
+  protected runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
     const num_cols = m.length;
     const num_rows = m[0].length;
     if (m.some(c => c.some(r => !r.isFinite()))) {
@@ -2327,7 +2349,7 @@ abstract class FPTraits {
    * @param op scalar operation to be run component-wise
    * @returns a matrix of intervals with the outputs of op.impl
    */
-  private runScalarPairToIntervalOpMatrixComponentWise(
+  protected runScalarPairToIntervalOpMatrixComponentWise(
     x: FPMatrix,
     y: FPMatrix,
     op: ScalarPairToIntervalOp
@@ -2467,6 +2489,7 @@ abstract class FPTraits {
   /** Calculate an acceptance interval for abs(n) */
   public abstract readonly absInterval: (n: number) => FPInterval;
 
+  // This op should be implemented diffferently for f32 and f16.
   private readonly AcosIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
       // acos(n) = atan2(sqrt(1.0 - n * n), n) or a polynomial approximation with absolute error
@@ -2557,6 +2580,7 @@ abstract class FPTraits {
     y: Array2D<number>
   ) => FPMatrix;
 
+  // This op should be implemented diffferently for f32 and f16.
   private readonly AsinIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
       // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
@@ -2606,6 +2630,7 @@ abstract class FPTraits {
   /** Calculate an acceptance interval of atan(x) */
   public abstract readonly atanInterval: (n: number | FPInterval) => FPInterval;
 
+  // This op should be implemented diffferently for f32 and f16.
   private readonly Atan2IntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
       {
@@ -3040,6 +3065,7 @@ abstract class FPTraits {
     y: number | number[]
   ) => FPInterval;
 
+  // This op should be implemented diffferently for f32 and f16.
   private readonly DivisionIntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
       {
@@ -3278,6 +3304,7 @@ abstract class FPTraits {
   /** Calculate an acceptance interval of inverseSqrt(x) */
   public abstract readonly inverseSqrtInterval: (n: number | FPInterval) => FPInterval;
 
+  // This op should be implemented diffferently for f32 and f16.
   private readonly LdexpIntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
       // Implementing SPIR-V's more restrictive domain until
@@ -3375,8 +3402,8 @@ abstract class FPTraits {
 
   private readonly MaxIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
-      // If both of he inputs are subnormal, then either of the inputs can be returned
-      if (isSubnormalNumberF32(x) && isSubnormalNumberF32(y)) {
+      // If both of the inputs are subnormal, then either of the inputs can be returned
+      if (this.isSubnormal(x) && this.isSubnormal(y)) {
         return this.correctlyRoundedInterval(
           this.spanIntervals(this.toInterval(x), this.toInterval(y))
         );
@@ -3402,8 +3429,8 @@ abstract class FPTraits {
 
   private readonly MinIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
-      // If both of he inputs are subnormal, then either of the inputs can be returned
-      if (isSubnormalNumberF32(x) && isSubnormalNumberF32(y)) {
+      // If both of the inputs are subnormal, then either of the inputs can be returned
+      if (this.isSubnormal(x) && this.isSubnormal(y)) {
         return this.correctlyRoundedInterval(
           this.spanIntervals(this.toInterval(x), this.toInterval(y))
         );
@@ -3648,24 +3675,6 @@ abstract class FPTraits {
     x: number | FPInterval,
     y: number | FPInterval
   ) => FPInterval;
-
-  // Once a full implementation of F16Interval exists, the correctlyRounded for
-  // that can potentially be used instead of having a bespoke operation
-  // implementation.
-  private readonly QuantizeToF16IntervalOp: ScalarToIntervalOp = {
-    impl: (n: number): FPInterval => {
-      const rounded = correctlyRoundedF16(n);
-      const flushed = addFlushedIfNeededF16(rounded);
-      return this.spanIntervals(...flushed.map(f => this.toInterval(f)));
-    },
-  };
-
-  protected quantizeToF16IntervalImpl(n: number): FPInterval {
-    return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
-  }
-
-  /** Calculate an acceptance interval of quantizeToF16(x) */
-  public abstract readonly quantizeToF16Interval: (n: number) => FPInterval;
 
   private readonly RadiansIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -4263,7 +4272,6 @@ class F32Traits extends FPTraits {
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.powIntervalImpl.bind(this);
-  public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
   public readonly refractInterval = this.refractIntervalImpl.bind(this);
@@ -4446,6 +4454,21 @@ class F32Traits extends FPTraits {
 
   /** Calculate an acceptance interval vector for unpack4x8unorm(x) */
   public readonly unpack4x8unormInterval = this.unpack4x8unormIntervalImpl.bind(this);
+
+  private readonly QuantizeToF16IntervalOp: ScalarToIntervalOp = {
+    impl: (n: number): FPInterval => {
+      const rounded = correctlyRoundedF16(n);
+      const flushed = addFlushedIfNeededF16(rounded);
+      return this.spanIntervals(...flushed.map(f => this.toInterval(f)));
+    },
+  };
+
+  protected quantizeToF16IntervalImpl(n: number): FPInterval {
+    return this.runScalarToIntervalOp(this.toInterval(n), this.QuantizeToF16IntervalOp);
+  }
+
+  /** Calculate an acceptance interval of quantizeToF16(x) */
+  public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
 }
 
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
@@ -4693,11 +4716,7 @@ class FPAbstractTraits extends FPTraits {
 
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
 // executes before they are defined.
-const kF16AnyInterval = new FPInterval(
-  'abstract',
-  Number.NEGATIVE_INFINITY,
-  Number.POSITIVE_INFINITY
-);
+const kF16AnyInterval = new FPInterval('f16', Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
 const kF16ZeroInterval = new FPInterval('f16', 0);
 
 // This is implementation is incomplete
@@ -4707,39 +4726,39 @@ class F16Traits extends FPTraits {
       min: kValue.f16.positive.min,
       max: kValue.f16.positive.max,
       infinity: kValue.f16.infinity.positive,
-      nearest_max: 0xffff, // Replace with correct value
-      less_than_one: 0xffff, // Replace with correct value
+      nearest_max: kValue.f16.positive.nearest_max,
+      less_than_one: kValue.f16.positive.less_than_one,
       subnormal: {
         min: kValue.f16.subnormal.positive.min,
         max: kValue.f16.subnormal.positive.max,
       },
       pi: {
-        whole: 0xffff, // Replace with correct value
-        three_quarters: 0xffff, // Replace with correct value
-        half: 0xffff, // Replace with correct value
-        third: 0xffff, // Replace with correct value
-        quarter: 0xffff, // Replace with correct value
-        sixth: 0xffff, // Replace with correct value
+        whole: kValue.f16.positive.pi.whole,
+        three_quarters: kValue.f16.positive.pi.three_quarters,
+        half: kValue.f16.positive.pi.half,
+        third: kValue.f16.positive.pi.third,
+        quarter: kValue.f16.positive.pi.quarter,
+        sixth: kValue.f16.positive.pi.sixth,
       },
-      e: 0xffff, // Replace with correct value
+      e: kValue.f16.positive.e,
     },
     negative: {
       min: kValue.f16.negative.min,
       max: kValue.f16.negative.max,
       infinity: kValue.f16.infinity.negative,
-      nearest_min: 0xffff, // Replace with correct value
-      less_than_one: 0xffff, // Replace with correct value
+      nearest_min: kValue.f16.negative.nearest_min,
+      less_than_one: kValue.f16.negative.less_than_one,
       subnormal: {
         min: kValue.f16.subnormal.negative.min,
         max: kValue.f16.subnormal.negative.max,
       },
       pi: {
-        whole: 0xffff, // Replace with correct value
-        three_quarters: 0xffff, // Replace with correct value
-        half: 0xffff, // Replace with correct value
-        third: 0xffff, // Replace with correct value
-        quarter: 0xffff, // Replace with correct value
-        sixth: 0xffff, // Replace with correct value
+        whole: kValue.f16.negative.pi.whole,
+        three_quarters: kValue.f16.negative.pi.three_quarters,
+        half: kValue.f16.negative.pi.half,
+        third: kValue.f16.negative.pi.third,
+        quarter: kValue.f16.negative.pi.quarter,
+        sixth: kValue.f16.negative.pi.sixth,
       },
     },
     anyInterval: kF16AnyInterval,
@@ -4748,13 +4767,13 @@ class F16Traits extends FPTraits {
     // initializer cannot be referenced in the initializer
     negPiToPiInterval: new FPInterval(
       'f16',
-      0xffff, // Replace with correct value
-      0xffff // Replace with correct value
+      kValue.f16.negative.pi.whole,
+      kValue.f16.positive.pi.whole
     ),
     greaterThanZeroInterval: new FPInterval(
       'f16',
-      0xffff, // Replace with correct value
-      0xffff // Replace with correct value
+      kValue.f16.subnormal.positive.min,
+      kValue.f16.positive.max
     ),
     zeroVector: {
       2: [kF16ZeroInterval, kF16ZeroInterval],
@@ -4830,15 +4849,12 @@ class F16Traits extends FPTraits {
   }
 
   // Utilities - Overrides
-  // number is represented as a f16, so any number value is already quantized to f16
-  public readonly quantize = (n: number) => {
-    return n;
-  };
-  public readonly correctlyRounded = correctlyRoundedF64;
-  public readonly isFinite = Number.isFinite;
-  public readonly isSubnormal = isSubnormalNumberF64;
-  public readonly flushSubnormal = flushSubnormalNumberF64;
-  public readonly oneULP = oneULPF64;
+  public readonly quantize = quantizeToF16;
+  public readonly correctlyRounded = correctlyRoundedF16;
+  public readonly isFinite = isFiniteF16;
+  public readonly isSubnormal = isSubnormalNumberF16;
+  public readonly flushSubnormal = flushSubnormalNumberF16;
+  public readonly oneULP = oneULPF16;
   public readonly scalarBuilder = f16;
 
   // Framework - Fundamental Error Intervals - Overrides
@@ -4908,7 +4924,7 @@ class F16Traits extends FPTraits {
   public readonly negationInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
+  public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   public readonly radiansInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(this);
   public readonly refractInterval = this.unimplementedRefract.bind(this);
@@ -4927,10 +4943,16 @@ class F16Traits extends FPTraits {
   public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
   public readonly truncInterval = this.unimplementedScalarToInterval.bind(this);
+
+  /** quantizeToF16 has no f16 overload. */
+  private quantizeToF16IntervalNotAvailable(n: number): FPInterval {
+    unreachable("quantizeToF16 don't have f16 overload.");
+    return kF16AnyInterval;
+  }
 }
 
 export const FP = {
   f32: new F32Traits(),
-  abstract: new FPAbstractTraits(),
   f16: new F16Traits(),
+  abstract: new FPAbstractTraits(),
 };

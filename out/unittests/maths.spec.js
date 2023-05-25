@@ -34,6 +34,7 @@ nextAfterF16,
 nextAfterF32,
 nextAfterF64,
 
+oneULPF16,
 oneULPF32,
 oneULPF64,
 lerpBigInt,
@@ -778,6 +779,153 @@ fn((t) => {
   t.expect(
   got === expect || Number.isNaN(got) && Number.isNaN(expect),
   `oneULPF32(${target}) returned ${got}. Expected ${expect}`);
+
+});
+
+g.test('oneULPF16FlushToZero').
+paramsSubcasesOnly([
+// Edge Cases
+{ target: Number.NaN, expect: Number.NaN },
+{ target: Number.POSITIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+{ target: Number.NEGATIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+
+// Zeroes, expect positive.min in flush mode
+{ target: +0, expect: reinterpretU16AsF16(0x0400) },
+{ target: -0, expect: reinterpretU16AsF16(0x0400) },
+
+// Subnormals
+{ target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0400) },
+{ target: 1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // positive subnormal
+{ target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0400) },
+{ target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0400) },
+{ target: -1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // negative subnormal
+{ target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0400) },
+
+// Normals
+{ target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
+{ target: 1, expect: reinterpretU16AsF16(0x1000) },
+{ target: 2, expect: reinterpretU16AsF16(0x1400) },
+{ target: 4, expect: reinterpretU16AsF16(0x1800) },
+{ target: 1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.positive.max, expect: reinterpretU16AsF16(0x5000) },
+{ target: kValue.f16.negative.max, expect: reinterpretU16AsF16(0x0001) },
+{ target: -1, expect: reinterpretU16AsF16(0x1000) },
+{ target: -2, expect: reinterpretU16AsF16(0x1400) },
+{ target: -4, expect: reinterpretU16AsF16(0x1800) },
+{ target: -1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.negative.min, expect: reinterpretU16AsF16(0x5000) },
+
+// No precise f16 value
+{ target: 0.001, expect: reinterpretU16AsF16(0x0010) }, // positive normal
+{ target: -0.001, expect: reinterpretU16AsF16(0x0010) }, // negative normal
+{ target: 1e8, expect: reinterpretU16AsF16(0x5000) }, // positive out of range
+{ target: -1e8, expect: reinterpretU16AsF16(0x5000) } // negative out of range
+]).
+fn((t) => {
+  const target = t.params.target;
+  const got = oneULPF16(target, 'flush');
+  const expect = t.params.expect;
+  t.expect(
+  got === expect || Number.isNaN(got) && Number.isNaN(expect),
+  `oneULPF16(${target}, 'flush') returned ${got}. Expected ${expect}`);
+
+});
+
+g.test('oneULPF16NoFlush').
+paramsSubcasesOnly([
+// Edge Cases
+{ target: Number.NaN, expect: Number.NaN },
+{ target: Number.POSITIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+{ target: Number.NEGATIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+
+// Zeroes, expect positive.min in flush mode
+{ target: +0, expect: reinterpretU16AsF16(0x0001) },
+{ target: -0, expect: reinterpretU16AsF16(0x0001) },
+
+// Subnormals
+{ target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0001) },
+{ target: 1.91e-6, expect: reinterpretU16AsF16(0x0001) }, // positive subnormal
+{ target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0001) },
+{ target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0001) },
+{ target: -1.91e-6, expect: reinterpretU16AsF16(0x0001) }, // negative subnormal
+{ target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0001) },
+
+// Normals
+{ target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
+{ target: 1, expect: reinterpretU16AsF16(0x1000) },
+{ target: 2, expect: reinterpretU16AsF16(0x1400) },
+{ target: 4, expect: reinterpretU16AsF16(0x1800) },
+{ target: 1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.positive.max, expect: reinterpretU16AsF16(0x5000) },
+{ target: kValue.f16.negative.max, expect: reinterpretU16AsF16(0x0001) },
+{ target: -1, expect: reinterpretU16AsF16(0x1000) },
+{ target: -2, expect: reinterpretU16AsF16(0x1400) },
+{ target: -4, expect: reinterpretU16AsF16(0x1800) },
+{ target: -1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.negative.min, expect: reinterpretU16AsF16(0x5000) },
+
+// No precise f16 value
+{ target: 0.001, expect: reinterpretU16AsF16(0x0010) }, // positive normal
+{ target: -0.001, expect: reinterpretU16AsF16(0x0010) }, // negative normal
+{ target: 1e8, expect: reinterpretU16AsF16(0x5000) }, // positive out of range
+{ target: -1e8, expect: reinterpretU16AsF16(0x5000) } // negative out of range
+]).
+fn((t) => {
+  const target = t.params.target;
+  const got = oneULPF16(target, 'no-flush');
+  const expect = t.params.expect;
+  t.expect(
+  got === expect || Number.isNaN(got) && Number.isNaN(expect),
+  `oneULPF16(${target}, no-flush) returned ${got}. Expected ${expect}`);
+
+});
+
+g.test('oneULPF16').
+paramsSubcasesOnly([
+// Edge Cases
+{ target: Number.NaN, expect: Number.NaN },
+{ target: Number.POSITIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+{ target: Number.NEGATIVE_INFINITY, expect: reinterpretU16AsF16(0x5000) },
+
+// Zeroes, expect positive.min in flush mode
+{ target: +0, expect: reinterpretU16AsF16(0x0400) },
+{ target: -0, expect: reinterpretU16AsF16(0x0400) },
+
+// Subnormals
+{ target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0400) },
+{ target: 1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // positive subnormal
+{ target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0400) },
+{ target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0400) },
+{ target: -1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // negative subnormal
+{ target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0400) },
+
+// Normals
+{ target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
+{ target: 1, expect: reinterpretU16AsF16(0x1000) },
+{ target: 2, expect: reinterpretU16AsF16(0x1400) },
+{ target: 4, expect: reinterpretU16AsF16(0x1800) },
+{ target: 1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.positive.max, expect: reinterpretU16AsF16(0x5000) },
+{ target: kValue.f16.negative.max, expect: reinterpretU16AsF16(0x0001) },
+{ target: -1, expect: reinterpretU16AsF16(0x1000) },
+{ target: -2, expect: reinterpretU16AsF16(0x1400) },
+{ target: -4, expect: reinterpretU16AsF16(0x1800) },
+{ target: -1000, expect: reinterpretU16AsF16(0x3800) },
+{ target: kValue.f16.negative.min, expect: reinterpretU16AsF16(0x5000) },
+
+// No precise f16 value
+{ target: 0.001, expect: reinterpretU16AsF16(0x0010) }, // positive normal
+{ target: -0.001, expect: reinterpretU16AsF16(0x0010) }, // negative normal
+{ target: 1e8, expect: reinterpretU16AsF16(0x5000) }, // positive out of range
+{ target: -1e8, expect: reinterpretU16AsF16(0x5000) } // negative out of range
+]).
+fn((t) => {
+  const target = t.params.target;
+  const got = oneULPF16(target, 'flush');
+  const expect = t.params.expect;
+  t.expect(
+  got === expect || Number.isNaN(got) && Number.isNaN(expect),
+  `oneULPF16(${target}, 'flush') returned ${got}. Expected ${expect}`);
 
 });
 

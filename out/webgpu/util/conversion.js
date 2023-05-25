@@ -967,16 +967,6 @@ export function reinterpretU32sAsF64(u32s) {
 }
 
 /**
- * @returns a number representing the u16 interpretation
- * of the bits of a number assumed to be an f16 value.
- */
-export function reinterpretF16AsU16(f16) {
-  const array = new Float16Array(1);
-  array[0] = f16;
-  return new Uint16Array(array.buffer)[0];
-}
-
-/**
  * @returns a number representing the u32 interpretation
  * of the bits of a number assumed to be an f32 value.
  */
@@ -1024,6 +1014,26 @@ export function reinterpretI32AsU32(i32) {
   const array = new Int32Array(1);
   array[0] = i32;
   return new Uint32Array(array.buffer)[0];
+}
+
+/**
+ * @returns a number representing the u16 interpretation
+ * of the bits of a number assumed to be an f16 value.
+ */
+export function reinterpretF16AsU16(f16) {
+  const array = new Float16Array(1);
+  array[0] = f16;
+  return new Uint16Array(array.buffer)[0];
+}
+
+/**
+ * @returns a number representing the f16 interpretation
+ * of the bits of a number assumed to be an u16 value.
+ */
+export function reinterpretU16AsF16(u16) {
+  const array = new Uint16Array(1);
+  array[0] = u16;
+  return new Float16Array(array.buffer)[0];
 }
 
 /**
