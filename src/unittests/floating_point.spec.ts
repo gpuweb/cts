@@ -7,10 +7,12 @@ import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, FPInterval, IntervalBounds } from '../webgpu/util/floating_point.js';
 import {
+  reinterpretU16AsF16,
   reinterpretU32AsF32,
   reinterpretU64AsF64,
   map2DArray,
   oneULPF32,
+  oneULPF16,
 } from '../webgpu/util/math.js';
 
 import { UnitTest } from './unit_test.js';
@@ -23,6 +25,7 @@ const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_IN
 /** Interval from kAnyBounds */
 const kAnyInterval = {
   f32: FP.f32.toInterval(kAnyBounds),
+  f16: FP.f16.toInterval(kAnyBounds),
   abstract: FP.abstract.toInterval(kAnyBounds),
 };
 
@@ -46,21 +49,45 @@ function minusOneULPF32(x: number): number {
   return minusNULPF32(x, 1);
 }
 
+/** @returns a number N * ULP greater than the provided number, treats input as f16 */
+function plusNULPF16(x: number, n: number): number {
+  return x + n * oneULPF16(x);
+}
+
+/** @returns a number one ULP greater than the provided number, treats input as f16 */
+function plusOneULPF16(x: number): number {
+  return plusNULPF16(x, 1);
+}
+
+/** @returns a number N * ULP less than the provided number, treats input as f16 */
+function minusNULPF16(x: number, n: number): number {
+  return x - n * oneULPF16(x);
+}
+
+/** @returns a number one ULP less than the provided number, treats input as f16 */
+function minusOneULPF16(x: number): number {
+  return minusNULPF16(x, 1);
+}
+
 /** Group ULP functions of different FP traits */
 const plusNULPFunctions = {
   f32: plusNULPF32,
+  f16: plusNULPF16,
 };
 
 const plusOneULPFunctions = {
   f32: plusOneULPF32,
+  f16: plusOneULPF16,
 };
 
 const minusNULPFunctions = {
   f32: minusNULPF32,
+  f16: minusNULPF16,
 };
 
 const minusOneULPFunctions = {
   f32: minusOneULPF32,
+  f16: minusOneULPF16,
 };
 
 /** @returns the expected IntervalBounds adjusted by the given error function
@@ -106,10 +133,10 @@ interface ConstructorCase {
   expected: IntervalBounds;
 }
 
-g.test('constructor_f32af')
+g.test('constructor')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ConstructorCase>(p => {
         const constants = FP[p.trait].constants();
@@ -167,10 +194,10 @@ interface ContainsNumberCase {
   expected: boolean;
 }
 
-g.test('contains_number_f32af')
+g.test('contains_number')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ContainsNumberCase>(p => {
         const constants = FP[p.trait].constants();
@@ -306,10 +333,10 @@ interface ContainsIntervalCase {
   expected: boolean;
 }
 
-g.test('contains_interval_f32af')
+g.test('contains_interval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ContainsIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -418,10 +445,10 @@ interface SpanIntervalsCase {
   expected: number | IntervalBounds;
 }
 
-g.test('spanIntervals_f32af')
+g.test('spanIntervals')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<SpanIntervalsCase>(p => {
         const constants = FP[p.trait].constants();
@@ -472,10 +499,10 @@ interface isVectorCase {
   expected: boolean;
 }
 
-g.test('isVector_f32af')
+g.test('isVector')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<isVectorCase>(p => {
         const trait = FP[p.trait];
@@ -583,10 +610,10 @@ interface toVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('toVector_f32af')
+g.test('toVector')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<toVectorCase>(p => {
         const trait = FP[p.trait];
@@ -710,10 +737,10 @@ interface isMatrixCase {
   expected: boolean;
 }
 
-g.test('isMatrix_f32af')
+g.test('isMatrix')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<isMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -1160,10 +1187,10 @@ interface toMatrixCase {
   expected: (number | IntervalBounds)[][];
 }
 
-g.test('toMatrix_f32af')
+g.test('toMatrix')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<toMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -1844,22 +1871,25 @@ interface AbsoluteErrorCase {
 // but 1.0 +/- x is still exactly representable.
 const kSmallAbsoluteErrorValue = {
   f32: 2 ** -11, // Builtin cos and sin has a absolute error 2**-11 for f32
+  f16: 2 ** -7, // Builtin cos and sin has a absolute error 2**-7 for f16
 } as const;
 // A large absolute error value is a representable value x that much smaller than maximum
 // positive, but positive.max - x is still exactly representable.
 const kLargeAbsoluteErrorValue = {
   f32: 2 ** 110, // f32.positive.max - 2**110 = 3.4028104e+38 = 0x7f7fffbf in f32
+  f16: 2 ** 10, // f16.positive.max - 2**10 = 64480 = 0x7bdf in f16
 } as const;
 // A subnormal absolute error value is a subnormal representable value x of kind, which ensures
 // that positive.subnormal.min +/- x is still exactly representable.
 const kSubnormalAbsoluteErrorValue = {
   f32: 2 ** -140, // f32 0x00000200
+  f16: 2 ** -20, // f16 0x0010
 } as const;
 
-g.test('absoluteErrorInterval_f32')
+g.test('absoluteErrorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<AbsoluteErrorCase>(p => {
         const trait = FP[p.trait];
@@ -1966,48 +1996,79 @@ const kCorrectlyRoundedNormalCases = {
     { value: reinterpretU32AsF32(0x83800000), expected: reinterpretU32AsF32(0x83800000) },
     { value: reinterpretU32AsF32(0x83800001), expected: reinterpretU32AsF32(0x83800001) },
   ] as CorrectlyRoundedCase[],
-};
+  f16: [
+    { value: 0, expected: [0, 0] },
+    { value: reinterpretU16AsF16(0x0c00), expected: reinterpretU16AsF16(0x0c00) },
+    { value: reinterpretU16AsF16(0x0c01), expected: reinterpretU16AsF16(0x0c01) },
+    { value: reinterpretU16AsF16(0x8c00), expected: reinterpretU16AsF16(0x8c00) },
+    { value: reinterpretU16AsF16(0x8c01), expected: reinterpretU16AsF16(0x8c01) },
+  ] as CorrectlyRoundedCase[],
+} as const;
 
 // 64-bit normals that fall between two conjunction normal values in target type
 const kCorrectlyRoundedF64NormalCases = [
   {
     value: reinterpretU64AsF64(0x3ff0_0000_0000_0001n),
-    expected: { f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)],
+      f16: [reinterpretU16AsF16(0x3c00), reinterpretU16AsF16(0x3c01)],
+    },
   },
   {
     value: reinterpretU64AsF64(0x3ff0_0000_0000_0002n),
-    expected: { f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0x3f800000), reinterpretU32AsF32(0x3f800001)],
+      f16: [reinterpretU16AsF16(0x3c00), reinterpretU16AsF16(0x3c01)],
+    },
   },
   {
     value: reinterpretU64AsF64(0x3ff0_0800_0000_0010n),
-    expected: { f32: [reinterpretU32AsF32(0x3f804000), reinterpretU32AsF32(0x3f804001)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0x3f804000), reinterpretU32AsF32(0x3f804001)],
+      f16: [reinterpretU16AsF16(0x3c02), reinterpretU16AsF16(0x3c03)],
+    },
   },
   {
     value: reinterpretU64AsF64(0x3ff0_1000_0000_0020n),
-    expected: { f32: [reinterpretU32AsF32(0x3f808000), reinterpretU32AsF32(0x3f808001)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0x3f808000), reinterpretU32AsF32(0x3f808001)],
+      f16: [reinterpretU16AsF16(0x3c04), reinterpretU16AsF16(0x3c05)],
+    },
   },
   {
     value: reinterpretU64AsF64(0xbff0_0000_0000_0001n),
-    expected: { f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)],
+      f16: [reinterpretU16AsF16(0xbc01), reinterpretU16AsF16(0xbc00)],
+    },
   },
   {
     value: reinterpretU64AsF64(0xbff0_0000_0000_0002n),
-    expected: { f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0xbf800001), reinterpretU32AsF32(0xbf800000)],
+      f16: [reinterpretU16AsF16(0xbc01), reinterpretU16AsF16(0xbc00)],
+    },
   },
   {
     value: reinterpretU64AsF64(0xbff0_0800_0000_0010n),
-    expected: { f32: [reinterpretU32AsF32(0xbf804001), reinterpretU32AsF32(0xbf804000)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0xbf804001), reinterpretU32AsF32(0xbf804000)],
+      f16: [reinterpretU16AsF16(0xbc03), reinterpretU16AsF16(0xbc02)],
+    },
   },
   {
     value: reinterpretU64AsF64(0xbff0_1000_0000_0020n),
-    expected: { f32: [reinterpretU32AsF32(0xbf808001), reinterpretU32AsF32(0xbf808000)] },
+    expected: {
+      f32: [reinterpretU32AsF32(0xbf808001), reinterpretU32AsF32(0xbf808000)],
+      f16: [reinterpretU16AsF16(0xbc05), reinterpretU16AsF16(0xbc04)],
+    },
   },
 ] as const;
 
-g.test('correctlyRoundedInterval_f32')
+g.test('correctlyRoundedInterval')
   .params(u =>
     u
-      .combine('trait', ['f32'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<CorrectlyRoundedCase>(p => {
         const constants = FP[p.trait].constants();
@@ -2060,12 +2121,13 @@ interface ULPCase {
 // Special values used for testing ULP error interval
 const kULPErrorValue = {
   f32: 4096, // 4096 ULP is required for atan accuracy on f32
+  f16: 5, // 5 ULP is required for atan accuracy on f16
 };
 
-g.test('ulpInterval_f32')
+g.test('ulpInterval')
   .params(u =>
     u
-      .combine('trait', ['f32'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ULPCase>(p => {
         const constants = FP[p.trait].constants();
