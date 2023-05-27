@@ -1,7 +1,8 @@
+import { getGPU, setDefaultRequestAdapterOptions } from '../../../common/util/navigator_gpu.js';
 import { assert, objectEquals, iterRange } from '../../../common/util/util.js';
 
 async function basicTest() {
-  const adapter = await navigator.gpu.requestAdapter();
+  const adapter = await getGPU(null).requestAdapter();
   assert(adapter !== null, 'Failed to get adapter.');
 
   const device = await adapter.requestDevice();
@@ -68,6 +69,10 @@ async function basicTest() {
 }
 
 self.onmessage = async (ev: MessageEvent) => {
+  const defaultRequestAdapterOptions: GPURequestAdapterOptions =
+    ev.data.defaultRequestAdapterOptions;
+  setDefaultRequestAdapterOptions(defaultRequestAdapterOptions);
+
   let error = undefined;
   try {
     await basicTest();
