@@ -877,16 +877,26 @@ vectorWidth)
 
 
 /**
- * @returns an array of Cases for operations over a range of inputs
+ * @returns array of Case for the input params with op applied
  * @param param0s array of inputs to try for the first param
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
+ * @param quantize function to quantize all values
+ * @param scalarize function to convert numbers to Scalars
  */
-export function generateBinaryToI32Cases(params0s, params1s, op) {
-  return cartesianProduct(params0s, params1s).reduce((cases, e) => {
+function generateScalarBinaryToScalarCases(
+param0s,
+param1s,
+op,
+quantize,
+scalarize)
+{
+  param0s = param0s.map(quantize);
+  param1s = param1s.map(quantize);
+  return cartesianProduct(param0s, param1s).reduce((cases, e) => {
     const expected = op(e[0], e[1]);
     if (expected !== undefined) {
-      cases.push({ input: [i32(e[0]), i32(e[1])], expected: i32(expected) });
+      cases.push({ input: [scalarize(e[0]), scalarize(e[1])], expected: scalarize(expected) });
     }
     return cases;
   }, new Array());
@@ -898,14 +908,18 @@ export function generateBinaryToI32Cases(params0s, params1s, op) {
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToU32Cases(params0s, params1s, op) {
-  return cartesianProduct(params0s, params1s).reduce((cases, e) => {
-    const expected = op(e[0], e[1]);
-    if (expected !== undefined) {
-      cases.push({ input: [u32(e[0]), u32(e[1])], expected: u32(expected) });
-    }
-    return cases;
-  }, new Array());
+export function generateBinaryToI32Cases(param0s, param1s, op) {
+  return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI32, i32);
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToU32Cases(param0s, param1s, op) {
+  return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToU32, u32);
 }
 
 /**

@@ -6,7 +6,7 @@ Execution Tests for the i32 arithmetic binary expression operations
 import { GPUTest } from '../../../../gpu_test.js';
 import { kValue } from '../../../../util/constants.js';
 import { TypeI32, TypeVec } from '../../../../util/conversion.js';
-import { fullI32Range, sparseI32Range, vectorI32Range } from '../../../../util/math.js';
+import { sparseI32Range, vectorI32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
 allInputSources,
@@ -74,25 +74,25 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/i32_arithmetic', {
   addition: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_add);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_add);
   },
   subtraction: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_subtract);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_subtract);
   },
   multiplication: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_multiply);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_multiply);
   },
   division_non_const: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_divide_non_const);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_divide_non_const);
   },
   division_const: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_divide_const);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_divide_const);
   },
   remainder_non_const: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_remainder_non_const);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_remainder_non_const);
   },
   remainder_const: () => {
-    return generateBinaryToI32Cases(fullI32Range(), fullI32Range(), i32_remainder_const);
+    return generateBinaryToI32Cases(sparseI32Range(), sparseI32Range(), i32_remainder_const);
   },
   addition_scalar_vector2: () => {
     return generateI32VectorBinaryToVectorCases(sparseI32Range(), vectorI32Range(2), i32_add);

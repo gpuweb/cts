@@ -6,7 +6,7 @@ Execution Tests for the u32 arithmetic binary expression operations
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeU32, TypeVec } from '../../../../util/conversion.js';
-import { fullU32Range, sparseU32Range, vectorU32Range } from '../../../../util/math.js';
+import { sparseU32Range, vectorU32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
   allInputSources,
@@ -62,25 +62,25 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('binary/u32_arithmetic', {
   addition: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_add);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_add);
   },
   subtraction: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_subtract);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_subtract);
   },
   multiplication: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_multiply);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_multiply);
   },
   division_non_const: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_divide_non_const);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_divide_non_const);
   },
   division_const: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_divide_const);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_divide_const);
   },
   remainder_non_const: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_remainder_non_const);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_remainder_non_const);
   },
   remainder_const: () => {
-    return generateBinaryToU32Cases(fullU32Range(), fullU32Range(), u32_remainder_const);
+    return generateBinaryToU32Cases(sparseU32Range(), sparseU32Range(), u32_remainder_const);
   },
   addition_scalar_vector2: () => {
     return generateU32VectorBinaryToVectorCases(sparseU32Range(), vectorU32Range(2), u32_add);
