@@ -318,7 +318,7 @@ export class LimitTestsImpl extends GPUTestBase {
 
   async init() {
     await super.init();
-    const gpu = getGPU();
+    const gpu = getGPU(this.rec);
     this._adapter = await gpu.requestAdapter();
     const limit = this.limit;
     this.defaultLimit = getDefaultLimit(limit);

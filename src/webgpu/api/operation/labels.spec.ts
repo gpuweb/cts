@@ -19,7 +19,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   requestDevice: async (t: GPUTest, label: string) => {
-    const gpu = getGPU();
+    const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     t.expect(!!adapter);
     const device = await adapter!.requestDevice({ label });
