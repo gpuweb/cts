@@ -31,7 +31,7 @@ u.combine('args', [
 
 fn(async (t) => {
   const { args } = t.params;
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
   const device = await adapter.requestDevice(...args);
@@ -61,7 +61,7 @@ desc(
     `).
 
 fn(async (t) => {
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -99,7 +99,7 @@ unless(
 
 
 fn(async (t) => {
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -172,7 +172,7 @@ desc(
     Test requesting device with an unknown feature.`).
 
 fn(async (t) => {
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -193,7 +193,7 @@ params((u) => u.combine('feature', kFeatureNames)).
 fn(async (t) => {
   const { feature } = t.params;
 
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -213,7 +213,7 @@ desc(
     requestDevice to reject.`).
 
 fn(async (t) => {
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -235,7 +235,7 @@ u.combine('limit', kLimits).beginSubcases().combine('limitValue', ['default', 'a
 fn(async (t) => {
   const { limit, limitValue } = t.params;
 
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -289,7 +289,7 @@ expandWithParams((p) => {
 fn(async (t) => {
   const { limit, mul, add } = t.params;
 
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
@@ -332,7 +332,7 @@ expandWithParams((p) => {
 fn(async (t) => {
   const { limit, mul, add } = t.params;
 
-  const gpu = getGPU();
+  const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 

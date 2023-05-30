@@ -2,6 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 
+import { getDefaultRequestAdapterOptions } from '../../util/navigator_gpu.js';
 
 export class TestWorker {
 
@@ -35,7 +36,12 @@ export class TestWorker {
   query,
   expectations = [])
   {
-    this.worker.postMessage({ query, expectations, debug: this.debug });
+    this.worker.postMessage({
+      query,
+      expectations,
+      debug: this.debug,
+      defaultRequestAdapterOptions: getDefaultRequestAdapterOptions()
+    });
     const workerResult = await new Promise((resolve) => {
       this.resolvers.set(query, resolve);
     });

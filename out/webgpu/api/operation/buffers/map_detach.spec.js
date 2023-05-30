@@ -48,7 +48,7 @@ fn(async (t) => {
 
   let device = t.device;
   if (deviceDestroy) {
-    const adapter = await getGPU().requestAdapter();
+    const adapter = await getGPU(t.rec).requestAdapter();
     assert(adapter !== null);
     device = await adapter.requestDevice();
   }

@@ -12,7 +12,7 @@
 export class IDLTest extends Fixture {
   init() {
     // Ensure the GPU provider is initialized
-    getGPU();
+    getGPU(this.rec);
     return Promise.resolve();
   }
 

@@ -3,6 +3,7 @@
 **/import { setBaseResourcePath } from '../../framework/resources.js';import { DefaultTestFileLoader } from '../../internal/file_loader.js';import { Logger } from '../../internal/logging/logger.js';
 import { parseQuery } from '../../internal/query/parseQuery.js';
 
+import { setDefaultRequestAdapterOptions } from '../../util/navigator_gpu.js';
 import { assert } from '../../util/util.js';
 
 // Should be DedicatedWorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
@@ -16,7 +17,11 @@ setBaseResourcePath('../../../resources');
 self.onmessage = async (ev) => {
   const query = ev.data.query;
   const expectations = ev.data.expectations;
+  const defaultRequestAdapterOptions =
+  ev.data.defaultRequestAdapterOptions;
   const debug = ev.data.debug;
+
+  setDefaultRequestAdapterOptions(defaultRequestAdapterOptions);
 
   Logger.globalDebugMode = debug;
   const log = new Logger();

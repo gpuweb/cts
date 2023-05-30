@@ -18,19 +18,11 @@ type DestroyableObject =
   | { getExtension(extensionName: 'WEBGL_lose_context'): WEBGL_lose_context };
 
 export class SubcaseBatchState {
-  private _params: TestParams;
-
-  constructor(params: TestParams) {
-    this._params = params;
-  }
-
-  /**
-   * Returns the case parameters for this test fixture shared state. Subcase params
-   * are not included.
-   */
-  get params(): TestParams {
-    return this._params;
-  }
+  constructor(
+    protected readonly recorder: TestCaseRecorder,
+    /** The case parameters for this test fixture shared state. Subcase params are not included. */
+    public readonly params: TestParams
+  ) {}
 
   /**
    * Runs before the `.before()` function.
@@ -62,13 +54,13 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    *
    * @internal
    */
-  protected rec: TestCaseRecorder;
+  readonly rec: TestCaseRecorder;
   private eventualExpectations: Array<Promise<unknown>> = [];
   private numOutstandingAsyncExpectations = 0;
   private objectsToCleanUp: DestroyableObject[] = [];
 
-  public static MakeSharedState(params: TestParams): SubcaseBatchState {
-    return new SubcaseBatchState(params);
+  public static MakeSharedState(recorder: TestCaseRecorder, params: TestParams): SubcaseBatchState {
+    return new SubcaseBatchState(recorder, params);
   }
 
   /** @internal */
@@ -340,12 +332,12 @@ export type SubcaseBatchStateFromFixture<F> = F extends Fixture<infer S> ? S : n
  */
 export type FixtureClass<F extends Fixture = Fixture> = {
   new (sharedState: SubcaseBatchStateFromFixture<F>, log: TestCaseRecorder, params: TestParams): F;
-  MakeSharedState(params: TestParams): SubcaseBatchStateFromFixture<F>;
+  MakeSharedState(recorder: TestCaseRecorder, params: TestParams): SubcaseBatchStateFromFixture<F>;
 };
 export type FixtureClassInterface<F extends Fixture = Fixture> = {
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   new (...args: any[]): F;
-  MakeSharedState(params: TestParams): SubcaseBatchStateFromFixture<F>;
+  MakeSharedState(recorder: TestCaseRecorder, params: TestParams): SubcaseBatchStateFromFixture<F>;
 };
 export type FixtureClassWithMixin<FC, M> = FC extends FixtureClass<infer F>
   ? FixtureClass<F & M>

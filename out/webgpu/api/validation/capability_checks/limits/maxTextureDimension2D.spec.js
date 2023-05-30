@@ -68,7 +68,7 @@ fn(async (t) => {
         () => {
           context.configure({
             device,
-            format: getGPU().getPreferredCanvasFormat()
+            format: getGPU(t.rec).getPreferredCanvasFormat()
           });
         },
         shouldError,
@@ -103,7 +103,7 @@ fn(async (t) => {
 
         context.configure({
           device,
-          format: getGPU().getPreferredCanvasFormat()
+          format: getGPU(t.rec).getPreferredCanvasFormat()
         });
 
         if (canvas) {

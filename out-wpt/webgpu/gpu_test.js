@@ -84,7 +84,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(descriptor) {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
-    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor));
+    this.provider = devicePool.acquire(
+      this.recorder,
+      initUncanonicalizedDeviceDescriptor(descriptor)
+    );
+
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
   }
@@ -140,6 +144,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     );
 
     this.mismatchedProvider = mismatchedDevicePool.acquire(
+      this.recorder,
       initUncanonicalizedDeviceDescriptor(descriptor)
     );
 
@@ -155,8 +160,8 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * as well as helpers that use that device.
  */
 export class GPUTestBase extends Fixture {
-  static MakeSharedState(params) {
-    return new GPUTestSubcaseBatchState(params);
+  static MakeSharedState(recorder, params) {
+    return new GPUTestSubcaseBatchState(recorder, params);
   }
 
   // This must be overridden in derived classes

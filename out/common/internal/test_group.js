@@ -479,7 +479,7 @@ class RunCaseSpecific {
     const { testHeartbeatCallback, maxSubcasesInFlight } = globalTestConfig;
     try {
       rec.start();
-      const sharedState = this.fixture.MakeSharedState(this.params);
+      const sharedState = this.fixture.MakeSharedState(rec, this.params);
       try {
         await sharedState.init();
         if (this.beforeFn) {
