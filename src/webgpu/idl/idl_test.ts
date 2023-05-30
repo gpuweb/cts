@@ -12,7 +12,7 @@ interface UnknownObject {
 export class IDLTest extends Fixture {
   init(): Promise<void> {
     // Ensure the GPU provider is initialized
-    getGPU();
+    getGPU(this.rec);
     return Promise.resolve();
   }
 

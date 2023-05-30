@@ -22,7 +22,7 @@ g.test('adapter_info')
     - Every member in the structure except description is properly formatted`
   )
   .fn(async t => {
-    const gpu = getGPU();
+    const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
