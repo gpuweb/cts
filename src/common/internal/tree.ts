@@ -1,5 +1,6 @@
+import { globalTestConfig } from '../framework/test_config.js';
 import { RunCase, RunFn } from '../internal/test_group.js';
-import { assert } from '../util/util.js';
+import { assert, now } from '../util/util.js';
 
 import { TestFileLoader } from './file_loader.js';
 import { TestParamsRW } from './params_utils.js';
@@ -253,6 +254,9 @@ export async function loadTreeForQuery(
   let foundCase = false;
   // L0 is suite:*
   const subtreeL0 = makeTreeForSuite(suite, isCollapsible);
+
+  const imports_start = now();
+  const pEntriesWithImports = []; // Promise<entry with importedSpec>[]
   for (const entry of specs) {
     if (entry.file.length === 0 && 'readme' in entry) {
       // Suite-level readme.
@@ -269,6 +273,34 @@ export async function loadTreeForQuery(
       }
     }
 
+    // We're going to be fetching+importing a bunch of things, so do it in async.
+    const pEntryWithImport = (async () => {
+      if ('readme' in entry) {
+        return entry;
+      } else {
+        return {
+          ...entry,
+          importedSpec: await loader.importSpecFile(queryToLoad.suite, entry.file),
+        };
+      }
+    })();
+
+    const kForceSerialImporting = false;
+    if (kForceSerialImporting) {
+      await pEntryWithImport;
+    }
+    pEntriesWithImports.push(pEntryWithImport);
+  }
+
+  const entriesWithImports = await Promise.all(pEntriesWithImports);
+  if (globalTestConfig.frameworkDebugLog) {
+    const imported_time = performance.now() - imports_start;
+    globalTestConfig.frameworkDebugLog(
+      `Imported importedSpecFiles[${entriesWithImports.length}] in ${imported_time}ms.`
+    );
+  }
+
+  for (const entry of entriesWithImports) {
     if ('readme' in entry) {
       // Entry is a README that is an ancestor or descendant of the query.
       // (It's included for display in the standalone runner.)
@@ -284,9 +316,9 @@ export async function loadTreeForQuery(
       setSubtreeDescriptionAndCountTODOs(readmeSubtree, entry.readme);
       continue;
     }
-    // Entry is a spec file.
 
-    const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
+    // Entry is a spec file.
+    const spec = entry.importedSpec;
     // subtreeL1 is suite:a,b:*
     const subtreeL1: TestSubtree<TestQueryMultiTest> = addSubtreeForFilePath(
       subtreeL0,

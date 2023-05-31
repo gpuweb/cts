@@ -1,7 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ // Implements the standalone test runner (see also: /standalone/index.html).
-import { dataCache } from '../framework/data_cache.js';import { setBaseResourcePath } from '../framework/resources.js';
+import { dataCache } from '../framework/data_cache.js';
+import { setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -93,6 +94,8 @@ optionsInfos)
 function optionsToRecord(options) {
   return options;
 }
+
+globalTestConfig.frameworkDebugLog = console.log;
 
 const options = getOptionsInfoFromSearchParameters(optionsInfo);
 const { runnow, debug, unrollConstEvalLoops, powerPreference } = options;
@@ -414,10 +417,8 @@ function consoleLogError(e) {
   if (e === undefined) return;
 
   globalThis._stack = e;
-
   console.log('_stack =', e);
   if ('extra' in e && e.extra !== undefined) {
-
     console.log('_stack.extra =', e.extra);
   }
 }
@@ -623,6 +624,9 @@ void (async () => {
   }
   loader.addEventListener('import', (ev) => {
     $('#info')[0].textContent = `loading: ${ev.data.url}`;
+  });
+  loader.addEventListener('imported', (ev) => {
+    $('#info')[0].textContent = `imported: ${ev.data.url}`;
   });
   loader.addEventListener('finish', () => {
     $('#info')[0].textContent = '';

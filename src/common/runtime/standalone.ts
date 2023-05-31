@@ -1,4 +1,5 @@
 // Implements the standalone test runner (see also: /standalone/index.html).
+/* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
 import { setBaseResourcePath } from '../framework/resources.js';
@@ -93,6 +94,8 @@ function getOptionsInfoFromSearchParameters(
 function optionsToRecord(options: StandaloneOptions) {
   return (options as unknown) as Record<string, boolean | string>;
 }
+
+globalTestConfig.frameworkDebugLog = console.log;
 
 const options = getOptionsInfoFromSearchParameters(optionsInfo);
 const { runnow, debug, unrollConstEvalLoops, powerPreference } = options;
@@ -414,10 +417,8 @@ function consoleLogError(e: Error | ErrorWithExtra | undefined) {
   if (e === undefined) return;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   (globalThis as any)._stack = e;
-  /* eslint-disable-next-line no-console */
   console.log('_stack =', e);
   if ('extra' in e && e.extra !== undefined) {
-    /* eslint-disable-next-line no-console */
     console.log('_stack.extra =', e.extra);
   }
 }
@@ -623,6 +624,9 @@ void (async () => {
   }
   loader.addEventListener('import', ev => {
     $('#info')[0].textContent = `loading: ${ev.data.url}`;
+  });
+  loader.addEventListener('imported', ev => {
+    $('#info')[0].textContent = `imported: ${ev.data.url}`;
   });
   loader.addEventListener('finish', () => {
     $('#info')[0].textContent = '';
