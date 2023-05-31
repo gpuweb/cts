@@ -1,5 +1,5 @@
 import { RunCase, RunFn } from '../internal/test_group.js';
-import { assert } from '../util/util.js';
+import { assert, now } from '../util/util.js';
 
 import { TestFileLoader } from './file_loader.js';
 import { TestParamsRW } from './params_utils.js';
@@ -254,7 +254,7 @@ export async function loadTreeForQuery(
   // L0 is suite:*
   const subtreeL0 = makeTreeForSuite(suite, isCollapsible);
 
-  const imports_start = performance.now();
+  const imports_start = now();
   const pImportedSpecFiles = []; // Promise<{file,spec}>[]
   for (const entry of specs) {
     if (entry.file.length === 0 && 'readme' in entry) {
