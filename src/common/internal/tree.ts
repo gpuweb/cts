@@ -256,7 +256,7 @@ export async function loadTreeForQuery(
   const subtreeL0 = makeTreeForSuite(suite, isCollapsible);
 
   const imports_start = now();
-  const pEntriesWithImports = []; // Promise<{file,spec}>[]
+  const pEntriesWithImports = []; // Promise<entry with importedSpec>[]
   for (const entry of specs) {
     if (entry.file.length === 0 && 'readme' in entry) {
       // Suite-level readme.
