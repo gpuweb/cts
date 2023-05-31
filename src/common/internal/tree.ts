@@ -1,3 +1,4 @@
+import { globalTestConfig } from '../framework/test_config.js';
 import { RunCase, RunFn } from '../internal/test_group.js';
 import { assert, now } from '../util/util.js';
 
@@ -293,7 +294,7 @@ export async function loadTreeForQuery(
       const spec = await loader.importSpecFile(queryToLoad.suite, entry.file);
       return {
         file: entry.file,
-        spec: spec,
+        spec,
       };
     })();
     const SERIALIZE_IMPORTING = false;
@@ -303,8 +304,12 @@ export async function loadTreeForQuery(
     pImportedSpecFiles.push(pImportedSpecFile);
   }
   const importedSpecFiles = await Promise.all(pImportedSpecFiles);
-  const imported_time = performance.now() - imports_start;
-  console.log(`Imported importedSpecFiles[${importedSpecFiles.length}] in ${imported_time}ms.`);
+  if (globalTestConfig.frameworkDebugLog) {
+    const imported_time = performance.now() - imports_start;
+    globalTestConfig.frameworkDebugLog(
+      `Imported importedSpecFiles[${importedSpecFiles.length}] in ${imported_time}ms.`
+    );
+  }
 
   for (const entry of importedSpecFiles) {
     const spec = entry.spec;
