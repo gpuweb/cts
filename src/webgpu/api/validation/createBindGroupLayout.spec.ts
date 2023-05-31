@@ -7,12 +7,10 @@ TODO: make sure tests are complete.
 import { kUnitCaseParamsBuilder } from '../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import {
-  kAllTextureFormats,
   kLimitInfo,
   kShaderStages,
   kShaderStageCombinations,
   kStorageTextureAccessValues,
-  kTextureFormatInfo,
   kTextureSampleTypes,
   kTextureViewDimensions,
   allBindingEntries,
@@ -21,6 +19,7 @@ import {
   kBufferBindingTypes,
   BGLEntry,
 } from '../../capability_info.js';
+import { kAllTextureFormats, kTextureFormatInfo } from '../../format_info.js';
 
 import { ValidationTest } from './validation_test.js';
 
@@ -454,5 +453,5 @@ g.test('storage_texture,formats')
           },
         ],
       });
-    }, !info.storage);
+    }, !info.color?.storage);
   });

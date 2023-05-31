@@ -6,14 +6,13 @@ TODO: review for completeness
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
+import { kMaxColorAttachments, kQueryTypes } from '../../../capability_info.js';
+import { GPUConst } from '../../../constants.js';
 import {
   kDepthStencilFormats,
-  kMaxColorAttachments,
-  kQueryTypes,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
-} from '../../../capability_info.js';
-import { GPUConst } from '../../../constants.js';
+} from '../../../format_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 class F extends ValidationTest {
@@ -202,8 +201,8 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
     const shouldError =
-      info.renderTargetPixelByteCost === undefined ||
-      info.renderTargetPixelByteCost * attachmentCount >
+      info.colorRender === undefined ||
+      info.colorRender.byteCost * attachmentCount >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.tryRenderPass(!shouldError, { colorAttachments });
@@ -959,13 +958,15 @@ g.test('resolveTarget,format_supports_resolve')
   )
   .fn(t => {
     const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+
     const multisampledColorTexture = t.createTexture({ format, sampleCount: 4 });
     const resolveTarget = t.createTexture({ format });
 
     const colorAttachment = t.getColorAttachment(multisampledColorTexture);
     colorAttachment.resolveTarget = resolveTarget.createView();
 
-    t.tryRenderPass(kTextureFormatInfo[format].resolve, {
+    t.tryRenderPass(!!info.colorRender?.resolve, {
       colorAttachments: [colorAttachment],
     });
   });
@@ -979,147 +980,64 @@ g.test('timestampWrites,query_set_type')
   )
   .params(u =>
     u //
-      .combine('queryTypeA', kQueryTypes)
-      .combine('queryTypeB', kQueryTypes)
+      .combine('queryType', kQueryTypes)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
   .fn(t => {
-    const { queryTypeA, queryTypeB } = t.params;
+    const { queryType } = t.params;
 
-    const timestampWriteA = {
-      querySet: t.device.createQuerySet({ type: queryTypeA, count: 1 }),
-      queryIndex: 0,
-      location: 'beginning' as const,
+    const timestampWrites = {
+      querySet: t.device.createQuerySet({ type: queryType, count: 2 }),
+      beginningOfPassWriteIndex: 0,
+      endOfPassWriteIndex: 1,
     };
 
-    const timestampWriteB = {
-      querySet: t.device.createQuerySet({ type: queryTypeB, count: 1 }),
-      queryIndex: 0,
-      location: 'end' as const,
-    };
-
-    const isValid = queryTypeA === 'timestamp' && queryTypeB === 'timestamp';
+    const isValid = queryType === 'timestamp';
 
     const colorTexture = t.createTexture();
     const descriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites: [timestampWriteA, timestampWriteB],
-    };
-
-    t.tryRenderPass(isValid, descriptor);
-  });
-
-g.test('timestamp_writes_location')
-  .desc('Test that entries in timestampWrites do not have the same location.')
-  .params(u =>
-    u //
-      .combine('locationA', ['beginning', 'end'] as const)
-      .combine('locationB', ['beginning', 'end'] as const)
-  )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase(['timestamp-query']);
-  })
-  .fn(t => {
-    const { locationA, locationB } = t.params;
-
-    const querySet = t.device.createQuerySet({
-      type: 'timestamp',
-      count: 2,
-    });
-
-    const timestampWriteA = {
-      querySet,
-      queryIndex: 0,
-      location: locationA,
-    };
-
-    const timestampWriteB = {
-      querySet,
-      queryIndex: 1,
-      location: locationB,
-    };
-
-    const isValid = locationA !== locationB;
-
-    const colorTexture = t.createTexture({ format: 'rgba8unorm' });
-    const descriptor = {
-      colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites: [timestampWriteA, timestampWriteB],
+      timestampWrites,
     };
 
     t.tryRenderPass(isValid, descriptor);
   });
 
 g.test('timestampWrite,query_index')
-  .desc(`Test that querySet.count should be greater than timestampWrite.queryIndex.`)
-  .params(u => u.combine('queryIndex', [0, 1, 2, 3]))
+  .desc(
+    `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
+         query indexes are unique.`
+  )
+  .paramsSubcasesOnly(u =>
+    u //
+      .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3] as const)
+      .combine('endOfPassWriteIndex', [undefined, 0, 1, 2, 3] as const)
+  )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase(['timestamp-query']);
   })
   .fn(t => {
-    const { queryIndex } = t.params;
+    const { beginningOfPassWriteIndex, endOfPassWriteIndex } = t.params;
 
     const querySetCount = 2;
 
-    const timestampWrite = {
+    const timestampWrites = {
       querySet: t.device.createQuerySet({ type: 'timestamp', count: querySetCount }),
-      queryIndex,
-      location: 'beginning' as const,
+      beginningOfPassWriteIndex,
+      endOfPassWriteIndex,
     };
 
-    const isValid = queryIndex < querySetCount;
+    const isValid =
+      beginningOfPassWriteIndex !== endOfPassWriteIndex &&
+      (beginningOfPassWriteIndex === undefined || beginningOfPassWriteIndex < querySetCount) &&
+      (endOfPassWriteIndex === undefined || endOfPassWriteIndex < querySetCount);
 
     const colorTexture = t.createTexture();
     const descriptor = {
       colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites: [timestampWrite],
-    };
-
-    t.tryRenderPass(isValid, descriptor);
-  });
-
-g.test('timestampWrite,same_query_index')
-  .desc(
-    `
-  Test that timestampWrites is invalid if each entry has the same queryIndex in the same querySet.
-  `
-  )
-  .params(u =>
-    u //
-      .combine('queryIndexA', [0, 1])
-      .combine('queryIndexB', [0, 1])
-  )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase(['timestamp-query']);
-  })
-  .fn(t => {
-    const { queryIndexA, queryIndexB } = t.params;
-
-    const querySet = t.device.createQuerySet({
-      type: 'timestamp',
-      count: 2,
-    });
-
-    const timestampWriteA = {
-      querySet,
-      queryIndex: queryIndexA,
-      location: 'beginning' as const,
-    };
-
-    const timestampWriteB = {
-      querySet,
-      queryIndex: queryIndexB,
-      location: 'end' as const,
-    };
-
-    const isValid = queryIndexA !== queryIndexB;
-
-    const colorTexture = t.createTexture();
-    const descriptor = {
-      colorAttachments: [t.getColorAttachment(colorTexture)],
-      timestampWrites: [timestampWriteA, timestampWriteB],
+      timestampWrites,
     };
 
     t.tryRenderPass(isValid, descriptor);

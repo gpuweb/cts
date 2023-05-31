@@ -4,6 +4,7 @@ import {
   FixtureClassInterface,
   FixtureClassWithMixin,
   SubcaseBatchState,
+  TestCaseRecorder,
   TestParams,
 } from '../common/framework/fixture.js';
 import {
@@ -14,14 +15,14 @@ import {
   unreachable,
 } from '../common/util/util.js';
 
+import { kQueryTypeInfo } from './capability_info.js';
 import {
-  EncodableTextureFormat,
-  SizedTextureFormat,
   kTextureFormatInfo,
-  kQueryTypeInfo,
-  resolvePerAspectFormat,
   kEncodableTextureFormats,
-} from './capability_info.js';
+  resolvePerAspectFormat,
+  SizedTextureFormat,
+  EncodableTextureFormat,
+} from './format_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
@@ -114,7 +115,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
-    this.provider = devicePool.acquire(initUncanonicalizedDeviceDescriptor(descriptor));
+    this.provider = devicePool.acquire(
+      this.recorder,
+      initUncanonicalizedDeviceDescriptor(descriptor)
+    );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
   }
@@ -172,6 +176,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     );
 
     this.mismatchedProvider = mismatchedDevicePool.acquire(
+      this.recorder,
       initUncanonicalizedDeviceDescriptor(descriptor)
     );
     // Suppress uncaught promise rejection (we'll catch it later).
@@ -186,8 +191,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * as well as helpers that use that device.
  */
 export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
-  public static MakeSharedState(params: TestParams): GPUTestSubcaseBatchState {
-    return new GPUTestSubcaseBatchState(params);
+  public static MakeSharedState(
+    recorder: TestCaseRecorder,
+    params: TestParams
+  ): GPUTestSubcaseBatchState {
+    return new GPUTestSubcaseBatchState(recorder, params);
   }
 
   // This must be overridden in derived classes

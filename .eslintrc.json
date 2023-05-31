@@ -12,7 +12,7 @@
     "browser": true,
     "node": true
   },
-  "plugins": ["node", "ban", "import", "deprecation"],
+  "plugins": ["node", "ban", "import", "deprecation", "gpuweb-cts"],
   "rules": {
     // Core rules
     "linebreak-style": ["warn", "unix"],
@@ -26,6 +26,10 @@
     // Comments relating to TODOs in descriptions can be marked with references like "[1]".
     // TODOs not relating to test coverage can be marked MAINTENANCE_TODO or similar.
     "no-warning-comments": ["warn", { "terms": ["todo", "fixme", "xxx"], "location": "anywhere" }],
+
+    // Plugin: gpuweb-cts
+    "gpuweb-cts/string-trailing-space": "warn",
+    "gpuweb-cts/string-tabs": "warn",
 
     // Plugin: @typescript-eslint
     "@typescript-eslint/no-inferrable-types": "off",

@@ -19,7 +19,7 @@ const kTestFunctions: { [name: string]: TestFunction } = {
   },
 
   requestDevice: async (t: GPUTest, label: string) => {
-    const gpu = getGPU();
+    const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     t.expect(!!adapter);
     const device = await adapter!.requestDevice({ label });
@@ -230,7 +230,7 @@ g.test('object_has_descriptor_label')
   .desc(
     `
   For every create function, the descriptor.label is carried over to the object.label.
-  
+
   TODO: test importExternalTexture
   TODO: make a best effort and generating an error that is likely to use label. There's nothing to check for
         but it may surface bugs related to unusual labels.

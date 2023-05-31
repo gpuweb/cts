@@ -17,8 +17,14 @@ module.exports = function (grunt) {
         args: ['tools/gen_version'],
       },
       'generate-listings': {
+        // Overwrites the listings.js files in out/. Must run before copy:out-wpt-generated;
+        // must not run before run:build-out (if it is run).
         cmd: 'node',
         args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+      },
+      validate: {
+        cmd: 'node',
+        args: ['tools/validate', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
       },
       'generate-wpt-cts-html': {
         cmd: 'node',
@@ -33,6 +39,7 @@ module.exports = function (grunt) {
         args: ['tools/run_node', 'unittests:*'],
       },
       'build-out': {
+        // Must run before run:generate-listings, which will overwrite some files.
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
@@ -51,13 +58,18 @@ module.exports = function (grunt) {
           '--delete-dir-on-start',
           '--out-dir=out-wpt/',
           'src/',
-          '--only=src/common/framework/',
-          '--only=src/common/runtime/helper/',
-          '--only=src/common/runtime/wpt.ts',
+          '--only=src/common/',
+          '--only=src/external/',
           '--only=src/webgpu/',
           // These files will be generated, instead of compiled from TypeScript.
           '--ignore=src/common/internal/version.ts',
           '--ignore=src/webgpu/listing.ts',
+          // These files are only used by non-WPT builds.
+          '--ignore=src/common/runtime/cmdline.ts',
+          '--ignore=src/common/runtime/server.ts',
+          '--ignore=src/common/runtime/standalone.ts',
+          '--ignore=src/common/runtime/helper/sys.ts',
+          '--ignore=src/common/tools',
         ],
       },
       'build-out-node': {
@@ -120,6 +132,7 @@ module.exports = function (grunt) {
     copy: {
       'out-wpt-generated': {
         files: [
+          // Must run after run:generate-version and run:generate-listings.
           { expand: true, cwd: 'out', src: 'common/internal/version.js', dest: 'out-wpt/' },
           { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
         ],
@@ -155,23 +168,16 @@ module.exports = function (grunt) {
     helpMessageTasks.push({ name, desc });
   }
 
-  grunt.registerTask('set-quiet-mode', () => {
-    grunt.log.write('Running tasks');
-    require('quiet-grunt');
-  });
-
-  grunt.registerTask('build-standalone', 'Build out/ (no checks, no WPT)', [
+  grunt.registerTask('build-standalone', 'Build out/ (no listings, no checks, no WPT)', [
     'run:build-out',
     'run:copy-assets',
     'run:generate-version',
-    'run:generate-listings',
   ]);
-  grunt.registerTask('build-wpt', 'Build out/ (no checks)', [
+  grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-listings)', [
     'run:build-out-wpt',
     'run:copy-assets-wpt',
     'run:autoformat-out-wpt',
     'run:generate-version',
-    'run:generate-listings',
     'copy:out-wpt-generated',
     'copy:out-wpt-htmlfiles',
     'run:generate-wpt-cts-html',
@@ -181,9 +187,10 @@ module.exports = function (grunt) {
   });
 
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
-    'set-quiet-mode',
     'clean',
+    'run:validate',
     'build-standalone',
+    'run:generate-listings',
     'build-wpt',
     'run:build-out-node',
     'build-done-message',
@@ -194,15 +201,17 @@ module.exports = function (grunt) {
     'run:tsdoc-treatWarningsAsErrors',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
-    'set-quiet-mode',
     'build-standalone',
+    'run:generate-listings',
     'build-done-message',
+    'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'set-quiet-mode',
     'build-wpt',
+    'run:generate-listings',
     'build-done-message',
+    'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('unittest', 'Build standalone, typecheck, and unittest', [
@@ -210,7 +219,6 @@ module.exports = function (grunt) {
     'run:unittest',
   ]);
   registerTaskAndAddToHelp('check', 'Just typecheck', [
-    'set-quiet-mode',
     'ts:check',
   ]);
 

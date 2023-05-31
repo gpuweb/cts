@@ -58,7 +58,7 @@ export function runStorageVariableTest({
   const wgsl = `
     @group(0) @binding(0)
     var<storage, read_write> output: array<atomic<${scalarType}>>;
-    
+
     @compute @workgroup_size(${workgroupSize})
     fn main(
         @builtin(global_invocation_id) global_invocation_id : vec3<u32>,
@@ -135,7 +135,7 @@ export function runWorkgroupVariableTest({
     // Result of each workgroup is written to output[workgroup_id.x]
     @group(0) @binding(0)
     var<storage, read_write> output: array<${scalarType}, ${wgNumElements * dispatchSize}>;
-    
+
     @compute @workgroup_size(${workgroupSize})
     fn main(
         @builtin(local_invocation_index) local_invocation_index: u32,

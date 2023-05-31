@@ -3,21 +3,19 @@ export const description = `createTexture validation tests.`;
 import { SkipTestCase } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert } from '../../../common/util/util.js';
+import { kTextureDimensions, kTextureUsages, kLimitInfo } from '../../capability_info.js';
+import { GPUConst } from '../../constants.js';
 import {
   kTextureFormats,
   kTextureFormatInfo,
   kCompressedTextureFormats,
-  kTextureDimensions,
-  kTextureUsages,
   kUncompressedTextureFormats,
   kRegularTextureFormats,
   kFeaturesForFormats,
-  textureDimensionAndFormatCompatible,
-  kLimitInfo,
-  viewCompatible,
   filterFormatsByFeature,
-} from '../../capability_info.js';
-import { GPUConst } from '../../constants.js';
+  viewCompatible,
+  textureDimensionAndFormatCompatible,
+} from '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
 import { ValidationTest } from './validation_test.js';
@@ -281,25 +279,21 @@ g.test('sampleCount,various_sampleCount_with_all_formats')
   })
   .fn(t => {
     const { dimension, sampleCount, format } = t.params;
-    const { blockWidth, blockHeight } = kTextureFormatInfo[format];
+    const info = kTextureFormatInfo[format];
 
     const usage =
       sampleCount > 1
         ? GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT
         : GPUTextureUsage.TEXTURE_BINDING;
     const descriptor = {
-      size: [32 * blockWidth, 32 * blockHeight, 1],
+      size: [32 * info.blockWidth, 32 * info.blockHeight, 1],
       sampleCount,
       dimension,
       format,
       usage,
     };
 
-    const success =
-      sampleCount === 1 ||
-      (sampleCount === 4 &&
-        kTextureFormatInfo[format].multisample &&
-        kTextureFormatInfo[format].renderable);
+    const success = sampleCount === 1 || (sampleCount === 4 && info.multisample && info.renderable);
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);
@@ -344,8 +338,8 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
         const info = kTextureFormatInfo[format];
         return (
           ((usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
-            (!info.renderable || dimension !== '2d')) ||
-          ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 && !info.storage) ||
+            (!info.colorRender || dimension !== '2d')) ||
+          ((usage & GPUConst.TextureUsage.STORAGE_BINDING) !== 0 && !info.color?.storage) ||
           (mipLevelCount !== 1 && dimension === '1d')
         );
       })
@@ -417,7 +411,7 @@ g.test('sample_count,1d_2d_array_3d')
 g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
   .desc(
     `Test default values for height and depthOrArrayLayers for every dimension type and every uncompressed format.
-	  It also tests smallest size (lower bound) for every dimension type and every uncompressed format, while other texture_size tests are testing the upper bound.`
+    It also tests smallest size (lower bound) for every dimension type and every uncompressed format, while other texture_size tests are testing the upper bound.`
   )
   .params(u =>
     u
@@ -449,7 +443,7 @@ g.test('texture_size,default_value_and_smallest_size,uncompressed_format')
 g.test('texture_size,default_value_and_smallest_size,compressed_format')
   .desc(
     `Test default values for height and depthOrArrayLayers for every dimension type and every compressed format.
-	  It also tests smallest size (lower bound) for every dimension type and every compressed format, while other texture_size tests are testing the upper bound.`
+    It also tests smallest size (lower bound) for every dimension type and every compressed format, while other texture_size tests are testing the upper bound.`
   )
   .params(u =>
     u
@@ -809,7 +803,7 @@ g.test('texture_usage')
     // Note that we unconditionally test copy usages for all formats. We don't check copySrc/copyDst in kTextureFormatInfo in capability_info.js
     // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
     // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
-    if (!info.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
+    if (!info.color?.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
     if (
       (!info.renderable || appliedDimension !== '2d') &&
       (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0

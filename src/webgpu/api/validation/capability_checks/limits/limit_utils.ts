@@ -2,7 +2,8 @@ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_b
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
-import { kLimitInfo, kTextureFormatInfo } from '../../../../capability_info.js';
+import { kLimitInfo } from '../../../../capability_info.js';
+import { kTextureFormatInfo } from '../../../../format_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 
@@ -81,11 +82,9 @@ function getWGSLBindings(
 export function computeBytesPerSample(targets: GPUColorTargetState[]) {
   let bytesPerSample = 0;
   for (const { format } of targets) {
-    const { renderTargetPixelByteCost, renderTargetComponentAlignment } = kTextureFormatInfo[
-      format
-    ];
-    const alignedBytesPerSample = align(bytesPerSample, renderTargetComponentAlignment!);
-    bytesPerSample = alignedBytesPerSample + renderTargetPixelByteCost!;
+    const info = kTextureFormatInfo[format];
+    const alignedBytesPerSample = align(bytesPerSample, info.colorRender!.alignment);
+    bytesPerSample = alignedBytesPerSample + info.colorRender!.byteCost;
   }
   return bytesPerSample;
 }
@@ -255,7 +254,8 @@ export function getLimitValue(
     case 'underDefault':
       return defaultLimit - 1;
     case 'betweenDefaultAndMaximum':
-      return ((defaultLimit + maximumLimit) / 2) | 0;
+      // The result can be larger than maximum i32.
+      return Math.floor((defaultLimit + maximumLimit) / 2);
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
@@ -318,7 +318,7 @@ export class LimitTestsImpl extends GPUTestBase {
 
   async init() {
     await super.init();
-    const gpu = getGPU();
+    const gpu = getGPU(this.rec);
     this._adapter = await gpu.requestAdapter();
     const limit = this.limit;
     this.defaultLimit = getDefaultLimit(limit);

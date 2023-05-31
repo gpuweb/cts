@@ -522,6 +522,7 @@ export function float16ToInt16(f16: number): number {
 
 /** A type of number representable by Scalar. */
 export type ScalarKind =
+  | 'abstract-float'
   | 'f64'
   | 'f32'
   | 'f16'
@@ -664,8 +665,13 @@ export const TypeI32 = new ScalarType('i32', 4, (buf: Uint8Array, offset: number
 export const TypeU32 = new ScalarType('u32', 4, (buf: Uint8Array, offset: number) =>
   u32(new Uint32Array(buf.buffer, offset)[0])
 );
+export const TypeAbstractFloat = new ScalarType(
+  'abstract-float',
+  8,
+  (buf: Uint8Array, offset: number) => abstractFloat(new Float64Array(buf.buffer, offset)[0])
+);
 export const TypeF64 = new ScalarType('f64', 8, (buf: Uint8Array, offset: number) =>
-  f32(new Float64Array(buf.buffer, offset)[0])
+  f64(new Float64Array(buf.buffer, offset)[0])
 );
 export const TypeF32 = new ScalarType('f32', 4, (buf: Uint8Array, offset: number) =>
   f32(new Float32Array(buf.buffer, offset)[0])
@@ -692,6 +698,8 @@ export const TypeBool = new ScalarType('bool', 4, (buf: Uint8Array, offset: numb
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind: ScalarKind): ScalarType {
   switch (kind) {
+    case 'abstract-float':
+      return TypeAbstractFloat;
     case 'f64':
       return TypeF64;
     case 'f32':
@@ -779,6 +787,10 @@ export class Scalar {
     };
     if (isFinite(this.value as number)) {
       switch (this.type.kind) {
+        case 'abstract-float':
+          return `${withPoint(this.value as number)}`;
+        case 'f64':
+          return `${withPoint(this.value as number)}`;
         case 'f32':
           return `${withPoint(this.value as number)}f`;
         case 'f16':
@@ -828,6 +840,11 @@ export interface ScalarBuilder {
   (value: number): Scalar;
 }
 
+/** Create an AbstractFloat from a numeric value, a JS `number`. */
+export function abstractFloat(value: number): Scalar {
+  const arr = new Float64Array([value]);
+  return new Scalar(TypeAbstractFloat, arr[0], arr);
+}
 /** Create an f64 from a numeric value, a JS `number`. */
 export function f64(value: number): Scalar {
   const arr = new Float64Array([value]);
@@ -997,6 +1014,26 @@ export function reinterpretI32AsU32(i32: number): number {
   const array = new Int32Array(1);
   array[0] = i32;
   return new Uint32Array(array.buffer)[0];
+}
+
+/**
+ * @returns a number representing the u16 interpretation
+ * of the bits of a number assumed to be an f16 value.
+ */
+export function reinterpretF16AsU16(f16: number): number {
+  const array = new Float16Array(1);
+  array[0] = f16;
+  return new Uint16Array(array.buffer)[0];
+}
+
+/**
+ * @returns a number representing the f16 interpretation
+ * of the bits of a number assumed to be an u16 value.
+ */
+export function reinterpretU16AsF16(u16: number): number {
+  const array = new Uint16Array(1);
+  array[0] = u16;
+  return new Float16Array(array.buffer)[0];
 }
 
 /**
@@ -1249,6 +1286,8 @@ export function serializeValue(v: Value): SerializedValue {
 export function deserializeValue(data: SerializedValue): Value {
   const buildScalar = (v: ScalarValue): Scalar => {
     switch (data.type) {
+      case 'abstract-float':
+        return abstractFloat(v as number);
       case 'f64':
         return f64(v as number);
       case 'i32':
@@ -1290,7 +1329,12 @@ export function deserializeValue(data: SerializedValue): Value {
 export function isFloatValue(v: Value): boolean {
   if (v instanceof Scalar) {
     const s = v;
-    return s.type.kind === 'f64' || s.type.kind === 'f32' || s.type.kind === 'f16';
+    return (
+      s.type.kind === 'abstract-float' ||
+      s.type.kind === 'f64' ||
+      s.type.kind === 'f32' ||
+      s.type.kind === 'f16'
+    );
   }
   return false;
 }

@@ -5,10 +5,10 @@ Test related to stencil states, stencil op, compare func, etc.
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { TypedArrayBufferView } from '../../../../common/util/util.js';
 import {
-  DepthStencilFormat,
   kDepthStencilFormats,
   kTextureFormatInfo,
-} from '../../../capability_info.js';
+  DepthStencilFormat,
+} from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 
@@ -553,7 +553,7 @@ g.test('stencil_reference_initialized')
       passOp: 'keep',
     } as const;
 
-    const hasDepth = kTextureFormatInfo[format].depth;
+    const hasDepth = !!kTextureFormatInfo[format].depth;
 
     const baseState = {
       format,

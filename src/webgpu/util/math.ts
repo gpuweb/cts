@@ -2,7 +2,15 @@ import { assert } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit, kValue } from './constants.js';
-import { f32, floatBitsToNumber, i32, kFloat16Format, kFloat32Format, u32 } from './conversion.js';
+import {
+  f32,
+  f16,
+  floatBitsToNumber,
+  i32,
+  kFloat16Format,
+  kFloat32Format,
+  u32,
+} from './conversion.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -386,12 +394,55 @@ export function oneULPF32(target: number, mode: FlushMode = 'flush'): number {
   //     before and after are f32 representable
   const before = nextAfterF32(target, 'negative', mode);
   const after = nextAfterF32(target, 'positive', mode);
-  const converted: number = new Float32Array([target])[0];
+  const converted: number = quantizeToF32(target);
   if (converted === target) {
     // |target| is f32 representable, so either before or after will be x
     return Math.min(target - before, after - target);
   } else {
     // |target| is not f32 representable so taking distance of neighbouring f32s.
+    return after - before;
+  }
+}
+
+/**
+ * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
+ *
+ * ulp(x) is the distance between the two floating point numbers nearest x.
+ * This value is also called unit of last place, ULP, and 1 ULP.
+ * See the WGSL spec and http://www.ens-lyon.fr/LIP/Pub/Rapports/RR/RR2005/RR2005-09.pdf
+ * for a more detailed/nuanced discussion of the definition of ulp(x).
+ *
+ * @param target number to calculate ULP for
+ * @param mode should FTZ occurring during calculation or not
+ */
+export function oneULPF16(target: number, mode: FlushMode = 'flush'): number {
+  if (Number.isNaN(target)) {
+    return Number.NaN;
+  }
+
+  target = mode === 'flush' ? flushSubnormalNumberF16(target) : target;
+
+  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // distance between the two nearest f16 representable numbers to the
+  // appropriate edge.
+  if (target === Number.POSITIVE_INFINITY || target >= kValue.f16.positive.max) {
+    return kValue.f16.positive.max - kValue.f16.positive.nearest_max;
+  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f16.negative.min) {
+    return kValue.f16.negative.nearest_min - kValue.f16.negative.min;
+  }
+
+  // ulp(x) is min(after - before), where
+  //     before <= x <= after
+  //     before =/= after
+  //     before and after are f16 representable
+  const before = nextAfterF16(target, 'negative', mode);
+  const after = nextAfterF16(target, 'positive', mode);
+  const converted: number = quantizeToF16(target);
+  if (converted === target) {
+    // |target| is f16 representable, so either before or after will be x
+    return Math.min(target - before, after - target);
+  } else {
+    // |target| is not f16 representable so taking distance of neighbouring f16s.
     return after - before;
   }
 }
@@ -599,10 +650,55 @@ export function lerp(a: number, b: number, t: number): number {
   return t > 1.0 === b > a ? Math.max(b, x) : Math.min(b, x);
 }
 
+/**
+ * Version of lerp that operates on bigint values
+ *
+ * lerp was not made into a generic or to take in (number|bigint), because that
+ * introduces a bunch of complexity overhead related to type differentiation
+ */
+export function lerpBigInt(a: bigint, b: bigint, idx: number, steps: number): bigint {
+  assert(Math.trunc(idx) === idx);
+  assert(Math.trunc(steps) === steps);
+
+  // This constrains t to [0.0, 1.0]
+  assert(idx >= 0);
+  assert(steps > 0);
+  assert(idx < steps);
+
+  if (steps === 1) {
+    return a;
+  }
+  if (idx === 0) {
+    return a;
+  }
+  if (idx === steps - 1) {
+    return b;
+  }
+
+  const min = (x: bigint, y: bigint): bigint => {
+    return x < y ? x : y;
+  };
+  const max = (x: bigint, y: bigint): bigint => {
+    return x > y ? x : y;
+  };
+
+  // For number the variable t is used, there t = idx / (steps - 1),
+  // but that is a fraction on [0, 1], so becomes either 0 or 1 when converted
+  // to bigint, so need to expand things out.
+  const big_idx = BigInt(idx);
+  const big_steps = BigInt(steps);
+  if ((a <= 0n && b >= 0n) || (a >= 0n && b <= 0n)) {
+    return (b * big_idx) / (big_steps - 1n) + (a - (a * big_idx) / (big_steps - 1n));
+  }
+
+  const x = a + (b * big_idx) / (big_steps - 1n) - (a * big_idx) / (big_steps - 1n);
+  return !(b > a) ? max(b, x) : min(b, x);
+}
+
 /** @returns a linear increasing range of numbers. */
-export function linearRange(a: number, b: number, num_steps: number): Array<number> {
+export function linearRange(a: number, b: number, num_steps: number): number[] {
   if (num_steps <= 0) {
-    return Array<number>();
+    return [];
   }
 
   // Avoid division by 0
@@ -614,6 +710,26 @@ export function linearRange(a: number, b: number, num_steps: number): Array<numb
 }
 
 /**
+ * Version of linearRange that operates on bigint values
+ *
+ * linearRange was not made into a generic or to take in (number|bigint),
+ * because that introduces a bunch of complexity overhead related to type
+ * differentiation
+ */
+export function linearRangeBigInt(a: bigint, b: bigint, num_steps: number): Array<bigint> {
+  if (num_steps <= 0) {
+    return [];
+  }
+
+  // Avoid division by 0
+  if (num_steps === 1) {
+    return [a];
+  }
+
+  return Array.from(Array(num_steps).keys()).map(i => lerpBigInt(a, b, i, num_steps));
+}
+
+/**
  * @returns a non-linear increasing range of numbers, with a bias towards the beginning.
  *
  * Generates a linear range on [0,1] with |num_steps|, then squares all the values to make the curve be quadratic,
@@ -621,10 +737,10 @@ export function linearRange(a: number, b: number, num_steps: number): Array<numb
  * This biased range is then scaled to the desired range using lerp.
  * Different curves could be generated by changing c, where greater values of c will bias more towards 0.
  */
-export function biasedRange(a: number, b: number, num_steps: number): Array<number> {
+export function biasedRange(a: number, b: number, num_steps: number): number[] {
   const c = 2;
   if (num_steps <= 0) {
-    return Array<number>();
+    return [];
   }
 
   // Avoid division by 0
@@ -747,14 +863,122 @@ export function fullF16Range(
   return bit_fields.map(reinterpretU16AsF16);
 }
 
+/**
+ * @returns an ascending sorted array of numbers spread over the entire range of 64-bit floats
+ *
+ * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f64 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the f64 range.
+ *
+ * This function is intended to provide dense coverage of the f64 range, for a minimal list of values to use to cover
+ * f64 behaviour, use sparseF64Range instead.
+ *
+ * @param counts structure param with 4 entries indicating the number of entries to be generated each region, entries
+ *               must be 0 or greater.
+ */
+export function fullF64Range(
+  counts: {
+    neg_norm?: number;
+    neg_sub?: number;
+    pos_sub: number;
+    pos_norm: number;
+  } = { pos_sub: 10, pos_norm: 50 }
+): Array<number> {
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
+
+  // Generating bit fields first and then converting to f64, so that the spread across the possible f64 values is more
+  // even. Generating against the bounds of f64 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+    ...linearRangeBigInt(kBit.f64.negative.min, kBit.f64.negative.max, counts.neg_norm),
+    ...linearRangeBigInt(
+      kBit.f64.subnormal.negative.min,
+      kBit.f64.subnormal.negative.max,
+      counts.neg_sub
+    ),
+    0n,
+    ...linearRangeBigInt(
+      kBit.f64.subnormal.positive.min,
+      kBit.f64.subnormal.positive.max,
+      counts.pos_sub
+    ),
+    ...linearRangeBigInt(kBit.f64.positive.min, kBit.f64.positive.max, counts.pos_norm),
+  ];
+  return bit_fields.map(reinterpretU64AsF64);
+}
+
+/**
+ * @returns an ascending sorted array of f64 values spread over specific range of f64 normal floats
+ *
+ * Numbers are divided into 4 regions: negative 64-bit normals, negative 64-bit subnormals, positive 64-bit subnormals &
+ * positive 64-bit normals.
+ * Zero is included.
+ *
+ * Numbers are generated via taking a linear spread of the bit field representations of the values in each region. This
+ * means that number of precise f64 values between each returned value in a region should be about the same. This allows
+ * for a wide range of magnitudes to be generated, instead of being extremely biased towards the edges of the range.
+ *
+ * @param begin a negative f64 normal float value
+ * @param end a positive f64 normal float value
+ * @param counts structure param with 4 entries indicating the number of entries
+ *               to be generated each region, entries must be 0 or greater.
+ */
+export function filteredF64Range(
+  begin: number,
+  end: number,
+  counts: { neg_norm?: number; neg_sub?: number; pos_sub: number; pos_norm: number } = {
+    pos_sub: 10,
+    pos_norm: 50,
+  }
+): Array<number> {
+  assert(
+    begin <= kValue.f64.negative.max,
+    `Beginning of range ${begin} must be negative f64 normal`
+  );
+  assert(end >= kValue.f64.positive.min, `Ending of range ${end} must be positive f64 normal`);
+
+  counts.neg_norm = counts.neg_norm === undefined ? counts.pos_norm : counts.neg_norm;
+  counts.neg_sub = counts.neg_sub === undefined ? counts.pos_sub : counts.neg_sub;
+
+  const u64_begin = reinterpretF64AsU64(begin);
+  const u64_end = reinterpretF64AsU64(end);
+  // Generating bit fields first and then converting to f64, so that the spread across the possible f64 values is more
+  // even. Generating against the bounds of f64 values directly results in the values being extremely biased towards the
+  // extremes, since they are so much larger.
+  const bit_fields = [
+    ...linearRangeBigInt(u64_begin, kBit.f64.negative.max, counts.neg_norm),
+    ...linearRangeBigInt(
+      kBit.f64.subnormal.negative.min,
+      kBit.f64.subnormal.negative.max,
+      counts.neg_sub
+    ),
+    0n,
+    ...linearRangeBigInt(
+      kBit.f64.subnormal.positive.min,
+      kBit.f64.subnormal.positive.max,
+      counts.pos_sub
+    ),
+    ...linearRangeBigInt(kBit.f64.positive.min, u64_end, counts.pos_norm),
+  ];
+  return bit_fields.map(reinterpretU64AsF64);
+}
+
 /** Short list of i32 values of interest to test against */
 const kInterestingI32Values: number[] = [
   kValue.i32.negative.max,
-  kValue.i32.negative.max / 2,
+  Math.trunc(kValue.i32.negative.max / 2),
+  -256,
+  -10,
   -1,
   0,
   1,
-  kValue.i32.positive.max / 2,
+  10,
+  256,
+  Math.trunc(kValue.i32.positive.max / 2),
   kValue.i32.positive.max,
 ];
 
@@ -836,7 +1060,14 @@ export function fullI32Range(
 }
 
 /** Short list of u32 values of interest to test against */
-const kInterestingU32Values: number[] = [0, 1, kValue.u32.max / 2, kValue.u32.max];
+const kInterestingU32Values: number[] = [
+  0,
+  1,
+  10,
+  256,
+  Math.trunc(kValue.u32.max / 2),
+  kValue.u32.max,
+];
 
 /** @returns minimal u32 values that cover the entire range of u32 behaviours
  *
@@ -1404,6 +1635,11 @@ export function quantizeToF32(num: number): number {
   return f32(num).value as number;
 }
 
+/** @returns the closest 16-bit floating point value to the input */
+export function quantizeToF16(num: number): number {
+  return f16(num).value as number;
+}
+
 /** @returns the closest 32-bit signed integer value to the input */
 export function quantizeToI32(num: number): number {
   return i32(num).value as number;
@@ -1442,11 +1678,19 @@ export function lcm(a: number, b: number): number {
 }
 
 /**
+ * @returns the bit representation as a 64-integer, via interpreting the input
+ * as a 64-bit float value
+ */
+export function reinterpretF64AsU64(input: number): bigint {
+  return new BigUint64Array(new Float64Array([input]).buffer)[0];
+}
+
+/**
  * @returns a 64-bit float value via interpreting the input as the bit
  * representation as a 64-bit integer
  */
 export function reinterpretU64AsF64(input: bigint): number {
-  return new Float64Array(new BigInt64Array([input]).buffer)[0];
+  return new Float64Array(new BigUint64Array([input]).buffer)[0];
 }
 
 /**
