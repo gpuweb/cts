@@ -208,8 +208,8 @@ module.exports = function (grunt) {
     'ts:check',
   ]);
   registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'build-wpt',
     'run:generate-listings',
+    'build-wpt',
     'build-done-message',
     'run:validate',
     'ts:check',
