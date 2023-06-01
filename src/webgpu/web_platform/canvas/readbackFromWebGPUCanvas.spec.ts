@@ -467,3 +467,15 @@ g.test('transferToImageBitmap_zero_size')
       canvas.transferToImageBitmap();
     });
   });
+
+g.test('transferToImageBitmap_huge_size')
+  .desc(`Regression test for a crash when calling transferImageBitmap on a HUGE canvas.`)
+  .fn(t => {
+    const canvas = createCanvas(t, 'offscreen', 1000000, 1000000);
+    canvas.getContext('webgpu')!;
+
+    // Transferring to such a HUGE image bitmap would not be possible, so an Exception is thrown.
+    t.shouldThrow(true, () => {
+      canvas.transferToImageBitmap();
+    });
+  });
