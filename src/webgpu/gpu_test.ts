@@ -7,6 +7,7 @@ import {
   TestCaseRecorder,
   TestParams,
 } from '../common/framework/fixture.js';
+import { globalTestConfig } from '../common/framework/test_config.js';
 import {
   assert,
   range,
@@ -207,6 +208,10 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
   get queue(): GPUQueue {
     return this.device.queue;
+  }
+
+  get isCompatibility() {
+    return globalTestConfig.compatibility;
   }
 
   /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
