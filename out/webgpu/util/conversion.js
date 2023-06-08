@@ -1017,6 +1017,16 @@ export function reinterpretI32AsU32(i32) {
 }
 
 /**
+ * @returns a number representing the f32 interpretation
+ * of the bits of a number assumed to be an i32 value.
+ */
+export function reinterpretI32AsF32(i32) {
+  const array = new Int32Array(1);
+  array[0] = i32;
+  return new Float32Array(array.buffer)[0];
+}
+
+/**
  * @returns a number representing the u16 interpretation
  * of the bits of a number assumed to be an f16 value.
  */
