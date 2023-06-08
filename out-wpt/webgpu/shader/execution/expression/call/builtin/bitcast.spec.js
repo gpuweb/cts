@@ -22,7 +22,7 @@ T is i32, u32, f32
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { alwaysPass, anyOf } from '../../../../../util/compare.js';
-import { kBit } from '../../../../../util/constants.js';
+import { kBit, kValue } from '../../../../../util/constants.js';
 import {
   reinterpretI32AsF32,
   reinterpretF32AsI32,
@@ -72,7 +72,9 @@ const f32ZerosInU32 = [0, kBit.f32.negative.zero];
 const f32ZerosInF32 = f32ZerosInU32.map(u => reinterpretU32AsF32(u));
 const f32ZerosInI32 = f32ZerosInU32.map(u => reinterpretU32AsI32(u));
 
-const f32FiniteRange = [...fullF32Range(), ...f32ZerosInF32];
+// f32FiniteRange is a list of finite f32s. fullF32Range() already
+// has +0, we only need to add -0.
+const f32FiniteRange = [...fullF32Range(), kValue.f32.negative.zero];
 const f32RangeWithInfAndNaN = [...f32FiniteRange, ...f32InfAndNaNInF32];
 
 const anyF32 = alwaysPass('any f32');

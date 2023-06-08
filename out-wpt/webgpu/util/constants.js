@@ -377,6 +377,7 @@ export const kValue = {
     positive: {
       min: reinterpretU64AsF64(kBit.f64.positive.min),
       max: reinterpretU64AsF64(kBit.f64.positive.max),
+      zero: reinterpretU64AsF64(kBit.f64.positive.zero),
       nearest_max: reinterpretU64AsF64(kBit.f64.positive.nearest_max),
       less_than_one: reinterpretU64AsF64(kBit.f64.positive.less_than_one),
       pi: {
@@ -392,6 +393,7 @@ export const kValue = {
     negative: {
       max: reinterpretU64AsF64(kBit.f64.negative.max),
       min: reinterpretU64AsF64(kBit.f64.negative.min),
+      zero: reinterpretU64AsF64(kBit.f64.negative.zero),
       nearest_min: reinterpretU64AsF64(kBit.f64.negative.nearest_min),
       less_than_one: reinterpretU64AsF64(kBit.f64.negative.less_than_one), // -0.999999940395
       pi: {
@@ -424,6 +426,7 @@ export const kValue = {
     positive: {
       min: reinterpretU32AsF32(kBit.f32.positive.min),
       max: reinterpretU32AsF32(kBit.f32.positive.max),
+      zero: reinterpretU32AsF32(kBit.f32.positive.zero),
       nearest_max: reinterpretU32AsF32(kBit.f32.positive.nearest_max),
       less_than_one: reinterpretU32AsF32(kBit.f32.positive.less_than_one),
       pi: {
@@ -450,6 +453,7 @@ export const kValue = {
     negative: {
       max: reinterpretU32AsF32(kBit.f32.negative.max),
       min: reinterpretU32AsF32(kBit.f32.negative.min),
+      zero: reinterpretU32AsF32(kBit.f32.negative.zero),
       nearest_min: reinterpretU32AsF32(kBit.f32.negative.nearest_min),
       less_than_one: reinterpretU32AsF32(kBit.f32.negative.less_than_one), // -0.999999940395
       pi: {
