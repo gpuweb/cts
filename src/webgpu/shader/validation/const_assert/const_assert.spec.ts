@@ -56,7 +56,7 @@ const is_false = false;
 `;
 
 g.test('constant_expression_no_assert')
-  .desc(`Test that const_assert does assert on a true conditional expression`)
+  .desc(`Test that const_assert does not assert on a true conditional expression`)
   .params(u =>
     u
       .combine('case', keysOf(kConditionCases))
@@ -91,7 +91,7 @@ g.test('constant_expression_assert')
 
 g.test('constant_expression_logical_or_no_assert')
   .desc(
-    `Test that const_assert does not assert on a condition expression that contains a logical or and evaluates true`
+    `Test that const_assert does not assert on a condition expression that contains a logical-or which evaluates to true`
   )
   .params(u =>
     u
@@ -113,7 +113,7 @@ g.test('constant_expression_logical_or_no_assert')
 
 g.test('constant_expression_logical_or_assert')
   .desc(
-    `Test that const_assert does assert on a condition expression that contains a logical or and evaluates false`
+    `Test that const_assert does assert on a condition expression that contains a logical-or which evaluates to false`
   )
   .params(u =>
     u
@@ -135,7 +135,7 @@ g.test('constant_expression_logical_or_assert')
 
 g.test('constant_expression_logical_and_no_assert')
   .desc(
-    `Test that const_assert does not assert on a condition expression that contains a logical and and evaluates true`
+    `Test that const_assert does not assert on a condition expression that contains a logical-and which evaluates to true`
   )
   .params(u =>
     u
@@ -157,7 +157,7 @@ g.test('constant_expression_logical_and_no_assert')
 
 g.test('constant_expression_logical_and_assert')
   .desc(
-    `Test that const_assert does not assert on a condition expression that contains a logical and and evaluates false`
+    `Test that const_assert does assert on a condition expression that contains a logical-and which evaluates to false`
   )
   .params(u =>
     u
