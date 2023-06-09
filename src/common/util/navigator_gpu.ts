@@ -1,8 +1,7 @@
 /// <reference types="@webgpu/types" />
 
 import { TestCaseRecorder } from '../framework/fixture.js';
-
-import { ErrorWithExtra, assert } from './util.js';
+import { ErrorWithExtra, assert, objectEquals } from './util.js';
 
 /**
  * Finds and returns the `navigator.gpu` object (or equivalent, for non-browser implementations).
@@ -37,6 +36,10 @@ let impl: GPU | undefined = undefined;
 let defaultRequestAdapterOptions: GPURequestAdapterOptions | undefined;
 
 export function setDefaultRequestAdapterOptions(options: GPURequestAdapterOptions) {
+  // It's okay to call this if you don't change the options
+  if (objectEquals(options, defaultRequestAdapterOptions)) {
+    return;
+  }
   if (impl) {
     throw new Error('must call setDefaultRequestAdapterOptions before getGPU');
   }
