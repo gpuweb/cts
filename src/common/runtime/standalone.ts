@@ -72,7 +72,7 @@ stopButtonElem.addEventListener('click', () => {
 
 if (powerPreference || compatibility) {
   setDefaultRequestAdapterOptions({
-    powerPreference,
+    ...(powerPreference && { powerPreference }),
     // MAINTENANCE_TODO: Change this to whatever the option ends up being
     ...(compatibility && { compatibilityMode: true }),
   });
