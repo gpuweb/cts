@@ -10,6 +10,7 @@ import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
   getVideoElement,
+  getVideoFrameFromVideoElement,
   kVideoExpectations,
 } from '../../web_platform/util.js';
 
@@ -41,18 +42,31 @@ It creates HTMLVideoElement with videos under Resource folder.
   .params(u =>
     u //
       .combineWithParams(kVideoExpectations)
-      .combine('useVideoFrame', [true, false])
+      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
       .combine('srcDoFlipYDuringCopy', [true, false])
   )
   .fn(async t => {
-    const { videoName, useVideoFrame, srcDoFlipYDuringCopy } = t.params;
+    const { videoName, sourceType, srcDoFlipYDuringCopy } = t.params;
+
+    if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
+      t.skip('WebCodec is not supported');
+    }
 
     const videoElement = getVideoElement(t, videoName);
 
-    await startPlayingAndWaitForVideo(videoElement, () => {
-      const videoFrame = new VideoFrame(videoElement);
-      const width = useVideoFrame ? videoFrame.codedWidth : videoElement.videoWidth;
-      const height = useVideoFrame ? videoFrame.codedHeight : videoElement.videoHeight;
+    await startPlayingAndWaitForVideo(videoElement, async () => {
+      const source =
+        sourceType === 'VideoFrame'
+          ? await getVideoFrameFromVideoElement(t, videoElement)
+          : videoElement;
+      const width =
+        sourceType === 'VideoFrame'
+          ? (source as VideoFrame).codedWidth
+          : (source as HTMLVideoElement).videoWidth;
+      const height =
+        sourceType === 'VideoFrame'
+          ? (source as VideoFrame).codedHeight
+          : (source as HTMLVideoElement).videoHeight;
       const dstTexture = t.device.createTexture({
         format: kFormat,
         size: { width, height, depthOrArrayLayers: 1 },
@@ -62,7 +76,7 @@ It creates HTMLVideoElement with videos under Resource folder.
 
       t.queue.copyExternalImageToTexture(
         {
-          source: useVideoFrame ? videoFrame : videoElement,
+          source,
           origin: { x: 0, y: 0 },
           flipY: srcDoFlipYDuringCopy,
         },
@@ -98,5 +112,7 @@ It creates HTMLVideoElement with videos under Resource folder.
           { coord: { x: width * 0.75, y: height * 0.75 }, exp: t.params._greenExpectation },
         ]);
       }
+
+      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
     });
   });
