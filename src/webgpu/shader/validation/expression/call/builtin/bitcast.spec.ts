@@ -13,15 +13,18 @@ export const g = makeTestGroup(ShaderValidationTest);
 // and which component will have a bad value.
 // Use width = 1 to indicate a scalar.
 type VectorCase = { width: number; badIndex: number };
-function vectorCases(): VectorCase[] {
-  const result: VectorCase[] = [];
-  for (let i = 1; i <= 4; i++) {
-    for (let j = 0; j < i; j++) {
-      result.push({ width: i, badIndex: j });
-    }
-  }
-  return result;
-}
+const vectorCases: VectorCase[] = [
+  { width: 1, badIndex: 0 },
+  { width: 2, badIndex: 0 },
+  { width: 2, badIndex: 1 },
+  { width: 3, badIndex: 0 },
+  { width: 3, badIndex: 1 },
+  { width: 3, badIndex: 2 },
+  { width: 4, badIndex: 0 },
+  { width: 4, badIndex: 1 },
+  { width: 4, badIndex: 2 },
+  { width: 4, badIndex: 3 },
+];
 
 const numNaNs = 4;
 const f32InfAndNaNInU32: number[] = [
@@ -48,7 +51,7 @@ It is a shader-creation error if any const-expression of floating-point type eva
   .params(u =>
     u
       .combine('fromScalarType', ['i32', 'u32'] as const)
-      .combine('vectorize', [...vectorCases()] as const)
+      .combine('vectorize', [...vectorCases] as const)
       .combine('bitBadValue', [...f32InfAndNaNInU32] as const)
   )
   .fn(t => {
