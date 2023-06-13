@@ -4864,7 +4864,7 @@ class F16Traits extends FPTraits {
   public readonly ulpInterval = this.ulpIntervalImpl.bind(this);
 
   // Framework - API - Overrides
-  public readonly absInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly absInterval = this.absIntervalImpl.bind(this);
   public readonly acosInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4876,7 +4876,7 @@ class F16Traits extends FPTraits {
   public readonly atanInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly ceilInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
@@ -4891,7 +4891,7 @@ class F16Traits extends FPTraits {
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this);
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
-  public readonly floorInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4929,7 +4929,7 @@ class F16Traits extends FPTraits {
   public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(this);
   public readonly refractInterval = this.unimplementedRefract.bind(this);
   public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly roundInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly signInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly sinInterval = this.unimplementedScalarToInterval.bind(this);
