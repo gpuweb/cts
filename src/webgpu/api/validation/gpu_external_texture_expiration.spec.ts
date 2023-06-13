@@ -155,7 +155,8 @@ g.test('import_and_use_in_different_task')
   .desc(
     `
     Tests that in the different task scope, previous imported GPUExternalTexture
-    should be expired.
+    should be expired if it is imported from HTMLVideoElment. GPUExternalTexture
+    imported from WebCodec VideoFrame is not expired.
     `
   )
   .params(u =>
@@ -187,8 +188,10 @@ g.test('import_and_use_in_different_task')
     });
 
     await waitForNextTask(() => {
-      // Enter in another task scope, previous GPUExternalTexture should be expired.
-      t.submitCommandBuffer(bindGroup, false);
+      // Enter in another task scope. For GPUExternalTexture imported from WebCodec,
+      // it shouldn't be expired because VideoFrame is not 'closed'.
+      // For GPUExternalTexutre imported from HTMLVideoElement, it should be expired.
+      t.submitCommandBuffer(bindGroup, sourceType === 'VideoFrame' ? true : false);
     });
   });
 
@@ -196,26 +199,18 @@ g.test('use_import_to_refresh')
   .desc(
     `
     Tests that in the different task scope, imported GPUExternalTexture
-    again on the same source frame should return the same GPUExternalTexture
+    again on the same HTMLVideoElement should return the same GPUExternalTexture
     object and refresh it.
     `
   )
-  .params(u =>
-    u //
-      .combine('sourceType', ['VideoElement', 'VideoFrame'] as const)
-  )
   .fn(async t => {
-    const sourceType = t.params.sourceType;
     const videoElement = t.getDefaultVideoElementAndCheck();
 
     let bindGroup: GPUBindGroup;
     let externalTexture: GPUExternalTexture;
     let source: HTMLVideoElement | VideoFrame;
-    await startPlayingAndWaitForVideo(videoElement, async () => {
-      source =
-        sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(t, videoElement)
-          : videoElement;
+    await startPlayingAndWaitForVideo(videoElement, () => {
+      source = videoElement;
       externalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
