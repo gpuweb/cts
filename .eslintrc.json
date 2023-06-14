@@ -17,9 +17,11 @@
     // Core rules
     "linebreak-style": ["warn", "unix"],
     "no-console": "warn",
+    "no-throw-literal": "warn",
     "no-undef": "off",
     "no-useless-rename": "warn",
     "object-shorthand": "warn",
+    "prefer-promise-reject-errors": "warn",
     "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }],
 
     // All test TODOs must be tracked inside file/test descriptions or READMEs.
