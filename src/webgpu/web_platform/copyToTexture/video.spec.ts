@@ -55,18 +55,17 @@ It creates HTMLVideoElement with videos under Resource folder.
     const videoElement = getVideoElement(t, videoName);
 
     await startPlayingAndWaitForVideo(videoElement, async () => {
-      const source =
-        sourceType === 'VideoFrame'
-          ? await getVideoFrameFromVideoElement(t, videoElement)
-          : videoElement;
-      const width =
-        sourceType === 'VideoFrame'
-          ? (source as VideoFrame).codedWidth
-          : (source as HTMLVideoElement).videoWidth;
-      const height =
-        sourceType === 'VideoFrame'
-          ? (source as VideoFrame).codedHeight
-          : (source as HTMLVideoElement).videoHeight;
+      let source, width, height;
+      if (sourceType === 'VideoFrame') {
+        source = await getVideoFrameFromVideoElement(t, videoElement);
+        width = source.codedWidth;
+        height = source.codedHeight;
+      } else {
+        source = videoElement;
+        width = source.videoWidth;
+        height = source.videoHeight;
+      }
+
       const dstTexture = t.device.createTexture({
         format: kFormat,
         size: { width, height, depthOrArrayLayers: 1 },
@@ -113,6 +112,8 @@ It creates HTMLVideoElement with videos under Resource folder.
         ]);
       }
 
-      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
+      if (source instanceof VideoFrame) {
+        source.close();
+      }
     });
   });
