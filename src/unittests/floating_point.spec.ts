@@ -2210,44 +2210,67 @@ interface ScalarToIntervalCase {
   expected: number | IntervalBounds;
 }
 
-g.test('absInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Common usages
-      { input: 1, expected: 1 },
-      { input: -1, expected: 1 },
-      { input: 0.1, expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-      { input: -0.1, expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
+const kAbsIntervalCases = [
+  {
+    input: 0.1,
+    expected: {
+      f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
+      f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+    },
+  },
+  {
+    input: -0.1,
+    expected: {
+      f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
+      f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+    },
+  },
+] as const;
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-      { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
-      { input: kValue.f32.negative.max, expected: kValue.f32.positive.min },
+g.test('absInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+        // Common usages
+        { input: 1, expected: 1 },
+        { input: -1, expected: 1 },
+        ...kAbsIntervalCases.map(t => {return {input: t.input, expected: t.expected[p.trait]} as ScalarToIntervalCase}),
 
-      // 32-bit subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: kValue.f32.subnormal.negative.min, expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
+        // Edge cases
+        { input: constants.positive.infinity, expected: kAnyBounds },
+        { input: constants.negative.infinity, expected: kAnyBounds },
+        { input: constants.positive.max, expected: constants.positive.max },
+        { input: constants.positive.min, expected: constants.positive.min },
+        { input: constants.negative.min, expected: constants.positive.max },
+        { input: constants.negative.max, expected: constants.positive.min },
 
-      // 64-bit subnormals
-      { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, kValue.f32.subnormal.positive.min] },
+        // 32-bit subnormals
+        { input: constants.positive.subnormal.max, expected: [0, constants.positive.subnormal.max] },
+        { input: constants.positive.subnormal.min, expected: [0, constants.positive.subnormal.min] },
+        { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
+        { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] },
 
-      // Zero
-      { input: 0, expected: 0 },
-    ]
+        // 64-bit subnormals
+        { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, constants.positive.subnormal.min] },
+        { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, constants.positive.subnormal.min] },
+
+        // Zero
+        { input: 0, expected: 0 },
+      ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.absInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.absInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.absInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.absInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2456,45 +2479,63 @@ g.test('atanhInterval_f32')
     );
   });
 
-g.test('ceilInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: 0, expected: 0 },
-      { input: 0.1, expected: 1 },
-      { input: 0.9, expected: 1 },
-      { input: 1.0, expected: 1 },
-      { input: 1.1, expected: 2 },
-      { input: 1.9, expected: 2 },
-      { input: -0.1, expected: 0 },
-      { input: -0.9, expected: 0 },
-      { input: -1.0, expected: -1 },
-      { input: -1.1, expected: -1 },
-      { input: -1.9, expected: -1 },
+// Large but still representable integer
+const kCeilIntervalCases = {
+  f32: [
+    { input: 2 ** 30, expected: 2 ** 30 },
+    { input: -(2 ** 30), expected: -(2 ** 30) },
+  ],
+  f16: [
+    { input: 2 ** 15, expected: 2 ** 15 },
+    { input: -(2 ** 15), expected: -(2 ** 15) },
+  ],
+} as const;
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { input: kValue.f32.positive.min, expected: 1 },
-      { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
-      { input: kValue.f32.negative.max, expected: 0 },
-      { input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
-      { input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
+g.test('ceilInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+        { input: 0, expected: 0 },
+        { input: 0.1, expected: 1 },
+        { input: 0.9, expected: 1 },
+        { input: 1.0, expected: 1 },
+        { input: 1.1, expected: 2 },
+        { input: 1.9, expected: 2 },
+        { input: -0.1, expected: 0 },
+        { input: -0.9, expected: 0 },
+        { input: -1.0, expected: -1 },
+        { input: -1.1, expected: -1 },
+        { input: -1.9, expected: -1 },
 
-      // 32-bit subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: [0, 1] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
-      { input: kValue.f32.subnormal.negative.min, expected: 0 },
-      { input: kValue.f32.subnormal.negative.max, expected: 0 },
-    ]
+        // Edge cases
+        { input: constants.positive.infinity, expected: kAnyBounds },
+        { input: constants.negative.infinity, expected: kAnyBounds },
+        { input: constants.positive.max, expected: constants.positive.max },
+        { input: constants.positive.min, expected: 1 },
+        { input: constants.negative.min, expected: constants.negative.min },
+        { input: constants.negative.max, expected: 0 },
+        ...kCeilIntervalCases[p.trait],
+
+        // 32-bit subnormals
+        { input: constants.positive.subnormal.max, expected: [0, 1] },
+        { input: constants.positive.subnormal.min, expected: [0, 1] },
+        { input: constants.negative.subnormal.min, expected: 0 },
+        { input: constants.negative.subnormal.max, expected: 0 },
+      ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.ceilInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.ceilInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.ceilInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.ceilInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2644,45 +2685,63 @@ g.test('exp2Interval_f32')
     );
   });
 
-g.test('floorInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: 0, expected: 0 },
-      { input: 0.1, expected: 0 },
-      { input: 0.9, expected: 0 },
-      { input: 1.0, expected: 1 },
-      { input: 1.1, expected: 1 },
-      { input: 1.9, expected: 1 },
-      { input: -0.1, expected: -1 },
-      { input: -0.9, expected: -1 },
-      { input: -1.0, expected: -1 },
-      { input: -1.1, expected: -2 },
-      { input: -1.9, expected: -2 },
+// Large but still representable integer
+const kFloorIntervalCases = {
+  f32: [
+    { input: 2 ** 30, expected: 2 ** 30 },
+    { input: -(2 ** 30), expected: -(2 ** 30) },
+  ],
+  f16: [
+    { input: 2 ** 15, expected: 2 ** 15 },
+    { input: -(2 ** 15), expected: -(2 ** 15) },
+  ],
+} as const;
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { input: kValue.f32.positive.min, expected: 0 },
-      { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
-      { input: kValue.f32.negative.max, expected: -1 },
-      { input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
-      { input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
+g.test('floorInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          { input: 0, expected: 0 },
+          { input: 0.1, expected: 0 },
+          { input: 0.9, expected: 0 },
+          { input: 1.0, expected: 1 },
+          { input: 1.1, expected: 1 },
+          { input: 1.9, expected: 1 },
+          { input: -0.1, expected: -1 },
+          { input: -0.9, expected: -1 },
+          { input: -1.0, expected: -1 },
+          { input: -1.1, expected: -2 },
+          { input: -1.9, expected: -2 },
 
-      // 32-bit subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: 0 },
-      { input: kValue.f32.subnormal.positive.min, expected: 0 },
-      { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] },
-    ]
+          // Edge cases
+          { input: constants.positive.infinity, expected: kAnyBounds },
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.positive.max, expected: constants.positive.max },
+          { input: constants.positive.min, expected: 0 },
+          { input: constants.negative.min, expected: constants.negative.min },
+          { input: constants.negative.max, expected: -1 },
+          ...kFloorIntervalCases[p.trait],
+
+          // 32-bit subnormals
+          { input: constants.positive.subnormal.max, expected: 0 },
+          { input: constants.positive.subnormal.min, expected: 0 },
+          { input: constants.negative.subnormal.min, expected: [-1, 0] },
+          { input: constants.negative.subnormal.max, expected: [-1, 0] },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.floorInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.floorInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.floorInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.floorInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2946,10 +3005,27 @@ g.test('radiansInterval_f32')
     );
   });
 
-g.test('roundInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
+// Large but still representable integer
+const kRoundIntervalCases = {
+  f32: [
+    { input: 2 ** 30, expected: 2 ** 30 },
+    { input: -(2 ** 30), expected: -(2 ** 30) },
+  ],
+  f16: [
+    { input: 2 ** 15, expected: 2 ** 15 },
+    { input: -(2 ** 15), expected: -(2 ** 15) },
+  ],
+} as const;
+
+g.test('roundInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
       { input: 0, expected: 0 },
       { input: 0.1, expected: 0 },
       { input: 0.5, expected: 0 },  // Testing tie breaking
@@ -2967,28 +3043,29 @@ g.test('roundInterval_f32')
       { input: -1.9, expected: -2 },
 
       // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
-      { input: kValue.f32.positive.min, expected: 0 },
-      { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
-      { input: kValue.f32.negative.max, expected: 0 },
-      { input: kValue.powTwo.to30, expected: kValue.powTwo.to30 },
-      { input: -kValue.powTwo.to30, expected: -kValue.powTwo.to30 },
+      { input: constants.positive.infinity, expected: kAnyBounds },
+      { input: constants.negative.infinity, expected: kAnyBounds },
+      { input: constants.positive.max, expected: constants.positive.max },
+      { input: constants.positive.min, expected: 0 },
+      { input: constants.negative.min, expected: constants.negative.min },
+      { input: constants.negative.max, expected: 0 },
+      ...kRoundIntervalCases[p.trait],
 
       // 32-bit subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: 0 },
-      { input: kValue.f32.subnormal.positive.min, expected: 0 },
-      { input: kValue.f32.subnormal.negative.min, expected: 0 },
-      { input: kValue.f32.subnormal.negative.max, expected: 0 },
-    ]
+      { input: constants.positive.subnormal.max, expected: 0 },
+      { input: constants.positive.subnormal.min, expected: 0 },
+      { input: constants.negative.subnormal.min, expected: 0 },
+      { input: constants.negative.subnormal.max, expected: 0 },
+    ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.roundInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.roundInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.roundInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.roundInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
