@@ -4864,7 +4864,7 @@ class F16Traits extends FPTraits {
   ulpInterval = this.ulpIntervalImpl.bind(this);
 
   // Framework - API - Overrides
-  absInterval = this.unimplementedScalarToInterval.bind(this);
+  absInterval = this.absIntervalImpl.bind(this);
   acosInterval = this.unimplementedScalarToInterval.bind(this);
   acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4876,7 +4876,7 @@ class F16Traits extends FPTraits {
   atanInterval = this.unimplementedScalarToInterval.bind(this);
   atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
   atanhInterval = this.unimplementedScalarToInterval.bind(this);
-  ceilInterval = this.unimplementedScalarToInterval.bind(this);
+  ceilInterval = this.ceilIntervalImpl.bind(this);
   clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
   clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
@@ -4891,7 +4891,7 @@ class F16Traits extends FPTraits {
   expInterval = this.unimplementedScalarToInterval.bind(this);
   exp2Interval = this.unimplementedScalarToInterval.bind(this);
   faceForwardIntervals = this.unimplementedFaceForward.bind(this);
-  floorInterval = this.unimplementedScalarToInterval.bind(this);
+  floorInterval = this.floorIntervalImpl.bind(this);
   fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
   fractInterval = this.unimplementedScalarToInterval.bind(this);
   inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4929,7 +4929,7 @@ class F16Traits extends FPTraits {
   reflectInterval = this.unimplementedVectorPairToVector.bind(this);
   refractInterval = this.unimplementedRefract.bind(this);
   remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
-  roundInterval = this.unimplementedScalarToInterval.bind(this);
+  roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.unimplementedScalarToInterval.bind(this);
   signInterval = this.unimplementedScalarToInterval.bind(this);
   sinInterval = this.unimplementedScalarToInterval.bind(this);
