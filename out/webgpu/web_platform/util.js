@@ -140,7 +140,7 @@ callback)
         await callback();
         resolve();
       } catch (ex) {
-        reject();
+        reject(ex);
       }
     })();
     if (video.error) {

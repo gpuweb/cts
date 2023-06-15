@@ -140,7 +140,7 @@ export function startPlayingAndWaitForVideo(
             await callback();
             resolve();
           } catch (ex) {
-            reject();
+            reject(ex);
           }
         })();
       if (video.error) {
