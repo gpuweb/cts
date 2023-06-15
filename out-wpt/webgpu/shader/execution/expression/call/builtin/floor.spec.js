@@ -36,6 +36,7 @@ export const d = makeCaseCache('floor', {
         -1.0,
         -1.1,
         -1.9,
+        0x80000000, // https://github.com/gpuweb/cts/issues/2766
         ...fullF32Range(),
       ],
 
@@ -58,6 +59,7 @@ export const d = makeCaseCache('floor', {
         -1.0,
         -1.1,
         -1.9,
+        0x8000, // https://github.com/gpuweb/cts/issues/2766
         ...fullF16Range(),
       ],
 

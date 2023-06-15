@@ -25,10 +25,26 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('round', {
   f32: () => {
-    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.roundInterval);
+    return FP.f32.generateScalarToIntervalCases(
+      [
+        0x80000000, // https://github.com/gpuweb/cts/issues/2766,
+        ...fullF32Range(),
+      ],
+
+      'unfiltered',
+      FP.f32.roundInterval
+    );
   },
   f16: () => {
-    return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.roundInterval);
+    return FP.f16.generateScalarToIntervalCases(
+      [
+        0x8000, // https://github.com/gpuweb/cts/issues/2766
+        ...fullF16Range(),
+      ],
+
+      'unfiltered',
+      FP.f16.roundInterval
+    );
   },
 });
 

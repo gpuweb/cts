@@ -3270,12 +3270,18 @@ class FPTraits {
       // This is how other shading languages operate and allows for a desirable
       // wrap around in graphics programming.
       const result = this.subtractionInterval(n, this.floorInterval(n));
+      assert(
+      // negative.subnormal.min instead of 0, because FTZ can occur
+      // selectively during the calculation
+      this.toInterval([this.constants().negative.subnormal.min, 1.0]).contains(result),
+      `fract(${n}) interval [${result}] unexpectedly extends beyond [~0.0, 1.0]`);
+
       if (result.contains(1)) {
         // Very small negative numbers can lead to catastrophic cancellation,
         // thus calculating a fract of 1.0, which is technically not a
         // fractional part, so some implementations clamp the result to next
         // nearest number.
-        return this.spanIntervals(result, this.toInterval(kValue.f32.positive.less_than_one));
+        return this.spanIntervals(result, this.toInterval(this.constants().positive.less_than_one));
       }
       return result;
     }

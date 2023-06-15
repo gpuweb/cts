@@ -37,6 +37,7 @@ export const d = makeCaseCache('fract', {
     -2, // -2 -> 0
     -1.11, // ~-1.11 -> ~0.89
     -10.0001, // -10.0001 -> ~0.9999
+    0x80000000, // https://github.com/gpuweb/cts/issues/2766
     ...fullF32Range()],
 
     'unfiltered',

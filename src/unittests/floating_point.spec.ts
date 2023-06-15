@@ -2484,10 +2484,12 @@ const kCeilIntervalCases = {
   f32: [
     { input: 2 ** 30, expected: 2 ** 30 },
     { input: -(2 ** 30), expected: -(2 ** 30) },
+    { input: 0x80000000, expected: 0x80000000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
-    { input: 2 ** 15, expected: 2 ** 15 },
-    { input: -(2 ** 15), expected: -(2 ** 15) },
+    { input: 2 ** 14, expected: 2 ** 14 },
+    { input: -(2 ** 14), expected: -(2 ** 14) },
+    { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
 
@@ -2690,10 +2692,12 @@ const kFloorIntervalCases = {
   f32: [
     { input: 2 ** 30, expected: 2 ** 30 },
     { input: -(2 ** 30), expected: -(2 ** 30) },
+    { input: 0x80000000, expected: 0x80000000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
-    { input: 2 ** 15, expected: 2 ** 15 },
-    { input: -(2 ** 15), expected: -(2 ** 15) },
+    { input: 2 ** 14, expected: 2 ** 14 },
+    { input: -(2 ** 14), expected: -(2 ** 14) },
+    { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
 
@@ -2766,7 +2770,10 @@ g.test('fractInterval_f32')
       { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
       { input: kValue.f32.negative.min, expected: 0 },
       { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] },
-    ]
+
+      // https://github.com/gpuweb/cts/issues/2766
+      { input: 0x80000000, expected: 0 },
+]
   )
   .fn(t => {
     const expected = FP.f32.toInterval(t.params.expected);
@@ -3010,10 +3017,12 @@ const kRoundIntervalCases = {
   f32: [
     { input: 2 ** 30, expected: 2 ** 30 },
     { input: -(2 ** 30), expected: -(2 ** 30) },
+    { input: 0x80000000, expected: 0x80000000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
-    { input: 2 ** 15, expected: 2 ** 15 },
-    { input: -(2 ** 15), expected: -(2 ** 15) },
+    { input: 2 ** 14, expected: 2 ** 14 },
+    { input: -(2 ** 14), expected: -(2 ** 14) },
+    { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
 
