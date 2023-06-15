@@ -15,7 +15,7 @@ import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
 
 import {
   kCTSOptionsInfo,
-  parseSearchPramLikeWithOptions,
+  parseSearchParamLikeWithOptions,
   CTSOptions,
   OptionInfo,
   OptionsInfos,
@@ -43,7 +43,7 @@ const kStandaloneOptionsInfos: OptionsInfos<StandaloneOptions> = {
   runnow: { description: 'run immediately on load' },
 };
 
-const { queries: qs, options } = parseSearchPramLikeWithOptions(
+const { queries: qs, options } = parseSearchParamLikeWithOptions(
   kStandaloneOptionsInfos,
   window.location.search || rootQuerySpec
 );
