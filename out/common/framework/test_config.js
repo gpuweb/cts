@@ -18,10 +18,16 @@
 
 
 
+
+
+
+
+
 export const globalTestConfig = {
   maxSubcasesInFlight: 500,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
-  unrollConstEvalLoops: false
+  unrollConstEvalLoops: false,
+  compatibility: false
 };
 //# sourceMappingURL=test_config.js.map

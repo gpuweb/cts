@@ -13,12 +13,21 @@ import { TestTree } from '../internal/tree.js';
 import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
 import { assert, unreachable } from '../util/util.js';
 
-import { optionEnabled, optionString } from './helper/options.js';
+import {
+kCTSOptionsInfo,
+parseSearchParamLikeWithOptions,
+
+
+
+camelCaseToSnakeCase } from
+'./helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
 let promptBeforeReload = false;
 let isFullCTS = false;
+
+globalTestConfig.frameworkDebugLog = console.log;
 
 window.onbeforeunload = () => {
   // Prompt user before reloading if there are any results
@@ -27,79 +36,20 @@ window.onbeforeunload = () => {
 
 const kOpenTestLinkAltText = 'Open';
 
-// The possible options for the tests.
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const optionsInfo = {
-  runnow: { description: 'run immediately on load' },
-  worker: { description: 'run in a worker' },
-  debug: { description: 'show more info' },
-  unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
-  powerPreference: {
-    description: 'set default powerPreference for some tests',
-    parser: optionString,
-    selectValueDescriptions: [
-    { value: '', description: 'default' },
-    { value: 'low-power', description: 'low-power' },
-    { value: 'high-performance', description: 'high-performance' }]
-
-  }
+const kStandaloneOptionsInfos = {
+  ...kCTSOptionsInfo,
+  runnow: { description: 'run immediately on load' }
 };
 
-/**
- * Converts camel case to snake case.
- * Examples:
- *    fooBar -> foo_bar
- *    parseHTMLFile -> parse_html_file
- */
-function camelCaseToSnakeCase(id) {
-  return id.
-  replace(/(.)([A-Z][a-z]+)/g, '$1_$2').
-  replace(/([a-z0-9])([A-Z])/g, '$1_$2').
-  toLowerCase();
-}
+const { queries: qs, options } = parseSearchParamLikeWithOptions(
+kStandaloneOptionsInfos,
+window.location.search || rootQuerySpec);
 
-/**
- * Creates a StandaloneOptions from the current URL search parameters.
- */
-function getOptionsInfoFromSearchParameters(
-optionsInfos)
-{
-  const optionValues = {};
-  for (const [optionName, info] of Object.entries(optionsInfos)) {
-    const parser = info.parser || optionEnabled;
-    optionValues[optionName] = parser(camelCaseToSnakeCase(optionName));
-  }
-  return optionValues;
-}
-
-// This is just a cast in one place.
-function optionsToRecord(options) {
-  return options;
-}
-
-globalTestConfig.frameworkDebugLog = console.log;
-
-const options = getOptionsInfoFromSearchParameters(optionsInfo);
-const { runnow, debug, unrollConstEvalLoops, powerPreference } = options;
+const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
 globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+globalTestConfig.compatibility = compatibility;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
@@ -120,8 +70,12 @@ stopButtonElem.addEventListener('click', () => {
   stopRequested = true;
 });
 
-if (powerPreference) {
-  setDefaultRequestAdapterOptions({ powerPreference: powerPreference });
+if (powerPreference || compatibility) {
+  setDefaultRequestAdapterOptions({
+    ...(powerPreference && { powerPreference }),
+    // MAINTENANCE_TODO: Change this to whatever the option ends up being
+    ...(compatibility && { compatibilityMode: true })
+  });
 }
 
 dataCache.setStore({
@@ -538,6 +492,11 @@ function prepareParams(params) {
   return new URLSearchParams(pairs).toString();
 }
 
+// This is just a cast in one place.
+export function optionsToRecord(options) {
+  return options;
+}
+
 /**
  * Given a search query, generates a search parameter string
  * @param queries array of queries
@@ -554,10 +513,6 @@ void (async () => {
   const loader = new DefaultTestFileLoader();
 
   // MAINTENANCE_TODO: start populating page before waiting for everything to load?
-  const qs = new URLSearchParams(window.location.search).getAll('q');
-  if (qs.length === 0) {
-    qs.push(rootQuerySpec);
-  }
   isFullCTS = qs.length === 1 && qs[0] === rootQuerySpec;
 
   // Update the URL bar to match the exact current options.
@@ -573,7 +528,10 @@ void (async () => {
     });
   };
 
-  const addOptionsToPage = (options, optionsInfos) => {
+  const addOptionsToPage = (
+  options,
+  optionsInfos) =>
+  {
     const optionsElem = $('table#options>tbody')[0];
     const optionValues = optionsToRecord(options);
 
@@ -615,7 +573,7 @@ void (async () => {
       appendTo(optionsElem);
     }
   };
-  addOptionsToPage(options, optionsInfo);
+  addOptionsToPage(options, kStandaloneOptionsInfos);
 
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const rootQuery = parseQuery(qs[0]);

@@ -13,12 +13,21 @@ import { TestTreeNode, TestSubtree, TestTreeLeaf, TestTree } from '../internal/t
 import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
 import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
 
-import { optionEnabled, optionString } from './helper/options.js';
+import {
+  kCTSOptionsInfo,
+  parseSearchParamLikeWithOptions,
+  CTSOptions,
+  OptionInfo,
+  OptionsInfos,
+  camelCaseToSnakeCase,
+} from './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
 let promptBeforeReload = false;
 let isFullCTS = false;
+
+globalTestConfig.frameworkDebugLog = console.log;
 
 window.onbeforeunload = () => {
   // Prompt user before reloading if there are any results
@@ -27,79 +36,20 @@ window.onbeforeunload = () => {
 
 const kOpenTestLinkAltText = 'Open';
 
-// The possible options for the tests.
-interface StandaloneOptions {
-  runnow: boolean;
-  worker: boolean;
-  debug: boolean;
-  unrollConstEvalLoops: boolean;
-  powerPreference: string;
-}
+type StandaloneOptions = CTSOptions & { runnow: OptionInfo };
 
-// Extra per option info.
-interface StandaloneOptionInfo {
-  description: string;
-  parser?: (key: string) => boolean | string;
-  selectValueDescriptions?: { value: string; description: string }[];
-}
-
-// Type for info for every option. This definition means adding an option
-// will generate a compile time error if not extra info is provided.
-type StandaloneOptionsInfos = Record<keyof StandaloneOptions, StandaloneOptionInfo>;
-
-const optionsInfo: StandaloneOptionsInfos = {
+const kStandaloneOptionsInfos: OptionsInfos<StandaloneOptions> = {
+  ...kCTSOptionsInfo,
   runnow: { description: 'run immediately on load' },
-  worker: { description: 'run in a worker' },
-  debug: { description: 'show more info' },
-  unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
-  powerPreference: {
-    description: 'set default powerPreference for some tests',
-    parser: optionString,
-    selectValueDescriptions: [
-      { value: '', description: 'default' },
-      { value: 'low-power', description: 'low-power' },
-      { value: 'high-performance', description: 'high-performance' },
-    ],
-  },
 };
 
-/**
- * Converts camel case to snake case.
- * Examples:
- *    fooBar -> foo_bar
- *    parseHTMLFile -> parse_html_file
- */
-function camelCaseToSnakeCase(id: string) {
-  return id
-    .replace(/(.)([A-Z][a-z]+)/g, '$1_$2')
-    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
-    .toLowerCase();
-}
-
-/**
- * Creates a StandaloneOptions from the current URL search parameters.
- */
-function getOptionsInfoFromSearchParameters(
-  optionsInfos: StandaloneOptionsInfos
-): StandaloneOptions {
-  const optionValues: Record<string, boolean | string> = {};
-  for (const [optionName, info] of Object.entries(optionsInfos)) {
-    const parser = info.parser || optionEnabled;
-    optionValues[optionName] = parser(camelCaseToSnakeCase(optionName));
-  }
-  return (optionValues as unknown) as StandaloneOptions;
-}
-
-// This is just a cast in one place.
-function optionsToRecord(options: StandaloneOptions) {
-  return (options as unknown) as Record<string, boolean | string>;
-}
-
-globalTestConfig.frameworkDebugLog = console.log;
-
-const options = getOptionsInfoFromSearchParameters(optionsInfo);
-const { runnow, debug, unrollConstEvalLoops, powerPreference } = options;
+const { queries: qs, options } = parseSearchParamLikeWithOptions(
+  kStandaloneOptionsInfos,
+  window.location.search || rootQuerySpec
+);
+const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
 globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+globalTestConfig.compatibility = compatibility;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
@@ -120,8 +70,12 @@ stopButtonElem.addEventListener('click', () => {
   stopRequested = true;
 });
 
-if (powerPreference) {
-  setDefaultRequestAdapterOptions({ powerPreference: powerPreference as GPUPowerPreference });
+if (powerPreference || compatibility) {
+  setDefaultRequestAdapterOptions({
+    ...(powerPreference && { powerPreference }),
+    // MAINTENANCE_TODO: Change this to whatever the option ends up being
+    ...(compatibility && { compatibilityMode: true }),
+  });
 }
 
 dataCache.setStore({
@@ -538,6 +492,11 @@ function prepareParams(params: Record<string, ParamValue>): string {
   return new URLSearchParams(pairs).toString();
 }
 
+// This is just a cast in one place.
+export function optionsToRecord(options: CTSOptions) {
+  return (options as unknown) as Record<string, boolean | string>;
+}
+
 /**
  * Given a search query, generates a search parameter string
  * @param queries array of queries
@@ -554,10 +513,6 @@ void (async () => {
   const loader = new DefaultTestFileLoader();
 
   // MAINTENANCE_TODO: start populating page before waiting for everything to load?
-  const qs = new URLSearchParams(window.location.search).getAll('q');
-  if (qs.length === 0) {
-    qs.push(rootQuerySpec);
-  }
   isFullCTS = qs.length === 1 && qs[0] === rootQuerySpec;
 
   // Update the URL bar to match the exact current options.
@@ -573,7 +528,10 @@ void (async () => {
     });
   };
 
-  const addOptionsToPage = (options: StandaloneOptions, optionsInfos: StandaloneOptionsInfos) => {
+  const addOptionsToPage = (
+    options: StandaloneOptions,
+    optionsInfos: typeof kStandaloneOptionsInfos
+  ) => {
     const optionsElem = $('table#options>tbody')[0];
     const optionValues = optionsToRecord(options);
 
@@ -587,7 +545,7 @@ void (async () => {
         });
     };
 
-    const createSelect = (optionName: string, info: StandaloneOptionInfo) => {
+    const createSelect = (optionName: string, info: OptionInfo) => {
       const select = $('<select>').on('change', function () {
         optionValues[optionName] = (this as HTMLInputElement).value;
         updateURLsWithCurrentOptions();
@@ -615,7 +573,7 @@ void (async () => {
         .appendTo(optionsElem);
     }
   };
-  addOptionsToPage(options, optionsInfo);
+  addOptionsToPage(options, kStandaloneOptionsInfos);
 
   assert(qs.length === 1, 'currently, there must be exactly one ?q=');
   const rootQuery = parseQuery(qs[0]);

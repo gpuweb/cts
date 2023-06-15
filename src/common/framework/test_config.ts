@@ -16,6 +16,11 @@ export type TestConfig = {
    * MSL compiler is extremely slow to compile with loops rolled.
    */
   unrollConstEvalLoops: boolean;
+
+  /**
+   * Whether or not we're running in compatibility mode.
+   */
+  compatibility: boolean;
 };
 
 export const globalTestConfig: TestConfig = {
@@ -23,4 +28,5 @@ export const globalTestConfig: TestConfig = {
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
   unrollConstEvalLoops: false,
+  compatibility: false,
 };
