@@ -3212,6 +3212,16 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "expression",
+      "call",
+      "builtin",
+      "bitcast"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "parse",
       "align"
     ]
