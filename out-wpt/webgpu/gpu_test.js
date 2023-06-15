@@ -1,6 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';
+import { globalTestConfig } from '../common/framework/test_config.js';
 import { assert, range, unreachable } from '../common/util/util.js';
 
 import { kQueryTypeInfo } from './capability_info.js';
@@ -173,6 +174,10 @@ export class GPUTestBase extends Fixture {
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
   get queue() {
     return this.device.queue;
+  }
+
+  get isCompatibility() {
+    return globalTestConfig.compatibility;
   }
 
   /** Snapshot a GPUBuffer's contents, returning a new GPUBuffer with the `MAP_READ` usage. */
