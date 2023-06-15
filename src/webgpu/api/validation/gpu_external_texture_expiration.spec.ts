@@ -67,7 +67,7 @@ g.test('import_multiple_times_in_same_task_scope')
   .desc(
     `
     Tests that GPUExternalTexture is valid after been imported in the task.
-    Tests that in the same task scope, import twice on the same video source should return
+    Tests that in the same task scope, import twice on the same video source may return
     the same GPUExternalTexture and bindGroup doesn't need to be updated.
     `
   )
@@ -99,13 +99,21 @@ g.test('import_multiple_times_in_same_task_scope')
       t.submitCommandBuffer(bindGroup, true);
 
       // Import again in the same task scope should return same object.
-      const shouldBeTheSameExternalTexture = t.device.importExternalTexture({
+      const mayBeTheSameExternalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
       });
-      assert(externalTexture === shouldBeTheSameExternalTexture);
 
-      t.submitCommandBuffer(bindGroup, true);
+      if (externalTexture === mayBeTheSameExternalTexture) {
+        t.submitCommandBuffer(bindGroup, true);
+      } else {
+        bindGroup = t.device.createBindGroup({
+          layout: t.getDefaultBindGroupLayout(),
+          entries: [{ binding: 0, resource: externalTexture }],
+        });
+
+        t.submitCommandBuffer(bindGroup, true);
+      }
     });
   });
 
@@ -199,8 +207,7 @@ g.test('use_import_to_refresh')
   .desc(
     `
     Tests that in the different task scope, imported GPUExternalTexture
-    again on the same HTMLVideoElement should return the same GPUExternalTexture
-    object and refresh it.
+    again on the same HTMLVideoElement should return active GPUExternalTexture.
     `
   )
   .fn(async t => {
@@ -225,15 +232,21 @@ g.test('use_import_to_refresh')
     });
 
     await waitForNextTask(() => {
-      // Video frame is not updated, import should return the same GPUExternalTexture object.
-      const shouldBeTheSameExternalTexture = t.device.importExternalTexture({
+      const maydBeTheSameExternalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
       });
-      assert(externalTexture === shouldBeTheSameExternalTexture);
 
-      // ImportExternalTexture should refresh expired GPUExternalTexture.
-      t.submitCommandBuffer(bindGroup, true);
+      if (externalTexture === maydBeTheSameExternalTexture) {
+        // ImportExternalTexture should refresh expired GPUExternalTexture.
+        t.submitCommandBuffer(bindGroup, true);
+      } else {
+        bindGroup = t.device.createBindGroup({
+          layout: t.getDefaultBindGroupLayout(),
+          entries: [{ binding: 0, resource: externalTexture }],
+        });
+        t.submitCommandBuffer(bindGroup, true);
+      }
     });
   });
 
