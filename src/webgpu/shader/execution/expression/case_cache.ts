@@ -1,4 +1,5 @@
 import { Cacheable, dataCache } from '../../../../common/framework/data_cache.js';
+import { unreachable } from '../../../../common/util/util.js';
 import {
   SerializedComparator,
   deserializeComparator,
@@ -113,7 +114,7 @@ export function serializeExpectation(e: Expectation): SerializedExpectation {
   if (isComparator(e)) {
     return { kind: 'comparator', value: serializeComparator(e) };
   }
-  throw `cannot serialize Expectation ${e}`;
+  unreachable(`cannot serialize Expectation ${e}`);
 }
 
 /** deserializeExpectation() converts a SerializedExpectation to a Expectation */
