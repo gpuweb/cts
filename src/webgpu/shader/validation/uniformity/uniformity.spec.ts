@@ -357,50 +357,14 @@ fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
   });
 
 function expectedUniformity(uniform: string, init: string): boolean {
-  switch (uniform) {
-    case `always`: {
-      return true;
-    }
-    case `never`: {
-      return false;
-    }
-    case `init`: {
-      switch (init) {
-        case `none`:
-        case `uniform`: {
-          return true;
-        }
-        case `nonuniform`: {
-          return false;
-        }
-        default: {
-          break;
-        }
-      }
-      unreachable(`Unhandled init`);
-      break;
-    }
-    default: {
-      unreachable(`Unhandled uniform`);
-    }
+  if (uniform === `always`) {
+    return true;
+  } else if (uniform === `init`) {
+    return init === `no_init` || init === `uniform`;
   }
-}
 
-function generateFunctionVarInit(init: string): string {
-  switch (init) {
-    case `none`: {
-      return ``;
-    }
-    case `uniform`: {
-      return `= uniform_value[3]`;
-    }
-    case `nonuniform`: {
-      return `= nonuniform_value[3]`;
-    }
-    default: {
-      unreachable(`Unhandled init`);
-    }
-  }
+  // uniform == `never` (or unknown values)
+  return false;
 }
 
 const kFuncVarCases = {
@@ -1208,21 +1172,24 @@ const kFuncVarCases = {
   },
 };
 
+const kVarInit = {
+  no_init: ``,
+  uniform: `= uniform_value[3];`,
+  nonuniform: `= nonuniform_value[3];`,
+};
+
 g.test('function_variables')
   .desc(`Test uniformity of function variables`)
-  .params(u =>
-    u
-      .combine('case', keysOf(kFuncVarCases))
-      .combine('init', ['none', 'uniform', 'nonuniform'] as const)
-  )
+  .params(u => u.combine('case', keysOf(kFuncVarCases)).combine('init', keysOf(kVarInit)))
   .fn(t => {
+    const func_case = kFuncVarCases[t.params.case];
     const code = `
-${kFuncVarCases[t.params.case].typedecl}
+${func_case.typedecl}
 
 @group(0) @binding(0)
-var<storage> uniform_value : array<${kFuncVarCases[t.params.case].typename}, 4>;
+var<storage> uniform_value : array<${func_case.typename}, 4>;
 @group(0) @binding(1)
-var<storage, read_write> nonuniform_value : array<${kFuncVarCases[t.params.case].typename}, 4>;
+var<storage, read_write> nonuniform_value : array<${func_case.typename}, 4>;
 
 @group(1) @binding(0)
 var t : texture_2d<f32>;
@@ -1236,17 +1203,17 @@ const uniform_val : u32 = 0;
 
 @fragment
 fn main() {
-  var x : ${kFuncVarCases[t.params.case].typename} ${generateFunctionVarInit(t.params.init)};
+  var x : ${func_case.typename} ${kVarInit[t.params.init]};
 
-  ${kFuncVarCases[t.params.case].assignment}
+  ${func_case.assignment}
 
-  if ${kFuncVarCases[t.params.case].cond} {
+  if ${func_case.cond} {
     let tmp = textureSample(t, s, vec2f(0,0));
   }
 }
 `;
 
-    const result = expectedUniformity(kFuncVarCases[t.params.case].uniform, t.params.init);
+    const result = expectedUniformity(func_case.uniform, t.params.init);
     if (!result) {
       t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
     }
