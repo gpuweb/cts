@@ -21,26 +21,35 @@ export function optionString(
   return searchParams.get(opt) || '';
 }
 
-// The possible options for the tests.
+/**
+ * The possible options for the tests.
+ */
 export interface CTSOptions {
   worker: boolean;
   debug: boolean;
   compatibility: boolean;
   unrollConstEvalLoops: boolean;
-  powerPreference: GPUPowerPreference;
+  powerPreference?: GPUPowerPreference | '';
 }
 
-// Extra per option info.
+/**
+ * Extra per option info.
+ */
 export interface OptionInfo {
   description: string;
   parser?: (key: string, searchParams?: URLSearchParams) => boolean | string;
   selectValueDescriptions?: { value: string; description: string }[];
 }
 
-// Type for info for every option. This definition means adding an option
-// will generate a compile time error if no extra info is provided.
+/**
+ * Type for info for every option. This definition means adding an option
+ * will generate a compile time error if no extra info is provided.
+ */
 export type OptionsInfos<Type> = Record<keyof Type, OptionInfo>;
 
+/**
+ * Options to the CTS.
+ */
 export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
   worker: { description: 'run in a worker' },
   debug: { description: 'show more info' },
@@ -90,14 +99,14 @@ function getOptionsInfoFromSearchString<Type extends CTSOptions>(
  * Given a test query string in the form of `suite:foo,bar,moo&opt1=val1&opt2=val2
  * returns the query and the options.
  */
-export function parseSearchPramLikeWithOptions<Type extends CTSOptions>(
+export function parseSearchParamLikeWithOptions<Type extends CTSOptions>(
   optionsInfos: OptionsInfos<Type>,
   query: string
 ): {
   queries: string[];
   options: Type;
 } {
-  const searchString = query.startsWith('q=') || query.startsWith('?') ? query : `q=${query}`;
+  const searchString = query.includes('q=') || query.startsWith('?') ? query : `q=${query}`;
   const queries = new URLSearchParams(searchString).getAll('q');
   const options = getOptionsInfoFromSearchString(optionsInfos, searchString);
   return { queries, options };
@@ -108,5 +117,5 @@ export function parseSearchPramLikeWithOptions<Type extends CTSOptions>(
  * returns the query and the common options.
  */
 export function parseSearchParamLikeWithCTSOptions(query: string) {
-  return parseSearchPramLikeWithOptions(kCTSOptionsInfo, query);
+  return parseSearchParamLikeWithOptions(kCTSOptionsInfo, query);
 }
