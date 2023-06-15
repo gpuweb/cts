@@ -2484,10 +2484,12 @@ const kCeilIntervalCases = {
   f32: [
     { input: 2 ** 30, expected: 2 ** 30 },
     { input: -(2 ** 30), expected: -(2 ** 30) },
+    { input: 0x80000000, expected: 0x80000000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
-    { input: 2 ** 15, expected: 2 ** 15 },
-    { input: -(2 ** 15), expected: -(2 ** 15) },
+    { input: 2 ** 14, expected: 2 ** 14 },
+    { input: -(2 ** 14), expected: -(2 ** 14) },
+    { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
 
@@ -3015,10 +3017,12 @@ const kRoundIntervalCases = {
   f32: [
     { input: 2 ** 30, expected: 2 ** 30 },
     { input: -(2 ** 30), expected: -(2 ** 30) },
+    { input: 0x80000000, expected: 0x80000000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
-    { input: 2 ** 15, expected: 2 ** 15 },
-    { input: -(2 ** 15), expected: -(2 ** 15) },
+    { input: 2 ** 14, expected: 2 ** 14 },
+    { input: -(2 ** 14), expected: -(2 ** 14) },
+    { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
 
