@@ -232,12 +232,12 @@ g.test('use_import_to_refresh')
     });
 
     await waitForNextTask(() => {
-      const maydBeTheSameExternalTexture = t.device.importExternalTexture({
+      const mayBeTheSameExternalTexture = t.device.importExternalTexture({
         /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         source: source as any,
       });
 
-      if (externalTexture === maydBeTheSameExternalTexture) {
+      if (externalTexture === mayBeTheSameExternalTexture) {
         // ImportExternalTexture should refresh expired GPUExternalTexture.
         t.submitCommandBuffer(bindGroup, true);
       } else {
