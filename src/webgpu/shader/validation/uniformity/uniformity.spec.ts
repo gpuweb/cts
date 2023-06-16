@@ -557,6 +557,16 @@ const kFuncVarCases = {
     cond: `x > 0`,
     uniform: `never`,
   },
+  if_nonescaping_nonuniform: {
+    typename: `u32`,
+    typedecl: ``,
+    assignment: `if uniform_cond {
+      x = nonuniform_value[0];
+      return;
+    }`,
+    cond: `x > 0`,
+    uniform: `init`,
+  },
   loop_body_depends_on_continuing_uniform: {
     typename: `u32`,
     typedecl: ``,
