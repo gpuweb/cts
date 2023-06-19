@@ -4478,26 +4478,14 @@ fn((t) => {
 // Scope for remaining unpack* tests so that they can have constants for magic
 // numbers that don't pollute the global namespace or have unwieldy long names.
 {
-  const kZeroBounds = [
-  reinterpretU32AsF32(0x81200000),
-  reinterpretU32AsF32(0x01200000)];
-
-  const kOneBoundsSnorm = [
-  reinterpretU64AsF64(0x3fef_ffff_a000_0000n),
-  reinterpretU64AsF64(0x3ff0_0000_4000_0000n)];
-
-  const kOneBoundsUnorm = [
-  reinterpretU64AsF64(0x3fef_ffff_b000_0000n),
-  reinterpretU64AsF64(0x3ff0_0000_2800_0000n)];
-
-  const kNegOneBoundsSnorm = [
-  reinterpretU64AsF64(0xbff0_0000_0000_0000n),
-  reinterpretU64AsF64(0xbfef_ffff_a000_0000n)];
-
+  const kZeroBounds = [0.0];
+  const kOneBoundsSnorm = [1.0];
+  const kOneBoundsUnorm = [1.0];
+  const kNegOneBoundsSnorm = [-1.0];
   const kHalfBounds2x16unorm = [
-  reinterpretU64AsF64(0x3fe0_000f_b000_0000n),
-  reinterpretU64AsF64(0x3fe0_0010_7000_0000n)];
-  // ~0.5..., due to lack of precision in u16
+  reinterpretU32AsF32(0x3f000080),
+  reinterpretU32AsF32(0x3f000081)];
+  // ~0.5..., due to the lack of accuracy in u16
 
   g.test('unpack2x16unormInterval').
   paramsSubcasesOnly(
@@ -4515,17 +4503,17 @@ fn((t) => {
     const got = FP.f32.unpack2x16unormInterval(t.params.input);
     t.expect(
     objectEquals(expected, got),
-    `unpack2x16unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
+    `unpack2x16unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
 
   });
 
   const kHalfBounds4x8snorm = [
-  reinterpretU64AsF64(0x3fe0_2040_2000_0000n),
-  reinterpretU64AsF64(0x3fe0_2041_0000_0000n)];
+  reinterpretU32AsF32(0x3f010204),
+  reinterpretU32AsF32(0x3f010205)];
   // ~0.50196..., due to lack of precision in i8
   const kNegHalfBounds4x8snorm = [
-  reinterpretU64AsF64(0xbfdf_bf7f_6000_0000n),
-  reinterpretU64AsF64(0xbfdf_bf7e_8000_0000n)];
+  reinterpretU32AsF32(0xbefdfbf8),
+  reinterpretU32AsF32(0xbefdfbf7)];
   // ~-0.49606..., due to lack of precision in i8
 
   g.test('unpack4x8snormInterval').
@@ -4561,13 +4549,13 @@ fn((t) => {
     const got = FP.f32.unpack4x8snormInterval(t.params.input);
     t.expect(
     objectEquals(expected, got),
-    `unpack4x8snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
+    `unpack4x8snormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
 
   });
 
   const kHalfBounds4x8unorm = [
-  reinterpretU64AsF64(0x3fe0_100f_b000_0000n),
-  reinterpretU64AsF64(0x3fe0_1010_7000_0000n)];
+  reinterpretU32AsF32(0x3f008080),
+  reinterpretU32AsF32(0x3f008081)];
   // ~0.50196..., due to lack of precision in u8
 
   g.test('unpack4x8unormInterval').
@@ -4595,7 +4583,7 @@ fn((t) => {
     const got = FP.f32.unpack4x8unormInterval(t.params.input);
     t.expect(
     objectEquals(expected, got),
-    `unpack4x8unormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
+    `unpack4x8unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
 
   });
 }

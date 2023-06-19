@@ -3608,7 +3608,7 @@ class F32Traits extends FPTraits {
     );
 
     const op = n => {
-      return this.divisionInterval(n, 65535);
+      return this.correctlyRoundedInterval(n / 65535);
     };
 
     this.unpackDataU32[0] = n;
@@ -3625,7 +3625,7 @@ class F32Traits extends FPTraits {
     );
 
     const op = n => {
-      return this.maxInterval(this.divisionInterval(n, 127), -1);
+      return this.correctlyRoundedInterval(Math.max(n / 127, -1));
     };
     this.unpackDataU32[0] = n;
     return [
@@ -3646,7 +3646,7 @@ class F32Traits extends FPTraits {
     );
 
     const op = n => {
-      return this.divisionInterval(n, 255);
+      return this.correctlyRoundedInterval(n / 255);
     };
 
     this.unpackDataU32[0] = n;
