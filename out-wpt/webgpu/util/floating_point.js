@@ -3591,7 +3591,7 @@ class F32Traits extends FPTraits {
     );
 
     const op = n => {
-      return this.maxInterval(this.divisionInterval(n, 32767), -1);
+      return this.ulpInterval(Math.max(n / 32767, -1), 3);
     };
 
     this.unpackDataU32[0] = n;
