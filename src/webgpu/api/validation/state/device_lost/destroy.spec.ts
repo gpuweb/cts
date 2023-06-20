@@ -454,6 +454,156 @@ Tests creating render pipeline on destroyed device.
     }, awaitLost);
   });
 
+g.test('createComputePipelineAsync')
+  .desc(
+    `
+Tests creating compute pipeline asynchronously on destroyed device.
+  - Tests with a valid no-op compute shader
+  `
+  )
+  .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
+  .fn(async t => {
+    const { awaitLost } = t.params;
+    const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
+    const fn = () =>
+      t.device.createComputePipelineAsync({
+        layout: 'auto',
+        compute: { module: cShader, entryPoint: 'main' },
+      });
+
+    // Normal creation succeeds.
+    await fn();
+
+    // Destroy the device, and expect it to be lost.
+    t.expectDeviceLost('destroyed');
+    t.device.destroy();
+    if (awaitLost) {
+      const lostInfo = await t.device.lost;
+      t.expect(lostInfo.reason === 'destroyed');
+    }
+
+    // After device destroy, expect a GPUPipelineError with "validation" reason.
+    t.shouldReject(
+      'GPUPipelineError',
+      (async () => {
+        try {
+          await fn();
+        } catch (ex) {
+          if (ex instanceof GPUPipelineError) {
+            t.expect(ex.reason === 'validation');
+          }
+          throw ex;
+        }
+      })()
+    );
+  });
+
+g.test('createRenderPipelineAsync')
+  .desc(
+    `
+Tests creating render pipeline asynchronously on destroyed device.
+  - Tests with valid no-op vertex and fragment shaders
+  `
+  )
+  .params(u => u.beginSubcases().combine('awaitLost', [true, false]))
+  .fn(async t => {
+    const { awaitLost } = t.params;
+    const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
+    const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
+    const fn = () =>
+      t.device.createRenderPipelineAsync({
+        layout: 'auto',
+        vertex: { module: vShader, entryPoint: 'main' },
+        fragment: {
+          module: fShader,
+          entryPoint: 'main',
+          targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+        },
+      });
+
+    // Normal creation succeeds.
+    await fn();
+
+    // Destroy the device, and expect it to be lost.
+    t.expectDeviceLost('destroyed');
+    t.device.destroy();
+    if (awaitLost) {
+      const lostInfo = await t.device.lost;
+      t.expect(lostInfo.reason === 'destroyed');
+    }
+
+    // After device destroy, expect a GPUPipelineError with "validation" reason.
+    t.shouldReject(
+      'GPUPipelineError',
+      (async () => {
+        try {
+          await fn();
+        } catch (ex) {
+          if (ex instanceof GPUPipelineError) {
+            t.expect(ex.reason === 'validation');
+          }
+          throw ex;
+        }
+      })()
+    );
+  });
+
+g.test('during,createComputePipelineAsync')
+  .desc(
+    `
+Tests destroying the device while asynchronously creating a compute pipeline.
+The promise should resolve as if creation succeeded.
+  `
+  )
+  .fn(t => {
+    const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
+    const p = t.device.createComputePipelineAsync({
+      layout: 'auto',
+      compute: { module: cShader, entryPoint: 'main' },
+    });
+
+    t.expectDeviceLost('destroyed');
+    t.device.destroy();
+
+    t.shouldResolve(
+      (async () => {
+        const pipeline = await p;
+        t.expect(pipeline instanceof GPUComputePipeline);
+      })()
+    );
+  });
+
+g.test('during,createRenderPipelineAsync')
+  .desc(
+    `
+Tests destroying the device while asynchronously creating a render pipeline.
+The promise should resolve as if creation succeeded.
+  `
+  )
+  .fn(t => {
+    const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
+    const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
+    const p = t.device.createRenderPipelineAsync({
+      layout: 'auto',
+      vertex: { module: vShader, entryPoint: 'main' },
+      fragment: {
+        module: fShader,
+        entryPoint: 'main',
+        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+      },
+    });
+
+    t.expectDeviceLost('destroyed');
+    t.device.destroy();
+
+    t.shouldResolve(
+      (async () => {
+        const pipeline = await p;
+        t.expect(pipeline instanceof GPURenderPipeline);
+      })()
+    );
+  });
+
 g.test('createCommandEncoder')
   .desc(
     `
