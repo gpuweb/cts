@@ -482,18 +482,11 @@ Tests creating compute pipeline asynchronously on destroyed device.
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    // After device destroy, expect a GPUPipelineError with "validation" reason.
-    t.shouldReject(
-      'GPUPipelineError',
+    // After device destroy, creation should still resolve successfully.
+    t.shouldResolve(
       (async () => {
-        try {
-          await fn();
-        } catch (ex) {
-          if (ex instanceof GPUPipelineError) {
-            t.expect(ex.reason === 'validation');
-          }
-          throw ex;
-        }
+        const pipeline = await fn();
+        t.expect(pipeline instanceof GPUComputePipeline);
       })()
     );
   });
@@ -532,18 +525,11 @@ Tests creating render pipeline asynchronously on destroyed device.
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    // After device destroy, expect a GPUPipelineError with "validation" reason.
-    t.shouldReject(
-      'GPUPipelineError',
+    // After device destroy, creation should still resolve successfully.
+    t.shouldResolve(
       (async () => {
-        try {
-          await fn();
-        } catch (ex) {
-          if (ex instanceof GPUPipelineError) {
-            t.expect(ex.reason === 'validation');
-          }
-          throw ex;
-        }
+        const pipeline = await fn();
+        t.expect(pipeline instanceof GPURenderPipeline);
       })()
     );
   });
