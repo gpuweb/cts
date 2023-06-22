@@ -341,7 +341,7 @@ export function oneULPF64(target: number, mode: FlushMode = 'flush'): number {
 
   target = mode === 'flush' ? flushSubnormalNumberF64(target) : target;
 
-  // For values out of bounds for f64.max_ulp(x) is defined as the
+  // For values out of bounds for f64 ulp(x) is defined as the
   // distance between the two nearest f64 representable numbers to the
   // appropriate edge, which also happens to be the maximum possible ULP.
   if (
@@ -382,7 +382,7 @@ export function oneULPF32(target: number, mode: FlushMode = 'flush'): number {
 
   target = mode === 'flush' ? flushSubnormalNumberF32(target) : target;
 
-  // For values out of bounds for f32.max_ulp(x) is defined as the
+  // For values out of bounds for f32 ulp(x) is defined as the
   // distance between the two nearest f32 representable numbers to the
   // appropriate edge, which also happens to be the maximum possible ULP.
   if (
@@ -428,7 +428,7 @@ export function oneULPF16(target: number, mode: FlushMode = 'flush'): number {
 
   target = mode === 'flush' ? flushSubnormalNumberF16(target) : target;
 
-  // For values out of bounds for f16.max_ulp(x) is defined as the
+  // For values out of bounds for f16 ulp(x) is defined as the
   // distance between the two nearest f16 representable numbers to the
   // appropriate edge, which also happens to be the maximum possible ULP.
   if (
