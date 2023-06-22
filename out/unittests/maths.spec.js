@@ -1589,12 +1589,9 @@ fn((test) => {
 
 
 
-// Have to indirectly reference the test cases, because the testing framework
-// creates case names from the parameters of the case via JSON.stringify.
-// For compatibility reason JSON.stringify does not handle BigInts, so directly
-// referencing the cases will cause a failure when it tries to build the case
-// name from the bits value
-const kF64LimitsEquivalencyCases = [
+// Test to confirm kBit and kValue constants are equivalent for f64
+g.test('f64LimitsEquivalency').
+paramsSimple([
 { bits: kBit.f64.positive.max, value: kValue.f64.positive.max },
 { bits: kBit.f64.positive.min, value: kValue.f64.positive.min },
 { bits: kBit.f64.positive.nearest_max, value: kValue.f64.positive.nearest_max },
@@ -1606,6 +1603,7 @@ const kF64LimitsEquivalencyCases = [
 { bits: kBit.f64.positive.pi.quarter, value: kValue.f64.positive.pi.quarter },
 { bits: kBit.f64.positive.pi.sixth, value: kValue.f64.positive.pi.sixth },
 { bits: kBit.f64.positive.e, value: kValue.f64.positive.e },
+{ bits: kBit.f64.positive.max_ulp, value: kValue.f64.positive.max_ulp },
 { bits: kBit.f64.negative.max, value: kValue.f64.negative.max },
 { bits: kBit.f64.negative.min, value: kValue.f64.negative.min },
 { bits: kBit.f64.negative.nearest_min, value: kValue.f64.negative.nearest_min },
@@ -1620,16 +1618,11 @@ const kF64LimitsEquivalencyCases = [
 { bits: kBit.f64.subnormal.negative.max, value: kValue.f64.subnormal.negative.max },
 { bits: kBit.f64.subnormal.negative.min, value: kValue.f64.subnormal.negative.min },
 { bits: kBit.f64.infinity.positive, value: kValue.f64.infinity.positive },
-{ bits: kBit.f64.infinity.negative, value: kValue.f64.infinity.negative }];
+{ bits: kBit.f64.infinity.negative, value: kValue.f64.infinity.negative }]).
 
-
-// Test to confirm kBit and kValue constants are equivalent for f64
-g.test('f64LimitsEquivalency').
-params((u) => u.combine('idx', Array.from(Array(kF64LimitsEquivalencyCases.length).keys()))).
 fn((test) => {
-  const idx = test.params.idx;
-  const bits = kF64LimitsEquivalencyCases[idx].bits;
-  const value = kF64LimitsEquivalencyCases[idx].value;
+  const bits = test.params.bits;
+  const value = test.params.value;
 
   const val_to_bits = bits === float64ToUint64(value);
   const bits_to_val = value === uint64ToFloat64(bits);
@@ -1658,6 +1651,7 @@ paramsSimple([
 { bits: kBit.f32.positive.pi.quarter, value: kValue.f32.positive.pi.quarter },
 { bits: kBit.f32.positive.pi.sixth, value: kValue.f32.positive.pi.sixth },
 { bits: kBit.f32.positive.e, value: kValue.f32.positive.e },
+{ bits: kBit.f32.positive.max_ulp, value: kValue.f32.positive.max_ulp },
 { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
 { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
 { bits: kBit.f32.negative.nearest_min, value: kValue.f32.negative.nearest_min },
@@ -1691,8 +1685,25 @@ g.test('f16LimitsEquivalency').
 paramsSimple([
 { bits: kBit.f16.positive.max, value: kValue.f16.positive.max },
 { bits: kBit.f16.positive.min, value: kValue.f16.positive.min },
+{ bits: kBit.f16.positive.nearest_max, value: kValue.f16.positive.nearest_max },
+{ bits: kBit.f16.positive.less_than_one, value: kValue.f16.positive.less_than_one },
+{ bits: kBit.f16.positive.pi.whole, value: kValue.f16.positive.pi.whole },
+{ bits: kBit.f16.positive.pi.three_quarters, value: kValue.f16.positive.pi.three_quarters },
+{ bits: kBit.f16.positive.pi.half, value: kValue.f16.positive.pi.half },
+{ bits: kBit.f16.positive.pi.third, value: kValue.f16.positive.pi.third },
+{ bits: kBit.f16.positive.pi.quarter, value: kValue.f16.positive.pi.quarter },
+{ bits: kBit.f16.positive.pi.sixth, value: kValue.f16.positive.pi.sixth },
+{ bits: kBit.f16.positive.e, value: kValue.f16.positive.e },
+{ bits: kBit.f16.positive.max_ulp, value: kValue.f16.positive.max_ulp },
 { bits: kBit.f16.negative.max, value: kValue.f16.negative.max },
 { bits: kBit.f16.negative.min, value: kValue.f16.negative.min },
+{ bits: kBit.f16.negative.nearest_min, value: kValue.f16.negative.nearest_min },
+{ bits: kBit.f16.negative.pi.whole, value: kValue.f16.negative.pi.whole },
+{ bits: kBit.f16.negative.pi.three_quarters, value: kValue.f16.negative.pi.three_quarters },
+{ bits: kBit.f16.negative.pi.half, value: kValue.f16.negative.pi.half },
+{ bits: kBit.f16.negative.pi.third, value: kValue.f16.negative.pi.third },
+{ bits: kBit.f16.negative.pi.quarter, value: kValue.f16.negative.pi.quarter },
+{ bits: kBit.f16.negative.pi.sixth, value: kValue.f16.negative.pi.sixth },
 { bits: kBit.f16.subnormal.positive.max, value: kValue.f16.subnormal.positive.max },
 { bits: kBit.f16.subnormal.positive.min, value: kValue.f16.subnormal.positive.min },
 { bits: kBit.f16.subnormal.negative.max, value: kValue.f16.subnormal.negative.max },

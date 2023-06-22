@@ -341,13 +341,16 @@ export function oneULPF64(target, mode = 'flush') {
 
   target = mode === 'flush' ? flushSubnormalNumberF64(target) : target;
 
-  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // For values out of bounds for f64 ulp(x) is defined as the
   // distance between the two nearest f64 representable numbers to the
-  // appropriate edge.
-  if (target === Number.POSITIVE_INFINITY || target >= kValue.f64.positive.max) {
-    return kValue.f64.positive.max - kValue.f64.positive.nearest_max;
-  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f64.negative.min) {
-    return kValue.f64.negative.nearest_min - kValue.f64.negative.min;
+  // appropriate edge, which also happens to be the maximum possible ULP.
+  if (
+  target === Number.POSITIVE_INFINITY ||
+  target >= kValue.f64.positive.max ||
+  target === Number.NEGATIVE_INFINITY ||
+  target <= kValue.f64.negative.min)
+  {
+    return kValue.f64.positive.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
@@ -379,13 +382,16 @@ export function oneULPF32(target, mode = 'flush') {
 
   target = mode === 'flush' ? flushSubnormalNumberF32(target) : target;
 
-  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // For values out of bounds for f32 ulp(x) is defined as the
   // distance between the two nearest f32 representable numbers to the
-  // appropriate edge.
-  if (target === Number.POSITIVE_INFINITY || target >= kValue.f32.positive.max) {
-    return kValue.f32.positive.max - kValue.f32.positive.nearest_max;
-  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f32.negative.min) {
-    return kValue.f32.negative.nearest_min - kValue.f32.negative.min;
+  // appropriate edge, which also happens to be the maximum possible ULP.
+  if (
+  target === Number.POSITIVE_INFINITY ||
+  target >= kValue.f32.positive.max ||
+  target === Number.NEGATIVE_INFINITY ||
+  target <= kValue.f32.negative.min)
+  {
+    return kValue.f32.positive.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
@@ -422,13 +428,16 @@ export function oneULPF16(target, mode = 'flush') {
 
   target = mode === 'flush' ? flushSubnormalNumberF16(target) : target;
 
-  // For values at the edge of the range or beyond ulp(x) is defined as the
+  // For values out of bounds for f16 ulp(x) is defined as the
   // distance between the two nearest f16 representable numbers to the
-  // appropriate edge.
-  if (target === Number.POSITIVE_INFINITY || target >= kValue.f16.positive.max) {
-    return kValue.f16.positive.max - kValue.f16.positive.nearest_max;
-  } else if (target === Number.NEGATIVE_INFINITY || target <= kValue.f16.negative.min) {
-    return kValue.f16.negative.nearest_min - kValue.f16.negative.min;
+  // appropriate edge, which also happens to be the maximum possible ULP.
+  if (
+  target === Number.POSITIVE_INFINITY ||
+  target >= kValue.f16.positive.max ||
+  target === Number.NEGATIVE_INFINITY ||
+  target <= kValue.f16.negative.min)
+  {
+    return kValue.f16.positive.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
