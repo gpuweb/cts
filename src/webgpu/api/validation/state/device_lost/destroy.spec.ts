@@ -451,18 +451,19 @@ Tests creating render pipeline on destroyed device.
 g.test('createComputePipelineAsync')
   .desc(
     `
-- Tests creating a compute pipeline asynchronously while destroying the device.
-- Tests creating a compute pipeline asynchronously on destroyed device.
+Tests creating a pipeline asynchronously while destroying the device and on a destroyed device
+- valid={true, false}, use an invalid or valid pipeline descriptor
+- awaitLost={true, false}, check results before/after waiting for the device lost promise
   `
   )
-  .params(u => u.combine('awaitLost', [true, false]))
+  .params(u => u.combine('valid', [true, false]).combine('awaitLost', [true, false]))
   .fn(async t => {
-    const { awaitLost } = t.params;
+    const { valid, awaitLost } = t.params;
     const cShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('COMPUTE') });
     const fn = () =>
       t.device.createComputePipelineAsync({
         layout: 'auto',
-        compute: { module: cShader, entryPoint: 'main' },
+        compute: { module: cShader, entryPoint: valid ? 'main' : 'does_not_exist' },
       });
 
     // Kick off async creation
@@ -476,13 +477,26 @@ g.test('createComputePipelineAsync')
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    // The async creation should resolve successfully.
-    t.shouldResolve(
-      (async () => {
-        const pipeline = await p;
-        t.expect(pipeline instanceof GPUComputePipeline);
-      })()
-    );
+    if (valid) {
+      // The async creation should resolve successfully.
+      t.shouldResolve(
+        (async () => {
+          const pipeline = await p;
+          t.expect(pipeline instanceof GPUComputePipeline);
+        })()
+      );
+    } else {
+      // The async creation should catch the error because validation
+      // runs on the device timeline. Validation occured before the
+      // device was lost.
+      t.shouldReject(
+        'GPUPipelineError',
+        p.catch((err: GPUPipelineError) => {
+          t.expect(err.reason === 'validation', 'Expected validation error');
+          throw err;
+        })
+      );
+    }
 
     // After device destroy, creation should still resolve successfully.
     t.shouldResolve(
@@ -496,13 +510,14 @@ g.test('createComputePipelineAsync')
 g.test('createRenderPipelineAsync')
   .desc(
     `
-- Tests creating a render pipeline asynchronously while destroying the device.
-- Tests creating a render pipeline asynchronously on destroyed device.
+Tests creating a pipeline asynchronously while destroying the device and on a destroyed device
+- valid={true, false}, use an invalid or valid pipeline descriptor
+- awaitLost={true, false}, check results before/after waiting for the device lost promise
   `
   )
-  .params(u => u.combine('awaitLost', [true, false]))
+  .params(u => u.combine('valid', [true, false]).combine('awaitLost', [true, false]))
   .fn(async t => {
-    const { awaitLost } = t.params;
+    const { valid, awaitLost } = t.params;
     const vShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('VERTEX') });
     const fShader = t.device.createShaderModule({ code: t.getNoOpShaderCode('FRAGMENT') });
     const fn = () =>
@@ -511,7 +526,7 @@ g.test('createRenderPipelineAsync')
         vertex: { module: vShader, entryPoint: 'main' },
         fragment: {
           module: fShader,
-          entryPoint: 'main',
+          entryPoint: valid ? 'main' : 'does_not_exist',
           targets: [{ format: 'rgba8unorm', writeMask: 0 }],
         },
       });
@@ -527,13 +542,26 @@ g.test('createRenderPipelineAsync')
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    // The async creation should resolve successfully.
-    t.shouldResolve(
-      (async () => {
-        const pipeline = await p;
-        t.expect(pipeline instanceof GPURenderPipeline);
-      })()
-    );
+    if (valid) {
+      // The async creation should resolve successfully.
+      t.shouldResolve(
+        (async () => {
+          const pipeline = await p;
+          t.expect(pipeline instanceof GPURenderPipeline);
+        })()
+      );
+    } else {
+      // The async creation should catch the error because validation
+      // runs on the device timeline. Validation occured before the
+      // device was lost.
+      t.shouldReject(
+        'GPUPipelineError',
+        p.catch((err: GPUPipelineError) => {
+          t.expect(err.reason === 'validation', 'Expected validation error');
+          throw err;
+        })
+      );
+    }
 
     // After device destroy, creation should still resolve successfully.
     t.shouldResolve(
