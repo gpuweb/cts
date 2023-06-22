@@ -213,6 +213,10 @@ g.test('array_layers')
       arrayLayerCount,
     } = t.params;
 
+    if (t.isCompatibility && viewDimension === 'cube-array') {
+      t.skip('cube-array is not supported in compatibility mode');
+    }
+
     const kWidth = 1 << (kLevels - 1); // 32
     const textureDescriptor = {
       format: 'rgba8unorm',
@@ -272,6 +276,10 @@ g.test('mip_levels')
       mipLevelCount,
     } = t.params;
 
+    if (t.isCompatibility && viewDimension === 'cube-array') {
+      t.skip('cube-array is not supported in compatibility mode');
+    }
+
     const textureDescriptor = {
       format: 'rgba8unorm',
       dimension: textureDimension,
@@ -309,6 +317,10 @@ g.test('cube_faces_square')
   )
   .fn(t => {
     const { dimension, size } = t.params;
+
+    if (t.isCompatibility && dimension === 'cube-array') {
+      t.skip('cube-array is not supported in compatibility mode');
+    }
 
     const texture = t.device.createTexture({
       format: 'rgba8unorm',
