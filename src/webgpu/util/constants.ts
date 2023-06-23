@@ -38,6 +38,7 @@ export const kBit = {
         sixth: BigInt(0x3fe0_c152_382d_7366n),
       },
       e: BigInt(0x4005_bf0a_8b14_5769n),
+      max_ulp: BigInt(0x7ca0_0000_0000_0000n),
     },
     negative: {
       max: BigInt(0x8010_0000_0000_0000n),
@@ -87,6 +88,7 @@ export const kBit = {
         sixth: 0x3f06_0a92,
       },
       e: 0x402d_f854,
+      max_ulp: 0x7380_0000,
     },
     negative: {
       max: 0x8080_0000,
@@ -136,6 +138,7 @@ export const kBit = {
         sixth: 0x3830,
       },
       e: 0x416f,
+      max_ulp: 0x5000,
     },
     negative: {
       max: 0x8400,
@@ -388,6 +391,7 @@ export const kValue = {
         sixth: reinterpretU64AsF64(kBit.f64.positive.pi.sixth),
       },
       e: reinterpretU64AsF64(kBit.f64.positive.e),
+      max_ulp: reinterpretU64AsF64(kBit.f64.positive.max_ulp),
     },
     negative: {
       max: reinterpretU64AsF64(kBit.f64.negative.max),
@@ -437,6 +441,7 @@ export const kValue = {
         sixth: reinterpretU32AsF32(kBit.f32.positive.pi.sixth),
       },
       e: reinterpretU32AsF32(kBit.f32.positive.e),
+      max_ulp: reinterpretU32AsF32(kBit.f32.positive.max_ulp),
       // The positive pipeline-overridable constant with the smallest magnitude
       // which when cast to f32 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
@@ -528,6 +533,7 @@ export const kValue = {
         sixth: reinterpretU16AsF16(kBit.f16.positive.pi.sixth),
       },
       e: reinterpretU16AsF16(kBit.f16.positive.e),
+      max_ulp: reinterpretU16AsF16(kBit.f16.positive.max_ulp),
       // The positive pipeline-overridable constant with the smallest magnitude
       // which when cast to f16 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.

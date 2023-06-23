@@ -103,6 +103,10 @@ g.test('texture_binding')
         ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
       )
   )
+  .beforeAllSubcases(t => {
+    const { format, viewFormat } = t.params;
+    t.skipIfTextureFormatNotSupported(format, viewFormat);
+  })
   .fn(t => {
     const { format, viewFormat } = t.params;
 
