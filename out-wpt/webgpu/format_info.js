@@ -1472,7 +1472,7 @@ export function filterFormatsByFeature(feature, formats) {
 }
 
 export function isCompressedTextureFormat(format) {
-  return format in kCompressedTextureFormats;
+  return format in kCompressedTextureFormatInfo;
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);

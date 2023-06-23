@@ -1236,7 +1236,7 @@ export function filterFormatsByFeature<T>(
 }
 
 export function isCompressedTextureFormat(format: GPUTextureFormat) {
-  return format in kCompressedTextureFormats;
+  return format in kCompressedTextureFormatInfo;
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
