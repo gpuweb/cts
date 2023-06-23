@@ -5,6 +5,7 @@ Tests for device lost induced via destroy.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { assert } from '../../../../../common/util/util.js';
 import {
   allBindingEntries,
   bindingTypeInfo,
@@ -469,6 +470,45 @@ Tests creating a pipeline asynchronously while destroying the device and on a de
     // Kick off async creation
     const p = fn();
 
+    // Track whether or not the device is lost.
+    let isLost = false;
+    void t.device.lost.then(() => {
+      isLost = true;
+    });
+
+    if (valid) {
+      // The async creation should resolve successfully.
+      t.shouldResolve(
+        (async () => {
+          const pipeline = await p;
+          assert(pipeline instanceof GPUComputePipeline, 'Pipeline was not a GPUComputePipeline');
+        })()
+      );
+    } else {
+      // The async creation should resolve successfully if the device is lost.
+      // If the device is not lost, it should see a validation error.
+      // Note: this could be a race!
+      t.shouldResolve(
+        p.then(
+          pipeline => {
+            assert(
+              isLost,
+              'Invalid async creation should "succeed" if the device is already lost.'
+            );
+            assert(pipeline instanceof GPUComputePipeline, 'Pipeline was not a GPUComputePipeline');
+          },
+          err => {
+            assert(
+              !isLost,
+              'Invalid async creation should only fail if the device is not yet lost.'
+            );
+            assert(err instanceof GPUPipelineError, 'Error was not a GPUPipelineError');
+            assert(err.reason === 'validation', 'Expected validation error');
+          }
+        )
+      );
+    }
+
     // Destroy the device, and expect it to be lost.
     t.expectDeviceLost('destroyed');
     t.device.destroy();
@@ -477,32 +517,11 @@ Tests creating a pipeline asynchronously while destroying the device and on a de
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    if (valid) {
-      // The async creation should resolve successfully.
-      t.shouldResolve(
-        (async () => {
-          const pipeline = await p;
-          t.expect(pipeline instanceof GPUComputePipeline);
-        })()
-      );
-    } else {
-      // The async creation should catch the error because validation
-      // runs on the device timeline. Validation occured before the
-      // device was lost.
-      t.shouldReject(
-        'GPUPipelineError',
-        p.catch((err: GPUPipelineError) => {
-          t.expect(err.reason === 'validation', 'Expected validation error');
-          throw err;
-        })
-      );
-    }
-
     // After device destroy, creation should still resolve successfully.
     t.shouldResolve(
       (async () => {
         const pipeline = await fn();
-        t.expect(pipeline instanceof GPUComputePipeline);
+        assert(pipeline instanceof GPUComputePipeline, 'Pipeline was not a GPUComputePipeline');
       })()
     );
   });
@@ -534,6 +553,45 @@ Tests creating a pipeline asynchronously while destroying the device and on a de
     // Kick off async creation
     const p = fn();
 
+    // Track whether or not the device is lost.
+    let isLost = false;
+    void t.device.lost.then(() => {
+      isLost = true;
+    });
+
+    if (valid) {
+      // The async creation should resolve successfully.
+      t.shouldResolve(
+        (async () => {
+          const pipeline = await p;
+          assert(pipeline instanceof GPURenderPipeline, 'Pipeline was not a GPURenderPipeline');
+        })()
+      );
+    } else {
+      // The async creation should resolve successfully if the device is lost.
+      // If the device is not lost, it should see a validation error.
+      // Note: this could be a race!
+      t.shouldResolve(
+        p.then(
+          pipeline => {
+            assert(
+              isLost,
+              'Invalid async creation should "succeed" if the device is already lost.'
+            );
+            assert(pipeline instanceof GPURenderPipeline, 'Pipeline was not a GPURenderPipeline');
+          },
+          err => {
+            assert(
+              !isLost,
+              'Invalid async creation should only fail if the device is not yet lost.'
+            );
+            assert(err instanceof GPUPipelineError, 'Error was not a GPUPipelineError');
+            assert(err.reason === 'validation', 'Expected validation error');
+          }
+        )
+      );
+    }
+
     // Destroy the device, and expect it to be lost.
     t.expectDeviceLost('destroyed');
     t.device.destroy();
@@ -542,32 +600,11 @@ Tests creating a pipeline asynchronously while destroying the device and on a de
       t.expect(lostInfo.reason === 'destroyed');
     }
 
-    if (valid) {
-      // The async creation should resolve successfully.
-      t.shouldResolve(
-        (async () => {
-          const pipeline = await p;
-          t.expect(pipeline instanceof GPURenderPipeline);
-        })()
-      );
-    } else {
-      // The async creation should catch the error because validation
-      // runs on the device timeline. Validation occured before the
-      // device was lost.
-      t.shouldReject(
-        'GPUPipelineError',
-        p.catch((err: GPUPipelineError) => {
-          t.expect(err.reason === 'validation', 'Expected validation error');
-          throw err;
-        })
-      );
-    }
-
     // After device destroy, creation should still resolve successfully.
     t.shouldResolve(
       (async () => {
         const pipeline = await fn();
-        t.expect(pipeline instanceof GPURenderPipeline);
+        assert(pipeline instanceof GPURenderPipeline, 'Pipeline was not a GPURenderPipeline');
       })()
     );
   });
