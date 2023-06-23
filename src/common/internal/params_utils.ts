@@ -33,8 +33,11 @@ export function extractPublicParams(params: TestParams): TestParams {
   return publicParams;
 }
 
+/** Used to escape reserved characters in URIs */
+const kPercent = '%';
+
 export const badParamValueChars = new RegExp(
-  '[' + kParamKVSeparator + kParamSeparator + kWildcard + ']'
+  '[' + kParamKVSeparator + kParamSeparator + kWildcard + kPercent + ']'
 );
 
 export function publicParamsEquals(x: TestParams, y: TestParams): boolean {
