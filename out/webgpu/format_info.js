@@ -1235,5 +1235,9 @@ formats)
   return formats.filter((f) => f === undefined || kTextureFormatInfo[f].feature === feature);
 }
 
+export function isCompressedTextureFormat(format) {
+  return format in kCompressedTextureFormats;
+}
+
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 //# sourceMappingURL=format_info.js.map
