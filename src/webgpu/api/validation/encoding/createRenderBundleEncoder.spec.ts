@@ -49,6 +49,9 @@ g.test('attachment_state,limits,maxColorAttachmentBytesPerSample,aligned')
         range(kMaxColorAttachments, i => i + 1)
       )
   )
+  .beforeAllSubcases(t => {
+    t.skipIfTextureFormatNotSupported(t.params.format);
+  })
   .fn(t => {
     const { format, colorFormatCount } = t.params;
     const info = kTextureFormatInfo[format];

@@ -160,6 +160,9 @@ g.test('unorm_texel_data_in_shader')
         ];
       })
   )
+  .beforeAllSubcases(t => {
+    t.skipIfTextureFormatNotSupported(t.params.format);
+  })
   .fn(doTest);
 
 g.test('snorm_texel_data_in_shader')
