@@ -166,6 +166,9 @@ g.test('render_pass_and_bundle,color_format')
   )
   .fn(t => {
     const { passFormat, bundleFormat } = t.params;
+
+    t.skipIfTextureFormatNotSupported(passFormat, bundleFormat);
+
     const bundleEncoder = t.device.createRenderBundleEncoder({
       colorFormats: [bundleFormat],
     });

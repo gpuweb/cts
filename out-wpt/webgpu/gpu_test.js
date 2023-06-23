@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { Fixture, SubcaseBatchState } from '../common/framework/fixture.js';
+ **/ import { Fixture, SkipTestCase, SubcaseBatchState } from '../common/framework/fixture.js';
 import { globalTestConfig } from '../common/framework/test_config.js';
 import { assert, range, unreachable } from '../common/util/util.js';
 
@@ -74,6 +74,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
     assert(this.provider !== undefined);
     return this.provider;
+  }
+
+  get isCompatibility() {
+    return globalTestConfig.compatibility;
   }
 
   /**
@@ -151,6 +155,24 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
     // Suppress uncaught promise rejection (we'll catch it later).
     this.mismatchedProvider.catch(() => {});
+  }
+
+  /** Throws an exception marking the subcase as skipped. */
+  skip(msg) {
+    throw new SkipTestCase(msg);
+  }
+
+  /**
+   * Skips test if any format is not supported.
+   */
+  skipIfTextureFormatNotSupported(...formats) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format === 'bgra8unorm-srgb') {
+          this.skip(`texture format '${format} is not supported`);
+        }
+      }
+    }
   }
 }
 
@@ -256,6 +278,19 @@ export class GPUTestBase extends Fixture {
         mappable.destroy();
       },
     };
+  }
+
+  /**
+   * Skips test if any format is not supported.
+   */
+  skipIfTextureFormatNotSupported(...formats) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format === 'bgra8unorm-srgb') {
+          this.skip(`texture format '${format} is not supported`);
+        }
+      }
+    }
   }
 
   /**

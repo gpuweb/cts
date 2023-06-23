@@ -176,6 +176,9 @@ combine('bundleFormat', kColorAttachmentFormats)).
 
 fn((t) => {
   const { passFormat, bundleFormat } = t.params;
+
+  t.skipIfTextureFormatNotSupported(passFormat, bundleFormat);
+
   const bundleEncoder = t.device.createRenderBundleEncoder({
     colorFormats: [bundleFormat]
   });

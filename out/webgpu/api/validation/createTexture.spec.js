@@ -501,6 +501,7 @@ combine('depthOrArrayLayers', [1, 2])).
 beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
+  t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -664,6 +665,7 @@ combine('size', [
 beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
+  t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

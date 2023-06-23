@@ -165,6 +165,9 @@ filter(({ format, usageType }) => {
 
 })).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
@@ -239,6 +242,9 @@ filter(({ format, usageType }) => {
 
 })).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn(async (t) => {
   const { awaitLost, format, usageType, usageCopy } = t.params;
   const { blockWidth, blockHeight } = kTextureFormatInfo[format];
@@ -898,6 +904,9 @@ Tests writeTexture on queue on destroyed device with uncompressed formats.
 params((u) =>
 u.combine('format', kRegularTextureFormats).beginSubcases().combine('awaitLost', [true, false])).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn(async (t) => {
   const { format, awaitLost } = t.params;
   const {

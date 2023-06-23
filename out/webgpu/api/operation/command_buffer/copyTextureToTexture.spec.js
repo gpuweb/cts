@@ -75,6 +75,8 @@ class F extends GPUTest {
   srcCopyLevel,
   dstCopyLevel)
   {
+    this.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+
     const mipLevelCount = dimension === '1d' ? 1 : 4;
 
     // Create srcTexture and dstTexture
