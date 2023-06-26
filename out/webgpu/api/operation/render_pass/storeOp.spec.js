@@ -150,6 +150,9 @@ beginSubcases().
 combine('mipLevel', kMipLevel).
 combine('arrayLayer', kArrayLayers)).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.colorFormat);
+}).
 fn((t) => {
   const colorAttachment = t.device.createTexture({
     format: t.params.colorFormat,

@@ -143,6 +143,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     const features = new Set<GPUFeatureName | undefined>();
     for (const format of formats) {
       if (format !== undefined) {
+        this.skipIfTextureFormatNotSupported(format);
         features.add(kTextureFormatInfo[format].feature);
       }
     }

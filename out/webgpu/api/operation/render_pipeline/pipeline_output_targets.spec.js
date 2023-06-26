@@ -59,6 +59,7 @@ expand('emptyAttachmentId', (p) => range(p.attachmentCount, (i) => i))).
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -152,6 +153,7 @@ filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOr
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

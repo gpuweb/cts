@@ -50,6 +50,7 @@ params((u) => u.combine('isAsync', [false, true]).combine('format', kTextureForm
 beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -101,6 +102,9 @@ range(kMaxColorAttachments, (i) => i + 1)).
 
 combine('isAsync', [false, true])).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn((t) => {
   const { format, attachmentCount, isAsync } = t.params;
   const info = kTextureFormatInfo[format];
@@ -185,6 +189,7 @@ combine('hasBlend', [false, true])).
 beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
+  t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

@@ -179,6 +179,7 @@ expand('offset', (p) => {
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -251,6 +252,7 @@ expand('rowsPerImage', texelBlockAlignmentTestExpanderForRowsPerImage)
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -293,6 +295,7 @@ expand('offset', texelBlockAlignmentTestExpanderForOffset)).
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -397,6 +400,7 @@ expandWithParams((p) => {
 
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
+  t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

@@ -18,6 +18,7 @@ params((u) => u.combine('isAsync', [false, true]).combine('format', kTextureForm
 beforeAllSubcases((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
+  t.skipIfTextureFormatNotSupported(format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {

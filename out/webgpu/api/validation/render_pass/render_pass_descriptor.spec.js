@@ -191,6 +191,9 @@ combine(
 range(kMaxColorAttachments, (i) => i + 1))).
 
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn((t) => {
   const { format, attachmentCount } = t.params;
   const info = kTextureFormatInfo[format];
@@ -956,6 +959,9 @@ u.
 combine('format', kRenderableColorTextureFormats).
 filter((t) => kTextureFormatInfo[t.format].multisample)).
 
+beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
+}).
 fn((t) => {
   const { format } = t.params;
   const info = kTextureFormatInfo[format];
