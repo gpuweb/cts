@@ -1229,4 +1229,325 @@ fn main() {
   }
   t.expectCompileResult(result, code);
 });
+
+const kShortCircuitExpressionCases = {
+  or_uniform_uniform: {
+    code: `
+      let x = uniform_cond || uniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: true
+  },
+  or_uniform_nonuniform: {
+    code: `
+      let x = uniform_cond || nonuniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  or_nonuniform_uniform: {
+    code: `
+      let x = nonuniform_cond || uniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  or_nonuniform_nonuniform: {
+    code: `
+      let x = nonuniform_cond || nonuniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  or_uniform_first_nonuniform: {
+    code: `
+      let x = textureSample(t, s, vec2f(0,0)).x == 0 || nonuniform_cond;
+    `,
+    uniform: true
+  },
+  or_uniform_second_nonuniform: {
+    code: `
+      let x = nonuniform_cond || textureSample(t, s, vec2f(0,0)).x == 0;
+    `,
+    uniform: false
+  },
+  and_uniform_uniform: {
+    code: `
+      let x = uniform_cond && uniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: true
+  },
+  and_uniform_nonuniform: {
+    code: `
+      let x = uniform_cond && nonuniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  and_nonuniform_uniform: {
+    code: `
+      let x = nonuniform_cond && uniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  and_nonuniform_nonuniform: {
+    code: `
+      let x = nonuniform_cond && nonuniform_cond;
+      if x {
+        let tmp = textureSample(t, s, vec2f(0,0));
+      }
+    `,
+    uniform: false
+  },
+  and_uniform_first_nonuniform: {
+    code: `
+      let x = textureSample(t, s, vec2f(0,0)).x == 0 && nonuniform_cond;
+    `,
+    uniform: true
+  },
+  and_uniform_second_nonuniform: {
+    code: `
+      let x = nonuniform_cond && textureSample(t, s, vec2f(0,0)).x == 0;
+    `,
+    uniform: false
+  }
+};
+
+g.test('short_circuit_expressions').
+desc(`Test uniformity of expressions`).
+params((u) => u.combine('case', keysOf(kShortCircuitExpressionCases))).
+fn((t) => {
+  const testcase = kShortCircuitExpressionCases[t.params.case];
+  const code = `
+@group(1) @binding(0)
+var t : texture_2d<f32>;
+@group(1) @binding(1)
+var s : sampler;
+
+const uniform_cond = true;
+var<private> nonuniform_cond = false;
+
+@fragment
+fn main() {
+  ${testcase.code}
+}
+`;
+
+  const res = testcase.uniform;
+  if (!res) {
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+  }
+  t.expectCompileResult(res, code);
+});
+
+const kExpressionCases = {
+  literal: {
+    code: `1u`,
+    uniform: true
+  },
+  uniform: {
+    code: `uniform_val`,
+    uniform: true
+  },
+  nonuniform: {
+    code: `nonuniform_val`,
+    uniform: false
+  },
+  uniform_index: {
+    code: `uniform_value[uniform_val]`,
+    uniform: true
+  },
+  nonuniform_index1: {
+    code: `uniform_value[nonuniform_val]`,
+    uniform: false
+  },
+  nonuniform_index2: {
+    code: `nonuniform_value[uniform_val]`,
+    uniform: false
+  },
+  uniform_struct: {
+    code: `uniform_struct.x`,
+    uniform: true
+  },
+  nonuniform_struct: {
+    code: `nonuniform_struct.x`,
+    uniform: false
+  }
+};
+
+const kBinOps = {
+  plus: {
+    code: '+',
+    test: '> 0'
+  },
+  minus: {
+    code: '-',
+    test: '> 0'
+  },
+  times: {
+    code: '*',
+    test: '> 0'
+  },
+  div: {
+    code: '/',
+    test: '> 0'
+  },
+  rem: {
+    code: '%',
+    test: '> 0'
+  },
+  and: {
+    code: '&',
+    test: '> 0'
+  },
+  or: {
+    code: '|',
+    test: '> 0'
+  },
+  xor: {
+    code: '^',
+    test: '> 0'
+  },
+  shl: {
+    code: '<<',
+    test: '> 0'
+  },
+  shr: {
+    code: '>>',
+    test: '> 0'
+  },
+  less: {
+    code: '<',
+    test: ''
+  },
+  lessequal: {
+    code: '<=',
+    test: ''
+  },
+  greater: {
+    code: '>',
+    test: ''
+  },
+  greaterequal: {
+    code: '>=',
+    test: ''
+  },
+  equal: {
+    code: '==',
+    test: ''
+  },
+  notequal: {
+    code: '!=',
+    test: ''
+  }
+};
+
+g.test('binary_expressions').
+desc(`Test uniformity of binary expressions`).
+params((u) =>
+u.
+combine('e1', keysOf(kExpressionCases)).
+combine('e2', keysOf(kExpressionCases)).
+combine('op', keysOf(kBinOps))).
+
+fn((t) => {
+  const e1 = kExpressionCases[t.params.e1];
+  const e2 = kExpressionCases[t.params.e2];
+  const op = kBinOps[t.params.op];
+  const code = `
+@group(0) @binding(0)
+var t : texture_2d<f32>;
+@group(0) @binding(1)
+var s : sampler;
+
+struct S {
+  x : u32
+}
+
+const uniform_struct = S(1);
+var<private> nonuniform_struct = S(1);
+
+const uniform_value : array<u32, 2> = array(1,1);
+var<private> nonuniform_value : array<u32, 2> = array(1,1);
+
+const uniform_val : u32 = 1;
+var<private> nonuniform_val : u32 = 1;
+
+@fragment
+fn main() {
+  let tmp = ${e1.code} ${op.code} ${e2.code};
+  if tmp ${op.test} {
+    let res = textureSample(t, s, vec2f(0,0));
+  }
+}
+`;
+
+  const res = e1.uniform && e2.uniform;
+  if (!res) {
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+  }
+  t.expectCompileResult(res, code);
+});
+
+g.test('unary_expressions').
+desc(`Test uniformity of uniary expressions`).
+params((u) =>
+u.
+combine('e', keysOf(kExpressionCases)).
+combine('op', ['!b_tmp', '~i_tmp > 0', '-i32(i_tmp) > 0'])).
+
+fn((t) => {
+  const e = kExpressionCases[t.params.e];
+  const code = `
+@group(0) @binding(0)
+var t : texture_2d<f32>;
+@group(0) @binding(1)
+var s : sampler;
+
+struct S {
+  x : i32
+}
+
+const uniform_struct = S(1);
+var<private> nonuniform_struct = S(1);
+
+const uniform_value : array<i32, 2> = array(1,1);
+var<private> nonuniform_value : array<i32, 2> = array(1,1);
+
+const uniform_val : i32 = 1;
+var<private> nonuniform_val : i32 = 1;
+
+@fragment
+fn main() {
+  let i_tmp = ${e.code};
+  let b_tmp = bool(i_tmp);
+  let tmp = ${t.params.op};
+  if tmp {
+    let res = textureSample(t, s, vec2f(0,0));
+  }
+}
+`;
+
+  const res = e.uniform;
+  if (!res) {
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+  }
+  t.expectCompileResult(res, code);
+});
 //# sourceMappingURL=uniformity.spec.js.map
