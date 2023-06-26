@@ -412,8 +412,24 @@ const kPointerCases = {
     check: `contents`,
     uniform: true,
   },
-  contents_scalar_uniform: {
+  contents_scalar_uniform1: {
     code: `let ptr = &func_scalar;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_uniform2: {
+    code: `func_scalar = nonuniform_value;
+    let ptr = &func_scalar;
+    func_scalar = 0;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_uniform3: {
+    code: `let ptr = &func_scalar;
+    func_scalar = nonuniform_value;
+    func_scalar = uniform_value;
     let test_val = *ptr;`,
     check: `contents`,
     uniform: true,
