@@ -356,6 +356,284 @@ fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
     t.expectCompileResult(t.params.uniform, code);
   });
 
+function generatePointerCheck(check: string): string {
+  if (check === `address`) {
+    return `let tmp = workgroupUniformLoad(ptr);`;
+  } else {
+    // check === `contents`
+    return `if test_val > 0 {
+      workgroupBarrier();
+    }`;
+  }
+}
+
+const kPointerCases = {
+  address_uniform_literal: {
+    code: `let ptr = &wg_array[0];`,
+    check: `address`,
+    uniform: true,
+  },
+  address_uniform_value: {
+    code: `let ptr = &wg_array[uniform_value];`,
+    check: `address`,
+    uniform: true,
+  },
+  address_nonuniform_value: {
+    code: `let ptr = &wg_array[nonuniform_value];`,
+    check: `address`,
+    uniform: false,
+  },
+  address_uniform_chain: {
+    code: `let p1 = &wg_struct.x;
+    let p2 = &(*p1)[uniform_value];
+    let p3 = &(*p2).x;
+    let ptr = &(*p3)[uniform_value];`,
+    check: `address`,
+    uniform: true,
+  },
+  address_nonuniform_chain1: {
+    code: `let p1 = &wg_struct.x;
+    let p2 = &(*p1)[nonuniform_value];
+    let p3 = &(*p2).x;
+    let ptr = &(*p3)[uniform_value];`,
+    check: `address`,
+    uniform: false,
+  },
+  address_nonuniform_chain2: {
+    code: `let p1 = &wg_struct.x;
+    let p2 = &(*p1)[uniform_value];
+    let p3 = &(*p2).x;
+    let ptr = &(*p3)[nonuniform_value];`,
+    check: `address`,
+    uniform: false,
+  },
+  wg_uniform_load_is_uniform: {
+    code: `let test_val = workgroupUniformLoad(&wg_scalar);`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_uniform1: {
+    code: `let ptr = &func_scalar;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_uniform2: {
+    code: `func_scalar = nonuniform_value;
+    let ptr = &func_scalar;
+    func_scalar = 0;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_uniform3: {
+    code: `let ptr = &func_scalar;
+    func_scalar = nonuniform_value;
+    func_scalar = uniform_value;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_nonuniform1: {
+    code: `func_scalar = nonuniform_value;
+    let ptr = &func_scalar;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_nonuniform2: {
+    code: `let ptr = &func_scalar;
+    *ptr = nonuniform_value;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_alias_uniform: {
+    code: `let p = &func_scalar;
+    let ptr = p;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_scalar_alias_nonuniform1: {
+    code: `func_scalar = nonuniform_value;
+    let p = &func_scalar;
+    let ptr = p;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_alias_nonuniform2: {
+    code: `let p = &func_scalar;
+    *p = nonuniform_value;
+    let ptr = p;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_alias_nonuniform3: {
+    code: `let p = &func_scalar;
+    let ptr = p;
+    *p = nonuniform_value;
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_alias_nonuniform4: {
+    code: `let p = &func_scalar;
+    func_scalar = nonuniform_value;
+    let test_val = *p;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_scalar_alias_nonuniform5: {
+    code: `let p = &func_scalar;
+    *p = nonuniform_value;
+    let test_val = func_scalar;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_array_uniform_index: {
+    code: `let ptr = &func_array[uniform_value];
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_array_nonuniform_index1: {
+    code: `let ptr = &func_array[nonuniform_value];
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_array_nonuniform_index2: {
+    code: `let ptr = &func_array[lid.x];
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_array_nonuniform_index3: {
+    code: `let ptr = &func_array[gid.x];
+    let test_val = *ptr;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_uniform: {
+    code: `let p1 = &func_struct.x[uniform_value].x[uniform_value].x[uniform_value];
+    let test_val = *p1;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_struct_nonuniform1: {
+    code: `let p1 = &func_struct.x[nonuniform_value].x[uniform_value].x[uniform_value];
+    let test_val = *p1;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_nonuniform2: {
+    code: `let p1 = &func_struct.x[uniform_value].x[gid.x].x[uniform_value];
+    let test_val = *p1;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_nonuniform3: {
+    code: `let p1 = &func_struct.x[uniform_value].x[uniform_value].x[lid.y];
+    let test_val = *p1;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_chain_uniform: {
+    code: `let p1 = &func_struct.x;
+    let p2 = &(*p1)[uniform_value];
+    let p3 = &(*p2).x;
+    let p4 = &(*p3)[uniform_value];
+    let p5 = &(*p4).x;
+    let p6 = &(*p5)[uniform_value];
+    let test_val = *p6;`,
+    check: `contents`,
+    uniform: true,
+  },
+  contents_struct_chain_nonuniform1: {
+    code: `let p1 = &func_struct.x;
+    let p2 = &(*p1)[nonuniform_value];
+    let p3 = &(*p2).x;
+    let p4 = &(*p3)[uniform_value];
+    let p5 = &(*p4).x;
+    let p6 = &(*p5)[uniform_value];
+    let test_val = *p6;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_chain_nonuniform2: {
+    code: `let p1 = &func_struct.x;
+    let p2 = &(*p1)[uniform_value];
+    let p3 = &(*p2).x;
+    let p4 = &(*p3)[gid.x];
+    let p5 = &(*p4).x;
+    let p6 = &(*p5)[uniform_value];
+    let test_val = *p6;`,
+    check: `contents`,
+    uniform: false,
+  },
+  contents_struct_chain_nonuniform3: {
+    code: `let p1 = &func_struct.x;
+    let p2 = &(*p1)[uniform_value];
+    let p3 = &(*p2).x;
+    let p4 = &(*p3)[uniform_value];
+    let p5 = &(*p4).x;
+    let p6 = &(*p5)[lid.y];
+    let test_val = *p6;`,
+    check: `contents`,
+    uniform: false,
+  },
+};
+
+g.test('pointers')
+  .desc(`Test pointer uniformity (contents and addresses)`)
+  .params(u => u.combine('case', keysOf(kPointerCases)).beginSubcases())
+  .fn(t => {
+    const testcase = kPointerCases[t.params.case];
+    const code = `
+var<workgroup> wg_scalar : u32;
+var<workgroup> wg_array : array<u32, 16>;
+
+struct Inner {
+  x : array<u32, 4>
+}
+struct Middle {
+  x : array<Inner, 4>
+}
+struct Outer {
+  x : array<Middle, 4>
+}
+var<workgroup> wg_struct : Outer;
+
+@group(0) @binding(0)
+var<storage> uniform_value : u32;
+@group(0) @binding(1)
+var<storage, read_write> nonuniform_value : u32;
+
+@compute @workgroup_size(16, 1, 1)
+fn main(@builtin(local_invocation_id) lid : vec3<u32>,
+        @builtin(global_invocation_id) gid : vec3<u32>) {
+  var func_scalar : u32;
+  var func_array : array<u32, 16>;
+  var func_struct : Outer;
+
+  ${testcase.code}
+`;
+
+    const with_check =
+      code +
+      `
+${generatePointerCheck(testcase.check)}
+}`;
+    if (!testcase.uniform) {
+      const without_check = code + `}\n`;
+      t.expectCompileResult(true, without_check);
+    }
+    t.expectCompileResult(testcase.uniform, with_check);
+  });
+
 function expectedUniformity(uniform: string, init: string): boolean {
   if (uniform === `always`) {
     return true;
