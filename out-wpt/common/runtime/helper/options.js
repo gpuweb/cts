@@ -21,6 +21,18 @@ export function optionString(opt, searchParams = getWindowURL().searchParams) {
  * The possible options for the tests.
  */
 
+export const kDefaultCTSOptions = {
+  worker: false,
+  debug: true,
+  compatibility: false,
+  unrollConstEvalLoops: false,
+  powerPreference: '',
+};
+
+/**
+ * Extra per option info.
+ */
+
 /**
  * Options to the CTS.
  */

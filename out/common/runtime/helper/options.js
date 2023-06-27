@@ -32,9 +32,17 @@ searchParams = getWindowURL().searchParams)
 
 
 
+export const kDefaultCTSOptions = {
+  worker: false,
+  debug: true,
+  compatibility: false,
+  unrollConstEvalLoops: false,
+  powerPreference: ''
+};
 
-
-
+/**
+ * Extra per option info.
+ */
 
 
 

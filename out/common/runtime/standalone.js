@@ -56,7 +56,7 @@ const logger = new Logger();
 
 setBaseResourcePath('../out/resources');
 
-const worker = options.worker ? new TestWorker(debug) : undefined;
+const worker = options.worker ? new TestWorker(options) : undefined;
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass');
 const resultsVis = document.getElementById('resultsVis');
