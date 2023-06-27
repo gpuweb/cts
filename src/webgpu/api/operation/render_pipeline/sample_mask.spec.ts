@@ -269,7 +269,6 @@ class F extends TextureTestMixin(GPUTest) {
     await super.init();
     if (this.isCompatibility) {
       this.skip('WGSL sample_mask is not supported in compatibility mode');
-      return;
     }
     // Create a 2x2 color texture to sample from
     // texel 0 - Red

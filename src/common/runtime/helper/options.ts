@@ -32,6 +32,14 @@ export interface CTSOptions {
   powerPreference?: GPUPowerPreference | '';
 }
 
+export const kDefaultCTSOptions: CTSOptions = {
+  worker: false,
+  debug: true,
+  compatibility: false,
+  unrollConstEvalLoops: false,
+  powerPreference: '',
+};
+
 /**
  * Extra per option info.
  */
