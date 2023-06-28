@@ -208,11 +208,11 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
-  skipIfTextureViewDimensionNotSupported(...formats: (GPUTextureViewDimension | undefined)[]) {
+  skipIfTextureViewDimensionNotSupported(...dimensions: (GPUTextureViewDimension | undefined)[]) {
     if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === 'cube-array') {
-          this.skip(`texture view format '${format} is not supported`);
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
         }
       }
     }
@@ -356,11 +356,11 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
-  skipIfTextureViewDimensionNotSupported(...formats: (GPUTextureViewDimension | undefined)[]) {
+  skipIfTextureViewDimensionNotSupported(...dimensions: (GPUTextureViewDimension | undefined)[]) {
     if (this.isCompatibility) {
-      for (const format of formats) {
-        if (format === 'cube-array') {
-          this.skip(`texture view format '${format} is not supported`);
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
         }
       }
     }
