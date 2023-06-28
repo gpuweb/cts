@@ -316,10 +316,7 @@ g.test('texture_must_have_correct_dimension')
       dimension: getTextureDimensionFromView(dimension),
     });
 
-    if (t.isCompatibility && viewDimension === 'cube-array') {
-      t.skip('cube-array texture view is not supported in compatibility mode');
-      return;
-    }
+    t.skipIfTextureViewDimensionNotSupported(viewDimension, dimension);
 
     const shouldError = viewDimension !== dimension;
     const textureView = texture.createView({ dimension });

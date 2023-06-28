@@ -366,6 +366,8 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
     const srcFormatInfo = kTextureFormatInfo[srcFormat];
     const dstFormatInfo = kTextureFormatInfo[dstFormat];
 
+    t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+
     const textureSize = {
       width: lcm(srcFormatInfo.blockWidth, dstFormatInfo.blockWidth),
       height: lcm(srcFormatInfo.blockHeight, dstFormatInfo.blockHeight),

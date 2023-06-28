@@ -207,6 +207,16 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       }
     }
   }
+
+  skipIfTextureViewDimensionNotSupported(...dimensions) {
+    if (this.isCompatibility) {
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -341,6 +351,16 @@ export class GPUTestBase extends Fixture {
       for (const format of formats) {
         if (format === 'bgra8unorm-srgb') {
           this.skip(`texture format '${format} is not supported`);
+        }
+      }
+    }
+  }
+
+  skipIfTextureViewDimensionNotSupported(...dimensions) {
+    if (this.isCompatibility) {
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
         }
       }
     }
