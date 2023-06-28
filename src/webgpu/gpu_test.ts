@@ -198,11 +198,21 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /**
    * Skips test if any format is not supported.
    */
-  skipIfTextureFormatNotSupported(...formats: GPUTextureFormat[]) {
+  skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
     if (this.isCompatibility) {
       for (const format of formats) {
         if (format === 'bgra8unorm-srgb') {
           this.skip(`texture format '${format} is not supported`);
+        }
+      }
+    }
+  }
+
+  skipIfTextureViewDimensionNotSupported(...dimensions: (GPUTextureViewDimension | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
         }
       }
     }
@@ -336,11 +346,21 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   /**
    * Skips test if any format is not supported.
    */
-  skipIfTextureFormatNotSupported(...formats: GPUTextureFormat[]) {
+  skipIfTextureFormatNotSupported(...formats: (GPUTextureFormat | undefined)[]) {
     if (this.isCompatibility) {
       for (const format of formats) {
         if (format === 'bgra8unorm-srgb') {
           this.skip(`texture format '${format} is not supported`);
+        }
+      }
+    }
+  }
+
+  skipIfTextureViewDimensionNotSupported(...dimensions: (GPUTextureViewDimension | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const dimension of dimensions) {
+        if (dimension === 'cube-array') {
+          this.skip(`texture view dimension '${dimension}' is not supported`);
         }
       }
     }
