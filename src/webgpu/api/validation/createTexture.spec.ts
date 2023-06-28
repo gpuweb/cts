@@ -848,6 +848,8 @@ g.test('viewFormats')
     const { format, viewFormat } = t.params;
     const { blockWidth, blockHeight } = kTextureFormatInfo[format];
 
+    t.skipIfTextureFormatNotSupported(format, viewFormat);
+
     const compatible = viewCompatible(format, viewFormat);
 
     // Test the viewFormat in the list.
