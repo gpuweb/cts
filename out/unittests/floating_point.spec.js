@@ -29,65 +29,44 @@ const kAnyInterval = {
   abstract: FP.abstract.toInterval(kAnyBounds)
 };
 
-/** @returns a number N * ULP greater than the provided number, treats input as f32 */
-function plusNULPF32(x, n) {
-  return x + n * oneULPF32(x);
-}
-
-/** @returns a number one ULP greater than the provided number, treats input as f32 */
-function plusOneULPF32(x) {
-  return plusNULPF32(x, 1);
-}
-
-/** @returns a number N * ULP less than the provided number, treats input as f32 */
-function minusNULPF32(x, n) {
-  return x - n * oneULPF32(x);
-}
-
-/** @returns a number one ULP less than the provided number, treats input as f32 */
-function minusOneULPF32(x) {
-  return minusNULPF32(x, 1);
-}
-
-/** @returns a number N * ULP greater than the provided number, treats input as f16 */
-function plusNULPF16(x, n) {
-  return x + n * oneULPF16(x);
-}
-
-/** @returns a number one ULP greater than the provided number, treats input as f16 */
-function plusOneULPF16(x) {
-  return plusNULPF16(x, 1);
-}
-
-/** @returns a number N * ULP less than the provided number, treats input as f16 */
-function minusNULPF16(x, n) {
-  return x - n * oneULPF16(x);
-}
-
-/** @returns a number one ULP less than the provided number, treats input as f16 */
-function minusOneULPF16(x) {
-  return minusNULPF16(x, 1);
-}
-
-/** Group ULP functions of different FP traits */
-const plusNULPFunctions = {
-  f32: plusNULPF32,
-  f16: plusNULPF16
+/** @returns a number N * ULP greater than the provided number */
+const kPlusNULPFunctions = {
+  f32: (x, n) => {
+    return x + n * oneULPF32(x);
+  },
+  f16: (x, n) => {
+    return x + n * oneULPF16(x);
+  }
 };
 
-const plusOneULPFunctions = {
-  f32: plusOneULPF32,
-  f16: plusOneULPF16
+/** @returns a number one ULP greater than the provided number */
+const kPlusOneULPFunctions = {
+  f32: (x) => {
+    return kPlusNULPFunctions['f32'](x, 1);
+  },
+  f16: (x) => {
+    return kPlusNULPFunctions['f16'](x, 1);
+  }
 };
 
-const minusNULPFunctions = {
-  f32: minusNULPF32,
-  f16: minusNULPF16
+/** @returns a number N * ULP less than the provided number */
+const kMinusNULPFunctions = {
+  f32: (x, n) => {
+    return x - n * oneULPF32(x);
+  },
+  f16: (x, n) => {
+    return x - n * oneULPF16(x);
+  }
 };
 
-const minusOneULPFunctions = {
-  f32: minusOneULPF32,
-  f16: minusOneULPF16
+/** @returns a number one ULP less than the provided number */
+const kMinusOneULPFunctions = {
+  f32: (x) => {
+    return kMinusNULPFunctions['f32'](x, 1);
+  },
+  f16: (x) => {
+    return kMinusNULPFunctions['f16'](x, 1);
+  }
 };
 
 /** @returns the expected IntervalBounds adjusted by the given error function
@@ -2132,10 +2111,10 @@ beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
   const ULPValue = kULPErrorValue[p.trait];
-  const plusOneULP = plusOneULPFunctions[p.trait];
-  const plusNULP = plusNULPFunctions[p.trait];
-  const minusOneULP = minusOneULPFunctions[p.trait];
-  const minusNULP = minusNULPFunctions[p.trait];
+  const plusOneULP = kPlusOneULPFunctions[p.trait];
+  const plusNULP = kPlusNULPFunctions[p.trait];
+  const minusOneULP = kMinusOneULPFunctions[p.trait];
+  const minusNULP = kMinusNULPFunctions[p.trait];
 
   return [
   // Edge Cases
@@ -2294,7 +2273,7 @@ paramsSubcasesOnly(
 { input: -1 / 2, expected: [reinterpretU32AsF32(0x4005fa91), reinterpretU32AsF32(0x40061a94)] }, // ~2π/3
 { input: 0, expected: kAnyBounds },
 { input: 1 / 2, expected: [reinterpretU32AsF32(0x3f85fa8f), reinterpretU32AsF32(0x3f861a94)] }, // ~π/3
-{ input: minusOneULPF32(1), expected: [reinterpretU64AsF64(0x3f2f_fdff_6000_0000n), reinterpretU64AsF64(0x3f3b_106f_c933_4fb9n)] }, // ~0.0003
+{ input: kMinusOneULPFunctions['f32'](1), expected: [reinterpretU64AsF64(0x3f2f_fdff_6000_0000n), reinterpretU64AsF64(0x3f3b_106f_c933_4fb9n)] }, // ~0.0003
 { input: 1, expected: kAnyBounds },
 { input: kValue.f32.positive.max, expected: kAnyBounds },
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
@@ -2428,13 +2407,13 @@ paramsSubcasesOnly(
 
 [
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-{ input: reinterpretU32AsF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, plusOneULPF32(kValue.f32.negative.pi.third)] }, // x = -√3
-{ input: -1, expected: [kValue.f32.negative.pi.quarter, plusOneULPF32(kValue.f32.negative.pi.quarter)] },
-{ input: reinterpretU32AsF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, plusOneULPF32(kValue.f32.negative.pi.sixth)] }, // x = -1/√3
+{ input: reinterpretU32AsF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] }, // x = -√3
+{ input: -1, expected: [kValue.f32.negative.pi.quarter, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
+{ input: reinterpretU32AsF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] }, // x = -1/√3
 { input: 0, expected: 0 },
-{ input: reinterpretU32AsF32(0x3f13cd3a), expected: [minusOneULPF32(kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
-{ input: 1, expected: [minusOneULPF32(kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
-{ input: reinterpretU32AsF32(0x3fddb3d7), expected: [minusOneULPF32(kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
+{ input: reinterpretU32AsF32(0x3f13cd3a), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
+{ input: 1, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
+{ input: reinterpretU32AsF32(0x3fddb3d7), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
@@ -2553,11 +2532,11 @@ paramsSubcasesOnly(
 // human-readable manner.
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.negative.min, expected: kAnyBounds },
-{ input: kValue.f32.negative.pi.whole, expected: [-1, plusOneULPF32(-1)] },
-{ input: kValue.f32.negative.pi.third, expected: [minusOneULPF32(1 / 2), 1 / 2] },
+{ input: kValue.f32.negative.pi.whole, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
+{ input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](1 / 2), 1 / 2] },
 { input: 0, expected: [1, 1] },
-{ input: kValue.f32.positive.pi.third, expected: [minusOneULPF32(1 / 2), 1 / 2] },
-{ input: kValue.f32.positive.pi.whole, expected: [-1, plusOneULPF32(-1)] },
+{ input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](1 / 2), 1 / 2] },
+{ input: kValue.f32.positive.pi.whole, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
 { input: kValue.f32.positive.max, expected: kAnyBounds },
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
@@ -2609,19 +2588,19 @@ paramsSubcasesOnly(
 [
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.negative.min, expected: kAnyBounds },
-{ input: kValue.f32.negative.pi.whole, expected: [minusOneULPF32(-180), plusOneULPF32(-180)] },
-{ input: kValue.f32.negative.pi.three_quarters, expected: [minusOneULPF32(-135), plusOneULPF32(-135)] },
-{ input: kValue.f32.negative.pi.half, expected: [minusOneULPF32(-90), plusOneULPF32(-90)] },
-{ input: kValue.f32.negative.pi.third, expected: [minusOneULPF32(-60), plusOneULPF32(-60)] },
-{ input: kValue.f32.negative.pi.quarter, expected: [minusOneULPF32(-45), plusOneULPF32(-45)] },
-{ input: kValue.f32.negative.pi.sixth, expected: [minusOneULPF32(-30), plusOneULPF32(-30)] },
+{ input: kValue.f32.negative.pi.whole, expected: [kMinusOneULPFunctions['f32'](-180), kPlusOneULPFunctions['f32'](-180)] },
+{ input: kValue.f32.negative.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](-135), kPlusOneULPFunctions['f32'](-135)] },
+{ input: kValue.f32.negative.pi.half, expected: [kMinusOneULPFunctions['f32'](-90), kPlusOneULPFunctions['f32'](-90)] },
+{ input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](-60), kPlusOneULPFunctions['f32'](-60)] },
+{ input: kValue.f32.negative.pi.quarter, expected: [kMinusOneULPFunctions['f32'](-45), kPlusOneULPFunctions['f32'](-45)] },
+{ input: kValue.f32.negative.pi.sixth, expected: [kMinusOneULPFunctions['f32'](-30), kPlusOneULPFunctions['f32'](-30)] },
 { input: 0, expected: 0 },
-{ input: kValue.f32.positive.pi.sixth, expected: [minusOneULPF32(30), plusOneULPF32(30)] },
-{ input: kValue.f32.positive.pi.quarter, expected: [minusOneULPF32(45), plusOneULPF32(45)] },
-{ input: kValue.f32.positive.pi.third, expected: [minusOneULPF32(60), plusOneULPF32(60)] },
-{ input: kValue.f32.positive.pi.half, expected: [minusOneULPF32(90), plusOneULPF32(90)] },
-{ input: kValue.f32.positive.pi.three_quarters, expected: [minusOneULPF32(135), plusOneULPF32(135)] },
-{ input: kValue.f32.positive.pi.whole, expected: [minusOneULPF32(180), plusOneULPF32(180)] },
+{ input: kValue.f32.positive.pi.sixth, expected: [kMinusOneULPFunctions['f32'](30), kPlusOneULPFunctions['f32'](30)] },
+{ input: kValue.f32.positive.pi.quarter, expected: [kMinusOneULPFunctions['f32'](45), kPlusOneULPFunctions['f32'](45)] },
+{ input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](60), kPlusOneULPFunctions['f32'](60)] },
+{ input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](90), kPlusOneULPFunctions['f32'](90)] },
+{ input: kValue.f32.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](135), kPlusOneULPFunctions['f32'](135)] },
+{ input: kValue.f32.positive.pi.whole, expected: [kMinusOneULPFunctions['f32'](180), kPlusOneULPFunctions['f32'](180)] },
 { input: kValue.f32.positive.max, expected: kAnyBounds },
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
@@ -2641,7 +2620,7 @@ paramsSubcasesOnly(
 [
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: 0, expected: 1 },
-{ input: 1, expected: [kValue.f32.positive.e, plusOneULPF32(kValue.f32.positive.e)] },
+{ input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
 { input: 89, expected: kAnyBounds }]).
 
 
@@ -2754,11 +2733,11 @@ paramsSubcasesOnly(
 
 [
 { input: 0, expected: 0 },
-{ input: 0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), plusOneULPF32(reinterpretU32AsF32(0x3f666666))] }, // ~0.9
+{ input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] }, // ~0.9
 { input: 1.0, expected: 0 },
 { input: 1.1, expected: [reinterpretU64AsF64(0x3fb9_9998_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-{ input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), plusOneULPF32(reinterpretU32AsF32(0x3f666666))] }, // ~0.9
+{ input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] }, // ~0.9
 { input: -0.9, expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
 { input: -1.0, expected: 0 },
 { input: -1.1, expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccd_0000_0000n)] }, // ~0.9
@@ -2790,10 +2769,10 @@ paramsSubcasesOnly(
 [
 { input: -1, expected: kAnyBounds },
 { input: 0, expected: kAnyBounds },
-{ input: 0.04, expected: [minusOneULPF32(5), plusOneULPF32(5)] },
+{ input: 0.04, expected: [kMinusOneULPFunctions['f32'](5), kPlusOneULPFunctions['f32'](5)] },
 { input: 1, expected: 1 },
-{ input: 100, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: kValue.f32.positive.max, expected: [reinterpretU32AsF32(0x1f800000), plusNULPF32(reinterpretU32AsF32(0x1f800000), 2)] }, // ~5.421...e-20, i.e. 1/√max f32
+{ input: 100, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: kValue.f32.positive.max, expected: [reinterpretU32AsF32(0x1f800000), kPlusNULPFunctions['f32'](reinterpretU32AsF32(0x1f800000), 2)] }, // ~5.421...e-20, i.e. 1/√max f32
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
@@ -2860,8 +2839,8 @@ paramsSubcasesOnly(
 { input: -1, expected: kAnyBounds },
 { input: 0, expected: kAnyBounds },
 { input: 1, expected: 0 },
-{ input: kValue.f32.positive.e, expected: [minusOneULPF32(1), 1] },
-{ input: kValue.f32.positive.max, expected: [minusOneULPF32(reinterpretU32AsF32(0x42b17218)), reinterpretU32AsF32(0x42b17218)] } // ~88.72...
+{ input: kValue.f32.positive.e, expected: [kMinusOneULPFunctions['f32'](1), 1] },
+{ input: kValue.f32.positive.max, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x42b17218)), reinterpretU32AsF32(0x42b17218)] } // ~88.72...
 ]).
 
 fn((t) => {
@@ -2890,7 +2869,7 @@ paramsSubcasesOnly(
 { input: 0, expected: kAnyBounds },
 { input: 1, expected: 0 },
 { input: 2, expected: 1 },
-{ input: kValue.f32.positive.max, expected: [minusOneULPF32(128), 128] }]).
+{ input: kValue.f32.positive.max, expected: [kMinusOneULPFunctions['f32'](128), 128] }]).
 
 
 fn((t) => {
@@ -2916,12 +2895,12 @@ paramsSubcasesOnly(
 
 [
 { input: 0, expected: 0 },
-{ input: 0.1, expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: 0.1, expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
 { input: 1.0, expected: -1.0 },
-{ input: 1.9, expected: [reinterpretU32AsF32(0xbff33334), plusOneULPF32(reinterpretU32AsF32(0xbff33334))] }, // ~-1.9
-{ input: -0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: 1.9, expected: [reinterpretU32AsF32(0xbff33334), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbff33334))] }, // ~-1.9
+{ input: -0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
 { input: -1.0, expected: 1 },
-{ input: -1.9, expected: [minusOneULPF32(reinterpretU32AsF32(0x3ff33334)), reinterpretU32AsF32(0x3ff33334)] }, // ~1.9
+{ input: -1.9, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3ff33334)), reinterpretU32AsF32(0x3ff33334)] }, // ~1.9
 
 // Edge cases
 { input: kValue.f32.infinity.positive, expected: kAnyBounds },
@@ -2987,19 +2966,19 @@ paramsSubcasesOnly(
 
 [
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-{ input: -180, expected: [minusOneULPF32(kValue.f32.negative.pi.whole), plusOneULPF32(kValue.f32.negative.pi.whole)] },
-{ input: -135, expected: [minusOneULPF32(kValue.f32.negative.pi.three_quarters), plusOneULPF32(kValue.f32.negative.pi.three_quarters)] },
-{ input: -90, expected: [minusOneULPF32(kValue.f32.negative.pi.half), plusOneULPF32(kValue.f32.negative.pi.half)] },
-{ input: -60, expected: [minusOneULPF32(kValue.f32.negative.pi.third), plusOneULPF32(kValue.f32.negative.pi.third)] },
-{ input: -45, expected: [minusOneULPF32(kValue.f32.negative.pi.quarter), plusOneULPF32(kValue.f32.negative.pi.quarter)] },
-{ input: -30, expected: [minusOneULPF32(kValue.f32.negative.pi.sixth), plusOneULPF32(kValue.f32.negative.pi.sixth)] },
+{ input: -180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.whole)] },
+{ input: -135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters)] },
+{ input: -90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.half)] },
+{ input: -60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] },
+{ input: -45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
+{ input: -30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] },
 { input: 0, expected: 0 },
-{ input: 30, expected: [minusOneULPF32(kValue.f32.positive.pi.sixth), plusOneULPF32(kValue.f32.positive.pi.sixth)] },
-{ input: 45, expected: [minusOneULPF32(kValue.f32.positive.pi.quarter), plusOneULPF32(kValue.f32.positive.pi.quarter)] },
-{ input: 60, expected: [minusOneULPF32(kValue.f32.positive.pi.third), plusOneULPF32(kValue.f32.positive.pi.third)] },
-{ input: 90, expected: [minusOneULPF32(kValue.f32.positive.pi.half), plusOneULPF32(kValue.f32.positive.pi.half)] },
-{ input: 135, expected: [minusOneULPF32(kValue.f32.positive.pi.three_quarters), plusOneULPF32(kValue.f32.positive.pi.three_quarters)] },
-{ input: 180, expected: [minusOneULPF32(kValue.f32.positive.pi.whole), plusOneULPF32(kValue.f32.positive.pi.whole)] },
+{ input: 30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth)] },
+{ input: 45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter)] },
+{ input: 60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.third)] },
+{ input: 90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.half)] },
+{ input: 135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters)] },
+{ input: 180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.whole)] },
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
 
@@ -3088,7 +3067,7 @@ paramsSubcasesOnly(
 { input: -0.1, expected: 0 },
 { input: -1, expected: 0 },
 { input: -10, expected: 0 },
-{ input: 0.1, expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
 { input: 10, expected: 1.0 },
 { input: 11.1, expected: 1.0 },
 { input: kValue.f32.positive.max, expected: 1.0 },
@@ -3160,9 +3139,9 @@ paramsSubcasesOnly(
 // human-readable manner.
 { input: kValue.f32.infinity.negative, expected: kAnyBounds },
 { input: kValue.f32.negative.min, expected: kAnyBounds },
-{ input: kValue.f32.negative.pi.half, expected: [-1, plusOneULPF32(-1)] },
+{ input: kValue.f32.negative.pi.half, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
 { input: 0, expected: 0 },
-{ input: kValue.f32.positive.pi.half, expected: [minusOneULPF32(1), 1] },
+{ input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](1), 1] },
 { input: kValue.f32.positive.max, expected: kAnyBounds },
 { input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
 
@@ -3361,14 +3340,14 @@ paramsSubcasesOnly(
 { input: [-1, -1], expected: -2 },
 
 // 64-bit normals
-{ input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] }, // ~0.2
-{ input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
-{ input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
-{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), plusOneULPF32(reinterpretU32AsF32(0xbe4ccccd))] }, // ~-0.2
+{ input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] }, // ~0.2
+{ input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd))] }, // ~0
+{ input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd))] }, // ~0
+{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbe4ccccd))] }, // ~-0.2
 
 // 32-bit subnormals
 { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -3422,21 +3401,21 @@ paramsSubcasesOnly(
 // used.
 
 // positive y, positive x
-{ input: [1, reinterpretU32AsF32(0x3fddb3d7)], expected: [minusNULPF32(kValue.f32.positive.pi.sixth, 4097), plusNULPF32(kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
-{ input: [1, 1], expected: [minusNULPF32(kValue.f32.positive.pi.quarter, 4097), plusNULPF32(kValue.f32.positive.pi.quarter, 4096)] },
+{ input: [1, reinterpretU32AsF32(0x3fddb3d7)], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
+{ input: [1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4096)] },
 { input: [reinterpretU32AsF32(0x3fddb3d7), 1], expected: [reinterpretU64AsF64(0x3ff0_bf52_2000_0000n), reinterpretU64AsF64(0x3ff0_c352_4000_0000n)] }, // y = √3
 { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
 
 // positive y, negative x
-{ input: [1, -1], expected: [minusNULPF32(kValue.f32.positive.pi.three_quarters, 4096), plusNULPF32(kValue.f32.positive.pi.three_quarters, 4097)] },
+{ input: [1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4096), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4097)] },
 { input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
 
 // negative y, negative x
-{ input: [-1, -1], expected: [minusNULPF32(kValue.f32.negative.pi.three_quarters, 4097), plusNULPF32(kValue.f32.negative.pi.three_quarters, 4096)] },
+{ input: [-1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4097), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4096)] },
 { input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
 
 // negative y, positive x
-{ input: [-1, 1], expected: [minusNULPF32(kValue.f32.negative.pi.quarter, 4096), plusNULPF32(kValue.f32.negative.pi.quarter, 4097)] },
+{ input: [-1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4097)] },
 { input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
 
 // Discontinuity @ origin (0,0)
@@ -3454,8 +3433,8 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
 
 // When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
-{ input: [reinterpretU32AsF32(0x80800000), reinterpretU32AsF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.negative.pi.whole, 4096), plusNULPF32(kValue.f32.negative.pi.whole, 4096)] },
-{ input: [reinterpretU32AsF32(0x00800000), reinterpretU32AsF32(0xbf800000)], expected: [minusNULPF32(kValue.f32.positive.pi.whole, 4096), plusNULPF32(kValue.f32.positive.pi.whole, 4096)] },
+{ input: [reinterpretU32AsF32(0x80800000), reinterpretU32AsF32(0xbf800000)], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4096)] },
+{ input: [reinterpretU32AsF32(0x00800000), reinterpretU32AsF32(0xbf800000)], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4096), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4096)] },
 
 // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
 { input: [1, kValue.f32.positive.max], expected: kAnyBounds },
@@ -3543,10 +3522,10 @@ paramsSubcasesOnly(
 // 64-bit normals
 { input: [0, 0.1], expected: 0 },
 { input: [0, -0.1], expected: 0 },
-{ input: [1, 0.1], expected: [minusOneULPF32(10), plusOneULPF32(10)] },
-{ input: [-1, 0.1], expected: [minusOneULPF32(-10), plusOneULPF32(-10)] },
-{ input: [1, -0.1], expected: [minusOneULPF32(-10), plusOneULPF32(-10)] },
-{ input: [-1, -0.1], expected: [minusOneULPF32(10), plusOneULPF32(10)] },
+{ input: [1, 0.1], expected: [kMinusOneULPFunctions['f32'](10), kPlusOneULPFunctions['f32'](10)] },
+{ input: [-1, 0.1], expected: [kMinusOneULPFunctions['f32'](-10), kPlusOneULPFunctions['f32'](-10)] },
+{ input: [1, -0.1], expected: [kMinusOneULPFunctions['f32'](-10), kPlusOneULPFunctions['f32'](-10)] },
+{ input: [-1, -0.1], expected: [kMinusOneULPFunctions['f32'](10), kPlusOneULPFunctions['f32'](10)] },
 
 // Denominator out of range
 { input: [1, kValue.f32.infinity.positive], expected: kAnyBounds },
@@ -3592,8 +3571,8 @@ paramsSubcasesOnly(
 // 64-bit normals
 { input: [0, 0.1], expected: 0 },
 { input: [0, -0.1], expected: 0 },
-{ input: [1.0000000001, 1], expected: [2, plusNULPF32(2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
-{ input: [-1.0000000001, 1], expected: [minusNULPF32(-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
+{ input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f32'](2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
+{ input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f32'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
 
 // Edge Cases
 { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
@@ -3640,14 +3619,14 @@ paramsSubcasesOnly(
 { input: [-1, -1], expected: -1 },
 
 // 64-bit normals
-{ input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
 { input: [-0.1, 0], expected: 0 },
 { input: [0, -0.1], expected: 0 },
-{ input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
 
 // 32-bit subnormals
 { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -3700,12 +3679,12 @@ paramsSubcasesOnly(
 // 64-bit normals
 { input: [0.1, 0], expected: 0 },
 { input: [0, 0.1], expected: 0 },
-{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
 
 // 32-bit subnormals
 { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
@@ -3768,10 +3747,10 @@ paramsSubcasesOnly(
 { input: [0, 0.1], expected: 0 },
 { input: [-0.1, 0], expected: 0 },
 { input: [0, -0.1], expected: 0 },
-{ input: [0.1, 0.1], expected: [minusNULPF32(reinterpretU32AsF32(0x3c23d70a), 2), plusOneULPF32(reinterpretU32AsF32(0x3c23d70a))] }, // ~0.01
-{ input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0xbc23d70a)), plusNULPF32(reinterpretU32AsF32(0xbc23d70a), 2)] }, // ~-0.01
-{ input: [-0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0xbc23d70a)), plusNULPF32(reinterpretU32AsF32(0xbc23d70a), 2)] }, // ~-0.01
-{ input: [-0.1, -0.1], expected: [minusNULPF32(reinterpretU32AsF32(0x3c23d70a), 2), plusOneULPF32(reinterpretU32AsF32(0x3c23d70a))] }, // ~0.01
+{ input: [0.1, 0.1], expected: [kMinusNULPFunctions['f32'](reinterpretU32AsF32(0x3c23d70a), 2), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3c23d70a))] }, // ~0.01
+{ input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0xbc23d70a)), kPlusNULPFunctions['f32'](reinterpretU32AsF32(0xbc23d70a), 2)] }, // ~-0.01
+{ input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0xbc23d70a)), kPlusNULPFunctions['f32'](reinterpretU32AsF32(0xbc23d70a), 2)] }, // ~-0.01
+{ input: [-0.1, -0.1], expected: [kMinusNULPFunctions['f32'](reinterpretU32AsF32(0x3c23d70a), 2), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3c23d70a))] }, // ~0.01
 
 // Infinities
 { input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
@@ -3811,9 +3790,9 @@ paramsSubcasesOnly(
 // of the errors.
 { input: [-1, 0], expected: kAnyBounds },
 { input: [0, 0], expected: kAnyBounds },
-{ input: [1, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
-{ input: [2, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
-{ input: [kValue.f32.positive.max, 0], expected: [minusNULPF32(1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
+{ input: [1, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
+{ input: [2, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
+{ input: [kValue.f32.positive.max, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
 { input: [0, 1], expected: kAnyBounds },
 { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_fffe_dfff_fe00n), reinterpretU64AsF64(0x3ff0_0000_c000_0200n)] }, // ~1
 { input: [1, 100], expected: [reinterpretU64AsF64(0x3fef_ffba_3fff_3800n), reinterpretU64AsF64(0x3ff0_0023_2000_c800n)] }, // ~1
@@ -3977,14 +3956,14 @@ paramsSubcasesOnly(
 { input: [-1, -1], expected: 0 },
 
 // 64-bit normals
-{ input: [0.1, 0], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), plusOneULPF32(reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0.1, 0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0.0
-{ input: [0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] }, // ~0.2
-{ input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), plusOneULPF32(reinterpretU32AsF32(0xbe4ccccd))] }, // ~-0.2
-{ input: [-0.1, -0.1], expected: [minusOneULPF32(reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - minusOneULPF32(reinterpretU32AsF32(0x3dcccccd))] }, // ~0
+{ input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+{ input: [0, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd))] }, // ~0.0
+{ input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3e4ccccd)), reinterpretU32AsF32(0x3e4ccccd)] }, // ~0.2
+{ input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbe4ccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbe4ccccd))] }, // ~-0.2
+{ input: [-0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)) - reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd) - kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd))] }, // ~0
 
 // // 32-bit normals
 { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
