@@ -199,7 +199,7 @@ function* fullSubrectCoordinates(
   }
 }
 
-function findFailedPixels(
+export function findFailedPixels(
   format: EncodableTextureFormat,
   subrectOrigin: Required<GPUOrigin3DDict>,
   subrectSize: Required<GPUExtent3DDict>,
