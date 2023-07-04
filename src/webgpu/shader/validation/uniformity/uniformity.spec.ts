@@ -2040,6 +2040,84 @@ const kFunctionCases = {
     cond: `call > 0`,
     uniform: false,
   },
+  textureDimensions_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureDimensions(t);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureGather_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureGather(0,t,s,vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureGatherCompare_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureGatherCompare(td,sd,vec2f(0,0), 0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureLoad_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureLoad(t,vec2u(0,0),0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureNumLayers_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumLayers(ta);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureNumLevels_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumLevels(t);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureNumSamples_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumSamples(ts);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureSampleLevel_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleLevel(t,s,vec2f(0,0),0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureSampleGrad_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleGrad(t,s,vec2f(0,0),vec2f(0,0),vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureSampleCompareLevel_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleCompareLevel(td,sd,vec2f(0,0), 0);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureSampleBaseClampToEdge_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleBaseClampToEdge(t,s,vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  min_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = min(0,0);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  value_constructor_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = vec2u(0,0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
 };
 
 g.test('functions')
@@ -2056,6 +2134,10 @@ var s : sampler;
 var td : texture_depth_2d;
 @group(0) @binding(3)
 var sd : sampler_comparison;
+@group(0) @binding(4)
+var ta : texture_2d_array<f32>;
+@group(0) @binding(5)
+var ts : texture_multisampled_2d<f32>;
 
 const uniform_cond = true;
 var<private> nonuniform_cond = true;
