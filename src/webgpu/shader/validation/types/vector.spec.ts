@@ -49,6 +49,12 @@ const kCases = {
   missing_el_ty: { wgsl: 'alias T = vec3<>;', ok: false },
   missing_t_left: { wgsl: 'alias T = vec3 u32>;', ok: false },
   missing_t_right: { wgsl: 'alias T = vec3<u32;', ok: false },
+  vec_of_array: { wgsl: 'alias T = vec3<array<i32, 2>>;', ok: false },
+  vec_of_runtime_array: { wgsl: 'alias T = vec3<array<i32>>;', ok: false },
+  vec_of_struct: { wgsl: 'struct S { i : i32 }\nalias T = vec3<S>;', ok: false },
+  vec_of_atomic: { wgsl: 'alias T = vec3<atomic<i32>>;', ok: false },
+  vec_of_matrix: { wgsl: 'alias T = vec3<mat2x2f>;', ok: false },
+  vec_of_vec: { wgsl: 'alias T = vec3<vec2f>;', ok: false },
 };
 
 g.test('vector')
