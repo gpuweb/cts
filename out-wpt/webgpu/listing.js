@@ -3423,6 +3423,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "types",
+      "vector"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "uniformity",
       "uniformity"
     ]
