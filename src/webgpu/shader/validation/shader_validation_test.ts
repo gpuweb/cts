@@ -1,3 +1,4 @@
+import { keysOf } from '../../../common/util/data_tables.js';
 import { ErrorWithExtra } from '../../../common/util/util.js';
 import { GPUTest } from '../../gpu_test.js';
 
@@ -52,6 +53,57 @@ export class ShaderValidationTest extends GPUTest {
         }
       }
     });
+  }
+
+  /**
+   * Add a test expectation for whether a createComputePipeline call succeeds or not.
+   */
+  expectPipelineResult(args: {
+    // True if the pipeline should build without error
+    expectedResult: boolean;
+    // The WGSL shader code
+    code: string;
+    // Pipeline overridable constants
+    constants?: Record<string, GPUPipelineConstantValue>;
+    // List of additional module-scope variable the entrypoint needs to reference
+    reference?: string[];
+  }) {
+    const phonies: Array<string> = [];
+
+    if (args.constants !== undefined) {
+      phonies.push(...keysOf(args.constants).map(c => `_ = ${c};`));
+    }
+    if (args.reference !== undefined) {
+      phonies.push(...args.reference.map(c => `_ = ${c};`));
+    }
+
+    const code =
+      args.code +
+      `
+@compute @workgroup_size(1)
+fn main() {
+  ${phonies.join('\n')}
+}`;
+
+    let shaderModule: GPUShaderModule;
+    this.expectGPUError(
+      'validation',
+      () => {
+        shaderModule = this.device.createShaderModule({ code });
+      },
+      false
+    );
+
+    this.expectGPUError(
+      'validation',
+      () => {
+        this.device.createComputePipeline({
+          layout: 'auto',
+          compute: { module: shaderModule!, entryPoint: 'main', constants: args.constants },
+        });
+      },
+      !args.expectedResult
+    );
   }
 
   /**
