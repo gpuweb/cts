@@ -16,6 +16,9 @@ const kEvaluationStages = ['constant', 'override'] as const;
 /// All floating-point scalar and vector types to test
 const kFloatingPointTypes = [
   '',
+  'vec2',
+  'vec3',
+  'vec4',
   'f32',
   'vec2f',
   'vec3f',
@@ -38,7 +41,7 @@ function runTest(
   type: string,
   stage: string
 ) {
-  const enables = requiresShaderF16(type) ? 'enable f16' : '';
+  const enables = requiresShaderF16(type) ? 'enable f16;' : '';
   switch (stage) {
     case 'constant': {
       t.expectCompileResult(
