@@ -158,6 +158,12 @@ const kCases = {
   ryb: { wgsl: 'let r : vec3<T> = v.ryb;', ok: false },
   xgza: { wgsl: 'let r : vec4<T> = v.xgza;', ok: false },
 
+  // error: too many swizzle elements
+  xxxxx: { wgsl: 'let r = v.xxxxx;', ok: false },
+  rrrrr: { wgsl: 'let r = v.rrrrr;', ok: false },
+  yxwxy: { wgsl: 'let r = v.yxwxy;', ok: false },
+  rgbar: { wgsl: 'let r = v.rgbar;', ok: false },
+
   // error: invalid index value
   literal_5: { wgsl: 'let r : T = v[5];', ok: false },
   literal_minus_1: { wgsl: 'let r : T = v[-1];', ok: false },
@@ -173,6 +179,7 @@ g.test('vector')
   .params(u =>
     u
       .combine('case', keysOf(kCases)) //
+      .combine('vector_decl', ['const', 'let', 'var', 'param'] as const)
       .combine('vector_width', [2, 3, 4] as const)
       .combine('element_type', ['i32', 'u32', 'f32', 'f16', 'bool'] as const)
   )
@@ -184,7 +191,7 @@ g.test('vector')
   .fn(t => {
     const c = kCases[t.params.case];
     const enables = t.params.element_type === 'f16' ? 'enable f16;' : '';
-    const code = `${enables}
+    const prefix = `${enables}
 
 alias T = ${t.params.element_type};
 
@@ -193,8 +200,21 @@ struct S {
 }
 
 @compute @workgroup_size(1)
+`;
+    const code =
+      t.params.vector_decl === 'param'
+        ? `${prefix}
 fn main() {
-  var v : vec${t.params.vector_width}<T>;
+  F(vec${t.params.vector_width}<T>());
+}
+
+fn F(v : vec${t.params.vector_width}<T>) {
+  ${c.wgsl}
+}
+`
+        : `${prefix}
+fn main() {
+  ${t.params.vector_decl} v = vec${t.params.vector_width}<T>();
   ${c.wgsl}
 }
 `;
