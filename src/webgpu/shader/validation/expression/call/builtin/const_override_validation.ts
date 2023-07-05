@@ -1,4 +1,5 @@
-import { assert } from '../../../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../../../common/util/util.js';
+import { kValue } from '../../../../../util/constants.js';
 import {
   Type,
   TypeF16,
@@ -22,6 +23,35 @@ export const kMinusOneToTwo = [
   1.5,
   1.9,
   2.0,
+] as const;
+
+/// An array of values ranging from -3π to 3π.
+export const kMinus3PiTo3Pi = [
+  -3 * Math.PI,
+  -2.999 * Math.PI,
+  -2.5 * Math.PI,
+  -2.001 * Math.PI,
+  -2.0 * Math.PI,
+  -1.999 * Math.PI,
+  -1.5 * Math.PI,
+  -1.001 * Math.PI,
+  -1.0 * Math.PI,
+  -0.999 * Math.PI,
+  -0.5 * Math.PI,
+  -0.001,
+  0,
+  0.001,
+  0.5 * Math.PI,
+  0.999 * Math.PI,
+  1.0 * Math.PI,
+  1.001 * Math.PI,
+  1.5 * Math.PI,
+  1.999 * Math.PI,
+  2.0 * Math.PI,
+  2.5 * Math.PI,
+  2.001 * Math.PI,
+  2.999 * Math.PI,
+  3 * Math.PI,
 ] as const;
 
 /// The evaluation stages to test
