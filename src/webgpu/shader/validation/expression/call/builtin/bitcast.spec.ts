@@ -141,4 +141,43 @@ Can't cast numeric type to vec3<f16> because it is 48 bits wide
 and no other type is that size.
 `
   )
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('other_type', [
+        'bool',
+        'u32',
+        'i32',
+        'f32',
+        'vec2<bool>',
+        'vec3<bool>',
+        'vec4<bool>',
+        'vec2u',
+        'vec3u',
+        'vec4u',
+        'vec2i',
+        'vec3i',
+        'vec4i',
+        'vec2f',
+        'vec3f',
+        'vec4f',
+        'vec2h',
+        'vec4h',
+      ] as const)
+      .combine('direction', ['to', 'from'] as const)
+      .combine('type', ['vec3<f16>', 'vec3h'])
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(t => {
+    const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+    const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+    const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+    t.expectCompileResult(false, code);
+  });
