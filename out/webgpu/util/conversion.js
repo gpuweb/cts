@@ -225,47 +225,49 @@ export function floatBitsToNormalULPFromZero(bits, fmt) {
  * There is no sign bit, and there is a shared 5-bit biased (15) exponent and a 9-bit
  * mantissa for each channel. The mantissa does NOT have an implicit leading "1.",
  * and instead has an implicit leading "0.".
+ *
+ * @see https://registry.khronos.org/OpenGL/extensions/EXT/EXT_texture_shared_exponent.txt
  */
 export function packRGB9E5UFloat(r, g, b) {
-  for (const v of [r, g, b]) {
-    assert(v >= 0 && v < Math.pow(2, 16));
-  }
+  const N = 9; // number of mantissa bits
+  const Emax = 31; // max exponent
+  const B = 15; // exponent bias
+  const sharedexp_max = ((1 << N) - 1) / (1 << N) * Math.pow(2, Emax - B);
+  const red_c = clamp(r, { min: 0, max: sharedexp_max });
+  const green_c = clamp(g, { min: 0, max: sharedexp_max });
+  const blue_c = clamp(b, { min: 0, max: sharedexp_max });
+  const max_c = Math.max(red_c, green_c, blue_c);
+  const exp_shared_p = Math.max(-B - 1, Math.floor(Math.log2(max_c))) + 1 + B;
+  const max_s = Math.floor(max_c / Math.pow(2, exp_shared_p - B - N) + 0.5);
+  const exp_shared = max_s === 1 << N ? exp_shared_p + 1 : exp_shared_p;
+  const scalar = 1 / Math.pow(2, exp_shared - B - N);
+  const red_s = Math.floor(red_c * scalar + 0.5);
+  const green_s = Math.floor(green_c * scalar + 0.5);
+  const blue_s = Math.floor(blue_c * scalar + 0.5);
+  assert(red_s >= 0 && red_s <= 0b111111111);
+  assert(green_s >= 0 && green_s <= 0b111111111);
+  assert(blue_s >= 0 && blue_s <= 0b111111111);
+  assert(exp_shared >= 0 && exp_shared <= 0b11111);
+  return (exp_shared << 27 | blue_s << 18 | green_s << 9 | red_s) >>> 0;
+}
 
-  const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
-  const extractMantissaAndExponent = (n) => {
-    const mantissaBits = 9;
-    buf.setFloat32(0, n, true);
-    const bits = buf.getUint32(0, true);
-    // >> to remove mantissa, & to remove sign
-    let biasedExponent = bits >> 23 & 0xff;
-    const mantissaBitsToDiscard = 23 - mantissaBits;
-    let mantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
-
-    // RGB9E5UFloat has an implicit leading 0. instead of a leading 1.,
-    // so we need to move the 1. into the mantissa and bump the exponent.
-    // For float32 encoding, the leading 1 is only present if the biased
-    // exponent is non-zero.
-    if (biasedExponent !== 0) {
-      mantissa = mantissa >> 1 | 0b100000000;
-      biasedExponent += 1;
-    }
-    return { biasedExponent, mantissa };
+/**
+ * Decodes a RGB9E5 encoded color.
+ * @see packRGB9E5UFloat
+ */
+export function unpackRGB9E5UFloat(encoded) {
+  const N = 9; // number of mantissa bits
+  const B = 15; // exponent bias
+  const red_s = encoded >>> 0 & 0b111111111;
+  const green_s = encoded >>> 9 & 0b111111111;
+  const blue_s = encoded >>> 18 & 0b111111111;
+  const exp_shared = encoded >>> 27 & 0b11111;
+  const exp = Math.pow(2, exp_shared - B - N);
+  return {
+    R: exp * red_s,
+    G: exp * green_s,
+    B: exp * blue_s
   };
-
-  const { biasedExponent: rExp, mantissa: rOrigMantissa } = extractMantissaAndExponent(r);
-  const { biasedExponent: gExp, mantissa: gOrigMantissa } = extractMantissaAndExponent(g);
-  const { biasedExponent: bExp, mantissa: bOrigMantissa } = extractMantissaAndExponent(b);
-
-  // Use the largest exponent, and shift the mantissa accordingly
-  const exp = Math.max(rExp, gExp, bExp);
-  const rMantissa = rOrigMantissa >> exp - rExp;
-  const gMantissa = gOrigMantissa >> exp - gExp;
-  const bMantissa = bOrigMantissa >> exp - bExp;
-
-  const bias = 15;
-  const biasedExp = exp === 0 ? 0 : exp - 127 + bias;
-  assert(biasedExp >= 0 && biasedExp <= 31);
-  return rMantissa | gMantissa << 9 | bMantissa << 18 | biasedExp << 27;
 }
 
 /**

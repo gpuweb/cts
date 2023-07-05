@@ -16,7 +16,8 @@ kFloat32Format,
 kFloat16Format,
 numberToFloat32Bits,
 float32BitsToNumber,
-numberToFloatBits } from
+numberToFloatBits,
+unpackRGB9E5UFloat } from
 '../conversion.js';
 import { clamp, signExtend } from '../math.js';
 
@@ -769,13 +770,7 @@ export const kTexelRepresentationInfo =
       buffer,
       // For the purpose of unpacking, expand into three "ufloat14" values.
       unpackBits: (data) => {
-        // Pretend the exponent part is A so we can use unpackComponentsBits.
-        const parts = unpackComponentsBits(kRGBA, data, { R: 9, G: 9, B: 9, A: 5 });
-        return {
-          R: parts.A << 9 | parts.R,
-          G: parts.A << 9 | parts.G,
-          B: parts.A << 9 | parts.B
-        };
+        return unpackRGB9E5UFloat(data[3] << 24 | data[2] << 16 | data[1] << 8 | data[0]);
       },
       numberToBits: (components) => ({
         R: float32ToFloatBits(components.R ?? unreachable(), 0, 5, 9, 15),

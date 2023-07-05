@@ -1,6 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `Unit tests for conversion`;import { makeTestGroup } from '../common/internal/test_group.js';
+**/export const description = `Unit tests for conversion`;import { mergeParams } from '../common/internal/params_utils.js';
+import { makeTestGroup } from '../common/internal/test_group.js';
+import { keysOf } from '../common/util/data_tables.js';
 import { assert, objectEquals } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
@@ -22,9 +24,11 @@ pack2x16snorm,
 pack2x16unorm,
 pack4x8snorm,
 pack4x8unorm,
+packRGB9E5UFloat,
 
 toMatrix,
 u32,
+unpackRGB9E5UFloat,
 vec2,
 vec3,
 vec4 } from
@@ -560,5 +564,64 @@ fn((test) => {
   const expect = test.params.result;
 
   test.expect(got === expect, `pack4x8unorm(${inputs}) returned ${got}. Expected ${expect}`);
+});
+
+const kRGB9E5UFloatCommonData = {
+  zero: /*        */{ encoded: 0b00000_000000000_000000000_000000000, rgb: [0, 0, 0] },
+  max: /*         */{ encoded: 0b11111_111111111_111111111_111111111, rgb: [65408, 65408, 65408] },
+  r1: /*          */{ encoded: 0b10000_000000000_000000000_100000000, rgb: [1, 0, 0] },
+  r2: /*          */{ encoded: 0b10001_000000000_000000000_100000000, rgb: [2, 0, 0] },
+  g1: /*          */{ encoded: 0b10000_000000000_100000000_000000000, rgb: [0, 1, 0] },
+  g2: /*          */{ encoded: 0b10001_000000000_100000000_000000000, rgb: [0, 2, 0] },
+  b1: /*          */{ encoded: 0b10000_100000000_000000000_000000000, rgb: [0, 0, 1] },
+  b2: /*          */{ encoded: 0b10001_100000000_000000000_000000000, rgb: [0, 0, 2] },
+  r1_g1_b1: /*    */{ encoded: 0b10000_100000000_100000000_100000000, rgb: [1, 1, 1] },
+  r1_g2_b1: /*    */{ encoded: 0b10001_010000000_100000000_010000000, rgb: [1, 2, 1] },
+  r4_g8_b2: /*    */{ encoded: 0b10011_001000000_100000000_010000000, rgb: [4, 8, 2] },
+  r1_g2_b3: /*    */{ encoded: 0b10001_110000000_100000000_010000000, rgb: [1, 2, 3] },
+  r128_g3968_b65408: { encoded: 0b11111_111111111_000011111_000000001, rgb: [128, 3968, 65408] },
+  r128_g1984_b30016: { encoded: 0b11110_111010101_000011111_000000010, rgb: [128, 1984, 30016] },
+  r_5_g_25_b_8: /**/{ encoded: 0b10011_100000000_000001000_000010000, rgb: [0.5, 0.25, 8] }
+};
+
+const kPackRGB9E5UFloatData = mergeParams(kRGB9E5UFloatCommonData, {
+  clamp_max: /*   */{ encoded: 0b11111_111111111_111111111_111111111, rgb: [1e7, 1e10, 1e50] },
+  subnormals: /*  */{ encoded: 0b00000_000000000_000000000_000000000, rgb: [1e-10, 1e-20, 1e-30] },
+  r57423_g54_b3478: { encoded: 0b11111_000011011_000000000_111000001, rgb: [57423, 54, 3478] },
+  r6852_g3571_b2356: { encoded: 0b11100_010010011_011011111_110101100, rgb: [6852, 3571, 2356] },
+  r68312_g12_b8123: { encoded: 0b11111_000111111_000000000_111111111, rgb: [68312, 12, 8123] },
+  r7321_g846_b32: { encoded: 0b11100_000000010_000110101_111001010, rgb: [7321, 846, 32] }
+});
+
+function bits5_9_9_9(x) {
+  const s = (x >>> 0).toString(2).padStart(32, '0');
+  return `${s.slice(0, 5)}_${s.slice(5, 14)}_${s.slice(14, 23)}_${s.slice(23, 32)}`;
+}
+
+g.test('packRGB9E5UFloat').
+params((u) => u.combine('case', keysOf(kPackRGB9E5UFloatData))).
+fn((test) => {
+  const c = kPackRGB9E5UFloatData[test.params.case];
+  const got = packRGB9E5UFloat(c.rgb[0], c.rgb[1], c.rgb[2]);
+  const expect = c.encoded;
+
+  test.expect(
+  got === expect,
+  `packRGB9E5UFloat(${c.rgb}) returned ${bits5_9_9_9(got)}. Expected ${bits5_9_9_9(expect)}`);
+
+});
+
+g.test('unpackRGB9E5UFloat').
+params((u) => u.combine('case', keysOf(kRGB9E5UFloatCommonData))).
+fn((test) => {
+  const c = kRGB9E5UFloatCommonData[test.params.case];
+  const got = unpackRGB9E5UFloat(c.encoded);
+  const expect = c.rgb;
+
+  test.expect(
+  got.R === expect[0] && got.G === expect[1] && got.B === expect[2],
+  `unpackRGB9E5UFloat(${bits5_9_9_9(c.encoded)} ` +
+  `returned ${got.R},${got.G},${got.B}. Expected ${expect}`);
+
 });
 //# sourceMappingURL=conversion.spec.js.map
