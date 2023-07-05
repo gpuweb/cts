@@ -123,12 +123,26 @@ g.test('id_fp16')
   })
   .fn(t => {
     const code = `
-@id(1${t.params['ext']})
+@id(1${t.params.ext})
 override a = 4;
 
 @workgroup_size(1, 1, 1)
 @compute fn main() {}`;
-    t.expectCompileResult(t.params['ext'] === '', code);
+    t.expectCompileResult(t.params.ext === '', code);
+  });
+
+g.test('id_struct_member')
+  .desc(`Test validation of id with struct member`)
+  .params(u => u.combine('id', ['@id(1) override', '']))
+  .fn(t => {
+    const code = `
+struct S {
+  ${t.params.id} a: i32,
+}
+
+@workgroup_size(1, 1, 1)
+@compute fn main() {}`;
+    t.expectCompileResult(t.params.id === '', code);
   });
 
 g.test('id_non_override')
