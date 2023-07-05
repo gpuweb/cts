@@ -3478,6 +3478,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "id"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "interpolate"
     ]
   },
