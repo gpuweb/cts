@@ -453,6 +453,10 @@ bitLength,
 opt)
 {
   assert(bitLength <= 32);
+  const numericRange = opt.signed ?
+  { min: -(2 ** (bitLength - 1)), max: 2 ** (bitLength - 1) - 1 } :
+  { min: 0, max: 2 ** bitLength - 1 };
+  const maxUnsignedValue = 2 ** bitLength;
   const encode = applyEach(
   (n) => (assertInIntegerRange(n, bitLength, opt.signed), n),
   componentOrder);
@@ -461,6 +465,11 @@ opt)
   (n) => (assertInIntegerRange(n, bitLength, opt.signed), n),
   componentOrder);
 
+  const bitsToNumber = applyEach((n) => {
+    const decodedN = opt.signed ? n > numericRange.max ? n - maxUnsignedValue : n : n;
+    assertInIntegerRange(decodedN, bitLength, opt.signed);
+    return decodedN;
+  }, componentOrder);
 
   let bitsToULPFromZero;
   if (opt.signed) {
@@ -483,11 +492,9 @@ opt)
     packComponents(componentOrder, components, bitLength, dataType),
     unpackBits: (data) => unpackComponentsBits(componentOrder, data, bitLength),
     numberToBits: applyEach((v) => v & bitMask, componentOrder),
-    bitsToNumber: decode,
+    bitsToNumber,
     bitsToULPFromZero,
-    numericRange: opt.signed ?
-    { min: -(2 ** (bitLength - 1)), max: 2 ** (bitLength - 1) - 1 } :
-    { min: 0, max: 2 ** bitLength - 1 }
+    numericRange
   };
 }
 
