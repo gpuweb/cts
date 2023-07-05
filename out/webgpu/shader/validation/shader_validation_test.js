@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { ErrorWithExtra } from '../../../common/util/util.js';import { GPUTest } from '../../gpu_test.js';
+**/import { keysOf } from '../../../common/util/data_tables.js';import { ErrorWithExtra } from '../../../common/util/util.js';import { GPUTest } from '../../gpu_test.js';
+
 /**
  * Base fixture for WGSL shader validation tests.
  */
@@ -52,6 +53,57 @@ export class ShaderValidationTest extends GPUTest {
         }
       }
     });
+  }
+
+  /**
+   * Add a test expectation for whether a createComputePipeline call succeeds or not.
+   */
+  expectPipelineResult(args)
+
+
+
+
+
+
+
+
+  {
+    const phonies = [];
+
+    if (args.constants !== undefined) {
+      phonies.push(...keysOf(args.constants).map((c) => `_ = ${c};`));
+    }
+    if (args.reference !== undefined) {
+      phonies.push(...args.reference.map((c) => `_ = ${c};`));
+    }
+
+    const code =
+    args.code +
+    `
+@compute @workgroup_size(1)
+fn main() {
+  ${phonies.join('\n')}
+}`;
+
+    let shaderModule;
+    this.expectGPUError(
+    'validation',
+    () => {
+      shaderModule = this.device.createShaderModule({ code });
+    },
+    false);
+
+
+    this.expectGPUError(
+    'validation',
+    () => {
+      this.device.createComputePipeline({
+        layout: 'auto',
+        compute: { module: shaderModule, entryPoint: 'main', constants: args.constants }
+      });
+    },
+    !args.expectedResult);
+
   }
 
   /**

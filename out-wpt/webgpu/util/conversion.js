@@ -1296,14 +1296,73 @@ export function deserializeValue(data) {
 
 /** @returns if the Value is a float scalar type */
 export function isFloatValue(v) {
-  if (v instanceof Scalar) {
-    const s = v;
+  return isFloatType(v.type);
+}
+
+/**
+ * @returns if @p ty is an abstract numeric type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isAbstractType(ty) {
+  if (ty instanceof ScalarType) {
+    return ty.kind === 'abstract-float';
+  }
+  return false;
+}
+
+/**
+ * @returns if @p ty is a floating point type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isFloatType(ty) {
+  if (ty instanceof ScalarType) {
     return (
-      s.type.kind === 'abstract-float' ||
-      s.type.kind === 'f64' ||
-      s.type.kind === 'f32' ||
-      s.type.kind === 'f16'
+      ty.kind === 'abstract-float' || ty.kind === 'f64' || ty.kind === 'f32' || ty.kind === 'f16'
     );
   }
   return false;
+}
+
+/// All floating-point scalar and vector types
+export const kAllFloatScalarsAndVectors = [
+  TypeAbstractFloat,
+  TypeVec(2, TypeAbstractFloat),
+  TypeVec(3, TypeAbstractFloat),
+  TypeVec(4, TypeAbstractFloat),
+  TypeF32,
+  TypeVec(2, TypeF32),
+  TypeVec(3, TypeF32),
+  TypeVec(4, TypeF32),
+  TypeF16,
+  TypeVec(2, TypeF16),
+  TypeVec(3, TypeF16),
+  TypeVec(4, TypeF16),
+];
+
+/// All integer scalar and vector types
+export const kAllIntegerScalarsAndVectors = [
+  TypeI32,
+  TypeVec(2, TypeI32),
+  TypeVec(3, TypeI32),
+  TypeVec(4, TypeI32),
+  TypeU32,
+  TypeVec(2, TypeU32),
+  TypeVec(3, TypeU32),
+  TypeVec(4, TypeU32),
+];
+
+/** @returns the inner element type of the given type */
+export function elementType(t) {
+  if (t instanceof ScalarType) {
+    return t;
+  }
+  if (t instanceof VectorType) {
+    return t.elementType;
+  }
+  if (t instanceof MatrixType) {
+    return t.elementType;
+  }
+  return null;
 }

@@ -3214,6 +3214,46 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "acos"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "acosh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "asin"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "atanh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "atomics"
     ]
   },
@@ -3417,6 +3457,14 @@ export const listing = [
       "validation",
       "shader_io",
       "locations"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
+      "workgroup_size"
     ]
   },
   {
