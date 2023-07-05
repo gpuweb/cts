@@ -1831,3 +1831,340 @@ fn main() {
     }
     t.expectCompileResult(res, code);
   });
+
+const kFunctionCases = {
+  uniform_result: {
+    function: `fn foo() -> u32 {
+      return uniform_values[0];
+    }`,
+    call: `let call = foo();`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  nonuniform_result: {
+    function: `fn foo() -> u32 {
+      return nonuniform_values[0];
+    }`,
+    call: `let call = foo();`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  nonuniform_return_is_uniform_after_call: {
+    function: `fn foo() {
+      if nonuniform_values[0] > 0 {
+        return;
+      } else {
+        return;
+      }
+    }`,
+    call: `foo();`,
+    cond: `uniform_cond`,
+    uniform: true,
+  },
+  uniform_passthrough_parameter: {
+    function: `fn foo(x : u32) -> u32 {
+      return x;
+    }`,
+    call: `let call = foo(uniform_values[0]);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  nonuniform_passthrough_parameter: {
+    function: `fn foo(x : u32) -> u32 {
+      return x;
+    }`,
+    call: `let call = foo(nonuniform_values[0]);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  combined_parameters1: {
+    function: `fn foo(x : u32, y : u32) -> u32 {
+      return x + y;
+    }`,
+    call: `let call = foo(uniform_values[0], uniform_values[1]);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  combined_parameters2: {
+    function: `fn foo(x : u32, y : u32) -> u32 {
+      return x + y;
+    }`,
+    call: `let call = foo(nonuniform_values[0], uniform_values[1]);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  combined_parameters3: {
+    function: `fn foo(x : u32, y : u32) -> u32 {
+      return x + y;
+    }`,
+    call: `let call = foo(uniform_values[0], nonuniform_values[1]);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  combined_parameters4: {
+    function: `fn foo(x : u32, y : u32) -> u32 {
+      return x + y;
+    }`,
+    call: `let call = foo(nonuniform_values[0], nonuniform_values[1]);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  uniform_parameter_cf_after_nonuniform_expr: {
+    function: `fn foo(x : bool, y : vec4f) -> f32 {
+      return select(0, y.x, x);
+    }`,
+    call: `let call = foo(nonuniform_cond || uniform_cond, textureSample(t,s,vec2f(0,0)));`,
+    cond: `uniform_cond`,
+    uniform: true,
+  },
+  required_uniform_function_call_in_uniform_cf: {
+    function: `fn foo() -> vec4f {
+      return textureSample(t,s,vec2f(0,0));
+    }`,
+    call: `if uniform_cond {
+      let call = foo();
+    }`,
+    cond: `uniform_cond`,
+    uniform: true,
+  },
+  required_uniform_function_call_in_nonuniform_cf: {
+    function: `fn foo() -> vec4f {
+      return textureSample(t,s,vec2f(0,0));
+    }`,
+    call: `if nonuniform_cond {
+      let call = foo();
+    }`,
+    cond: `uniform_cond`,
+    uniform: false,
+  },
+  required_uniform_function_call_in_nonuniform_cf2: {
+    function: `@diagnostic(warning, derivative_uniformity)
+    fn foo() -> vec4f {
+      return textureSample(t,s,vec2f(0,0));
+    }`,
+    call: `if nonuniform_cond {
+      let call = foo();
+      let sample = textureSample(t,s,vec2f(0,0));
+    }`,
+    cond: `uniform_cond`,
+    uniform: false,
+  },
+  required_uniform_function_call_depends_on_uniform_param: {
+    function: `fn foo(x : bool) -> vec4f {
+      if x {
+        return textureSample(t,s,vec2f(0,0));
+      }
+      return vec4f(0);
+    }`,
+    call: `let call = foo(uniform_cond);`,
+    cond: `uniform_cond`,
+    uniform: true,
+  },
+  required_uniform_function_call_depends_on_nonuniform_param: {
+    function: `fn foo(x : bool) -> vec4f {
+      if x {
+        return textureSample(t,s,vec2f(0,0));
+      }
+      return vec4f(0);
+    }`,
+    call: `let call = foo(nonuniform_cond);`,
+    cond: `uniform_cond`,
+    uniform: false,
+  },
+  dpdx_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdx(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  dpdy_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdy(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  dpdxCoarse_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdxCoarse(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  dpdyCoarse_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdyCoarse(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  dpdxFine_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdxFine(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  dpdyFine_nonuniform_result: {
+    function: ``,
+    call: `let call = dpdyFine(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  fwidth_nonuniform_result: {
+    function: ``,
+    call: `let call = fwidth(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  fwidthCoarse_nonuniform_result: {
+    function: ``,
+    call: `let call = fwidthCoarse(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  fwidthFine_nonuniform_result: {
+    function: ``,
+    call: `let call = fwidthFine(1);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  textureSample_nonuniform_result: {
+    function: ``,
+    call: `let call = textureSample(t,s,vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: false,
+  },
+  textureSampleBias_nonuniform_result: {
+    function: ``,
+    call: `let call = textureSampleBias(t,s,vec2f(0,0), 0);`,
+    cond: `call.x > 0`,
+    uniform: false,
+  },
+  textureSampleCompare_nonuniform_result: {
+    function: ``,
+    call: `let call = textureSampleCompare(td,sd,vec2f(0,0), 0);`,
+    cond: `call > 0`,
+    uniform: false,
+  },
+  textureDimensions_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureDimensions(t);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureGather_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureGather(0,t,s,vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureGatherCompare_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureGatherCompare(td,sd,vec2f(0,0), 0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureLoad_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureLoad(t,vec2u(0,0),0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureNumLayers_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumLayers(ta);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureNumLevels_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumLevels(t);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureNumSamples_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureNumSamples(ts);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureSampleLevel_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleLevel(t,s,vec2f(0,0),0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureSampleGrad_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleGrad(t,s,vec2f(0,0),vec2f(0,0),vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  textureSampleCompareLevel_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleCompareLevel(td,sd,vec2f(0,0), 0);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  textureSampleBaseClampToEdge_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = textureSampleBaseClampToEdge(t,s,vec2f(0,0));`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+  min_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = min(0,0);`,
+    cond: `call > 0`,
+    uniform: true,
+  },
+  value_constructor_uniform_input_uniform_result: {
+    function: ``,
+    call: `let call = vec2u(0,0);`,
+    cond: `call.x > 0`,
+    uniform: true,
+  },
+};
+
+g.test('functions')
+  .desc(`Test uniformity of function calls (non-pointer parameters)`)
+  .params(u => u.combine('case', keysOf(kFunctionCases)))
+  .fn(t => {
+    const func_case = kFunctionCases[t.params.case];
+    const code = `
+@group(0) @binding(0)
+var t : texture_2d<f32>;
+@group(0) @binding(1)
+var s : sampler;
+@group(0) @binding(2)
+var td : texture_depth_2d;
+@group(0) @binding(3)
+var sd : sampler_comparison;
+@group(0) @binding(4)
+var ta : texture_2d_array<f32>;
+@group(0) @binding(5)
+var ts : texture_multisampled_2d<f32>;
+
+const uniform_cond = true;
+var<private> nonuniform_cond = true;
+
+@group(1) @binding(0)
+var<storage> uniform_values : array<u32, 4>;
+@group(1) @binding(1)
+var<storage, read_write> nonuniform_values : array<u32, 4>;
+
+${func_case.function}
+
+@fragment
+fn main() {
+  ${func_case.call}
+
+  if ${func_case.cond} {
+    let tmp = textureSample(t,s,vec2f(0,0));
+  }
+}
+`;
+
+    const res = func_case.uniform;
+    if (!res) {
+      t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+    }
+    t.expectCompileResult(res, code);
+  });
