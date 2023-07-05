@@ -5,9 +5,11 @@ import { Case, IntervalFilter } from '../shader/execution/expression/expression.
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
+  elementType,
   f16,
   f32,
   f64,
+  isFloatType,
   reinterpretF16AsU16,
   reinterpretF32AsU32,
   reinterpretF64AsU32s,
@@ -17,6 +19,7 @@ import {
   Scalar,
   toMatrix,
   toVector,
+  Type,
   u32,
 } from './conversion.js';
 import {
@@ -613,7 +616,8 @@ interface FPConstants {
   };
 }
 
-abstract class FPTraits {
+/** Abstract base class for all floating-point traits */
+export abstract class FPTraits {
   public readonly kind: FPKind;
   protected constructor(k: FPKind) {
     this.kind = k;
@@ -4962,3 +4966,35 @@ export const FP = {
   f16: new F16Traits(),
   abstract: new FPAbstractTraits(),
 };
+
+/** @returns the floating-point traits for the element type of @p type */
+export function fpTraitsFor(type: Type): FPTraits {
+  const elTy = elementType(type);
+  switch (elTy?.kind) {
+    case 'abstract-float':
+      return FP.abstract;
+    case 'f32':
+      return FP.f32;
+    case 'f16':
+      return FP.f16;
+    default:
+      unreachable(`unsupported type: ${elTy}`);
+  }
+}
+
+/**
+ * @returns true if the value @p value is representable with the element type of @p type
+ */
+export function isRepresentable(value: number, type: Type) {
+  if (!Number.isFinite(value)) {
+    return false;
+  }
+  const elTy = elementType(type);
+  if (elTy !== null) {
+    if (isFloatType(elTy)) {
+      const constants = fpTraitsFor(type).constants();
+      return value >= constants.negative.min && value <= constants.positive.max;
+    }
+  }
+  assert(false, `isRepresentable() is not yet implemented for type ${elTy}`);
+}

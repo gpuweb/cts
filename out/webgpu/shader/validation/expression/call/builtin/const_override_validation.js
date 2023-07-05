@@ -24,6 +24,35 @@ export const kMinusOneToTwo = [
 2.0];
 
 
+/// An array of values ranging from -3π to 3π.
+export const kMinus3PiTo3Pi = [
+-3 * Math.PI,
+-2.999 * Math.PI,
+-2.5 * Math.PI,
+-2.001 * Math.PI,
+-2.0 * Math.PI,
+-1.999 * Math.PI,
+-1.5 * Math.PI,
+-1.001 * Math.PI,
+-1.0 * Math.PI,
+-0.999 * Math.PI,
+-0.5 * Math.PI,
+-0.001,
+0,
+0.001,
+0.5 * Math.PI,
+0.999 * Math.PI,
+1.0 * Math.PI,
+1.001 * Math.PI,
+1.5 * Math.PI,
+1.999 * Math.PI,
+2.0 * Math.PI,
+2.5 * Math.PI,
+2.001 * Math.PI,
+2.999 * Math.PI,
+3 * Math.PI];
+
+
 /// The evaluation stages to test
 export const kConstantAndOverrideStages = ['constant', 'override'];
 
