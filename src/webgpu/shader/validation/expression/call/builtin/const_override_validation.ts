@@ -1,3 +1,4 @@
+import { assert } from '../../../../../../common/util/util.js';
 import {
   Type,
   TypeF16,
@@ -26,6 +27,19 @@ export const kMinusOneToTwo = [
 /// The evaluation stages to test
 export const kConstantAndOverrideStages = ['constant', 'override'] as const;
 
+export type ConstantOrOverrideStage = 'constant' | 'override';
+
+/**
+ * @returns true if evaluation stage @p stage supports expressions of type @p.
+ */
+export function stageSupportsType(stage: ConstantOrOverrideStage, type: Type) {
+  if (stage === 'override' && isAbstractType(elementType(type)!)) {
+    // Abstract numerics are concretized before being used in an override expression.
+    return false;
+  }
+  return true;
+}
+
 /**
  * Runs a validation test to check that evaluation of @p builtin either evaluates with or without
  * error at shader creation time or pipeline creation time.
@@ -42,7 +56,7 @@ export function validateConstOrOverrideBuiltinEval(
   expectedResult: boolean,
   value: number,
   type: Type,
-  stage: 'constant' | 'override'
+  stage: ConstantOrOverrideStage
 ) {
   const elTy = elementType(type)!;
   const enables = elTy === TypeF16 ? 'enable f16;' : '';
@@ -65,10 +79,11 @@ const v = ${builtin}(${conversion}(${value}));`
       break;
     }
     case 'override': {
+      assert(!isAbstractType(elTy));
       t.expectPipelineResult({
         expectedResult,
         code: `${enables}
-override o : ${isAbstractType(elTy) ? 'f32' : elTy.toString()};
+override o : ${elTy.toString()};
 var<private> v = ${builtin}(${conversion}(o));`,
         constants: { o: value },
         reference: ['v'],
