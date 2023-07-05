@@ -230,3 +230,60 @@ fn main() {
 }`;
     t.expectCompileResult(false, code);
   });
+
+g.test('valid_vec2h')
+  .specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin')
+  .desc(`Check valid vec2<f16> bitcasts`)
+  .params(u =>
+    u
+      .combine('other_type', ['u32', 'i32', 'f32'] as const)
+      .combine('type', ['vec2<f16>', 'vec2h'] as const)
+      .combine('direction', ['to', 'from'] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(t => {
+    const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+    const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+    const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+    t.expectCompileResult(true, code);
+  });
+
+g.test('valid_vec4h')
+  .specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin')
+  .desc(`Check valid vec2<f16> bitcasts`)
+  .params(u =>
+    u
+      .combine('other_type', [
+        'vec2<u32>',
+        'vec2u',
+        'vec2<i32>',
+        'vec2i',
+        'vec2<f32>',
+        'vec2f',
+      ] as const)
+      .combine('type', ['vec4<f16>', 'vec4h'] as const)
+      .combine('direction', ['to', 'from'] as const)
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(t => {
+    const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+    const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+    const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+    t.expectCompileResult(true, code);
+  });
