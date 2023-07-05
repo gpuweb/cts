@@ -70,7 +70,7 @@ export const TexelFormats = [
 /**
  * Generate a bunch types (vec, mat, sized/unsized array) for testing.
  */
-export function* generateTypes({ storageClass, baseType, containerType, isAtomic = false }) {
+export function* generateTypes({ addressSpace, baseType, containerType, isAtomic = false }) {
   const scalarInfo = kScalarTypeInfo[baseType];
   if (isAtomic) {
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
@@ -78,7 +78,7 @@ export function* generateTypes({ storageClass, baseType, containerType, isAtomic
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
   // Storage and uniform require host-sharable types.
-  if (storageClass === 'storage' || storageClass === 'uniform') {
+  if (addressSpace === 'storage' || addressSpace === 'uniform') {
     assert(isHostSharable(baseType), 'type ' + baseType.toString() + ' is not host sharable');
   }
 
@@ -128,7 +128,7 @@ export function* generateTypes({ storageClass, baseType, containerType, isAtomic
         ? {
             alignment: scalarInfo.layout.alignment,
             size:
-              storageClass === 'uniform'
+              addressSpace === 'uniform'
                 ? // Uniform storage class must have array elements aligned to 16.
                   kArrayLength *
                   arrayStride({
@@ -141,7 +141,7 @@ export function* generateTypes({ storageClass, baseType, containerType, isAtomic
     };
 
     // Sized
-    if (storageClass === 'uniform') {
+    if (addressSpace === 'uniform') {
       yield {
         type: `array<vec4<${scalarType}>,${kArrayLength}>`,
         _kTypeInfo: arrayTypeInfo,
@@ -150,7 +150,7 @@ export function* generateTypes({ storageClass, baseType, containerType, isAtomic
       yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
     }
     // Unsized
-    if (storageClass === 'storage') {
+    if (addressSpace === 'storage') {
       yield { type: `array<${scalarType}>`, _kTypeInfo: arrayTypeInfo };
     }
   }
@@ -170,8 +170,8 @@ export function* generateTypes({ storageClass, baseType, containerType, isAtomic
 /** Atomic access requires scalar/array container type and storage/workgroup memory. */
 export function supportsAtomics(p) {
   return (
-    ((p.storageClass === 'storage' && p.storageMode === 'read_write') ||
-      p.storageClass === 'workgroup') &&
+    ((p.addressSpace === 'storage' && p.storageMode === 'read_write') ||
+      p.addressSpace === 'workgroup') &&
     (p.containerType === 'scalar' || p.containerType === 'array')
   );
 }
@@ -185,7 +185,7 @@ export function* supportedScalarTypes(p) {
     if (p.isAtomic && !info.supportsAtomics) continue;
 
     // Storage and uniform require host-sharable types.
-    const isHostShared = p.storageClass === 'storage' || p.storageClass === 'uniform';
+    const isHostShared = p.addressSpace === 'storage' || p.addressSpace === 'uniform';
     if (isHostShared && info.layout === undefined) continue;
 
     yield scalarType;

@@ -56,9 +56,9 @@ params((u) =>
 u
 // Only workgroup, function, and private variables can be declared without data bound to them.
 // The implementation's shader translator should ensure these values are initialized.
-.combine('storageClass', ['workgroup', 'private', 'function']).
-expand('workgroupSize', ({ storageClass }) => {
-  switch (storageClass) {
+.combine('addressSpace', ['workgroup', 'private', 'function']).
+expand('workgroupSize', ({ addressSpace }) => {
+  switch (addressSpace) {
     case 'workgroup':
       return [
       [1, 1, 1],
@@ -293,10 +293,10 @@ fn((t) => {
 
   }('TestType', t.params._type);
 
-  switch (t.params.storageClass) {
+  switch (t.params.addressSpace) {
     case 'workgroup':
     case 'private':
-      moduleScope += `\nvar<${t.params.storageClass}> testVar: ${typeDecl};`;
+      moduleScope += `\nvar<${t.params.addressSpace}> testVar: ${typeDecl};`;
       break;
     case 'function':
       functionScope += `\nvar testVar: ${typeDecl};`;
@@ -395,7 +395,7 @@ fn((t) => {
       }
     `;
 
-  if (t.params.storageClass === 'workgroup') {
+  if (t.params.addressSpace === 'workgroup') {
     // Populate the maximum amount of workgroup memory with known values to
     // ensure initialization overrides in another shader.
     const wg_memory_limits = t.device.limits.maxComputeWorkgroupStorageSize;
