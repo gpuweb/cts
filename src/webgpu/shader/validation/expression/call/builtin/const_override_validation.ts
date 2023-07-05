@@ -1,5 +1,4 @@
-import { assert, unreachable } from '../../../../../../common/util/util.js';
-import { kValue } from '../../../../../util/constants.js';
+import { assert } from '../../../../../../common/util/util.js';
 import {
   Type,
   TypeF16,
