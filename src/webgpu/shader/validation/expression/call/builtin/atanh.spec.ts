@@ -15,6 +15,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   kConstantAndOverrideStages,
   kMinusOneToTwo,
+  stageSupportsType,
   validateConstOrOverrideBuiltinEval,
 } from './const_override_validation.js';
 
@@ -32,6 +33,7 @@ Validates that constant evaluation and override evaluation of atanh() rejects in
     u
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', kAllFloatScalarsAndVectors)
+      .filter(u => stageSupportsType(u.stage, u.type))
       .combine('value', kMinusOneToTwo)
   )
   .beforeAllSubcases(t => {
