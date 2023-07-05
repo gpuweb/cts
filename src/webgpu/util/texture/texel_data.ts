@@ -453,6 +453,10 @@ function makeIntegerInfo(
   opt: { signed: boolean }
 ): TexelRepresentationInfo {
   assert(bitLength <= 32);
+  const numericRange = opt.signed
+    ? { min: -(2 ** (bitLength - 1)), max: 2 ** (bitLength - 1) - 1 }
+    : { min: 0, max: 2 ** bitLength - 1 };
+  const maxUnsignedValue = 2 ** bitLength;
   const encode = applyEach(
     (n: number) => (assertInIntegerRange(n, bitLength, opt.signed), n),
     componentOrder
@@ -461,6 +465,11 @@ function makeIntegerInfo(
     (n: number) => (assertInIntegerRange(n, bitLength, opt.signed), n),
     componentOrder
   );
+  const bitsToNumber = applyEach((n: number) => {
+    const decodedN = opt.signed ? (n > numericRange.max ? n - maxUnsignedValue : n) : n;
+    assertInIntegerRange(decodedN, bitLength, opt.signed);
+    return decodedN;
+  }, componentOrder);
 
   let bitsToULPFromZero: ComponentMapFn;
   if (opt.signed) {
@@ -483,11 +492,9 @@ function makeIntegerInfo(
       packComponents(componentOrder, components, bitLength, dataType),
     unpackBits: (data: Uint8Array) => unpackComponentsBits(componentOrder, data, bitLength),
     numberToBits: applyEach(v => v & bitMask, componentOrder),
-    bitsToNumber: decode,
+    bitsToNumber,
     bitsToULPFromZero,
-    numericRange: opt.signed
-      ? { min: -(2 ** (bitLength - 1)), max: 2 ** (bitLength - 1) - 1 }
-      : { min: 0, max: 2 ** bitLength - 1 },
+    numericRange,
   };
 }
 
