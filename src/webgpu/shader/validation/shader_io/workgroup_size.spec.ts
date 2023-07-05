@@ -73,6 +73,13 @@ const kWorkgroupSizeTests = {
     pass: true,
   },
 
+  const_expr: {
+    src: `const a = 4;
+    const b = 5;
+    @workgroup_size(a, b, a + b)`,
+    pass: true,
+  },
+
   override: {
     src: `@id(42) override block_width = 12u;
 @workgroup_size(block_width)`,
@@ -94,6 +101,13 @@ const kWorkgroupSizeTests = {
   },
   trailing_comma_z: {
     src: `@workgroup_size(8, 8, 8,)`,
+    pass: true,
+  },
+
+  override_expr: {
+    src: `override a = 5;
+    override b = 6;
+    @workgroup_size(a, b, a + b)`,
     pass: true,
   },
 
