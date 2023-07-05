@@ -1,5 +1,6 @@
+const builtin = 'acosh';
 export const description = `
-Validation tests for the acosh() builtin.
+Validation tests for the ${builtin}() builtin.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -21,12 +22,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const builtin = 'acosh';
-
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of acosh() rejects invalid values
+Validates that constant evaluation and override evaluation of ${builtin}() rejects invalid values
 `
   )
   .params(u =>
@@ -53,10 +52,10 @@ Validates that constant evaluation and override evaluation of acosh() rejects in
     );
   });
 
-g.test('reject_integer_arguments')
+g.test('integer_argument')
   .desc(
     `
-Validates that scalar and vector integer arguments are rejected
+Validates that scalar and vector integer arguments are rejected by ${builtin}()
 `
   )
   .params(u => u.combine('type', [TypeF32, ...kAllIntegerScalarsAndVectors]))
