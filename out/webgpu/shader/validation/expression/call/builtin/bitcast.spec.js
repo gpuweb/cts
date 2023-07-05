@@ -141,5 +141,150 @@ Can't cast numeric type to vec3<f16> because it is 48 bits wide
 and no other type is that size.
 `).
 
-unimplemented();
+params((u) =>
+u.
+combine('other_type', [
+'bool',
+'u32',
+'i32',
+'f32',
+'vec2<bool>',
+'vec3<bool>',
+'vec4<bool>',
+'vec2u',
+'vec3u',
+'vec4u',
+'vec2i',
+'vec3i',
+'vec4i',
+'vec2f',
+'vec3f',
+'vec4f',
+'vec2h',
+'vec4h']).
+
+combine('direction', ['to', 'from']).
+combine('type', ['vec3<f16>', 'vec3h'])).
+
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+  const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+  const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+  t.expectCompileResult(false, code);
+});
+
+g.test('bad_to_f16').
+specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
+desc(
+`
+Can't cast non-16-bit types to f16 because it is 16 bits wide
+and no other type is that size.
+`).
+
+params((u) =>
+u.
+combine('other_type', [
+'bool',
+'u32',
+'i32',
+'f32',
+'vec2<bool>',
+'vec3<bool>',
+'vec4<bool>',
+'vec2u',
+'vec3u',
+'vec4u',
+'vec2i',
+'vec3i',
+'vec4i',
+'vec2f',
+'vec3f',
+'vec4f',
+'vec2h',
+'vec3h',
+'vec4h']).
+
+combine('direction', ['to', 'from'])).
+
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  const src_type = t.params.direction === 'to' ? 'f16' : t.params.other_type;
+  const dst_type = t.params.direction === 'from' ? 'f16' : t.params.other_type;
+  const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+  t.expectCompileResult(false, code);
+});
+
+g.test('valid_vec2h').
+specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
+desc(`Check valid vec2<f16> bitcasts`).
+params((u) =>
+u.
+combine('other_type', ['u32', 'i32', 'f32']).
+combine('type', ['vec2<f16>', 'vec2h']).
+combine('direction', ['to', 'from'])).
+
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+  const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+  const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+  t.expectCompileResult(true, code);
+});
+
+g.test('valid_vec4h').
+specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
+desc(`Check valid vec2<f16> bitcasts`).
+params((u) =>
+u.
+combine('other_type', [
+'vec2<u32>',
+'vec2u',
+'vec2<i32>',
+'vec2i',
+'vec2<f32>',
+'vec2f']).
+
+combine('type', ['vec4<f16>', 'vec4h']).
+combine('direction', ['to', 'from'])).
+
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  const src_type = t.params.direction === 'to' ? t.params.type : t.params.other_type;
+  const dst_type = t.params.direction === 'from' ? t.params.type : t.params.other_type;
+  const code = `
+enable f16;
+@fragment
+fn main() {
+  var src : ${src_type};
+  let dst = bitcast<${dst_type}>(src);
+}`;
+  t.expectCompileResult(true, code);
+});
 //# sourceMappingURL=bitcast.spec.js.map
