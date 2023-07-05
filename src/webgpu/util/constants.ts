@@ -38,7 +38,6 @@ export const kBit = {
         sixth: BigInt(0x3fe0_c152_382d_7366n),
       },
       e: BigInt(0x4005_bf0a_8b14_5769n),
-      max_ulp: BigInt(0x7ca0_0000_0000_0000n),
     },
     negative: {
       max: BigInt(0x8010_0000_0000_0000n),
@@ -69,6 +68,7 @@ export const kBit = {
       positive: BigInt(0x7ff0_0000_0000_0000n),
       negative: BigInt(0xfff0_0000_0000_0000n),
     },
+    max_ulp: BigInt(0x7ca0_0000_0000_0000n),
   },
 
   // Limits of f32
@@ -88,7 +88,6 @@ export const kBit = {
         sixth: 0x3f06_0a92,
       },
       e: 0x402d_f854,
-      max_ulp: 0x7380_0000,
     },
     negative: {
       max: 0x8080_0000,
@@ -119,6 +118,7 @@ export const kBit = {
       positive: 0x7f80_0000,
       negative: 0xff80_0000,
     },
+    max_ulp: 0x7380_0000,
   },
 
   // Limits of f16
@@ -138,7 +138,6 @@ export const kBit = {
         sixth: 0x3830,
       },
       e: 0x416f,
-      max_ulp: 0x5000,
     },
     negative: {
       max: 0x8400,
@@ -169,6 +168,7 @@ export const kBit = {
       positive: 0x7c00,
       negative: 0xfc00,
     },
+    max_ulp: 0x5000,
   },
 
   // 32-bit representation of power(2, n) n = {-31, ..., 31}
@@ -391,7 +391,6 @@ export const kValue = {
         sixth: reinterpretU64AsF64(kBit.f64.positive.pi.sixth),
       },
       e: reinterpretU64AsF64(kBit.f64.positive.e),
-      max_ulp: reinterpretU64AsF64(kBit.f64.positive.max_ulp),
     },
     negative: {
       max: reinterpretU64AsF64(kBit.f64.negative.max),
@@ -422,6 +421,7 @@ export const kValue = {
       positive: reinterpretU64AsF64(kBit.f64.infinity.positive),
       negative: reinterpretU64AsF64(kBit.f64.infinity.negative),
     },
+    max_ulp: reinterpretU64AsF64(kBit.f64.max_ulp),
   },
 
   // Limits of f32
@@ -441,7 +441,6 @@ export const kValue = {
         sixth: reinterpretU32AsF32(kBit.f32.positive.pi.sixth),
       },
       e: reinterpretU32AsF32(kBit.f32.positive.e),
-      max_ulp: reinterpretU32AsF32(kBit.f32.positive.max_ulp),
       // The positive pipeline-overridable constant with the smallest magnitude
       // which when cast to f32 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
@@ -496,6 +495,8 @@ export const kValue = {
       positive: reinterpretU32AsF32(kBit.f32.infinity.positive),
       negative: reinterpretU32AsF32(kBit.f32.infinity.negative),
     },
+    max_ulp: reinterpretU32AsF32(kBit.f32.max_ulp),
+    emax: 127,
   },
 
   // Limits of i16
@@ -533,7 +534,6 @@ export const kValue = {
         sixth: reinterpretU16AsF16(kBit.f16.positive.pi.sixth),
       },
       e: reinterpretU16AsF16(kBit.f16.positive.e),
-      max_ulp: reinterpretU16AsF16(kBit.f16.positive.max_ulp),
       // The positive pipeline-overridable constant with the smallest magnitude
       // which when cast to f16 will produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
@@ -588,6 +588,8 @@ export const kValue = {
       positive: reinterpretU16AsF16(kBit.f16.infinity.positive),
       negative: reinterpretU16AsF16(kBit.f16.infinity.negative),
     },
+    max_ulp: reinterpretU16AsF16(kBit.f16.max_ulp),
+    emax: 15,
   },
 
   // Limits of i8

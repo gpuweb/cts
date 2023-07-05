@@ -350,7 +350,7 @@ export function oneULPF64(target, mode = 'flush') {
   target === Number.NEGATIVE_INFINITY ||
   target <= kValue.f64.negative.min)
   {
-    return kValue.f64.positive.max_ulp;
+    return kValue.f64.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
@@ -391,7 +391,7 @@ export function oneULPF32(target, mode = 'flush') {
   target === Number.NEGATIVE_INFINITY ||
   target <= kValue.f32.negative.min)
   {
-    return kValue.f32.positive.max_ulp;
+    return kValue.f32.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
@@ -437,7 +437,7 @@ export function oneULPF16(target, mode = 'flush') {
   target === Number.NEGATIVE_INFINITY ||
   target <= kValue.f16.negative.min)
   {
-    return kValue.f16.positive.max_ulp;
+    return kValue.f16.max_ulp;
   }
 
   // ulp(x) is min(after - before), where
@@ -496,40 +496,60 @@ export function correctlyRoundedF64(n) {
  * This function does not consider flushing mode, so subnormals are maintained.
  * The caller is responsible to flushing before and after as appropriate.
  *
- * Out of range values return the appropriate infinity and edge value.
+ * Out of bounds values need to consider how they interact with the overflow
+ * rules.
+ *  * If a value is OOB but not too far out, an implementation may choose to round
+ * to nearest finite value or the correct infinity. This boundary is at
+ * 2^(f32.emax + 1) and -(2^(f32.emax + 1)) respectively.
+ * Values that are at or beyond these limits must be rounded towards the
+ * appropriate infinity.
  *
  * @param n number to be quantized
  * @returns all of the acceptable roundings for quantizing to 32-bits in
  *          ascending order.
  */
 export function correctlyRoundedF32(n) {
-  assert(!Number.isNaN(n), `correctlyRoundedF32 not defined for NaN`);
-  // Above f32 range
-  if (n === Number.POSITIVE_INFINITY || n > kValue.f32.positive.max) {
-    return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
-  }
-
-  // Below f32 range
-  if (n === Number.NEGATIVE_INFINITY || n < kValue.f32.negative.min) {
-    return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
-  }
-
-  const n_32 = new Float32Array([n])[0];
-  const converted = n_32;
-  if (n === converted) {
-    // n is precisely expressible as a f32, so should not be rounded
+  if (Number.isNaN(n)) {
     return [n];
   }
 
-  if (converted > n) {
-    // n_32 rounded towards +inf, so is after n
-    const other = nextAfterF32(n_32, 'negative', 'no-flush');
-    return [other, converted];
-  } else {
-    // n_32 rounded towards -inf, so is before n
-    const other = nextAfterF32(n_32, 'positive', 'no-flush');
-    return [converted, other];
+  // Greater than or equal to the upper overflow boundry
+  if (n >= 2 ** (kValue.f32.emax + 1)) {
+    return [Number.POSITIVE_INFINITY];
   }
+
+  // OOB, but less than the upper overflow boundary
+  if (n > kValue.f32.positive.max) {
+    return [kValue.f32.positive.max, Number.POSITIVE_INFINITY];
+  }
+
+  // f32 finite
+  if (n <= kValue.f32.positive.max && n >= kValue.f32.negative.min) {
+    const n_32 = new Float32Array([n])[0];
+    const converted = n_32;
+    if (n === converted) {
+      // n is precisely expressible as a f32, so should not be rounded
+      return [n];
+    }
+
+    if (converted > n) {
+      // n_32 rounded towards +inf, so is after n
+      const other = nextAfterF32(n_32, 'negative', 'no-flush');
+      return [other, converted];
+    } else {
+      // n_32 rounded towards -inf, so is before n
+      const other = nextAfterF32(n_32, 'positive', 'no-flush');
+      return [converted, other];
+    }
+  }
+
+  // OOB, but greater the lower overflow boundary
+  if (n > -(2 ** (kValue.f32.emax + 1))) {
+    return [Number.NEGATIVE_INFINITY, kValue.f32.negative.min];
+  }
+
+  // Less than or equal to the lower overflow boundary
+  return [Number.NEGATIVE_INFINITY];
 }
 
 /**
@@ -545,40 +565,60 @@ export function correctlyRoundedF32(n) {
  * This function does not consider flushing mode, so subnormals are maintained.
  * The caller is responsible to flushing before and after as appropriate.
  *
- * Out of range values return the appropriate infinity and edge value.
+ * Out of bounds values need to consider how they interact with the overflow
+ * rules.
+ *  * If a value is OOB but not too far out, an implementation may choose to round
+ * to nearest finite value or the correct infinity. This boundary is at
+ * 2^(f16.emax + 1) and -(2^(f16.emax + 1)) respectively.
+ * Values that are at or beyond these limits must be rounded towards the
+ * appropriate infinity.
  *
  * @param n number to be quantized
  * @returns all of the acceptable roundings for quantizing to 16-bits in
  *          ascending order.
  */
 export function correctlyRoundedF16(n) {
-  assert(!Number.isNaN(n), `correctlyRoundedF16 not defined for NaN`);
-  // Above f16 range
-  if (n === Number.POSITIVE_INFINITY || n > kValue.f16.positive.max) {
-    return [kValue.f16.positive.max, Number.POSITIVE_INFINITY];
-  }
-
-  // Below f16 range
-  if (n === Number.NEGATIVE_INFINITY || n < kValue.f16.negative.min) {
-    return [Number.NEGATIVE_INFINITY, kValue.f16.negative.min];
-  }
-
-  const n_16 = new Float16Array([n])[0];
-  const converted = n_16;
-  if (n === converted) {
-    // n is precisely expressible as a f16, so should not be rounded
+  if (Number.isNaN(n)) {
     return [n];
   }
 
-  if (converted > n) {
-    // n_16 rounded towards +inf, so is after n
-    const other = nextAfterF16(n_16, 'negative', 'no-flush');
-    return [other, converted];
-  } else {
-    // n_16 rounded towards -inf, so is before n
-    const other = nextAfterF16(n_16, 'positive', 'no-flush');
-    return [converted, other];
+  // Greater than or equal to the upper overflow boundry
+  if (n >= 2 ** (kValue.f16.emax + 1)) {
+    return [Number.POSITIVE_INFINITY];
   }
+
+  // OOB, but less than the upper overflow boundary
+  if (n > kValue.f16.positive.max) {
+    return [kValue.f16.positive.max, Number.POSITIVE_INFINITY];
+  }
+
+  // f16 finite
+  if (n <= kValue.f16.positive.max && n >= kValue.f16.negative.min) {
+    const n_16 = new Float16Array([n])[0];
+    const converted = n_16;
+    if (n === converted) {
+      // n is precisely expressible as a f16, so should not be rounded
+      return [n];
+    }
+
+    if (converted > n) {
+      // n_16 rounded towards +inf, so is after n
+      const other = nextAfterF16(n_16, 'negative', 'no-flush');
+      return [other, converted];
+    } else {
+      // n_16 rounded towards -inf, so is before n
+      const other = nextAfterF16(n_16, 'positive', 'no-flush');
+      return [converted, other];
+    }
+  }
+
+  // OOB, but greater the lower overflow boundary
+  if (n > -(2 ** (kValue.f16.emax + 1))) {
+    return [Number.NEGATIVE_INFINITY, kValue.f16.negative.min];
+  }
+
+  // Less than or equal to the lower overflow boundary
+  return [Number.NEGATIVE_INFINITY];
 }
 
 /**

@@ -939,10 +939,16 @@ paramsSubcasesOnly(
 
 [
 // Edge Cases
-{ value: kValue.f32.infinity.positive, expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
-{ value: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
 { value: kValue.f32.positive.max, expected: [kValue.f32.positive.max] },
 { value: kValue.f32.negative.min, expected: [kValue.f32.negative.min] },
+{ value: kValue.f32.positive.max + oneULPF64(kValue.f32.positive.max), expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+{ value: kValue.f32.negative.min - oneULPF64(kValue.f32.negative.min), expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ value: 2 ** (kValue.f32.emax + 1) - oneULPF64(kValue.f32.positive.max), expected: [kValue.f32.positive.max, Number.POSITIVE_INFINITY] },
+{ value: -(2 ** (kValue.f32.emax + 1)) + oneULPF64(kValue.f32.positive.max), expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
+{ value: 2 ** (kValue.f32.emax + 1), expected: [Number.POSITIVE_INFINITY] },
+{ value: -(2 ** (kValue.f32.emax + 1)), expected: [Number.NEGATIVE_INFINITY] },
+{ value: kValue.f32.infinity.positive, expected: [Number.POSITIVE_INFINITY] },
+{ value: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY] },
 
 // 32-bit subnormals
 { value: kValue.f32.subnormal.positive.min, expected: [kValue.f32.subnormal.positive.min] },
@@ -994,10 +1000,16 @@ paramsSubcasesOnly(
 
 [
 // Edge Cases
-{ value: kValue.f16.infinity.positive, expected: [kValue.f16.positive.max, Number.POSITIVE_INFINITY] },
-{ value: kValue.f16.infinity.negative, expected: [Number.NEGATIVE_INFINITY, kValue.f16.negative.min] },
 { value: kValue.f16.positive.max, expected: [kValue.f16.positive.max] },
 { value: kValue.f16.negative.min, expected: [kValue.f16.negative.min] },
+{ value: kValue.f16.positive.max + oneULPF64(kValue.f16.positive.max), expected: [kValue.f16.positive.max, Number.POSITIVE_INFINITY] },
+{ value: kValue.f16.negative.min - oneULPF64(kValue.f16.negative.min), expected: [Number.NEGATIVE_INFINITY, kValue.f16.negative.min] },
+{ value: 2 ** (kValue.f16.emax + 1) - oneULPF64(kValue.f16.positive.max), expected: [kValue.f16.positive.max, Number.POSITIVE_INFINITY] },
+{ value: -(2 ** (kValue.f16.emax + 1)) + oneULPF64(kValue.f16.positive.max), expected: [Number.NEGATIVE_INFINITY, kValue.f16.negative.min] },
+{ value: 2 ** (kValue.f16.emax + 1), expected: [Number.POSITIVE_INFINITY] },
+{ value: -(2 ** (kValue.f16.emax + 1)), expected: [Number.NEGATIVE_INFINITY] },
+{ value: kValue.f16.infinity.positive, expected: [Number.POSITIVE_INFINITY] },
+{ value: kValue.f16.infinity.negative, expected: [Number.NEGATIVE_INFINITY] },
 
 // 16-bit subnormals
 { value: kValue.f16.subnormal.positive.min, expected: [kValue.f16.subnormal.positive.min] },
@@ -1603,7 +1615,7 @@ paramsSimple([
 { bits: kBit.f64.positive.pi.quarter, value: kValue.f64.positive.pi.quarter },
 { bits: kBit.f64.positive.pi.sixth, value: kValue.f64.positive.pi.sixth },
 { bits: kBit.f64.positive.e, value: kValue.f64.positive.e },
-{ bits: kBit.f64.positive.max_ulp, value: kValue.f64.positive.max_ulp },
+{ bits: kBit.f64.max_ulp, value: kValue.f64.max_ulp },
 { bits: kBit.f64.negative.max, value: kValue.f64.negative.max },
 { bits: kBit.f64.negative.min, value: kValue.f64.negative.min },
 { bits: kBit.f64.negative.nearest_min, value: kValue.f64.negative.nearest_min },
@@ -1651,7 +1663,7 @@ paramsSimple([
 { bits: kBit.f32.positive.pi.quarter, value: kValue.f32.positive.pi.quarter },
 { bits: kBit.f32.positive.pi.sixth, value: kValue.f32.positive.pi.sixth },
 { bits: kBit.f32.positive.e, value: kValue.f32.positive.e },
-{ bits: kBit.f32.positive.max_ulp, value: kValue.f32.positive.max_ulp },
+{ bits: kBit.f32.max_ulp, value: kValue.f32.max_ulp },
 { bits: kBit.f32.negative.max, value: kValue.f32.negative.max },
 { bits: kBit.f32.negative.min, value: kValue.f32.negative.min },
 { bits: kBit.f32.negative.nearest_min, value: kValue.f32.negative.nearest_min },
@@ -1694,7 +1706,7 @@ paramsSimple([
 { bits: kBit.f16.positive.pi.quarter, value: kValue.f16.positive.pi.quarter },
 { bits: kBit.f16.positive.pi.sixth, value: kValue.f16.positive.pi.sixth },
 { bits: kBit.f16.positive.e, value: kValue.f16.positive.e },
-{ bits: kBit.f16.positive.max_ulp, value: kValue.f16.positive.max_ulp },
+{ bits: kBit.f16.max_ulp, value: kValue.f16.max_ulp },
 { bits: kBit.f16.negative.max, value: kValue.f16.negative.max },
 { bits: kBit.f16.negative.min, value: kValue.f16.negative.min },
 { bits: kBit.f16.negative.nearest_min, value: kValue.f16.negative.nearest_min },
