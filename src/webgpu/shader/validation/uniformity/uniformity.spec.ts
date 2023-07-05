@@ -1800,6 +1800,50 @@ const kPointerParamCases = {
     cond: `uniform_cond`,
     uniform: false,
   },
+  uniform_conditional_call_assign_uniform: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: true,
+  },
+  uniform_conditional_call_assign_nonuniform1: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = nonuniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false,
+  },
+  uniform_conditional_call_assign_nonuniform2: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = nonuniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false,
+  },
+  nonuniform_conditional_call_assign_uniform: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if nonuniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false,
+  },
 };
 
 g.test('function_pointer_parameters')
