@@ -46,18 +46,22 @@ g.test('entry_point_call_target')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction')
   .desc(`Test that an entry point cannot be the target of a function call`)
   .params(u =>
-    u.combine('stage', ['@fragment', '@vertex', '@compute @workgroup_size(1,1,1)'] as const)
+    u
+      .combine('stage', ['@fragment', '@vertex', '@compute @workgroup_size(1,1,1)'] as const)
+      .combine('entry_point', ['with', 'without'] as const)
   )
   .fn(t => {
+    const use_attr = t.params.entry_point === 'with';
     let ret_attr = '';
-    if (t.params.stage === '@vertex') {
+    if (use_attr && t.params.stage === '@vertex') {
       ret_attr = '@builtin(position)';
     }
     const ret = t.params.stage.indexOf('@vertex') === 0 ? `-> ${ret_attr} vec4f` : '';
     const ret_value = t.params.stage.indexOf('@vertex') === 0 ? `return vec4f();` : '';
     const call = t.params.stage.indexOf('@vertex') === 0 ? 'let tmp = bar();' : 'bar();';
-    const with_entry_point = `
-${t.params.stage}
+    const stage_attr = use_attr ? t.params.stage : '';
+    const code = `
+${stage_attr}
 fn bar() ${ret} {
   ${ret_value}
 }
@@ -66,18 +70,7 @@ fn foo() {
   ${call}
 }
 `;
-    const without_entry_point = `
-fn bar() -> vec4f {
-  return vec4f();
-}
-
-fn foo() {
-  let tmp = bar();
-}
-`;
-
-    t.expectCompileResult(true, without_entry_point);
-    t.expectCompileResult(false, with_entry_point);
+    t.expectCompileResult(!use_attr, code);
   });
 
 interface RetTypeCase {
