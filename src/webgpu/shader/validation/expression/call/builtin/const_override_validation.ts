@@ -1,4 +1,5 @@
 import { assert, unreachable } from '../../../../../../common/util/util.js';
+import { kValue } from '../../../../../util/constants.js';
 import {
   Type,
   TypeF16,
@@ -140,7 +141,7 @@ var<private> v = ${builtin}(${conversion}(o));`,
 }
 
 /** @returns a sweep of the representable values for element type of @p type */
-export function fullFPRangeForType(type: Type) {
+export function fullRangeForType(type: Type) {
   switch (elementType(type)?.kind) {
     case 'abstract-float':
       return fullF64Range();
@@ -148,6 +149,12 @@ export function fullFPRangeForType(type: Type) {
       return fullF32Range();
     case 'f16':
       return fullF16Range();
+    case 'i32':
+      return linearRange(kValue.i32.negative.min, kValue.i32.positive.max, 50).map(f =>
+        Math.floor(f)
+      );
+    case 'u32':
+      return linearRange(0, kValue.u32.max, 50).map(f => Math.floor(f));
   }
   unreachable();
 }
