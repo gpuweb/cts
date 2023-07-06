@@ -6,26 +6,13 @@ import {
   elementType,
   isAbstractType,
 } from '../../../../../util/conversion.js';
-import { fullF16Range, fullF32Range, fullF64Range } from '../../../../../util/math.js';
+import { fullF16Range, fullF32Range, fullF64Range, linearRange } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
-/// An array of values ranging from -1 to 2
-export const kMinusOneToTwo = [
-  -1.0,
-  -0.9,
-  -0.1,
-  0.0,
-  0.1,
-  0.5,
-  0.9,
-  1.0,
-  1.1,
-  1.5,
-  1.9,
-  2.0,
-] as const;
+/// A linear sweep between -2 to 2
+export const kMinusTwoToTwo = linearRange(-2, 2, 10);
 
-/// An array of values ranging from -3π to 3π.
+/// An array of values ranging from -3π to 3π, with a focus on multiples of π
 export const kMinus3PiTo3Pi = [
   -3 * Math.PI,
   -2.999 * Math.PI,
@@ -163,4 +150,15 @@ export function fullFPRangeForType(type: Type) {
       return fullF16Range();
   }
   unreachable();
+}
+
+/** @returns all the values in the provided arrays with duplicates removed */
+export function unique<T>(...arrays: Array<readonly T[]>): T[] {
+  const set = new Set<T>();
+  for (const arr of arrays) {
+    for (const item of arr) {
+      set.add(item);
+    }
+  }
+  return [...set];
 }
