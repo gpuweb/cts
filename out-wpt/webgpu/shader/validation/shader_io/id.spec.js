@@ -134,7 +134,7 @@ override a = 4;
 
 g.test('id_struct_member')
   .desc(`Test validation of id with struct member`)
-  .params(u => u.combine('id', ['@id(1) override', '']))
+  .params(u => u.combine('id', ['@id(1) override', '@id(1)', '']))
   .fn(t => {
     const code = `
 struct S {
