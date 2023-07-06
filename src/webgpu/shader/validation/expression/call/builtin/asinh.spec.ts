@@ -16,8 +16,10 @@ import { linearRange } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
+  unique,
   validateConstOrOverrideBuiltinEval,
 } from './const_override_validation.js';
 
@@ -34,7 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', kAllFloatScalarsAndVectors)
       .filter(u => stageSupportsType(u.stage, u.type))
-      .combine('value', linearRange(-2000, 2000, 10))
+      .expand('value', u => unique(fullRangeForType(u.type), linearRange(-2000, 2000, 10)))
   )
   .beforeAllSubcases(t => {
     if (elementType(t.params.type) === TypeF16) {

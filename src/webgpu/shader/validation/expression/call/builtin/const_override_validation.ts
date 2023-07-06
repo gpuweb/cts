@@ -115,7 +115,12 @@ export function validateConstOrOverrideBuiltinEval(
   switch (stage) {
     case 'constant': {
       let val_str = value.toString();
-      if (isFloatType(elTy) && !val_str.includes('.') && !val_str.includes('e')) {
+      if (
+        isFloatType(elTy) &&
+        !val_str.includes('.') &&
+        !val_str.includes('e') &&
+        !val_str.includes('E')
+      ) {
         val_str += '.0';
       }
 
