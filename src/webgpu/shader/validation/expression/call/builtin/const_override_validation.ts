@@ -6,6 +6,7 @@ import {
   VectorType,
   elementType,
   isAbstractType,
+  isFloatType,
 } from '../../../../../util/conversion.js';
 import { fullF16Range, fullF32Range, fullF64Range, linearRange } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -114,7 +115,7 @@ export function validateConstOrOverrideBuiltinEval(
   switch (stage) {
     case 'constant': {
       let val_str = value.toString();
-      if (!val_str.includes('.') && !val_str.includes('e')) {
+      if (isFloatType(elTy) && !val_str.includes('.') && !val_str.includes('e')) {
         val_str += '.0';
       }
 
