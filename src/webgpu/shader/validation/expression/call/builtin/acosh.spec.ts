@@ -11,12 +11,15 @@ import {
   kAllFloatScalarsAndVectors,
   kAllIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
+import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  fullRangeForType,
   kConstantAndOverrideStages,
-  kMinusOneToTwo,
+  kMinusTwoToTwo,
   stageSupportsType,
+  unique,
   validateConstOrOverrideBuiltinEval,
 } from './const_override_validation.js';
 
@@ -33,7 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', kAllFloatScalarsAndVectors)
       .filter(u => stageSupportsType(u.stage, u.type))
-      .combine('value', kMinusOneToTwo)
+      .expand('value', u => unique(fullRangeForType(u.type), kMinusTwoToTwo))
   )
   .beforeAllSubcases(t => {
     if (elementType(t.params.type) === TypeF16) {
@@ -41,7 +44,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     }
   })
   .fn(t => {
-    const expectedResult = t.params.value >= 1;
+    const expectedResult = isRepresentable(Math.acosh(t.params.value), t.params.type);
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,

@@ -1,54 +1,68 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../../../../../common/util/util.js';import {
+**/import { assert, unreachable } from '../../../../../../common/util/util.js';import { kValue } from '../../../../../util/constants.js';import {
+
 TypeF16,
 VectorType,
 elementType,
-isAbstractType } from
+isAbstractType,
+isFloatType } from
 '../../../../../util/conversion.js';
+import { fullF16Range, fullF32Range, fullF64Range, linearRange } from '../../../../../util/math.js';
 
 
-/// An array of values ranging from -1 to 2
-export const kMinusOneToTwo = [
--1.0,
--0.9,
--0.1,
-0.0,
-0.1,
-0.5,
-0.9,
-1.0,
-1.1,
-1.5,
-1.9,
-2.0];
+/// A linear sweep between -2 to 2
+export const kMinusTwoToTwo = linearRange(-2, 2, 10);
 
-
-/// An array of values ranging from -3π to 3π.
+/// An array of values ranging from -3π to 3π, with a focus on multiples of π
 export const kMinus3PiTo3Pi = [
 -3 * Math.PI,
 -2.999 * Math.PI,
+
+-2.501 * Math.PI,
 -2.5 * Math.PI,
+-2.499 * Math.PI,
+
 -2.001 * Math.PI,
 -2.0 * Math.PI,
 -1.999 * Math.PI,
+
+-1.501 * Math.PI,
 -1.5 * Math.PI,
+-1.499 * Math.PI,
+
 -1.001 * Math.PI,
 -1.0 * Math.PI,
 -0.999 * Math.PI,
+
+-0.501 * Math.PI,
 -0.5 * Math.PI,
+-0.499 * Math.PI,
+
 -0.001,
 0,
 0.001,
+
+0.499 * Math.PI,
 0.5 * Math.PI,
+0.501 * Math.PI,
+
 0.999 * Math.PI,
 1.0 * Math.PI,
 1.001 * Math.PI,
+
+1.499 * Math.PI,
 1.5 * Math.PI,
+1.501 * Math.PI,
+
 1.999 * Math.PI,
 2.0 * Math.PI,
-2.5 * Math.PI,
 2.001 * Math.PI,
+
+2.499 * Math.PI,
+2.5 * Math.PI,
+2.501 * Math.PI,
+
 2.999 * Math.PI,
 3 * Math.PI];
 
@@ -100,10 +114,20 @@ stage)
 
   switch (stage) {
     case 'constant':{
+        let val_str = value.toString();
+        if (
+        isFloatType(elTy) &&
+        !val_str.includes('.') &&
+        !val_str.includes('e') &&
+        !val_str.includes('E'))
+        {
+          val_str += '.0';
+        }
+
         t.expectCompileResult(
         expectedResult,
         `${enables}
-const v = ${builtin}(${conversion}(${value}));`);
+const v = ${builtin}(${conversion}(${val_str}));`);
 
         break;
       }
@@ -120,5 +144,35 @@ var<private> v = ${builtin}(${conversion}(o));`,
         break;
       }}
 
+}
+
+/** @returns a sweep of the representable values for element type of @p type */
+export function fullRangeForType(type) {
+  switch (elementType(type)?.kind) {
+    case 'abstract-float':
+      return fullF64Range();
+    case 'f32':
+      return fullF32Range();
+    case 'f16':
+      return fullF16Range();
+    case 'i32':
+      return linearRange(kValue.i32.negative.min, kValue.i32.positive.max, 50).map((f) =>
+      Math.floor(f));
+
+    case 'u32':
+      return linearRange(0, kValue.u32.max, 50).map((f) => Math.floor(f));}
+
+  unreachable();
+}
+
+/** @returns all the values in the provided arrays with duplicates removed */
+export function unique(...arrays) {
+  const set = new Set();
+  for (const arr of arrays) {
+    for (const item of arr) {
+      set.add(item);
+    }
+  }
+  return [...set];
 }
 //# sourceMappingURL=const_override_validation.js.map

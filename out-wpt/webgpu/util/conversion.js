@@ -1355,6 +1355,34 @@ export const kAllIntegerScalarsAndVectors = [
   TypeVec(4, TypeU32),
 ];
 
+/// All signed integer scalar and vector types
+export const kAllSignedIntegerScalarsAndVectors = [
+  TypeI32,
+  TypeVec(2, TypeI32),
+  TypeVec(3, TypeI32),
+  TypeVec(4, TypeI32),
+];
+
+/// All unsigned integer scalar and vector types
+export const kAllUnsignedIntegerScalarsAndVectors = [
+  TypeU32,
+  TypeVec(2, TypeU32),
+  TypeVec(3, TypeU32),
+  TypeVec(4, TypeU32),
+];
+
+/// All floating-point and integer scalar and vector types
+export const kAllFloatAndIntegerScalarsAndVectors = [
+  ...kAllFloatScalarsAndVectors,
+  ...kAllIntegerScalarsAndVectors,
+];
+
+/// All floating-point and signed integer scalar and vector types
+export const kAllFloatAndSignedIntegerScalarsAndVectors = [
+  ...kAllFloatScalarsAndVectors,
+  ...kAllSignedIntegerScalarsAndVectors,
+];
+
 /** @returns the inner element type of the given type */
 export function elementType(t) {
   if (t instanceof ScalarType) {
