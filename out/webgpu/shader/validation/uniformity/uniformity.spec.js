@@ -1607,6 +1607,283 @@ const kShortCircuitExpressionCases = {
   }
 };
 
+const kPointerParamCases = {
+  pointer_uniform_passthrough_value: {
+    function: `fn foo(p : ptr<function, u32>) -> u32 {
+      return *p;
+    }`,
+    call: `var x = uniform_values[0];
+    let call = foo(&x);`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  pointer_nonuniform_passthrough_value: {
+    function: `fn foo(p : ptr<function, u32>) -> u32 {
+      return *p;
+    }`,
+    call: `var x = uniform_values[0];
+    let call = foo(&x);`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  pointer_store_uniform_value: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = nonuniform_values[0];
+    foo(&x);`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  pointer_store_nonuniform_value: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = nonuniform_values[0];
+    }`,
+    call: `var x = uniform_values[0];
+    foo(&x);`,
+    cond: `x > 0`,
+    uniform: false
+  },
+  pointer_depends_on_nonpointer_param_uniform: {
+    function: `fn foo(p : ptr<function, u32>, x : u32) {
+      *p = x;
+    }`,
+    call: `var x = nonuniform_values[0];
+    foo(&x, uniform_values[0]);`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  pointer_depends_on_nonpointer_param_nonuniform: {
+    function: `fn foo(p : ptr<function, u32>, x : u32) {
+      *p = x;
+    }`,
+    call: `var x = uniform_values[0];
+    foo(&x, nonuniform_values[0]);`,
+    cond: `x > 0`,
+    uniform: false
+  },
+  pointer_depends_on_pointer_param_uniform: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      *p = *q;
+    }`,
+    call: `var x = nonuniform_values[0];
+    var y = uniform_values[0];
+    foo(&x, &y);`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  pointer_depends_on_pointer_param_nonuniform: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      *p = *q;
+    }`,
+    call: `var x = uniform_values[0];
+    var y = nonuniform_values[0];
+    foo(&x, &y);`,
+    cond: `x > 0`,
+    uniform: false
+  },
+  pointer_codependent1: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      if *p > 0 {
+        *p = *q;
+      } else {
+        *q++;
+      }
+    }`,
+    call: `var x = uniform_values[0];
+    var y = uniform_values[1];
+    foo(&x, &y);
+    let a = x + y;`,
+    cond: `a > 0`,
+    uniform: true
+  },
+  pointer_codependent2: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      if *p > 0 {
+        *p = *q;
+      } else {
+        *q++;
+      }
+    }`,
+    call: `var x = uniform_values[0];
+    var y = nonuniform_values[1];
+    foo(&x, &y);
+    let a = x + y;`,
+    cond: `a > 0`,
+    uniform: false
+  },
+  pointer_codependent3: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      if *p > 0 {
+        *p = *q;
+      } else {
+        *q++;
+      }
+    }`,
+    call: `var x = nonuniform_values[0];
+    var y = uniform_values[1];
+    foo(&x, &y);
+    let a = x + y;`,
+    cond: `a > 0`,
+    uniform: false
+  },
+  pointer_codependent4: {
+    function: `fn foo(p : ptr<function, u32>, q : ptr<function, u32>) {
+      if *p > 0 {
+        *p = *q;
+      } else {
+        *q++;
+      }
+    }`,
+    call: `var x = nonuniform_values[0];
+    var y = nonuniform_values[1];
+    foo(&x, &y);
+    let a = x + y;`,
+    cond: `a > 0`,
+    uniform: false
+  },
+  uniform_param_uniform_assignment: {
+    function: `fn foo(p : ptr<function, array<u32, 2>>, idx : u32) {
+      (*p)[idx] = uniform_values[0];
+    }`,
+    call: `var x = array(uniform_values[0], uniform_values[1]);
+    foo(&x, uniform_values[3]);`,
+    cond: `x[0] > 0`,
+    uniform: true
+  },
+  uniform_param_nonuniform_assignment: {
+    function: `fn foo(p : ptr<function, array<u32, 2>>, idx : u32) {
+      (*p)[idx] = nonuniform_values[0];
+    }`,
+    call: `var x = array(uniform_values[0], uniform_values[1]);
+    foo(&x, uniform_values[3]);`,
+    cond: `x[0] > 0`,
+    uniform: false
+  },
+  nonuniform_param_uniform_assignment: {
+    function: `fn foo(p : ptr<function, array<u32, 2>>, idx : u32) {
+      (*p)[idx] = uniform_values[0];
+    }`,
+    call: `var x = array(uniform_values[0], uniform_values[1]);
+    foo(&x, u32(clamp(pos.x, 0, 1)));`,
+    cond: `x[0] > 0`,
+    uniform: false
+  },
+  nonuniform_param_nonuniform_assignment: {
+    function: `fn foo(p : ptr<function, array<u32, 2>>, idx : u32) {
+      (*p)[idx] = nonuniform_values[0];
+    }`,
+    call: `var x = array(uniform_values[0], uniform_values[1]);
+    foo(&x, u32(clamp(pos.x, 0, 1)));`,
+    cond: `x[0] > 0`,
+    uniform: false
+  },
+  required_uniform_success: {
+    function: `fn foo(p : ptr<function, u32>) {
+      if *p > 0 {
+        let tmp = textureSample(t,s,vec2f(0,0));
+      }
+    }`,
+    call: `var x = uniform_values[0];
+    foo(&x);`,
+    cond: `uniform_cond`,
+    uniform: true
+  },
+  required_uniform_failure: {
+    function: `fn foo(p : ptr<function, u32>) {
+      if *p > 0 {
+        let tmp = textureSample(t,s,vec2f(0,0));
+      }
+    }`,
+    call: `var x = nonuniform_values[0];
+    foo(&x);`,
+    cond: `uniform_cond`,
+    uniform: false
+  },
+  uniform_conditional_call_assign_uniform: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: true
+  },
+  uniform_conditional_call_assign_nonuniform1: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = nonuniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false
+  },
+  uniform_conditional_call_assign_nonuniform2: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = nonuniform_values[1];
+    if uniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false
+  },
+  nonuniform_conditional_call_assign_uniform: {
+    function: `fn foo(p : ptr<function, u32>) {
+      *p = uniform_values[0];
+    }`,
+    call: `var x = uniform_values[1];
+    if nonuniform_cond {
+      foo(&x);
+    }`,
+    cond: `x > 0`,
+    uniform: false
+  }
+};
+
+g.test('function_pointer_parameters').
+desc(`Test functions and calls with pointer parameters`).
+params((u) => u.combine('case', keysOf(kPointerParamCases))).
+fn((t) => {
+  const pointer_case = kPointerParamCases[t.params.case];
+  const code = `
+@group(0) @binding(0)
+var t : texture_2d<f32>;
+@group(0) @binding(1)
+var s : sampler;
+
+const uniform_cond = true;
+var<private> nonuniform_cond = true;
+
+@group(1) @binding(0)
+var<storage> uniform_values : array<u32, 4>;
+@group(1) @binding(1)
+var<storage, read_write> nonuniform_values : array<u32, 4>;
+
+${pointer_case.function}
+
+@fragment
+fn main(@builtin(position) pos : vec4f) {
+  ${pointer_case.call}
+
+  if ${pointer_case.cond} {
+    let tmp = textureSample(t,s,vec2f(0,0));
+  }
+}
+`;
+
+  const res = pointer_case.uniform;
+  if (!res) {
+    t.expectCompileResult(true, `diagnostic(off, derivative_uniformity);\n` + code);
+  }
+  t.expectCompileResult(res, code);
+});
+
 g.test('short_circuit_expressions').
 desc(`Test uniformity of expressions`).
 params((u) => u.combine('case', keysOf(kShortCircuitExpressionCases))).
