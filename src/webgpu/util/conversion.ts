@@ -555,6 +555,34 @@ export class ScalarType {
   public get size(): number {
     return this._size;
   }
+
+  /** Constructs a Scalar of this type with @p value */
+  public create(value: number): Scalar {
+    switch (this.kind) {
+      case 'abstract-float':
+        return abstractFloat(value);
+      case 'f64':
+        return f64(value);
+      case 'f32':
+        return f32(value);
+      case 'f16':
+        return f16(value);
+      case 'u32':
+        return u32(value);
+      case 'u16':
+        return u16(value);
+      case 'u8':
+        return u8(value);
+      case 'i32':
+        return i32(value);
+      case 'i16':
+        return i16(value);
+      case 'i8':
+        return i8(value);
+      case 'bool':
+        return bool(value !== 0);
+    }
+  }
 }
 
 /** VectorType describes the type of WGSL Vector. */
@@ -586,6 +614,11 @@ export class VectorType {
 
   public get size(): number {
     return this.elementType.size * this.width;
+  }
+
+  /** Constructs a Vector of this type with @p value in each element */
+  public create(value: number): Vector {
+    return new Vector(Array(this.width).fill(this.elementType.create(value)));
   }
 }
 
@@ -737,6 +770,20 @@ export function numElementsOf(ty: Type): number {
     return ty.cols * ty.rows;
   }
   throw new Error(`unhandled type ${ty}`);
+}
+
+/** @returns the scalar elements of the given Value */
+export function elementsOf(value: Value): Scalar[] {
+  if (value instanceof Scalar) {
+    return [value];
+  }
+  if (value instanceof Vector) {
+    return value.elements;
+  }
+  if (value instanceof Matrix) {
+    return value.elements.flat();
+  }
+  throw new Error(`unhandled value ${value}`);
 }
 
 /** @returns the scalar (element) type of the given Type */
@@ -1425,15 +1472,9 @@ export const kAllFloatAndSignedIntegerScalarsAndVectors = [
 ] as const;
 
 /** @returns the inner element type of the given type */
-export function elementType(t: Type) {
+export function elementType(t: ScalarType | VectorType | MatrixType) {
   if (t instanceof ScalarType) {
     return t;
   }
-  if (t instanceof VectorType) {
-    return t.elementType;
-  }
-  if (t instanceof MatrixType) {
-    return t.elementType;
-  }
-  return null;
+  return t.elementType;
 }
