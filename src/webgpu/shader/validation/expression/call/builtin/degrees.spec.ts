@@ -42,7 +42,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
     }
   })
   .fn(t => {
-    const expectedResult = isRepresentable(t.params.value * 180 * Math.PI, t.params.type);
+    const expectedResult = isRepresentable((t.params.value * 180) / Math.PI, t.params.type);
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
