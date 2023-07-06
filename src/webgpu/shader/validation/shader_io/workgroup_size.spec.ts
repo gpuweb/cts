@@ -235,7 +235,7 @@ ${kWorkgroupSizeTests[t.params.attr].src}
   });
 
 g.test('workgroup_size_fragment_shader')
-  .desc(`Test validation of workgroup_size on fragment shader`)
+  .desc(`Test validation of workgroup_size on a fragment shader`)
   .fn(t => {
     const code = `
 @workgroup_size(1)
@@ -244,7 +244,7 @@ g.test('workgroup_size_fragment_shader')
   });
 
 g.test('workgroup_size_vertex_shader')
-  .desc(`Test validation of workgroup_size on fragment shader`)
+  .desc(`Test validation of workgroup_size on a vertex shader`)
   .fn(t => {
     const code = `
 @workgroup_size(1)
@@ -262,7 +262,7 @@ fn my_func() {}`;
   });
 
 g.test('workgroup_size_const')
-  .desc(`Test validation of workgroup_size on user function`)
+  .desc(`Test validation of workgroup_size on a const`)
   .fn(t => {
     const code = `
 @workgroup_size(1)
@@ -273,7 +273,7 @@ fn my_func() {}`;
   });
 
 g.test('workgroup_size_var')
-  .desc(`Test validation of workgroup_size on user function`)
+  .desc(`Test validation of workgroup_size on a var`)
   .fn(t => {
     const code = `
 @workgroup_size(1)
