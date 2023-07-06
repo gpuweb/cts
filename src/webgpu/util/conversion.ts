@@ -616,9 +616,14 @@ export class VectorType {
     return this.elementType.size * this.width;
   }
 
-  /** Constructs a Vector of this type with @p value in each element */
-  public create(value: number): Vector {
-    return new Vector(Array(this.width).fill(this.elementType.create(value)));
+  /** Constructs a Vector of this type with the given values */
+  public create(value: number | number[]): Vector {
+    if (value instanceof Array) {
+      assert(value.length === this.width);
+    } else {
+      value = Array(this.width).fill(value);
+    }
+    return new Vector(value.map(v => this.elementType.create(v)));
   }
 }
 
@@ -1415,21 +1420,39 @@ export function isFloatType(ty: Type): boolean {
   return false;
 }
 
-/// All floating-point scalar and vector types
-export const kAllFloatScalarsAndVectors = [
-  TypeAbstractFloat,
+/// All floating-point scalar types
+export const kAllFloatScalars = [TypeAbstractFloat, TypeF32, TypeF16] as const;
+
+/// All floating-point vec2 types
+export const kAllFloatVector2 = [
   TypeVec(2, TypeAbstractFloat),
-  TypeVec(3, TypeAbstractFloat),
-  TypeVec(4, TypeAbstractFloat),
-  TypeF32,
   TypeVec(2, TypeF32),
-  TypeVec(3, TypeF32),
-  TypeVec(4, TypeF32),
-  TypeF16,
   TypeVec(2, TypeF16),
+] as const;
+
+/// All floating-point vec3 types
+export const kAllFloatVector3 = [
+  TypeVec(3, TypeAbstractFloat),
+  TypeVec(3, TypeF32),
   TypeVec(3, TypeF16),
+] as const;
+
+/// All floating-point vec4 types
+export const kAllFloatVector4 = [
+  TypeVec(4, TypeAbstractFloat),
+  TypeVec(4, TypeF32),
   TypeVec(4, TypeF16),
 ] as const;
+
+/// All floating-point vector types
+export const kAllFloatVectors = [
+  ...kAllFloatVector2,
+  ...kAllFloatVector3,
+  ...kAllFloatVector4,
+] as const;
+
+/// All floating-point scalar and vector types
+export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors] as const;
 
 /// All integer scalar and vector types
 export const kAllIntegerScalarsAndVectors = [
