@@ -3304,6 +3304,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "cosh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "degrees"
     ]
   },
@@ -3415,6 +3425,26 @@ export const listing = [
       "call",
       "builtin",
       "sin"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "sinh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "sqrt"
     ]
   },
   {
