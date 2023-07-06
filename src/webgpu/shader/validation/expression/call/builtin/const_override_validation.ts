@@ -1,4 +1,4 @@
-import { assert } from '../../../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../../../common/util/util.js';
 import {
   Type,
   TypeF16,
@@ -6,6 +6,7 @@ import {
   elementType,
   isAbstractType,
 } from '../../../../../util/conversion.js';
+import { fullF16Range, fullF32Range, fullF64Range } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 /// An array of values ranging from -1 to 2
@@ -124,10 +125,15 @@ export function validateConstOrOverrideBuiltinEval(
 
   switch (stage) {
     case 'constant': {
+      let val_str = value.toString();
+      if (!val_str.includes('.') && !val_str.includes('e')) {
+        val_str += '.0';
+      }
+
       t.expectCompileResult(
         expectedResult,
         `${enables}
-const v = ${builtin}(${conversion}(${value}));`
+const v = ${builtin}(${conversion}(${val_str}));`
       );
       break;
     }
@@ -144,4 +150,17 @@ var<private> v = ${builtin}(${conversion}(o));`,
       break;
     }
   }
+}
+
+/** @returns a sweep of the representable values for element type of @p type */
+export function fullFPRangeForType(type: Type) {
+  switch (elementType(type)?.kind) {
+    case 'abstract-float':
+      return fullF64Range();
+    case 'f32':
+      return fullF32Range();
+    case 'f16':
+      return fullF16Range();
+  }
+  unreachable();
 }
