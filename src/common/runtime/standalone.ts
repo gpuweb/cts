@@ -589,7 +589,14 @@ void (async () => {
   loader.addEventListener('finish', () => {
     $('#info')[0].textContent = '';
   });
-  const tree = await loader.loadTree(rootQuery);
+
+  let tree;
+  try {
+    tree = await loader.loadTree(rootQuery);
+  } catch (err) {
+    $('#info')[0].textContent = (err as Error).toString();
+    return;
+  }
 
   tree.dissolveSingleChildTrees();
 
