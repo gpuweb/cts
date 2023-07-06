@@ -3462,6 +3462,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "binding"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "builtins"
     ]
   },
@@ -3471,6 +3479,22 @@ export const listing = [
       "validation",
       "shader_io",
       "entry_point"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
+      "group"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
+      "group_and_binding"
     ]
   },
   {
