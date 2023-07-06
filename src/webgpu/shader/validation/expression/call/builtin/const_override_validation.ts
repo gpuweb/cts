@@ -141,20 +141,32 @@ var<private> v = ${builtin}(${callArgs.join(', ')});`,
 }
 
 /** @returns a sweep of the representable values for element type of @p type */
-export function fullRangeForType(type: Type) {
+export function fullRangeForType(type: Type, count?: number) {
+  if (count === undefined) {
+    count = 25;
+  }
   switch (elementType(type)?.kind) {
     case 'abstract-float':
-      return fullF64Range();
+      return fullF64Range({
+        pos_sub: Math.ceil((count * 1) / 5),
+        pos_norm: Math.ceil((count * 4) / 5),
+      });
     case 'f32':
-      return fullF32Range();
+      return fullF32Range({
+        pos_sub: Math.ceil((count * 1) / 5),
+        pos_norm: Math.ceil((count * 4) / 5),
+      });
     case 'f16':
-      return fullF16Range();
+      return fullF16Range({
+        pos_sub: Math.ceil((count * 1) / 5),
+        pos_norm: Math.ceil((count * 4) / 5),
+      });
     case 'i32':
-      return linearRange(kValue.i32.negative.min, kValue.i32.positive.max, 50).map(f =>
+      return linearRange(kValue.i32.negative.min, kValue.i32.positive.max, count).map(f =>
         Math.floor(f)
       );
     case 'u32':
-      return linearRange(0, kValue.u32.max, 50).map(f => Math.floor(f));
+      return linearRange(0, kValue.u32.max, count).map(f => Math.floor(f));
   }
   unreachable();
 }
