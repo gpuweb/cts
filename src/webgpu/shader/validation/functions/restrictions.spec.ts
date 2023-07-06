@@ -53,14 +53,17 @@ g.test('entry_point_call_target')
     if (t.params.stage === '@vertex') {
       ret_attr = '@builtin(position)';
     }
+    const ret = t.params.stage.indexOf('@vertex') === 0 ? `-> ${ret_attr} vec4f` : '';
+    const ret_value = t.params.stage.indexOf('@vertex') === 0 ? `return vec4f();` : '';
+    const call = t.params.stage.indexOf('@vertex') === 0 ? 'let tmp = bar();' : 'bar();';
     const with_entry_point = `
 ${t.params.stage}
-fn bar() -> ${ret_attr} vec4f {
-  return vec4f();
+fn bar() ${ret} {
+  ${ret_value}
 }
 
 fn foo() {
-  let tmp = bar();
+  ${call}
 }
 `;
     const without_entry_point = `
