@@ -28,27 +28,51 @@ export const kMinusOneToTwo = [
 export const kMinus3PiTo3Pi = [
   -3 * Math.PI,
   -2.999 * Math.PI,
+
+  -2.501 * Math.PI,
   -2.5 * Math.PI,
+  -2.499 * Math.PI,
+
   -2.001 * Math.PI,
   -2.0 * Math.PI,
   -1.999 * Math.PI,
+
+  -1.501 * Math.PI,
   -1.5 * Math.PI,
+  -1.499 * Math.PI,
+
   -1.001 * Math.PI,
   -1.0 * Math.PI,
   -0.999 * Math.PI,
+
+  -0.501 * Math.PI,
   -0.5 * Math.PI,
+  -0.499 * Math.PI,
+
   -0.001,
   0,
   0.001,
+
+  0.499 * Math.PI,
   0.5 * Math.PI,
+  0.501 * Math.PI,
+
   0.999 * Math.PI,
   1.0 * Math.PI,
   1.001 * Math.PI,
+
+  1.499 * Math.PI,
   1.5 * Math.PI,
+  1.501 * Math.PI,
+
   1.999 * Math.PI,
   2.0 * Math.PI,
-  2.5 * Math.PI,
   2.001 * Math.PI,
+
+  2.499 * Math.PI,
+  2.5 * Math.PI,
+  2.501 * Math.PI,
+
   2.999 * Math.PI,
   3 * Math.PI,
 ] as const;
