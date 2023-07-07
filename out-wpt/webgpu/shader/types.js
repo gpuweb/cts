@@ -47,6 +47,57 @@ export const kMatrixContainerTypeInfo = {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
+export const kAccessModeInfo = {
+  read: { read: true, write: false },
+  write: { read: false, write: true },
+  read_write: { read: true, write: true },
+};
+
+export const kAddressSpaceInfo = {
+  storage: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read', 'read_write'],
+    spellAccessMode: 'may',
+  },
+  uniform: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read'],
+    spellAccessMode: 'never',
+  },
+  private: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  workgroup: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  function: {
+    scope: 'function',
+    binding: false,
+    spell: 'may',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  handle: {
+    scope: 'module',
+    binding: true,
+    spell: 'never',
+    accessModes: [],
+    spellAccessMode: 'never',
+  },
+};
+
 /** List of texel formats and their shader representation */
 export const TexelFormats = [
   { format: 'rgba8unorm', _shaderType: 'f32' },

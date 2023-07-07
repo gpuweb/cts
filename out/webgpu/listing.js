@@ -3193,6 +3193,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "decl",
+      "var_access_mode"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "expression",
       "access",
       "vector"

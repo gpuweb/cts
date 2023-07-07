@@ -4,6 +4,7 @@ import { align } from '../util/math.js';
 
 const kArrayLength = 3;
 
+export type Requirement = 'never' | 'may' | 'must'; // never is the same as "must not"
 export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'atomic' | 'array';
 export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
 
@@ -43,7 +44,83 @@ export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
 
-export type AddressSpace = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup';
+export type AddressSpace = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup' | 'handle';
+export type AccessMode = 'read' | 'write' | 'read_write';
+export type Scope = 'module' | 'function';
+
+export const kAccessModeInfo = {
+  read: { read: true, write: false },
+  write: { read: false, write: true },
+  read_write: { read: true, write: true },
+} as const;
+
+export type AddressSpaceInfo = {
+  // Variables in this address space must be declared in what scope?
+  scope: Scope;
+
+  // True if a variable in this address space requires a binding.
+  binding: boolean;
+
+  // Spell the address space in var declarations?
+  spell: Requirement;
+
+  // Access modes for ordinary accesses (loads, stores).
+  // The first one is the default.
+  // This is empty for the 'handle' address space where access is opaque.
+  accessModes: readonly AccessMode[];
+
+  // Spell the access mode in var declarations?
+  //   7.3 var Declarations
+  //   The access mode always has a default value, and except for variables
+  //   in the storage address space, must not be specified in the WGSL source.
+  //   See §13.3 Address Spaces.
+  spellAccessMode: Requirement;
+};
+
+export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
+  storage: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read', 'read_write'],
+    spellAccessMode: 'may',
+  },
+  uniform: {
+    scope: 'module',
+    binding: true,
+    spell: 'must',
+    accessModes: ['read'],
+    spellAccessMode: 'never',
+  },
+  private: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  workgroup: {
+    scope: 'module',
+    binding: false,
+    spell: 'must',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  function: {
+    scope: 'function',
+    binding: false,
+    spell: 'may',
+    accessModes: ['read_write'],
+    spellAccessMode: 'never',
+  },
+  handle: {
+    scope: 'module',
+    binding: true,
+    spell: 'never',
+    accessModes: [],
+    spellAccessMode: 'never',
+  },
+} as const;
 
 /** List of texel formats and their shader representation */
 export const TexelFormats = [
@@ -181,7 +258,7 @@ export function* generateTypes({
 /** Atomic access requires scalar/array container type and storage/workgroup memory. */
 export function supportsAtomics(p: {
   addressSpace: string;
-  storageMode: string | undefined;
+  storageMode: AccessMode | undefined;
   access: string;
   containerType: ContainerType;
 }) {
