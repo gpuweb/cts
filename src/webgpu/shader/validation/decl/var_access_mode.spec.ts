@@ -97,13 +97,20 @@ function accessModeExpander(p: {
 }
 
 /**
- * @returns false if the test does not spell the address space in the var
- * declaration but the address space requires it.
- * Use this filter when trying to test something other than access mode
- * functionality.
+ * @returns true if an explicit address space is requested on a variable
+ * declaration whenever the address space requires one:
+ *
+ *       must implies requested
+ *
+ * Rewrite as:
+ *
+ *       !must or requested
  */
-function compatibleAS(p: { info: AddressSpaceInfo; explicitSpace: boolean }): boolean {
-  return !p.explicitSpace && p.info.spell === 'must';
+export function varDeclCompatibleAddressSpace(p: {
+  info: AddressSpaceInfo;
+  explicitSpace: boolean;
+}): boolean {
+  return !(p.info.spell === 'must') || p.explicitSpace;
 }
 
 /** @returns the effective access mode for the given experiment.  */
@@ -130,7 +137,7 @@ g.test('explicit_access_mode')
         .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .combine('explicitSpace', [true, false])
-        .filter(t => compatibleAS(t))
+        .filter(t => varDeclCompatibleAddressSpace(t))
         .combine('explicitMode', [true])
         .combine('accessMode', keysOf(kAccessModeInfo))
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
