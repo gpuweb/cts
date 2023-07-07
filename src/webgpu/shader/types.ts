@@ -55,9 +55,14 @@ export const kAccessModeInfo = {
 } as const;
 
 export type AddressSpaceInfo = {
+  // Variables in this address space must be declared in what scope?
   scope: Scope;
+
+  // True if a variable in this address space requires a binding.
   binding: boolean;
-  spell: Requirement; // Spell the address space in var declarations?
+
+  // Spell the address space in var declarations?
+  spell: Requirement;
 
   // Access modes for ordinary accesses (loads, stores).
   // The first one is the default.
@@ -72,7 +77,7 @@ export type AddressSpaceInfo = {
   spellAccessMode: Requirement;
 };
 
-export const kAddressSpaceInfo = {
+export const kAddressSpaceInfo: Record<string, AddressSpaceInfo> = {
   storage: {
     scope: 'module',
     binding: true,

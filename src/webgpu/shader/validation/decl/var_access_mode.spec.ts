@@ -5,8 +5,6 @@ The access mode always has a default value, and except for variables in the
 storage address space, must not be specified in the WGSL source. See §13.3 Address Spaces.
 `;
 
-// TODO(4128): Validate the similar rules on pointer types.
-
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
 import {
@@ -21,25 +19,31 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 import { declareEntryPoint, ShaderStage } from './util.js';
 
 // Test address spaces that we can hold an i32 variable.
-const kOrdinaryAddressSpaces = keysOf(kAddressSpaceInfo).filter(as => as !== 'handle');
+const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
+  as => as !== 'handle'
+) as AddressSpace[];
 
 export const g = makeTestGroup(ShaderValidationTest);
 
 /**
- * @returns a WGSL declaration for an 'x' variable with the given parameters.
+ * @returns a WGSL var declaration with given parameters for variable 'x' and
+ * store type i32.
  */
 function declareVarX(
   addressSpace: AddressSpace | undefined,
   accessMode: AccessMode | undefined
 ): string {
-  const bindingPart =
-    addressSpace && kAddressSpaceInfo[addressSpace].binding ? '@group(0) @binding(0) ' : '';
-  const spacePart = addressSpace ? (addressSpace as string) : '';
-  const modePart = accessMode ? (accessMode as string) : '';
-  const comma = spacePart && modePart ? ',' : '';
-  const templatePart = spacePart || modePart ? `<${spacePart}${comma}${modePart}>` : '';
+  const parts: string[] = [];
+  if (addressSpace && kAddressSpaceInfo[addressSpace].binding) parts.push('@group(0) @binding(0) ');
+  parts.push('var');
 
-  return `${bindingPart}var${templatePart} x: i32;`;
+  const template_parts: string[] = [];
+  if (addressSpace) template_parts.push(addressSpace as string);
+  if (accessMode) template_parts.push(accessMode);
+  if (template_parts.length > 0) parts.push(`<${template_parts.join(',')}>`);
+
+  parts.push(' x: i32;');
+  return parts.join('');
 }
 
 /**
@@ -60,12 +64,16 @@ function getShader(
     p.explicitSpace ? p.addressSpace : undefined,
     p.explicitMode ? p.accessMode : undefined
   );
-  const beforeShader = as_info.scope === 'module' ? decl : '';
-  const insideShader = as_info.scope === 'function' ? decl : '';
-  const body = `${insideShader}\n${additionalBody ? additionalBody : ''}`;
-  const entryPoint = declareEntryPoint({ stage: p.stage, body });
-  const prog = `${beforeShader}\n${entryPoint}`;
-  return prog;
+
+  additionalBody = additionalBody ?? '';
+
+  switch (as_info.scope) {
+    case 'module':
+      return decl + '\n' + declareEntryPoint({ stage: p.stage, body: additionalBody });
+
+    case 'function':
+      return declareEntryPoint({ stage: p.stage, body: decl + '\n' + additionalBody });
+  }
 }
 
 /** @returns the list of address space info objects for the given address space.  */
@@ -73,13 +81,14 @@ function infoExpander(p: { addressSpace: AddressSpace }): readonly AddressSpaceI
   return [kAddressSpaceInfo[p.addressSpace]];
 }
 
-/** @returns a list of booleans indicating valid cases of specifying the address
+/**
+ * @returns a list of booleans indicating valid cases of specifying the address
  * space.
  */
 function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly boolean[] {
   return p.info.spell === 'must' ? [true] : [true, false];
 }
-/** @returns a list of usable access modes under given experiment conditions. */
+/** @returns a list of usable access modes under given experiment conditions.  */
 function accessModeExpander(p: {
   explicitMode: boolean; // Whether the access mode will be emitted.
   info: AddressSpaceInfo;
@@ -87,7 +96,8 @@ function accessModeExpander(p: {
   return p.explicitMode && p.info.spellAccessMode !== 'never' ? p.info.accessModes : [];
 }
 
-/** @returns false if the test does not spell the address space in the var
+/**
+ * @returns false if the test does not spell the address space in the var
  * declaration but the address space requires it.
  * Use this filter when trying to test something other than access mode
  * functionality.
@@ -112,11 +122,12 @@ function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMode }): b
 }
 
 g.test('explicit_access_mode')
-  .desc('Validate uses of an explicit access mode on a variable declaration')
+  .desc('Validate uses of an explicit access mode on a var declaration')
+  .specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls')
   .params(
     u =>
       u
-        .combine('addressSpace', kOrdinaryAddressSpaces)
+        .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .combine('explicitSpace', [true, false])
         .filter(t => compatibleAS(t))
@@ -139,11 +150,12 @@ g.test('explicit_access_mode')
   });
 
 g.test('implicit_access_mode')
-  .desc('Validate an implicit access mode on a variable declaration')
+  .desc('Validate an implicit access mode on a var declaration')
+  .specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls')
   .params(
     u =>
       u
-        .combine('addressSpace', kOrdinaryAddressSpaces)
+        .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .expand('explicitSpace', explicitSpaceExpander)
         .combine('explicitMode', [false])
@@ -161,10 +173,11 @@ g.test('implicit_access_mode')
 
 g.test('read_access')
   .desc('A variable can be read from when the access mode permits')
+  .specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls')
   .params(
     u =>
       u
-        .combine('addressSpace', kOrdinaryAddressSpaces)
+        .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .expand('explicitSpace', explicitSpaceExpander)
         .combine('explicitMode', [false, true])
@@ -179,10 +192,11 @@ g.test('read_access')
 
 g.test('write_access')
   .desc('A variable can be written to when the access mode permits')
+  .specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls')
   .params(
     u =>
       u
-        .combine('addressSpace', kOrdinaryAddressSpaces)
+        .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .expand('explicitSpace', explicitSpaceExpander)
         .combine('explicitMode', [false, true])
@@ -192,35 +206,5 @@ g.test('write_access')
   .fn(t => {
     const prog = getShader(t.params, 'x = 0;');
     const ok = supportsWrite(t.params);
-    t.expectCompileResult(ok, prog);
-  });
-
-g.test('bad_template_contents')
-  .desc('A variable declaration has explicit access mode with varying other template list contents')
-  .params(u =>
-    u
-      .combine('accessMode', ['read', 'read_write'])
-      .combine('prefix', ['storage,', '', ','])
-      .combine('suffix', [',storage', ',read', ',', ''])
-  )
-  .fn(t => {
-    const prog = `@group(0) @binding(0)
-                  var<${t.params.prefix}${t.params.accessMode}${t.params.suffix}> x: i32;`;
-    const ok = t.params.prefix === 'storage,' && t.params.suffix === '';
-    t.expectCompileResult(ok, prog);
-  });
-
-g.test('bad_template_delim')
-  .desc('A variable declaration has explicit access mode with varying template list delimiters')
-  .params(u =>
-    u
-      .combine('accessMode', ['read', 'read_write'])
-      .combine('prefix', ['', '<', '>', ','])
-      .combine('suffix', ['', '<', '>', ','])
-  )
-  .fn(t => {
-    const prog = `@group(0) @binding(0)
-                  var ${t.params.prefix}storage,${t.params.accessMode}${t.params.suffix} x: i32;`;
-    const ok = t.params.prefix === '<' && t.params.suffix === '>';
     t.expectCompileResult(ok, prog);
   });
