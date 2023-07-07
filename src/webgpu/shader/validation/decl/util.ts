@@ -70,6 +70,20 @@ export function declareVarX(
   return parts.join('');
 }
 
+/**
+ * @returns true if an explicit address space is requested on a variable
+ * declaration whenever the address space requires one:
+ *
+ * 	  must implies requested
+ *
+ * Rewrite as:
+ *
+ * 	  !must or requested
+ */
+export function varDeclCompatibleAddressSpace(p: { info: AddressSpaceInfo; explicitSpace: boolean }): boolean {
+  return !(p.info.spell === 'must') || p.explicitSpace;
+}
+
 /** @returns the list of address space info objects for the given address space.  */
 export function infoExpander(p: { addressSpace: AddressSpace }): readonly AddressSpaceInfo[] {
   return [kAddressSpaceInfo[p.addressSpace]];
