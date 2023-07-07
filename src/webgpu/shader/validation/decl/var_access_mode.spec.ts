@@ -7,16 +7,19 @@ storage address space, must not be specified in the WGSL source. See §13.3 Addr
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
-import {
-  AccessMode,
-  AddressSpace,
-  AddressSpaceInfo,
-  kAccessModeInfo,
-  kAddressSpaceInfo,
-} from '../../types.js';
+import { AddressSpace, AddressSpaceInfo, kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
-import { declareEntryPoint, getVarDeclShader, accessModeExpander, infoExpander, supportsRead, supportsWrite, ShaderStage } from './util.js';
+import {
+  explicitSpaceExpander,
+  varDeclCompatibleAddressSpace,
+  getVarDeclShader,
+  accessModeExpander,
+  infoExpander,
+  supportsRead,
+  supportsWrite,
+  ShaderStage,
+} from './util.js';
 
 // Address spaces that can hold an i32 variable.
 const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
@@ -24,31 +27,6 @@ const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
 ) as AddressSpace[];
 
 export const g = makeTestGroup(ShaderValidationTest);
-
-/**
- * @returns a list of booleans indicating valid cases of specifying the address
- * space.
- */
-function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly boolean[] {
-  return p.info.spell === 'must' ? [true] : [true, false];
-}
-
-/**
- * @returns true if an explicit address space is requested on a variable
- * declaration whenever the address space requires one:
- *
- *       must implies requested
- *
- * Rewrite as:
- *
- *       !must or requested
- */
-export function varDeclCompatibleAddressSpace(p: {
-  info: AddressSpaceInfo;
-  explicitSpace: boolean;
-}): boolean {
-  return !(p.info.spell === 'must') || p.explicitSpace;
-}
 
 g.test('explicit_access_mode')
   .desc('Validate uses of an explicit access mode on a var declaration')

@@ -74,19 +74,30 @@ export function declareVarX(
  * @returns true if an explicit address space is requested on a variable
  * declaration whenever the address space requires one:
  *
- * 	  must implies requested
+ *    must implies requested
  *
  * Rewrite as:
  *
- * 	  !must or requested
+ *    !must or requested
  */
-export function varDeclCompatibleAddressSpace(p: { info: AddressSpaceInfo; explicitSpace: boolean }): boolean {
+export function varDeclCompatibleAddressSpace(p: {
+  info: AddressSpaceInfo;
+  explicitSpace: boolean;
+}): boolean {
   return !(p.info.spell === 'must') || p.explicitSpace;
 }
 
 /** @returns the list of address space info objects for the given address space.  */
 export function infoExpander(p: { addressSpace: AddressSpace }): readonly AddressSpaceInfo[] {
   return [kAddressSpaceInfo[p.addressSpace]];
+}
+
+/**
+ * @returns a list of booleans indicating valid cases of specifying the address
+ * space.
+ */
+export function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly boolean[] {
+  return p.info.spell === 'must' ? [true] : [true, false];
 }
 
 /** @returns a list of usable access modes under given experiment conditions.  */
@@ -128,20 +139,37 @@ export function getVarDeclShader(
   }
 }
 
+/**
+ * @returns the WGSL spelling of a pointer type corresponding to a variable
+ * declared with the given parameters.
+ */
+export function pointerType(p: {
+  addressSpace: AddressSpace; // Address space to use if p.explicitSpace
+  explicitSpace: boolean; // If false, use 'function' address space
+  accessMode: AccessMode | undefined; // The access mode to use, if any
+  storeType: string; // The store type.
+}): string {
+  const space = p.explicitSpace ? p.addressSpace : 'function';
+  const modePart = p.accessMode ? ',' + p.accessMode : '';
+  return `ptr<${space},${p.storeType}${modePart}>`;
+}
+
 /** @returns the effective access mode for the given experiment.  */
-function effectiveMode(p: { info: AddressSpaceInfo; accessMode: AccessMode }): AccessMode {
+export function effectiveAccessMode(p: {
+  info: AddressSpaceInfo;
+  accessMode: AccessMode;
+}): AccessMode {
   return p.accessMode || p.info.accessModes[0]; // default is first.
 }
 
 /** @returns whether the setup allows reads */
 export function supportsRead(p: { info: AddressSpaceInfo; accessMode: AccessMode }): boolean {
-  const mode = effectiveMode(p);
+  const mode = effectiveAccessMode(p);
   return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].read;
 }
 
 /** @returns whether the setup allows writes */
 export function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMode }): boolean {
-  const mode = effectiveMode(p);
+  const mode = effectiveAccessMode(p);
   return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
 }
-
