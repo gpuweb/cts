@@ -42,13 +42,12 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  const expectedResult = isRepresentable(Math.sinh(t.params.value), t.params.type);
+  const expectedResult = isRepresentable(Math.sinh(t.params.value), elementType(t.params.type));
   validateConstOrOverrideBuiltinEval(
   t,
   builtin,
   expectedResult,
-  t.params.value,
-  t.params.type,
+  [t.params.type.create(t.params.value)],
   t.params.stage);
 
 });
@@ -65,8 +64,7 @@ fn((t) => {
   t,
   builtin,
   /* expectedResult */t.params.type === TypeF32,
-  /* value */0,
-  t.params.type,
+  [t.params.type.create(0)],
   'constant');
 
 });

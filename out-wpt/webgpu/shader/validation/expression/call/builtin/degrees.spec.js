@@ -43,13 +43,16 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
     }
   })
   .fn(t => {
-    const expectedResult = isRepresentable((t.params.value * 180) / Math.PI, t.params.type);
+    const expectedResult = isRepresentable(
+      (t.params.value * 180) / Math.PI,
+      elementType(t.params.type)
+    );
+
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       expectedResult,
-      t.params.value,
-      t.params.type,
+      [t.params.type.create(t.params.value)],
       t.params.stage
     );
   });
@@ -66,8 +69,7 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
       t,
       builtin,
       /* expectedResult */ t.params.type === TypeF32,
-      /* value */ 1,
-      t.params.type,
+      [t.params.type.create(1)],
       'constant'
     );
   });

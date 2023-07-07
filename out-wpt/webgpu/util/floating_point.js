@@ -6,7 +6,6 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
-  elementType,
   f16,
   f32,
   f64,
@@ -4173,10 +4172,9 @@ export const FP = {
   abstract: new FPAbstractTraits(),
 };
 
-/** @returns the floating-point traits for the element type of @p type */
+/** @returns the floating-point traits for @p type */
 export function fpTraitsFor(type) {
-  const elTy = elementType(type);
-  switch (elTy?.kind) {
+  switch (type.kind) {
     case 'abstract-float':
       return FP.abstract;
     case 'f32':
@@ -4184,23 +4182,18 @@ export function fpTraitsFor(type) {
     case 'f16':
       return FP.f16;
     default:
-      unreachable(`unsupported type: ${elTy}`);
+      unreachable(`unsupported type: ${type}`);
   }
 }
 
-/**
- * @returns true if the value @p value is representable with the element type of @p type
- */
+/** @returns true if the value @p value is representable with @p type */
 export function isRepresentable(value, type) {
   if (!Number.isFinite(value)) {
     return false;
   }
-  const elTy = elementType(type);
-  if (elTy !== null) {
-    if (isFloatType(elTy)) {
-      const constants = fpTraitsFor(type).constants();
-      return value >= constants.negative.min && value <= constants.positive.max;
-    }
+  if (isFloatType(type)) {
+    const constants = fpTraitsFor(type).constants();
+    return value >= constants.negative.min && value <= constants.positive.max;
   }
-  assert(false, `isRepresentable() is not yet implemented for type ${elTy}`);
+  assert(false, `isRepresentable() is not yet implemented for type ${type}`);
 }

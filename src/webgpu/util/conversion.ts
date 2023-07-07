@@ -555,6 +555,34 @@ export class ScalarType {
   public get size(): number {
     return this._size;
   }
+
+  /** Constructs a Scalar of this type with @p value */
+  public create(value: number): Scalar {
+    switch (this.kind) {
+      case 'abstract-float':
+        return abstractFloat(value);
+      case 'f64':
+        return f64(value);
+      case 'f32':
+        return f32(value);
+      case 'f16':
+        return f16(value);
+      case 'u32':
+        return u32(value);
+      case 'u16':
+        return u16(value);
+      case 'u8':
+        return u8(value);
+      case 'i32':
+        return i32(value);
+      case 'i16':
+        return i16(value);
+      case 'i8':
+        return i8(value);
+      case 'bool':
+        return bool(value !== 0);
+    }
+  }
 }
 
 /** VectorType describes the type of WGSL Vector. */
@@ -586,6 +614,16 @@ export class VectorType {
 
   public get size(): number {
     return this.elementType.size * this.width;
+  }
+
+  /** Constructs a Vector of this type with the given values */
+  public create(value: number | number[]): Vector {
+    if (value instanceof Array) {
+      assert(value.length === this.width);
+    } else {
+      value = Array(this.width).fill(value);
+    }
+    return new Vector(value.map(v => this.elementType.create(v)));
   }
 }
 
@@ -737,6 +775,20 @@ export function numElementsOf(ty: Type): number {
     return ty.cols * ty.rows;
   }
   throw new Error(`unhandled type ${ty}`);
+}
+
+/** @returns the scalar elements of the given Value */
+export function elementsOf(value: Value): Scalar[] {
+  if (value instanceof Scalar) {
+    return [value];
+  }
+  if (value instanceof Vector) {
+    return value.elements;
+  }
+  if (value instanceof Matrix) {
+    return value.elements.flat();
+  }
+  throw new Error(`unhandled value ${value}`);
 }
 
 /** @returns the scalar (element) type of the given Type */
@@ -1368,21 +1420,39 @@ export function isFloatType(ty: Type): boolean {
   return false;
 }
 
-/// All floating-point scalar and vector types
-export const kAllFloatScalarsAndVectors = [
-  TypeAbstractFloat,
+/// All floating-point scalar types
+export const kAllFloatScalars = [TypeAbstractFloat, TypeF32, TypeF16] as const;
+
+/// All floating-point vec2 types
+export const kAllFloatVector2 = [
   TypeVec(2, TypeAbstractFloat),
-  TypeVec(3, TypeAbstractFloat),
-  TypeVec(4, TypeAbstractFloat),
-  TypeF32,
   TypeVec(2, TypeF32),
-  TypeVec(3, TypeF32),
-  TypeVec(4, TypeF32),
-  TypeF16,
   TypeVec(2, TypeF16),
+] as const;
+
+/// All floating-point vec3 types
+export const kAllFloatVector3 = [
+  TypeVec(3, TypeAbstractFloat),
+  TypeVec(3, TypeF32),
   TypeVec(3, TypeF16),
+] as const;
+
+/// All floating-point vec4 types
+export const kAllFloatVector4 = [
+  TypeVec(4, TypeAbstractFloat),
+  TypeVec(4, TypeF32),
   TypeVec(4, TypeF16),
 ] as const;
+
+/// All floating-point vector types
+export const kAllFloatVectors = [
+  ...kAllFloatVector2,
+  ...kAllFloatVector3,
+  ...kAllFloatVector4,
+] as const;
+
+/// All floating-point scalar and vector types
+export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors] as const;
 
 /// All integer scalar and vector types
 export const kAllIntegerScalarsAndVectors = [
@@ -1425,15 +1495,9 @@ export const kAllFloatAndSignedIntegerScalarsAndVectors = [
 ] as const;
 
 /** @returns the inner element type of the given type */
-export function elementType(t: Type) {
+export function elementType(t: ScalarType | VectorType | MatrixType) {
   if (t instanceof ScalarType) {
     return t;
   }
-  if (t instanceof VectorType) {
-    return t.elementType;
-  }
-  if (t instanceof MatrixType) {
-    return t.elementType;
-  }
-  return null;
+  return t.elementType;
 }

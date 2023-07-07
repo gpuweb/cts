@@ -46,8 +46,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       t,
       builtin,
       expectedResult,
-      t.params.value,
-      t.params.type,
+      [t.params.type.create(t.params.value)],
       t.params.stage
     );
   });
@@ -64,8 +63,7 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
       t,
       builtin,
       /* expectedResult */ t.params.type === TypeF32,
-      /* value */ 1,
-      t.params.type,
+      [t.params.type.create(1)],
       'constant'
     );
   });

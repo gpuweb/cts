@@ -46,8 +46,7 @@ fn((t) => {
   t,
   builtin,
   expectedResult,
-  t.params.value,
-  t.params.type,
+  [t.params.type.create(t.params.value)],
   t.params.stage);
 
 });
@@ -64,8 +63,7 @@ fn((t) => {
   t,
   builtin,
   /* expectedResult */t.params.type === TypeF32,
-  /* value */0,
-  t.params.type,
+  [t.params.type.create(0)],
   'constant');
 
 });

@@ -3354,6 +3354,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "length"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "log"
     ]
   },
