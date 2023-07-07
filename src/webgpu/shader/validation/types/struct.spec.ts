@@ -34,7 +34,7 @@ struct T {
 
 g.test('no_indirect_recursion_via_array_element')
   .desc('Test that indirect recursion of structures via array element types is rejected')
-  .params(u => u.combine('target', ['i32', 'A']))
+  .params(u => u.combine('target', ['i32', 'S']))
   .fn(t => {
     const wgsl = `
 struct S {
@@ -77,4 +77,23 @@ struct S2 {
 }
 `;
     t.expectCompileResult(t.params.target === 'S1', wgsl);
+  });
+
+g.test('no_indirect_recursion_via_struct_member_nested_in_alias')
+  .desc(
+    `Test that indirect recursion of structures via struct members is rejected when the member type
+    is an alias that contains the structure`
+  )
+  .params(u => u.combine('target', ['i32', 'A']))
+  .fn(t => {
+    const wgsl = `
+alias A = array<S2, 4>;
+struct S1 {
+  a : ${t.params.target}
+}
+struct S2 {
+  a : S1
+}
+`;
+    t.expectCompileResult(t.params.target === 'i32', wgsl);
   });
