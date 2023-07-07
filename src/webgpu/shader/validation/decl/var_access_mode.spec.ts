@@ -7,13 +7,7 @@ storage address space, must not be specified in the WGSL source. See §13.3 Addr
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
-import {
-  AccessMode,
-  AddressSpace,
-  AddressSpaceInfo,
-  kAccessModeInfo,
-  kAddressSpaceInfo,
-} from '../../types.js';
+import { AddressSpace, kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
@@ -73,6 +67,7 @@ g.test('implicit_access_mode')
         .expand('info', infoExpander)
         .expand('explicitSpace', explicitSpaceExpander)
         .combine('explicitMode', [false])
+        .combine('accessMode', [''] as const)
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
   .fn(t => {
