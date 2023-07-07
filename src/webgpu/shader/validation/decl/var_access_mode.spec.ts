@@ -16,7 +16,17 @@ import {
 } from '../../types.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
-import { declareEntryPoint, getVarDeclShader, accessModeExpander, infoExpander, supportsRead, supportsWrite, ShaderStage } from './util.js';
+import {
+  explicitSpaceExpander,
+  varDeclCompatibleAddressSpace,
+  declareEntryPoint,
+  getVarDeclShader,
+  accessModeExpander,
+  infoExpander,
+  supportsRead,
+  supportsWrite,
+  ShaderStage,
+} from './util.js';
 
 // Address spaces that can hold an i32 variable.
 const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
@@ -24,24 +34,6 @@ const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
 ) as AddressSpace[];
 
 export const g = makeTestGroup(ShaderValidationTest);
-
-/**
- * @returns a list of booleans indicating valid cases of specifying the address
- * space.
- */
-function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly boolean[] {
-  return p.info.spell === 'must' ? [true] : [true, false];
-}
-
-/**
- * @returns false if the test does not spell the address space in the var
- * declaration but the address space requires it.
- * Use this filter when trying to test something other than access mode
- * functionality.
- */
-function compatibleAS(p: { info: AddressSpaceInfo; explicitSpace: boolean }): boolean {
-  return !p.explicitSpace && p.info.spell === 'must';
-}
 
 g.test('explicit_access_mode')
   .desc('Validate uses of an explicit access mode on a var declaration')
@@ -52,7 +44,7 @@ g.test('explicit_access_mode')
         .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('info', infoExpander)
         .combine('explicitSpace', [true, false])
-        .filter(t => compatibleAS(t))
+        .filter(t => varDeclCompatibleAddressSpace(t))
         .combine('explicitMode', [true])
         .combine('accessMode', keysOf(kAccessModeInfo))
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
