@@ -1088,7 +1088,7 @@ export abstract class FPTraits {
    * @param filter what interval filtering to apply
    * @param ops callbacks that implement generating an acceptance interval
    */
-  private makeScalarTripleToIntervalCase(
+  public makeScalarTripleToIntervalCase(
     param0: number,
     param1: number,
     param2: number,
