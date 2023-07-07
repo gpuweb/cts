@@ -53,10 +53,7 @@ fn ${arg.name}() {
  * @returns a WGSL var declaration with given parameters for variable 'x' and
  * store type i32.
  */
-export function declareVarX(
-  addressSpace: AddressSpace | '',
-  accessMode: AccessMode | ''
-): string {
+export function declareVarX(addressSpace: AddressSpace | '', accessMode: AccessMode | ''): string {
   const parts: string[] = [];
   if (addressSpace && kAddressSpaceInfo[addressSpace].binding) parts.push('@group(0) @binding(0) ');
   parts.push('var');
@@ -74,13 +71,16 @@ export function declareVarX(
  * @returns true if an explicit address space is requested on a variable
  * declaration whenever the address space requires one:
  *
- * 	  must implies requested
+ *    must implies requested
  *
  * Rewrite as:
  *
- * 	  !must or requested
+ *    !must or requested
  */
-export function varDeclCompatibleAddressSpace(p: { info: AddressSpaceInfo; explicitSpace: boolean }): boolean {
+export function varDeclCompatibleAddressSpace(p: {
+  info: AddressSpaceInfo;
+  explicitSpace: boolean;
+}): boolean {
   return !(p.info.spell === 'must') || p.explicitSpace;
 }
 
@@ -147,11 +147,11 @@ export function pointerType(p: {
   addressSpace: AddressSpace; // Address space to use if p.explicitSpace
   explicitSpace: boolean; // If false, use 'function' address space
   accessMode: AccessMode | ''; // The access mode to use, if any
-  storeType: string; // The store type.
+  ptrStoreType: string; // The store type.
 }): string {
   const space = p.explicitSpace ? p.addressSpace : 'function';
   const modePart = p.accessMode ? ',' + p.accessMode : '';
-  return `ptr<${space},${p.storeType}${modePart}>`;
+  return `ptr<${space},${p.ptrStoreType}${modePart}>`;
 }
 
 /** @returns the effective access mode for the given experiment.  */
@@ -173,4 +173,3 @@ export function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMod
   const mode = effectiveAccessMode(p);
   return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
 }
-

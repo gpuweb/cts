@@ -13,7 +13,6 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 import {
   explicitSpaceExpander,
   varDeclCompatibleAddressSpace,
-  declareEntryPoint,
   getVarDeclShader,
   accessModeExpander,
   infoExpander,
