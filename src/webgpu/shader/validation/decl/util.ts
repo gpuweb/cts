@@ -54,8 +54,8 @@ fn ${arg.name}() {
  * store type i32.
  */
 export function declareVarX(
-  addressSpace: AddressSpace | undefined,
-  accessMode: AccessMode | undefined
+  addressSpace: AddressSpace | '',
+  accessMode: AccessMode | ''
 ): string {
   const parts: string[] = [];
   if (addressSpace && kAddressSpaceInfo[addressSpace].binding) parts.push('@group(0) @binding(0) ');
@@ -100,12 +100,15 @@ export function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly b
   return p.info.spell === 'must' ? [true] : [true, false];
 }
 
-/** @returns a list of usable access modes under given experiment conditions.  */
+/**
+ * @returns a list of usable access modes under given experiment conditions, or undefined
+ * if none are allowed.
+ */
 export function accessModeExpander(p: {
   explicitMode: boolean; // Whether the access mode will be emitted.
   info: AddressSpaceInfo;
-}): readonly AccessMode[] {
-  return p.explicitMode && p.info.spellAccessMode !== 'never' ? p.info.accessModes : [];
+}): readonly (AccessMode | '')[] {
+  return p.explicitMode && p.info.spellAccessMode !== 'never' ? p.info.accessModes : [''];
 }
 
 /**
@@ -116,7 +119,7 @@ export function getVarDeclShader(
   p: {
     addressSpace: AddressSpace; // Address space for the variable.
     explicitSpace: boolean; // Should the address space be explicitly spelled?
-    accessMode?: AccessMode; // What access mode to use.
+    accessMode: AccessMode | ''; // What access mode to use.
     explicitMode: boolean; // Should the access mode be explicitly spelled?
     stage: ShaderStage; // What shader stage to use.
   },
@@ -124,8 +127,8 @@ export function getVarDeclShader(
 ): string {
   const as_info = kAddressSpaceInfo[p.addressSpace];
   const decl = declareVarX(
-    p.explicitSpace ? p.addressSpace : undefined,
-    p.explicitMode ? p.accessMode : undefined
+    p.explicitSpace ? p.addressSpace : '',
+    p.explicitMode ? p.accessMode : ''
   );
 
   additionalBody = additionalBody ?? '';
@@ -146,7 +149,7 @@ export function getVarDeclShader(
 export function pointerType(p: {
   addressSpace: AddressSpace; // Address space to use if p.explicitSpace
   explicitSpace: boolean; // If false, use 'function' address space
-  accessMode: AccessMode | undefined; // The access mode to use, if any
+  accessMode: AccessMode | ''; // The access mode to use, if any
   storeType: string; // The store type.
 }): string {
   const space = p.explicitSpace ? p.addressSpace : 'function';
@@ -157,19 +160,19 @@ export function pointerType(p: {
 /** @returns the effective access mode for the given experiment.  */
 export function effectiveAccessMode(p: {
   info: AddressSpaceInfo;
-  accessMode: AccessMode;
+  accessMode: AccessMode | '';
 }): AccessMode {
   return p.accessMode || p.info.accessModes[0]; // default is first.
 }
 
 /** @returns whether the setup allows reads */
-export function supportsRead(p: { info: AddressSpaceInfo; accessMode: AccessMode }): boolean {
+export function supportsRead(p: { info: AddressSpaceInfo; accessMode: AccessMode | '' }): boolean {
   const mode = effectiveAccessMode(p);
   return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].read;
 }
 
 /** @returns whether the setup allows writes */
-export function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMode }): boolean {
+export function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMode | '' }): boolean {
   const mode = effectiveAccessMode(p);
   return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
 }
