@@ -3728,6 +3728,14 @@ export const listing = [
       "shader",
       "validation",
       "types",
+      "struct"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "types",
       "vector"
     ]
   },
