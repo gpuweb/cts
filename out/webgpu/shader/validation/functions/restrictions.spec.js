@@ -585,4 +585,35 @@ fn foo() {
 
   t.expectCompileResult(false, code);
 });
+
+g.test('param_names_must_differ').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-declaration-sec').
+desc(`Test that function parameters must have different names`).
+params((u) => u.combine('p1', ['a', 'b', 'c']).combine('p2', ['a', 'b', 'c'])).
+fn((t) => {
+  const code = `fn foo(${t.params.p1} : u32, ${t.params.p2} : f32) { }`;
+  t.expectCompileResult(t.params.p1 !== t.params.p2, code);
+});
+
+const kParamUseCases = {
+  body: `fn foo(param : u32) {
+    let tmp = param;
+  }`,
+  var: `var<private> v : u32 = param;
+  fn foo(param : u32) { }`,
+  const: `const c : u32 = param;
+  fn foo(param : u32) { }`,
+  override: `override o : u32 = param;
+  fn foo(param : u32) { }`,
+  function: `fn bar() { let tmp = param; }
+  fn foo(param : u32) { }`
+};
+
+g.test('param_scope_is_function_body').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-declaration-sec').
+desc(`Test that function parameters are only in scope in the function body`).
+params((u) => u.combine('use', keysOf(kParamUseCases))).
+fn((t) => {
+  t.expectCompileResult(t.params.use === 'body', kParamUseCases[t.params.use]);
+});
 //# sourceMappingURL=restrictions.spec.js.map
