@@ -595,33 +595,24 @@ g.test('param_names_must_differ')
     t.expectCompileResult(t.params.p1 !== t.params.p2, code);
   });
 
+const kParamUseCases: Record<string, string> = {
+  body: `fn foo(param : u32) {
+    let tmp = param;
+  }`,
+  var: `var<private> v : u32 = param;
+  fn foo(param : u32) { }`,
+  const: `const c : u32 = param;
+  fn foo(param : u32) { }`,
+  override: `override o : u32 = param;
+  fn foo(param : u32) { }`,
+  function: `fn bar() { let tmp = param; }
+  fn foo(param : u32) { }`,
+};
+
 g.test('param_scope_is_function_body')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-declaration-sec')
   .desc(`Test that function parameters are only in scope in the function body`)
-  .params(u => u.combine('use', ['body', 'var', 'const', 'override', 'function'] as const))
+  .params(u => u.combine('use', keysOf(kParamUseCases)))
   .fn(t => {
-    const body_use = `let tmp = param;`;
-    const var_use = `var<private> v : u32 = param;`;
-    const const_use = `const c : u32 = param;`;
-    const override_use = `override o : u32 = param;`;
-    const function_use = `fn bar() { let tmp = param; }`;
-
-    const body = t.params.use === 'body' ? body_use : '';
-    const var_decl = t.params.use === 'var' ? var_use : '';
-    const const_decl = t.params.use === 'const' ? const_use : '';
-    const override_decl = t.params.use === 'override' ? override_use : '';
-    const other_function = t.params.use === 'function' ? function_use : '';
-
-    const code = `
-${var_decl}
-${const_decl}
-${override_decl}
-
-fn foo(param : u32) {
-  ${body}
-}
-
-${other_function}`;
-
-    t.expectCompileResult(t.params.use === 'body', code);
+    t.expectCompileResult(t.params.use === 'body', kParamUseCases[t.params.use]);
   });
