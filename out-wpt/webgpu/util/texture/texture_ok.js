@@ -153,7 +153,7 @@ function* fullSubrectCoordinates(subrectOrigin, subrectSize) {
   }
 }
 
-function findFailedPixels(
+export function findFailedPixels(
   format,
   subrectOrigin,
   subrectSize,
