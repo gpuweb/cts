@@ -3214,16 +3214,6 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "abs"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "expression",
-      "call",
-      "builtin",
       "acos"
     ]
   },
@@ -3295,26 +3285,6 @@ export const listing = [
       "call",
       "builtin",
       "bitcast"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "expression",
-      "call",
-      "builtin",
-      "ceil"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "expression",
-      "call",
-      "builtin",
-      "clamp"
     ]
   },
   {
