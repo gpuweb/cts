@@ -27,10 +27,34 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-/** @returns true if the sum of the squares of each element in @p vec is representable by @p type */
-function isSquareSumRepresentable(vec: number[], type: ScalarType) {
+/**
+ * Evaluates the result and information about a call to length(), with a vector
+ * formed from @p vec of the element type @p type.
+ */
+function calculate(
+  vec: number[],
+  type: ScalarType
+): {
+  /**
+   * True iff the sum of the squares can be represented by the data type.
+   * @note The specification does not enforce the method or precision of how
+   * length() is calculated. If intermediate is not representable but the result
+   * is representable, then the test case is skipped as it is undefined whether
+   * the evaluation should error or not.
+   */
+  isIntermediateRepresentable: boolean;
+  /** True iff the result of length() can be represented by the data type. */
+  isResultRepresentable: boolean;
+  /** The computed value of length(). */
+  result: number;
+} {
   const squareSum = vec.reduce((prev, curr) => prev + curr * curr, 0);
-  return isRepresentable(squareSum, type);
+  const result = Math.sqrt(squareSum);
+  return {
+    isIntermediateRepresentable: isRepresentable(squareSum, type),
+    isResultRepresentable: isRepresentable(result, type),
+    result,
+  };
 }
 
 g.test('scalar')
@@ -77,7 +101,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .filter(u => stageSupportsType(u.stage, u.type))
       .expand('x', u => fullRangeForType(u.type, 5))
       .expand('y', u => fullRangeForType(u.type, 5))
-      .filter(u => isSquareSumRepresentable([u.x, u.y], elementType(u.type)))
+      .expand('_result', u => [calculate([u.x, u.y], elementType(u.type))])
+      .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
     if (elementType(t.params.type) === TypeF16) {
@@ -85,7 +110,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     }
   })
   .fn(t => {
-    const expectedResult = true;
+    const expectedResult = t.params._result.isResultRepresentable;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
@@ -109,7 +134,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .expand('x', u => fullRangeForType(u.type, 4))
       .expand('y', u => fullRangeForType(u.type, 4))
       .expand('z', u => fullRangeForType(u.type, 4))
-      .filter(u => isSquareSumRepresentable([u.x, u.y, u.z], elementType(u.type)))
+      .expand('_result', u => [calculate([u.x, u.y, u.z], elementType(u.type))])
+      .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
     if (elementType(t.params.type) === TypeF16) {
@@ -117,7 +143,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     }
   })
   .fn(t => {
-    const expectedResult = true;
+    const expectedResult = t.params._result.isResultRepresentable;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
@@ -142,7 +168,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .expand('y', u => fullRangeForType(u.type, 3))
       .expand('z', u => fullRangeForType(u.type, 3))
       .expand('w', u => fullRangeForType(u.type, 3))
-      .filter(u => isSquareSumRepresentable([u.x, u.y, u.z, u.w], elementType(u.type)))
+      .expand('_result', u => [calculate([u.x, u.y, u.z, u.w], elementType(u.type))])
+      .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
     if (elementType(t.params.type) === TypeF16) {
@@ -150,7 +177,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     }
   })
   .fn(t => {
-    const expectedResult = true;
+    const expectedResult = t.params._result.isResultRepresentable;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
