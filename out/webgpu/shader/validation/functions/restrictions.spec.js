@@ -616,4 +616,131 @@ params((u) => u.combine('use', keysOf(kParamUseCases))).
 fn((t) => {
   t.expectCompileResult(t.params.use === 'body', kParamUseCases[t.params.use]);
 });
+
+g.test('param_number_matches_call').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-calls').
+desc(`Test that function calls have an equal number of arguments as the number of parameters`).
+params((u) =>
+u.
+combine('num_args', [0, 1, 2, 3, 4, 255]).
+combine('num_params', [0, 1, 2, 3, 4, 255])).
+
+fn((t) => {
+  let code = `
+    fn bar(`;
+  for (let i = 0; i < t.params.num_params; i++) {
+    code += `p${i} : u32,`;
+  }
+  code += `) { }\n`;
+  code += `fn foo() {\nbar(`;
+  for (let i = 0; i < t.params.num_args; i++) {
+    code += `0,`;
+  }
+  code += `);\n}`;
+  t.expectCompileResult(t.params.num_args === t.params.num_params, code);
+});
+
+const kParamsTypes = ['u32', 'i32', 'f32'];
+
+
+
+
+
+
+const kArgValues = {
+  abstract_int: {
+    value: '0',
+    matches: ['u32', 'i32', 'f32']
+  },
+  abstract_float: {
+    value: '0.0',
+    matches: ['f32']
+  },
+  unsigned_int: {
+    value: '0u',
+    matches: ['u32']
+  },
+  signed_int: {
+    value: '0i',
+    matches: ['i32']
+  },
+  float: {
+    value: '0f',
+    matches: ['f32']
+  }
+};
+
+function checkArgTypeMatch(param_type, arg_matches) {
+  for (const match of arg_matches) {
+    if (match === param_type) {
+      return true;
+    }
+  }
+  return false;
+}
+
+g.test('call_arg_types_match_params').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-calls').
+desc(`Test that the argument types match in order`).
+params((u) =>
+u.
+combine('num_args', [1, 2, 3]).
+combine('p1_type', kParamsTypes).
+combine('p2_type', kParamsTypes).
+combine('p3_type', kParamsTypes).
+combine('arg1_value', keysOf(kArgValues)).
+combine('arg2_value', keysOf(kArgValues)).
+combine('arg3_value', keysOf(kArgValues))).
+
+fn((t) => {
+  let code = `
+    fn bar(`;
+  for (let i = 0; i < t.params.num_args; i++) {
+    switch (i) {
+      case 0:
+      default:{
+          code += `p${i} : ${t.params.p1_type},`;
+          break;
+        }
+      case 1:{
+          code += `p${i} : ${t.params.p2_type},`;
+          break;
+        }
+      case 2:{
+          code += `p${i} : ${t.params.p3_type},`;
+          break;
+        }}
+
+  }
+  code += `) { }
+    fn foo() {
+      bar(`;
+  for (let i = 0; i < t.params.num_args; i++) {
+    switch (i) {
+      case 0:
+      default:{
+          code += `${kArgValues[t.params.arg1_value].value},`;
+          break;
+        }
+      case 1:{
+          code += `${kArgValues[t.params.arg2_value].value},`;
+          break;
+        }
+      case 2:{
+          code += `${kArgValues[t.params.arg3_value].value},`;
+          break;
+        }}
+
+  }
+  code += `);\n}`;
+
+  let res = checkArgTypeMatch(t.params.p1_type, kArgValues[t.params.arg1_value].matches);
+  if (res && t.params.num_args > 1) {
+    res = checkArgTypeMatch(t.params.p2_type, kArgValues[t.params.arg2_value].matches);
+  }
+  if (res && t.params.num_args > 2) {
+    res = checkArgTypeMatch(t.params.p3_type, kArgValues[t.params.arg3_value].matches);
+  }
+  t.expectCompileResult(res, code);
+});
 //# sourceMappingURL=restrictions.spec.js.map
