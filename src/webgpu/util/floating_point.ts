@@ -4413,7 +4413,7 @@ class F32Traits extends FPTraits {
       'unpack2x16unormInterval only accepts values on the bounds of u32'
     );
     const op = (n: number): FPInterval => {
-      return this.correctlyRoundedInterval(n / 65535);
+      return this.ulpInterval(n / 65535, 3);
     };
 
     this.unpackDataU32[0] = n;
@@ -4429,7 +4429,7 @@ class F32Traits extends FPTraits {
       'unpack4x8snormInterval only accepts values on the bounds of u32'
     );
     const op = (n: number): FPInterval => {
-      return this.correctlyRoundedInterval(Math.max(n / 127, -1));
+      return this.ulpInterval(Math.max(n / 127, -1), 3);
     };
     this.unpackDataU32[0] = n;
     return [
@@ -4449,7 +4449,7 @@ class F32Traits extends FPTraits {
       'unpack4x8unormInterval only accepts values on the bounds of u32'
     );
     const op = (n: number): FPInterval => {
-      return this.correctlyRoundedInterval(n / 255);
+      return this.ulpInterval(n / 255, 3);
     };
 
     this.unpackDataU32[0] = n;
