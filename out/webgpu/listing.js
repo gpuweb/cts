@@ -3194,6 +3194,22 @@ export const listing = [
       "shader",
       "validation",
       "decl",
+      "const"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
+      "override"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
       "var_access_mode"
     ]
   },
