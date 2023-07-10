@@ -131,6 +131,8 @@ type FloatFormat = { signed: 0 | 1; exponentBits: number; mantissaBits: number; 
 export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bias: 127 } as const;
 /** FloatFormat defining IEEE754 16-bit float. */
 export const kFloat16Format = { signed: 1, exponentBits: 5, mantissaBits: 10, bias: 15 } as const;
+/** FloatFormat for 9 bit mantissa, 5 bit exponent unsigned float */
+export const kUFloat9e5Format = { signed: 0, exponentBits: 5, mantissaBits: 9, bias: 15 } as const;
 
 /**
  * Once-allocated ArrayBuffer/views to avoid overhead of allocation when converting between numeric formats
@@ -177,6 +179,23 @@ export function floatBitsToNumber(bits: number, fmt: FloatFormat): number {
   f32BitsWithWrongBias |= (bits << (31 - kNonSignBits)) & 0x8000_0000;
   const numberWithWrongBias = float32BitsToNumber(f32BitsWithWrongBias);
   return numberWithWrongBias * 2 ** (kFloat32Format.bias - fmt.bias);
+}
+
+/**
+ * Convert ufloat9e5 bits from rgb9e5ufloat to a JS number
+ *
+ * The difference between `floatBitsToNumber` and `ufloatBitsToNumber`
+ * is that the latter doesn't use an implicit leading bit:
+ *
+ * floatBitsToNumber      = 2^(exponent - bias) * (1 + mantissa / 2 ^ numMantissaBits)
+ * ufloatM9E5BitsToNumber = 2^(exponent - bias) * (mantissa / 2 ^ numMantissaBits)
+ *                        = 2^(exponent - bias - numMantissaBits) * mantissa
+ */
+export function ufloatM9E5BitsToNumber(bits: number, fmt: FloatFormat): number {
+  const exponent = bits >> fmt.mantissaBits;
+  const mantissaMask = (1 << fmt.mantissaBits) - 1;
+  const mantissa = bits & mantissaMask;
+  return mantissa * 2 ** (exponent - fmt.bias - fmt.mantissaBits);
 }
 
 /**
@@ -232,15 +251,15 @@ export function packRGB9E5UFloat(r: number, g: number, b: number): number {
   const N = 9; // number of mantissa bits
   const Emax = 31; // max exponent
   const B = 15; // exponent bias
-  const sharedexp_max = (((1 << N) - 1) / (1 << N)) * Math.pow(2, Emax - B);
+  const sharedexp_max = (((1 << N) - 1) / (1 << N)) * 2 ** (Emax - B);
   const red_c = clamp(r, { min: 0, max: sharedexp_max });
   const green_c = clamp(g, { min: 0, max: sharedexp_max });
   const blue_c = clamp(b, { min: 0, max: sharedexp_max });
   const max_c = Math.max(red_c, green_c, blue_c);
   const exp_shared_p = Math.max(-B - 1, Math.floor(Math.log2(max_c))) + 1 + B;
-  const max_s = Math.floor(max_c / Math.pow(2, exp_shared_p - B - N) + 0.5);
+  const max_s = Math.floor(max_c / 2 ** (exp_shared_p - B - N) + 0.5);
   const exp_shared = max_s === 1 << N ? exp_shared_p + 1 : exp_shared_p;
-  const scalar = 1 / Math.pow(2, exp_shared - B - N);
+  const scalar = 1 / 2 ** (exp_shared - B - N);
   const red_s = Math.floor(red_c * scalar + 0.5);
   const green_s = Math.floor(green_c * scalar + 0.5);
   const blue_s = Math.floor(blue_c * scalar + 0.5);
