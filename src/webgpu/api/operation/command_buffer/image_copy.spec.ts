@@ -514,7 +514,7 @@ class ImageCopyTest extends GPUTest {
       GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
     );
     // At this point both buffer and bufferData have the same random data in
-    // them. We'll use copyTextureToBuffer to up buffer with data from the
+    // them. We'll use copyTextureToBuffer to update buffer with data from the
     // texture and updateLinearTextureDataSubBox to update bufferData with the
     // data we originally uploaded to the texture.
 
