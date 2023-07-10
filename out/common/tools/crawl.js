@@ -45,8 +45,7 @@ async function crawlFilesRecursively(dir) {
 
 export async function crawl(suiteDir, validate) {
   if (!fs.existsSync(suiteDir)) {
-    console.error(`Could not find ${suiteDir}`);
-    process.exit(1);
+    throw new Error(`Could not find suite: ${suiteDir}`);
   }
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
