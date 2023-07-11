@@ -354,6 +354,9 @@ Test that color attachment formats in render passes or bundles match the pipelin
   )
   .fn(t => {
     const { encoderType, encoderFormat, pipelineFormat } = t.params;
+
+    t.skipIfTextureFormatNotSupported(encoderFormat, pipelineFormat);
+
     const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 
     const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {

@@ -363,6 +363,9 @@ combine('pipelineFormat', kColorAttachmentFormats)).
 
 fn((t) => {
   const { encoderType, encoderFormat, pipelineFormat } = t.params;
+
+  t.skipIfTextureFormatNotSupported(encoderFormat, pipelineFormat);
+
   const pipeline = t.createRenderPipeline([{ format: pipelineFormat, writeMask: 0 }]);
 
   const { encoder, validateFinishAndSubmit } = t.createEncoder(encoderType, {
