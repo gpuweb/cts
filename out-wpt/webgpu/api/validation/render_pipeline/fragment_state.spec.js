@@ -73,10 +73,15 @@ g.test('limits,maxColorAttachments')
 
     const descriptor = t.getDescriptor({
       targets: range(targetsLength, i => {
-        // Set writeMask to 0 for attachments without fragment output
-        return { format: 'rg8unorm', writeMask: i === 0 ? 0xf : 0 };
+        return { format: 'rg8unorm', writeMask: 0 };
       }),
       fragmentShaderCode: kDefaultFragmentShaderCode,
+      // add a depth stencil so that we can set writeMask to 0 for all color attachments
+      depthStencil: {
+        format: 'depth24plus',
+        depthWriteEnabled: true,
+        depthCompare: 'always',
+      },
     });
 
     t.doCreateRenderPipelineTest(
