@@ -60,6 +60,10 @@ combine('hasSampleMaskOutput', [false, true])).
 fn((t) => {
   const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
 
+  if (t.isCompatibility && hasSampleMaskOutput) {
+    t.skip('WGSL sample_mask is not supported in compatibility mode');
+  }
+
   const descriptor = t.getDescriptor({
     multisample: { alphaToCoverageEnabled, count: 4 },
     fragmentShaderCode: hasSampleMaskOutput ?
