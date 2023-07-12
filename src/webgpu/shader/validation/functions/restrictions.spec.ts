@@ -248,14 +248,24 @@ const kFunctionParamTypeCases: Record<string, ParamTypeCase> = {
 
   // Invalid pointers.
   ptr5: { name: `ptr<storage, u32>`, valid: false },
-  ptr6: { name: `ptr<storage, u32, read_write>`, valid: false },
-  ptr7: { name: `ptr<uniform, u32>`, valid: false },
-  ptr8: { name: `ptr<workgroup, u32>`, valid: false },
+  ptr6: { name: `ptr<storage, u32, read>`, valid: false },
+  ptr7: { name: `ptr<storage, u32, read_write>`, valid: false },
+  ptr8: { name: `ptr<uniform, u32>`, valid: false },
+  ptr9: { name: `ptr<workgroup, u32>`, valid: false },
+  ptr10: { name: `ptr<handle, u32>`, valid: false }, // Can't spell handle address space
+  ptr12: { name: `ptr<not_an_address_space, u32>`, valid: false },
+  ptr13: { name: `ptr<storage>`, valid: false }, // No store type
+  ptr14: { name: `ptr<private,clamp>`, valid: false }, // Invalid store type
+  ptr15: { name: `ptr<private,u32,read>`, valid: false }, // Can't specify access mode
+  ptr16: { name: `ptr<private,u32,write>`, valid: false }, // Can't specify access mode
+  ptr17: { name: `ptr<private,u32,read_write>`, valid: false }, // Can't specify access mode
+  ptrWorkgroupAtomic: { name: `ptr<workgroup, atomic<u32>>`, valid: false },
+  ptrWorkgroupNestedAtomic: { name: `ptr<workgroup, array<atomic<u32>,1>>`, valid: false },
 };
 
 g.test('function_parameter_types')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction')
-  .desc(`Test that function return types must be constructible`)
+  .desc(`Test validation of user-declared function parameter types`)
   .params(u => u.combine('case', keysOf(kFunctionParamTypeCases)))
   .beforeAllSubcases(t => {
     if (kFunctionParamTypeCases[t.params.case].name === 'f16') {
@@ -438,7 +448,9 @@ function parameterMatches(decl: string, matches: string[]): boolean {
 
 g.test('function_parameter_matching')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction')
-  .desc(`Test that function return types must be constructible`)
+  .desc(
+    `Test that function parameter types match function parameter type on user-declared functions`
+  )
   .params(u =>
     u
       .combine('decl', keysOf(kFunctionParamTypeCases))
