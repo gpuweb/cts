@@ -1111,9 +1111,25 @@ export interface TextureTestMixinType {
 
   /**
    * Renders the 2 given textures to an rgba8unorm texture at the size of the
-   * specified mipLevel. Expects contents of both textures to match.
-   * Also expects contents described by origin and size to not be a constant value
-   * so as to make sure something interesting was actually compared.
+   * specified mipLevel, each time reading the contents of the result.
+   * Expects contents of both renders to match. Also expects contents described
+   * by origin and size to not be a constant value so as to make sure something
+   * interesting was actually compared.
+   *
+   * The point of this function is to compare compressed texture contents in
+   * compatibility mode. `copyTextureToBuffer` does not work for compressed
+   * textures in compatibility mode so instead, we pass 2 compressed texture
+   * to this function. Each one will be rendered to an `rgba8unorm` texture,
+   * the results of that `rgba8unorm` texture read via `copyTextureToBuffer`,
+   * and then results compared. This indirectly lets us compare the contents
+   * of the 2 compressed textures.
+   *
+   * Code calling this function would generate the textures where the
+   * `actualTexture` is generated calling `writeTexture`, `copyBufferToTexture`
+   * or `copyTextureToTexture` and `expectedTexture`'s data is generated entirely
+   * on the CPU in such a way that its content should match whatever process
+   * was used to generate `actualTexture`. Often this involves calling
+   * `updateLinearTextureDataSubBox`
    */
   expectTexturesToMatchByRendering(
     actualTexture: GPUTexture,
