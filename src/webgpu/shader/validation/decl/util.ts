@@ -59,7 +59,7 @@ export function declareVarX(addressSpace: AddressSpace | '', accessMode: AccessM
   parts.push('var');
 
   const template_parts: string[] = [];
-  if (addressSpace) template_parts.push(addressSpace as string);
+  if (addressSpace) template_parts.push(addressSpace);
   if (accessMode) template_parts.push(accessMode);
   if (template_parts.length > 0) parts.push(`<${template_parts.join(',')}>`);
 
