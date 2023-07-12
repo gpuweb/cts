@@ -36,7 +36,7 @@ g.test('explicit_access_mode')
         .combine('addressSpace', kNonHandleAddressSpaces)
         .combine('explicitSpace', [true, false])
         .filter(t => varDeclCompatibleAddressSpace(t))
-        .combine('explicitMode', [true])
+        .combine('explicitAccess', [true])
         .combine('accessMode', keysOf(kAccessModeInfo))
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
@@ -63,7 +63,7 @@ g.test('implicit_access_mode')
       u
         .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('explicitSpace', explicitSpaceExpander)
-        .combine('explicitMode', [false])
+        .combine('explicitAccess', [false])
         .combine('accessMode', [''] as const)
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
@@ -85,7 +85,7 @@ g.test('read_access')
       u
         .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('explicitSpace', explicitSpaceExpander)
-        .combine('explicitMode', [false, true])
+        .combine('explicitAccess', [false, true])
         .expand('accessMode', accessModeExpander)
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )
@@ -103,7 +103,7 @@ g.test('write_access')
       u
         .combine('addressSpace', kNonHandleAddressSpaces)
         .expand('explicitSpace', explicitSpaceExpander)
-        .combine('explicitMode', [false, true])
+        .combine('explicitAccess', [false, true])
         .expand('accessMode', accessModeExpander)
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
   )

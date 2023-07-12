@@ -100,10 +100,10 @@ export function explicitSpaceExpander(p: { addressSpace: AddressSpace }): readon
  */
 export function accessModeExpander(p: {
   addressSpace: AddressSpace;
-  explicitMode: boolean; // Whether the access mode will be emitted.
+  explicitAccess: boolean; // Whether the access mode will be emitted.
 }): readonly (AccessMode | '')[] {
   const info = kAddressSpaceInfo[p.addressSpace];
-  return p.explicitMode && info.spellAccessMode !== 'never' ? info.accessModes : [''];
+  return p.explicitAccess && info.spellAccessMode !== 'never' ? info.accessModes : [''];
 }
 
 /**
@@ -115,7 +115,7 @@ export function getVarDeclShader(
     addressSpace: AddressSpace; // Address space for the variable.
     explicitSpace: boolean; // Should the address space be explicitly spelled?
     accessMode: AccessMode | ''; // What access mode to use.
-    explicitMode: boolean; // Should the access mode be explicitly spelled?
+    explicitAccess: boolean; // Should the access mode be explicitly spelled?
     stage: ShaderStage; // What shader stage to use.
   },
   additionalBody?: string
@@ -123,7 +123,7 @@ export function getVarDeclShader(
   const info = kAddressSpaceInfo[p.addressSpace];
   const decl = declareVarX(
     p.explicitSpace ? p.addressSpace : '',
-    p.explicitMode ? p.accessMode : ''
+    p.explicitAccess ? p.accessMode : ''
   );
 
   additionalBody = additionalBody ?? '';

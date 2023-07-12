@@ -49,7 +49,7 @@ g.test('let_ptr_explicit_type_matches_var')
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
       .expand('explicitSpace', explicitSpaceExpander)
-      .combine('explicitMode', [false, true])
+      .combine('explicitAccess', [false, true])
       .expand('accessMode', accessModeExpander)
       .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
       // Vary the store type.
@@ -69,7 +69,7 @@ g.test('let_ptr_reads')
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
       .expand('explicitSpace', explicitSpaceExpander)
-      .combine('explicitMode', [false, true])
+      .combine('explicitAccess', [false, true])
       .expand('accessMode', accessModeExpander)
       .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
       .combine('inferPtrType', [false, true])
@@ -91,7 +91,7 @@ g.test('let_ptr_writes')
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
       .expand('explicitSpace', explicitSpaceExpander)
-      .combine('explicitMode', [false, true])
+      .combine('explicitAccess', [false, true])
       .expand('accessMode', accessModeExpander)
       .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
       .combine('inferPtrType', [false, true])
