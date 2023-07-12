@@ -1,6 +1,14 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/
+**/import {
+
+kAccessModeInfo,
+kAddressSpaceInfo } from
+'../../types.js';
+
+/** An enumerator of shader stages */
+
+
 /** The list of all shader stages */
 export const kShaderStages = ['vertex', 'fragment', 'compute'];
 
@@ -39,5 +47,136 @@ fn ${arg.name}() {
   ${arg.body}
 }`;}
 
+}
+
+/**
+ * @returns a WGSL var declaration with given parameters for variable 'x' and
+ * store type i32.
+ */
+export function declareVarX(addressSpace, accessMode) {
+  const parts = [];
+  if (addressSpace && kAddressSpaceInfo[addressSpace].binding) parts.push('@group(0) @binding(0) ');
+  parts.push('var');
+
+  const template_parts = [];
+  if (addressSpace) template_parts.push(addressSpace);
+  if (accessMode) template_parts.push(accessMode);
+  if (template_parts.length > 0) parts.push(`<${template_parts.join(',')}>`);
+
+  parts.push(' x: i32;');
+  return parts.join('');
+}
+
+/**
+ * @returns true if an explicit address space is requested on a variable
+ * declaration whenever the address space requires one:
+ *
+ *    must implies requested
+ *
+ * Rewrite as:
+ *
+ *    !must or requested
+ */
+export function varDeclCompatibleAddressSpace(p)
+
+
+{
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return !(info.spell === 'must') || p.explicitSpace;
+}
+
+/**
+ * @returns a list of booleans indicating valid cases of specifying the address
+ * space.
+ */
+export function explicitSpaceExpander(p) {
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return info.spell === 'must' ? [true] : [true, false];
+}
+
+/**
+ * @returns a list of usable access modes under given experiment conditions, or undefined
+ * if none are allowed.
+ */
+export function accessModeExpander(p)
+
+
+{
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return p.explicitAccess && info.spellAccessMode !== 'never' ? info.accessModes : [''];
+}
+
+/**
+ * @returns a WGSL program with a single variable declaration, with the
+ * given parameterization
+ */
+export function getVarDeclShader(
+p,
+
+
+
+
+
+
+additionalBody)
+{
+  const info = kAddressSpaceInfo[p.addressSpace];
+  const decl = declareVarX(
+  p.explicitSpace ? p.addressSpace : '',
+  p.explicitAccess ? p.accessMode : '');
+
+
+  additionalBody = additionalBody ?? '';
+
+  switch (info.scope) {
+    case 'module':
+      return decl + '\n' + declareEntryPoint({ stage: p.stage, body: additionalBody });
+
+    case 'function':
+      return declareEntryPoint({ stage: p.stage, body: decl + '\n' + additionalBody });}
+
+}
+
+/**
+ * @returns the WGSL spelling of a pointer type corresponding to a variable
+ * declared with the given parameters.
+ */
+export function pointerType(p)
+
+
+
+
+{
+  const space = p.explicitSpace ? p.addressSpace : 'function';
+  const modePart = p.accessMode ? ',' + p.accessMode : '';
+  return `ptr<${space},${p.ptrStoreType}${modePart}>`;
+}
+
+/** @returns the effective access mode for the given experiment.  */
+export function effectiveAccessMode(
+info,
+accessMode)
+{
+  return accessMode || info.accessModes[0]; // default is first.
+}
+
+/** @returns whether the setup allows reads */
+export function supportsRead(p)
+
+
+{
+  const info = kAddressSpaceInfo[p.addressSpace];
+  const mode = effectiveAccessMode(info, p.accessMode);
+  return info.accessModes.includes(mode) && kAccessModeInfo[mode].read;
+}
+
+/** @returns whether the setup allows writes */
+export function supportsWrite(p)
+
+
+{
+  const info = kAddressSpaceInfo[p.addressSpace];
+  const mode = effectiveAccessMode(info, p.accessMode);
+  return info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
 }
 //# sourceMappingURL=util.js.map
