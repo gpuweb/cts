@@ -26,7 +26,6 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
   pointerType,
-  infoExpander,
   explicitSpaceExpander,
   accessModeExpander,
   getVarDeclShader,
@@ -49,7 +48,6 @@ g.test('let_ptr_explicit_type_matches_var')
   .params(u =>
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
-      .expand('info', infoExpander)
       .expand('explicitSpace', explicitSpaceExpander)
       .combine('explicitMode', [false, true])
       .expand('accessMode', accessModeExpander)
@@ -70,7 +68,6 @@ g.test('let_ptr_reads')
   .params(u =>
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
-      .expand('info', infoExpander)
       .expand('explicitSpace', explicitSpaceExpander)
       .combine('explicitMode', [false, true])
       .expand('accessMode', accessModeExpander)
@@ -93,7 +90,6 @@ g.test('let_ptr_writes')
   .params(u =>
     u // Generate non-handle variables in all valid permutations of address space and access mode.
       .combine('addressSpace', kNonHandleAddressSpaces)
-      .expand('info', infoExpander)
       .expand('explicitSpace', explicitSpaceExpander)
       .combine('explicitMode', [false, true])
       .expand('accessMode', accessModeExpander)

@@ -78,23 +78,20 @@ export function declareVarX(addressSpace: AddressSpace | '', accessMode: AccessM
  *    !must or requested
  */
 export function varDeclCompatibleAddressSpace(p: {
-  info: AddressSpaceInfo;
+  addressSpace: AddressSpace;
   explicitSpace: boolean;
 }): boolean {
-  return !(p.info.spell === 'must') || p.explicitSpace;
-}
-
-/** @returns the list of address space info objects for the given address space.  */
-export function infoExpander(p: { addressSpace: AddressSpace }): readonly AddressSpaceInfo[] {
-  return [kAddressSpaceInfo[p.addressSpace]];
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return !(info.spell === 'must') || p.explicitSpace;
 }
 
 /**
  * @returns a list of booleans indicating valid cases of specifying the address
  * space.
  */
-export function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly boolean[] {
-  return p.info.spell === 'must' ? [true] : [true, false];
+export function explicitSpaceExpander(p: { addressSpace: AddressSpace }): readonly boolean[] {
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return info.spell === 'must' ? [true] : [true, false];
 }
 
 /**
@@ -102,10 +99,11 @@ export function explicitSpaceExpander(p: { info: AddressSpaceInfo }): readonly b
  * if none are allowed.
  */
 export function accessModeExpander(p: {
+  addressSpace: AddressSpace;
   explicitMode: boolean; // Whether the access mode will be emitted.
-  info: AddressSpaceInfo;
 }): readonly (AccessMode | '')[] {
-  return p.explicitMode && p.info.spellAccessMode !== 'never' ? p.info.accessModes : [''];
+  const info = kAddressSpaceInfo[p.addressSpace];
+  return p.explicitMode && info.spellAccessMode !== 'never' ? info.accessModes : [''];
 }
 
 /**
@@ -122,7 +120,7 @@ export function getVarDeclShader(
   },
   additionalBody?: string
 ): string {
-  const as_info = kAddressSpaceInfo[p.addressSpace];
+  const info = kAddressSpaceInfo[p.addressSpace];
   const decl = declareVarX(
     p.explicitSpace ? p.addressSpace : '',
     p.explicitMode ? p.accessMode : ''
@@ -130,7 +128,7 @@ export function getVarDeclShader(
 
   additionalBody = additionalBody ?? '';
 
-  switch (as_info.scope) {
+  switch (info.scope) {
     case 'module':
       return decl + '\n' + declareEntryPoint({ stage: p.stage, body: additionalBody });
 
@@ -155,21 +153,29 @@ export function pointerType(p: {
 }
 
 /** @returns the effective access mode for the given experiment.  */
-export function effectiveAccessMode(p: {
-  info: AddressSpaceInfo;
-  accessMode: AccessMode | '';
-}): AccessMode {
-  return p.accessMode || p.info.accessModes[0]; // default is first.
+export function effectiveAccessMode(
+  info: AddressSpaceInfo,
+  accessMode: AccessMode | ''
+): AccessMode {
+  return accessMode || info.accessModes[0]; // default is first.
 }
 
 /** @returns whether the setup allows reads */
-export function supportsRead(p: { info: AddressSpaceInfo; accessMode: AccessMode | '' }): boolean {
-  const mode = effectiveAccessMode(p);
-  return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].read;
+export function supportsRead(p: {
+  addressSpace: AddressSpace;
+  accessMode: AccessMode | '';
+}): boolean {
+  const info = kAddressSpaceInfo[p.addressSpace];
+  const mode = effectiveAccessMode(info, p.accessMode);
+  return info.accessModes.includes(mode) && kAccessModeInfo[mode].read;
 }
 
 /** @returns whether the setup allows writes */
-export function supportsWrite(p: { info: AddressSpaceInfo; accessMode: AccessMode | '' }): boolean {
-  const mode = effectiveAccessMode(p);
-  return p.info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
+export function supportsWrite(p: {
+  addressSpace: AddressSpace;
+  accessMode: AccessMode | '';
+}): boolean {
+  const info = kAddressSpaceInfo[p.addressSpace];
+  const mode = effectiveAccessMode(info, p.accessMode);
+  return info.accessModes.includes(mode) && kAccessModeInfo[mode].write;
 }
