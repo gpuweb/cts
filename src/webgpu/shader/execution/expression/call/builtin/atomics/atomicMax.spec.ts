@@ -35,7 +35,7 @@ fn atomicMax(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarKind', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -44,7 +44,7 @@ fn atomicMax(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 
     const initValue = 0;
     const op = `atomicMax(&output[0], id)`;
-    const expected = new (typedArrayCtor(t.params.scalarKind))(bufferNumElements);
+    const expected = new (typedArrayCtor(t.params.scalarType))(bufferNumElements);
     expected[0] = numInvocations - 1;
 
     runStorageVariableTest({
@@ -72,7 +72,7 @@ fn atomicMax(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarKind', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'])
   )
   .fn(t => {
     // Allocate one extra element to ensure it doesn't get modified
@@ -81,7 +81,7 @@ fn atomicMax(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const initValue = 0;
     const op = `atomicMax(&wg[0], id)`;
 
-    const expected = new (typedArrayCtor(t.params.scalarKind))(
+    const expected = new (typedArrayCtor(t.params.scalarType))(
       wgNumElements * t.params.dispatchSize
     ).fill(initValue);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
