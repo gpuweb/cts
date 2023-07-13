@@ -1,5 +1,5 @@
 export const description = `
-Tests that you can not call copyTextureToBuffer with compressed textures in compat mode.
+Tests limitations of copyTextureToBuffer in compat mode.
 `;
 
 import { makeTestGroup } from '../../../../../common/internal/test_group.js';
