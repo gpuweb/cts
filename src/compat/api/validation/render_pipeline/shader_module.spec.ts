@@ -1,5 +1,5 @@
 export const description = `
-Tests that you can not create a render pipeline with a shader module that uses sample_mask in compat mode.
+Tests limitations of createRenderPipeline related to shader modules in compat mode.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -37,7 +37,7 @@ Tests that you can not create a render pipeline with a shader module that uses s
         }
         @fragment fn fsWithSampleMaskUsage() -> Output {
             var o: Output;
-            // We need to make sure this sample_mask isn't optimized out even its value equals "no op".
+            // We need to make sure this sample_mask isn't optimized out even if its value equals "no op".
             o.mask_out = 0xFFFFFFFFu;
             o.color = vec4f(1.0, 1.0, 1.0, 1.0);
             return o;
