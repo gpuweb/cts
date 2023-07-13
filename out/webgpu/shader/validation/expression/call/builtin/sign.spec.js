@@ -33,6 +33,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatAndSignedIntegerScalarsAndVectors).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 expand('value', (u) => fullRangeForType(u.type))).
 
 beforeAllSubcases((t) => {

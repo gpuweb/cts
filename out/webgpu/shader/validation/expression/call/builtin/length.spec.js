@@ -69,6 +69,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatScalars).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 expand('value', (u) => fullRangeForType(u.type))).
 
 beforeAllSubcases((t) => {
@@ -99,6 +100,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatVector2).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 expand('x', (u) => fullRangeForType(u.type, 5)).
 expand('y', (u) => fullRangeForType(u.type, 5)).
 expand('_result', (u) => [calculate([u.x, u.y], elementType(u.type))]).
@@ -131,6 +133,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatVector3).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 expand('x', (u) => fullRangeForType(u.type, 4)).
 expand('y', (u) => fullRangeForType(u.type, 4)).
 expand('z', (u) => fullRangeForType(u.type, 4)).
@@ -164,6 +167,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatVector4).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 expand('x', (u) => fullRangeForType(u.type, 3)).
 expand('y', (u) => fullRangeForType(u.type, 3)).
 expand('z', (u) => fullRangeForType(u.type, 3)).

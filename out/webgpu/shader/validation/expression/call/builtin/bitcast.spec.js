@@ -52,6 +52,7 @@ params((u) =>
 u.
 combine('fromScalarType', ['i32', 'u32']).
 combine('vectorize', [...vectorCases]).
+beginSubcases().
 combine('bitBadValue', [...f32InfAndNaNInU32])).
 
 fn((t) => {

@@ -36,6 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', kAllFloatScalarsAndVectors)
       .filter(u => stageSupportsType(u.stage, u.type))
+      .beginSubcases()
       .expand('value', u => {
         const constants = fpTraitsFor(elementType(u.type)).constants();
         return unique(fullRangeForType(u.type), [

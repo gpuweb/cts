@@ -34,6 +34,7 @@ u.
 combine('stage', kConstantAndOverrideStages).
 combine('type', kAllFloatScalarsAndVectors).
 filter((u) => stageSupportsType(u.stage, u.type)).
+beginSubcases().
 combine('value', [
 -1e2,
 -1e3,
