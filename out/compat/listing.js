@@ -6,6 +6,14 @@ export const listing = [
       "api",
       "validation",
       "texture",
+      "createTexture"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "texture",
       "cubeArray"
     ]
   }
