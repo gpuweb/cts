@@ -1,0 +1,140 @@
+/**
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/export const description = `
+Test for texture_ok utils.
+`;import { makeTestGroup } from '../common/framework/test_group.js';
+
+import { TexelView } from '../webgpu/util/texture/texel_view.js';
+import { findFailedPixels } from '../webgpu/util/texture/texture_ok.js';
+
+import { UnitTest } from './unit_test.js';
+
+class F extends UnitTest {
+  test(act, exp) {
+    this.expect(act === exp, 'got: ' + act.replace('\n', '⏎'));
+  }
+}
+
+export const g = makeTestGroup(F);
+g.test('findFailedPixels').
+desc(
+`
+    Test findFailedPixels passes what is expected to pass and fails what is expected
+    to fail. For example NaN === NaN should be true in a texture that allows NaN.
+    2 different representations of the same rgb9e5ufloat should compare as equal.
+    etc...
+  `).
+
+params((u) =>
+u.combineWithParams([
+// Sanity Check
+{
+  format: 'rgba8unorm',
+  actual: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
+  expected: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
+  isSame: true
+},
+// Slightly different values
+{
+  format: 'rgba8unorm',
+  actual: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
+  expected: new Uint8Array([0x00, 0x40, 0x81, 0xff]),
+  isSame: false
+},
+// Different representations of the same value
+{
+  format: 'rgb9e5ufloat',
+  actual: new Uint8Array([0x78, 0x56, 0x34, 0x12]),
+  expected: new Uint8Array([0xf0, 0xac, 0x68, 0x0c]),
+  isSame: true
+},
+// Slightly different values
+{
+  format: 'rgb9e5ufloat',
+  actual: new Uint8Array([0x78, 0x56, 0x34, 0x12]),
+  expected: new Uint8Array([0xf1, 0xac, 0x68, 0x0c]),
+  isSame: false
+},
+// Test NaN === NaN
+{
+  format: 'r32float',
+  actual: new Float32Array([parseFloat('abc')]),
+  expected: new Float32Array([parseFloat('def')]),
+  isSame: true
+},
+// Sanity Check
+{
+  format: 'r32float',
+  actual: new Float32Array([1.23]),
+  expected: new Float32Array([1.23]),
+  isSame: true
+},
+// Slightly different values.
+{
+  format: 'r32float',
+  actual: new Uint32Array([0x3f9d70a4]),
+  expected: new Uint32Array([0x3f9d70a5]),
+  isSame: false
+},
+// Slightly different
+{
+  format: 'rg11b10ufloat',
+  actual: new Uint32Array([0x3ce]),
+  expected: new Uint32Array([0x3cf]),
+  isSame: false
+},
+// NaN === NaN (red)
+{
+  format: 'rg11b10ufloat',
+  actual: new Uint32Array([0b11111000000]),
+  expected: new Uint32Array([0b11111000000]),
+  isSame: true
+},
+// NaN === NaN (green)
+{
+  format: 'rg11b10ufloat',
+  actual: new Uint32Array([0b11111000000_00000000000]),
+  expected: new Uint32Array([0b11111000000_00000000000]),
+  isSame: true
+},
+// NaN === NaN (blue)
+{
+  format: 'rg11b10ufloat',
+  actual: new Uint32Array([0b1111100000_00000000000_00000000000]),
+  expected: new Uint32Array([0b1111100000_00000000000_00000000000]),
+  isSame: true
+}])).
+
+
+fn((t) => {
+  const { format, actual, expected, isSame } = t.params;
+  const actualData = new Uint8Array(actual.buffer);
+  const expectedData = new Uint8Array(expected.buffer);
+
+  const actTexelView = TexelView.fromTextureDataByReference(format, actualData, {
+    bytesPerRow: actualData.byteLength,
+    rowsPerImage: 1,
+    subrectOrigin: [0, 0, 0],
+    subrectSize: [1, 1, 1]
+  });
+  const expTexelView = TexelView.fromTextureDataByReference(format, expectedData, {
+    bytesPerRow: expectedData.byteLength,
+    rowsPerImage: 1,
+    subrectOrigin: [0, 0, 0],
+    subrectSize: [1, 1, 1]
+  });
+
+  const zero = { x: 0, y: 0, z: 0 };
+  const failedPixelsMessage = findFailedPixels(
+  format,
+  zero,
+  { width: 1, height: 1, depthOrArrayLayers: 1 },
+  { actTexelView, expTexelView },
+  {
+    maxFractionalDiff: 0
+  });
+
+
+  t.expect(isSame === !failedPixelsMessage, failedPixelsMessage);
+});
+//# sourceMappingURL=texture_ok.spec.js.map

@@ -89,5 +89,10 @@ export const listing = [
     "file": [
       "test_query"
     ]
+  },
+  {
+    "file": [
+      "texture_ok"
+    ]
   }
 ];

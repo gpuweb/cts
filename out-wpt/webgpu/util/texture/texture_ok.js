@@ -120,6 +120,9 @@ function comparePerComponent(actual, expected, maxDiff) {
     const act = actual[k];
     const exp = expected[k];
     if (exp === undefined) return false;
+    if (Number.isNaN(act) && Number.isNaN(exp)) {
+      return true;
+    }
     return Math.abs(act - exp) <= maxDiff;
   });
 }
