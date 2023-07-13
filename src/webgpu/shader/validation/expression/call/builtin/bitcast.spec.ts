@@ -52,6 +52,7 @@ It is a shader-creation error if any const-expression of floating-point type eva
     u
       .combine('fromScalarType', ['i32', 'u32'] as const)
       .combine('vectorize', [...vectorCases] as const)
+      .beginSubcases()
       .combine('bitBadValue', [...f32InfAndNaNInU32] as const)
   )
   .fn(t => {

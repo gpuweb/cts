@@ -36,6 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', kAllFloatScalarsAndVectors)
       .filter(u => stageSupportsType(u.stage, u.type))
+      .beginSubcases()
       .expand('value', u => unique(fullRangeForType(u.type), linearRange(-2000, 2000, 10)))
   )
   .beforeAllSubcases(t => {
