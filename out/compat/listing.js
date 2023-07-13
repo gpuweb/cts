@@ -5,6 +5,15 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "encoding",
+      "cmds",
+      "copyTextureToBuffer"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "render_pipeline",
       "shader_module"
     ]
