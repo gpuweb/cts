@@ -15,6 +15,14 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
+      "fragment_state"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
       "shader_module"
     ]
   },
