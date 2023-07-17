@@ -21,50 +21,62 @@ type BindConfig = kBindConfigs[number];
  * Gets the WGSL needed for testing a render pipeline using texture_2d or texture_storage_2d
  * and either 2 bindgroups or 1
  */
-function getRenderPipelineWGSL(textureType: TextureType, bindConfig: BindConfig) {
+function getRenderShaderModule(
+  device: GPUDevice,
+  textureType: TextureType,
+  bindConfig: BindConfig
+) {
   const textureTypeWGSL = getTextureTypeWGSL(textureType);
   const secondGroup = bindConfig === 'one bindgroup' ? 0 : 1;
   const secondBinding = secondGroup === 0 ? 1 : 0;
-  return `
-  @vertex
-  fn vs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4f {
-    var pos = array(
-      vec4f(-1,  3, 0, 1),
-      vec4f( 3, -1, 0, 1),
-      vec4f(-1, -1, 0, 1));
-    return pos[VertexIndex];
-  }
+  return device.createShaderModule({
+    code: `
+      @vertex
+      fn vs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4f {
+        var pos = array(
+          vec4f(-1,  3, 0, 1),
+          vec4f( 3, -1, 0, 1),
+          vec4f(-1, -1, 0, 1));
+        return pos[VertexIndex];
+      }
 
-  @group(0) @binding(0) var tex0 : ${textureTypeWGSL};
-  @group(${secondGroup}) @binding(${secondBinding}) var tex1 : ${textureTypeWGSL};
+      @group(0) @binding(0) var tex0 : ${textureTypeWGSL};
+      @group(${secondGroup}) @binding(${secondBinding}) var tex1 : ${textureTypeWGSL};
 
-  @fragment
-  fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
-    _ = tex0;
-    _ = tex1;
-    return vec4f(0);
-  }
-  `;
+      @fragment
+      fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
+        _ = tex0;
+        _ = tex1;
+        return vec4f(0);
+      }
+  `,
+  });
 }
 
 /**
  * Gets the WGSL needed for testing a compute pipeline using texture_2d or texture_storage_2d
  * and either 2 bindgroups or 1
  */
-function getComputePipelineWGSL(textureType: TextureType, bindConfig: BindConfig) {
+function getComputeShaderModule(
+  device: GPUDevice,
+  textureType: TextureType,
+  bindConfig: BindConfig
+) {
   const textureTypeWGSL = getTextureTypeWGSL(textureType);
   const secondGroup = bindConfig === 'one bindgroup' ? 0 : 1;
   const secondBinding = secondGroup === 0 ? 1 : 0;
-  return `
-  @group(0) @binding(0) var tex0 : ${textureTypeWGSL};
-  @group(${secondGroup}) @binding(${secondBinding}) var tex1 : ${textureTypeWGSL};
+  return device.createShaderModule({
+    code: `
+      @group(0) @binding(0) var tex0 : ${textureTypeWGSL};
+      @group(${secondGroup}) @binding(${secondBinding}) var tex1 : ${textureTypeWGSL};
 
-  @compute @workgroup_size(1)
-  fn cs() {
-    _ = tex0;
-    _ = tex1;
-  }
-  `;
+      @compute @workgroup_size(1)
+      fn cs() {
+        _ = tex0;
+        _ = tex1;
+      }
+    `,
+  });
 }
 
 type GPUEncoderType = GPURenderPassEncoder | GPUComputePassEncoder | GPURenderBundleEncoder;
@@ -79,7 +91,6 @@ const kBindCases: {
       texture: GPUTexture
     ) => {
       shouldSucceed: boolean;
-      use: boolean;
     };
   };
 } = {
@@ -94,7 +105,7 @@ const kBindCases: {
         ],
       });
       encoder.setBindGroup(0, bindGroup);
-      return { shouldSucceed: false, use: true };
+      return { shouldSucceed: false };
     },
   },
   'incompatible views in different bindGroups': {
@@ -114,7 +125,7 @@ const kBindCases: {
       });
       encoder.setBindGroup(0, bindGroup0);
       encoder.setBindGroup(1, bindGroup1);
-      return { shouldSucceed: false, use: true };
+      return { shouldSucceed: false };
     },
   },
   'can bind same view in different bindGroups': {
@@ -134,7 +145,7 @@ const kBindCases: {
       });
       encoder.setBindGroup(0, bindGroup0);
       encoder.setBindGroup(1, bindGroup1);
-      return { shouldSucceed: true, use: true };
+      return { shouldSucceed: true };
     },
   },
   'binding incompatible bindGroups then fix': {
@@ -156,30 +167,29 @@ const kBindCases: {
       });
       encoder.setBindGroup(0, badBindGroup);
       encoder.setBindGroup(0, goodBindGroup);
-      return { shouldSucceed: true, use: true };
-    },
-  },
-  'binding incompatible bindGroups without using': {
-    bindConfig: 'two bindgroups',
-    fn(device: GPUDevice, pipeline: GPUPipelineBase, encoder: GPUEncoderType, texture: GPUTexture) {
-      const bindGroup0 = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: texture.createView({ baseMipLevel: 0, mipLevelCount: 1 }) },
-        ],
-      });
-      const bindGroup1 = device.createBindGroup({
-        layout: pipeline.getBindGroupLayout(1),
-        entries: [
-          { binding: 0, resource: texture.createView({ baseMipLevel: 1, mipLevelCount: 1 }) },
-        ],
-      });
-      encoder.setBindGroup(0, bindGroup0);
-      encoder.setBindGroup(1, bindGroup1);
-      return { shouldSucceed: true, use: false };
+      return { shouldSucceed: true };
     },
   },
 };
+
+function createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(
+  device: GPUDevice,
+  pipeline: GPUPipelineBase,
+  encoder: GPUEncoderType,
+  texture: GPUTexture
+) {
+  const bindGroup0 = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [{ binding: 0, resource: texture.createView({ baseMipLevel: 0, mipLevelCount: 1 }) }],
+  });
+  const bindGroup1 = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(1),
+    entries: [{ binding: 0, resource: texture.createView({ baseMipLevel: 1, mipLevelCount: 1 }) }],
+  });
+  encoder.setBindGroup(0, bindGroup0);
+  encoder.setBindGroup(1, bindGroup1);
+}
+
 const kBindCaseNames = keysOf(kBindCases);
 
 const kDrawUseCases: {
@@ -228,9 +238,66 @@ const kDispatchUseCases: {
 };
 const kDispatchCaseNames = keysOf(kDispatchUseCases);
 
+function createResourcesForRenderPassTest(
+  t: ValidationTest,
+  textureType: TextureType,
+  bindConfig: BindConfig
+) {
+  const texture = t.device.createTexture({
+    size: [2, 1, 1],
+    mipLevelCount: 2,
+    format: 'rgba8unorm',
+    usage:
+      textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
+  });
+  t.trackForCleanup(texture);
+
+  const module = getRenderShaderModule(t.device, textureType, bindConfig);
+  const pipeline = t.device.createRenderPipeline({
+    layout: 'auto',
+    vertex: {
+      module,
+      entryPoint: 'vs',
+    },
+    fragment: {
+      module,
+      entryPoint: 'fs',
+      targets: [{ format: 'rgba8unorm' }],
+    },
+  });
+
+  return { texture, pipeline };
+}
+
+function createResourcesForComputePassTest(
+  t: ValidationTest,
+  textureType: TextureType,
+  bindConfig: BindConfig
+) {
+  const texture = t.device.createTexture({
+    size: [2, 1, 1],
+    mipLevelCount: 2,
+    format: 'rgba8unorm',
+    usage:
+      textureType === 'storage' ? GPUTextureUsage.STORAGE_BINDING : GPUTextureUsage.TEXTURE_BINDING,
+  });
+  t.trackForCleanup(texture);
+
+  const module = getComputeShaderModule(t.device, textureType, bindConfig);
+  const pipeline = t.device.createComputePipeline({
+    layout: 'auto',
+    compute: {
+      module,
+      entryPoint: 'cs',
+    },
+  });
+
+  return { texture, pipeline };
+}
+
 export const g = makeTestGroup(ValidationTest);
 
-g.test('twoDifferentTextureViews,render_pass')
+g.test('twoDifferentTextureViews,render_pass,used')
   .desc(
     `
 Tests that you can not use 2 different views of the same texture in a render pass in compat mode..
@@ -239,7 +306,6 @@ Tests that you can not use 2 different views of the same texture in a render pas
 - Test you can not use incompatible views in different bindGroups
 - Test you can bind the same view in different bindGroups
 - Test binding incompatible bindGroups is ok as long as they are fixed before draw/dispatch
-- Test binding incompatible bindGroups is ok if there's no draw/dispatch
 
   The last 2 tests are to check validation happens at the correct time (draw/dispatch) and not
   at finish or setBindGroup.
@@ -266,45 +332,35 @@ Tests that you can not use 2 different views of the same texture in a render pas
   .fn(t => {
     const { encoderType, bindCase, useCase, textureType } = t.params;
     const { bindConfig, fn } = kBindCases[bindCase];
-
-    const texture = t.device.createTexture({
-      size: [2, 1, 1],
-      mipLevelCount: 2,
-      format: 'rgba8unorm',
-      usage:
-        textureType === 'storage'
-          ? GPUTextureUsage.STORAGE_BINDING
-          : GPUTextureUsage.TEXTURE_BINDING,
-    });
-    t.trackForCleanup(texture);
-
-    const code = getRenderPipelineWGSL(textureType, bindConfig);
-    const module = t.device.createShaderModule({ code });
-
-    const pipeline = t.device.createRenderPipeline({
-      layout: 'auto',
-      vertex: {
-        module,
-        entryPoint: 'vs',
-      },
-      fragment: {
-        module,
-        entryPoint: 'fs',
-        targets: [{ format: 'rgba8unorm' }],
-      },
-    });
-
+    const { texture, pipeline } = createResourcesForRenderPassTest(t, textureType, bindConfig);
     const { encoder, validateFinish } = t.createEncoder(encoderType);
     encoder.setPipeline(pipeline);
-
-    const { shouldSucceed, use } = fn(t.device, pipeline, encoder, texture);
-    if (use) {
-      kDrawUseCases[useCase](t, encoder as GPURenderCommandsMixin);
-    }
+    const { shouldSucceed } = fn(t.device, pipeline, encoder, texture);
+    kDrawUseCases[useCase](t, encoder as GPURenderCommandsMixin);
     validateFinish(shouldSucceed);
   });
 
-g.test('twoDifferentTextureViews,compute_pass')
+g.test('twoDifferentTextureViews,render_pass,unused')
+  .desc(
+    `
+Tests that binding 2 different views of the same texture but not using them does not generate a validation error.
+    `
+  )
+  .params(u => u.combine('encoderType', kRenderEncodeTypes).combine('textureType', kTextureTypes))
+  .fn(t => {
+    const { encoderType, textureType } = t.params;
+    const { texture, pipeline } = createResourcesForRenderPassTest(
+      t,
+      textureType,
+      'two bindgroups'
+    );
+    const { encoder, validateFinish } = t.createEncoder(encoderType);
+    encoder.setPipeline(pipeline);
+    createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(t.device, pipeline, encoder, texture);
+    validateFinish(true);
+  });
+
+g.test('twoDifferentTextureViews,compute_pass,used')
   .desc(
     `
 Tests that you can not use 2 different views of the same texture in a compute pass in compat mode..
@@ -313,7 +369,6 @@ Tests that you can not use 2 different views of the same texture in a compute pa
 - Test you can not use incompatible views in different bindGroups
 - Test can bind the same view in different bindGroups
 - Test that binding incompatible bindGroups is ok as long as they are fixed before draw/dispatch
-- Test that binding incompatible bindGroups is ok if there's no draw/dispatch
 
   The last 2 tests are to check validation happens at the correct time (draw/dispatch) and not
   at finish or setBindGroup.
@@ -339,35 +394,30 @@ Tests that you can not use 2 different views of the same texture in a compute pa
   .fn(t => {
     const { bindCase, useCase, textureType } = t.params;
     const { bindConfig, fn } = kBindCases[bindCase];
-
-    const texture = t.device.createTexture({
-      size: [2, 1, 1],
-      mipLevelCount: 2,
-      format: 'rgba8unorm',
-      usage:
-        textureType === 'storage'
-          ? GPUTextureUsage.STORAGE_BINDING
-          : GPUTextureUsage.TEXTURE_BINDING,
-    });
-    t.trackForCleanup(texture);
-
-    const code = getComputePipelineWGSL(textureType, bindConfig);
-    const module = t.device.createShaderModule({ code });
-
-    const pipeline = t.device.createComputePipeline({
-      layout: 'auto',
-      compute: {
-        module,
-        entryPoint: 'cs',
-      },
-    });
-
+    const { texture, pipeline } = createResourcesForComputePassTest(t, textureType, bindConfig);
     const { encoder, validateFinish } = t.createEncoder('compute pass');
     encoder.setPipeline(pipeline);
-
-    const { shouldSucceed, use } = fn(t.device, pipeline, encoder, texture);
-    if (use) {
-      kDispatchUseCases[useCase](t, encoder);
-    }
+    const { shouldSucceed } = fn(t.device, pipeline, encoder, texture);
+    kDispatchUseCases[useCase](t, encoder);
     validateFinish(shouldSucceed);
+  });
+
+g.test('twoDifferentTextureViews,compute_pass,unused')
+  .desc(
+    `
+Tests that binding 2 different views of the same texture but not using them does not generate a validation error.
+    `
+  )
+  .params(u => u.combine('textureType', kTextureTypes))
+  .fn(t => {
+    const { textureType } = t.params;
+    const { texture, pipeline } = createResourcesForComputePassTest(
+      t,
+      textureType,
+      'two bindgroups'
+    );
+    const { encoder, validateFinish } = t.createEncoder('compute pass');
+    encoder.setPipeline(pipeline);
+    createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(t.device, pipeline, encoder, texture);
+    validateFinish(true);
   });
