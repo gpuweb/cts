@@ -3068,34 +3068,44 @@ export abstract class FPTraits {
     y: number | number[]
   ) => FPInterval;
 
-  // This op should be implemented diffferently for f32 and f16.
-  private readonly DivisionIntervalOp: ScalarPairToIntervalOp = {
-    impl: this.limitScalarPairToIntervalDomain(
-      {
-        x: [this.toInterval([kValue.f32.negative.min, kValue.f32.positive.max])],
-        y: [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])],
-      },
-      (x: number, y: number): FPInterval => {
-        if (y === 0) {
-          return this.constants().anyInterval;
+  // This op is implemented diffferently for f32 and f16.
+  private DivisionIntervalOpBuilder(): ScalarPairToIntervalOp {
+    assert(this.kind === 'f32' || this.kind === 'f16');
+    const constants = this.constants();
+    const domain_x = [this.toInterval([constants.negative.min, constants.positive.max])];
+    const domain_y =
+      this.kind === 'f32'
+        ? [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])]
+        : [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
+    return {
+      impl: this.limitScalarPairToIntervalDomain(
+        {
+          x: domain_x,
+          y: domain_y,
+        },
+        (x: number, y: number): FPInterval => {
+          if (y === 0) {
+            return constants.anyInterval;
+          }
+          return this.ulpInterval(x / y, 2.5);
         }
-        return this.ulpInterval(x / y, 2.5);
-      }
-    ),
-    extrema: (x: FPInterval, y: FPInterval): [FPInterval, FPInterval] => {
-      // division has a discontinuity at y = 0.
-      if (y.contains(0)) {
-        y = this.toInterval(0);
-      }
-      return [x, y];
-    },
-  };
+      ),
+      extrema: (x: FPInterval, y: FPInterval): [FPInterval, FPInterval] => {
+        // division has a discontinuity at y = 0.
+        if (y.contains(0)) {
+          y = this.toInterval(0);
+        }
+        return [x, y];
+      },
+    };
+  }
 
   protected divisionIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
+    assert(this.kind === 'f32' || this.kind === 'f16');
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
-      this.DivisionIntervalOp
+      this.DivisionIntervalOpBuilder()
     );
   }
 
@@ -4878,7 +4888,7 @@ class F16Traits extends FPTraits {
   public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  public readonly additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   public readonly asinInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4895,7 +4905,7 @@ class F16Traits extends FPTraits {
   public readonly degreesInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(this);
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
-  public readonly divisionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this);
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this);
@@ -4903,7 +4913,7 @@ class F16Traits extends FPTraits {
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly lengthInterval = this.unimplementedLength.bind(this);
   public readonly logInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4914,7 +4924,7 @@ class F16Traits extends FPTraits {
   public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.unimplementedModf.bind(this);
-  public readonly multiplicationInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
     this
   );
@@ -4944,9 +4954,9 @@ class F16Traits extends FPTraits {
   public readonly sinInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly stepInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly subtractionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   public readonly tanInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this);
