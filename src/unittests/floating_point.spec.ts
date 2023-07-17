@@ -2554,22 +2554,22 @@ g.test('cosInterval')
         const constants = trait.constants();
         // prettier-ignore
         return [
-        // This test does not include some common cases. i.e. f(x = π/2) = 0,
-        // because the difference between true x and x as a f32 is sufficiently
-        // large, such that the high slope of f @ x causes the results to be
-        // substantially different, so instead of getting 0 you get a value on the
-        // order of 10^-8 away from 0, thus difficult to express in a
-        // human-readable manner.
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.negative.min, expected: kAnyBounds },
-        { input: constants.negative.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
-        { input: 0, expected: [1, 1] },
-        { input: constants.positive.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
-        { input: constants.positive.max, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
+          // This test does not include some common cases. i.e. f(x = π/2) = 0,
+          // because the difference between true x and x as a f32 is sufficiently
+          // large, such that the high slope of f @ x causes the results to be
+          // substantially different, so instead of getting 0 you get a value on the
+          // order of 10^-8 away from 0, thus difficult to express in a
+          // human-readable manner.
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.negative.min, expected: kAnyBounds },
+          { input: constants.negative.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+          { input: 0, expected: [1, 1] },
+          { input: constants.positive.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+          { input: constants.positive.max, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
 
-        ...(kCosIntervalThirdPiCases[p.trait] as ScalarToIntervalCase[]),
-      ];
+          ...(kCosIntervalThirdPiCases[p.trait] as ScalarToIntervalCase[]),
+        ];
       })
   )
   .fn(t => {
@@ -3169,20 +3169,20 @@ g.test('sinInterval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-        // This test does not include some common cases, i.e. f(x = -π|π) = 0,
-        // because the difference between true x and x as a f32 is sufficiently
-        // large, such that the high slope of f @ x causes the results to be
-        // substantially different, so instead of getting 0 you get a value on the
-        // order of 10^-8 away from it, thus difficult to express in a
-        // human-readable manner.
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.negative.min, expected: kAnyBounds },
-        { input: constants.negative.pi.half, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
-        { input: 0, expected: 0 },
-        { input: constants.positive.pi.half, expected: [kMinusOneULPFunctions[p.trait](1), 1] },
-        { input: constants.positive.max, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
-      ];
+          // This test does not include some common cases, i.e. f(x = -π|π) = 0,
+          // because the difference between true x and x as a f32 is sufficiently
+          // large, such that the high slope of f @ x causes the results to be
+          // substantially different, so instead of getting 0 you get a value on the
+          // order of 10^-8 away from it, thus difficult to express in a
+          // human-readable manner.
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.negative.min, expected: kAnyBounds },
+          { input: constants.negative.pi.half, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+          { input: 0, expected: 0 },
+          { input: constants.positive.pi.half, expected: [kMinusOneULPFunctions[p.trait](1), 1] },
+          { input: constants.positive.max, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {
