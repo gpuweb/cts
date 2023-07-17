@@ -2520,39 +2520,72 @@ g.test('ceilInterval')
     );
   });
 
-g.test('cosInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // This test does not include some common cases. i.e. f(x = π/2) = 0,
-      // because the difference between true x and x as a f32 is sufficiently
-      // large, such that the high slope of f @ x causes the results to be
-      // substantially different, so instead of getting 0 you get a value on the
-      // order of 10^-8 away from 0, thus difficult to express in a
-      // human-readable manner.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: kValue.f32.negative.pi.whole, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
-      { input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](1/2), 1/2] },
-      { input: 0, expected: [1, 1] },
-      { input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](1/2), 1/2] },
-      { input: kValue.f32.positive.pi.whole, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
+// Cos interval cases on x=π/3, the result of f32 and f16 is different because π/3 quantized to
+// different direction for two types.
+const kCosIntervalThirdPiCases = {
+  // prettier-ignore
+  f32: [
+    // cos(-1.0471975803375244) = 0.499999974763
+    { input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](1/2), 1/2] },
+    // cos(1.0471975803375244) = 0.499999974763
+    { input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](1/2), 1/2] },
+  ],
+  f16: [
+    // cos(-1.046875) = 0.50027931
+    {
+      input: kValue.f16.negative.pi.third,
+      expected: FP['f16'].correctlyRoundedInterval(0.50027931).bounds(),
+    },
+    // cos(1.046875) = 0.50027931
+    {
+      input: kValue.f16.positive.pi.third,
+      expected: FP['f16'].correctlyRoundedInterval(0.50027931).bounds(),
+    },
+  ],
+};
+
+g.test('cosInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+        // This test does not include some common cases. i.e. f(x = π/2) = 0,
+        // because the difference between true x and x as a f32 is sufficiently
+        // large, such that the high slope of f @ x causes the results to be
+        // substantially different, so instead of getting 0 you get a value on the
+        // order of 10^-8 away from 0, thus difficult to express in a
+        // human-readable manner.
+        { input: constants.negative.infinity, expected: kAnyBounds },
+        { input: constants.negative.min, expected: kAnyBounds },
+        { input: constants.negative.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+        { input: 0, expected: [1, 1] },
+        { input: constants.positive.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+        { input: constants.positive.max, expected: kAnyBounds },
+        { input: constants.positive.infinity, expected: kAnyBounds },
+
+        ...(kCosIntervalThirdPiCases[p.trait] as ScalarToIntervalCase[]),
+      ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
+
     const error = (_: number): number => {
-      return 2 ** -11;
+      return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = FP.f32.toInterval(t.params.expected);
+    const expected = trait.toInterval(t.params.expected);
 
-    const got = FP.f32.cosInterval(t.params.input);
+    const got = trait.cosInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.cosInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.cosInterval(${t.params.input}) returned ${got}. Expected ${expected}, ===${t.params.expected}===`
     );
   });
 
@@ -3127,37 +3160,45 @@ g.test('signInterval_f32')
     );
   });
 
-g.test('sinInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // This test does not include some common cases, i.e. f(x = -π|π) = 0,
-      // because the difference between true x and x as a f32 is sufficiently
-      // large, such that the high slope of f @ x causes the results to be
-      // substantially different, so instead of getting 0 you get a value on the
-      // order of 10^-8 away from it, thus difficult to express in a
-      // human-readable manner.
-      { input: kValue.f32.infinity.negative, expected: kAnyBounds },
-      { input: kValue.f32.negative.min, expected: kAnyBounds },
-      { input: kValue.f32.negative.pi.half, expected: [-1, kPlusOneULPFunctions['f32'](-1)] },
-      { input: 0, expected: 0 },
-      { input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](1), 1] },
-      { input: kValue.f32.positive.max, expected: kAnyBounds },
-      { input: kValue.f32.infinity.positive, expected: kAnyBounds },
-    ]
+g.test('sinInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+        // This test does not include some common cases, i.e. f(x = -π|π) = 0,
+        // because the difference between true x and x as a f32 is sufficiently
+        // large, such that the high slope of f @ x causes the results to be
+        // substantially different, so instead of getting 0 you get a value on the
+        // order of 10^-8 away from it, thus difficult to express in a
+        // human-readable manner.
+        { input: constants.negative.infinity, expected: kAnyBounds },
+        { input: constants.negative.min, expected: kAnyBounds },
+        { input: constants.negative.pi.half, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
+        { input: 0, expected: 0 },
+        { input: constants.positive.pi.half, expected: [kMinusOneULPFunctions[p.trait](1), 1] },
+        { input: constants.positive.max, expected: kAnyBounds },
+        { input: constants.positive.infinity, expected: kAnyBounds },
+      ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
+
     const error = (_: number): number => {
-      return 2 ** -11;
+      return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
     };
 
     t.params.expected = applyError(t.params.expected, error);
-    const expected = FP.f32.toInterval(t.params.expected);
+    const expected = trait.toInterval(t.params.expected);
 
-    const got = FP.f32.sinInterval(t.params.input);
+    const got = trait.sinInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.sinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.sinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
