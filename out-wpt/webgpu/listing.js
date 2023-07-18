@@ -3703,14 +3703,6 @@ export const listing = [
     "file": [
       "shader",
       "validation",
-      "resource_interface",
-      "bindings"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
       "shader_io",
       "binding"
     ]

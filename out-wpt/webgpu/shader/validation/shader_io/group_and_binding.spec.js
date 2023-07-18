@@ -2,113 +2,39 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ export const description = `Validation tests for group and binding`;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
+
+import {
+  declareEntrypoint,
+  kResourceEmitters,
+  kResourceKindsA,
+  kResourceKindsAll,
+  kResourceKindsB,
+} from './util.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-g.test('storage')
-  .desc(`Test validation of group and binding on storage resources`)
+g.test('binding_attributes')
+  .desc(`Test that both @group and @binding attributes must both be declared.`)
+  .params(u =>
+    u
+      .combine('stage', ['vertex', 'fragment', 'compute'])
+      .combine('has_group', [true, false])
+      .combine('has_binding', [true, false])
+      .combine('resource', kResourceKindsAll)
+      .beginSubcases()
+  )
   .fn(t => {
-    const code = `
-@group(1) @binding(1)
-var<storage> a: i32;
+    const emitter = kResourceEmitters.get(t.params.resource);
+    //const emitter = kResourceEmitters.get('uniform') as ResourceDeclarationEmitter;
+    const code = emitter(
+      'R',
+      t.params.has_group ? 0 : undefined,
+      t.params.has_binding ? 0 : undefined
+    );
 
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-}`;
-    t.expectCompileResult(true, code);
-  });
-
-g.test('uniform')
-  .desc(`Test validation of group and binding on uniform resources`)
-  .fn(t => {
-    const code = `
-@group(1) @binding(1)
-var<uniform> a: i32;
-
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-}`;
-    t.expectCompileResult(true, code);
-  });
-
-g.test('texture')
-  .desc(`Test validation of group and binding on texture resources`)
-  .fn(t => {
-    const code = `
-@group(1) @binding(1)
-var a: texture_2d<f32>;
-
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-}`;
-    t.expectCompileResult(true, code);
-  });
-
-g.test('sampler')
-  .desc(`Test validation of group and binding on sampler resources`)
-  .fn(t => {
-    const code = `
-@group(1) @binding(1)
-var a: sampler;
-
-@group(0) @binding(2)
-var b: sampler_comparison;
-
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-  _ = b;
-}`;
-    t.expectCompileResult(true, code);
-  });
-
-const kRequiredSettingTests = {
-  storage: {
-    space: '<storage>',
-    kind: 'i32',
-    pass: false,
-  },
-  uniform: {
-    space: '<uniform>',
-    kind: 'i32',
-    pass: false,
-  },
-  handle_tex: {
-    space: '',
-    kind: 'texture_2d<f32>',
-    pass: false,
-  },
-  handle_sampler: {
-    space: '',
-    kind: 'sampler',
-    pass: false,
-  },
-  none: {
-    space: '<private>',
-    kind: 'i32',
-    pass: true,
-  },
-};
-
-g.test('required_group_and_binding')
-  .desc(`Test validation of group and binding missing on required address spaces`)
-  .params(u => u.combine('attr', keysOf(kRequiredSettingTests)))
-  .fn(t => {
-    const data = kRequiredSettingTests[t.params.attr];
-
-    const code = `
-var${data.space} a: ${data.kind};
-
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-}`;
-    t.expectCompileResult(data.pass, code);
+    const expect = t.params.has_group && t.params.has_binding;
+    t.expectCompileResult(expect, code);
   });
 
 g.test('private_module_scope')
@@ -161,41 +87,86 @@ g.test('function_scope_texture')
     t.expectCompileResult(false, code);
   });
 
-g.test('duplicate_group_binding_same_entry_point')
+g.test('single_entry_point')
   .desc(
-    `Test validation of group and binding when same values set on a var used in the same entry point`
+    `Test that two different resource variables in a shader must not have the same group and binding values, when considered as a pair.`
   )
-  .params(u => u.combine('group', [1, 2]))
+  .params(u =>
+    u
+      .combine('stage', ['vertex', 'fragment', 'compute'])
+      .combine('a_kind', kResourceKindsA)
+      .combine('b_kind', kResourceKindsB)
+      .combine('a_group', [0, 3])
+      .combine('b_group', [0, 3])
+      .combine('a_binding', [0, 3])
+      .combine('b_binding', [0, 3])
+      .combine('usage', ['direct', 'transitive'])
+      .beginSubcases()
+  )
   .fn(t => {
-    const code = `
-@group(${t.params.group}) @binding(1) var a: texture_2d<f32>;
-@group(1) @binding(1) var<storage> b: i32;
+    const resourceA = kResourceEmitters.get(t.params.a_kind);
+    const resourceB = kResourceEmitters.get(t.params.b_kind);
+    const resources = `
+${resourceA('resource_a', t.params.a_group, t.params.a_binding)}
+${resourceB('resource_b', t.params.b_group, t.params.b_binding)}
+`;
+    const expect =
+      t.params.a_group !== t.params.b_group || t.params.a_binding !== t.params.b_binding;
 
-@workgroup_size(1, 1, 1)
-@compute fn main() {
-  _ = a;
-  _ = b;
-}`;
-    t.expectCompileResult(`${t.params.group}` === '2', code);
+    if (t.params.usage === 'direct') {
+      const code = `
+${resources}
+${declareEntrypoint('main', t.params.stage, '_ = resource_a; _ = resource_b;')}
+`;
+      t.expectCompileResult(expect, code);
+    } else {
+      const code = `
+${resources}
+fn use_a() { _ = resource_a; }
+fn use_b() { _ = resource_b; }
+${declareEntrypoint('main', t.params.stage, 'use_a(); use_b();')}
+`;
+      t.expectCompileResult(expect, code);
+    }
   });
 
-g.test('duplicate_group_binding_different_entry_point')
+g.test('different_entry_points')
   .desc(
-    `Test validation of group and binding when same values set on a var used in different entry points`
+    `Test that resources may use the same binding points if exclusively accessed by different entry points.`
+  )
+  .params(u =>
+    u
+      .combine('a_stage', ['vertex', 'fragment', 'compute'])
+      .combine('b_stage', ['vertex', 'fragment', 'compute'])
+      .combine('a_kind', kResourceKindsA)
+      .combine('b_kind', kResourceKindsB)
+      .combine('usage', ['direct', 'transitive'])
+      .beginSubcases()
   )
   .fn(t => {
-    const code = `
-@group(1) @binding(1) var a: texture_2d<f32>;
-@group(1) @binding(1) var b: sampler;
+    const resourceA = kResourceEmitters.get(t.params.a_kind);
+    const resourceB = kResourceEmitters.get(t.params.b_kind);
+    const resources = `
+${resourceA('resource_a', /* group */ 0, /* binding */ 0)}
+${resourceB('resource_b', /* group */ 0, /* binding */ 0)}
+`;
+    const expect = true; // Binding reuse between different entry points is fine.
 
-@workgroup_size(1, 1, 1)
-@compute fn main_a() {
-  _ = a;
-}
-
-@workgroup_size(1, 1, 1)
-@compute fn main_b() {
-  _ = b;
-}`;
-    t.expectCompileResult(true, code);
+    if (t.params.usage === 'direct') {
+      const code = `
+${resources}
+${declareEntrypoint('main_a', t.params.a_stage, '_ = resource_a;')}
+${declareEntrypoint('main_b', t.params.b_stage, '_ = resource_b;')}
+`;
+      t.expectCompileResult(expect, code);
+    } else {
+      const code = `
+${resources}
+fn use_a() { _ = resource_a; }
+fn use_b() { _ = resource_b; }
+${declareEntrypoint('main_a', t.params.a_stage, 'use_a();')}
+${declareEntrypoint('main_b', t.params.b_stage, 'use_b();')}
+`;
+      t.expectCompileResult(expect, code);
+    }
   });
