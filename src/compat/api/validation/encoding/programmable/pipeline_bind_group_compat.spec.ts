@@ -300,7 +300,7 @@ export const g = makeTestGroup(ValidationTest);
 g.test('twoDifferentTextureViews,render_pass,used')
   .desc(
     `
-Tests that you can not use 2 different views of the same texture in a render pass in compat mode..
+Tests that you can not use 2 different views of the same texture in a render pass in compat mode.
 
 - Test you can not use incompatible views in the same bindGroup
 - Test you can not use incompatible views in different bindGroups
@@ -363,7 +363,7 @@ Tests that binding 2 different views of the same texture but not using them does
 g.test('twoDifferentTextureViews,compute_pass,used')
   .desc(
     `
-Tests that you can not use 2 different views of the same texture in a compute pass in compat mode..
+Tests that you can not use 2 different views of the same texture in a compute pass in compat mode.
 
 - Test you can not use incompatible views in the same bindGroup
 - Test you can not use incompatible views in different bindGroups
