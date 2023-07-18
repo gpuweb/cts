@@ -2788,7 +2788,9 @@ export class FPTraits {
     impl: this.limitScalarToIntervalDomain(
     this.constants().negPiToPiInterval,
     (n) => {
-      return this.absoluteErrorInterval(Math.cos(n), 2 ** -11);
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+      return this.absoluteErrorInterval(Math.cos(n), abs_error);
     })
 
   };
@@ -3868,7 +3870,9 @@ export class FPTraits {
     impl: this.limitScalarToIntervalDomain(
     this.constants().negPiToPiInterval,
     (n) => {
-      return this.absoluteErrorInterval(Math.sin(n), 2 ** -11);
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+      return this.absoluteErrorInterval(Math.sin(n), abs_error);
     })
 
   };
@@ -4889,7 +4893,7 @@ class F16Traits extends FPTraits {
   clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
   clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  cosInterval = this.unimplementedScalarToInterval.bind(this);
+  cosInterval = this.cosIntervalImpl.bind(this);
   coshInterval = this.unimplementedScalarToInterval.bind(this);
   crossInterval = this.unimplementedVectorPairToVector.bind(this);
   degreesInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4941,7 +4945,7 @@ class F16Traits extends FPTraits {
   roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.unimplementedScalarToInterval.bind(this);
   signInterval = this.unimplementedScalarToInterval.bind(this);
-  sinInterval = this.unimplementedScalarToInterval.bind(this);
+  sinInterval = this.sinIntervalImpl.bind(this);
   sinhInterval = this.unimplementedScalarToInterval.bind(this);
   smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
   sqrtInterval = this.unimplementedScalarToInterval.bind(this);
