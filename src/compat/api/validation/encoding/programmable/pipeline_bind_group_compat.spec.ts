@@ -307,8 +307,8 @@ Tests that you can not use 2 different views of the same texture in a render pas
 - Test you can bind the same view in different bindGroups
 - Test binding incompatible bindGroups is ok as long as they are fixed before draw/dispatch
 
-  The last 2 tests are to check validation happens at the correct time (draw/dispatch) and not
-  at finish or setBindGroup.
+  The last test is to check validation happens at the correct time (draw/dispatch) and not
+  at setBindGroup.
     `
   )
   .params(u =>
@@ -370,8 +370,8 @@ Tests that you can not use 2 different views of the same texture in a compute pa
 - Test can bind the same view in different bindGroups
 - Test that binding incompatible bindGroups is ok as long as they are fixed before draw/dispatch
 
-  The last 2 tests are to check validation happens at the correct time (draw/dispatch) and not
-  at finish or setBindGroup.
+  The last test is to check validation happens at the correct time (draw/dispatch) and not
+  at setBindGroup.
     `
   )
   .params(u =>
