@@ -643,7 +643,7 @@ behaviour in this region as rigorously defined nor tested, so fully testing
 here would likely find lots of issues that would just need to be mitigated in
 the CTS.
 
-Currently, we choose to avoid testing validation of near-overflow scenarios
+Currently, we choose to avoid testing validation of near-overflow scenarios.
 
 ### Additional Technical Limitations
 
