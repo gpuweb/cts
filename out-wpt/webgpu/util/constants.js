@@ -172,42 +172,10 @@ export const kBit = {
     max_ulp: 0x5000,
   },
 
-  // 32-bit representation of power(2, n) n = {-31, ..., 31}
-  // A uint32 representation as a JS `number`
-  // {toMinus31, ..., to31} ie. {-31, ..., 31}
+  // Uint32 representation of power(2, n) n = {0, ..., 31}
+  // Stored as a JS `number`
+  // {to0, ..., to31} ie. {0, ..., 31}
   powTwo: {
-    toMinus1: 0x3f00_0000,
-    toMinus2: 0x3e80_0000,
-    toMinus3: 0x3e00_0000,
-    toMinus4: 0x3d80_0000,
-    toMinus5: 0x3d00_0000,
-    toMinus6: 0x3c80_0000,
-    toMinus7: 0x3c00_0000,
-    toMinus8: 0x3b80_0000,
-    toMinus9: 0x3b00_0000,
-    toMinus10: 0x3a80_0000,
-    toMinus11: 0x3a00_0000,
-    toMinus12: 0x3980_0000,
-    toMinus13: 0x3900_0000,
-    toMinus14: 0x3880_0000,
-    toMinus15: 0x3800_0000,
-    toMinus16: 0x3780_0000,
-    toMinus17: 0x3700_0000,
-    toMinus18: 0x3680_0000,
-    toMinus19: 0x3600_0000,
-    toMinus20: 0x3580_0000,
-    toMinus21: 0x3500_0000,
-    toMinus22: 0x3480_0000,
-    toMinus23: 0x3400_0000,
-    toMinus24: 0x3380_0000,
-    toMinus25: 0x3300_0000,
-    toMinus26: 0x3280_0000,
-    toMinus27: 0x3200_0000,
-    toMinus28: 0x3180_0000,
-    toMinus29: 0x3100_0000,
-    toMinus30: 0x3080_0000,
-    toMinus31: 0x3000_0000,
-
     to0: 0x0000_0001,
     to1: 0x0000_0002,
     to2: 0x0000_0004,
@@ -242,42 +210,10 @@ export const kBit = {
     to31: 0x8000_0000,
   },
 
-  // 32-bit representation of  of -1 * power(2, n) n = {-31, ..., 31}
-  // An int32 represented as a JS `number`
-  // {toMinus31, ..., to31} ie. {-31, ..., 31}
+  // Int32 representation of  of -1 * power(2, n) n = {0, ..., 31}
+  // Stored as a JS `number`
+  // {to0, ..., to31} ie. {0, ..., 31}
   negPowTwo: {
-    toMinus1: 0xbf00_0000,
-    toMinus2: 0xbe80_0000,
-    toMinus3: 0xbe00_0000,
-    toMinus4: 0xbd80_0000,
-    toMinus5: 0xbd00_0000,
-    toMinus6: 0xbc80_0000,
-    toMinus7: 0xbc00_0000,
-    toMinus8: 0xbb80_0000,
-    toMinus9: 0xbb00_0000,
-    toMinus10: 0xba80_0000,
-    toMinus11: 0xba00_0000,
-    toMinus12: 0xb980_0000,
-    toMinus13: 0xb900_0000,
-    toMinus14: 0xb880_0000,
-    toMinus15: 0xb800_0000,
-    toMinus16: 0xb780_0000,
-    toMinus17: 0xb700_0000,
-    toMinus18: 0xb680_0000,
-    toMinus19: 0xb600_0000,
-    toMinus20: 0xb580_0000,
-    toMinus21: 0xb500_0000,
-    toMinus22: 0xb480_0000,
-    toMinus23: 0xb400_0000,
-    toMinus24: 0xb380_0000,
-    toMinus25: 0xb300_0000,
-    toMinus26: 0xb280_0000,
-    toMinus27: 0xb200_0000,
-    toMinus28: 0xb180_0000,
-    toMinus29: 0xb100_0000,
-    toMinus30: 0xb080_0000,
-    toMinus31: 0xb000_0000,
-
     to0: 0xffff_ffff,
     to1: 0xffff_fffe,
     to2: 0xffff_fffc,
