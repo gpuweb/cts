@@ -2788,7 +2788,9 @@ export abstract class FPTraits {
     impl: this.limitScalarToIntervalDomain(
       this.constants().negPiToPiInterval,
       (n: number): FPInterval => {
-        return this.absoluteErrorInterval(Math.cos(n), 2 ** -11);
+        assert(this.kind === 'f32' || this.kind === 'f16');
+        const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+        return this.absoluteErrorInterval(Math.cos(n), abs_error);
       }
     ),
   };
@@ -3868,7 +3870,9 @@ export abstract class FPTraits {
     impl: this.limitScalarToIntervalDomain(
       this.constants().negPiToPiInterval,
       (n: number): FPInterval => {
-        return this.absoluteErrorInterval(Math.sin(n), 2 ** -11);
+        assert(this.kind === 'f32' || this.kind === 'f16');
+        const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+        return this.absoluteErrorInterval(Math.sin(n), abs_error);
       }
     ),
   };
@@ -4889,7 +4893,7 @@ class F16Traits extends FPTraits {
   public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  public readonly cosInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this);
   public readonly degreesInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4941,7 +4945,7 @@ class F16Traits extends FPTraits {
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly signInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly sinInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this);
