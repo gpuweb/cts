@@ -132,7 +132,7 @@ beforeAllSubcases((t) => {
 fn((t) => {
   const code = `
 struct S {
-  @size(1${t.params.ext}) a: f32,
+  @size(4${t.params.ext}) a: f32,
 }
 @group(0) @binding(0)
 var<storage> a: S;
