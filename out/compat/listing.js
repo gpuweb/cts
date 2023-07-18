@@ -14,6 +14,15 @@ export const listing = [
     "file": [
       "api",
       "validation",
+      "encoding",
+      "programmable",
+      "pipeline_bind_group_compat"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
       "render_pipeline",
       "fragment_state"
     ]
