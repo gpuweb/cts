@@ -39,11 +39,11 @@ const kMustUseDeclarations = {
     valid: false,
   },
   empty_parameter: {
-    code: `must_use() fn foo() -> u32 { return 0; }`,
+    code: `@must_use() fn foo() -> u32 { return 0; }`,
     valid: false,
   },
   parameter: {
-    code: `must_use(0) fn foo() -> u32 { return 0; }`,
+    code: `@must_use(0) fn foo() -> u32 { return 0; }`,
     valid: false,
   },
 };
