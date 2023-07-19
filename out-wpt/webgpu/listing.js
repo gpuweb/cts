@@ -3632,6 +3632,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "diagnostic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "discard"
     ]
   },
