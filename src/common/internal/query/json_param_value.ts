@@ -1,4 +1,4 @@
-import { assert, sortObjectByKey, isPlainObject, isArrayOrTypedArray } from '../../util/util.js';
+import { assert, sortObjectByKey, isPlainObject } from '../../util/util.js';
 import { JSONWithUndefined } from '../params_utils.js';
 
 // JSON can't represent various values and by default stores them as `null`.
@@ -52,7 +52,7 @@ function stringifyFilter(k: string, v: unknown): unknown {
     );
   }
 
-  const isObject = v !== null && typeof v === 'object' && !isArrayOrTypedArray(v);
+  const isObject = v !== null && typeof v === 'object' && !Array.isArray(v);
   if (isObject) {
     assert(
       isPlainObject(v),

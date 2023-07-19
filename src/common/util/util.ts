@@ -170,22 +170,6 @@ export function isPlainObject(v: unknown) {
 }
 
 /**
- * Returns true if v is a TypedArray.
- * Note: This is not a perfect check.
- */
-export function isTypedArray(v: unknown) {
-  const t = v as ArrayBufferView;
-  return !!t && typeof t.byteLength === 'number' && t.buffer instanceof ArrayBuffer;
-}
-
-/**
- * Returns true if v is a TypedArray or Array
- */
-export function isArrayOrTypedArray(v: unknown) {
-  return Array.isArray(v) || isTypedArray(v);
-}
-
-/**
  * Makes a copy of a JS `object`, with the keys reordered into sorted order.
  */
 export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unknown } {
