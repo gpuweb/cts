@@ -85,7 +85,7 @@ export class ShaderValidationTest extends GPUTest {
       error.extra.compilationInfo = compilationInfo;
 
       if (compilationInfo.messages.some(m => m.type === 'warning')) {
-        if (expectWarning === true) {
+        if (expectWarning) {
           error.message = `No 'warning' message as expected.\n` + messagesLog;
           this.rec.debug(error);
         } else {
@@ -93,7 +93,7 @@ export class ShaderValidationTest extends GPUTest {
           this.rec.validationFailed(error);
         }
       } else {
-        if (expectWarning === true) {
+        if (expectWarning) {
           error.message = `Missing expected 'warning' message.\n` + messagesLog;
           this.rec.validationFailed(error);
         } else {
