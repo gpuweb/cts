@@ -313,6 +313,78 @@ export const kTypedArrayBufferViews: {
 export const kTypedArrayBufferViewKeys = keysOf(kTypedArrayBufferViews);
 export const kTypedArrayBufferViewConstructors = Object.values(kTypedArrayBufferViews);
 
+interface TypedArrayMap {
+  Int8Array: Int8Array;
+  Uint8Array: Uint8Array;
+  Int16Array: Int16Array;
+  Uint16Array: Uint16Array;
+  Uint8ClampedArray: Uint8ClampedArray;
+  Int32Array: Int32Array;
+  Uint32Array: Uint32Array;
+  Float32Array: Float32Array;
+  Float64Array: Float64Array;
+  BigInt64Array: BigInt64Array;
+  BigUint64Array: BigUint64Array;
+}
+
+type TypedArrayParam<K extends keyof TypedArrayMap> = {
+  type: K;
+  data: number[];
+};
+
+/**
+ * Creates a case parameter for a typedarray.
+ *
+ * You can't put typedarrays in case parameters directly so instead of
+ *
+ * ```
+ * u.combine('data', [
+ *   new Uint8Array([1, 2, 3]),
+ *   new Float32Array([4, 5, 6]),
+ * ])
+ * ```
+ *
+ * You can use
+ *
+ * ```
+ * u.combine('data', [
+ *   typedArrayParam('Uint8Array' [1, 2, 3]),
+ *   typedArrayParam('Float32Array' [4, 5, 6]),
+ * ])
+ * ```
+ *
+ * and then convert the params to typedarrays eg.
+ *
+ * ```
+ *  .fn(t => {
+ *    const data = t.params.data.map(v => typedArrayFromParam(v));
+ *  })
+ * ```
+ */
+export function typedArrayParam<K extends keyof TypedArrayMap>(
+  type: K,
+  data: number[]
+): TypedArrayParam<K> {
+  return { type, data };
+}
+
+export function createTypedArray<K extends keyof TypedArrayMap>(
+  type: K,
+  data: number[]
+): TypedArrayMap[K] {
+  return new kTypedArrayBufferViews[type](data) as TypedArrayMap[K];
+}
+
+/**
+ * Converts a TypedArrayParam to a typedarray. See typedArrayParam
+ */
+export function typedArrayFromParam<K extends keyof TypedArrayMap>(
+  param: TypedArrayParam<K>
+): TypedArrayMap[K] {
+  const { type, data } = param;
+  return createTypedArray(type, data);
+}
+
 function subarrayAsU8(
   buf: ArrayBuffer | TypedArrayBufferView,
   { start = 0, length }: { start?: number; length?: number }
