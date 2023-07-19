@@ -67,8 +67,7 @@ const kMustUseCalls = {
 
 g.test('call')
   .desc(`Validate that a call to must_use function cannot be the whole function call statement`)
-  .params(u => u.combine('use', ['@must_use', ''] as const)
-                .combine('call', keysOf(kMustUseCalls)))
+  .params(u => u.combine('use', ['@must_use', ''] as const).combine('call', keysOf(kMustUseCalls)))
   .fn(t => {
     const test = kMustUseCalls[t.params.call];
     const code = `
@@ -197,8 +196,9 @@ const kMustUseBuiltinCalls = {
 
 g.test('builtin_must_use')
   .desc(`Validate must_use built-in functions`)
-  .params(u => u.combine('call', keysOf(kMustUseBuiltinCalls))
-                .combine('use', [true, false] as const))
+  .params(u =>
+    u.combine('call', keysOf(kMustUseBuiltinCalls)).combine('use', [true, false] as const)
+  )
   .fn(t => {
     let call = kMustUseBuiltinCalls[t.params.call];
     if (t.params.use) {
@@ -232,7 +232,7 @@ fn foo() {
   ${call};
 }`;
 
-  t.expectCompileResult(t.params.use, code);
+    t.expectCompileResult(t.params.use, code);
   });
 
 const kNoMustUseBuiltinCalls = {
@@ -250,8 +250,9 @@ const kNoMustUseBuiltinCalls = {
 
 g.test('builtin_no_must_use')
   .desc(`Validate built-in functions without must_use`)
-  .params(u => u.combine('call', keysOf(kNoMustUseBuiltinCalls))
-                .combine('use', [true, false] as const))
+  .params(u =>
+    u.combine('call', keysOf(kNoMustUseBuiltinCalls)).combine('use', [true, false] as const)
+  )
   .fn(t => {
     let call = kNoMustUseBuiltinCalls[t.params.call];
     if (t.params.use) {
@@ -264,6 +265,5 @@ fn foo() {
   ${call};
 }`;
 
-  t.expectCompileResult(true, code);
+    t.expectCompileResult(true, code);
   });
-
