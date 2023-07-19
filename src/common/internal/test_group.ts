@@ -289,8 +289,8 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
         let testcaseString;
         try {
           testcaseString = stringifyPublicParams(params);
-        } catch (e: unknown) {
-          throw new Error(`${e?.toString()}: ${testPathString}`);
+        } catch (e) {
+          throw new Error(`${e}: ${testPathString}`);
         }
 
         // A (hopefully) unique representation of a params value.
