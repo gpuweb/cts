@@ -5,6 +5,7 @@ export const description = `
 Validation tests for the ${builtin}() builtin.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   TypeF16,
   TypeF32,
@@ -23,6 +24,8 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+const kValuesTypes = objectsToRecord(kAllFloatAndSignedIntegerScalarsAndVectors);
+
 g.test('values')
   .desc(
     `
@@ -32,13 +35,13 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatAndSignedIntegerScalarsAndVectors)
-      .filter(u => stageSupportsType(u.stage, u.type))
+      .combine('type', keysOf(kValuesTypes))
+      .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => fullRangeForType(u.type))
+      .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -48,10 +51,15 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       t,
       builtin,
       expectedResult,
-      [t.params.type.create(t.params.value)],
+      [kValuesTypes[t.params.type].create(t.params.value)],
       t.params.stage
     );
   });
+
+const kUnsignedIntegerArgumentTypes = objectsToRecord([
+  TypeF32,
+  ...kAllUnsignedIntegerScalarsAndVectors,
+]);
 
 g.test('unsigned_integer_argument')
   .desc(
@@ -59,13 +67,14 @@ g.test('unsigned_integer_argument')
 Validates that scalar and vector integer arguments are rejected by ${builtin}()
 `
   )
-  .params(u => u.combine('type', [TypeF32, ...kAllUnsignedIntegerScalarsAndVectors]))
+  .params(u => u.combine('type', keysOf(kUnsignedIntegerArgumentTypes)))
   .fn(t => {
+    const type = kUnsignedIntegerArgumentTypes[t.params.type];
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      /* expectedResult */ t.params.type === TypeF32,
-      [t.params.type.create(1)],
+      /* expectedResult */ type === TypeF32,
+      [type.create(1)],
       'constant'
     );
   });

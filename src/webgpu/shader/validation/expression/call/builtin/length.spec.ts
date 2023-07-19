@@ -4,6 +4,7 @@ Validation tests for the ${builtin}() builtin.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   ScalarType,
   TypeF16,
@@ -57,6 +58,8 @@ function calculate(
   };
 }
 
+const kScalarTypes = objectsToRecord(kAllFloatScalars);
+
 g.test('scalar')
   .desc(
     `
@@ -67,13 +70,13 @@ the input scalar value always compiles without error
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatScalars)
-      .filter(u => stageSupportsType(u.stage, u.type))
+      .combine('type', keysOf(kScalarTypes))
+      .filter(u => stageSupportsType(u.stage, kScalarTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => fullRangeForType(u.type))
+      .expand('value', u => fullRangeForType(kScalarTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kScalarTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -84,10 +87,12 @@ the input scalar value always compiles without error
       t,
       builtin,
       expectedResult,
-      [t.params.type.create(t.params.value)],
+      [kScalarTypes[t.params.type].create(t.params.value)],
       t.params.stage
     );
   });
+
+const kVec2Types = objectsToRecord(kAllFloatVector2);
 
 g.test('vec2')
   .desc(
@@ -98,16 +103,16 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatVector2)
-      .filter(u => stageSupportsType(u.stage, u.type))
+      .combine('type', keysOf(kVec2Types))
+      .filter(u => stageSupportsType(u.stage, kVec2Types[u.type]))
       .beginSubcases()
-      .expand('x', u => fullRangeForType(u.type, 5))
-      .expand('y', u => fullRangeForType(u.type, 5))
-      .expand('_result', u => [calculate([u.x, u.y], elementType(u.type))])
+      .expand('x', u => fullRangeForType(kVec2Types[u.type], 5))
+      .expand('y', u => fullRangeForType(kVec2Types[u.type], 5))
+      .expand('_result', u => [calculate([u.x, u.y], elementType(kVec2Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kVec2Types[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -117,10 +122,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       t,
       builtin,
       expectedResult,
-      [t.params.type.create([t.params.x, t.params.y])],
+      [kVec2Types[t.params.type].create([t.params.x, t.params.y])],
       t.params.stage
     );
   });
+
+const kVec3Types = objectsToRecord(kAllFloatVector3);
 
 g.test('vec3')
   .desc(
@@ -131,17 +138,17 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatVector3)
-      .filter(u => stageSupportsType(u.stage, u.type))
+      .combine('type', keysOf(kVec3Types))
+      .filter(u => stageSupportsType(u.stage, kVec3Types[u.type]))
       .beginSubcases()
-      .expand('x', u => fullRangeForType(u.type, 4))
-      .expand('y', u => fullRangeForType(u.type, 4))
-      .expand('z', u => fullRangeForType(u.type, 4))
-      .expand('_result', u => [calculate([u.x, u.y, u.z], elementType(u.type))])
+      .expand('x', u => fullRangeForType(kVec3Types[u.type], 4))
+      .expand('y', u => fullRangeForType(kVec3Types[u.type], 4))
+      .expand('z', u => fullRangeForType(kVec3Types[u.type], 4))
+      .expand('_result', u => [calculate([u.x, u.y, u.z], elementType(kVec3Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kVec3Types[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -151,10 +158,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       t,
       builtin,
       expectedResult,
-      [t.params.type.create([t.params.x, t.params.y, t.params.z])],
+      [kVec3Types[t.params.type].create([t.params.x, t.params.y, t.params.z])],
       t.params.stage
     );
   });
+
+const kVec4Types = objectsToRecord(kAllFloatVector4);
 
 g.test('vec4')
   .desc(
@@ -165,18 +174,18 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatVector4)
-      .filter(u => stageSupportsType(u.stage, u.type))
+      .combine('type', keysOf(kVec4Types))
+      .filter(u => stageSupportsType(u.stage, kVec4Types[u.type]))
       .beginSubcases()
-      .expand('x', u => fullRangeForType(u.type, 3))
-      .expand('y', u => fullRangeForType(u.type, 3))
-      .expand('z', u => fullRangeForType(u.type, 3))
-      .expand('w', u => fullRangeForType(u.type, 3))
-      .expand('_result', u => [calculate([u.x, u.y, u.z, u.w], elementType(u.type))])
+      .expand('x', u => fullRangeForType(kVec4Types[u.type], 3))
+      .expand('y', u => fullRangeForType(kVec4Types[u.type], 3))
+      .expand('z', u => fullRangeForType(kVec4Types[u.type], 3))
+      .expand('w', u => fullRangeForType(kVec4Types[u.type], 3))
+      .expand('_result', u => [calculate([u.x, u.y, u.z, u.w], elementType(kVec4Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kVec4Types[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -186,10 +195,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       t,
       builtin,
       expectedResult,
-      [t.params.type.create([t.params.x, t.params.y, t.params.z, t.params.w])],
+      [kVec4Types[t.params.type].create([t.params.x, t.params.y, t.params.z, t.params.w])],
       t.params.stage
     );
   });
+
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
 
 g.test('integer_argument')
   .desc(
@@ -197,13 +208,14 @@ g.test('integer_argument')
 Validates that scalar and vector integer arguments are rejected by ${builtin}()
 `
   )
-  .params(u => u.combine('type', [TypeF32, ...kAllIntegerScalarsAndVectors]))
+  .params(u => u.combine('type', keysOf(kIntegerArgumentTypes)))
   .fn(t => {
+    const type = kIntegerArgumentTypes[t.params.type];
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      /* expectedResult */ t.params.type === TypeF32,
-      [t.params.type.create(1)],
+      /* expectedResult */ type === TypeF32,
+      [type.create(1)],
       'constant'
     );
   });

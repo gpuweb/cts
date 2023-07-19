@@ -3,28 +3,29 @@
 **/export const description = `
 Validation negative tests for bitcast builtins.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { kBit } from '../../../../../util/constants.js';
 import { linearRange } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-// A VectorCase specfies the number of components a vector type has,
+// A VectorCase specifies the number of components a vector type has,
 // and which component will have a bad value.
 // Use width = 1 to indicate a scalar.
 
-const vectorCases = [
-{ width: 1, badIndex: 0 },
-{ width: 2, badIndex: 0 },
-{ width: 2, badIndex: 1 },
-{ width: 3, badIndex: 0 },
-{ width: 3, badIndex: 1 },
-{ width: 3, badIndex: 2 },
-{ width: 4, badIndex: 0 },
-{ width: 4, badIndex: 1 },
-{ width: 4, badIndex: 2 },
-{ width: 4, badIndex: 3 }];
-
+const kVectorCases = {
+  v1_b0: { width: 1, badIndex: 0 },
+  v2_b0: { width: 2, badIndex: 0 },
+  v2_b1: { width: 2, badIndex: 1 },
+  v3_b0: { width: 3, badIndex: 0 },
+  v3_b1: { width: 3, badIndex: 1 },
+  v3_b2: { width: 3, badIndex: 2 },
+  v4_b0: { width: 4, badIndex: 0 },
+  v4_b1: { width: 4, badIndex: 1 },
+  v4_b2: { width: 4, badIndex: 2 },
+  v4_b3: { width: 4, badIndex: 3 }
+};
 
 const numNaNs = 4;
 const f32InfAndNaNInU32 = [
@@ -51,7 +52,7 @@ It is a shader-creation error if any const-expression of floating-point type eva
 params((u) =>
 u.
 combine('fromScalarType', ['i32', 'u32']).
-combine('vectorize', [...vectorCases]).
+combine('vectorize', keysOf(kVectorCases)).
 beginSubcases().
 combine('bitBadValue', [...f32InfAndNaNInU32])).
 
@@ -61,8 +62,9 @@ fn((t) => {
   // For vector cases, generate code where one component is bad. In this case
   // width=4 and badIndex=2
   //  const f = bitcast<vec4f>(vec4<32>(0,0,i32(u32(0x7f800000)),0));
-  const width = t.params.vectorize.width;
-  const badIndex = t.params.vectorize.badIndex;
+  const vectorize = kVectorCases[t.params.vectorize];
+  const width = vectorize.width;
+  const badIndex = vectorize.badIndex;
   const badScalar = `${t.params.fromScalarType}(u32(${t.params.bitBadValue}))`;
   const destType = width === 1 ? 'f32' : `vec${width}f`;
   const srcType =

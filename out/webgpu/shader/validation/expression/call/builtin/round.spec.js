@@ -4,6 +4,7 @@
 Validation tests for the ${builtin}() builtin.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
 TypeF16,
 TypeF32,
@@ -24,6 +25,8 @@ validateConstOrOverrideBuiltinEval } from
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
+
 g.test('values').
 desc(
 `
@@ -33,19 +36,19 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
 params((u) =>
 u.
 combine('stage', kConstantAndOverrideStages).
-combine('type', kAllFloatScalarsAndVectors).
-filter((u) => stageSupportsType(u.stage, u.type)).
+combine('type', keysOf(kValuesTypes)).
+filter((u) => stageSupportsType(u.stage, kValuesTypes[u.type])).
 beginSubcases().
 expand('value', (u) => {
-  const constants = fpTraitsFor(elementType(u.type)).constants();
-  return unique(fullRangeForType(u.type), [
+  const constants = fpTraitsFor(elementType(kValuesTypes[u.type])).constants();
+  return unique(fullRangeForType(kValuesTypes[u.type]), [
   constants.negative.min + 0.1,
   constants.positive.max - 0.1]);
 
 })).
 
 beforeAllSubcases((t) => {
-  if (elementType(t.params.type) === TypeF16) {
+  if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
     t.selectDeviceOrSkipTestCase('shader-f16');
   }
 }).
@@ -55,10 +58,12 @@ fn((t) => {
   t,
   builtin,
   expectedResult,
-  [t.params.type.create(t.params.value)],
+  [kValuesTypes[t.params.type].create(t.params.value)],
   t.params.stage);
 
 });
+
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(
@@ -66,13 +71,14 @@ desc(
 Validates that scalar and vector integer arguments are rejected by ${builtin}()
 `).
 
-params((u) => u.combine('type', [TypeF32, ...kAllIntegerScalarsAndVectors])).
+params((u) => u.combine('type', keysOf(kIntegerArgumentTypes))).
 fn((t) => {
+  const type = kIntegerArgumentTypes[t.params.type];
   validateConstOrOverrideBuiltinEval(
   t,
   builtin,
-  /* expectedResult */t.params.type === TypeF32,
-  [t.params.type.create(1)],
+  /* expectedResult */type === TypeF32,
+  [type.create(1)],
   'constant');
 
 });
