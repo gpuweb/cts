@@ -4,6 +4,7 @@ Validation tests for the ${builtin}() builtin.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   TypeF16,
   elementType,
@@ -20,6 +21,8 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+const kValuesTypes = objectsToRecord(kAllFloatAndIntegerScalarsAndVectors);
+
 g.test('values')
   .desc(
     `
@@ -29,28 +32,25 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', kAllFloatAndIntegerScalarsAndVectors)
-      .filter(u => stageSupportsType(u.stage, u.type))
-      .expand('e', u => fullRangeForType(u.type, 3))
-      .expand('low', u => fullRangeForType(u.type, 4))
-      .expand('high', u => fullRangeForType(u.type, 4))
+      .combine('type', keysOf(kValuesTypes))
+      .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
+      .expand('e', u => fullRangeForType(kValuesTypes[u.type], 3))
+      .expand('low', u => fullRangeForType(kValuesTypes[u.type], 4))
+      .expand('high', u => fullRangeForType(kValuesTypes[u.type], 4))
   )
   .beforeAllSubcases(t => {
-    if (elementType(t.params.type) === TypeF16) {
+    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
+    const type = kValuesTypes[t.params.type];
     const expectedResult = t.params.low <= t.params.high;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       expectedResult,
-      [
-        t.params.type.create(t.params.e),
-        t.params.type.create(t.params.low),
-        t.params.type.create(t.params.high),
-      ],
+      [type.create(t.params.e), type.create(t.params.low), type.create(t.params.high)],
       t.params.stage
     );
   });
