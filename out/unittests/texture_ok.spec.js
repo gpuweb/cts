@@ -3,6 +3,7 @@
 **/export const description = `
 Test for texture_ok utils.
 `;import { makeTestGroup } from '../common/framework/test_group.js';
+import { typedArrayFromParam, typedArrayParam } from '../common/util/util.js';
 
 import { TexelView } from '../webgpu/util/texture/texel_view.js';
 import { findFailedPixels } from '../webgpu/util/texture/texture_ok.js';
@@ -30,86 +31,86 @@ u.combineWithParams([
 // Sanity Check
 {
   format: 'rgba8unorm',
-  actual: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
-  expected: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
+  actual: typedArrayParam('Uint8Array', [0x00, 0x40, 0x80, 0xff]),
+  expected: typedArrayParam('Uint8Array', [0x00, 0x40, 0x80, 0xff]),
   isSame: true
 },
 // Slightly different values
 {
   format: 'rgba8unorm',
-  actual: new Uint8Array([0x00, 0x40, 0x80, 0xff]),
-  expected: new Uint8Array([0x00, 0x40, 0x81, 0xff]),
+  actual: typedArrayParam('Uint8Array', [0x00, 0x40, 0x80, 0xff]),
+  expected: typedArrayParam('Uint8Array', [0x00, 0x40, 0x81, 0xff]),
   isSame: false
 },
 // Different representations of the same value
 {
   format: 'rgb9e5ufloat',
-  actual: new Uint8Array([0x78, 0x56, 0x34, 0x12]),
-  expected: new Uint8Array([0xf0, 0xac, 0x68, 0x0c]),
+  actual: typedArrayParam('Uint8Array', [0x78, 0x56, 0x34, 0x12]),
+  expected: typedArrayParam('Uint8Array', [0xf0, 0xac, 0x68, 0x0c]),
   isSame: true
 },
 // Slightly different values
 {
   format: 'rgb9e5ufloat',
-  actual: new Uint8Array([0x78, 0x56, 0x34, 0x12]),
-  expected: new Uint8Array([0xf1, 0xac, 0x68, 0x0c]),
+  actual: typedArrayParam('Uint8Array', [0x78, 0x56, 0x34, 0x12]),
+  expected: typedArrayParam('Uint8Array', [0xf1, 0xac, 0x68, 0x0c]),
   isSame: false
 },
 // Test NaN === NaN
 {
   format: 'r32float',
-  actual: new Float32Array([parseFloat('abc')]),
-  expected: new Float32Array([parseFloat('def')]),
+  actual: typedArrayParam('Float32Array', [parseFloat('abc')]),
+  expected: typedArrayParam('Float32Array', [parseFloat('def')]),
   isSame: true
 },
 // Sanity Check
 {
   format: 'r32float',
-  actual: new Float32Array([1.23]),
-  expected: new Float32Array([1.23]),
+  actual: typedArrayParam('Float32Array', [1.23]),
+  expected: typedArrayParam('Float32Array', [1.23]),
   isSame: true
 },
 // Slightly different values.
 {
   format: 'r32float',
-  actual: new Uint32Array([0x3f9d70a4]),
-  expected: new Uint32Array([0x3f9d70a5]),
+  actual: typedArrayParam('Uint32Array', [0x3f9d70a4]),
+  expected: typedArrayParam('Uint32Array', [0x3f9d70a5]),
   isSame: false
 },
 // Slightly different
 {
   format: 'rg11b10ufloat',
-  actual: new Uint32Array([0x3ce]),
-  expected: new Uint32Array([0x3cf]),
+  actual: typedArrayParam('Uint32Array', [0x3ce]),
+  expected: typedArrayParam('Uint32Array', [0x3cf]),
   isSame: false
 },
 // NaN === NaN (red)
 {
   format: 'rg11b10ufloat',
-  actual: new Uint32Array([0b11111000000]),
-  expected: new Uint32Array([0b11111000000]),
+  actual: typedArrayParam('Uint32Array', [0b11111000000]),
+  expected: typedArrayParam('Uint32Array', [0b11111000000]),
   isSame: true
 },
 // NaN === NaN (green)
 {
   format: 'rg11b10ufloat',
-  actual: new Uint32Array([0b11111000000_00000000000]),
-  expected: new Uint32Array([0b11111000000_00000000000]),
+  actual: typedArrayParam('Uint32Array', [0b11111000000_00000000000]),
+  expected: typedArrayParam('Uint32Array', [0b11111000000_00000000000]),
   isSame: true
 },
 // NaN === NaN (blue)
 {
   format: 'rg11b10ufloat',
-  actual: new Uint32Array([0b1111100000_00000000000_00000000000]),
-  expected: new Uint32Array([0b1111100000_00000000000_00000000000]),
+  actual: typedArrayParam('Uint32Array', [0b1111100000_00000000000_00000000000]),
+  expected: typedArrayParam('Uint32Array', [0b1111100000_00000000000_00000000000]),
   isSame: true
 }])).
 
 
 fn((t) => {
   const { format, actual, expected, isSame } = t.params;
-  const actualData = new Uint8Array(actual.buffer);
-  const expectedData = new Uint8Array(expected.buffer);
+  const actualData = new Uint8Array(typedArrayFromParam(actual).buffer);
+  const expectedData = new Uint8Array(typedArrayFromParam(expected).buffer);
 
   const actTexelView = TexelView.fromTextureDataByReference(format, actualData, {
     bytesPerRow: actualData.byteLength,
