@@ -236,6 +236,28 @@ export class FPTraits {
   }
 
   /**
+   * Makes a param that can be turned into an interval
+   */
+  toParam(n) {
+    return {
+      kind: this.kind,
+      interval: n,
+    };
+  }
+
+  /**
+   * Converts p into an FPInterval if it is an FPIntervalPAram
+   */
+  fromParam(p) {
+    const param = p;
+    if (param.interval && param.kind) {
+      assert(param.kind === this.kind);
+      return this.toInterval(param.interval);
+    }
+    return p;
+  }
+
+  /**
    * @returns an interval with the tightest bounds that includes all provided
    *          intervals
    */

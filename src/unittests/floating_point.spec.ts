@@ -5,7 +5,7 @@ Floating Point unit tests.
 import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
-import { FP, FPInterval, IntervalBounds } from '../webgpu/util/floating_point.js';
+import { FP, FPInterval, FPIntervalParam, IntervalBounds } from '../webgpu/util/floating_point.js';
 import {
   reinterpretU16AsF16,
   reinterpretU32AsF32,
@@ -24,9 +24,9 @@ const kAnyBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_IN
 
 /** Interval from kAnyBounds */
 const kAnyInterval = {
-  f32: FP.f32.toInterval(kAnyBounds),
-  f16: FP.f16.toInterval(kAnyBounds),
-  abstract: FP.abstract.toInterval(kAnyBounds),
+  f32: FP.f32.toParam(kAnyBounds),
+  f16: FP.f16.toParam(kAnyBounds),
+  abstract: FP.abstract.toParam(kAnyBounds),
 };
 
 /** @returns a number N * ULP greater than the provided number */
@@ -474,7 +474,7 @@ g.test('spanIntervals')
   });
 
 interface isVectorCase {
-  input: (number | IntervalBounds | FPInterval)[];
+  input: (number | IntervalBounds | FPIntervalParam)[];
   expected: boolean;
 }
 
@@ -521,60 +521,55 @@ g.test('isVector')
           },
 
           // FPInterval, valid dimensions
-          { input: [trait.toInterval([1]), trait.toInterval([2])], expected: true },
-          { input: [trait.toInterval([1, 2]), trait.toInterval([2, 3])], expected: true },
+          { input: [trait.toParam([1]), trait.toParam([2])], expected: true },
+          { input: [trait.toParam([1, 2]), trait.toParam([2, 3])], expected: true },
           {
-            input: [trait.toInterval([1]), trait.toInterval([2]), trait.toInterval([3])],
+            input: [trait.toParam([1]), trait.toParam([2]), trait.toParam([3])],
             expected: true,
           },
           {
-            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+            input: [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
             expected: true,
           },
           {
-            input: [
-              trait.toInterval([1]),
-              trait.toInterval([2]),
-              trait.toInterval([3]),
-              trait.toInterval([4]),
-            ],
+            input: [trait.toParam([1]), trait.toParam([2]), trait.toParam([3]), trait.toParam([4])],
             expected: true,
           },
           {
             input: [
-              trait.toInterval([1, 2]),
-              trait.toInterval([2, 3]),
-              trait.toInterval([3, 4]),
-              trait.toInterval([4, 5]),
+              trait.toParam([1, 2]),
+              trait.toParam([2, 3]),
+              trait.toParam([3, 4]),
+              trait.toParam([4, 5]),
             ],
             expected: true,
           },
 
           // FPInterval, invalid dimensions
-          { input: [trait.toInterval([1])], expected: false },
+          { input: [trait.toParam([1])], expected: false },
           {
             input: [
-              trait.toInterval([1]),
-              trait.toInterval([2]),
-              trait.toInterval([3]),
-              trait.toInterval([4]),
-              trait.toInterval([5]),
+              trait.toParam([1]),
+              trait.toParam([2]),
+              trait.toParam([3]),
+              trait.toParam([4]),
+              trait.toParam([5]),
             ],
             expected: false,
           },
 
           // Mixed
           { input: [1, [2]], expected: false },
-          { input: [1, [2], trait.toInterval([3])], expected: false },
-          { input: [1, trait.toInterval([2]), [3], 4], expected: false },
-          { input: [trait.toInterval(1), 2], expected: false },
-          { input: [trait.toInterval(1), [2]], expected: false },
+          { input: [1, [2], trait.toParam([3])], expected: false },
+          { input: [1, trait.toParam([2]), [3], 4], expected: false },
+          { input: [trait.toParam(1), 2], expected: false },
+          { input: [trait.toParam(1), [2]], expected: false },
         ];
       })
   )
   .fn(t => {
     const trait = FP[t.params.trait];
-    const input = t.params.input;
+    const input = t.params.input.map(e => trait.fromParam(e));
     const expected = t.params.expected;
 
     const got = trait.isVector(input);
@@ -585,7 +580,7 @@ g.test('isVector')
   });
 
 interface toVectorCase {
-  input: (number | IntervalBounds | FPInterval)[];
+  input: (number | IntervalBounds | FPIntervalParam)[];
   expected: (number | IntervalBounds)[];
 }
 
@@ -644,20 +639,20 @@ g.test('toVector')
           },
 
           // FPInterval
-          { input: [trait.toInterval([1]), trait.toInterval([2])], expected: [1, 2] },
+          { input: [trait.toParam([1]), trait.toParam([2])], expected: [1, 2] },
           {
-            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
+            input: [trait.toParam([1, 2]), trait.toParam([2, 3])],
             expected: [
               [1, 2],
               [2, 3],
             ],
           },
           {
-            input: [trait.toInterval([1]), trait.toInterval([2]), trait.toInterval([3])],
+            input: [trait.toParam([1]), trait.toParam([2]), trait.toParam([3])],
             expected: [1, 2, 3],
           },
           {
-            input: [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
+            input: [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
             expected: [
               [1, 2],
               [2, 3],
@@ -665,20 +660,15 @@ g.test('toVector')
             ],
           },
           {
-            input: [
-              trait.toInterval([1]),
-              trait.toInterval([2]),
-              trait.toInterval([3]),
-              trait.toInterval([4]),
-            ],
+            input: [trait.toParam([1]), trait.toParam([2]), trait.toParam([3]), trait.toParam([4])],
             expected: [1, 2, 3, 4],
           },
           {
             input: [
-              trait.toInterval([1, 2]),
-              trait.toInterval([2, 3]),
-              trait.toInterval([3, 4]),
-              trait.toInterval([4, 5]),
+              trait.toParam([1, 2]),
+              trait.toParam([2, 3]),
+              trait.toParam([3, 4]),
+              trait.toParam([4, 5]),
             ],
             expected: [
               [1, 2],
@@ -690,8 +680,8 @@ g.test('toVector')
 
           // Mixed
           { input: [1, [2]], expected: [1, 2] },
-          { input: [1, [2], trait.toInterval([3])], expected: [1, 2, 3] },
-          { input: [1, trait.toInterval([2]), [3], 4], expected: [1, 2, 3, 4] },
+          { input: [1, [2], trait.toParam([3])], expected: [1, 2, 3] },
+          { input: [1, trait.toParam([2]), [3], 4], expected: [1, 2, 3, 4] },
           {
             input: [1, [2], [2, 3], kAnyInterval[p.trait]],
             expected: [1, 2, [2, 3], kAnyBounds],
@@ -701,7 +691,7 @@ g.test('toVector')
   )
   .fn(t => {
     const trait = FP[t.params.trait];
-    const input = t.params.input;
+    const input = t.params.input.map(e => trait.fromParam(e));
     const expected = t.params.expected.map(e => trait.toInterval(e));
 
     const got = trait.toVector(input);
@@ -712,7 +702,7 @@ g.test('toVector')
   });
 
 interface isMatrixCase {
-  input: (number | IntervalBounds | FPInterval)[][];
+  input: (number | IntervalBounds | FPIntervalParam)[][];
   expected: boolean;
 }
 
@@ -875,152 +865,137 @@ g.test('isMatrix')
           // FPInterval, valid dimensions
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8), trait.toParam(9)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
-              [trait.toInterval(10), trait.toInterval(11), trait.toInterval(12)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8), trait.toParam(9)],
+              [trait.toParam(10), trait.toParam(11), trait.toParam(12)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
-              [
-                trait.toInterval(9),
-                trait.toInterval(10),
-                trait.toInterval(11),
-                trait.toInterval(12),
-              ],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
+              [trait.toParam(9), trait.toParam(10), trait.toParam(11), trait.toParam(12)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
-              [
-                trait.toInterval(9),
-                trait.toInterval(10),
-                trait.toInterval(11),
-                trait.toInterval(12),
-              ],
-              [
-                trait.toInterval(13),
-                trait.toInterval(14),
-                trait.toInterval(15),
-                trait.toInterval(16),
-              ],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
+              [trait.toParam(9), trait.toParam(10), trait.toParam(11), trait.toParam(12)],
+              [trait.toParam(13), trait.toParam(14), trait.toParam(15), trait.toParam(16)],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
-              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
+              [trait.toParam([5, 6]), trait.toParam([6, 7])],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
-              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
+              [trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9])],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9]), trait.toParam([9, 10])],
             ],
             expected: true,
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
-              [trait.toInterval([10, 11]), trait.toInterval([11, 12]), trait.toInterval([12, 13])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9]), trait.toParam([9, 10])],
+              [trait.toParam([10, 11]), trait.toParam([11, 12]), trait.toParam([12, 13])],
             ],
             expected: true,
           },
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
             ],
             expected: true,
@@ -1028,22 +1003,22 @@ g.test('isMatrix')
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
               [
-                trait.toInterval([9, 10]),
-                trait.toInterval([10, 11]),
-                trait.toInterval([11, 12]),
-                trait.toInterval([12, 13]),
+                trait.toParam([9, 10]),
+                trait.toParam([10, 11]),
+                trait.toParam([11, 12]),
+                trait.toParam([12, 13]),
               ],
             ],
             expected: true,
@@ -1051,61 +1026,61 @@ g.test('isMatrix')
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
               [
-                trait.toInterval([9, 10]),
-                trait.toInterval([10, 11]),
-                trait.toInterval([11, 12]),
-                trait.toInterval([12, 13]),
+                trait.toParam([9, 10]),
+                trait.toParam([10, 11]),
+                trait.toParam([11, 12]),
+                trait.toParam([12, 13]),
               ],
               [
-                trait.toInterval([13, 14]),
-                trait.toInterval([14, 15]),
-                trait.toInterval([15, 16]),
-                trait.toInterval([16, 17]),
+                trait.toParam([13, 14]),
+                trait.toParam([14, 15]),
+                trait.toParam([15, 16]),
+                trait.toParam([16, 17]),
               ],
             ],
             expected: true,
           },
 
           // FPInterval, invalid dimensions
-          { input: [[trait.toInterval(1)]], expected: false },
+          { input: [[trait.toParam(1)]], expected: false },
           {
-            input: [[trait.toInterval(1)], [trait.toInterval(3), trait.toInterval(4)]],
+            input: [[trait.toParam(1)], [trait.toParam(3), trait.toParam(4)]],
             expected: false,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4), trait.toInterval(5)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4), trait.toParam(5)],
             ],
             expected: false,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5)],
             ],
             expected: false,
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8)],
-              [trait.toInterval(9), trait.toInterval(10)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8)],
+              [trait.toParam(9), trait.toParam(10)],
             ],
             expected: false,
           },
@@ -1128,20 +1103,20 @@ g.test('isMatrix')
           {
             input: [
               [1, 2],
-              [trait.toInterval([3]), 4],
+              [trait.toParam([3]), 4],
             ],
             expected: false,
           },
           {
             input: [
-              [[1], trait.toInterval([2])],
-              [trait.toInterval([3]), trait.toInterval([4])],
+              [[1], trait.toParam([2])],
+              [trait.toParam([3]), trait.toParam([4])],
             ],
             expected: false,
           },
           {
             input: [
-              [trait.toInterval(1), [2]],
+              [trait.toParam(1), [2]],
               [3, 4],
             ],
             expected: false,
@@ -1151,7 +1126,7 @@ g.test('isMatrix')
   )
   .fn(t => {
     const trait = FP[t.params.trait];
-    const input = t.params.input;
+    const input = t.params.input.map(a => a.map(e => trait.fromParam(e)));
     const expected = t.params.expected;
 
     const got = trait.isMatrix(input);
@@ -1162,7 +1137,7 @@ g.test('isMatrix')
   });
 
 interface toMatrixCase {
-  input: (number | IntervalBounds | FPInterval)[][];
+  input: (number | IntervalBounds | FPIntervalParam)[][];
   expected: (number | IntervalBounds)[][];
 }
 
@@ -1397,8 +1372,8 @@ g.test('toMatrix')
           // FPInterval
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
             ],
             expected: [
               [1, 2],
@@ -1407,9 +1382,9 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6)],
             ],
             expected: [
               [1, 2],
@@ -1419,10 +1394,10 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2)],
-              [trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8)],
+              [trait.toParam(1), trait.toParam(2)],
+              [trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8)],
             ],
             expected: [
               [1, 2],
@@ -1433,8 +1408,8 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
             ],
             expected: [
               [1, 2, 3],
@@ -1443,9 +1418,9 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8), trait.toParam(9)],
             ],
             expected: [
               [1, 2, 3],
@@ -1455,10 +1430,10 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3)],
-              [trait.toInterval(4), trait.toInterval(5), trait.toInterval(6)],
-              [trait.toInterval(7), trait.toInterval(8), trait.toInterval(9)],
-              [trait.toInterval(10), trait.toInterval(11), trait.toInterval(12)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3)],
+              [trait.toParam(4), trait.toParam(5), trait.toParam(6)],
+              [trait.toParam(7), trait.toParam(8), trait.toParam(9)],
+              [trait.toParam(10), trait.toParam(11), trait.toParam(12)],
             ],
             expected: [
               [1, 2, 3],
@@ -1469,8 +1444,8 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
             ],
             expected: [
               [1, 2, 3, 4],
@@ -1479,14 +1454,9 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
-              [
-                trait.toInterval(9),
-                trait.toInterval(10),
-                trait.toInterval(11),
-                trait.toInterval(12),
-              ],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
+              [trait.toParam(9), trait.toParam(10), trait.toParam(11), trait.toParam(12)],
             ],
             expected: [
               [1, 2, 3, 4],
@@ -1496,20 +1466,10 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval(1), trait.toInterval(2), trait.toInterval(3), trait.toInterval(4)],
-              [trait.toInterval(5), trait.toInterval(6), trait.toInterval(7), trait.toInterval(8)],
-              [
-                trait.toInterval(9),
-                trait.toInterval(10),
-                trait.toInterval(11),
-                trait.toInterval(12),
-              ],
-              [
-                trait.toInterval(13),
-                trait.toInterval(14),
-                trait.toInterval(15),
-                trait.toInterval(16),
-              ],
+              [trait.toParam(1), trait.toParam(2), trait.toParam(3), trait.toParam(4)],
+              [trait.toParam(5), trait.toParam(6), trait.toParam(7), trait.toParam(8)],
+              [trait.toParam(9), trait.toParam(10), trait.toParam(11), trait.toParam(12)],
+              [trait.toParam(13), trait.toParam(14), trait.toParam(15), trait.toParam(16)],
             ],
             expected: [
               [1, 2, 3, 4],
@@ -1521,8 +1481,8 @@ g.test('toMatrix')
 
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
             ],
             expected: [
               [
@@ -1537,9 +1497,9 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
-              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
+              [trait.toParam([5, 6]), trait.toParam([6, 7])],
             ],
             expected: [
               [
@@ -1558,10 +1518,10 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3])],
-              [trait.toInterval([3, 4]), trait.toInterval([4, 5])],
-              [trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3])],
+              [trait.toParam([3, 4]), trait.toParam([4, 5])],
+              [trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9])],
             ],
             expected: [
               [
@@ -1584,8 +1544,8 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
             ],
             expected: [
               [
@@ -1602,9 +1562,9 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9]), trait.toParam([9, 10])],
             ],
             expected: [
               [
@@ -1626,10 +1586,10 @@ g.test('toMatrix')
           },
           {
             input: [
-              [trait.toInterval([1, 2]), trait.toInterval([2, 3]), trait.toInterval([3, 4])],
-              [trait.toInterval([4, 5]), trait.toInterval([5, 6]), trait.toInterval([6, 7])],
-              [trait.toInterval([7, 8]), trait.toInterval([8, 9]), trait.toInterval([9, 10])],
-              [trait.toInterval([10, 11]), trait.toInterval([11, 12]), trait.toInterval([12, 13])],
+              [trait.toParam([1, 2]), trait.toParam([2, 3]), trait.toParam([3, 4])],
+              [trait.toParam([4, 5]), trait.toParam([5, 6]), trait.toParam([6, 7])],
+              [trait.toParam([7, 8]), trait.toParam([8, 9]), trait.toParam([9, 10])],
+              [trait.toParam([10, 11]), trait.toParam([11, 12]), trait.toParam([12, 13])],
             ],
             expected: [
               [
@@ -1657,16 +1617,16 @@ g.test('toMatrix')
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
             ],
             expected: [
@@ -1687,22 +1647,22 @@ g.test('toMatrix')
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
               [
-                trait.toInterval([9, 10]),
-                trait.toInterval([10, 11]),
-                trait.toInterval([11, 12]),
-                trait.toInterval([12, 13]),
+                trait.toParam([9, 10]),
+                trait.toParam([10, 11]),
+                trait.toParam([11, 12]),
+                trait.toParam([12, 13]),
               ],
             ],
             expected: [
@@ -1729,28 +1689,28 @@ g.test('toMatrix')
           {
             input: [
               [
-                trait.toInterval([1, 2]),
-                trait.toInterval([2, 3]),
-                trait.toInterval([3, 4]),
-                trait.toInterval([4, 5]),
+                trait.toParam([1, 2]),
+                trait.toParam([2, 3]),
+                trait.toParam([3, 4]),
+                trait.toParam([4, 5]),
               ],
               [
-                trait.toInterval([5, 6]),
-                trait.toInterval([6, 7]),
-                trait.toInterval([7, 8]),
-                trait.toInterval([8, 9]),
+                trait.toParam([5, 6]),
+                trait.toParam([6, 7]),
+                trait.toParam([7, 8]),
+                trait.toParam([8, 9]),
               ],
               [
-                trait.toInterval([9, 10]),
-                trait.toInterval([10, 11]),
-                trait.toInterval([11, 12]),
-                trait.toInterval([12, 13]),
+                trait.toParam([9, 10]),
+                trait.toParam([10, 11]),
+                trait.toParam([11, 12]),
+                trait.toParam([12, 13]),
               ],
               [
-                trait.toInterval([13, 14]),
-                trait.toInterval([14, 15]),
-                trait.toInterval([15, 16]),
-                trait.toInterval([16, 17]),
+                trait.toParam([13, 14]),
+                trait.toParam([14, 15]),
+                trait.toParam([15, 16]),
+                trait.toParam([16, 17]),
               ],
             ],
             expected: [
@@ -1805,7 +1765,7 @@ g.test('toMatrix')
           {
             input: [
               [1, 2],
-              [trait.toInterval([3]), 4],
+              [trait.toParam([3]), 4],
             ],
             expected: [
               [1, 2],
@@ -1814,8 +1774,8 @@ g.test('toMatrix')
           },
           {
             input: [
-              [[1], trait.toInterval([2])],
-              [trait.toInterval([3]), trait.toInterval([4])],
+              [[1], trait.toParam([2])],
+              [trait.toParam([3]), trait.toParam([4])],
             ],
             expected: [
               [1, 2],
@@ -1827,7 +1787,7 @@ g.test('toMatrix')
   )
   .fn(t => {
     const trait = FP[t.params.trait];
-    const input = t.params.input;
+    const input = map2DArray(t.params.input, e => trait.fromParam(e));
     const expected = map2DArray(t.params.expected, e => trait.toInterval(e));
 
     const got = trait.toMatrix(input);

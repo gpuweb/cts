@@ -615,6 +615,12 @@ interface FPConstants {
   };
 }
 
+/** A representation of an FPInterval for a case param */
+export type FPIntervalParam = {
+  kind: FPKind;
+  interval: number | IntervalBounds;
+};
+
 /** Abstract base class for all floating-point traits */
 export abstract class FPTraits {
   public readonly kind: FPKind;
@@ -639,6 +645,30 @@ export abstract class FPTraits {
     }
 
     return new FPInterval(this.kind, n, n);
+  }
+
+  /**
+   * Makes a param that can be turned into an interval
+   */
+  public toParam(n: number | IntervalBounds): FPIntervalParam {
+    return {
+      kind: this.kind,
+      interval: n,
+    };
+  }
+
+  /**
+   * Converts p into an FPInterval if it is an FPIntervalPAram
+   */
+  public fromParam(
+    p: number | IntervalBounds | FPIntervalParam
+  ): number | IntervalBounds | FPInterval {
+    const param = p as FPIntervalParam;
+    if (param.interval && param.kind) {
+      assert(param.kind === this.kind);
+      return this.toInterval(param.interval);
+    }
+    return p as number | IntervalBounds;
   }
 
   /**

@@ -615,6 +615,12 @@ function addFlushedIfNeededF16(values) {
 
 
 
+
+
+
+
+
+
 /** Abstract base class for all floating-point traits */
 export class FPTraits {
 
@@ -639,6 +645,30 @@ export class FPTraits {
     }
 
     return new FPInterval(this.kind, n, n);
+  }
+
+  /**
+   * Makes a param that can be turned into an interval
+   */
+  toParam(n) {
+    return {
+      kind: this.kind,
+      interval: n
+    };
+  }
+
+  /**
+   * Converts p into an FPInterval if it is an FPIntervalPAram
+   */
+  fromParam(
+  p)
+  {
+    const param = p;
+    if (param.interval && param.kind) {
+      assert(param.kind === this.kind);
+      return this.toInterval(param.interval);
+    }
+    return p;
   }
 
   /**
