@@ -34,6 +34,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
+      .beginSubcases()
       .expand('e', u => fullRangeForType(kValuesTypes[u.type], 3))
       .expand('low', u => fullRangeForType(kValuesTypes[u.type], 4))
       .expand('high', u => fullRangeForType(kValuesTypes[u.type], 4))
