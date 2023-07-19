@@ -52,13 +52,15 @@ function stringifyFilter(k: string, v: unknown): unknown {
     );
   }
 
-  const isObject = typeof v === 'object' && !isArrayOrTypedArray(v);
-  assert(
-    !isObject || isPlainObject(v),
-    `value must be a plain object but it appears to be a '${
-      Object.getPrototypeOf(v || {}).constructor.name
-    }'`
-  );
+  const isObject = v !== null && typeof v === 'object' && !isArrayOrTypedArray(v);
+  if (isObject) {
+    assert(
+      isPlainObject(v),
+      `value must be a plain object but it appears to be a '${
+        Object.getPrototypeOf(v).constructor.name
+      }`
+    );
+  }
   assert(typeof v !== 'function', `${v} can not be a function`);
 
   if (Object.is(v, -0)) {
