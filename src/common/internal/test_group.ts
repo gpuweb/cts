@@ -286,7 +286,12 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
         assert(this.batchSize === 0 || !('batch__' in params));
 
         // stringifyPublicParams also checks for invalid params values
-        const testcaseString = stringifyPublicParams(params);
+        let testcaseString;
+        try {
+          testcaseString = stringifyPublicParams(params);
+        } catch (e) {
+          throw new Error(`${e}: ${testPathString}`);
+        }
 
         // A (hopefully) unique representation of a params value.
         const testcaseStringUnique = stringifyPublicParamsUniquely(params);

@@ -158,6 +158,13 @@ export function rejectWithoutUncaught(err) {
 }
 
 /**
+ * Returns true if v is a plain JavaScript object.
+ */
+export function isPlainObject(v) {
+  return !!v && Object.getPrototypeOf(v).constructor === Object.prototype.constructor;
+}
+
+/**
  * Makes a copy of a JS `object`, with the keys reordered into sorted order.
  */
 export function sortObjectByKey(v) {

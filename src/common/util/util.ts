@@ -163,6 +163,13 @@ export function rejectWithoutUncaught<T>(err: unknown): Promise<T> {
 }
 
 /**
+ * Returns true if v is a plain JavaScript object.
+ */
+export function isPlainObject(v: unknown) {
+  return !!v && Object.getPrototypeOf(v).constructor === Object.prototype.constructor;
+}
+
+/**
  * Makes a copy of a JS `object`, with the keys reordered into sorted order.
  */
 export function sortObjectByKey(v: { [k: string]: unknown }): { [k: string]: unknown } {
