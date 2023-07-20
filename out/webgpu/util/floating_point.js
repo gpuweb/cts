@@ -3100,34 +3100,44 @@ export class FPTraits {
 
 
 
-  // This op should be implemented diffferently for f32 and f16.
-  DivisionIntervalOp = {
-    impl: this.limitScalarPairToIntervalDomain(
-    {
-      x: [this.toInterval([kValue.f32.negative.min, kValue.f32.positive.max])],
-      y: [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])]
-    },
-    (x, y) => {
-      if (y === 0) {
-        return this.constants().anyInterval;
-      }
-      return this.ulpInterval(x / y, 2.5);
-    }),
+  // This op is implemented diffferently for f32 and f16.
+  DivisionIntervalOpBuilder() {
+    assert(this.kind === 'f32' || this.kind === 'f16');
+    const constants = this.constants();
+    const domain_x = [this.toInterval([constants.negative.min, constants.positive.max])];
+    const domain_y =
+    this.kind === 'f32' ?
+    [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])] :
+    [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
+    return {
+      impl: this.limitScalarPairToIntervalDomain(
+      {
+        x: domain_x,
+        y: domain_y
+      },
+      (x, y) => {
+        if (y === 0) {
+          return constants.anyInterval;
+        }
+        return this.ulpInterval(x / y, 2.5);
+      }),
 
-    extrema: (x, y) => {
-      // division has a discontinuity at y = 0.
-      if (y.contains(0)) {
-        y = this.toInterval(0);
+      extrema: (x, y) => {
+        // division has a discontinuity at y = 0.
+        if (y.contains(0)) {
+          y = this.toInterval(0);
+        }
+        return [x, y];
       }
-      return [x, y];
-    }
-  };
+    };
+  }
 
   divisionIntervalImpl(x, y) {
+    assert(this.kind === 'f32' || this.kind === 'f16');
     return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
-    this.DivisionIntervalOp);
+    this.DivisionIntervalOpBuilder());
 
   }
 
@@ -4912,7 +4922,7 @@ class F16Traits extends FPTraits {
   acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  additionInterval = this.additionIntervalImpl.bind(this);
   additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   asinInterval = this.unimplementedScalarToInterval.bind(this);
   asinhInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4929,7 +4939,7 @@ class F16Traits extends FPTraits {
   degreesInterval = this.unimplementedScalarToInterval.bind(this);
   determinantInterval = this.unimplementedMatrixToInterval.bind(this);
   distanceInterval = this.unimplementedDistance.bind(this);
-  divisionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  divisionInterval = this.divisionIntervalImpl.bind(this);
   dotInterval = this.unimplementedVectorPairToInterval.bind(this);
   expInterval = this.unimplementedScalarToInterval.bind(this);
   exp2Interval = this.unimplementedScalarToInterval.bind(this);
@@ -4937,7 +4947,7 @@ class F16Traits extends FPTraits {
   floorInterval = this.floorIntervalImpl.bind(this);
   fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
   fractInterval = this.unimplementedScalarToInterval.bind(this);
-  inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
   lengthInterval = this.unimplementedLength.bind(this);
   logInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4948,7 +4958,7 @@ class F16Traits extends FPTraits {
   mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   modfInterval = this.unimplementedModf.bind(this);
-  multiplicationInterval = this.unimplementedScalarPairToInterval.bind(this);
+  multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
   this);
 
@@ -4978,9 +4988,9 @@ class F16Traits extends FPTraits {
   sinInterval = this.sinIntervalImpl.bind(this);
   sinhInterval = this.unimplementedScalarToInterval.bind(this);
   smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  sqrtInterval = this.unimplementedScalarToInterval.bind(this);
+  sqrtInterval = this.sqrtIntervalImpl.bind(this);
   stepInterval = this.unimplementedScalarPairToInterval.bind(this);
-  subtractionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  subtractionInterval = this.subtractionIntervalImpl.bind(this);
   subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   tanInterval = this.unimplementedScalarToInterval.bind(this);
   tanhInterval = this.unimplementedScalarToInterval.bind(this);
