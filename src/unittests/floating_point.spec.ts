@@ -2175,32 +2175,32 @@ g.test('absInterval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-        // Common usages
-        { input: 1, expected: 1 },
-        { input: -1, expected: 1 },
-        ...kAbsIntervalCases.map(t => {return {input: t.input, expected: t.expected[p.trait]} as ScalarToIntervalCase}),
+          // Common usages
+          { input: 1, expected: 1 },
+          { input: -1, expected: 1 },
+          ...kAbsIntervalCases.map(t => {return {input: t.input, expected: t.expected[p.trait]} as ScalarToIntervalCase}),
 
-        // Edge cases
-        { input: constants.positive.infinity, expected: kAnyBounds },
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.positive.max, expected: constants.positive.max },
-        { input: constants.positive.min, expected: constants.positive.min },
-        { input: constants.negative.min, expected: constants.positive.max },
-        { input: constants.negative.max, expected: constants.positive.min },
+          // Edge cases
+          { input: constants.positive.infinity, expected: kAnyBounds },
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.positive.max, expected: constants.positive.max },
+          { input: constants.positive.min, expected: constants.positive.min },
+          { input: constants.negative.min, expected: constants.positive.max },
+          { input: constants.negative.max, expected: constants.positive.min },
 
-        // 32-bit subnormals
-        { input: constants.positive.subnormal.max, expected: [0, constants.positive.subnormal.max] },
-        { input: constants.positive.subnormal.min, expected: [0, constants.positive.subnormal.min] },
-        { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
-        { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] },
+          // 32-bit subnormals
+          { input: constants.positive.subnormal.max, expected: [0, constants.positive.subnormal.max] },
+          { input: constants.positive.subnormal.min, expected: [0, constants.positive.subnormal.min] },
+          { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
+          { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] },
 
-        // 64-bit subnormals
-        { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, constants.positive.subnormal.min] },
-        { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, constants.positive.subnormal.min] },
+          // 64-bit subnormals
+          { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, constants.positive.subnormal.min] },
+          { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, constants.positive.subnormal.min] },
 
-        // Zero
-        { input: 0, expected: 0 },
-      ];
+          // Zero
+          { input: 0, expected: 0 },
+        ];
       })
   )
   .fn(t => {
@@ -2251,23 +2251,24 @@ g.test('acosInterval')
         const constants = trait.constants();
         // prettier-ignore
         return [
-        // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-        // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-        // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-        // well-defined/implemented at 0.
-        // Near 1, the absolute error should be larger and, away from 1 the atan2
-        // inherited error should be larger.
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.negative.min, expected: kAnyBounds },
-        { input: -1, expected: kAnyBounds },
-        { input: 0, expected: kAnyBounds },
-        { input: 1, expected: kAnyBounds },
-        { input: constants.positive.max, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
+          // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
+          // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
+          // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
+          // well-defined/implemented at 0.
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.negative.min, expected: kAnyBounds },
+          { input: -1, expected: kAnyBounds },
+          { input: 0, expected: kAnyBounds },
+          { input: 1, expected: kAnyBounds },
+          { input: constants.positive.max, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
 
-        // Cases that bounded by absolute error and inherited from atan2(sqrt(1-x*x), x).
-        ...kAcosIntervalCases[p.trait],
-      ];
+          // Cases that bounded by absolute error and inherited from atan2(sqrt(1-x*x), x). Note that
+          // even x is very close to 1.0 and the expected result is close to 0.0, the expected
+          // interval is still bounded by ULP as well as absolute error, specifically lower boundary
+          // comes from ULP error and upper boundary comes from absolute error in those cases.
+          ...kAcosIntervalCases[p.trait],
+        ];
       })
   )
   .fn(t => {
@@ -2359,29 +2360,29 @@ g.test('asinInterval')
         const abs_error = p.trait === 'f32' ? 6.77e-5 : 3.91e-3;
         // prettier-ignore
         return [
-        // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-        // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
-        // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-        // well-defined/implemented at 0.
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.negative.min, expected: kAnyBounds },
-        { input: -1, expected: kAnyBounds },
-        // Subnormal input may get flushed to 0, and result in kAnyBounds.
-        { input: constants.negative.subnormal.min, expected: kAnyBounds },
-        { input: 0, expected: kAnyBounds },
-        { input: constants.positive.subnormal.max, expected: kAnyBounds },
-        { input: 1, expected: kAnyBounds },
-        { input: constants.positive.max, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
+          // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
+          // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
+          // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
+          // well-defined/implemented at 0.
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.negative.min, expected: kAnyBounds },
+          { input: -1, expected: kAnyBounds },
+          // Subnormal input may get flushed to 0, and result in kAnyBounds.
+          { input: constants.negative.subnormal.min, expected: kAnyBounds },
+          { input: 0, expected: kAnyBounds },
+          { input: constants.positive.subnormal.max, expected: kAnyBounds },
+          { input: 1, expected: kAnyBounds },
+          { input: constants.positive.max, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
 
-        // When input near 0, the expected result is bounded by absolute error rather than ULP
-        // error. Away from 0 the atan2 inherited error should be larger.
-        { input: constants.negative.max, expected: trait.absoluteErrorInterval(Math.asin(constants.negative.max), abs_error).bounds() },  // ~0
-        { input: constants.positive.min, expected: trait.absoluteErrorInterval(Math.asin(constants.positive.min), abs_error).bounds() },  // ~0
+          // When input near 0, the expected result is bounded by absolute error rather than ULP
+          // error. Away from 0 the atan2 inherited error should be larger.
+          { input: constants.negative.max, expected: trait.absoluteErrorInterval(Math.asin(constants.negative.max), abs_error).bounds() },  // ~0
+          { input: constants.positive.min, expected: trait.absoluteErrorInterval(Math.asin(constants.positive.min), abs_error).bounds() },  // ~0
 
-        // Cases that inherited from atan2(x, sqrt(1-x*x))
-        ...kAsinIntervalInheritedCases[p.trait],
-      ];
+          // Cases that inherited from atan2(x, sqrt(1-x*x))
+          ...kAsinIntervalInheritedCases[p.trait],
+        ];
       })
   )
   .fn(t => {
@@ -2468,12 +2469,12 @@ g.test('atanInterval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-        { input: 0, expected: 0 },
-        ...kAtanIntervalCases[p.trait],
+          { input: 0, expected: 0 },
+          ...kAtanIntervalCases[p.trait],
 
-        { input: constants.negative.infinity, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
-      ];
+          { input: constants.negative.infinity, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {
@@ -2894,19 +2895,19 @@ g.test('inverseSqrtInterval')
         const constants = trait.constants();
         // prettier-ignore
         return [
-        // Exactly representable cases
-        { input: 1, expected: 1 },
-        { input: 0.25, expected: 2 },
-        { input: 64, expected: 0.125 },
+          // Exactly representable cases
+          { input: 1, expected: 1 },
+          { input: 0.25, expected: 2 },
+          { input: 64, expected: 0.125 },
 
-        // Cases that input and/or result not exactly representable
-        ...kInverseSqrtIntervalCases[p.trait],
+          // Cases that input and/or result not exactly representable
+          ...kInverseSqrtIntervalCases[p.trait],
 
-        // Out of definition domain
-        { input: -1, expected: kAnyBounds },
-        { input: 0, expected: kAnyBounds },
-        { input: constants.positive.infinity, expected: kAnyBounds },
-      ];
+          // Out of definition domain
+          { input: -1, expected: kAnyBounds },
+          { input: 0, expected: kAnyBounds },
+          { input: constants.positive.infinity, expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {
@@ -3713,38 +3714,38 @@ g.test('atan2Interval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-        ...kAtan2IntervalCases[p.trait],
+          ...kAtan2IntervalCases[p.trait],
 
-        // Cases that y out of bound.
-        // positive y, positive x
-        { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
-        // positive y, negative x
-        { input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
-        // negative y, negative x
-        { input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
-        // negative y, positive x
-        { input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
+          // Cases that y out of bound.
+          // positive y, positive x
+          { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
+          // positive y, negative x
+          { input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
+          // negative y, negative x
+          { input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
+          // negative y, positive x
+          { input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
 
-        // Discontinuity @ origin (0,0)
-        { input: [0, 0], expected: kAnyBounds },
-        { input: [0, constants.positive.subnormal.max], expected: kAnyBounds },
-        { input: [0, constants.negative.subnormal.min], expected: kAnyBounds },
-        { input: [0, constants.positive.min], expected: kAnyBounds },
-        { input: [0, constants.negative.max], expected: kAnyBounds },
-        { input: [0, constants.positive.max], expected: kAnyBounds },
-        { input: [0, constants.negative.min], expected: kAnyBounds },
-        { input: [0, constants.positive.infinity], expected: kAnyBounds },
-        { input: [0, constants.negative.infinity], expected: kAnyBounds },
-        { input: [0, 1], expected: kAnyBounds },
-        { input: [constants.positive.subnormal.max, 1], expected: kAnyBounds },
-        { input: [constants.negative.subnormal.min, 1], expected: kAnyBounds },
+          // Discontinuity @ origin (0,0)
+          { input: [0, 0], expected: kAnyBounds },
+          { input: [0, constants.positive.subnormal.max], expected: kAnyBounds },
+          { input: [0, constants.negative.subnormal.min], expected: kAnyBounds },
+          { input: [0, constants.positive.min], expected: kAnyBounds },
+          { input: [0, constants.negative.max], expected: kAnyBounds },
+          { input: [0, constants.positive.max], expected: kAnyBounds },
+          { input: [0, constants.negative.min], expected: kAnyBounds },
+          { input: [0, constants.positive.infinity], expected: kAnyBounds },
+          { input: [0, constants.negative.infinity], expected: kAnyBounds },
+          { input: [0, 1], expected: kAnyBounds },
+          { input: [constants.positive.subnormal.max, 1], expected: kAnyBounds },
+          { input: [constants.negative.subnormal.min, 1], expected: kAnyBounds },
 
-        // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
-        { input: [1, constants.positive.max], expected: kAnyBounds },
-        { input: [1, constants.positive.nearest_max], expected: kAnyBounds },
-        { input: [1, constants.negative.min], expected: kAnyBounds },
-        { input: [1, constants.negative.nearest_min], expected: kAnyBounds },
-      ];
+          // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
+          { input: [1, constants.positive.max], expected: kAnyBounds },
+          { input: [1, constants.positive.nearest_max], expected: kAnyBounds },
+          { input: [1, constants.negative.min], expected: kAnyBounds },
+          { input: [1, constants.negative.nearest_min], expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {
@@ -3864,32 +3865,32 @@ g.test('divisionInterval')
         const constants = trait.constants();
         // prettier-ignore
         return [
-        // Representable normals
-        { input: [0, 1], expected: 0 },
-        { input: [0, -1], expected: 0 },
-        { input: [1, 1], expected: 1 },
-        { input: [1, -1], expected: -1 },
-        { input: [-1, 1], expected: -1 },
-        { input: [-1, -1], expected: 1 },
-        { input: [4, 2], expected: 2 },
-        { input: [-4, 2], expected: -2 },
-        { input: [4, -2], expected: -2 },
-        { input: [-4, -2], expected: 2 },
+          // Representable normals
+          { input: [0, 1], expected: 0 },
+          { input: [0, -1], expected: 0 },
+          { input: [1, 1], expected: 1 },
+          { input: [1, -1], expected: -1 },
+          { input: [-1, 1], expected: -1 },
+          { input: [-1, -1], expected: 1 },
+          { input: [4, 2], expected: 2 },
+          { input: [-4, 2], expected: -2 },
+          { input: [4, -2], expected: -2 },
+          { input: [-4, -2], expected: 2 },
 
-        // 64-bit normals that can not be exactly represented
-        ...kDivisionInterval64BitsNormalCases[p.trait],
+          // 64-bit normals that can not be exactly represented
+          ...kDivisionInterval64BitsNormalCases[p.trait],
 
-        // Denominator out of range
-        { input: [1, constants.positive.infinity], expected: kAnyBounds },
-        { input: [1, constants.negative.infinity], expected: kAnyBounds },
-        { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
-        { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
-        { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds },
-        { input: [1, constants.positive.max], expected: kAnyBounds },
-        { input: [1, constants.negative.min], expected: kAnyBounds },
-        { input: [1, 0], expected: kAnyBounds },
-        { input: [1, constants.positive.subnormal.max], expected: kAnyBounds },
-      ];
+          // Denominator out of range
+          { input: [1, constants.positive.infinity], expected: kAnyBounds },
+          { input: [1, constants.negative.infinity], expected: kAnyBounds },
+          { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds },
+          { input: [1, constants.positive.max], expected: kAnyBounds },
+          { input: [1, constants.negative.min], expected: kAnyBounds },
+          { input: [1, 0], expected: kAnyBounds },
+          { input: [1, constants.positive.subnormal.max], expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {
@@ -4132,46 +4133,46 @@ g.test('multiplicationInterval')
         const constants = trait.constants();
         // prettier-ignore
         return [
-        // Representable normals
-        { input: [0, 0], expected: 0 },
-        { input: [1, 0], expected: 0 },
-        { input: [0, 1], expected: 0 },
-        { input: [-1, 0], expected: 0 },
-        { input: [0, -1], expected: 0 },
-        { input: [1, 1], expected: 1 },
-        { input: [1, -1], expected: -1 },
-        { input: [-1, 1], expected: -1 },
-        { input: [-1, -1], expected: 1 },
-        { input: [2, 1], expected: 2 },
-        { input: [1, -2], expected: -2 },
-        { input: [-2, 1], expected: -2 },
-        { input: [-2, -1], expected: 2 },
-        { input: [2, 2], expected: 4 },
-        { input: [2, -2], expected: -4 },
-        { input: [-2, 2], expected: -4 },
-        { input: [-2, -2], expected: 4 },
+          // Representable normals
+          { input: [0, 0], expected: 0 },
+          { input: [1, 0], expected: 0 },
+          { input: [0, 1], expected: 0 },
+          { input: [-1, 0], expected: 0 },
+          { input: [0, -1], expected: 0 },
+          { input: [1, 1], expected: 1 },
+          { input: [1, -1], expected: -1 },
+          { input: [-1, 1], expected: -1 },
+          { input: [-1, -1], expected: 1 },
+          { input: [2, 1], expected: 2 },
+          { input: [1, -2], expected: -2 },
+          { input: [-2, 1], expected: -2 },
+          { input: [-2, -1], expected: 2 },
+          { input: [2, 2], expected: 4 },
+          { input: [2, -2], expected: -4 },
+          { input: [-2, 2], expected: -4 },
+          { input: [-2, -2], expected: 4 },
 
-        // 64-bit normals that can not be exactly represented
-        ...kMultiplicationInterval64BitsNormalCases[p.trait],
+          // 64-bit normals that can not be exactly represented
+          ...kMultiplicationInterval64BitsNormalCases[p.trait],
 
-        // Infinities
-        { input: [0, constants.positive.infinity], expected: kAnyBounds },
-        { input: [1, constants.positive.infinity], expected: kAnyBounds },
-        { input: [-1, constants.positive.infinity], expected: kAnyBounds },
-        { input: [constants.positive.infinity, constants.positive.infinity], expected: kAnyBounds },
-        { input: [0, constants.negative.infinity], expected: kAnyBounds },
-        { input: [1, constants.negative.infinity], expected: kAnyBounds },
-        { input: [-1, constants.negative.infinity], expected: kAnyBounds },
-        { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
-        { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds },
-        { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
+          // Infinities
+          { input: [0, constants.positive.infinity], expected: kAnyBounds },
+          { input: [1, constants.positive.infinity], expected: kAnyBounds },
+          { input: [-1, constants.positive.infinity], expected: kAnyBounds },
+          { input: [constants.positive.infinity, constants.positive.infinity], expected: kAnyBounds },
+          { input: [0, constants.negative.infinity], expected: kAnyBounds },
+          { input: [1, constants.negative.infinity], expected: kAnyBounds },
+          { input: [-1, constants.negative.infinity], expected: kAnyBounds },
+          { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
 
-        // Edges
-        { input: [constants.positive.max, constants.positive.max], expected: kAnyBounds },
-        { input: [constants.negative.min, constants.negative.min], expected: kAnyBounds },
-        { input: [constants.positive.max, constants.negative.min], expected: kAnyBounds },
-        { input: [constants.negative.min, constants.positive.max], expected: kAnyBounds },
-      ];
+          // Edges
+          { input: [constants.positive.max, constants.positive.max], expected: kAnyBounds },
+          { input: [constants.negative.min, constants.negative.min], expected: kAnyBounds },
+          { input: [constants.positive.max, constants.negative.min], expected: kAnyBounds },
+          { input: [constants.negative.min, constants.positive.max], expected: kAnyBounds },
+        ];
       })
   )
   .fn(t => {

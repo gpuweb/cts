@@ -2522,7 +2522,7 @@ export abstract class FPTraits {
   /** Calculate an acceptance interval for abs(n) */
   public abstract readonly absInterval: (n: number) => FPInterval;
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   private readonly AcosIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
       assert(this.kind === 'f32' || this.kind === 'f16');
@@ -2615,7 +2615,7 @@ export abstract class FPTraits {
     y: Array2D<number>
   ) => FPMatrix;
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   private readonly AsinIntervalOp: ScalarToIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n: number) => {
       assert(this.kind === 'f32' || this.kind === 'f16');
@@ -2669,13 +2669,13 @@ export abstract class FPTraits {
   /** Calculate an acceptance interval of atan(x) */
   public abstract readonly atanInterval: (n: number | FPInterval) => FPInterval;
 
-  // This op is implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   private Atan2IntervalOpBuilder(): ScalarPairToIntervalOp {
     assert(this.kind === 'f32' || this.kind === 'f16');
     const constants = this.constants();
-    // For atan2, there params are labelled (y, x), not (x, y), so domain.x is first parameter (y), and domain.y is
-    // the second parameter (x)
-    // first param must be finite and normal
+    // For atan2, the params are labelled (y, x), not (x, y), so domain.x is first parameter (y),
+    // and domain.y is the second parameter (x).
+    // The first param must be finite and normal.
     const domain_x = [
       this.toInterval([constants.negative.min, constants.negative.max]),
       this.toInterval([constants.positive.min, constants.positive.max]),
@@ -3120,7 +3120,7 @@ export abstract class FPTraits {
     y: number | number[]
   ) => FPInterval;
 
-  // This op is implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   private DivisionIntervalOpBuilder(): ScalarPairToIntervalOp {
     assert(this.kind === 'f32' || this.kind === 'f16');
     const constants = this.constants();
@@ -3375,7 +3375,7 @@ export abstract class FPTraits {
   /** Calculate an acceptance interval of inverseSqrt(x) */
   public abstract readonly inverseSqrtInterval: (n: number | FPInterval) => FPInterval;
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op should be implemented differently for f32 and f16.
   private readonly LdexpIntervalOp: ScalarPairToIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
       // Implementing SPIR-V's more restrictive domain until

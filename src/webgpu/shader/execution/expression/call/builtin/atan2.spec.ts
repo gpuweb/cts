@@ -22,8 +22,8 @@ export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('atan2', {
   f32: () => {
-    // Using sparse, since there a N^2 cases being generated, but including extra values around 0, since that is where
-    // there is a discontinuity that implementations tend to behave badly at.
+    // Using sparse range since there are N^2 cases being generated, and also including extra values
+    // around 0, where there is a discontinuity that implementations may behave badly at.
     const numeric_range = [
       ...sparseF32Range(),
       ...linearRange(kValue.f32.negative.max, kValue.f32.positive.min, 10),
@@ -36,8 +36,8 @@ export const d = makeCaseCache('atan2', {
     );
   },
   f16: () => {
-    // Using sparse, since there a N^2 cases being generated, but including extra values around 0, since that is where
-    // there is a discontinuity that implementations tend to behave badly at.
+    // Using sparse range since there are N^2 cases being generated, and also including extra values
+    // around 0, where there is a discontinuity that implementations may behave badly at.
     const numeric_range = [
       ...sparseF16Range(),
       ...linearRange(kValue.f16.negative.max, kValue.f16.positive.min, 10),
