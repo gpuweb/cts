@@ -1,4 +1,4 @@
-import { assert, sortObjectByKey } from '../../util/util.js';
+import { assert, sortObjectByKey, isPlainObject } from '../../util/util.js';
 import { JSONWithUndefined } from '../params_utils.js';
 
 // JSON can't represent various values and by default stores them as `null`.
@@ -51,6 +51,17 @@ function stringifyFilter(k: string, v: unknown): unknown {
       `${v} matches bigint magic pattern for stringification, so cannot be used`
     );
   }
+
+  const isObject = v !== null && typeof v === 'object' && !Array.isArray(v);
+  if (isObject) {
+    assert(
+      isPlainObject(v),
+      `value must be a plain object but it appears to be a '${
+        Object.getPrototypeOf(v).constructor.name
+      }`
+    );
+  }
+  assert(typeof v !== 'function', `${v} can not be a function`);
 
   if (Object.is(v, -0)) {
     return jsNegativeZeroMagicValue;
