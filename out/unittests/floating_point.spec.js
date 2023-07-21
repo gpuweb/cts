@@ -2213,38 +2213,71 @@ fn((t) => {
 
 });
 
-g.test('acosInterval_f32').
-paramsSubcasesOnly(
+// Acos expectation intervals are bounded by both inherited atan2(sqrt(1.0 - x*x), x) and absolute error.
+// Atan2 introduce 4096ULP for f32 and 5ULP for f16, and sqrt inherited from 1.0/inverseSqrt.
 
-[
-// Some of these are hard coded, since the error intervals are difficult
-// to express in a closed human-readable form due to the complexity of
-// their derivation.
-//
-// The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-// sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-// The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-// well-defined/implemented at 0.
-// Near 1, the absolute error should be larger and, away from 1 the atan2
-// inherited error should be larger.
-{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
-{ input: kValue.f32.negative.min, expected: kAnyBounds },
-{ input: -1, expected: kAnyBounds },
-{ input: -1 / 2, expected: [reinterpretU32AsF32(0x4005fa91), reinterpretU32AsF32(0x40061a94)] }, // ~2π/3
-{ input: 0, expected: kAnyBounds },
-{ input: 1 / 2, expected: [reinterpretU32AsF32(0x3f85fa8f), reinterpretU32AsF32(0x3f861a94)] }, // ~π/3
-{ input: kMinusOneULPFunctions['f32'](1), expected: [reinterpretU64AsF64(0x3f2f_fdff_6000_0000n), reinterpretU64AsF64(0x3f3b_106f_c933_4fb9n)] }, // ~0.0003
-{ input: 1, expected: kAnyBounds },
-{ input: kValue.f32.positive.max, expected: kAnyBounds },
-{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
+const kAcosIntervalCases = {
+  f32: [
+  { input: kPlusOneULPFunctions['f32'](-1), expected: [reinterpretU32AsF32(0x4048fa32), reinterpretU32AsF32(0x40491bdb)] }, // ~π
+  { input: -1 / 2, expected: [reinterpretU32AsF32(0x4005fa90), reinterpretU32AsF32(0x40061a93)] }, // ~2π/3
+  { input: 1 / 2, expected: [reinterpretU32AsF32(0x3f85fa8f), reinterpretU32AsF32(0x3f861a94)] }, // ~π/3
+  // Input case to get smallest well-defined expected result, the expectation interval is bounded
+  // by ULP (lower boundary) and absolute error (upper boundary).
+  // f32 1.0-1ULP=0x3F7FFFFF=0.9999999403953552,
+  // acos(0.9999999403953552)=3.4526698478747995220159699019994e-4 rounded to f32 0x39B504F3 or 0x39B504F4,
+  // absolute error interval upper boundary 0x39B504F4+6.77e-5=0.00041296700619608164 i.e. f64 0x3F3B_106F_C933_4FB9.
+  { input: kMinusOneULPFunctions['f32'](1), expected: [reinterpretU64AsF64(0x3f2f_fdff_6000_0000n), reinterpretU64AsF64(0x3f3b_106f_c933_4fb9n)] } // ~0.0003
+  ],
+  f16: [
+  { input: kPlusOneULPFunctions['f16'](-1), expected: [reinterpretU16AsF16(0x4233), reinterpretU16AsF16(0x4243)] }, // ~π
+  { input: -1 / 2, expected: [reinterpretU16AsF16(0x402a), reinterpretU16AsF16(0x4037)] }, // ~2π/3
+  { input: 1 / 2, expected: [reinterpretU16AsF16(0x3c29), reinterpretU16AsF16(0x3c38)] }, // ~π/3
+  // Input case to get smallest well-defined expected result, the expectation interval is bounded
+  // by ULP (lower boundary) and absolute error (upper boundary).
+  // f16 1.0-1ULP=0x3BFF=0.99951171875,
+  // acos(0.99951171875)=0.03125127170547389912035676677648 rounded to f16 0x2800 or 0x2801,
+  // absolute error interval upper boundary 0x2801+3.91e-3=0.035190517578125 i.e. f64 0x3FA2_047D_D441_3554.
+  { input: kMinusOneULPFunctions['f16'](1), expected: [reinterpretU16AsF16(0x259d), reinterpretU64AsF64(0x3fa2_047d_d441_3554n)] } // ~0.03
+  ]
+};
 
+g.test('acosInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
+
+  return [
+  // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
+  // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
+  // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
+  // well-defined/implemented at 0.
+  { input: constants.negative.infinity, expected: kAnyBounds },
+  { input: constants.negative.min, expected: kAnyBounds },
+  { input: -1, expected: kAnyBounds },
+  { input: 0, expected: kAnyBounds },
+  { input: 1, expected: kAnyBounds },
+  { input: constants.positive.max, expected: kAnyBounds },
+  { input: constants.positive.infinity, expected: kAnyBounds },
+
+  // Cases that bounded by absolute error and inherited from atan2(sqrt(1-x*x), x). Note that
+  // even x is very close to 1.0 and the expected result is close to 0.0, the expected
+  // interval is still bounded by ULP as well as absolute error, specifically lower boundary
+  // comes from ULP error and upper boundary comes from absolute error in those cases.
+  ...kAcosIntervalCases[p.trait]];
+
+})).
 
 fn((t) => {
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.acosInterval(t.params.input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.acosInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
@@ -2302,38 +2335,63 @@ fn((t) => {
 
 });
 
-g.test('asinInterval_f32').
-paramsSubcasesOnly(
+// Asin cases that bounded by inherited atan2(x, sqrt(1.0 - x*x)) rather than absolute error.
+// Atan2 introduce 4096ULP for f32 and 5ULP for f16, and sqrt inherited from 1.0/inverseSqrt.
 
-[
-// Some of these are hard coded, since the error intervals are difficult
-// to express in a simple human-readable form due to the complexity of their derivation.
-//
-// The acceptance interval @ x = -1 and 1 is kAnyBounds, because
-// sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
-// The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
-// well-defined/implemented at 0.
-// Near 0, but not subnormal the absolute error should be larger, so will
-// be +/- 6.77e-5, away from 0 the atan2 inherited error should be larger.
-{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
-{ input: kValue.f32.negative.min, expected: kAnyBounds },
-{ input: -1, expected: kAnyBounds },
-{ input: -1 / 2, expected: [reinterpretU64AsF64(0xbfe0_c352_c000_0000n), reinterpretU64AsF64(0xbfe0_bf51_c000_0000n)] }, // ~-π/6
-{ input: kValue.f32.negative.max, expected: [-6.77e-5, 6.77e-5] }, // ~0
-{ input: 0, expected: kAnyBounds },
-{ input: kValue.f32.positive.min, expected: [-6.77e-5, 6.77e-5] }, // ~0
-{ input: 1 / 2, expected: [reinterpretU64AsF64(0x3fe0_bf51_c000_0000n), reinterpretU64AsF64(0x3fe0_c352_c000_0000n)] }, // ~π/6
-{ input: 1, expected: kAnyBounds }, // ~π/2
-{ input: kValue.f32.positive.max, expected: kAnyBounds },
-{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
+const kAsinIntervalInheritedCases = {
+  f32: [
+  { input: -1 / 2, expected: [reinterpretU32AsF32(0xbf061a96), reinterpretU32AsF32(0xbf05fa8e)] }, // ~-π/6
+  { input: 1 / 2, expected: [reinterpretU32AsF32(0x3f05fa8e), reinterpretU32AsF32(0x3f061a96)] } // ~π/6
+  ],
+  f16: [
+  { input: -1 / 2, expected: [reinterpretU16AsF16(0xb83a), reinterpretU16AsF16(0xb827)] }, // ~-π/6
+  { input: 1 / 2, expected: [reinterpretU16AsF16(0x3827), reinterpretU16AsF16(0x383a)] } // ~π/6
+  ]
+};
 
+g.test('asinInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
+  const abs_error = p.trait === 'f32' ? 6.77e-5 : 3.91e-3;
+
+  return [
+  // The acceptance interval @ x = -1 and 1 is kAnyBounds, because
+  // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
+  // The acceptance interval @ x = 0 is kAnyBounds, because atan2 is not
+  // well-defined/implemented at 0.
+  { input: constants.negative.infinity, expected: kAnyBounds },
+  { input: constants.negative.min, expected: kAnyBounds },
+  { input: -1, expected: kAnyBounds },
+  // Subnormal input may get flushed to 0, and result in kAnyBounds.
+  { input: constants.negative.subnormal.min, expected: kAnyBounds },
+  { input: 0, expected: kAnyBounds },
+  { input: constants.positive.subnormal.max, expected: kAnyBounds },
+  { input: 1, expected: kAnyBounds },
+  { input: constants.positive.max, expected: kAnyBounds },
+  { input: constants.positive.infinity, expected: kAnyBounds },
+
+  // When input near 0, the expected result is bounded by absolute error rather than ULP
+  // error. Away from 0 the atan2 inherited error should be larger.
+  { input: constants.negative.max, expected: trait.absoluteErrorInterval(Math.asin(constants.negative.max), abs_error).bounds() }, // ~0
+  { input: constants.positive.min, expected: trait.absoluteErrorInterval(Math.asin(constants.positive.min), abs_error).bounds() }, // ~0
+
+  // Cases that inherited from atan2(x, sqrt(1-x*x))
+  ...kAsinIntervalInheritedCases[p.trait]];
+
+})).
 
 fn((t) => {
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.asinInterval(t.params.input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.asinInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
@@ -2362,33 +2420,78 @@ fn((t) => {
 
 });
 
-g.test('atanInterval_f32').
-paramsSubcasesOnly(
 
-[
-{ input: kValue.f32.infinity.negative, expected: kAnyBounds },
-{ input: reinterpretU32AsF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] }, // x = -√3
-{ input: -1, expected: [kValue.f32.negative.pi.quarter, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
-{ input: reinterpretU32AsF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] }, // x = -1/√3
-{ input: 0, expected: 0 },
-{ input: reinterpretU32AsF32(0x3f13cd3a), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] }, // x = 1/√3
-{ input: 1, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
-{ input: reinterpretU32AsF32(0x3fddb3d7), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }, // x = √3
-{ input: kValue.f32.infinity.positive, expected: kAnyBounds }]).
+const kAtanIntervalCases = {
+  f32: [
+  // x=-√3=-1.7320508... quantized to f32 0xBFDDB3D7,
+  // atan(0xBFDDB3D7)=-1.0471975434247854181546378047331 ~ -pi/3 rounded to f32 0xBF860A92 or 0xBF860A91,
+  // kValue.f32.negative.pi.third is 0xBF860A92.
+  { input: reinterpretU32AsF32(0xbfddb3d7), expected: [kValue.f32.negative.pi.third, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] },
+  // atan(-1)=-0.78539816339744830961566084581988 ~ -pi/4 rounded to f32 0xBF490FDB or 0xBF490FDA,
+  // kValue.f32.negative.pi.quarter is 0xBF490FDB.
+  { input: -1, expected: [kValue.f32.negative.pi.quarter, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
+  // x=-1/√3=-0.577350269... quantized to f32 0xBF13CD3A,
+  // atan(0xBF13CD3A)=-0.52359876782648663982267459646249 ~ -pi/6 rounded to f32 0xBF060A92 or 0xBF060A91,
+  // kValue.f32.negative.pi.sixth is 0xBF060A92.
+  { input: reinterpretU32AsF32(0xbf13cd3a), expected: [kValue.f32.negative.pi.sixth, kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] },
+  // x=1/√3=0.577350269... quantized to f32 0x3F13CD3A.
+  { input: reinterpretU32AsF32(0x3f13cd3a), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kValue.f32.positive.pi.sixth] },
+  { input: 1, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kValue.f32.positive.pi.quarter] },
+  // x=√3=1.7320508... quantized to f32 0x3FDDB3D7.
+  { input: reinterpretU32AsF32(0x3fddb3d7), expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kValue.f32.positive.pi.third] }],
 
+  f16: [
+  // x=-√3=-1.7320508... quantized to f16 0xBEED,
+  // atan(0xBEED)=-1.0470461377318847079113932677171 ~ -pi/3 rounded to f16 0xBC31 or 0xBC30,
+  // kValue.f16.negative.pi.third is 0xBC30.
+  { input: reinterpretU16AsF16(0xbeed), expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.third), kValue.f16.negative.pi.third] },
+  // atan(-1)=-0.78539816339744830961566084581988 ~ -pi/4 rounded to f16 0xBA49 or 0xBA48.
+  // kValue.f16.negative.pi.quarter is 0xBA48.
+  { input: -1, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.quarter), kValue.f16.negative.pi.quarter] },
+  // x=-1/√3=-0.577350269... quantized to f16 0xB89E,
+  // atan(0xB89E)=-0.52344738860166563645762619364966 ~ -pi/6 rounded to f16 0xB831 or 0xB830,
+  // kValue.f16.negative.pi.sixth is 0xB830.
+  { input: reinterpretU16AsF16(0xb89e), expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.sixth), kValue.f16.negative.pi.sixth] },
+  // x=1/√3=0.577350269... quantized to f16 0x389E
+  { input: reinterpretU16AsF16(0x389e), expected: [kValue.f16.positive.pi.sixth, kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.sixth)] },
+  { input: 1, expected: [kValue.f16.positive.pi.quarter, kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.quarter)] },
+  // x=√3=1.7320508... quantized to f16 0x3EED
+  { input: reinterpretU16AsF16(0x3eed), expected: [kValue.f16.positive.pi.third, kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.third)] }]
+
+};
+
+g.test('atanInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const constants = FP[p.trait].constants();
+
+  return [
+  { input: 0, expected: 0 },
+  ...kAtanIntervalCases[p.trait],
+
+  { input: constants.negative.infinity, expected: kAnyBounds },
+  { input: constants.positive.infinity, expected: kAnyBounds }];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
+
+  const ulp_error = t.params.trait === 'f32' ? 4096 : 5;
   const error = (n) => {
-    return 4096 * oneULPF32(n);
+    return ulp_error * trait.oneULP(n);
   };
 
   t.params.expected = applyError(t.params.expected, error);
-  const expected = FP.f32.toInterval(t.params.expected);
+  const expected = trait.toInterval(t.params.expected);
 
-  const got = FP.f32.atanInterval(t.params.input);
+  const got = trait.atanInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
@@ -3523,76 +3626,136 @@ fn((t) => {
 
 });
 
+// Cases for Atan2Interval. The positive x & y quadrant is tested in more detail, and the other
+// quadrants are spot checked that values are pointing in the right direction.
 // Note: atan2's parameters are labelled (y, x) instead of (x, y)
-g.test('atan2Interval_f32').
-paramsSubcasesOnly(
 
-[
-// Some of these are hard coded, since the error intervals are difficult
-// to express in a closed human-readable form due to the inherited nature
-// of the errors.
-//
-// The positive x & y quadrant is tested in more detail, and the other
-// quadrants are spot checked that values are pointing in the right
-// direction.
-//
-// Some of the intervals appear slightly asymmetric,
-// i.e. [π/4 - 4097 * ULPF32(π/4), π/4 + 4096 * ULPF32(π/4)],
-// this is because π/4 is not precisely expressible as a f32, so the
-// higher precision value can be rounded up or down when converting to
-// f32. Thus, one option will be 1 ULP off of the constant value being
-// used.
+const kAtan2IntervalCases = {
+  // atan has 4096ULP error boundary for f32.
+  f32: [
+  // positive y, positive x
+  // √3 rounded to f32 0x3FDDB3D7, atan2(1, 0x3FDDB3D7)=0.52359877749051820266056630237827 ~ pi/6 rounded to f32 0x3F060A91 or 0x3F060A92,
+  // kValue.f32.positive.pi.sixth is 0x3F060A92.
+  { input: [1, reinterpretU32AsF32(0x3fddb3d7)], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4096)] },
+  // atan2(1, 1)=0.78539816339744830961566084581988 ~ pi/4 rounded to f32 0x3F490FDA or 0x3F490FDB,
+  // kValue.f32.positive.pi.quarter is 0x3F490FDB.
+  { input: [1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4096)] },
+  // √3 rounded to f32 0x3FDDB3D7, atan2(0x3FDDB3D7, 1) = 1.0471975493043784165707553892615 ~ pi/3 rounded to f32 0x3F860A91 or 0x3F860A92,
+  // kValue.f32.positive.pi.third is 0x3F860A92.
+  { input: [reinterpretU32AsF32(0x3fddb3d7), 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.third, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.third, 4096)] },
 
-// positive y, positive x
-{ input: [1, reinterpretU32AsF32(0x3fddb3d7)], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.sixth, 4096)] }, // x = √3
-{ input: [1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.quarter, 4096)] },
-{ input: [reinterpretU32AsF32(0x3fddb3d7), 1], expected: [reinterpretU64AsF64(0x3ff0_bf52_2000_0000n), reinterpretU64AsF64(0x3ff0_c352_4000_0000n)] }, // y = √3
-{ input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
+  // positive y, negative x
+  // atan2(1, -1)=pi*3/4=2.3561944901923449288469825374591 rounded to f32 0x4016CBE3 or 0x4016CBE4,
+  // kValue.f32.positive.pi.three_quarters is 0x4016CBE4.
+  { input: [1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4096)] },
 
-// positive y, negative x
-{ input: [1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4096), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.three_quarters, 4097)] },
-{ input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
+  // negative y, negative x
+  // atan2(-1, -1)=-pi*3/4=-2.3561944901923449288469825374591 rounded to f32 0xC016CBE4 or 0xC016CBE3,
+  // kValue.f32.negative.pi.three_quarters is 0xC016CBE4.
+  { input: [-1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4097)] },
 
-// negative y, negative x
-{ input: [-1, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4097), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.three_quarters, 4096)] },
-{ input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
+  // negative y, positive x
+  // atan2(-1, 1)=-pi/4=-0.78539816339744830961566084581988 rounded to f32 0xBF490FDB or 0xBF490FDA,
+  // kValue.f32.negative.pi.quarter is 0xBF490FDB.
+  { input: [-1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4097)] },
 
-// negative y, positive x
-{ input: [-1, 1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.quarter, 4097)] },
-{ input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
+  // When y/x ~ 0, test that ULP applied to result of atan2, not the intermediate y/x value.
+  // y/x ~ 0, y<0, x<0, atan2(y,x) ~ -pi rounded to f32 0xC0490FDB or 0xC0490FDA,
+  // kValue.f32.negative.pi.whole is 0xC0490FDB.
+  { input: [kValue.f32.negative.max, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4097)] },
+  // y/x ~ 0, y>0, x<0, atan2(y,x) ~ pi rounded to f32 0x40490FDA or 0x40490FDB,
+  // kValue.f32.positive.pi.whole is 0x40490FDB.
+  { input: [kValue.f32.positive.min, -1], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4097), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4096)] }],
 
-// Discontinuity @ origin (0,0)
-{ input: [0, 0], expected: kAnyBounds },
-{ input: [0, kValue.f32.subnormal.positive.max], expected: kAnyBounds },
-{ input: [0, kValue.f32.subnormal.negative.min], expected: kAnyBounds },
-{ input: [0, kValue.f32.positive.min], expected: kAnyBounds },
-{ input: [0, kValue.f32.negative.max], expected: kAnyBounds },
-{ input: [0, kValue.f32.positive.max], expected: kAnyBounds },
-{ input: [0, kValue.f32.negative.min], expected: kAnyBounds },
-{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
-{ input: [0, 1], expected: kAnyBounds },
-{ input: [kValue.f32.subnormal.positive.max, 1], expected: kAnyBounds },
-{ input: [kValue.f32.subnormal.negative.min, 1], expected: kAnyBounds },
+  // atan has 5ULP error boundary for f16.
+  f16: [
+  // positive y, positive x
+  // √3 rounded to f16 0x3EED, atan2(1, 0x3EED)=0.52375018906301191131992842392268 ~ pi/6 rounded to f16 0x3830 or 0x3831,
+  // kValue.f16.positive.pi.sixth is 0x3830.
+  { input: [1, reinterpretU16AsF16(0x3eed)], expected: [kMinusNULPFunctions['f16'](kValue.f16.positive.pi.sixth, 5), kPlusNULPFunctions['f16'](kValue.f16.positive.pi.sixth, 6)] },
+  // atan2(1, 1)=0.78539816339744830961566084581988 ~ pi/4 rounded to f16 0x3A48 or 0x3A49,
+  // kValue.f16.positive.pi.quarter is 0x3A48.
+  { input: [1, 1], expected: [kMinusNULPFunctions['f16'](kValue.f16.positive.pi.quarter, 5), kPlusNULPFunctions['f16'](kValue.f16.positive.pi.quarter, 6)] },
+  // √3 rounded to f16 0x3EED, atan2(0x3EED, 1) = 1.0470461377318847079113932677171 ~ pi/3 rounded to f16 0x3C30 or 0x3C31,
+  // kValue.f16.positive.pi.third is 0x3C30.
+  { input: [reinterpretU16AsF16(0x3eed), 1], expected: [kMinusNULPFunctions['f16'](kValue.f16.positive.pi.third, 5), kPlusNULPFunctions['f16'](kValue.f16.positive.pi.third, 6)] },
 
-// When atan(y/x) ~ 0, test that ULP applied to result of atan2, not the intermediate atan(y/x) value
-{ input: [reinterpretU32AsF32(0x80800000), reinterpretU32AsF32(0xbf800000)], expected: [kMinusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4096), kPlusNULPFunctions['f32'](kValue.f32.negative.pi.whole, 4096)] },
-{ input: [reinterpretU32AsF32(0x00800000), reinterpretU32AsF32(0xbf800000)], expected: [kMinusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4096), kPlusNULPFunctions['f32'](kValue.f32.positive.pi.whole, 4096)] },
+  // positive y, negative x
+  // atan2(1, -1)=pi*3/4=2.3561944901923449288469825374591 rounded to f16 0x40B6 or 0x40B7,
+  // kValue.f16.positive.pi.three_quarters is 0x40B6.
+  { input: [1, -1], expected: [kMinusNULPFunctions['f16'](kValue.f16.positive.pi.three_quarters, 5), kPlusNULPFunctions['f16'](kValue.f16.positive.pi.three_quarters, 6)] },
 
-// Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
-{ input: [1, kValue.f32.positive.max], expected: kAnyBounds },
-{ input: [1, kValue.f32.positive.nearest_max], expected: kAnyBounds },
-{ input: [1, kValue.f32.negative.min], expected: kAnyBounds },
-{ input: [1, kValue.f32.negative.nearest_min], expected: kAnyBounds }]).
+  // negative y, negative x
+  // atan2(-1, -1)=-pi*3/4=-2.3561944901923449288469825374591 rounded to f16 0xC0B7 or 0xC0B6,
+  // kValue.f16.negative.pi.three_quarters is 0xC0B6.
+  { input: [-1, -1], expected: [kMinusNULPFunctions['f16'](kValue.f16.negative.pi.three_quarters, 6), kPlusNULPFunctions['f16'](kValue.f16.negative.pi.three_quarters, 5)] },
 
+  // negative y, positive x
+  // atan2(-1, 1)=-pi/4=-0.78539816339744830961566084581988 rounded to f16 0xBA49 or 0xBA48,
+  // kValue.f16.negative.pi.quarter is 0xBA48.
+  { input: [-1, 1], expected: [kMinusNULPFunctions['f16'](kValue.f16.negative.pi.quarter, 6), kPlusNULPFunctions['f16'](kValue.f16.negative.pi.quarter, 5)] },
+
+  // When y/x ~ 0, test that ULP applied to result of atan2, not the intermediate y/x value.
+  // y/x ~ 0, y<0, x<0, atan2(y,x) ~ -pi rounded to f16 0xC249 or 0xC248,
+  // kValue.f16.negative.pi.whole is 0xC248.
+  { input: [kValue.f16.negative.max, -1], expected: [kMinusNULPFunctions['f16'](kValue.f16.negative.pi.whole, 6), kPlusNULPFunctions['f16'](kValue.f16.negative.pi.whole, 5)] },
+  // y/x ~ 0, y>0, x<0, atan2(y,x) ~ pi rounded to f16 0x4248 or 0x4249,
+  // kValue.f16.positive.pi.whole is 0x4248.
+  { input: [kValue.f16.positive.min, -1], expected: [kMinusNULPFunctions['f16'](kValue.f16.positive.pi.whole, 5), kPlusNULPFunctions['f16'](kValue.f16.positive.pi.whole, 6)] }]
+
+};
+
+g.test('atan2Interval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const constants = FP[p.trait].constants();
+
+  return [
+  ...kAtan2IntervalCases[p.trait],
+
+  // Cases that y out of bound.
+  // positive y, positive x
+  { input: [Number.POSITIVE_INFINITY, 1], expected: kAnyBounds },
+  // positive y, negative x
+  { input: [Number.POSITIVE_INFINITY, -1], expected: kAnyBounds },
+  // negative y, negative x
+  { input: [Number.NEGATIVE_INFINITY, -1], expected: kAnyBounds },
+  // negative y, positive x
+  { input: [Number.NEGATIVE_INFINITY, 1], expected: kAnyBounds },
+
+  // Discontinuity @ origin (0,0)
+  { input: [0, 0], expected: kAnyBounds },
+  { input: [0, constants.positive.subnormal.max], expected: kAnyBounds },
+  { input: [0, constants.negative.subnormal.min], expected: kAnyBounds },
+  { input: [0, constants.positive.min], expected: kAnyBounds },
+  { input: [0, constants.negative.max], expected: kAnyBounds },
+  { input: [0, constants.positive.max], expected: kAnyBounds },
+  { input: [0, constants.negative.min], expected: kAnyBounds },
+  { input: [0, constants.positive.infinity], expected: kAnyBounds },
+  { input: [0, constants.negative.infinity], expected: kAnyBounds },
+  { input: [0, 1], expected: kAnyBounds },
+  { input: [constants.positive.subnormal.max, 1], expected: kAnyBounds },
+  { input: [constants.negative.subnormal.min, 1], expected: kAnyBounds },
+
+  // Very large |x| values should cause kAnyBounds to be returned, due to the restrictions on division
+  { input: [1, constants.positive.max], expected: kAnyBounds },
+  { input: [1, constants.positive.nearest_max], expected: kAnyBounds },
+  { input: [1, constants.negative.min], expected: kAnyBounds },
+  { input: [1, constants.negative.nearest_min], expected: kAnyBounds }];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const [y, x] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.atan2Interval(y, x);
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.atan2Interval(y, x);
   t.expect(
   objectEquals(expected, got),
-  `f32.atan2Interval(${y}, ${x}) returned ${got}]. Expected ${expected}`);
+  `${t.params.trait}.atan2Interval(${y}, ${x}) returned ${got}]. Expected ${expected}`);
 
 });
 

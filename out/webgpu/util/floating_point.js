@@ -2522,14 +2522,16 @@ export class FPTraits {
   /** Calculate an acceptance interval for abs(n) */
 
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   AcosIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
       // acos(n) = atan2(sqrt(1.0 - n * n), n) or a polynomial approximation with absolute error
       const y = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
+      const approx_abs_error = this.kind === 'f32' ? 6.77e-5 : 3.91e-3;
       return this.spanIntervals(
       this.atan2Interval(y, n),
-      this.absoluteErrorInterval(Math.acos(n), 6.77e-5));
+      this.absoluteErrorInterval(Math.acos(n), approx_abs_error));
 
     })
   };
@@ -2613,14 +2615,16 @@ export class FPTraits {
 
 
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   AsinIntervalOp = {
     impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
       // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
       const x = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
+      const approx_abs_error = this.kind === 'f32' ? 6.77e-5 : 3.91e-3;
       return this.spanIntervals(
       this.atan2Interval(n, x),
-      this.absoluteErrorInterval(Math.asin(n), 6.77e-5));
+      this.absoluteErrorInterval(Math.asin(n), approx_abs_error));
 
     })
   };
@@ -2651,7 +2655,9 @@ export class FPTraits {
 
   AtanIntervalOp = {
     impl: (n) => {
-      return this.ulpInterval(Math.atan(n), 4096);
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const ulp_error = this.kind === 'f32' ? 4096 : 5;
+      return this.ulpInterval(Math.atan(n), ulp_error);
     }
   };
 
@@ -2663,51 +2669,65 @@ export class FPTraits {
   /** Calculate an acceptance interval of atan(x) */
 
 
-  // This op should be implemented diffferently for f32 and f16.
-  Atan2IntervalOp = {
-    impl: this.limitScalarPairToIntervalDomain(
-    {
-      // For atan2, there params are labelled (y, x), not (x, y), so domain.x is first parameter (y), and domain.y is
-      // the second parameter (x)
-      x: [
-      this.toInterval([kValue.f32.negative.min, kValue.f32.negative.max]),
-      this.toInterval([kValue.f32.positive.min, kValue.f32.positive.max])],
-      // first param must be finite and normal
-      y: [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])] // inherited from division
-    },
-    (y, x) => {
-      const atan_yx = Math.atan(y / x);
-      // x > 0, atan(y/x)
-      if (x > 0) {
-        return this.ulpInterval(atan_yx, 4096);
-      }
+  // This op is implemented differently for f32 and f16.
+  Atan2IntervalOpBuilder() {
+    assert(this.kind === 'f32' || this.kind === 'f16');
+    const constants = this.constants();
+    // For atan2, the params are labelled (y, x), not (x, y), so domain.x is first parameter (y),
+    // and domain.y is the second parameter (x).
+    // The first param must be finite and normal.
+    const domain_x = [
+    this.toInterval([constants.negative.min, constants.negative.max]),
+    this.toInterval([constants.positive.min, constants.positive.max])];
 
-      // x < 0, y > 0, atan(y/x) + π
-      if (y > 0) {
-        return this.ulpInterval(atan_yx + kValue.f32.positive.pi.whole, 4096);
-      }
-
-      // x < 0, y < 0, atan(y/x) - π
-      return this.ulpInterval(atan_yx - kValue.f32.positive.pi.whole, 4096);
-    }),
-
-    extrema: (y, x) => {
-      // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
-      if (y.contains(0)) {
-        if (x.contains(0)) {
-          return [this.toInterval(0), this.toInterval(0)];
+    // inherited from division
+    const domain_y =
+    this.kind === 'f32' ?
+    [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])] :
+    [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
+    const ulp_error = this.kind === 'f32' ? 4096 : 5;
+    return {
+      impl: this.limitScalarPairToIntervalDomain(
+      {
+        x: domain_x,
+        y: domain_y
+      },
+      (y, x) => {
+        // Accurate result in f64
+        let atan_yx = Math.atan(y / x);
+        // Offset by +/-pi according to the definition. Use pi value in f64 because we are
+        // handling accurate result.
+        if (x < 0) {
+          // x < 0, y > 0, result is atan(y/x) + π
+          if (y > 0) {
+            atan_yx = atan_yx + kValue.f64.positive.pi.whole;
+          } else {
+            // x < 0, y < 0, result is atan(y/x) - π
+            atan_yx = atan_yx - kValue.f64.positive.pi.whole;
+          }
         }
-        return [this.toInterval(0), x];
+
+        return this.ulpInterval(atan_yx, ulp_error);
+      }),
+
+      extrema: (y, x) => {
+        // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
+        if (y.contains(0)) {
+          if (x.contains(0)) {
+            return [this.toInterval(0), this.toInterval(0)];
+          }
+          return [this.toInterval(0), x];
+        }
+        return [y, x];
       }
-      return [y, x];
-    }
-  };
+    };
+  }
 
   atan2IntervalImpl(y, x) {
     return this.runScalarPairToIntervalOp(
     this.toInterval(y),
     this.toInterval(x),
-    this.Atan2IntervalOp);
+    this.Atan2IntervalOpBuilder());
 
   }
 
@@ -3100,7 +3120,7 @@ export class FPTraits {
 
 
 
-  // This op is implemented diffferently for f32 and f16.
+  // This op is implemented differently for f32 and f16.
   DivisionIntervalOpBuilder() {
     assert(this.kind === 'f32' || this.kind === 'f16');
     const constants = this.constants();
@@ -3355,7 +3375,7 @@ export class FPTraits {
   /** Calculate an acceptance interval of inverseSqrt(x) */
 
 
-  // This op should be implemented diffferently for f32 and f16.
+  // This op should be implemented differently for f32 and f16.
   LdexpIntervalOp = {
     impl: this.limitScalarPairToIntervalDomain(
     // Implementing SPIR-V's more restrictive domain until
@@ -4918,16 +4938,16 @@ class F16Traits extends FPTraits {
 
   // Framework - API - Overrides
   absInterval = this.absIntervalImpl.bind(this);
-  acosInterval = this.unimplementedScalarToInterval.bind(this);
+  acosInterval = this.acosIntervalImpl.bind(this);
   acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   additionInterval = this.additionIntervalImpl.bind(this);
   additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
-  asinInterval = this.unimplementedScalarToInterval.bind(this);
+  asinInterval = this.asinIntervalImpl.bind(this);
   asinhInterval = this.unimplementedScalarToInterval.bind(this);
-  atanInterval = this.unimplementedScalarToInterval.bind(this);
-  atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
+  atanInterval = this.atanIntervalImpl.bind(this);
+  atan2Interval = this.atan2IntervalImpl.bind(this);
   atanhInterval = this.unimplementedScalarToInterval.bind(this);
   ceilInterval = this.ceilIntervalImpl.bind(this);
   clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
