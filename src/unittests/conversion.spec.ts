@@ -40,7 +40,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-const kFloat32BitsToNumberCases = [
+const kFloat16BitsToNumberCases = [
   [0b0_01111_0000000000, 1],
   [0b0_00001_0000000000, 0.00006103515625],
   [0b0_01101_0101010101, 0.33325195],
@@ -59,7 +59,7 @@ const kFloat32BitsToNumberCases = [
 
 g.test('float16BitsToFloat32').fn(t => {
   for (const [bits, number] of [
-    ...kFloat32BitsToNumberCases,
+    ...kFloat16BitsToNumberCases,
     [0b1_00000_0000000000, -0], // (resulting sign is not actually tested)
     [0b0_00000_1111111111, 0.00006104], // subnormal f16 input
     [0b1_00000_1111111111, -0.00006104],
@@ -75,7 +75,7 @@ g.test('float16BitsToFloat32').fn(t => {
 
 g.test('float32ToFloat16Bits').fn(t => {
   for (const [bits, number] of [
-    ...kFloat32BitsToNumberCases,
+    ...kFloat16BitsToNumberCases,
     [0b0_00000_0000000000, 0.00001], // input that becomes subnormal in f16 is rounded to 0
     [0b1_00000_0000000000, -0.00001], // and sign is preserved
   ]) {
@@ -99,7 +99,7 @@ g.test('float32ToFloatBits_floatBitsToNumber')
     const { signed, exponentBits, mantissaBits } = t.params;
     const bias = (1 << (exponentBits - 1)) - 1;
 
-    for (const [, value] of kFloat32BitsToNumberCases) {
+    for (const [, value] of kFloat16BitsToNumberCases) {
       if (value < 0 && signed === 0) continue;
       const bits = float32ToFloatBits(value, signed, exponentBits, mantissaBits, bias);
       const reconstituted = floatBitsToNumber(bits, { signed, exponentBits, mantissaBits, bias });
