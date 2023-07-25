@@ -2,8 +2,8 @@ export const description = `
 Tests that you can not create a render pipeline with different per target blend state or write mask in compat mode.
 `;
 
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../common/util/data_tables.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
 import { CompatibilityTest } from '../../../compatibility_test.js';
 
 export const g = makeTestGroup(CompatibilityTest);

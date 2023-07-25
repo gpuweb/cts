@@ -2,7 +2,7 @@ export const description = `
 Tests that you can not create cube array views in compat mode.
 `;
 
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { CompatibilityTest } from '../../../compatibility_test.js';
 
 export const g = makeTestGroup(CompatibilityTest);

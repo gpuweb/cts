@@ -2,9 +2,9 @@ export const description = `
 Tests limitations of bind group usage in a pipeline in compat mode.
 `;
 
-import { makeTestGroup } from '../../../../../common/internal/test_group.js';
-import { keysOf } from '../../../../../common/util/data_tables.js';
-import { kRenderEncodeTypes } from '../../../../../webgpu/util/command_buffer_maker.js';
+import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../../common/util/data_tables.js';
+import { kRenderEncodeTypes } from '../../../../../util/command_buffer_maker.js';
 import { CompatibilityTest } from '../../../../compatibility_test.js';
 
 const kTextureTypes = ['regular', 'storage'];
