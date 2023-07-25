@@ -33,11 +33,6 @@
     DoCopyTextureToBufferWithDepthAspectTest().
 
 TODO: Expand tests of GPUExtent3D [1]
-
-TODO: Fix this test for the various skipped formats [2]:
-- snorm tests failing due to rounding
-- float tests failing because float values are not byte-preserved
-- compressed formats
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, ErrorWithExtra, memcpy, unreachable } from '../../../../common/util/util.js';
@@ -79,21 +74,6 @@ const kMethodsToTest = [
   // Then we make sure that CopyT2B works for all formats:
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ];
-
-// [2]: Fix things so this list can be reduced to zero (see file description)
-const kExcludedFormats = new Set([
-  'r8snorm',
-  'rg8snorm',
-  'rgba8snorm',
-  'rg11b10ufloat',
-  'rg16float',
-  'rgba16float',
-  'r32float',
-  'rg32float',
-  'rgba32float',
-]);
-
-const kWorkingColorTextureFormats = kColorTextureFormats.filter(x => !kExcludedFormats.has(x));
 
 const dataGenerator = new DataArrayGenerator();
 const altDataGenerator = new DataArrayGenerator();
@@ -1346,7 +1326,7 @@ bytes in copy works for every format.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1447,7 +1427,7 @@ works for every format with 2d and 2d-array textures.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1520,7 +1500,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1676,7 +1656,7 @@ TODO: Make a variant for depth-stencil formats.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', ['2d', '3d'])
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
