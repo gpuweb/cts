@@ -1,3 +1,3 @@
 # Compatibility mode tests
 
-To run these tests use `q=compat:*&compatibility=1`.
+To run these tests in compatibility mode use `q=webgpu:compat,*&compatibility=1`.
