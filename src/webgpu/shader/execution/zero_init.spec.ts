@@ -423,8 +423,24 @@ g.test('compute,zero_init')
       }
       `;
 
+      const fillLayout = t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: 'read-only-storage' },
+          },
+          {
+            binding: 1,
+            visibility: GPUShaderStage.COMPUTE,
+            buffer: { type: 'storage' },
+          },
+        ],
+      });
+
       const fillPipeline = t.device.createComputePipeline({
-        layout: 'auto',
+        layout: t.device.createPipelineLayout({ bindGroupLayouts: [fillLayout] }),
+        label: 'Workgroup Fill Pipeline',
         compute: {
           module: t.device.createShaderModule({
             code: wgsl,
