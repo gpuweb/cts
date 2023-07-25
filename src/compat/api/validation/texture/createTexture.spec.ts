@@ -3,9 +3,9 @@ Tests that you can not use bgra8unorm-srgb in compat mode.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ValidationTest } from '../../../../webgpu/api/validation/validation_test.js';
+import { CompatibilityTest } from '../../../compatibility_test.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 
 g.test('unsupportedTextureFormats')
   .desc(`Tests that you can not create a bgra8unorm-srgb texture in compat mode.`)

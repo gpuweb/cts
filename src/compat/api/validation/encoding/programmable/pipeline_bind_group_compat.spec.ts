@@ -4,8 +4,8 @@ Tests limitations of bind group usage in a pipeline in compat mode.
 
 import { makeTestGroup } from '../../../../../common/internal/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
-import { ValidationTest } from '../../../../../webgpu/api/validation/validation_test.js';
 import { kRenderEncodeTypes } from '../../../../../webgpu/util/command_buffer_maker.js';
+import { CompatibilityTest } from '../../../../compatibility_test.js';
 
 const kTextureTypes = ['regular', 'storage'];
 type TextureType = typeof kTextureTypes[number];
@@ -193,24 +193,24 @@ function createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(
 const kBindCaseNames = keysOf(kBindCases);
 
 const kDrawUseCases: {
-  [key: string]: (t: ValidationTest, encoder: GPURenderCommandsMixin) => void;
+  [key: string]: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => void;
 } = {
-  draw: (t: ValidationTest, encoder: GPURenderCommandsMixin) => {
+  draw: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
     encoder.draw(3);
   },
-  drawIndexed: (t: ValidationTest, encoder: GPURenderCommandsMixin) => {
+  drawIndexed: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
     const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 1, 2]), GPUBufferUsage.INDEX);
     encoder.setIndexBuffer(indexBuffer, 'uint16');
     encoder.drawIndexed(3);
   },
-  drawIndirect(t: ValidationTest, encoder: GPURenderCommandsMixin) {
+  drawIndirect(t: CompatibilityTest, encoder: GPURenderCommandsMixin) {
     const indirectBuffer = t.makeBufferWithContents(
       new Uint32Array([3, 1, 0, 0]),
       GPUBufferUsage.INDIRECT
     );
     encoder.drawIndirect(indirectBuffer, 0);
   },
-  drawIndexedIndirect(t: ValidationTest, encoder: GPURenderCommandsMixin) {
+  drawIndexedIndirect(t: CompatibilityTest, encoder: GPURenderCommandsMixin) {
     const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 1, 2]), GPUBufferUsage.INDEX);
     encoder.setIndexBuffer(indexBuffer, 'uint16');
     const indirectBuffer = t.makeBufferWithContents(
@@ -223,12 +223,12 @@ const kDrawUseCases: {
 const kDrawCaseNames = keysOf(kDrawUseCases);
 
 const kDispatchUseCases: {
-  [key: string]: (t: ValidationTest, encoder: GPUComputePassEncoder) => void;
+  [key: string]: (t: CompatibilityTest, encoder: GPUComputePassEncoder) => void;
 } = {
-  dispatchWorkgroups(t: ValidationTest, encoder: GPUComputePassEncoder) {
+  dispatchWorkgroups(t: CompatibilityTest, encoder: GPUComputePassEncoder) {
     encoder.dispatchWorkgroups(1);
   },
-  dispatchWorkgroupsIndirect(t: ValidationTest, encoder: GPUComputePassEncoder) {
+  dispatchWorkgroupsIndirect(t: CompatibilityTest, encoder: GPUComputePassEncoder) {
     const indirectBuffer = t.makeBufferWithContents(
       new Uint32Array([1, 1, 1]),
       GPUBufferUsage.INDIRECT
@@ -239,7 +239,7 @@ const kDispatchUseCases: {
 const kDispatchCaseNames = keysOf(kDispatchUseCases);
 
 function createResourcesForRenderPassTest(
-  t: ValidationTest,
+  t: CompatibilityTest,
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
@@ -270,7 +270,7 @@ function createResourcesForRenderPassTest(
 }
 
 function createResourcesForComputePassTest(
-  t: ValidationTest,
+  t: CompatibilityTest,
   textureType: TextureType,
   bindConfig: BindConfig
 ) {
@@ -295,7 +295,7 @@ function createResourcesForComputePassTest(
   return { texture, pipeline };
 }
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 
 g.test('twoDifferentTextureViews,render_pass,used')
   .desc(

@@ -3,14 +3,14 @@ Tests limitations of copyTextureToBuffer in compat mode.
 `;
 
 import { makeTestGroup } from '../../../../../common/internal/test_group.js';
-import { ValidationTest } from '../../../../../webgpu/api/validation/validation_test.js';
 import {
   kCompressedTextureFormats,
   kTextureFormatInfo,
 } from '../../../../../webgpu/format_info.js';
 import { align } from '../../../../../webgpu/util/math.js';
+import { CompatibilityTest } from '../../../../compatibility_test.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 
 g.test('compressed')
   .desc(`Tests that you can not call copyTextureToBuffer with compressed textures in compat mode.`)
