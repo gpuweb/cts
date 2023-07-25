@@ -3,9 +3,9 @@ Tests that you can not create cube array views in compat mode.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ValidationTest } from '../../../../webgpu/api/validation/validation_test.js';
+import { CompatibilityTest } from '../../../compatibility_test.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 g.test('cube_array')
   .desc('Test you cannot create a cube array texture view.')
   .params(u => u.combine('dimension', ['cube', 'cube-array'] as const))

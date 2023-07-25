@@ -3,9 +3,9 @@
 **/export const description = `
 Tests limitations of createRenderPipeline related to shader modules in compat mode.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { ValidationTest } from '../../../../webgpu/api/validation/validation_test.js';
+import { CompatibilityTest } from '../../../compatibility_test.js';
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 
 g.test('sample_mask').
 desc(

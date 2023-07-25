@@ -4,8 +4,8 @@
 Tests limitations of bind group usage in a pipeline in compat mode.
 `;import { makeTestGroup } from '../../../../../common/internal/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
-import { ValidationTest } from '../../../../../webgpu/api/validation/validation_test.js';
 import { kRenderEncodeTypes } from '../../../../../webgpu/util/command_buffer_maker.js';
+import { CompatibilityTest } from '../../../../compatibility_test.js';
 
 const kTextureTypes = ['regular', 'storage'];
 
@@ -295,7 +295,7 @@ bindConfig)
   return { texture, pipeline };
 }
 
-export const g = makeTestGroup(ValidationTest);
+export const g = makeTestGroup(CompatibilityTest);
 
 g.test('twoDifferentTextureViews,render_pass,used').
 desc(
