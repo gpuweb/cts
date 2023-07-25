@@ -31,11 +31,6 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
     DoCopyTextureToBufferWithDepthAspectTest().
 
 TODO: Expand tests of GPUExtent3D [1]
-
-TODO: Fix this test for the various skipped formats [2]:
-- snorm tests failing due to rounding
-- float tests failing because float values are not byte-preserved
-- compressed formats
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -126,19 +121,7 @@ const kMethodsToTest = [
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ] as const;
 
-// [2]: Fix things so this list can be reduced to zero (see file description)
-const kExcludedFormats: Set<ColorTextureFormat> = new Set([
-  'r8snorm',
-  'rg8snorm',
-  'rgba8snorm',
-  'rg11b10ufloat',
-  'rg16float',
-  'rgba16float',
-  'r32float',
-  'rg32float',
-  'rgba32float',
-]);
-const kWorkingColorTextureFormats = kColorTextureFormats.filter(x => !kExcludedFormats.has(x));
+const kWorkingColorTextureFormats = kColorTextureFormats;
 
 const dataGenerator = new DataArrayGenerator();
 const altDataGenerator = new DataArrayGenerator();
