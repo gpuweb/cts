@@ -121,8 +121,6 @@ const kMethodsToTest = [
   { initMethod: 'WriteTexture', checkMethod: 'PartialCopyT2B' },
 ] as const;
 
-const kWorkingColorTextureFormats = kColorTextureFormats;
-
 const dataGenerator = new DataArrayGenerator();
 const altDataGenerator = new DataArrayGenerator();
 
@@ -1396,7 +1394,7 @@ bytes in copy works for every format.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1497,7 +1495,7 @@ works for every format with 2d and 2d-array textures.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1570,7 +1568,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', kTextureDimensions)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
@@ -1735,7 +1733,7 @@ TODO: Make a variant for depth-stencil formats.
   .params(u =>
     u
       .combineWithParams(kMethodsToTest)
-      .combine('format', kWorkingColorTextureFormats)
+      .combine('format', kColorTextureFormats)
       .filter(formatCanBeTested)
       .combine('dimension', ['2d', '3d'] as const)
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
