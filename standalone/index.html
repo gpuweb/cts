@@ -42,7 +42,7 @@
         --testcase-data-status-fail-bg-color: #fdd;
         --testcase-data-status-warn-bg-color: #ffb;
         --testcase-data-status-pass-bg-color: #cfc;
-        --testcase-data-status-skip-bg-color: #eee;
+        --testcase-data-status-skip-bg-color: #aaf;
 
         --testcase-logs-bg-color: #white;
         --testcase-log-odd-bg-color: #fff;
@@ -74,7 +74,7 @@
           --testcase-data-status-fail-bg-color: #400;
           --testcase-data-status-warn-bg-color: #660;
           --testcase-data-status-pass-bg-color: #040;
-          --testcase-data-status-skip-bg-color: #444;
+          --testcase-data-status-skip-bg-color: #446;
 
           --testcase-logs-bg-color: #black;
           --testcase-log-odd-bg-color: #000;
@@ -288,8 +288,14 @@
       .subtree[data-status='pass'] {
         background: linear-gradient(90deg, var(--testcase-data-status-pass-bg-color), var(--testcase-data-status-pass-bg-color) 16px, var(--bg-color) 16px);
       }
+      .subtree[data-status='skip'] {
+        background: linear-gradient(90deg, var(--testcase-data-status-skip-bg-color), var(--testcase-data-status-skip-bg-color) 16px, var(--bg-color) 16px);
+      }
       .subtree[data-status='pass']::before {
         content: "✔"
+      }
+      .subtree[data-status='skip']::before {
+        content: "○"
       }
       .subtree[data-status='passfail']::before {
         content: "✔/⛔"

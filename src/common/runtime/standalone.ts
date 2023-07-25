@@ -321,6 +321,9 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
       if (subtreeResult.fail > 0) {
         status += 'fail';
       }
+      if (subtreeResult.skip === subtreeResult.total) {
+        status += 'skip';
+      }
       div.setAttribute('data-status', status);
       if (autoCloseOnPass.checked && status === 'pass') {
         div.firstElementChild!.removeAttribute('open');
