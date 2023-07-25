@@ -19,6 +19,7 @@ import {
   kFloat16Format,
   kFloat32Format,
   Matrix,
+  numbersApproximatelyEqual,
   pack2x16float,
   pack2x16snorm,
   pack2x16unorm,
@@ -39,7 +40,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-const cases = [
+const kFloat16BitsToNumberCases = [
   [0b0_01111_0000000000, 1],
   [0b0_00001_0000000000, 0.00006103515625],
   [0b0_01101_0101010101, 0.33325195],
@@ -51,11 +52,14 @@ const cases = [
   [0b0_10101_1001000000, 100],
   [0b1_01100_1001100110, -0.1999512],
   [0b1_10101_1001000000, -100],
+  [0b0_11111_1111111111, Number.NaN],
+  [0b0_11111_0000000000, Number.POSITIVE_INFINITY],
+  [0b1_11111_0000000000, Number.NEGATIVE_INFINITY],
 ];
 
 g.test('float16BitsToFloat32').fn(t => {
   for (const [bits, number] of [
-    ...cases,
+    ...kFloat16BitsToNumberCases,
     [0b1_00000_0000000000, -0], // (resulting sign is not actually tested)
     [0b0_00000_1111111111, 0.00006104], // subnormal f16 input
     [0b1_00000_1111111111, -0.00006104],
@@ -63,7 +67,7 @@ g.test('float16BitsToFloat32').fn(t => {
     const actual = float16BitsToFloat32(bits);
     t.expect(
       // some loose check
-      Math.abs(actual - number) <= 0.00001,
+      numbersApproximatelyEqual(actual, number, 0.00001),
       `for ${bits.toString(2)}, expected ${number}, got ${actual}`
     );
   }
@@ -71,7 +75,7 @@ g.test('float16BitsToFloat32').fn(t => {
 
 g.test('float32ToFloat16Bits').fn(t => {
   for (const [bits, number] of [
-    ...cases,
+    ...kFloat16BitsToNumberCases,
     [0b0_00000_0000000000, 0.00001], // input that becomes subnormal in f16 is rounded to 0
     [0b1_00000_0000000000, -0.00001], // and sign is preserved
   ]) {
@@ -95,11 +99,14 @@ g.test('float32ToFloatBits_floatBitsToNumber')
     const { signed, exponentBits, mantissaBits } = t.params;
     const bias = (1 << (exponentBits - 1)) - 1;
 
-    for (const [, value] of cases) {
+    for (const [, value] of kFloat16BitsToNumberCases) {
       if (value < 0 && signed === 0) continue;
       const bits = float32ToFloatBits(value, signed, exponentBits, mantissaBits, bias);
       const reconstituted = floatBitsToNumber(bits, { signed, exponentBits, mantissaBits, bias });
-      t.expect(Math.abs(reconstituted - value) <= 0.0000001, `${reconstituted} vs ${value}`);
+      t.expect(
+        numbersApproximatelyEqual(reconstituted, value, 0.0000001),
+        `${reconstituted} vs ${value}`
+      );
     }
   });
 
