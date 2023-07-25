@@ -84,25 +84,46 @@ g.test('findFailedPixels')
         expected: typedArrayParam('Uint32Array', [0x3cf]),
         isSame: false,
       },
-      // NaN === NaN (red)
+      // Positive.Infinity === Positive.Infinity (red)
       {
         format: 'rg11b10ufloat' as RegularTextureFormat,
         actual: typedArrayParam('Uint32Array', [0b11111000000]),
         expected: typedArrayParam('Uint32Array', [0b11111000000]),
         isSame: true,
       },
-      // NaN === NaN (green)
+      // Positive.Infinity === Positive.Infinity (green)
       {
         format: 'rg11b10ufloat' as RegularTextureFormat,
         actual: typedArrayParam('Uint32Array', [0b11111000000_00000000000]),
         expected: typedArrayParam('Uint32Array', [0b11111000000_00000000000]),
         isSame: true,
       },
-      // NaN === NaN (blue)
+      // Positive.Infinity === Positive.Infinity (blue)
       {
         format: 'rg11b10ufloat' as RegularTextureFormat,
         actual: typedArrayParam('Uint32Array', [0b1111100000_00000000000_00000000000]),
         expected: typedArrayParam('Uint32Array', [0b1111100000_00000000000_00000000000]),
+        isSame: true,
+      },
+      // NaN === NaN (red)
+      {
+        format: 'rg11b10ufloat' as RegularTextureFormat,
+        actual: typedArrayParam('Uint32Array', [0b11111000001]),
+        expected: typedArrayParam('Uint32Array', [0b11111000010]),
+        isSame: true,
+      },
+      // NaN === NaN (green)
+      {
+        format: 'rg11b10ufloat' as RegularTextureFormat,
+        actual: typedArrayParam('Uint32Array', [0b11111000100_00000000000]),
+        expected: typedArrayParam('Uint32Array', [0b11111001000_00000000000]),
+        isSame: true,
+      },
+      // NaN === NaN (blue)
+      {
+        format: 'rg11b10ufloat' as RegularTextureFormat,
+        actual: typedArrayParam('Uint32Array', [0b1111110000_00000000000_00000000000]),
+        expected: typedArrayParam('Uint32Array', [0b1111101000_00000000000_00000000000]),
         isSame: true,
       },
     ])
