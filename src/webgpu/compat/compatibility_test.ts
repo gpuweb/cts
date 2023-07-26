@@ -1,4 +1,4 @@
-import { ValidationTest } from '../webgpu/api/validation/validation_test.js';
+import { ValidationTest } from '../api/validation/validation_test.js';
 
 export class CompatibilityTest extends ValidationTest {
   async init() {

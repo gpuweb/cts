@@ -2,7 +2,7 @@ export const description = `
 Tests that you can not use bgra8unorm-srgb in compat mode.
 `;
 
-import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { CompatibilityTest } from '../../../compatibility_test.js';
 
 export const g = makeTestGroup(CompatibilityTest);

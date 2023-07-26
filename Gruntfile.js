@@ -20,11 +20,11 @@ module.exports = function (grunt) {
         // Overwrites the listings.js files in out/. Must run before copy:out-wpt-generated;
         // must not run before run:build-out (if it is run).
         cmd: 'node',
-        args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/compat', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+        args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
       },
       validate: {
         cmd: 'node',
-        args: ['tools/validate', 'src/webgpu', 'src/compat', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+        args: ['tools/validate', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
       },
       'generate-wpt-cts-html': {
         cmd: 'node',
