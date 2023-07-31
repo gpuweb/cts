@@ -2997,7 +2997,7 @@ export const listing = [
       "execution",
       "expression",
       "unary",
-      "abstract_float_assignment"
+      "af_assignment"
     ]
   },
   {

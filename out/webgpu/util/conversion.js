@@ -9,7 +9,8 @@ clamp,
 correctlyRoundedF16,
 isFiniteF16,
 isSubnormalNumberF16,
-isSubnormalNumberF32 } from
+isSubnormalNumberF32,
+isSubnormalNumberF64 } from
 './math.js';
 
 /**
@@ -884,6 +885,7 @@ export class Scalar {
    * @param offset the byte offset within buffer
    */
   copyTo(buffer, offset) {
+    assert(this.type.kind !== 'f64', `Copying f64 values to/from buffers is not defined`);
     for (let i = 0; i < this.bits.length; i++) {
       buffer[offset + i] = this.bits[i];
     }
@@ -938,9 +940,28 @@ export class Scalar {
           if (n !== null && isFloatValue(this)) {
             let str = this.value.toString();
             str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
-            return isSubnormalNumberF32(n.valueOf()) ?
-            `${Colors.bold(str)} (0x${hex} subnormal)` :
-            `${Colors.bold(str)} (0x${hex})`;
+            switch (this.type.kind) {
+              case 'abstract-float':
+                return isSubnormalNumberF64(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f64':
+                return isSubnormalNumberF64(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f32':
+                return isSubnormalNumberF32(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f16':
+                return isSubnormalNumberF16(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              default:
+                unreachable(
+                `Printing of floating point kind ${this.type.kind} is not implemented...`);}
+
+
           }
           return `${Colors.bold(this.value.toString())} (0x${hex})`;
         }}

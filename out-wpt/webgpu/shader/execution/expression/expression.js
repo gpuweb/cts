@@ -3,6 +3,7 @@
  **/ import { globalTestConfig } from '../../../../common/framework/test_config.js';
 import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { compare } from '../../../util/compare.js';
+import { kValue } from '../../../util/constants.js';
 import {
   ScalarType,
   Scalar,
@@ -104,6 +105,10 @@ function valueStrides(tys) {
 // Helper for returning the WGSL storage type for the given Type.
 function storageType(ty) {
   if (ty instanceof ScalarType) {
+    assert(ty.kind !== 'f64', `'No storage type defined for 'f64' values`);
+    if (ty.kind === 'abstract-float') {
+      return TypeVec(2, TypeU32);
+    }
     if (ty.kind === 'bool') {
       return TypeU32;
     }
@@ -117,7 +122,8 @@ function storageType(ty) {
 // Helper for converting a value of the type 'ty' from the storage type.
 function fromStorage(ty, expr) {
   if (ty instanceof ScalarType) {
-    assert(ty.kind !== 'abstract-float', `No storage type defined for AbstractFloat values`);
+    assert(ty.kind !== 'abstract-float', `AbstractFloat values should not be in input storage`);
+    assert(ty.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.kind === 'bool') {
       return `${expr} != 0u`;
     }
@@ -125,9 +131,10 @@ function fromStorage(ty, expr) {
   if (ty instanceof VectorType) {
     assert(
       ty.elementType.kind !== 'abstract-float',
-      `No storage type defined for AbstractFloat values`
+      `AbstractFloat values should not be in input storage`
     );
 
+    assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
       return `${expr} != vec${ty.width}<u32>(0u)`;
     }
@@ -138,7 +145,12 @@ function fromStorage(ty, expr) {
 // Helper for converting a value of the type 'ty' to the storage type.
 function toStorage(ty, expr) {
   if (ty instanceof ScalarType) {
-    assert(ty.kind !== 'abstract-float', `No storage type defined for AbstractFloat values`);
+    assert(
+      ty.kind !== 'abstract-float',
+      `AbstractFloat values have custom code writing to input storage`
+    );
+
+    assert(ty.kind !== 'f64', `No storage type defined for 'f64' values`);
     if (ty.kind === 'bool') {
       return `select(0u, 1u, ${expr})`;
     }
@@ -146,9 +158,10 @@ function toStorage(ty, expr) {
   if (ty instanceof VectorType) {
     assert(
       ty.elementType.kind !== 'abstract-float',
-      `No storage type defined for AbstractFloat values`
+      `AbstractFloat values have custom code writing to input storage`
     );
 
+    assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
       return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
@@ -187,6 +200,7 @@ function getOrCreate(map, key, create) {
  * @param resultType the return type for the expression overload
  * @param cfg test configuration values
  * @param cases list of test cases
+ * @param batch_size override the calculated casesPerBatch.
  */
 export async function run(
   t,
@@ -194,7 +208,8 @@ export async function run(
   parameterTypes,
   resultType,
   cfg = { inputSource: 'storage_r' },
-  cases
+  cases,
+  batch_size
 ) {
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   if (cfg.vectorize !== undefined) {
@@ -208,6 +223,9 @@ export async function run(
   // so chunk the tests up into batches that fit into the limits. We also split
   // the cases into smaller batches to help with shader compilation performance.
   const casesPerBatch = (function () {
+    if (batch_size) {
+      return batch_size;
+    }
     switch (cfg.inputSource) {
       case 'const':
         // Some drivers are slow to optimize shaders with many constant values,
@@ -453,13 +471,110 @@ export function basicExpressionBuilder(expressionBuilder) {
       // Constant eval
       //////////////////////////////////////////////////////////////////////////
       let body = '';
-      if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')) {
+      if (
+        scalarTypeOf(resultType).kind !== 'abstract-float' &&
+        parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')
+      ) {
         // Directly assign the expression to the output, to avoid an
         // intermediate store, which will concretize the value early
         body = cases
           .map(
-            (c, i) => `  outputs[${i}].value = ${expressionBuilder(map(c.input, v => v.wgsl()))};`
+            (c, i) =>
+              `  outputs[${i}].value = ${toStorage(
+                resultType,
+                expressionBuilder(map(c.input, v => v.wgsl()))
+              )};`
           )
+          .join('\n  ');
+      } else if (scalarTypeOf(resultType).kind === 'abstract-float') {
+        // AbstractFloats are f64s under the hood. WebGPU does not support
+        // putting f64s in buffers, so the result needs to be split up into u32s
+        // and rebuilt in the test framework.
+        //
+        // This is complicated by the fact that user defined functions cannot
+        // take/return AbstractFloats, and AbstractFloats cannot be stored in
+        // variables, so the code cannot just inject a simple utility function
+        // at the top of the shader, instead this snippet needs to be inlined
+        // everywhere the test needs to return an AbstractFloat.
+        //
+        // select is used below, since ifs are not available during constant
+        // eval. This has the side effect of short-circuiting doesn't occur, so
+        // both sides of the select have to evaluate and be valid.
+        //
+        // This snippet implements FTZ for subnormals to bypass the need for
+        // complex subnormal specific logic.
+        //
+        // Expressions resulting in subnormals can still be reasonably tested,
+        // since this snippet will return 0 with the correct sign, which is
+        // always in the acceptance interval for a subnormal result, since an
+        // implementation may FTZ.
+        //
+        // Document for the snippet is included here in this code block, since
+        // shader length affects compilation time  significantly on some
+        // backends.
+        //
+        // Snippet with documentation:
+        //   const kExponentBias = 1022;
+        //
+        //   // Detect if the value is zero or subnormal, so that FTZ behaviour
+        //   // can occur
+        //   const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
+        //
+        //   // MSB of the upper u32 is 1 if the value is negative, otherwise 0
+        //   // Extract the sign bit early, so that abs() can be used with
+        //   // frexp() so negative cases do not need to be handled
+        //   const sign_bit : u32 = select(0, 0x80000000, ${expr} < 0);
+        //
+        //   // Use frexp() to obtain the exponent and fractional parts, and
+        //   // then perform FTZ if needed
+        //   const f = frexp(abs(${expr}));
+        //   const f_fract = select(f.fract, 0, subnormal_or_zero);
+        //   const f_exp = select(f.exp, -kExponentBias, subnormal_or_zero);
+        //
+        //   // Adjust for the exponent bias and shift for storing in bits
+        //   // [20..31] of the upper u32
+        //   const exponent_bits : u32 = (f_exp + kExponentBias) << 20;
+        //
+        //   // Extract the portion of the mantissa that appears in upper u32 as
+        //   // a float for later use
+        //   const high_mantissa = ldexp(f_fract, 21);
+        //
+        //   // Extract the portion of the mantissa that appears in upper u32 as
+        //   // as bits. This value is masked, because normals will explicitly
+        //   // have the implicit leading 1 that should not be in the final
+        //   // result.
+        //   const high_mantissa_bits : u32 = u32(ldexp(f_fract, 21)) & 0x000fffff;
+        //
+        //   // Calculate the mantissa stored in the lower u32 as a float
+        //   const low_mantissa = f_fract - ldexp(floor(high_mantissa), -21);
+        //
+        //   // Convert the lower u32 mantissa to bits
+        //   const low_mantissa_bits = u32(ldexp(low_mantissa, 53));
+        //
+        //   // Pack the result into 2x u32s for writing out to the testing
+        //   // framework
+        //   outputs[${i}].value.x = low_mantissa_bits;
+        //   outputs[${i}].value.y = sign_bit | exponent_bits | high_mantissa_bits;
+        body = cases
+          .map((c, i) => {
+            const expr = `${expressionBuilder(map(c.input, v => v.wgsl()))}`;
+
+            return `  {
+    const kExponentBias = 1022;
+    const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
+    const sign_bit : u32 = select(0, 0x80000000, ${expr} < 0);
+    const f = frexp(abs(${expr}));
+    const f_fract = select(f.fract, 0, subnormal_or_zero);
+    const f_exp = select(f.exp, -kExponentBias, subnormal_or_zero);
+    const exponent_bits : u32 = (f_exp + kExponentBias) << 20;
+    const high_mantissa = ldexp(f_fract, 21);
+    const high_mantissa_bits : u32 = u32(ldexp(f_fract, 21)) & 0x000fffff;
+    const low_mantissa = f_fract - ldexp(floor(high_mantissa), -21);
+    const low_mantissa_bits = u32(ldexp(low_mantissa, 53));
+    outputs[${i}].value.x = low_mantissa_bits;
+    outputs[${i}].value.y = sign_bit | exponent_bits | high_mantissa_bits;
+  }`;
+          })
           .join('\n  ');
       } else if (globalTestConfig.unrollConstEvalLoops) {
         body = cases
