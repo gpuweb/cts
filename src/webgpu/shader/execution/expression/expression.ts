@@ -583,8 +583,8 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
         //
         //   // Extract the portion of the mantissa that appears in upper u32 as
         //   // as bits. This value is masked, because normals will explicitly
-        //   // have the implicit leading 1 that, which shouldn't be in the
-        //   // final result.
+        //   // have the implicit leading 1 that should not be in the final
+        //   // result.
         //   const high_mantissa_bits : u32 = u32(ldexp(f_fract, 21)) & 0x000fffff;
         //
         //   // Calculate the mantissa stored in the lower u32 as a float
