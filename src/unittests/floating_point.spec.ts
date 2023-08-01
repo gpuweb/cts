@@ -3027,12 +3027,12 @@ g.test('logInterval')
 const kLog2IntervalCases = {
   f32: [
     // kValue.f32.positive.max is 0x7F7FFFFF = 3.4028234663852886e+38,
-    // log(0x7F7FFFFF) = 127.99999991400867200665269600978 rounded to f32 0x42FFFFFF or 0x43000000 = 128.0
+    // log2(0x7F7FFFFF) = 127.99999991400867200665269600978 rounded to f32 0x42FFFFFF or 0x43000000 = 128.0
     { input: kValue.f32.positive.max, expected: [kMinusOneULPFunctions['f32'](128.0), 128.0] },
   ] as ScalarToIntervalCase[],
   f16: [
     // kValue.f16.positive.max is 0x7BFF = 65504,
-    // log(0x7BFF) = 15.999295387023410627258428389903 rounded to f16 0x4BFF or 0x4C00 = 16.0
+    // log2(0x7BFF) = 15.999295387023410627258428389903 rounded to f16 0x4BFF or 0x4C00 = 16.0
     { input: kValue.f16.positive.max, expected: [kMinusOneULPFunctions['f16'](16.0), 16.0] },
   ] as ScalarToIntervalCase[],
 } as const;
