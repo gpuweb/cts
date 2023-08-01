@@ -128,36 +128,36 @@ export function serializeFPInterval(i) {
   const traits = FP[i.kind];
   switch (i.kind) {
     case 'abstract': {
-      if (i === traits.constants().anyInterval) {
-        return { kind: 'abstract', any: true };
+      if (i === traits.constants().indeterminateInterval) {
+        return { kind: 'abstract', indeterminate: true };
       } else {
         return {
           kind: 'abstract',
-          any: false,
+          indeterminate: false,
           begin: reinterpretF64AsU32s(i.begin),
           end: reinterpretF64AsU32s(i.end),
         };
       }
     }
     case 'f32': {
-      if (i === traits.constants().anyInterval) {
-        return { kind: 'f32', any: true };
+      if (i === traits.constants().indeterminateInterval) {
+        return { kind: 'f32', indeterminate: true };
       } else {
         return {
           kind: 'f32',
-          any: false,
+          indeterminate: false,
           begin: reinterpretF32AsU32(i.begin),
           end: reinterpretF32AsU32(i.end),
         };
       }
     }
     case 'f16': {
-      if (i === traits.constants().anyInterval) {
-        return { kind: 'f16', any: true };
+      if (i === traits.constants().indeterminateInterval) {
+        return { kind: 'f16', indeterminate: true };
       } else {
         return {
           kind: 'f16',
-          any: false,
+          indeterminate: false,
           begin: reinterpretF16AsU16(i.begin),
           end: reinterpretF16AsU16(i.end),
         };
@@ -172,8 +172,8 @@ export function serializeFPInterval(i) {
 export function deserializeFPInterval(data) {
   const kind = data.kind;
   const traits = FP[kind];
-  if (data.any) {
-    return traits.constants().anyInterval;
+  if (data.indeterminate) {
+    return traits.constants().indeterminateInterval;
   }
   switch (kind) {
     case 'abstract': {
@@ -407,10 +407,10 @@ export class FPTraits {
    * @param domain interval to restrict inputs to
    * @param impl operation implementation to run if input is within the required domain
    * @returns a ScalarToInterval that calls impl if domain contains the input,
-   *          otherwise it returns an any interval */
+   *          otherwise it returns an indeterminate interval */
   limitScalarToIntervalDomain(domain, impl) {
     return n => {
-      return domain.contains(n) ? impl(n) : this.constants().anyInterval;
+      return domain.contains(n) ? impl(n) : this.constants().indeterminateInterval;
     };
   }
 
@@ -423,11 +423,11 @@ export class FPTraits {
    * @param domain set of intervals to restrict inputs to
    * @param impl operation implementation to run if input is within the required domain
    * @returns a ScalarPairToInterval that calls impl if domain contains the input,
-   *          otherwise it returns an any interval */
+   *          otherwise it returns an indeterminate interval */
   limitScalarPairToIntervalDomain(domain, impl) {
     return (x, y) => {
       if (!domain.x.some(d => d.contains(x)) || !domain.y.some(d => d.contains(y))) {
-        return this.constants().anyInterval;
+        return this.constants().indeterminateInterval;
       }
 
       return impl(x, y);
@@ -1465,7 +1465,7 @@ export class FPTraits {
    */
   runScalarToIntervalOp(x, op) {
     if (!x.isFinite()) {
-      return this.constants().anyInterval;
+      return this.constants().indeterminateInterval;
     }
 
     if (op.extrema !== undefined) {
@@ -1476,7 +1476,7 @@ export class FPTraits {
       ...x.bounds().map(b => this.roundAndFlushScalarToInterval(b, op))
     );
 
-    return result.isFinite() ? result : this.constants().anyInterval;
+    return result.isFinite() ? result : this.constants().indeterminateInterval;
   }
 
   /**
@@ -1492,7 +1492,7 @@ export class FPTraits {
    */
   runScalarPairToIntervalOp(x, y, op) {
     if (!x.isFinite() || !y.isFinite()) {
-      return this.constants().anyInterval;
+      return this.constants().indeterminateInterval;
     }
 
     if (op.extrema !== undefined) {
@@ -1507,7 +1507,7 @@ export class FPTraits {
     });
 
     const result = this.spanIntervals(...outputs);
-    return result.isFinite() ? result : this.constants().anyInterval;
+    return result.isFinite() ? result : this.constants().indeterminateInterval;
   }
 
   /**
@@ -1521,7 +1521,7 @@ export class FPTraits {
    */
   runScalarTripleToIntervalOp(x, y, z, op) {
     if (!x.isFinite() || !y.isFinite() || !z.isFinite()) {
-      return this.constants().anyInterval;
+      return this.constants().indeterminateInterval;
     }
 
     const outputs = new Set();
@@ -1534,7 +1534,7 @@ export class FPTraits {
     });
 
     const result = this.spanIntervals(...outputs);
-    return result.isFinite() ? result : this.constants().anyInterval;
+    return result.isFinite() ? result : this.constants().indeterminateInterval;
   }
 
   /**
@@ -1547,7 +1547,7 @@ export class FPTraits {
    */
   runVectorToIntervalOp(x, op) {
     if (x.some(e => !e.isFinite())) {
-      return this.constants().anyInterval;
+      return this.constants().indeterminateInterval;
     }
 
     const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -1558,7 +1558,7 @@ export class FPTraits {
     });
 
     const result = this.spanIntervals(...outputs);
-    return result.isFinite() ? result : this.constants().anyInterval;
+    return result.isFinite() ? result : this.constants().indeterminateInterval;
   }
 
   /**
@@ -1572,7 +1572,7 @@ export class FPTraits {
    */
   runVectorPairToIntervalOp(x, y, op) {
     if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
-      return this.constants().anyInterval;
+      return this.constants().indeterminateInterval;
     }
 
     const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -1586,7 +1586,7 @@ export class FPTraits {
     });
 
     const result = this.spanIntervals(...outputs);
-    return result.isFinite() ? result : this.constants().anyInterval;
+    return result.isFinite() ? result : this.constants().indeterminateInterval;
   }
 
   /**
@@ -1599,7 +1599,7 @@ export class FPTraits {
    */
   runVectorToVectorOp(x, op) {
     if (x.some(e => !e.isFinite())) {
-      return this.constants().anyVector[x.length];
+      return this.constants().indeterminateVector[x.length];
     }
 
     const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -1610,7 +1610,9 @@ export class FPTraits {
     });
 
     const result = this.spanVectors(...outputs);
-    return result.every(e => e.isFinite()) ? result : this.constants().anyVector[result.length];
+    return result.every(e => e.isFinite())
+      ? result
+      : this.constants().indeterminateVector[result.length];
   }
 
   /**
@@ -1641,7 +1643,7 @@ export class FPTraits {
    */
   runVectorPairToVectorOp(x, y, op) {
     if (x.some(e => !e.isFinite()) || y.some(e => !e.isFinite())) {
-      return this.constants().anyVector[x.length];
+      return this.constants().indeterminateVector[x.length];
     }
 
     const x_values = cartesianProduct(...x.map(e => e.bounds()));
@@ -1655,7 +1657,9 @@ export class FPTraits {
     });
 
     const result = this.spanVectors(...outputs);
-    return result.every(e => e.isFinite()) ? result : this.constants().anyVector[result.length];
+    return result.every(e => e.isFinite())
+      ? result
+      : this.constants().indeterminateVector[result.length];
   }
 
   /**
@@ -1697,7 +1701,7 @@ export class FPTraits {
     const num_cols = m.length;
     const num_rows = m[0].length;
     if (m.some(c => c.some(r => !r.isFinite()))) {
-      return this.constants().anyMatrix[num_cols][num_rows];
+      return this.constants().indeterminateMatrix[num_cols][num_rows];
     }
 
     const m_flat = flatten2DArray(m);
@@ -1718,7 +1722,7 @@ export class FPTraits {
     // arrays.
     return result.every(c => c.every(r => r.isFinite()))
       ? result
-      : this.constants().anyMatrix[result_cols][result_rows];
+      : this.constants().indeterminateMatrix[result_cols][result_rows];
   }
 
   /**
@@ -1760,7 +1764,7 @@ export class FPTraits {
   AbsoluteErrorIntervalOp(error_range) {
     const op = {
       impl: _ => {
-        return this.constants().anyInterval;
+        return this.constants().indeterminateInterval;
       },
     };
 
@@ -1774,7 +1778,7 @@ export class FPTraits {
         assert(!Number.isNaN(n), `absolute error not defined for NaN`);
         // Return anyInterval if given center n is infinity.
         if (!this.isFinite(n)) {
-          return this.constants().anyInterval;
+          return this.constants().indeterminateInterval;
         }
         return this.toInterval([n - error_range, n + error_range]);
       };
@@ -1820,7 +1824,7 @@ export class FPTraits {
   ULPIntervalOp(numULP) {
     const op = {
       impl: _ => {
-        return this.constants().anyInterval;
+        return this.constants().indeterminateInterval;
       },
     };
 
@@ -2038,7 +2042,7 @@ export class FPTraits {
       ),
 
       extrema: (y, x) => {
-        // There is discontinuity + undefined behaviour at y/x = 0 that will dominate the accuracy
+        // There is discontinuity, which generates an indeterminate result, at y/x = 0 that will dominate the accuracy
         if (y.contains(0)) {
           if (x.contains(0)) {
             return [this.toInterval(0), this.toInterval(0)];
@@ -2433,7 +2437,7 @@ export class FPTraits {
         },
         (x, y) => {
           if (y === 0) {
-            return constants.anyInterval;
+            return constants.indeterminateInterval;
           }
           return this.ulpInterval(x / y, 2.5);
         }
@@ -2667,7 +2671,7 @@ export class FPTraits {
         const result = e1 * 2 ** e2;
         if (Number.isNaN(result)) {
           // Overflowed TS's number type, so definitely out of bounds for f32
-          return this.constants().anyInterval;
+          return this.constants().indeterminateInterval;
         }
         return this.correctlyRoundedInterval(result);
       }
@@ -3034,7 +3038,7 @@ export class FPTraits {
 
     if (!k.isFinite() || k.containsZeroOrSubnormals()) {
       // There is a discontinuity at k == 0, due to sqrt(k) being calculated, so exiting early
-      return this.constants().anyVector[this.toVector(i).length];
+      return this.constants().indeterminateVector[this.toVector(i).length];
     }
 
     if (k.end < 0.0) {
@@ -3244,8 +3248,8 @@ export class FPTraits {
    * [0, 0] and [1, 1] indicate that the correct answer in point they encapsulate.
    * [0, 1] should not be treated as a span, i.e. 0.1 is acceptable, but instead
    * indicate either 0.0 or 1.0 are acceptable answers.
-   * [-∞, +∞] is treated as any interval, since an undefined or infinite value
-   * was passed in.
+   * [-∞, +∞] is treated as indeterminate interval, since an indeterminate or
+   * infinite value was passed in.
    */
 
   SubtractionIntervalOp = {
@@ -3378,7 +3382,7 @@ class F32Traits extends FPTraits {
         sixth: kValue.f32.negative.pi.sixth,
       },
     },
-    anyInterval: kF32AnyInterval,
+    indeterminateInterval: kF32AnyInterval,
     zeroInterval: kF32ZeroInterval,
     // Have to use the constants.ts values here, because values defined in the
     // initializer cannot be referenced in the initializer
@@ -3399,12 +3403,12 @@ class F32Traits extends FPTraits {
       3: [kF32ZeroInterval, kF32ZeroInterval, kF32ZeroInterval],
       4: [kF32ZeroInterval, kF32ZeroInterval, kF32ZeroInterval, kF32ZeroInterval],
     },
-    anyVector: {
+    indeterminateVector: {
       2: [kF32AnyInterval, kF32AnyInterval],
       3: [kF32AnyInterval, kF32AnyInterval, kF32AnyInterval],
       4: [kF32AnyInterval, kF32AnyInterval, kF32AnyInterval, kF32AnyInterval],
     },
-    anyMatrix: {
+    indeterminateMatrix: {
       2: {
         2: [
           [kF32AnyInterval, kF32AnyInterval],
@@ -3629,7 +3633,7 @@ class F32Traits extends FPTraits {
 
     this.unpackDataU32[0] = n;
     if (this.unpackDataF16.some(f => !isFiniteF16(f))) {
-      return [this.constants().anyInterval, this.constants().anyInterval];
+      return [this.constants().indeterminateInterval, this.constants().indeterminateInterval];
     }
 
     const result = [
@@ -3638,7 +3642,7 @@ class F32Traits extends FPTraits {
     ];
 
     if (result.some(r => !r.isFinite())) {
-      return [this.constants().anyInterval, this.constants().anyInterval];
+      return [this.constants().indeterminateInterval, this.constants().indeterminateInterval];
     }
     return result;
   }
@@ -3791,7 +3795,7 @@ class FPAbstractTraits extends FPTraits {
         sixth: kValue.f64.negative.pi.sixth,
       },
     },
-    anyInterval: kAbstractAnyInterval,
+    indeterminateInterval: kAbstractAnyInterval,
     zeroInterval: kAbstractZeroInterval,
     // Have to use the constants.ts values here, because values defined in the
     // initializer cannot be referenced in the initializer
@@ -3817,12 +3821,12 @@ class FPAbstractTraits extends FPTraits {
         kAbstractZeroInterval,
       ],
     },
-    anyVector: {
+    indeterminateVector: {
       2: [kAbstractAnyInterval, kAbstractAnyInterval],
       3: [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
       4: [kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval, kAbstractAnyInterval],
     },
-    anyMatrix: {
+    indeterminateMatrix: {
       2: {
         2: [
           [kAbstractAnyInterval, kAbstractAnyInterval],
@@ -3892,7 +3896,8 @@ class FPAbstractTraits extends FPTraits {
   }
 
   // Utilities - Overrides
-  // number is represented as a f64, so any number value is already quantized to f64
+  // number is represented as a f64 internally, so all number values are already
+  // quantized to f64
   quantize = n => {
     return n;
   };
@@ -4033,7 +4038,7 @@ class F16Traits extends FPTraits {
         sixth: kValue.f16.negative.pi.sixth,
       },
     },
-    anyInterval: kF16AnyInterval,
+    indeterminateInterval: kF16AnyInterval,
     zeroInterval: kF16ZeroInterval,
     // Have to use the constants.ts values here, because values defined in the
     // initializer cannot be referenced in the initializer
@@ -4054,12 +4059,12 @@ class F16Traits extends FPTraits {
       3: [kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval],
       4: [kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval],
     },
-    anyVector: {
+    indeterminateVector: {
       2: [kF16AnyInterval, kF16AnyInterval],
       3: [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
       4: [kF16AnyInterval, kF16AnyInterval, kF16AnyInterval, kF16AnyInterval],
     },
-    anyMatrix: {
+    indeterminateMatrix: {
       2: {
         2: [
           [kF16AnyInterval, kF16AnyInterval],
