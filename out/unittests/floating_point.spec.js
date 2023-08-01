@@ -3959,119 +3959,169 @@ fn((t) => {
 
 });
 
-g.test('maxInterval_f32').
-paramsSubcasesOnly(
 
-[
-// 32-bit normals
-{ input: [0, 0], expected: 0 },
-{ input: [1, 0], expected: 1 },
-{ input: [0, 1], expected: 1 },
-{ input: [-1, 0], expected: 0 },
-{ input: [0, -1], expected: 0 },
-{ input: [1, 1], expected: 1 },
-{ input: [1, -1], expected: 1 },
-{ input: [-1, 1], expected: 1 },
-{ input: [-1, -1], expected: -1 },
+const kMaxInterval64BitsCases = {
+  f32: [
+  // 0.1 rounded to f32 0x3DCCCCCC or 0x3DCCCCCD, -0.1 rounded to f32 0xBDCCCCCD or 0xBDCCCCCC
+  { input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [0, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] } // ~-0.1
+  ],
+  f16: [
+  // 0.1 rounded to f16 0x2E66 or 0x2E67, -0.1 rounded to f16 0xAE67 or 0xAE66
+  { input: [0.1, 0], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [0, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] } // ~-0.1
+  ]
+};
 
-// 64-bit normals
-{ input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, 0], expected: 0 },
-{ input: [0, -0.1], expected: 0 },
-{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+g.test('maxInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
-// 32-bit subnormals
-{ input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
-{ input: [0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-{ input: [kValue.f32.subnormal.positive.min, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: 1 },
-{ input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+  return [
+  // Representable normals
+  { input: [0, 0], expected: 0 },
+  { input: [1, 0], expected: 1 },
+  { input: [0, 1], expected: 1 },
+  { input: [-1, 0], expected: 0 },
+  { input: [0, -1], expected: 0 },
+  { input: [1, 1], expected: 1 },
+  { input: [1, -1], expected: 1 },
+  { input: [-1, 1], expected: 1 },
+  { input: [-1, -1], expected: -1 },
 
-// Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
+  // 64-bit normals that not exactly representable
+  { input: [-0.1, 0], expected: 0 },
+  { input: [0, -0.1], expected: 0 },
+  ...kMaxInterval64BitsCases[p.trait],
 
+  // Representable subnormals
+  { input: [constants.positive.subnormal.max, 0], expected: [0, constants.positive.subnormal.max] },
+  { input: [0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
+  { input: [constants.positive.subnormal.min, 0], expected: [0, constants.positive.subnormal.min] },
+  { input: [0, constants.positive.subnormal.min], expected: [0, constants.positive.subnormal.min] },
+  { input: [constants.negative.subnormal.max, 0], expected: [constants.negative.subnormal.max, 0] },
+  { input: [0, constants.negative.subnormal.max], expected: [constants.negative.subnormal.max, 0] },
+  { input: [constants.negative.subnormal.min, 0], expected: [constants.negative.subnormal.min, 0] },
+  { input: [0, constants.negative.subnormal.min], expected: [constants.negative.subnormal.min, 0] },
+  { input: [1, constants.positive.subnormal.max], expected: 1 },
+  { input: [constants.negative.subnormal.min, constants.positive.subnormal.max], expected: [constants.negative.subnormal.min, constants.positive.subnormal.max] },
+
+  // Infinities
+  { input: [0, constants.positive.infinity], expected: kAnyBounds },
+  { input: [constants.positive.infinity, 0], expected: kAnyBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kAnyBounds },
+  { input: [0, constants.negative.infinity], expected: kAnyBounds },
+  { input: [constants.negative.infinity, 0], expected: kAnyBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds }];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const [x, y] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.maxInterval(x, y);
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.maxInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.maxInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.maxInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 
-g.test('minInterval_f32').
-paramsSubcasesOnly(
 
-[
-// 32-bit normals
-{ input: [0, 0], expected: 0 },
-{ input: [1, 0], expected: 0 },
-{ input: [0, 1], expected: 0 },
-{ input: [-1, 0], expected: -1 },
-{ input: [0, -1], expected: -1 },
-{ input: [1, 1], expected: 1 },
-{ input: [1, -1], expected: -1 },
-{ input: [-1, 1], expected: -1 },
-{ input: [-1, -1], expected: -1 },
+const kMinInterval64BitsCases = {
+  f32: [
+  // 0.1 rounded to f32 0x3DCCCCCC or 0x3DCCCCCD, -0.1 rounded to f32 0xBDCCCCCD or 0xBDCCCCCC
+  { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+  { input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+  { input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  { input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+  { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+  { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] } // ~-0.1
+  ],
+  f16: [
+  // 0.1 rounded to f16 0x2E66 or 0x2E67, -0.1 rounded to f16 0xAE67 or 0xAE66
+  { input: [-0.1, 0], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] }, // ~-0.1
+  { input: [0, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] }, // ~-0.1
+  { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
+  { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] }, // ~-0.1
+  { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] }, // ~-0.1
+  { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] } // ~-0.1
+  ]
+};
 
-// 64-bit normals
-{ input: [0.1, 0], expected: 0 },
-{ input: [0, 0.1], expected: 0 },
-{ input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-{ input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
+g.test('minInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
-// 32-bit subnormals
-{ input: [kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.max] },
-{ input: [0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-{ input: [kValue.f32.subnormal.positive.min, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [kValue.f32.subnormal.negative.max, 0], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [0, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [kValue.f32.subnormal.negative.min, 0], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [0, kValue.f32.subnormal.negative.min], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [-1, kValue.f32.subnormal.positive.max], expected: -1 },
-{ input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max] },
+  return [
+  // Representable normals
+  { input: [0, 0], expected: 0 },
+  { input: [1, 0], expected: 0 },
+  { input: [0, 1], expected: 0 },
+  { input: [-1, 0], expected: -1 },
+  { input: [0, -1], expected: -1 },
+  { input: [1, 1], expected: 1 },
+  { input: [1, -1], expected: -1 },
+  { input: [-1, 1], expected: -1 },
+  { input: [-1, -1], expected: -1 },
 
-// Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, 0], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [0, kValue.f32.infinity.negative], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, 0], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kAnyBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kAnyBounds }]).
+  // 64-bit normals that not exactly representable
+  { input: [0.1, 0], expected: 0 },
+  { input: [0, 0.1], expected: 0 },
+  ...kMinInterval64BitsCases[p.trait],
 
+  // Representable subnormals
+  { input: [constants.positive.subnormal.max, 0], expected: [0, constants.positive.subnormal.max] },
+  { input: [0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
+  { input: [constants.positive.subnormal.min, 0], expected: [0, constants.positive.subnormal.min] },
+  { input: [0, constants.positive.subnormal.min], expected: [0, constants.positive.subnormal.min] },
+  { input: [constants.negative.subnormal.max, 0], expected: [constants.negative.subnormal.max, 0] },
+  { input: [0, constants.negative.subnormal.max], expected: [constants.negative.subnormal.max, 0] },
+  { input: [constants.negative.subnormal.min, 0], expected: [constants.negative.subnormal.min, 0] },
+  { input: [0, constants.negative.subnormal.min], expected: [constants.negative.subnormal.min, 0] },
+  { input: [-1, constants.positive.subnormal.max], expected: -1 },
+  { input: [constants.negative.subnormal.min, constants.positive.subnormal.max], expected: [constants.negative.subnormal.min, constants.positive.subnormal.max] },
+
+  // Infinities
+  { input: [0, constants.positive.infinity], expected: kAnyBounds },
+  { input: [constants.positive.infinity, 0], expected: kAnyBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kAnyBounds },
+  { input: [0, constants.negative.infinity], expected: kAnyBounds },
+  { input: [constants.negative.infinity, 0], expected: kAnyBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kAnyBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kAnyBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kAnyBounds }];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const [x, y] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.minInterval(x, y);
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.minInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 

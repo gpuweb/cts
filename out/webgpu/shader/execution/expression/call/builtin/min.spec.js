@@ -17,9 +17,9 @@ If both operands are NaNs, a NaN is returned.
 Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { i32, TypeF32, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
+import { i32, TypeF32, TypeF16, TypeI32, TypeU32, u32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range } from '../../../../../util/math.js';
+import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -34,6 +34,14 @@ export const d = makeCaseCache('min', {
     fullF32Range(),
     'unfiltered',
     FP.f32.minInterval);
+
+  },
+  f16: () => {
+    return FP.f16.generateScalarPairToIntervalCases(
+    fullF16Range(),
+    fullF16Range(),
+    'unfiltered',
+    FP.f16.minInterval);
 
   }
 });
@@ -119,5 +127,11 @@ desc(`f16 tests`).
 params((u) =>
 u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
 
-unimplemented();
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16');
+  await run(t, builtin('min'), [TypeF16, TypeF16], TypeF16, t.params, cases);
+});
 //# sourceMappingURL=min.spec.js.map
