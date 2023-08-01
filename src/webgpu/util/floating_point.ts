@@ -3437,8 +3437,10 @@ export abstract class FPTraits {
     impl: this.limitScalarToIntervalDomain(
       this.constants().greaterThanZeroInterval,
       (n: number): FPInterval => {
+        assert(this.kind === 'f32' || this.kind === 'f16');
+        const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
         if (n >= 0.5 && n <= 2.0) {
-          return this.absoluteErrorInterval(Math.log(n), 2 ** -21);
+          return this.absoluteErrorInterval(Math.log(n), abs_error);
         }
         return this.ulpInterval(Math.log(n), 3);
       }
@@ -3456,8 +3458,10 @@ export abstract class FPTraits {
     impl: this.limitScalarToIntervalDomain(
       this.constants().greaterThanZeroInterval,
       (n: number): FPInterval => {
+        assert(this.kind === 'f32' || this.kind === 'f16');
+        const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
         if (n >= 0.5 && n <= 2.0) {
-          return this.absoluteErrorInterval(Math.log2(n), 2 ** -21);
+          return this.absoluteErrorInterval(Math.log2(n), abs_error);
         }
         return this.ulpInterval(Math.log2(n), 3);
       }
@@ -4970,8 +4974,8 @@ class F16Traits extends FPTraits {
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly lengthInterval = this.unimplementedLength.bind(this);
-  public readonly logInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly log2Interval = this.unimplementedScalarToInterval.bind(this);
+  public readonly logInterval = this.logIntervalImpl.bind(this);
+  public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
   public readonly minInterval = this.minIntervalImpl.bind(this);
   public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
