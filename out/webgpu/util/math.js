@@ -1180,13 +1180,16 @@ const kInterestingF32Values = [
 kValue.f32.negative.min,
 -10.0,
 -1.0,
+-0.125,
 kValue.f32.negative.max,
 kValue.f32.subnormal.negative.min,
 kValue.f32.subnormal.negative.max,
+-0.0,
 0.0,
 kValue.f32.subnormal.positive.min,
 kValue.f32.subnormal.positive.max,
 kValue.f32.positive.min,
+0.125,
 1.0,
 10.0,
 kValue.f32.positive.max];
@@ -1413,13 +1416,16 @@ const kInterestingF16Values = [
 kValue.f16.negative.min,
 -10.0,
 -1.0,
+-0.125,
 kValue.f16.negative.max,
 kValue.f16.subnormal.negative.min,
 kValue.f16.subnormal.negative.max,
+-0.0,
 0.0,
 kValue.f16.subnormal.positive.min,
 kValue.f16.subnormal.positive.max,
 kValue.f16.positive.min,
+0.125,
 1.0,
 10.0,
 kValue.f16.positive.max];
@@ -1639,6 +1645,87 @@ export function sparseMatrixF16Range(c, r) {
   'sparseMatrixF16Range only accepts row counts of 2, 3, and 4');
 
   return kSparseMatrixF16Values[c][r];
+}
+
+/** Short list of f64 values of interest to test against */
+const kInterestingF64Values = [
+kValue.f64.negative.min,
+-10.0,
+-1.0,
+-0.125,
+kValue.f64.negative.max,
+kValue.f64.subnormal.negative.min,
+kValue.f64.subnormal.negative.max,
+-0.0,
+0.0,
+kValue.f64.subnormal.positive.min,
+kValue.f64.subnormal.positive.max,
+kValue.f64.positive.min,
+0.125,
+1.0,
+10.0,
+kValue.f64.positive.max];
+
+
+/** @returns minimal F64 values that cover the entire range of F64 behaviours
+ *
+ * Has specially selected values that cover edge cases, normals, and subnormals.
+ * This is used instead of fullF64Range when the number of test cases being
+ * generated is a super linear function of the length of F64 values which is
+ * leading to time outs.
+ *
+ * These values have been chosen to attempt to test the widest range of F64
+ * behaviours in the lowest number of entries, so may potentially miss function
+ * specific values of interest. If there are known values of interest they
+ * should be appended to this list in the test generation code.
+ */
+export function sparseF64Range() {
+  return kInterestingF64Values;
+}
+
+const kVectorF64Values = {
+  2: sparseF64Range().flatMap((f) => [
+  [f, 1.0],
+  [1.0, f],
+  [f, -1.0],
+  [-1.0, f]]),
+
+  3: sparseF64Range().flatMap((f) => [
+  [f, 1.0, 2.0],
+  [1.0, f, 2.0],
+  [1.0, 2.0, f],
+  [f, -1.0, -2.0],
+  [-1.0, f, -2.0],
+  [-1.0, -2.0, f]]),
+
+  4: sparseF64Range().flatMap((f) => [
+  [f, 1.0, 2.0, 3.0],
+  [1.0, f, 2.0, 3.0],
+  [1.0, 2.0, f, 3.0],
+  [1.0, 2.0, 3.0, f],
+  [f, -1.0, -2.0, -3.0],
+  [-1.0, f, -2.0, -3.0],
+  [-1.0, -2.0, f, -3.0],
+  [-1.0, -2.0, -3.0, f]])
+
+};
+
+/**
+ * Returns set of vectors, indexed by dimension containing interesting float
+ * values.
+ *
+ * The tests do not do the simple option for coverage of computing the cartesian
+ * product of all of the interesting float values N times for vecN tests,
+ * because that creates a huge number of tests for vec3 and vec4, leading to
+ * time outs.
+ *
+ * Instead they insert the interesting F64 values into each location of the
+ * vector to get a spread of testing over the entire range. This reduces the
+ * number of cases being run substantially, but maintains coverage.
+ */
+export function vectorF64Range(dim) {
+  assert(dim === 2 || dim === 3 || dim === 4, 'vectorF64Range only accepts dimensions 2, 3, and 4');
+  return kVectorF64Values[dim];
 }
 
 /**
