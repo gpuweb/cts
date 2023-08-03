@@ -19,14 +19,14 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-/** Bounds indicating an expectation of an indeterminate value */
-const kIndeterminateBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
+/** Bounds indicating an expectation of unbounded error */
+const kUnboundedBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
-/** Interval from kIndeterminateBounds */
-const kIndeterminateInterval = {
-  f32: FP.f32.toParam(kIndeterminateBounds),
-  f16: FP.f16.toParam(kIndeterminateBounds),
-  abstract: FP.abstract.toParam(kIndeterminateBounds)
+/** Interval from kUnboundedBounds */
+const kUnboundedInterval = {
+  f32: FP.f32.toParam(kUnboundedBounds),
+  f16: FP.f16.toParam(kUnboundedBounds),
+  abstract: FP.abstract.toParam(kUnboundedBounds)
 };
 
 /** @returns a number N * ULP greater than the provided number */
@@ -140,7 +140,7 @@ expandWithParams((p) => {
   // Infinities
   { input: [0, constants.positive.infinity], expected: [0, Number.POSITIVE_INFINITY] },
   { input: [constants.negative.infinity, 0], expected: [Number.NEGATIVE_INFINITY, 0] },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds }];
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds }];
 
 
   // Note: Out of range values are limited to infinities for abstract float, due to abstract
@@ -447,7 +447,7 @@ expandWithParams((p) => {
   { intervals: [[2, 5], [0, 1]], expected: [0, 5] },
   { intervals: [[0, 2], [1, 5]], expected: [0, 5] },
   { intervals: [[0, 5], [1, 2]], expected: [0, 5] },
-  { intervals: [[constants.negative.infinity, 0], [0, constants.positive.infinity]], expected: kIndeterminateBounds },
+  { intervals: [[constants.negative.infinity, 0], [0, constants.positive.infinity]], expected: kUnboundedBounds },
 
   // Multiple Intervals
   { intervals: [[0, 1], [2, 3], [4, 5]], expected: [0, 5] },
@@ -683,8 +683,8 @@ expandWithParams((p) => {
   { input: [1, [2], trait.toParam([3])], expected: [1, 2, 3] },
   { input: [1, trait.toParam([2]), [3], 4], expected: [1, 2, 3, 4] },
   {
-    input: [1, [2], [2, 3], kIndeterminateInterval[p.trait]],
-    expected: [1, 2, [2, 3], kIndeterminateBounds]
+    input: [1, [2], [2, 3], kUnboundedInterval[p.trait]],
+    expected: [1, 2, [2, 3], kUnboundedBounds]
   }];
 
 })).
@@ -1839,20 +1839,20 @@ expandWithParams((p) => {
 
   return [
   // Edge Cases
-  // 1. Interval around infinity would be kIndeterminateBounds
-  { value: constants.positive.infinity, error: 0, expected: kIndeterminateBounds },
-  { value: constants.positive.infinity, error: largeErr, expected: kIndeterminateBounds },
-  { value: constants.positive.infinity, error: 1, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, error: 0, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, error: largeErr, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, error: 1, expected: kIndeterminateBounds },
+  // 1. Interval around infinity would be kUnboundedBounds
+  { value: constants.positive.infinity, error: 0, expected: kUnboundedBounds },
+  { value: constants.positive.infinity, error: largeErr, expected: kUnboundedBounds },
+  { value: constants.positive.infinity, error: 1, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, error: 0, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, error: largeErr, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, error: 1, expected: kUnboundedBounds },
   // 2. Interval around largest finite positive/negative
   { value: constants.positive.max, error: 0, expected: constants.positive.max },
-  { value: constants.positive.max, error: largeErr, expected: kIndeterminateBounds },
-  { value: constants.positive.max, error: constants.positive.max, expected: kIndeterminateBounds },
+  { value: constants.positive.max, error: largeErr, expected: kUnboundedBounds },
+  { value: constants.positive.max, error: constants.positive.max, expected: kUnboundedBounds },
   { value: constants.negative.min, error: 0, expected: constants.negative.min },
-  { value: constants.negative.min, error: largeErr, expected: kIndeterminateBounds },
-  { value: constants.negative.min, error: constants.positive.max, expected: kIndeterminateBounds },
+  { value: constants.negative.min, error: largeErr, expected: kUnboundedBounds },
+  { value: constants.negative.min, error: constants.positive.max, expected: kUnboundedBounds },
   // 3. Interval around small but normal center, center should not get flushed.
   { value: constants.positive.min, error: 0, expected: constants.positive.min },
   { value: constants.positive.min, error: smallErr, expected: [constants.positive.min - smallErr, constants.positive.min + smallErr] },
@@ -2014,8 +2014,8 @@ expandWithParams((p) => {
 
   return [
   // Edge Cases
-  { value: constants.positive.infinity, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, expected: kIndeterminateBounds },
+  { value: constants.positive.infinity, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, expected: kUnboundedBounds },
   { value: constants.positive.max, expected: constants.positive.max },
   { value: constants.negative.min, expected: constants.negative.min },
   { value: constants.positive.min, expected: constants.positive.min },
@@ -2078,21 +2078,21 @@ expandWithParams((p) => {
 
   return [
   // Edge Cases
-  { value: constants.positive.infinity, num_ulp: 0, expected: kIndeterminateBounds },
-  { value: constants.positive.infinity, num_ulp: 1, expected: kIndeterminateBounds },
-  { value: constants.positive.infinity, num_ulp: ULPValue, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, num_ulp: 0, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, num_ulp: 1, expected: kIndeterminateBounds },
-  { value: constants.negative.infinity, num_ulp: ULPValue, expected: kIndeterminateBounds },
+  { value: constants.positive.infinity, num_ulp: 0, expected: kUnboundedBounds },
+  { value: constants.positive.infinity, num_ulp: 1, expected: kUnboundedBounds },
+  { value: constants.positive.infinity, num_ulp: ULPValue, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, num_ulp: 0, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, num_ulp: 1, expected: kUnboundedBounds },
+  { value: constants.negative.infinity, num_ulp: ULPValue, expected: kUnboundedBounds },
   { value: constants.positive.max, num_ulp: 0, expected: constants.positive.max },
-  { value: constants.positive.max, num_ulp: 1, expected: kIndeterminateBounds },
-  { value: constants.positive.max, num_ulp: ULPValue, expected: kIndeterminateBounds },
+  { value: constants.positive.max, num_ulp: 1, expected: kUnboundedBounds },
+  { value: constants.positive.max, num_ulp: ULPValue, expected: kUnboundedBounds },
   { value: constants.positive.min, num_ulp: 0, expected: constants.positive.min },
   { value: constants.positive.min, num_ulp: 1, expected: [0, plusOneULP(constants.positive.min)] },
   { value: constants.positive.min, num_ulp: ULPValue, expected: [0, plusNULP(constants.positive.min, ULPValue)] },
   { value: constants.negative.min, num_ulp: 0, expected: constants.negative.min },
-  { value: constants.negative.min, num_ulp: 1, expected: kIndeterminateBounds },
-  { value: constants.negative.min, num_ulp: ULPValue, expected: kIndeterminateBounds },
+  { value: constants.negative.min, num_ulp: 1, expected: kUnboundedBounds },
+  { value: constants.negative.min, num_ulp: ULPValue, expected: kUnboundedBounds },
   { value: constants.negative.max, num_ulp: 0, expected: constants.negative.max },
   { value: constants.negative.max, num_ulp: 1, expected: [minusOneULP(constants.negative.max), 0] },
   { value: constants.negative.max, num_ulp: ULPValue, expected: [minusNULP(constants.negative.max, ULPValue), 0] },
@@ -2181,8 +2181,8 @@ expandWithParams((p) => {
   ...kAbsIntervalCases.map((t) => {return { input: t.input, expected: t.expected[p.trait] };}),
 
   // Edge cases
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
   { input: constants.positive.max, expected: constants.positive.max },
   { input: constants.positive.min, expected: constants.positive.min },
   { input: constants.negative.min, expected: constants.positive.max },
@@ -2251,17 +2251,17 @@ expandWithParams((p) => {
   const constants = trait.constants();
 
   return [
-  // The acceptance interval @ x = -1 and 1 is kIndeterminateBounds, because
+  // The acceptance interval @ x = -1 and 1 is kUnboundedBounds, because
   // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inverseqrt
-  // The acceptance interval @ x = 0 is kIndeterminateBounds, because atan2 is not
+  // The acceptance interval @ x = 0 is kUnboundedBounds, because atan2 is not
   // well-defined/implemented at 0.
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.min, expected: kIndeterminateBounds },
-  { input: -1, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
-  { input: 1, expected: kIndeterminateBounds },
-  { input: constants.positive.max, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.min, expected: kUnboundedBounds },
+  { input: -1, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
+  { input: 1, expected: kUnboundedBounds },
+  { input: constants.positive.max, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
 
   // Cases that bounded by absolute error and inherited from atan2(sqrt(1-x*x), x). Note that
   // even x is very close to 1.0 and the expected result is close to 0.0, the expected
@@ -2288,15 +2288,15 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
-{ input: -1, expected: kIndeterminateBounds },
-{ input: 0, expected: kIndeterminateBounds },
-{ input: 1, expected: kIndeterminateBounds }, // 1/0 occurs in inverseSqrt in this formulation
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
+{ input: -1, expected: kUnboundedBounds },
+{ input: 0, expected: kUnboundedBounds },
+{ input: 1, expected: kUnboundedBounds }, // 1/0 occurs in inverseSqrt in this formulation
 { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] }, // ~0.443..., differs from the primary in the later digits
 { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] }, // ~2.993...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2315,15 +2315,15 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
-{ input: -1, expected: kIndeterminateBounds },
-{ input: 0, expected: kIndeterminateBounds },
-{ input: 1, expected: kIndeterminateBounds }, // 1/0 occurs in inverseSqrt in this formulation
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
+{ input: -1, expected: kUnboundedBounds },
+{ input: 0, expected: kUnboundedBounds },
+{ input: 1, expected: kUnboundedBounds }, // 1/0 occurs in inverseSqrt in this formulation
 { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
 { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] }, // ~2.993...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2360,20 +2360,20 @@ expandWithParams((p) => {
   const abs_error = p.trait === 'f32' ? 6.77e-5 : 3.91e-3;
 
   return [
-  // The acceptance interval @ x = -1 and 1 is kIndeterminateBounds, because
+  // The acceptance interval @ x = -1 and 1 is kUnboundedBounds, because
   // sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of inversqrt.
-  // The acceptance interval @ x = 0 is kIndeterminateBounds, because atan2 is not
+  // The acceptance interval @ x = 0 is kUnboundedBounds, because atan2 is not
   // well-defined/implemented at 0.
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.min, expected: kIndeterminateBounds },
-  { input: -1, expected: kIndeterminateBounds },
-  // Subnormal input may get flushed to 0, and result in kIndeterminateBounds.
-  { input: constants.negative.subnormal.min, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
-  { input: constants.positive.subnormal.max, expected: kIndeterminateBounds },
-  { input: 1, expected: kIndeterminateBounds },
-  { input: constants.positive.max, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.min, expected: kUnboundedBounds },
+  { input: -1, expected: kUnboundedBounds },
+  // Subnormal input may get flushed to 0, and result in kUnboundedBounds.
+  { input: constants.negative.subnormal.min, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
+  { input: constants.positive.subnormal.max, expected: kUnboundedBounds },
+  { input: 1, expected: kUnboundedBounds },
+  { input: constants.positive.max, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
 
   // When input near 0, the expected result is bounded by absolute error rather than ULP
   // error. Away from 0 the atan2 inherited error should be larger.
@@ -2402,13 +2402,13 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] }, // ~-0.88137...
 { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] }, // ~0
 { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] }, // ~0.88137...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2472,8 +2472,8 @@ expandWithParams((p) => {
   { input: 0, expected: 0 },
   ...kAtanIntervalCases[p.trait],
 
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds }];
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
 })).
 
@@ -2501,15 +2501,15 @@ paramsSubcasesOnly(
 [
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
-{ input: -1, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
+{ input: -1, expected: kUnboundedBounds },
 { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] }, // ~-0.1003...
 { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] }, // ~0
 { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] }, // ~0.1003...
-{ input: 1, expected: kIndeterminateBounds },
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: 1, expected: kUnboundedBounds },
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2557,8 +2557,8 @@ expandWithParams((p) => {
   { input: -1.9, expected: -1 },
 
   // Edge cases
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
   { input: constants.positive.max, expected: constants.positive.max },
   { input: constants.positive.min, expected: 1 },
   { input: constants.negative.min, expected: constants.negative.min },
@@ -2623,13 +2623,13 @@ expandWithParams((p) => {
   // substantially different, so instead of getting 0 you get a value on the
   // order of 10^-8 away from 0, thus difficult to express in a
   // human-readable manner.
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.min, expected: kIndeterminateBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.min, expected: kUnboundedBounds },
   { input: constants.negative.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
   { input: 0, expected: [1, 1] },
   { input: constants.positive.pi.whole, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
-  { input: constants.positive.max, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
+  { input: constants.positive.max, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
 
   ...kCosIntervalThirdPiCases[p.trait]];
 
@@ -2659,13 +2659,13 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: -1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] }, // ~1.1543...
 { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] }, // ~1
 { input: 1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] }, // ~1.1543...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2682,8 +2682,8 @@ g.test('degreesInterval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: kValue.f32.negative.pi.whole, expected: [kMinusOneULPFunctions['f32'](-180), kPlusOneULPFunctions['f32'](-180)] },
 { input: kValue.f32.negative.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](-135), kPlusOneULPFunctions['f32'](-135)] },
 { input: kValue.f32.negative.pi.half, expected: [kMinusOneULPFunctions['f32'](-90), kPlusOneULPFunctions['f32'](-90)] },
@@ -2697,8 +2697,8 @@ paramsSubcasesOnly(
 { input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](90), kPlusOneULPFunctions['f32'](90)] },
 { input: kValue.f32.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](135), kPlusOneULPFunctions['f32'](135)] },
 { input: kValue.f32.positive.pi.whole, expected: [kMinusOneULPFunctions['f32'](180), kPlusOneULPFunctions['f32'](180)] },
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2714,10 +2714,10 @@ g.test('expInterval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: 0, expected: 1 },
 { input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
-{ input: 89, expected: kIndeterminateBounds }]).
+{ input: 89, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2740,10 +2740,10 @@ g.test('exp2Interval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: 0, expected: 1 },
 { input: 1, expected: 2 },
-{ input: 128, expected: kIndeterminateBounds }]).
+{ input: 128, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2798,8 +2798,8 @@ expandWithParams((p) => {
   { input: -1.9, expected: -2 },
 
   // Edge cases
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
   { input: constants.positive.max, expected: constants.positive.max },
   { input: constants.positive.min, expected: 0 },
   { input: constants.negative.min, expected: constants.negative.min },
@@ -2839,8 +2839,8 @@ paramsSubcasesOnly(
 { input: -1.1, expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccd_0000_0000n)] }, // ~0.9
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: kValue.f32.positive.max, expected: 0 },
 { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
 { input: kValue.f32.negative.min, expected: 0 },
@@ -2904,9 +2904,9 @@ expandWithParams((p) => {
   ...kInverseSqrtIntervalCases[p.trait],
 
   // Out of definition domain
-  { input: -1, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds }];
+  { input: -1, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
 })).
 
@@ -2935,8 +2935,8 @@ paramsSubcasesOnly(
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
 //
-// length(0) = kIndeterminateBounds, because length uses sqrt, which is defined as 1/inversesqrt
-{ input: 0, expected: kIndeterminateBounds },
+// length(0) = kUnboundedBounds, because length uses sqrt, which is defined as 1/inversesqrt
+{ input: 0, expected: kUnboundedBounds },
 { input: 1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: -1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
@@ -2945,18 +2945,18 @@ paramsSubcasesOnly(
 { input: -10.0, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] }, // ~10
 
 // Subnormal Cases
-{ input: kValue.f32.subnormal.negative.min, expected: kIndeterminateBounds },
-{ input: kValue.f32.subnormal.negative.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.subnormal.positive.min, expected: kIndeterminateBounds },
-{ input: kValue.f32.subnormal.positive.max, expected: kIndeterminateBounds },
+{ input: kValue.f32.subnormal.negative.min, expected: kUnboundedBounds },
+{ input: kValue.f32.subnormal.negative.max, expected: kUnboundedBounds },
+{ input: kValue.f32.subnormal.positive.min, expected: kUnboundedBounds },
+{ input: kValue.f32.subnormal.positive.max, expected: kUnboundedBounds },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.positive.min, expected: kIndeterminateBounds },
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.max, expected: kUnboundedBounds },
+{ input: kValue.f32.positive.min, expected: kUnboundedBounds },
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -2996,8 +2996,8 @@ beginSubcases().
 expandWithParams((p) => {
 
   return [
-  { input: -1, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
+  { input: -1, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
   { input: 1, expected: 0 },
   ...kLogIntervalCases[p.trait]];
 
@@ -3045,8 +3045,8 @@ beginSubcases().
 expandWithParams((p) => {
 
   return [
-  { input: -1, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
+  { input: -1, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
   { input: 1, expected: 0 },
   { input: 2, expected: 1 },
   { input: 16, expected: 4 },
@@ -3087,8 +3087,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3ff33334)), reinterpretU32AsF32(0x3ff33334)] }, // ~1.9
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.negative.min },
 { input: kValue.f32.positive.min, expected: kValue.f32.negative.max },
 { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
@@ -3114,8 +3114,8 @@ g.test('quantizeToF16Interval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
 { input: -1, expected: -1 },
 { input: -0.1, expected: [reinterpretU32AsF32(0xbdcce000), reinterpretU32AsF32(0xbdccc000)] }, // ~-0.1
@@ -3131,8 +3131,8 @@ paramsSubcasesOnly(
 { input: 0.1, expected: [reinterpretU32AsF32(0x3dccc000), reinterpretU32AsF32(0x3dcce000)] }, // ~0.1
 { input: 1, expected: 1 },
 { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3149,7 +3149,7 @@ g.test('radiansInterval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: -180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.whole)] },
 { input: -135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters)] },
 { input: -90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.half)] },
@@ -3163,7 +3163,7 @@ paramsSubcasesOnly(
 { input: 90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.half)] },
 { input: 135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters)] },
 { input: 180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.whole)] },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3215,8 +3215,8 @@ expandWithParams((p) => {
   { input: -1.9, expected: -2 },
 
   // Edge cases
-  { input: constants.positive.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
   { input: constants.positive.max, expected: constants.positive.max },
   { input: constants.positive.min, expected: 0 },
   { input: constants.negative.min, expected: constants.negative.min },
@@ -3266,8 +3266,8 @@ paramsSubcasesOnly(
 { input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
 
 // Infinities
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3283,7 +3283,7 @@ g.test('signInterval_f32').
 paramsSubcasesOnly(
 
 [
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: kValue.f32.negative.min, expected: -1 },
 { input: -10, expected: -1 },
 { input: -1, expected: -1 },
@@ -3299,7 +3299,7 @@ paramsSubcasesOnly(
 { input: 1, expected: 1 },
 { input: 10, expected: 1 },
 { input: kValue.f32.positive.max, expected: 1 },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3326,13 +3326,13 @@ expandWithParams((p) => {
   // substantially different, so instead of getting 0 you get a value on the
   // order of 10^-8 away from it, thus difficult to express in a
   // human-readable manner.
-  { input: constants.negative.infinity, expected: kIndeterminateBounds },
-  { input: constants.negative.min, expected: kIndeterminateBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.min, expected: kUnboundedBounds },
   { input: constants.negative.pi.half, expected: [-1, kPlusOneULPFunctions[p.trait](-1)] },
   { input: 0, expected: 0 },
   { input: constants.positive.pi.half, expected: [kMinusOneULPFunctions[p.trait](1), 1] },
-  { input: constants.positive.max, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds }];
+  { input: constants.positive.max, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
 })).
 
@@ -3360,13 +3360,13 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: -1, expected: [reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] }, // ~-1.175...
 { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] }, // ~0
 { input: 1, expected: [reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] }, // ~1.175...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3443,9 +3443,9 @@ expandWithParams((p) => {
   ...kSqrtIntervalCases[p.trait],
 
   // Cases out of definition domain
-  { input: -1, expected: kIndeterminateBounds },
-  { input: 0, expected: kIndeterminateBounds },
-  { input: constants.positive.infinity, expected: kIndeterminateBounds }];
+  { input: -1, expected: kUnboundedBounds },
+  { input: 0, expected: kUnboundedBounds },
+  { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
 })).
 
@@ -3489,15 +3489,15 @@ paramsSubcasesOnly(
 //
 // The examples here have been manually traced to confirm the expectation
 // values are correct.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] }, // ~0.0
-{ input: kValue.f32.negative.pi.half, expected: kIndeterminateBounds },
+{ input: kValue.f32.negative.pi.half, expected: kUnboundedBounds },
 { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] }, // ~0.0
-{ input: kValue.f32.positive.pi.half, expected: kIndeterminateBounds },
+{ input: kValue.f32.positive.pi.half, expected: kUnboundedBounds },
 { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] }, // ~0.0
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3516,13 +3516,13 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
-{ input: kValue.f32.negative.min, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
 { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] }, // ~-0.7615...
 { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] }, // ~0
 { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] }, // ~0.7615...
-{ input: kValue.f32.positive.max, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds }]).
+{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3551,8 +3551,8 @@ paramsSubcasesOnly(
 { input: -1.9, expected: -1 },
 
 // Edge cases
-{ input: kValue.f32.infinity.positive, expected: kIndeterminateBounds },
-{ input: kValue.f32.infinity.negative, expected: kIndeterminateBounds },
+{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
 { input: kValue.f32.positive.max, expected: kValue.f32.positive.max },
 { input: kValue.f32.positive.min, expected: 0 },
 { input: kValue.f32.negative.min, expected: kValue.f32.negative.min },
@@ -3652,14 +3652,14 @@ expandWithParams((p) => {
   { input: [0, constants.negative.subnormal.min], expected: [constants.negative.subnormal.min, 0] },
 
   // Infinities
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds }];
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
 })).
 
@@ -3766,33 +3766,33 @@ expandWithParams((p) => {
 
   // Cases that y out of bound.
   // positive y, positive x
-  { input: [Number.POSITIVE_INFINITY, 1], expected: kIndeterminateBounds },
+  { input: [Number.POSITIVE_INFINITY, 1], expected: kUnboundedBounds },
   // positive y, negative x
-  { input: [Number.POSITIVE_INFINITY, -1], expected: kIndeterminateBounds },
+  { input: [Number.POSITIVE_INFINITY, -1], expected: kUnboundedBounds },
   // negative y, negative x
-  { input: [Number.NEGATIVE_INFINITY, -1], expected: kIndeterminateBounds },
+  { input: [Number.NEGATIVE_INFINITY, -1], expected: kUnboundedBounds },
   // negative y, positive x
-  { input: [Number.NEGATIVE_INFINITY, 1], expected: kIndeterminateBounds },
+  { input: [Number.NEGATIVE_INFINITY, 1], expected: kUnboundedBounds },
 
   // Discontinuity @ origin (0,0)
-  { input: [0, 0], expected: kIndeterminateBounds },
-  { input: [0, constants.positive.subnormal.max], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.subnormal.min], expected: kIndeterminateBounds },
-  { input: [0, constants.positive.min], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.max], expected: kIndeterminateBounds },
-  { input: [0, constants.positive.max], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.min], expected: kIndeterminateBounds },
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [0, 1], expected: kIndeterminateBounds },
-  { input: [constants.positive.subnormal.max, 1], expected: kIndeterminateBounds },
-  { input: [constants.negative.subnormal.min, 1], expected: kIndeterminateBounds },
+  { input: [0, 0], expected: kUnboundedBounds },
+  { input: [0, constants.positive.subnormal.max], expected: kUnboundedBounds },
+  { input: [0, constants.negative.subnormal.min], expected: kUnboundedBounds },
+  { input: [0, constants.positive.min], expected: kUnboundedBounds },
+  { input: [0, constants.negative.max], expected: kUnboundedBounds },
+  { input: [0, constants.positive.max], expected: kUnboundedBounds },
+  { input: [0, constants.negative.min], expected: kUnboundedBounds },
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [0, 1], expected: kUnboundedBounds },
+  { input: [constants.positive.subnormal.max, 1], expected: kUnboundedBounds },
+  { input: [constants.negative.subnormal.min, 1], expected: kUnboundedBounds },
 
-  // Very large |x| values should cause kIndeterminateBounds to be returned, due to the restrictions on division
-  { input: [1, constants.positive.max], expected: kIndeterminateBounds },
-  { input: [1, constants.positive.nearest_max], expected: kIndeterminateBounds },
-  { input: [1, constants.negative.min], expected: kIndeterminateBounds },
-  { input: [1, constants.negative.nearest_min], expected: kIndeterminateBounds }];
+  // Very large |x| values should cause kUnboundedBounds to be returned, due to the restrictions on division
+  { input: [1, constants.positive.max], expected: kUnboundedBounds },
+  { input: [1, constants.positive.nearest_max], expected: kUnboundedBounds },
+  { input: [1, constants.negative.min], expected: kUnboundedBounds },
+  { input: [1, constants.negative.nearest_min], expected: kUnboundedBounds }];
 
 })).
 
@@ -3815,15 +3815,15 @@ paramsSubcasesOnly(
 // to express in a closed human-readable  form due to the inherited nature
 // of the errors.
 //
-// distance(x, y), where x - y = 0 has an acceptance interval of kIndeterminateBounds,
-// because distance(x, y) = length(x - y), and length(0) = kIndeterminateBounds
-{ input: [0, 0], expected: kIndeterminateBounds },
+// distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
+// because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds
+{ input: [0, 0], expected: kUnboundedBounds },
 { input: [1.0, 0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
-{ input: [1.0, 1.0], expected: kIndeterminateBounds },
+{ input: [1.0, 1.0], expected: kUnboundedBounds },
 { input: [-0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
-{ input: [-1.0, -1.0], expected: kIndeterminateBounds },
+{ input: [-1.0, -1.0], expected: kUnboundedBounds },
 { input: [0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 { input: [0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 { input: [-0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
@@ -3834,18 +3834,18 @@ paramsSubcasesOnly(
 { input: [0, -10.0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] }, // ~10
 
 // Subnormal Cases
-{ input: [kValue.f32.subnormal.negative.min, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.subnormal.negative.max, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.subnormal.positive.min, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.subnormal.positive.max, 0], expected: kIndeterminateBounds },
+{ input: [kValue.f32.subnormal.negative.min, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.subnormal.negative.max, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.subnormal.positive.min, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.subnormal.positive.max, 0], expected: kUnboundedBounds },
 
 // Edge cases
-{ input: [kValue.f32.infinity.positive, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.negative.min, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.negative.max, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.positive.min, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.positive.max, 0], expected: kIndeterminateBounds }]).
+{ input: [kValue.f32.infinity.positive, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.negative.min, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.negative.max, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.positive.min, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.positive.max, 0], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -3929,15 +3929,15 @@ expandWithParams((p) => {
   ...kDivisionInterval64BitsNormalCases[p.trait],
 
   // Denominator out of range
-  { input: [1, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [1, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [1, constants.positive.max], expected: kIndeterminateBounds },
-  { input: [1, constants.negative.min], expected: kIndeterminateBounds },
-  { input: [1, 0], expected: kIndeterminateBounds },
-  { input: [1, constants.positive.subnormal.max], expected: kIndeterminateBounds }];
+  { input: [1, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [1, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [1, constants.positive.max], expected: kUnboundedBounds },
+  { input: [1, constants.negative.min], expected: kUnboundedBounds },
+  { input: [1, 0], expected: kUnboundedBounds },
+  { input: [1, constants.positive.subnormal.max], expected: kUnboundedBounds }];
 
 })).
 
@@ -3989,12 +3989,12 @@ paramsSubcasesOnly(
 { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
 
 // Out of Bounds
-{ input: [1, 128], expected: kIndeterminateBounds },
-{ input: [-1, 128], expected: kIndeterminateBounds },
-{ input: [100, 126], expected: kIndeterminateBounds },
-{ input: [-100, 126], expected: kIndeterminateBounds },
-{ input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kIndeterminateBounds },
-{ input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kIndeterminateBounds }]).
+{ input: [1, 128], expected: kUnboundedBounds },
+{ input: [-1, 128], expected: kUnboundedBounds },
+{ input: [100, 126], expected: kUnboundedBounds },
+{ input: [-100, 126], expected: kUnboundedBounds },
+{ input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
+{ input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4068,14 +4068,14 @@ expandWithParams((p) => {
   { input: [constants.negative.subnormal.min, constants.positive.subnormal.max], expected: [constants.negative.subnormal.min, constants.positive.subnormal.max] },
 
   // Infinities
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds }];
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
 })).
 
@@ -4151,14 +4151,14 @@ expandWithParams((p) => {
   { input: [constants.negative.subnormal.min, constants.positive.subnormal.max], expected: [constants.negative.subnormal.min, constants.positive.subnormal.max] },
 
   // Infinities
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds }];
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
 })).
 
@@ -4254,22 +4254,22 @@ expandWithParams((p) => {
   ...kMultiplicationInterval64BitsNormalCases[p.trait],
 
   // Infinities
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [1, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [-1, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [1, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [-1, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [1, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [-1, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [1, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [-1, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
 
   // Edges
-  { input: [constants.positive.max, constants.positive.max], expected: kIndeterminateBounds },
-  { input: [constants.negative.min, constants.negative.min], expected: kIndeterminateBounds },
-  { input: [constants.positive.max, constants.negative.min], expected: kIndeterminateBounds },
-  { input: [constants.negative.min, constants.positive.max], expected: kIndeterminateBounds }];
+  { input: [constants.positive.max, constants.positive.max], expected: kUnboundedBounds },
+  { input: [constants.negative.min, constants.negative.min], expected: kUnboundedBounds },
+  { input: [constants.positive.max, constants.negative.min], expected: kUnboundedBounds },
+  { input: [constants.negative.min, constants.positive.max], expected: kUnboundedBounds }];
 
 })).
 
@@ -4291,20 +4291,20 @@ paramsSubcasesOnly(
 // Some of these are hard coded, since the error intervals are difficult
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
-{ input: [-1, 0], expected: kIndeterminateBounds },
-{ input: [0, 0], expected: kIndeterminateBounds },
+{ input: [-1, 0], expected: kUnboundedBounds },
+{ input: [0, 0], expected: kUnboundedBounds },
 { input: [1, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
 { input: [2, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
 { input: [kValue.f32.positive.max, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] }, // ~1
-{ input: [0, 1], expected: kIndeterminateBounds },
+{ input: [0, 1], expected: kUnboundedBounds },
 { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_fffe_dfff_fe00n), reinterpretU64AsF64(0x3ff0_0000_c000_0200n)] }, // ~1
 { input: [1, 100], expected: [reinterpretU64AsF64(0x3fef_ffba_3fff_3800n), reinterpretU64AsF64(0x3ff0_0023_2000_c800n)] }, // ~1
-{ input: [1, kValue.f32.positive.max], expected: kIndeterminateBounds },
+{ input: [1, kValue.f32.positive.max], expected: kUnboundedBounds },
 { input: [2, 1], expected: [reinterpretU64AsF64(0x3fff_fffe_a000_0200n), reinterpretU64AsF64(0x4000_0001_0000_0200n)] }, // ~2
 { input: [2, 2], expected: [reinterpretU64AsF64(0x400f_fffd_a000_0400n), reinterpretU64AsF64(0x4010_0001_a000_0400n)] }, // ~4
 { input: [10, 10], expected: [reinterpretU64AsF64(0x4202_a04f_51f7_7000n), reinterpretU64AsF64(0x4202_a070_ee08_e000n)] }, // ~10000000000
 { input: [10, 1], expected: [reinterpretU64AsF64(0x4023_fffe_0b65_8b00n), reinterpretU64AsF64(0x4024_0002_149a_7c00n)] }, // ~10
-{ input: [kValue.f32.positive.max, 1], expected: kIndeterminateBounds }]).
+{ input: [kValue.f32.positive.max, 1], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4346,15 +4346,15 @@ paramsSubcasesOnly(
 { input: [-1, -0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
 
 // Denominator out of range
-{ input: [1, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [1, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [1, kValue.f32.positive.max], expected: kIndeterminateBounds },
-{ input: [1, kValue.f32.negative.min], expected: kIndeterminateBounds },
-{ input: [1, 0], expected: kIndeterminateBounds },
-{ input: [1, kValue.f32.subnormal.positive.max], expected: kIndeterminateBounds }]).
+{ input: [1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [1, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [1, kValue.f32.positive.max], expected: kUnboundedBounds },
+{ input: [1, kValue.f32.negative.min], expected: kUnboundedBounds },
+{ input: [1, 0], expected: kUnboundedBounds },
+{ input: [1, kValue.f32.subnormal.positive.max], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4423,14 +4423,14 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min], expected: [0, 1] },
 
 // Infinities
-{ input: [0, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, 0], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kIndeterminateBounds }]).
+{ input: [0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, 0], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4514,14 +4514,14 @@ expandWithParams((p) => {
   { input: [0, constants.negative.subnormal.min], expected: [0, constants.positive.subnormal.max] },
 
   // Infinities
-  { input: [0, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [0, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, 0], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.negative.infinity], expected: kIndeterminateBounds },
-  { input: [constants.negative.infinity, constants.positive.infinity], expected: kIndeterminateBounds },
-  { input: [constants.positive.infinity, constants.negative.infinity], expected: kIndeterminateBounds }];
+  { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
 })).
 
@@ -4575,10 +4575,10 @@ paramsSubcasesOnly(
 { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kValue.f32.positive.max },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kIndeterminateBounds }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4625,10 +4625,10 @@ paramsSubcasesOnly(
 { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kIndeterminateBounds }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4674,11 +4674,11 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [reinterpretU32AsF32(0x80000002), 0] },
 
 // Infinities
-{ input: [0, 1, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kIndeterminateBounds }]).
+{ input: [0, 1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4744,16 +4744,16 @@ paramsSubcasesOnly(
 { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
-{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kIndeterminateBounds },
-{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kIndeterminateBounds },
-{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
+{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
+{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
 
 // Showing how precise and imprecise versions diff
 { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 }]).
@@ -4823,16 +4823,16 @@ paramsSubcasesOnly(
 { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
 // Infinities
-{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kIndeterminateBounds },
-{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kIndeterminateBounds },
-{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kIndeterminateBounds },
-{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kIndeterminateBounds },
-{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
-{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kIndeterminateBounds },
+{ input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
+{ input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
+{ input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
+{ input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+{ input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
 
 // Showing how precise and imprecise versions diff
 { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10.0 }]).
@@ -4879,18 +4879,18 @@ paramsSubcasesOnly(
 { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
 { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
 { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kIndeterminateBounds },
-{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kIndeterminateBounds },
+{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kUnboundedBounds },
+{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kUnboundedBounds },
 
 // Infinities
-{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kIndeterminateBounds },
-{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kIndeterminateBounds },
-{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kIndeterminateBounds },
-{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kIndeterminateBounds },
-{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kIndeterminateBounds },
-{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kIndeterminateBounds }]).
+{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kUnboundedBounds },
+{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kUnboundedBounds },
+{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
+{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
+{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kUnboundedBounds },
+{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -4929,8 +4929,8 @@ paramsSubcasesOnly(
 { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], 0] },
 
 // f16 out of bounds
-{ input: 0x7c000000, expected: [kIndeterminateBounds, kIndeterminateBounds] },
-{ input: 0xffff0000, expected: [kIndeterminateBounds, kIndeterminateBounds] }]).
+{ input: 0x7c000000, expected: [kUnboundedBounds, kUnboundedBounds] },
+{ input: 0xffff0000, expected: [kUnboundedBounds, kUnboundedBounds] }]).
 
 
 fn((t) => {
@@ -5180,9 +5180,9 @@ paramsSubcasesOnly(
 { input: [0.1, 0.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // Test that dot going OOB bounds in the intermediate calculations propagates
-{ input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kIndeterminateBounds },
-{ input: [kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], expected: kIndeterminateBounds },
-{ input: [kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], expected: kIndeterminateBounds }]).
+{ input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kUnboundedBounds },
+{ input: [kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], expected: kUnboundedBounds },
+{ input: [kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], expected: kUnboundedBounds }]).
 
 
 fn((t) => {
@@ -5207,11 +5207,11 @@ paramsSubcasesOnly(
 // to express in a closed human-readable form due to the inherited nature
 // of the errors.
 //
-// distance(x, y), where x - y = 0 has an acceptance interval of kIndeterminateBounds,
-// because distance(x, y) = length(x - y), and length(0) = kIndeterminateBounds
+// distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
+// because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds
 
 // vec2
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: kIndeterminateBounds },
+{ input: [[1.0, 0.0], [1.0, 0.0]], expected: kUnboundedBounds },
 { input: [[1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0], [1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -5220,7 +5220,7 @@ paramsSubcasesOnly(
 { input: [[0.1, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // vec3
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kIndeterminateBounds },
+{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kUnboundedBounds },
 { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -5235,7 +5235,7 @@ paramsSubcasesOnly(
 { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] }, // ~0.1
 
 // vec4
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kIndeterminateBounds },
+{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kUnboundedBounds },
 { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
 { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] }, // ~1
@@ -5293,12 +5293,12 @@ paramsSubcasesOnly(
 { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
 
 // Test that going out of bounds in the intermediate calculations is caught correctly.
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kIndeterminateBounds },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
 
 // https://github.com/gpuweb/cts/issues/2155
 { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] }]).
@@ -5440,15 +5440,15 @@ paramsSubcasesOnly(
 { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0, ~0.0]
 
 // Test that dot going OOB bounds in the intermediate calculations propagates
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
 
 // Test that post-dot going OOB propagates
-{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] }]).
+{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }]).
 
 
 fn((t) => {
@@ -7118,7 +7118,7 @@ fn((t) => {
   { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
 
   // k contains 0
-  { input: [[1, 1], [0.1, 0], 1.005038], expected: [kIndeterminateBounds, kIndeterminateBounds] },
+  { input: [[1, 1], [0.1, 0], 1.005038], expected: [kUnboundedBounds, kUnboundedBounds] },
 
   // k > 0
   // vec2
@@ -7140,12 +7140,12 @@ fn((t) => {
     [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] }, // ~-35.494...
 
   // Test that dot going OOB bounds in the intermediate calculations propagates
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-  { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-  { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kIndeterminateBounds, kIndeterminateBounds, kIndeterminateBounds] }]).
+  { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }]).
 
 
   fn((t) => {
