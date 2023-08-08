@@ -413,7 +413,14 @@ function makeTreeNodeHeaderHTML(
     .addClass(isLeaf ? 'leafrun' : 'subtreerun')
     .attr('alt', runtext)
     .attr('title', runtext)
-    .on('click', () => void runSubtree())
+    .on('click', async () => {
+      console.log(`Starting run for ${n.query}`);
+      const startTime = performance.now();
+      await runSubtree();
+      const dt = performance.now() - startTime;
+      const dtMinutes = dt / 1000 / 60;
+      console.log(`Finished run: ${dt.toFixed(1)} ms = ${dtMinutes.toFixed(1)} min`);
+    })
     .appendTo(header);
   $('<a>')
     .addClass('nodelink')
