@@ -1,4 +1,4 @@
-import { Merged, mergeParams } from '../internal/params_utils.js';
+import { Merged, assertMergedWithoutOverlap, mergeParams } from '../internal/params_utils.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
 import { assert, mapLazy } from '../util/util.js';
 
@@ -150,7 +150,7 @@ export class CaseParamsBuilder<CaseP extends {}>
   expandWithParams<NewP extends {}>(
     expander: (_: Merged<{}, CaseP>) => Iterable<NewP>
   ): CaseParamsBuilder<Merged<CaseP, NewP>> {
-    const newGenerator = expanderGenerator(this.cases, expander);
+    const newGenerator = genExpandWithParams(this.cases, expander);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
@@ -159,11 +159,8 @@ export class CaseParamsBuilder<CaseP extends {}>
     key: NewPKey,
     expander: (_: Merged<{}, CaseP>) => Iterable<NewPValue>
   ): CaseParamsBuilder<Merged<CaseP, { [name in NewPKey]: NewPValue }>> {
-    return this.expandWithParams(function* (p) {
-      for (const value of expander(p)) {
-        yield { [key]: value } as { readonly [name in NewPKey]: NewPValue };
-      }
-    });
+    const newGenerator = genExpand(this.cases, key, expander);
+    return new CaseParamsBuilder(() => newGenerator({}));
   }
 
   /** @inheritDoc */
@@ -256,7 +253,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
   expandWithParams<NewP extends {}>(
     expander: (_: Merged<CaseP, SubcaseP>) => Iterable<NewP>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, NewP>> {
-    return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
+    return new SubcaseParamsBuilder(this.cases, genExpandWithParams(this.subcases, expander));
   }
 
   /** @inheritDoc */
@@ -264,12 +261,7 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
     key: NewPKey,
     expander: (_: Merged<CaseP, SubcaseP>) => Iterable<NewPValue>
   ): SubcaseParamsBuilder<CaseP, Merged<SubcaseP, { [name in NewPKey]: NewPValue }>> {
-    return this.expandWithParams(function* (p) {
-      for (const value of expander(p)) {
-        // TypeScript doesn't know here that NewPKey is always a single literal string type.
-        yield { [key]: value } as { [name in NewPKey]: NewPValue };
-      }
-    });
+    return new SubcaseParamsBuilder(this.cases, genExpand(this.subcases, key, expander));
   }
 
   /** @inheritDoc */
@@ -300,14 +292,36 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
   }
 }
 
-function expanderGenerator<Base, A, B>(
+/** Creates a generator function for expandWithParams() methods above. */
+function genExpandWithParams<Base, A, B>(
   baseGenerator: (_: Base) => Generator<A>,
   expander: (_: Merged<Base, A>) => Iterable<B>
 ): (_: Base) => Generator<Merged<A, B>> {
   return function* (base: Base) {
     for (const a of baseGenerator(base)) {
       for (const b of expander(mergeParams(base, a))) {
-        yield mergeParams(a, b);
+        const merged = mergeParams(a, b);
+        assertMergedWithoutOverlap([a, b], merged);
+
+        yield merged;
+      }
+    }
+  };
+}
+
+/** Creates a generator function for expand() methods above. */
+function genExpand<Base, A, NewPKey extends string, NewPValue>(
+  baseGenerator: (_: Base) => Generator<A>,
+  key: NewPKey,
+  expander: (_: Merged<Base, A>) => Iterable<NewPValue>
+): (_: Base) => Generator<Merged<A, { [k in NewPKey]: NewPValue }>> {
+  return function* (base: Base) {
+    for (const a of baseGenerator(base)) {
+      const before = mergeParams(base, a);
+      assert(!(key in before), () => `Key '${key}' already exists in ${JSON.stringify(before)}`);
+
+      for (const v of expander(before)) {
+        yield { ...a, [key]: v } as Merged<A, { [k in NewPKey]: NewPValue }>;
       }
     }
   };
