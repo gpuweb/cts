@@ -9,7 +9,11 @@ kUnitCaseParamsBuilder,
 builderIterateCasesWithSubcases } from
 '../common/framework/params_builder.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { mergeParams, publicParamsEquals } from '../common/internal/params_utils.js';
+import {
+assertMergedWithoutOverlap,
+mergeParams,
+publicParamsEquals } from
+'../common/internal/params_utils.js';
 import { assert, objectEquals } from '../common/util/util.js';
 
 import { UnitTest } from './unit_test.js';
@@ -348,7 +352,7 @@ g.test('invalid,shadowing').fn((t) => {
         yield { w: 5 };
       }
     });
-    // Iterating causes e.g. mergeParams({x:1}, {x:3}), which fails.
+    // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
       Array.from(p.iterateCasesWithSubcases());
     });
@@ -368,7 +372,7 @@ g.test('invalid,shadowing').fn((t) => {
         yield { w: 5 };
       }
     });
-    // Iterating causes e.g. mergeParams({x:1}, {x:3}), which fails.
+    // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
       Array.from(p.iterateCasesWithSubcases());
     });
@@ -394,14 +398,13 @@ g.test('invalid,shadowing').fn((t) => {
       assert(subcases !== undefined);
       // Iterating subcases is fine...
       for (const subcaseP of subcases) {
+        const merged = mergeParams(caseP, subcaseP);
         if (caseP.a) {
           assert(subcases !== undefined);
-          // Only errors once we try to e.g. mergeParams({x:1}, {x:3}).
+          // Only errors once we try to merge e.g. ({x:1}, {x:3}).
           t.shouldThrow('Error', () => {
-            mergeParams(caseP, subcaseP);
+            assertMergedWithoutOverlap([caseP, subcaseP], merged);
           });
-        } else {
-          mergeParams(caseP, subcaseP);
         }
       }
     }

@@ -1,6 +1,6 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { mergeParams } from '../internal/params_utils.js';
+ **/ import { assertMergedWithoutOverlap, mergeParams } from '../internal/params_utils.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
 import { assert, mapLazy } from '../util/util.js';
 
@@ -54,17 +54,14 @@ export class CaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritDoc */
   expandWithParams(expander) {
-    const newGenerator = expanderGenerator(this.cases, expander);
+    const newGenerator = genExpandWithParams(this.cases, expander);
     return new CaseParamsBuilder(() => newGenerator({}));
   }
 
   /** @inheritDoc */
   expand(key, expander) {
-    return this.expandWithParams(function* (p) {
-      for (const value of expander(p)) {
-        yield { [key]: value };
-      }
-    });
+    const newGenerator = genExpand(this.cases, key, expander);
+    return new CaseParamsBuilder(() => newGenerator({}));
   }
 
   /** @inheritDoc */
@@ -146,17 +143,12 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
 
   /** @inheritDoc */
   expandWithParams(expander) {
-    return new SubcaseParamsBuilder(this.cases, expanderGenerator(this.subcases, expander));
+    return new SubcaseParamsBuilder(this.cases, genExpandWithParams(this.subcases, expander));
   }
 
   /** @inheritDoc */
   expand(key, expander) {
-    return this.expandWithParams(function* (p) {
-      for (const value of expander(p)) {
-        // TypeScript doesn't know here that NewPKey is always a single literal string type.
-        yield { [key]: value };
-      }
-    });
+    return new SubcaseParamsBuilder(this.cases, genExpand(this.subcases, key, expander));
   }
 
   /** @inheritDoc */
@@ -182,11 +174,29 @@ export class SubcaseParamsBuilder extends ParamsBuilderBase {
   }
 }
 
-function expanderGenerator(baseGenerator, expander) {
+/** Creates a generator function for expandWithParams() methods above. */
+function genExpandWithParams(baseGenerator, expander) {
   return function* (base) {
     for (const a of baseGenerator(base)) {
       for (const b of expander(mergeParams(base, a))) {
-        yield mergeParams(a, b);
+        const merged = mergeParams(a, b);
+        assertMergedWithoutOverlap([a, b], merged);
+
+        yield merged;
+      }
+    }
+  };
+}
+
+/** Creates a generator function for expand() methods above. */
+function genExpand(baseGenerator, key, expander) {
+  return function* (base) {
+    for (const a of baseGenerator(base)) {
+      const before = mergeParams(base, a);
+      assert(!(key in before), () => `Key '${key}' already exists in ${JSON.stringify(before)}`);
+
+      for (const v of expander(before)) {
+        yield { ...a, [key]: v };
       }
     }
   };
