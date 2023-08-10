@@ -65,7 +65,7 @@ export interface IterableTest {
   testPath: string[];
   description: string | undefined;
   readonly testCreationStack: Error;
-  iterate(): Iterable<RunCase>;
+  iterate(caseFilter: TestParams | null): Iterable<RunCase>;
 }
 
 export function makeTestGroupForUnitTesting<F extends Fixture>(
@@ -280,7 +280,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     }
 
     const seen = new Set<string>();
-    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
+    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
         assert(this.batchSize === 0 || !('batch__' in params));
