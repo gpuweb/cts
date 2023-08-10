@@ -4,7 +4,7 @@ import { assert, now } from '../util/util.js';
 
 import { TestFileLoader } from './file_loader.js';
 import { TestParamsRW } from './params_utils.js';
-import { compareQueries, Ordering } from './query/compare.js';
+import { comparePublicParamsPaths, compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
   TestQueryMultiCase,
@@ -359,6 +359,14 @@ export async function loadTreeForQuery(
       // file if there's no need to (based on the subqueriesToExpand).
       for (const c of t.iterate(paramsFilter)) {
         // iterate() guarantees c's query is equal to or a subset of queryToLoad.
+
+        if (queryToLoad instanceof TestQuerySingleCase) {
+          // A subset is OK if it's TestQueryMultiCase, but for SingleCase it must match exactly.
+          const ordering = comparePublicParamsPaths(c.id.params, queryToLoad.params);
+          if (ordering !== Ordering.Equal) {
+            continue;
+          }
+        }
 
         // Leaf for case is suite:a,b:c,d:x=1;y=2
         addLeafForCase(subtreeL2, c, isCollapsible);
