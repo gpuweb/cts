@@ -209,6 +209,7 @@ g.test('case').fn(async t => {
   t.shouldReject('Error', t.load('suite1:baz:zed,:*'));
 
   t.shouldReject('Error', t.load('suite1:baz:zed:'));
+  t.shouldReject('Error', t.load('suite1:baz:zed:a=1'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2*'));
   t.shouldReject('Error', t.load('suite1:baz:zed:a=1;b=2;'));
   t.shouldReject('SyntaxError', t.load('suite1:baz:zed:a=1;b=2,')); // tries to parse '2,' as JSON
