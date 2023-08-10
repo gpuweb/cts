@@ -2,6 +2,7 @@ export const description = `
 Unit tests for parameterization helpers.
 `;
 
+import { TestParams } from '../common/framework/fixture.js';
 import {
   kUnitCaseParamsBuilder,
   CaseSubcaseIterable,
@@ -10,8 +11,8 @@ import {
 } from '../common/framework/params_builder.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 import {
-  assertMergedWithoutOverlap,
   mergeParams,
+  mergeParamsChecked,
   publicParamsEquals,
 } from '../common/internal/params_utils.js';
 import { assert, objectEquals } from '../common/util/util.js';
@@ -21,12 +22,12 @@ import { UnitTest } from './unit_test.js';
 class ParamsTest extends UnitTest {
   expectParams<CaseP, SubcaseP>(
     act: ParamsBuilderBase<CaseP, SubcaseP>,
-    exp: CaseSubcaseIterable<{}, {}>
+    exp: CaseSubcaseIterable<{}, {}>,
+    caseFilter: TestParams | null = null
   ): void {
-    const a = Array.from(builderIterateCasesWithSubcases(act)).map(([caseP, subcases]) => [
-      caseP,
-      subcases ? Array.from(subcases) : undefined,
-    ]);
+    const a = Array.from(
+      builderIterateCasesWithSubcases(act, caseFilter)
+    ).map(([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]);
     const e = Array.from(exp);
     this.expect(
       objectEquals(a, e),
@@ -47,6 +48,20 @@ g.test('combine').fn(t => {
     [{ hello: 2 }, undefined],
     [{ hello: 3 }, undefined],
   ]);
+  t.expectParams<{ hello: number }, {}>(
+    u.combine('hello', [1, 2, 3]),
+    [
+      [{ hello: 1 }, undefined],
+      [{ hello: 2 }, undefined],
+      [{ hello: 3 }, undefined],
+    ],
+    {}
+  );
+  t.expectParams<{ hello: number }, {}>(
+    u.combine('hello', [1, 2, 3]),
+    [[{ hello: 2 }, undefined]],
+    { hello: 2 }
+  );
   t.expectParams<{ hello: 1 | 2 | 3 }, {}>(u.combine('hello', [1, 2, 3] as const), [
     [{ hello: 1 }, undefined],
     [{ hello: 2 }, undefined],
@@ -55,6 +70,14 @@ g.test('combine').fn(t => {
   t.expectParams<{}, { hello: number }>(u.beginSubcases().combine('hello', [1, 2, 3]), [
     [{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]],
   ]);
+  t.expectParams<{}, { hello: number }>(
+    u.beginSubcases().combine('hello', [1, 2, 3]),
+    [[{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]]],
+    {}
+  );
+  t.expectParams<{}, { hello: number }>(u.beginSubcases().combine('hello', [1, 2, 3]), [], {
+    hello: 2,
+  });
   t.expectParams<{}, { hello: 1 | 2 | 3 }>(u.beginSubcases().combine('hello', [1, 2, 3] as const), [
     [{}, [{ hello: 1 }, { hello: 2 }, { hello: 3 }]],
   ]);
@@ -210,6 +233,14 @@ g.test('expandP').fn(t => {
       [{ w: 5 }, undefined],
     ]
   );
+  t.expectParams<{ z: number | undefined; w: number | undefined }, {}>(
+    u.expandWithParams(function* () {
+      yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
+      yield { w: 5 };
+    }),
+    [[{ z: 3 }, undefined]],
+    { z: 3 }
+  );
   t.expectParams<{}, { z: number | undefined; w: number | undefined }>(
     u.beginSubcases().expandWithParams(function* () {
       yield* kUnitCaseParamsBuilder.combine('z', [3, 4]);
@@ -219,17 +250,8 @@ g.test('expandP').fn(t => {
   );
 
   // more complex
-  t.expectParams<
-    {
-      a: boolean;
-      x: number | undefined;
-      y: number | undefined;
-      z: number | undefined;
-      w: number | undefined;
-    },
-    {}
-  >(
-    u
+  {
+    const p = u
       .combineWithParams([
         { a: true, x: 1 },
         { a: false, y: 2 },
@@ -241,13 +263,39 @@ g.test('expandP').fn(t => {
         } else {
           yield { w: 5 };
         }
-      }),
-    [
+      });
+    type T = {
+      a: boolean;
+      x: number | undefined;
+      y: number | undefined;
+      z: number | undefined;
+      w: number | undefined;
+    };
+    t.expectParams<T, {}>(p, [
       [{ a: true, x: 1, z: 3 }, undefined],
       [{ a: true, x: 1, z: 4 }, undefined],
       [{ a: false, y: 2, w: 5 }, undefined],
-    ]
-  );
+    ]);
+    t.expectParams<T, {}>(
+      p,
+      [
+        [{ a: true, x: 1, z: 3 }, undefined],
+        [{ a: true, x: 1, z: 4 }, undefined],
+        [{ a: false, y: 2, w: 5 }, undefined],
+      ],
+      {}
+    );
+    t.expectParams<T, {}>(
+      p,
+      [
+        [{ a: true, x: 1, z: 3 }, undefined],
+        [{ a: true, x: 1, z: 4 }, undefined],
+      ],
+      { a: true }
+    );
+    t.expectParams<T, {}>(p, [[{ a: false, y: 2, w: 5 }, undefined]], { a: false });
+  }
+
   t.expectParams<
     { a: boolean; x: number | undefined; y: number | undefined },
     { z: number | undefined; w: number | undefined }
@@ -354,7 +402,7 @@ g.test('invalid,shadowing').fn(t => {
       });
     // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
-      Array.from(p.iterateCasesWithSubcases());
+      Array.from(p.iterateCasesWithSubcases(null));
     });
   }
   // Existing SubcaseP is shadowed by a new SubcaseP.
@@ -374,7 +422,7 @@ g.test('invalid,shadowing').fn(t => {
       });
     // Iterating causes merging e.g. ({x:1}, {x:3}), which fails.
     t.shouldThrow('Error', () => {
-      Array.from(p.iterateCasesWithSubcases());
+      Array.from(p.iterateCasesWithSubcases(null));
     });
   }
   // Existing CaseP is shadowed by a new SubcaseP.
@@ -392,18 +440,19 @@ g.test('invalid,shadowing').fn(t => {
           yield { w: 5 };
         }
       });
-    const cases = Array.from(p.iterateCasesWithSubcases());
+    const cases = Array.from(p.iterateCasesWithSubcases(null));
     // Iterating cases is fine...
     for (const [caseP, subcases] of cases) {
       assert(subcases !== undefined);
       // Iterating subcases is fine...
       for (const subcaseP of subcases) {
-        const merged = mergeParams(caseP, subcaseP);
         if (caseP.a) {
           assert(subcases !== undefined);
+
           // Only errors once we try to merge e.g. ({x:1}, {x:3}).
+          mergeParams(caseP, subcaseP);
           t.shouldThrow('Error', () => {
-            assertMergedWithoutOverlap([caseP, subcaseP], merged);
+            mergeParamsChecked(caseP, subcaseP);
           });
         }
       }
