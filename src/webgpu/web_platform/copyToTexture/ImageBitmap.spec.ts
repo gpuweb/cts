@@ -106,6 +106,7 @@ g.test('from_ImageData')
     u
       .combine('alpha', ['none', 'premultiply'] as const)
       .combine('orientation', ['none', 'flipY'] as const)
+      .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
@@ -122,6 +123,7 @@ g.test('from_ImageData')
       height,
       alpha,
       orientation,
+      colorSpaceConversion,
       dstColorFormat,
       dstPremultiplied,
       srcDoFlipYDuringCopy,
@@ -149,6 +151,7 @@ g.test('from_ImageData')
     const imageBitmap = await createImageBitmap(imageData, {
       premultiplyAlpha: alpha,
       imageOrientation: orientation,
+      colorSpaceConversion,
     });
 
     const dst = t.device.createTexture({
@@ -223,6 +226,7 @@ g.test('from_canvas')
   .params(u =>
     u
       .combine('orientation', ['none', 'flipY'] as const)
+      .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
@@ -238,6 +242,7 @@ g.test('from_canvas')
       width,
       height,
       orientation,
+      colorSpaceConversion,
       dstColorFormat,
       dstPremultiplied,
       srcDoFlipYDuringCopy,
@@ -293,6 +298,7 @@ g.test('from_canvas')
     const imageBitmap = await createImageBitmap(imageCanvas as HTMLCanvasElement, {
       premultiplyAlpha: 'premultiply',
       imageOrientation: orientation,
+      colorSpaceConversion,
     });
 
     const dst = t.device.createTexture({
@@ -370,6 +376,7 @@ g.test('copy_subrect_from_ImageData')
     u
       .combine('alpha', ['none', 'premultiply'] as const)
       .combine('orientation', ['none', 'flipY'] as const)
+      .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
@@ -380,6 +387,7 @@ g.test('copy_subrect_from_ImageData')
       copySubRectInfo,
       alpha,
       orientation,
+      colorSpaceConversion,
       dstPremultiplied,
       srcDoFlipYDuringCopy,
     } = t.params;
@@ -408,6 +416,7 @@ g.test('copy_subrect_from_ImageData')
     const imageBitmap = await createImageBitmap(imageData, {
       premultiplyAlpha: alpha,
       imageOrientation: orientation,
+      colorSpaceConversion,
     });
 
     const dst = t.device.createTexture({
@@ -483,13 +492,20 @@ g.test('copy_subrect_from_2D_Canvas')
   .params(u =>
     u
       .combine('orientation', ['none', 'flipY'] as const)
+      .combine('colorSpaceConversion', ['none', 'default'] as const)
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
       .combine('copySubRectInfo', kCopySubrectInfo)
   )
   .fn(async t => {
-    const { copySubRectInfo, orientation, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
+    const {
+      copySubRectInfo,
+      orientation,
+      colorSpaceConversion,
+      dstPremultiplied,
+      srcDoFlipYDuringCopy,
+    } = t.params;
 
     const { srcOrigin, dstOrigin, srcSize, dstSize, copyExtent } = copySubRectInfo;
     const kColorFormat = 'rgba8unorm';
@@ -544,6 +560,7 @@ g.test('copy_subrect_from_2D_Canvas')
     const imageBitmap = await createImageBitmap(imageCanvas as HTMLCanvasElement, {
       premultiplyAlpha: 'premultiply',
       imageOrientation: orientation,
+      colorSpaceConversion,
     });
 
     const dst = t.device.createTexture({

@@ -106,6 +106,7 @@ params((u) =>
 u.
 combine('alpha', ['none', 'premultiply']).
 combine('orientation', ['none', 'flipY']).
+combine('colorSpaceConversion', ['none', 'default']).
 combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
@@ -122,6 +123,7 @@ fn(async (t) => {
     height,
     alpha,
     orientation,
+    colorSpaceConversion,
     dstColorFormat,
     dstPremultiplied,
     srcDoFlipYDuringCopy
@@ -148,7 +150,8 @@ fn(async (t) => {
 
   const imageBitmap = await createImageBitmap(imageData, {
     premultiplyAlpha: alpha,
-    imageOrientation: orientation
+    imageOrientation: orientation,
+    colorSpaceConversion
   });
 
   const dst = t.device.createTexture({
@@ -223,6 +226,7 @@ desc(
 params((u) =>
 u.
 combine('orientation', ['none', 'flipY']).
+combine('colorSpaceConversion', ['none', 'default']).
 combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
@@ -238,6 +242,7 @@ fn(async (t) => {
     width,
     height,
     orientation,
+    colorSpaceConversion,
     dstColorFormat,
     dstPremultiplied,
     srcDoFlipYDuringCopy
@@ -292,7 +297,8 @@ fn(async (t) => {
   // `createImageBitmap` that takes `ImageBitmapOptions`.
   const imageBitmap = await createImageBitmap(imageCanvas, {
     premultiplyAlpha: 'premultiply',
-    imageOrientation: orientation
+    imageOrientation: orientation,
+    colorSpaceConversion
   });
 
   const dst = t.device.createTexture({
@@ -370,6 +376,7 @@ params((u) =>
 u.
 combine('alpha', ['none', 'premultiply']).
 combine('orientation', ['none', 'flipY']).
+combine('colorSpaceConversion', ['none', 'default']).
 combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
@@ -380,6 +387,7 @@ fn(async (t) => {
     copySubRectInfo,
     alpha,
     orientation,
+    colorSpaceConversion,
     dstPremultiplied,
     srcDoFlipYDuringCopy
   } = t.params;
@@ -407,7 +415,8 @@ fn(async (t) => {
 
   const imageBitmap = await createImageBitmap(imageData, {
     premultiplyAlpha: alpha,
-    imageOrientation: orientation
+    imageOrientation: orientation,
+    colorSpaceConversion
   });
 
   const dst = t.device.createTexture({
@@ -483,13 +492,20 @@ desc(
 params((u) =>
 u.
 combine('orientation', ['none', 'flipY']).
+combine('colorSpaceConversion', ['none', 'default']).
 combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
 combine('copySubRectInfo', kCopySubrectInfo)).
 
 fn(async (t) => {
-  const { copySubRectInfo, orientation, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
+  const {
+    copySubRectInfo,
+    orientation,
+    colorSpaceConversion,
+    dstPremultiplied,
+    srcDoFlipYDuringCopy
+  } = t.params;
 
   const { srcOrigin, dstOrigin, srcSize, dstSize, copyExtent } = copySubRectInfo;
   const kColorFormat = 'rgba8unorm';
@@ -543,7 +559,8 @@ fn(async (t) => {
   // `createImageBitmap` that takes `ImageBitmapOptions`.
   const imageBitmap = await createImageBitmap(imageCanvas, {
     premultiplyAlpha: 'premultiply',
-    imageOrientation: orientation
+    imageOrientation: orientation,
+    colorSpaceConversion
   });
 
   const dst = t.device.createTexture({
