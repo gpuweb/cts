@@ -14,7 +14,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v3
         with:
-          node-version: "15.x"
+          node-version: "16.x"
       - run: npm ci
       - run: npm run wpt
       - name: copy out-wpt to wpt tree
