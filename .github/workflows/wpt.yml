@@ -1,8 +1,6 @@
 name: WPT Lint Test
 
 on:
-  push:
-    branches-ignore: [gh-pages]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -16,7 +14,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v3
         with:
-          node-version: "15.x"
+          node-version: "16.x"
       - run: npm ci
       - run: npm run wpt
       - name: copy out-wpt to wpt tree
@@ -26,4 +24,3 @@ jobs:
       - name: test wpt lint
         run: ./wpt lint
         working-directory: ./wpt
-
