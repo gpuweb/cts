@@ -4,63 +4,21 @@ copyExternalImageToTexture from HTMLImageElement source.
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout } from '../../../common/util/util.js';
-import {
-  kTextureFormatInfo,
-  kValidTextureFormatsForCopyE2T,
-  EncodableTextureFormat,
-} from '../../format_info.js';
+import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
 import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
-import { PerTexelComponent } from '../../util/texture/texel_data.js';
-import { TexelView } from '../../util/texture/texel_view.js';
 
-type TestColor = PerTexelComponent<number>;
-// None of the dst texture format is 'uint' or 'sint', so we can always use float value.
-const kColors = {
-  Red: { R: 1.0, G: 0.0, B: 0.0, A: 1.0 },
-  Green: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
-  Blue: { R: 0.0, G: 0.0, B: 1.0, A: 1.0 },
-  Black: { R: 0.0, G: 0.0, B: 0.0, A: 1.0 },
-  White: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 },
-} as const;
-const kTestColorsOpaque = [
-  kColors.Red,
-  kColors.Green,
-  kColors.Blue,
-  kColors.Black,
-  kColors.White,
-] as const;
+import { kTestColorsOpaque, makeTestColorsTexelView } from './util.js';
 
-function makeTestColorsTexelView({
-  testColors,
-  format,
-  width,
-  height,
-  premultiplied,
-  flipY,
-}: {
-  testColors: readonly TestColor[];
-  format: EncodableTextureFormat;
-  width: number;
-  height: number;
-  premultiplied: boolean;
-  flipY: boolean;
-}) {
-  return TexelView.fromTexelsAsColors(format, coords => {
-    const y = flipY ? height - coords.y - 1 : coords.y;
-    const pixelPos = y * width + coords.x;
-    const currentPixel = testColors[pixelPos % testColors.length];
-
-    if (premultiplied && currentPixel.A !== 1.0) {
-      return {
-        R: currentPixel.R! * currentPixel.A!,
-        G: currentPixel.G! * currentPixel.A!,
-        B: currentPixel.B! * currentPixel.A!,
-        A: currentPixel.A,
-      };
-    } else {
-      return currentPixel;
-    }
+async function decodeImageFromCanvas(canvas: HTMLCanvasElement): Promise<HTMLImageElement> {
+  const blobFromCanvas = new Promise(resolve => {
+    canvas.toBlob(blob => resolve(blob));
   });
+  const blob = (await blobFromCanvas) as Blob;
+  const url = URL.createObjectURL(blob);
+  const image = new Image(canvas.width, canvas.height);
+  image.src = url;
+  await raceWithRejectOnTimeout(image.decode(), 5000, 'decode image timeout');
+  return image;
 }
 
 export const g = makeTestGroup(CopyToTextureUtils);
@@ -105,6 +63,7 @@ g.test('from_image')
   )
   .beforeAllSubcases(t => {
     t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
+    if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
   })
   .fn(async t => {
     const {
@@ -116,27 +75,9 @@ g.test('from_image')
       srcDoFlipYDuringCopy,
     } = t.params;
 
-    // CTS sometimes runs on worker threads, where document is not available.
-    // In this case, OffscreenCanvas can be used instead of <canvas>.
-    // But some browsers don't support OffscreenCanvas, and some don't
-    // support '2d' contexts on OffscreenCanvas.
-    // In this situation, the case will be skipped.
-    let imageCanvas: HTMLCanvasElement | OffscreenCanvas;
-    if (typeof document !== 'undefined') {
-      imageCanvas = document.createElement('canvas');
-      imageCanvas.width = width;
-      imageCanvas.height = height;
-    } else if (typeof OffscreenCanvas === 'undefined') {
-      t.skip('OffscreenCanvas is not supported');
-      return;
-    } else {
-      imageCanvas = new OffscreenCanvas(width, height);
-    }
-    const imageCanvasContext = imageCanvas.getContext('2d');
-    if (imageCanvasContext === null) {
-      t.skip('OffscreenCanvas "2d" context not available');
-      return;
-    }
+    const imageCanvas = document.createElement('canvas');
+    imageCanvas.width = width;
+    imageCanvas.height = height;
 
     // Generate non-transparent pixel data to avoid canvas
     // different opt behaviour on putImageData()
@@ -158,21 +99,15 @@ g.test('from_image')
       subrectSize: { width, height },
     });
 
+    const imageCanvasContext = imageCanvas.getContext('2d') as CanvasRenderingContext2D;
+    if (imageCanvasContext === null) {
+      t.skip('canvas cannot get 2d context');
+      return;
+    }
     // Use putImageData to prevent color space conversion.
     imageCanvasContext.putImageData(imageData, 0, 0);
 
-    const blobFromCanvas = new Promise((resolve, reject) => {
-      if (typeof document !== 'undefined') {
-        (imageCanvas as HTMLCanvasElement).toBlob(blob => resolve(blob));
-      } else {
-        (imageCanvas as OffscreenCanvas).convertToBlob().then(resolve, reject);
-      }
-    });
-    const blob = (await blobFromCanvas) as Blob;
-    const url = URL.createObjectURL(blob);
-    const image = new Image(imageCanvas.width, imageCanvas.height);
-    image.src = url;
-    await raceWithRejectOnTimeout(image.decode(), 5000, 'load image timeout');
+    const image = await decodeImageFromCanvas(imageCanvas);
 
     const dst = t.device.createTexture({
       size: { width, height },
@@ -201,7 +136,7 @@ g.test('from_image')
 
     t.doTestAndCheckResult(
       {
-        source: image as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        source: image,
         origin: { x: 0, y: 0 },
         flipY: srcDoFlipYDuringCopy,
       },
@@ -257,33 +192,18 @@ g.test('copy_subrect_from_2D_Canvas')
       .beginSubcases()
       .combine('copySubRectInfo', kCopySubrectInfo)
   )
+  .beforeAllSubcases(t => {
+    if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
+  })
   .fn(async t => {
     const { copySubRectInfo, orientation, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
 
     const { srcOrigin, dstOrigin, srcSize, dstSize, copyExtent } = copySubRectInfo;
     const kColorFormat = 'rgba8unorm';
 
-    // CTS sometimes runs on worker threads, where document is not available.
-    // In this case, OffscreenCanvas can be used instead of <canvas>.
-    // But some browsers don't support OffscreenCanvas, and some don't
-    // support '2d' contexts on OffscreenCanvas.
-    // In this situation, the case will be skipped.
-    let imageCanvas: HTMLCanvasElement | OffscreenCanvas;
-    if (typeof document !== 'undefined') {
-      imageCanvas = document.createElement('canvas');
-      imageCanvas.width = srcSize.width;
-      imageCanvas.height = srcSize.height;
-    } else if (typeof OffscreenCanvas === 'undefined') {
-      t.skip('OffscreenCanvas is not supported');
-      return;
-    } else {
-      imageCanvas = new OffscreenCanvas(srcSize.width, srcSize.height);
-    }
-    const imageCanvasContext = imageCanvas.getContext('2d');
-    if (imageCanvasContext === null) {
-      t.skip('OffscreenCanvas "2d" context not available');
-      return;
-    }
+    const imageCanvas = document.createElement('canvas');
+    imageCanvas.width = srcSize.width;
+    imageCanvas.height = srcSize.height;
 
     // Generate non-transparent pixel data to avoid canvas
     // different opt behaviour on putImageData()
@@ -305,21 +225,15 @@ g.test('copy_subrect_from_2D_Canvas')
       subrectSize: srcSize,
     });
 
+    const imageCanvasContext = imageCanvas.getContext('2d');
+    if (imageCanvasContext === null) {
+      t.skip('canvas cannot get 2d context');
+      return;
+    }
     // Use putImageData to prevent color space conversion.
     imageCanvasContext.putImageData(imageData, 0, 0);
 
-    const blobFromCanvas = new Promise((resolve, reject) => {
-      if (typeof document !== 'undefined') {
-        (imageCanvas as HTMLCanvasElement).toBlob(blob => resolve(blob));
-      } else {
-        (imageCanvas as OffscreenCanvas).convertToBlob().then(resolve, reject);
-      }
-    });
-    const blob = (await blobFromCanvas) as Blob;
-    const url = URL.createObjectURL(blob);
-    const image = new Image(imageCanvas.width, imageCanvas.height);
-    image.src = url;
-    await raceWithRejectOnTimeout(image.decode(), 5000, 'load image timeout');
+    const image = await decodeImageFromCanvas(imageCanvas);
 
     const dst = t.device.createTexture({
       size: dstSize,
@@ -347,7 +261,7 @@ g.test('copy_subrect_from_2D_Canvas')
 
     t.doTestAndCheckResult(
       {
-        source: image as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        source: image,
         origin: srcOrigin,
         flipY: srcDoFlipYDuringCopy,
       },

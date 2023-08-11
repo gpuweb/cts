@@ -3,66 +3,10 @@ copyExternalImageToTexture from ImageData source.
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
-import {
-  kTextureFormatInfo,
-  kValidTextureFormatsForCopyE2T,
-  EncodableTextureFormat,
-} from '../../format_info.js';
+import { kTextureFormatInfo, kValidTextureFormatsForCopyE2T } from '../../format_info.js';
 import { CopyToTextureUtils, kCopySubrectInfo } from '../../util/copy_to_texture.js';
-import { PerTexelComponent } from '../../util/texture/texel_data.js';
-import { TexelView } from '../../util/texture/texel_view.js';
 
-type TestColor = PerTexelComponent<number>;
-// None of the dst texture format is 'uint' or 'sint', so we can always use float value.
-const kColors = {
-  Red: { R: 1.0, G: 0.0, B: 0.0, A: 1.0 },
-  Green: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
-  Blue: { R: 0.0, G: 0.0, B: 1.0, A: 1.0 },
-  Black: { R: 0.0, G: 0.0, B: 0.0, A: 1.0 },
-  White: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 },
-  SemitransparentWhite: { R: 1.0, G: 1.0, B: 1.0, A: 0.6 },
-} as const;
-const kTestColorsOpaque = [
-  kColors.Red,
-  kColors.Green,
-  kColors.Blue,
-  kColors.Black,
-  kColors.White,
-] as const;
-const kTestColorsAll = [...kTestColorsOpaque, kColors.SemitransparentWhite] as const;
-
-function makeTestColorsTexelView({
-  testColors,
-  format,
-  width,
-  height,
-  premultiplied,
-  flipY,
-}: {
-  testColors: readonly TestColor[];
-  format: EncodableTextureFormat;
-  width: number;
-  height: number;
-  premultiplied: boolean;
-  flipY: boolean;
-}) {
-  return TexelView.fromTexelsAsColors(format, coords => {
-    const y = flipY ? height - coords.y - 1 : coords.y;
-    const pixelPos = y * width + coords.x;
-    const currentPixel = testColors[pixelPos % testColors.length];
-
-    if (premultiplied && currentPixel.A !== 1.0) {
-      return {
-        R: currentPixel.R! * currentPixel.A!,
-        G: currentPixel.G! * currentPixel.A!,
-        B: currentPixel.B! * currentPixel.A!,
-        A: currentPixel.A,
-      };
-    } else {
-      return currentPixel;
-    }
-  });
-}
+import { kTestColorsAll, makeTestColorsTexelView } from './util.js';
 
 export const g = makeTestGroup(CopyToTextureUtils);
 
@@ -79,8 +23,8 @@ g.test('from_ImageData')
   Then call copyExternalImageToTexture() to do a full copy to the 0 mipLevel
   of dst texture, and read the contents out to compare with the ImageData contents.
 
-  Do premultiply alpha during copy if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
+  Expect alpha to get premultiplied in the copy if, and only if, 'premultipliedAlpha'
+  in 'GPUImageCopyTextureTagged' is set to 'true'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped.
@@ -162,7 +106,7 @@ g.test('from_ImageData')
 
     t.doTestAndCheckResult(
       {
-        source: imageData as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        source: imageData,
         origin: { x: 0, y: 0 },
         flipY: srcDoFlipYDuringCopy,
       },
@@ -193,8 +137,8 @@ g.test('copy_subrect_from_ImageData')
   rect info list, to the 0 mipLevel of dst texture, and read the contents out to compare
   with the ImageBitmap contents.
 
-  Do premultiply alpha during copy if 'premultipliedAlpha' in 'GPUImageCopyTextureTagged'
-  is set to 'true' and do unpremultiply alpha if it is set to 'false'.
+  Expect alpha to get premultiplied in the copy if, and only if, 'premultipliedAlpha'
+  in 'GPUImageCopyTextureTagged' is set to 'true'.
 
   If 'flipY' in 'GPUImageCopyExternalImage' is set to 'true', copy will ensure the result
   is flipped, and origin is top-left consistantly.
@@ -267,7 +211,7 @@ g.test('copy_subrect_from_ImageData')
 
     t.doTestAndCheckResult(
       {
-        source: imageData as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        source: imageData,
         origin: srcOrigin,
         flipY: srcDoFlipYDuringCopy,
       },
