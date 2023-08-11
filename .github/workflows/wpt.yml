@@ -1,8 +1,6 @@
 name: WPT Lint Test
 
 on:
-  push:
-    branches-ignore: [gh-pages]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -26,4 +24,3 @@ jobs:
       - name: test wpt lint
         run: ./wpt lint
         working-directory: ./wpt
-
