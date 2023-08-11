@@ -45,7 +45,7 @@
     "@types/pngjs": "^6.0.1",
     "@types/serve-index": "^1.9.1",
     "@typescript-eslint/parser": "^4.33.0",
-    "@webgpu/types": "gpuweb/types#ecce0c39ff3cd735612c30ad71b346a577263cfb",
+    "@webgpu/types": "gpuweb/types#ca1a548178567e6021fd194380b97be1bf6b07b7",
     "ansi-colors": "4.1.1",
     "babel-plugin-add-header-comment": "^1.0.3",
     "babel-plugin-const-enum": "^1.2.0",
