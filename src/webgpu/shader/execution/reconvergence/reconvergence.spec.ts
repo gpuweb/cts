@@ -150,8 +150,6 @@ async function testProgram(t: GPUTest, program: Program) {
   pass.end();
   t.queue.submit([encoder.finish()]);
 
-  console.log(`READBACK NOW`);
-
   const sizeReadback = await t.readGPUBufferRangeTyped(
     sizeBuffer,
     {
@@ -161,11 +159,10 @@ async function testProgram(t: GPUTest, program: Program) {
       method: 'copy',
     }
   );
-  console.log(`POST READBACK`);
   const sizeData: Uint32Array = sizeReadback.data;
   const actualSize = sizeData[0];
   console.log(`Actual subgroup size = ${actualSize}`);
-  //t.expectOK(checkSubgroupSizeConsistency(sizeData, minSubgroupSize, maxSubgroupSize));
+  t.expectOK(checkSubgroupSizeConsistency(sizeData, minSubgroupSize, maxSubgroupSize));
 
   //t.expectGPUBufferValuesPassCheck(
   //  sizeBuffer,
@@ -244,11 +241,11 @@ g.test('random_reconvergence')
   //.beforeAllSubcases(t => {
   //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
   //})
-  .fn(t => {
+  .fn(async t => {
     const invocations = 128; // t.device.limits.maxSubgroupSize;
 
     let program: Program = new Program(t.params.style, t.params.seed, invocations);
     program.generate();
 
-    testProgram(t, program);
+    await testProgram(t, program);
   });
