@@ -3,20 +3,93 @@ https://github.com/KhronosGroup/VK-GL-CTS/blob/main/external/vulkancts/modules/v
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { iterRange, unreachable } from '../../../../common/util/util.js';
+import {
+  assert,
+  iterRange,
+  TypedArrayBufferViewConstructor,
+  unreachable
+} from '../../../../common/util/util.js';
 import { Style, Program, generateSeeds } from './util.js'
 
 export const g = makeTestGroup(GPUTest);
+
+/**
+ * @returns The population count of input.
+ */
+function popcount(input: number): number {
+  let n = input;
+  n = n - ((n >> 1) & 0x55555555)
+  n = (n & 0x33333333) + ((n >> 2) & 0x33333333)
+  return ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24
+}
+
+class SizeReference {
+  private x: number;
+  constructor(n: number = 0) {
+    this.x = n;
+  }
+  set value(n : number) {
+    this.x = n;
+  }
+  get value(): number {
+    return this.x;
+  }
+};
+
+/**
+ * Checks that subgroup size reported by the shader is consistent.
+ *
+ * @param data GPUBuffer that stores the builtin value and uniform ballot count.
+ * @param min  The device reported minimum subgroup size
+ * @param max  The device reported maximum subgroup size
+ *
+ * @returns an error if either the builtin value or ballot count is outside [min, max],
+ * not a a power of 2, or they do not match.
+ */
+function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: number, sizeRef: SizeReference): Error | undefined {
+  const builtin: number = data[0];
+  const ballot: number = data[1];
+  sizeRef.value = builtin;
+  if (popcount(builtin) != 1)
+    return new Error(`Subgroup size builtin value (${builtin}) is not a power of two`);
+  if (builtin < min)
+    return new Error(`Subgroup size builtin value (${builtin}) is less than device minimum ${min}`);
+  if (max < builtin)
+    return new Error(`Subgroup size builtin value (${builtin}) is greater than device maximum ${max}`);
+
+  if (popcount(ballot) != 1)
+    return new Error(`Subgroup size ballot value (${builtin}) is not a power of two`);
+  if (ballot < min)
+    return new Error(`Subgroup size ballot value (${ballot}) is less than device minimum ${min}`);
+  if (max < ballot)
+    return new Error(`Subgroup size ballot value (${ballot}) is greater than device maximum ${max}`);
+
+  if (builtin != ballot) {
+    return new Error(`Subgroup size mismatch:
+ - builtin value = ${builtin}
+ - ballot = ${ballot}
+`);
+  }
+  return undefined;
+}
 
 function testProgram(t: GPUTest, program: Program) {
   let wgsl = program.genCode();
   console.log(wgsl);
 
-  let num = program.simulate(true, 16);
-  console.log(`Max locations = ${num}`);
+  // TODO: query the device
+  const minSubgroupSize = 4;
+  const maxSubgroupSize = 128;
 
-  num = program.simulate(true, 32);
-  console.log(`Max locations = ${num}`);
+  let numLocs = 0;
+  const locMap = new Map();
+  for (var size = minSubgroupSize; size <= maxSubgroupSize; size *= 2) {
+    let num = program.simulate(true, size);
+    locMap.set(size, num);
+    numLocs = Math.max(num, numLocs);
+  }
+  // Add 1 to ensure there are no extraneous writes.
+  numLocs++;
 
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
@@ -35,7 +108,8 @@ function testProgram(t: GPUTest, program: Program) {
   t.trackForCleanup(inputBuffer);
 
   const ballotBuffer = t.device.createBuffer({
-    size: 128 * 4, // TODO: FIXME
+    // Each location stores 16 bytes per invocation.
+    size: numLocs * program.invocations * 4 * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
   t.trackForCleanup(ballotBuffer);
@@ -45,6 +119,12 @@ function testProgram(t: GPUTest, program: Program) {
       GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
   );
   t.trackForCleanup(locationBuffer);
+
+  const sizeBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(2, x => 0)]),
+      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+  );
+  t.trackForCleanup(sizeBuffer);
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -67,6 +147,12 @@ function testProgram(t: GPUTest, program: Program) {
           buffer: locationBuffer
         },
       },
+      {
+        binding: 3,
+        resource: {
+          buffer: sizeBuffer
+        },
+      },
     ],
   });
 
@@ -77,6 +163,29 @@ function testProgram(t: GPUTest, program: Program) {
   pass.dispatchWorkgroups(1,1,1);
   pass.end();
   t.queue.submit([encoder.finish()]);
+
+  const actualSize = new SizeReference(0);
+
+  t.expectGPUBufferValuesPassCheck(
+    sizeBuffer,
+    a => checkSubgroupSizeConsistency(a, minSubgroupSize, maxSubgroupSize, actualSize),
+    {
+      srcByteOffset: 0,
+      type: Uint32Array,
+      typedLength: 2,
+      method: 'copy',
+      mode: 'fail',
+    }
+  );
+
+  console.log(`Actual subgroup size = ${actualSize.value}`);
+  for (var i = minSubgroupSize; i <= maxSubgroupSize; i *= 2) {
+    console.log(` Simulated locs for size ${i} = ${locMap.get(i)}`);
+  }
+  program.sizeRefData(locMap.get(actualSize.value));
+  console.log(`RefData length = ${program.refData.length}`);
+  //let num = program.simulate(false, actualSize.value);
+  //assert(num === locMap.get(actualSize.value));
 }
 
 g.test('predefined_reconvergence')
@@ -86,6 +195,9 @@ g.test('predefined_reconvergence')
       .combine('test', [...iterRange(3, x => x)] as const)
       .beginSubcases()
   )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
+  //})
   .fn(t => {
     const invocations = 128; // t.device.limits.maxSubgroupSize;
 
@@ -129,6 +241,9 @@ g.test('random_reconvergence')
       })
       .beginSubcases()
   )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
+  //})
   .fn(t => {
     const invocations = 128; // t.device.limits.maxSubgroupSize;
 

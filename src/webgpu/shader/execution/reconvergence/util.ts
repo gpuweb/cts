@@ -16,6 +16,25 @@ function getReplicatedMask(submask: bigint, size: number, total: number = 128): 
   return mask;
 }
 
+/**
+ * Produce the subgroup mask for local invocation |id| within |fullMask|
+ *
+ * @param fullMask The active mask for the full workgroup
+ * @param size     The subgroup size
+ * @param id       The local invocation index
+ *
+ * @returns A Uint32Array with 4 elements containing the subgroup mask.
+ */
+function getSubgroupMask(fullMask: bigint, size: number, id: number): Uint32Array {
+  const arr: Uint32Array = new Uint32Array(4);
+  let mask: bigint = fullMask >> BigInt((id / size) * size);
+  arr[0] = Number(BigInt.asUintN(32, mask));
+  arr[1] = Number(BigInt.asUintN(32, mask >> 32n));
+  arr[2] = Number(BigInt.asUintN(32, mask >> 64n));
+  arr[3] = Number(BigInt.asUintN(32, mask >> 96n));
+  return arr;
+}
+
 /** @returns true if bit |bit| is set to 1. */
 function testBit(mask: bigint, bit: number): boolean {
   return ((mask >> BigInt(bit)) & 0x1n) == 1n;
@@ -122,6 +141,7 @@ export class Program {
   private functions: string[];
   private indents: number[];
   private storeBase: number;
+  public refData: Uint32Array;
 
   /**
    * constructor
@@ -158,6 +178,7 @@ export class Program {
     this.indents = [];
     this.indents.push(2);
     this.storeBase = 0x10000;
+    this.refData = new Uint32Array();
   }
 
   /** @returns A random float between 0 and 1 */
@@ -387,8 +408,7 @@ export class Program {
       switch (op.type) {
         case OpType.Ballot: {
           this.genIndent();
-          // TODO: FIXME
-          this.addCode(`\/\/ ballots[stride * output_loc + local_id] = subgroupBallot();\n`);
+          this.addCode(`ballots[stride * output_loc + local_id] = subgroupBallot();\n`);
           this.genIndent();
           this.addCode(`output_loc++;\n`);
           break;
@@ -484,7 +504,7 @@ export class Program {
     }
 
     let code: string = `
-//enable chromium_experimental_subgroups;
+enable chromium_experimental_subgroups;
 
 const stride = ${this.invocations};
 
@@ -494,6 +514,8 @@ var<storage, read> inputs : array<u32>;
 var<storage, read_write> ballots : array<vec4u>;
 @group(0) @binding(2)
 var<storage, read_write> locations : array<u32>;
+@group(0) @binding(3)
+var<storage, read_write> size : array<u32>;
 
 var<private> subgroup_id : u32;
 var<private> local_id : u32;
@@ -502,13 +524,23 @@ var<private> output_loc : u32 = 0;
 @compute @workgroup_size(${this.invocations},1,1)
 fn main(
   @builtin(local_invocation_index) lid : u32,
-  //@builtin(subgroup_invocation_id) sid : u32,
+  @builtin(subgroup_invocation_id) sid : u32,
+  @builtin(subgroup_size) sg_size : u32,
 ) {
   _ = inputs[0];
   _ = ballots[0];
   _ = locations[0];
-  subgroup_id = 0; // sid;
+  subgroup_id = sid;
   local_id = lid;
+
+  // Store the subgroup size from the built-in value and ballot to check for
+  // consistency.
+  let b = subgroupBallot();
+  if lid == 0 {
+    size[0] = sg_size;
+    let count = countOneBits(b);
+    size[1] = count.x + count.y + count.z + count.w;
+  }
 
   f0();
 }
@@ -565,6 +597,11 @@ ${this.functions[i]}
     this.functions[this.curFunc] += code;
   }
 
+  public sizeRefData(locs: number) {
+    this.refData = new Uint32Array(locs * 4 * this.invocations);
+    this.refData.fill(0);
+  }
+
   // TODO: Reconvergence guarantees are not as strong as this simulation.
   public simulate(countOnly: boolean, subgroupSize: number): number {
     class State {
@@ -605,6 +642,7 @@ ${this.functions[i]}
     var locs = new Array(this.invocations);
     locs.fill(0);
 
+    console.log(`Simulating subgroup size = ${subgroupSize}`);
     var i = 0;
     while (i < this.ops.length) {
       const op = this.ops[i];
@@ -633,16 +671,22 @@ ${this.functions[i]}
 
           for (var id = 0; id < this.invocations; id++) {
             if (testBit(curMask, id)) {
-              if (countOnly) {
-                locs[id]++;
-              } else {
-              //  if (op.caseValue == 1) {
-				  		//    // Emit a magic value to indicate that we shouldn't validate this ballot
-				  		//    ref[(outLoc[id]++)*invocationStride + id] = bitsetToU64(0x12345678, subgroupSize, id);
-				  		//  } else {
-				  		//    ref[(outLoc[id]++)*invocationStride + id] = bitsetToU64(stateStack[nesting].activeMask, subgroupSize, id);
-              //  }
+              if (!countOnly) {
+                if (!op.uniform) {
+                  // Emit a magic value to indicate that we shouldn't validate this ballot
+                  this.refData[4 * locs[id] * this.invocations + id + 0] = 0x12345678
+                  this.refData[4 * locs[id] * this.invocations + id + 1] = 0x12345678
+                  this.refData[4 * locs[id] * this.invocations + id + 2] = 0x12345678
+                  this.refData[4 * locs[id] * this.invocations + id + 3] = 0x12345678
+                } else {
+                  let mask = getSubgroupMask(curMask, subgroupSize, id);
+                  this.refData[4 * locs[id] * this.invocations + id + 0] = mask[0];
+                  this.refData[4 * locs[id] * this.invocations + id + 1] = mask[1];
+                  this.refData[4 * locs[id] * this.invocations + id + 2] = mask[2];
+                  this.refData[4 * locs[id] * this.invocations + id + 3] = mask[3];
+                }
               }
+              locs[id]++;
             }
           }
           break;
@@ -650,10 +694,13 @@ ${this.functions[i]}
         case OpType.Store: {
           for (var id = 0; id < 128; id++) {
             if (testBit(stack[nesting].activeMask, id)) {
-              if (countOnly)
-                locs[id]++;
-              //else
-              //  ref[(outLoc[id]++)*invocationStride + id] = ops[i].value;
+              if (!countOnly) {
+                this.refData[4 * locs[id]++ * this.invocations + id + 0] = op.value;
+                this.refData[4 * locs[id]++ * this.invocations + id + 1] = 0;
+                this.refData[4 * locs[id]++ * this.invocations + id + 2] = 0;
+                this.refData[4 * locs[id]++ * this.invocations + id + 3] = 0;
+              }
+              locs[id]++;
             }
           }
           break;
@@ -815,6 +862,7 @@ ${this.functions[i]}
     for (var j = 0; j < this.invocations; j++) {
       maxLoc = Math.max(maxLoc, locs[j]);
     }
+    console.log(`Max location = ${maxLoc}\n`);
     return maxLoc;
   }
 
