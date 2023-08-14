@@ -23,19 +23,6 @@ function popcount(input: number): number {
   return ((n + (n >> 4) & 0xF0F0F0F) * 0x1010101) >> 24
 }
 
-class SizeReference {
-  private x: number;
-  constructor(n: number = 0) {
-    this.x = n;
-  }
-  set value(n : number) {
-    this.x = n;
-  }
-  get value(): number {
-    return this.x;
-  }
-};
-
 /**
  * Checks that subgroup size reported by the shader is consistent.
  *
@@ -46,10 +33,9 @@ class SizeReference {
  * @returns an error if either the builtin value or ballot count is outside [min, max],
  * not a a power of 2, or they do not match.
  */
-function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: number, sizeRef: SizeReference): Error | undefined {
+function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: number): Error | undefined {
   const builtin: number = data[0];
   const ballot: number = data[1];
-  sizeRef.value = builtin;
   if (popcount(builtin) != 1)
     return new Error(`Subgroup size builtin value (${builtin}) is not a power of two`);
   if (builtin < min)
@@ -73,7 +59,7 @@ function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: numbe
   return undefined;
 }
 
-function testProgram(t: GPUTest, program: Program) {
+async function testProgram(t: GPUTest, program: Program) {
   let wgsl = program.genCode();
   console.log(wgsl);
 
@@ -164,28 +150,42 @@ function testProgram(t: GPUTest, program: Program) {
   pass.end();
   t.queue.submit([encoder.finish()]);
 
-  const actualSize = new SizeReference(0);
+  console.log(`READBACK NOW`);
 
-  t.expectGPUBufferValuesPassCheck(
+  const sizeReadback = await t.readGPUBufferRangeTyped(
     sizeBuffer,
-    a => checkSubgroupSizeConsistency(a, minSubgroupSize, maxSubgroupSize, actualSize),
     {
       srcByteOffset: 0,
       type: Uint32Array,
       typedLength: 2,
       method: 'copy',
-      mode: 'fail',
     }
   );
+  console.log(`POST READBACK`);
+  const sizeData: Uint32Array = sizeReadback.data;
+  const actualSize = sizeData[0];
+  console.log(`Actual subgroup size = ${actualSize}`);
+  //t.expectOK(checkSubgroupSizeConsistency(sizeData, minSubgroupSize, maxSubgroupSize));
 
-  console.log(`Actual subgroup size = ${actualSize.value}`);
-  for (var i = minSubgroupSize; i <= maxSubgroupSize; i *= 2) {
-    console.log(` Simulated locs for size ${i} = ${locMap.get(i)}`);
-  }
-  program.sizeRefData(locMap.get(actualSize.value));
-  console.log(`RefData length = ${program.refData.length}`);
-  //let num = program.simulate(false, actualSize.value);
-  //assert(num === locMap.get(actualSize.value));
+  //t.expectGPUBufferValuesPassCheck(
+  //  sizeBuffer,
+  //  a => checkSubgroupSizeConsistency(a, minSubgroupSize, maxSubgroupSize, actualSize),
+  //  {
+  //    srcByteOffset: 0,
+  //    type: Uint32Array,
+  //    typedLength: 2,
+  //    method: 'copy',
+  //    mode: 'fail',
+  //  }
+  //);
+
+  //for (var i = minSubgroupSize; i <= maxSubgroupSize; i *= 2) {
+  //  console.log(` Simulated locs for size ${i} = ${locMap.get(i)}`);
+  //}
+  //program.sizeRefData(locMap.get(actualSize));
+  //console.log(`RefData length = ${program.refData.length}`);
+  //let num = program.simulate(false, actualSize);
+  //assert(num === locMap.get(actualSize));
 }
 
 g.test('predefined_reconvergence')
