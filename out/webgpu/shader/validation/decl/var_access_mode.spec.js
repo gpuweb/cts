@@ -12,7 +12,6 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
 explicitSpaceExpander,
-varDeclCompatibleAddressSpace,
 getVarDeclShader,
 accessModeExpander,
 supportsRead,
@@ -34,8 +33,11 @@ params(
 (u) =>
 u.
 combine('addressSpace', kNonHandleAddressSpaces).
-combine('explicitSpace', [true, false]).
-filter((t) => varDeclCompatibleAddressSpace(t)).
+combine('explicitSpace', [true, false])
+// Only keep cases where:
+//   *if* the address space must be specified on a var decl (e.g. var<private>)
+//   then the address space will actually be specified in this test case.
+.filter((t) => kAddressSpaceInfo[t.addressSpace].spell !== 'must' || t.explicitSpace).
 combine('explicitAccess', [true]).
 combine('accessMode', keysOf(kAccessModeInfo)).
 combine('stage', ['compute']) // Only need to check compute shaders

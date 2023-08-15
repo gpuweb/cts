@@ -12,7 +12,6 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
   explicitSpaceExpander,
-  varDeclCompatibleAddressSpace,
   getVarDeclShader,
   accessModeExpander,
   supportsRead,
@@ -35,7 +34,10 @@ g.test('explicit_access_mode')
       u
         .combine('addressSpace', kNonHandleAddressSpaces)
         .combine('explicitSpace', [true, false])
-        .filter(t => varDeclCompatibleAddressSpace(t))
+        // Only keep cases where:
+        //   *if* the address space must be specified on a var decl (e.g. var<private>)
+        //   then the address space will actually be specified in this test case.
+        .filter(t => kAddressSpaceInfo[t.addressSpace].spell !== 'must' || t.explicitSpace)
         .combine('explicitAccess', [true])
         .combine('accessMode', keysOf(kAccessModeInfo))
         .combine('stage', ['compute' as ShaderStage]) // Only need to check compute shaders
@@ -50,7 +52,7 @@ g.test('explicit_access_mode')
       // The address space must allow an access mode to be spelled, and the
       // access mode must be in the list of modes for the address space.
       info.spellAccessMode !== 'never' &&
-      (info.accessModes as readonly string[]).includes(t.params.accessMode);
+      info.accessModes.includes(t.params.accessMode);
 
     t.expectCompileResult(ok, prog);
   });
