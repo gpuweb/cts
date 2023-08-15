@@ -68,24 +68,6 @@ export function declareVarX(addressSpace: AddressSpace | '', accessMode: AccessM
 }
 
 /**
- * @returns true if an explicit address space is requested on a variable
- * declaration whenever the address space requires one:
- *
- *    must implies requested
- *
- * Rewrite as:
- *
- *    !must or requested
- */
-export function varDeclCompatibleAddressSpace(p: {
-  addressSpace: AddressSpace;
-  explicitSpace: boolean;
-}): boolean {
-  const info = kAddressSpaceInfo[p.addressSpace];
-  return !(info.spell === 'must') || p.explicitSpace;
-}
-
-/**
  * @returns a list of booleans indicating valid cases of specifying the address
  * space.
  */
