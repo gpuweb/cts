@@ -1,7 +1,7 @@
 import { Merged, mergeParams, mergeParamsChecked } from '../internal/params_utils.js';
 import { comparePublicParamsPaths, Ordering } from '../internal/query/compare.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
-import { assert, mapLazy } from '../util/util.js';
+import { assert, mapLazy, objectEquals } from '../util/util.js';
 
 import { TestParams } from './fixture.js';
 
@@ -173,7 +173,8 @@ export class CaseParamsBuilder<CaseP extends {}>
         for (const b of expander(a)) {
           if (caseFilter) {
             // If the expander generated any key-value pair that conflicts with caseFilter, skip.
-            if (Object.entries(b).some(([k, v]) => k in caseFilter && caseFilter[k] !== v)) {
+            const kvPairs = Object.entries(b);
+            if (kvPairs.some(([k, v]) => k in caseFilter && !objectEquals(caseFilter[k], v))) {
               continue;
             }
           }
@@ -197,8 +198,7 @@ export class CaseParamsBuilder<CaseP extends {}>
         for (const v of expander(a)) {
           // If the expander generated a value for this key that conflicts with caseFilter, skip.
           if (caseFilter && key in caseFilter) {
-            // Cast through unknown to avoid having to constrain NewPValue throughout the call stack
-            if (caseFilter[key] !== (v as unknown)) {
+            if (!objectEquals(caseFilter[key], v)) {
               continue;
             }
           }
