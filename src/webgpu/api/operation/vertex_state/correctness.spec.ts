@@ -1,5 +1,5 @@
 export const description = `
-TODO: Test more corner case values for Float16 / Float32 (INF, NaN, +-0, ...) and reduce the
+TODO: Test more corner case values for Float16 / Float32 (INF, NaN, ...) and reduce the
 float tolerance.
 `;
 
@@ -173,7 +173,7 @@ fn check(success : bool) {
 }
 
 fn floatsSimilar(a : f32, b : f32, tolerance : f32) -> bool {
-  // TODO do we check for + and - 0?
+  // Note: -0.0 and 0.0 have different bit patterns, but compare as equal.
   return abs(a - b) < tolerance;
 }
 
@@ -306,7 +306,8 @@ struct VSOutputs {
 
     switch (formatInfo.type) {
       case 'float': {
-        const data = [42.42, 0.0, 1.0, -1.0, 1000, -18.7, 25.17];
+        // -0.0 and +0.0 have different bit patterns, but compare as equal.
+        const data = [42.42, 0.0, -0.0, 1.0, -1.0, 1000, -18.7, 25.17];
         const expectedData = new Float32Array(data).buffer;
         const vertexData =
           bitSize === 32
