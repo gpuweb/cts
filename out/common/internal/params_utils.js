@@ -124,16 +124,11 @@ export function mergeParams(a, b) {
   return { ...a, ...b };
 }
 
-/**
- * Merges two objects into one `{ ...a, ...b }` and asserts they had no overlapping keys.
- * This is slower than {@link mergeParams}.
- */
-export function mergeParamsChecked(a, b) {
-  const merged = mergeParams(a, b);
+/** Asserts that the result of a mergeParams didn't have overlap. This is not extremely fast. */
+export function assertMergedWithoutOverlap([a, b], merged) {
   assert(
   Object.keys(merged).length === Object.keys(a).length + Object.keys(b).length,
   () => `Duplicate key between ${JSON.stringify(a)} and ${JSON.stringify(b)}`);
 
-  return merged;
 }
 //# sourceMappingURL=params_utils.js.map
