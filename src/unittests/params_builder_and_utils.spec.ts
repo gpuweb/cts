@@ -269,6 +269,24 @@ g.test('expandP').fn(t => {
     [[{}, [{ z: 3 }, { z: 4 }, { w: 5 }]]]
   );
 
+  t.expectParams<{ x: [] | {} }, {}>(
+    u.expand('x', () => [[], {}] as const),
+    [
+      [{ x: [] }, undefined],
+      [{ x: {} }, undefined],
+    ]
+  );
+  t.expectParams<{ x: [] | {} }, {}>(
+    u.expand('x', () => [[], {}] as const),
+    [[{ x: [] }, undefined]],
+    { x: [] }
+  );
+  t.expectParams<{ x: [] | {} }, {}>(
+    u.expand('x', () => [[], {}] as const),
+    [[{ x: {} }, undefined]],
+    { x: {} }
+  );
+
   // more complex
   {
     const p = u
