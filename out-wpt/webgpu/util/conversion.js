@@ -87,7 +87,19 @@ export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias
     return (((1 << exponentBits) - 1) << mantissaBits) | ((1 << mantissaBits) - 1);
   }
 
+  const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
+  buf.setFloat32(0, n, true);
+  const bits = buf.getUint32(0, true);
+  // bits (32): seeeeeeeefffffffffffffffffffffff
+
+  // 0 or 1
+  const sign = (bits >> 31) & signBits;
+
   if (n === 0) {
+    if (sign === 1) {
+      // Handle negative zero.
+      return 1 << (exponentBits + mantissaBits);
+    }
     return 0;
   }
 
@@ -103,15 +115,7 @@ export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias
     );
   }
 
-  const buf = new DataView(new ArrayBuffer(Float32Array.BYTES_PER_ELEMENT));
-  buf.setFloat32(0, n, true);
-  const bits = buf.getUint32(0, true);
-  // bits (32): seeeeeeeefffffffffffffffffffffff
-
   const mantissaBitsToDiscard = 23 - mantissaBits;
-
-  // 0 or 1
-  const sign = (bits >> 31) & signBits;
 
   // >> to remove mantissa, & to remove sign, - 127 to remove bias.
   const exp = ((bits >> 23) & 0xff) - 127;

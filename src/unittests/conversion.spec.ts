@@ -46,6 +46,7 @@ const kFloat16BitsToNumberCases = [
   [0b0_01101_0101010101, 0.33325195],
   [0b0_11110_1111111111, 65504],
   [0b0_00000_0000000000, 0],
+  [0b1_00000_0000000000, -0.0], // -0.0 compares as equal to 0.0
   [0b0_01110_0000000000, 0.5],
   [0b0_01100_1001100110, 0.1999512],
   [0b0_01111_0000000001, 1.00097656],
@@ -60,7 +61,6 @@ const kFloat16BitsToNumberCases = [
 g.test('float16BitsToFloat32').fn(t => {
   for (const [bits, number] of [
     ...kFloat16BitsToNumberCases,
-    [0b1_00000_0000000000, -0], // (resulting sign is not actually tested)
     [0b0_00000_1111111111, 0.00006104], // subnormal f16 input
     [0b1_00000_1111111111, -0.00006104],
   ]) {
@@ -115,6 +115,7 @@ g.test('floatBitsToULPFromZero,16').fn(t => {
     t.expect(floatBitsToNormalULPFromZero(bits, kFloat16Format) === ulpFromZero, bits.toString(2));
   // Zero
   test(0b0_00000_0000000000, 0);
+  test(0b1_00000_0000000000, 0);
   // Subnormal
   test(0b0_00000_0000000001, 0);
   test(0b1_00000_0000000001, 0);
@@ -153,6 +154,7 @@ g.test('floatBitsToULPFromZero,32').fn(t => {
     t.expect(floatBitsToNormalULPFromZero(bits, kFloat32Format) === ulpFromZero, bits.toString(2));
   // Zero
   test(0b0_00000000_00000000000000000000000, 0);
+  test(0b1_00000000_00000000000000000000000, 0);
   // Subnormal
   test(0b0_00000000_00000000000000000000001, 0);
   test(0b1_00000000_00000000000000000000001, 0);
@@ -191,6 +193,9 @@ g.test('floatBitsToULPFromZero,32').fn(t => {
 g.test('scalarWGSL').fn(t => {
   const cases: Array<[Scalar, string]> = [
     [f32(0.0), '0.0f'],
+    // f32(-0.0) should map to '-0.0f'
+    // Tracked by https://github.com/gpuweb/cts/issues/2901
+    [f32(-0.0), '0.0f'],
     [f32(1.0), '1.0f'],
     [f32(-1.0), '-1.0f'],
     [f32Bits(0x70000000), '1.5845632502852868e+29f'],
