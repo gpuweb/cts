@@ -124,10 +124,15 @@ export function mergeParams<A extends {}, B extends {}>(a: A, b: B): Merged<A, B
   return { ...a, ...b } as Merged<A, B>;
 }
 
-/** Asserts that the result of a mergeParams didn't have overlap. This is not extremely fast. */
-export function assertMergedWithoutOverlap([a, b]: [{}, {}], merged: {}): void {
+/**
+ * Merges two objects into one `{ ...a, ...b }` and asserts they had no overlapping keys.
+ * This is slower than {@link mergeParams}.
+ */
+export function mergeParamsChecked<A extends {}, B extends {}>(a: A, b: B): Merged<A, B> {
+  const merged = mergeParams(a, b);
   assert(
     Object.keys(merged).length === Object.keys(a).length + Object.keys(b).length,
     () => `Duplicate key between ${JSON.stringify(a)} and ${JSON.stringify(b)}`
   );
+  return merged;
 }

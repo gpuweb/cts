@@ -280,7 +280,7 @@ class TestBuilder {
     }
 
     const seen = new Set();
-    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
+    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
         assert(this.batchSize === 0 || !('batch__' in params));
@@ -332,45 +332,37 @@ class TestBuilder {
     }
   }
 
-  *iterate() {
+  makeCaseSpecific(params, subcases) {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
-    this.testCases ??= kUnitCaseParamsBuilder;
-    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases)) {
-      if (this.batchSize === 0 || subcases === undefined) {
-        yield new RunCaseSpecific(
-        this.testPath,
-        caseParams,
-        this.isUnimplemented,
-        subcases,
-        this.fixture,
-        this.testFn,
-        this.beforeFn,
-        this.testCreationStack);
+    return new RunCaseSpecific(
+    this.testPath,
+    params,
+    this.isUnimplemented,
+    subcases,
+    this.fixture,
+    this.testFn,
+    this.beforeFn,
+    this.testCreationStack);
 
+  }
+
+  *iterate(caseFilter) {
+    this.testCases ??= kUnitCaseParamsBuilder;
+    for (const [caseParams, subcases] of builderIterateCasesWithSubcases(
+    this.testCases,
+    caseFilter))
+    {
+      if (this.batchSize === 0 || subcases === undefined) {
+        yield this.makeCaseSpecific(caseParams, subcases);
       } else {
         const subcaseArray = Array.from(subcases);
         if (subcaseArray.length <= this.batchSize) {
-          yield new RunCaseSpecific(
-          this.testPath,
-          caseParams,
-          this.isUnimplemented,
-          subcaseArray,
-          this.fixture,
-          this.testFn,
-          this.beforeFn,
-          this.testCreationStack);
-
+          yield this.makeCaseSpecific(caseParams, subcaseArray);
         } else {
           for (let i = 0; i < subcaseArray.length; i = i + this.batchSize) {
-            yield new RunCaseSpecific(
-            this.testPath,
+            yield this.makeCaseSpecific(
             { ...caseParams, batch__: i / this.batchSize },
-            this.isUnimplemented,
-            subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)),
-            this.fixture,
-            this.testFn,
-            this.beforeFn,
-            this.testCreationStack);
+            subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)));
 
           }
         }
