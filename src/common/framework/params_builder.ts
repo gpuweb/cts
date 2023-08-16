@@ -194,11 +194,13 @@ export class CaseParamsBuilder<CaseP extends {}>
       for (const a of baseGenerator(caseFilter)) {
         assert(!(key in a), `New key '${key}' already exists in ${JSON.stringify(a)}`);
 
-        const caseFilterV = caseFilter?.[key];
         for (const v of expander(a)) {
           // If the expander generated a value for this key that conflicts with caseFilter, skip.
-          if (caseFilter && (caseFilterV as {}) !== v) {
-            continue;
+          if (caseFilter && key in caseFilter) {
+            // Cast through unknown to avoid having to constrain NewPValue throughout the call stack
+            if (caseFilter[key] !== (v as unknown)) {
+              continue;
+            }
           }
           yield { ...a, [key]: v } as Merged<CaseP, { [name in NewPKey]: NewPValue }>;
         }
