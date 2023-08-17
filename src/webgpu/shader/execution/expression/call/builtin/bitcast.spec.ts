@@ -140,7 +140,7 @@ function u32ToU16x2(u32: number): number[] {
 }
 
 /**
- * @returns a vec2<f16> from an array of two u16.
+ * @returns a vec2<f16> from an array of two u16, each reinterpreted as f16.
  */
 function u16x2ToVec2F16(u16x2: number[]): Vector {
   assert(u16x2.length === 2);
@@ -148,7 +148,7 @@ function u16x2ToVec2F16(u16x2: number[]): Vector {
 }
 
 /**
- * @returns a vec4<f16> from an array of four u16.
+ * @returns a vec4<f16> from an array of four u16, each reinterpreted as f16.
  */
 function u16x4ToVec4F16(u16x4: number[]): Vector {
   assert(u16x4.length === 4);
@@ -337,21 +337,18 @@ function bitcastU32ToF32Comparator(u: number): Comparator {
  * subnormal, Inf, or NaN. Test cases that bitcasted to vector of f16 use this function to get
  * per-element expectation and build vector expectation using cartesianProduct.
  */
-function generateF16ExpectationIntervals(bitcastedF16ValueInU16: number): FPInterval[] {
+function generateF16ExpectationIntervals(bitcastedF16Value: number): FPInterval[] {
   // If the bitcasted f16 value is inf or nan, the result is unbounded
-  if (!isFiniteF16(bitcastedF16ValueInU16)) {
+  if (!isFiniteF16(bitcastedF16Value)) {
     return [f16UnboundedInterval];
   }
   // If the casted f16 value is +/-0.0, the result can be one of both. Note that in JS -0.0 === 0.0.
-  if (bitcastedF16ValueInU16 === 0.0) {
+  if (bitcastedF16Value === 0.0) {
     return [f16ZerosInterval];
   }
-  const exactInterval = FP.f16.toInterval(bitcastedF16ValueInU16);
+  const exactInterval = FP.f16.toInterval(bitcastedF16Value);
   // If the casted f16 value is subnormal, it also may be flushed to +/-0.0.
-  return [
-    exactInterval,
-    ...(isSubnormalNumberF16(bitcastedF16ValueInU16) ? [f16ZerosInterval] : []),
-  ];
+  return [exactInterval, ...(isSubnormalNumberF16(bitcastedF16Value) ? [f16ZerosInterval] : [])];
 }
 
 /**
@@ -364,7 +361,7 @@ function bitcastF16ToF16Comparator(f: number): Comparator {
 }
 
 /**
- * @returns a Comparator for checking if a vec2<f16>is a valid bitcast
+ * @returns a Comparator for checking if a vec2<f16> is a valid bitcast
  * conversion from u32.
  */
 function bitcastU32ToVec2F16Comparator(u: number): Comparator {
@@ -495,10 +492,14 @@ function possible32BitScalarIntervalsFromF16x2(
   if (type === 'u32') {
     reinterpretFromU32 = (x: number) => x;
     expectationsForValue = x => [u32(x)];
+    // Scalar expectation can not express "unbounded" for i32 and u32, so use 0 here as a
+    // placeholder, and the possibleExpectations should be ignored if the result is unbounded.
     unboundedExpectations = [u32(0)];
   } else if (type === 'i32') {
     reinterpretFromU32 = (x: number) => reinterpretU32AsI32(x);
     expectationsForValue = x => [i32(x)];
+    // Scalar expectation can not express "unbounded" for i32 and u32, so use 0 here as a
+    // placeholder, and the possibleExpectations should be ignored if the result is unbounded.
     unboundedExpectations = [i32(0)];
   } else {
     assert(type === 'f32');
@@ -544,7 +545,7 @@ function bitcastVec2F16ToU32Comparator(vec2F16InU16x2: number[]): Comparator {
   const expectations = possible32BitScalarIntervalsFromF16x2(vec2F16InU16x2, 'u32');
   // Return alwaysPass if result is expected unbounded.
   if (expectations.isUnbounded) {
-    return alwaysPass('any u32');
+    return anyU32;
   }
   return anyOf(...expectations.possibleExpectations);
 }
@@ -558,7 +559,7 @@ function bitcastVec2F16ToI32Comparator(vec2F16InU16x2: number[]): Comparator {
   const expectations = possible32BitScalarIntervalsFromF16x2(vec2F16InU16x2, 'i32');
   // Return alwaysPass if result is expected unbounded.
   if (expectations.isUnbounded) {
-    return alwaysPass('any i32');
+    return anyI32;
   }
   return anyOf(...expectations.possibleExpectations);
 }
@@ -572,7 +573,7 @@ function bitcastVec2F16ToF32Comparator(vec2F16InU16x2: number[]): Comparator {
   const expectations = possible32BitScalarIntervalsFromF16x2(vec2F16InU16x2, 'f32');
   // Return alwaysPass if result is expected unbounded.
   if (expectations.isUnbounded) {
-    return alwaysPass('any f32');
+    return anyF32;
   }
   return anyOf(...expectations.possibleExpectations);
 }
