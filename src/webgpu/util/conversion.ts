@@ -581,6 +581,12 @@ export function float16ToInt16(f16: number): number {
   return i16Arr[0];
 }
 
+/** All Type* implement this interface, so that they can be interchangeable used within WGSL contains like Structs */
+interface WGSLType {
+  read(buf: Uint8Array, offset: number): Value;
+  readonly size: number;
+}
+
 /** A type of number representable by Scalar. */
 export type ScalarKind =
   | 'abstract-float'
@@ -596,19 +602,23 @@ export type ScalarKind =
   | 'bool';
 
 /** ScalarType describes the type of WGSL Scalar. */
-export class ScalarType {
+export class ScalarType implements WGSLType {
   readonly kind: ScalarKind; // The named type
   readonly _size: number; // In bytes
-  readonly read: (buf: Uint8Array, offset: number) => Scalar; // reads a scalar from a buffer
+  readonly _readImpl: (buf: Uint8Array, offset: number) => Scalar; // reads a scalar from a buffer
 
   constructor(kind: ScalarKind, size: number, read: (buf: Uint8Array, offset: number) => Scalar) {
     this.kind = kind;
     this._size = size;
-    this.read = read;
+    this._readImpl = read;
   }
 
   public toString(): string {
     return this.kind;
+  }
+
+  public read(buf: Uint8Array, offset: number): Value {
+    return this._readImpl(buf, offset);
   }
 
   public get size(): number {
@@ -645,7 +655,7 @@ export class ScalarType {
 }
 
 /** VectorType describes the type of WGSL Vector. */
-export class VectorType {
+export class VectorType implements WGSLType {
   readonly width: number; // Number of elements in the vector
   readonly elementType: ScalarType; // Element type
 
@@ -658,10 +668,11 @@ export class VectorType {
    * @returns a vector constructed from the values read from the buffer at the
    * given byte offset
    */
-  public read(buf: Uint8Array, offset: number): Vector {
+  public read(buf: Uint8Array, offset: number): Value {
     const elements: Array<Scalar> = [];
     for (let i = 0; i < this.width; i++) {
-      elements[i] = this.elementType.read(buf, offset);
+      // Coercing is safe here, since elementType is a ScalarType
+      elements[i] = this.elementType.read(buf, offset) as Scalar;
       offset += this.elementType.size;
     }
     return new Vector(elements);
@@ -701,7 +712,7 @@ export function TypeVec(width: number, elementType: ScalarType): VectorType {
 }
 
 /** MatrixType describes the type of WGSL Matrix. */
-export class MatrixType {
+export class MatrixType implements WGSLType {
   readonly cols: number; // Number of columns in the Matrix
   readonly rows: number; // Number of elements per column in the Matrix
   readonly elementType: ScalarType; // Element type
@@ -720,11 +731,12 @@ export class MatrixType {
    * @returns a Matrix constructed from the values read from the buffer at the
    * given byte offset
    */
-  public read(buf: Uint8Array, offset: number): Matrix {
+  public read(buf: Uint8Array, offset: number): Value {
     const elements: Scalar[][] = [...Array(this.cols)].map(_ => [...Array(this.rows)]);
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
-        elements[c][r] = this.elementType.read(buf, offset);
+        // Coercing is safe here, since elementType is a ScalarType
+        elements[c][r] = this.elementType.read(buf, offset) as Scalar;
         offset += this.elementType.size;
       }
 
@@ -738,6 +750,10 @@ export class MatrixType {
 
   public toString(): string {
     return `mat${this.cols}x${this.rows}<${this.elementType}>`;
+  }
+
+  public get size(): number {
+    return this.elementType.size * (this.rows !== 3 ? this.rows : 4) * this.cols;
   }
 }
 
@@ -755,8 +771,69 @@ export function TypeMat(cols: number, rows: number, elementType: ScalarType): Ma
   return ty;
 }
 
-/** Type is a ScalarType, VectorType, or MatrixType. */
-export type Type = ScalarType | VectorType | MatrixType;
+/** StructType describes the type of WGSL Struct. */
+export class StructType {
+  readonly name: string;
+  readonly elementTypes: Type[]; // Element types
+
+  constructor(name: string, types: Type[]) {
+    this.name = name;
+    this.elementTypes = types;
+  }
+
+  /**
+   * @returns a Struct constructed from the values read from the buffer at the
+   * given byte offset
+   */
+  public read(buf: Uint8Array, offset: number): Struct {
+    const elements: Value[] = this.elementTypes.map(e => {
+      const result = e.read(buf, offset);
+      offset += e.size;
+      // vec3s have a padding element
+      if (e instanceof VectorType) {
+        if (e.width === 3) {
+          offset += e.elementType.size;
+        }
+      }
+      return result;
+    });
+    return struct(this.name, ...elements);
+  }
+
+  public toString(): string {
+    return this.name;
+  }
+
+  public get size(): number {
+    return this.elementTypes.reduce((sum, cur) => {
+      sum += cur.size;
+      // vec3s have a padding element
+      if (cur instanceof VectorType) {
+        if (cur.width === 3) {
+          sum += cur.elementType.size;
+        }
+      }
+      return sum;
+    }, 0);
+  }
+}
+
+// Maps a string representation of a Struct type to Struct type.
+const structTypes = new Map<string, StructType>();
+
+export function TypeStruct(name: string, ...elementTypes: Type[]): StructType {
+  const key = `struct ${name} { ${elementTypes.join(',\n')} }`;
+  let ty = structTypes.get(key);
+  if (ty !== undefined) {
+    return ty;
+  }
+  ty = new StructType(name, elementTypes);
+  structTypes.set(key, ty);
+  return ty;
+}
+
+/** Type is a ScalarType, VectorType, MatrixType, or StructType. */
+export type Type = ScalarType | VectorType | MatrixType | StructType;
 
 export const TypeI32 = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
   i32(new Int32Array(buf.buffer, offset)[0])
@@ -850,16 +927,19 @@ export function elementsOf(value: Value): Scalar[] {
   throw new Error(`unhandled value ${value}`);
 }
 
-/** @returns the scalar (element) type of the given Type */
-export function scalarTypeOf(ty: Type): ScalarType {
+/** @returns the scalar (element) types of the given Type */
+export function scalarTypesOf(ty: Type): ScalarType[] {
   if (ty instanceof ScalarType) {
-    return ty;
+    return [ty];
   }
   if (ty instanceof VectorType) {
-    return ty.elementType;
+    return [ty.elementType];
   }
   if (ty instanceof MatrixType) {
-    return ty.elementType;
+    return [ty.elementType];
+  }
+  if (ty instanceof StructType) {
+    return ty.elementTypes.flatMap(scalarTypesOf);
   }
   throw new Error(`unhandled type ${ty}`);
 }
@@ -1364,8 +1444,51 @@ export function toMatrix(m: number[][], op: (n: number) => Scalar): Matrix {
   return new Matrix(elements);
 }
 
-/** Value is a Scalar or Vector value. */
-export type Value = Scalar | Vector | Matrix;
+/**
+ * Class that encapsulates a Struct value.
+ */
+export class Struct {
+  readonly name: string;
+  readonly elements: Value[];
+  readonly type: StructType;
+
+  public constructor(name: string, ...elements: Value[]) {
+    this.name = name;
+    this.elements = elements;
+    this.type = TypeStruct(name, ...elements.map(e => e.type));
+  }
+
+  /**
+   * Copies the struct value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
+  public copyTo(buffer: Uint8Array, offset: number) {
+    this.elements.forEach(e => {
+      e.copyTo(buffer, offset);
+      offset += e.type.size;
+    });
+  }
+
+  /**
+   * @returns the WGSL representation of this struct value
+   */
+  public wgsl(): string {
+    return `${this.name}(${this.elements.join(', ')}`;
+  }
+
+  public toString(): string {
+    return `${this.name}<${this.type}>(${this.elements.join(', ')}`;
+  }
+}
+
+/** Helper for building Structs from a list of values. */
+export function struct(name: string, ...elements: Value[]) {
+  return new Struct(name, ...elements);
+}
+
+/** Value is a WGSL representable value. */
+export type Value = Scalar | Vector | Matrix | Struct;
 
 export type SerializedValueScalar = {
   kind: 'scalar';
@@ -1385,7 +1508,17 @@ export type SerializedValueMatrix = {
   value: number[][];
 };
 
-export type SerializedValue = SerializedValueScalar | SerializedValueVector | SerializedValueMatrix;
+export type SerializedValueStruct = {
+  kind: 'struct';
+  type: string;
+  value: SerializedValue[];
+};
+
+export type SerializedValue =
+  | SerializedValueScalar
+  | SerializedValueVector
+  | SerializedValueMatrix
+  | SerializedValueStruct;
 
 export function serializeValue(v: Value): SerializedValue {
   const value = (kind: ScalarKind, s: Scalar) => {
@@ -1420,6 +1553,13 @@ export function serializeValue(v: Value): SerializedValue {
       kind: 'matrix',
       type: kind,
       value: v.elements.map(c => c.map(r => value(kind, r))) as number[][],
+    };
+  }
+  if (v instanceof Struct) {
+    return {
+      kind: 'struct',
+      type: v.name,
+      value: v.elements.map(e => serializeValue(e)),
     };
   }
 
@@ -1464,6 +1604,9 @@ export function deserializeValue(data: SerializedValue): Value {
     }
     case 'matrix': {
       return new Matrix(data.value.map(c => c.map(buildScalar)));
+    }
+    case 'struct': {
+      return struct(data.type, ...data.value.map(d => deserializeValue(d)));
     }
   }
 }
@@ -1574,7 +1717,8 @@ export const kAllFloatAndSignedIntegerScalarsAndVectors = [
 ] as const;
 
 /** @returns the inner element type of the given type */
-export function elementType(t: ScalarType | VectorType | MatrixType) {
+export function elementScalarType(t: ScalarType | VectorType | MatrixType | StructType) {
+  assert(!(t instanceof StructType), `StructType is not guaranteed to contain a single ScalarType`);
   if (t instanceof ScalarType) {
     return t;
   }

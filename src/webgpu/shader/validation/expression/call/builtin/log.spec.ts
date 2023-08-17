@@ -8,7 +8,7 @@ import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tabl
 import {
   TypeF16,
   TypeF32,
-  elementType,
+  elementScalarType,
   kAllFloatScalarsAndVectors,
   kAllIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
@@ -40,7 +40,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+    if (elementScalarType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

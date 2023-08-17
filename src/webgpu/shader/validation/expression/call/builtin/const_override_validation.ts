@@ -4,7 +4,7 @@ import {
   Type,
   TypeF16,
   Value,
-  elementType,
+  elementScalarType,
   elementsOf,
   isAbstractType,
 } from '../../../../../util/conversion.js';
@@ -76,7 +76,7 @@ export type ConstantOrOverrideStage = 'constant' | 'override';
  * @returns true if evaluation stage @p stage supports expressions of type @p.
  */
 export function stageSupportsType(stage: ConstantOrOverrideStage, type: Type) {
-  if (stage === 'override' && isAbstractType(elementType(type)!)) {
+  if (stage === 'override' && isAbstractType(elementScalarType(type)!)) {
     // Abstract numerics are concretized before being used in an override expression.
     return false;
   }
@@ -99,7 +99,7 @@ export function validateConstOrOverrideBuiltinEval(
   args: Value[],
   stage: ConstantOrOverrideStage
 ) {
-  const elTys = args.map(arg => elementType(arg.type)!);
+  const elTys = args.map(arg => elementScalarType(arg.type)!);
   const enables = elTys.some(ty => ty === TypeF16) ? 'enable f16;' : '';
 
   switch (stage) {
@@ -145,7 +145,7 @@ export function fullRangeForType(type: Type, count?: number) {
   if (count === undefined) {
     count = 25;
   }
-  switch (elementType(type)?.kind) {
+  switch (elementScalarType(type)?.kind) {
     case 'abstract-float':
       return fullF64Range({
         pos_sub: Math.ceil((count * 1) / 5),

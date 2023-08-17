@@ -265,6 +265,16 @@ export type FPMatrix =
       [FPInterval, FPInterval, FPInterval, FPInterval]
     ];
 
+export type FPValue = FPInterval | FPVector | FPMatrix | FPStruct;
+
+/** Container representing a struct of FP values */
+export class FPStruct {
+  readonly elements: FPValue[];
+  constructor(...elements: FPValue[]) {
+    this.elements = elements;
+  }
+}
+
 // Utilities
 
 /** @returns input with an appended 0, if inputs contains non-zero subnormals */
@@ -989,7 +999,7 @@ export abstract class FPTraits {
   }
 
   /** Stub for modf generator */
-  protected unimplementedModf(_x: number): { fract: FPInterval; whole: FPInterval } {
+  protected unimplementedModf(_x: number): FPStruct {
     unreachable(`Not yet implemented for ${this.kind}`);
   }
 
@@ -3589,14 +3599,14 @@ export abstract class FPTraits {
   /** All acceptance interval functions for mix(x, y, z) */
   public abstract readonly mixIntervals: ScalarTripleToInterval[];
 
-  protected modfIntervalImpl(n: number): { fract: FPInterval; whole: FPInterval } {
+  protected modfIntervalImpl(n: number): FPStruct {
     const fract = this.correctlyRoundedInterval(n % 1.0);
     const whole = this.correctlyRoundedInterval(n - (n % 1.0));
-    return { fract, whole };
+    return new FPStruct(fract, whole);
   }
 
   /** Calculate an acceptance interval of modf(x) */
-  public abstract readonly modfInterval: (n: number) => { fract: FPInterval; whole: FPInterval };
+  public abstract readonly modfInterval: (n: number) => FPStruct;
 
   private readonly MultiplicationInnerOp = {
     impl: (x: number, y: number): FPInterval => {

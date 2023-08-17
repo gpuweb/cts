@@ -5,7 +5,13 @@ Floating Point unit tests.
 import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
-import { FP, FPInterval, FPIntervalParam, IntervalBounds } from '../webgpu/util/floating_point.js';
+import {
+  FP,
+  FPInterval,
+  FPIntervalParam,
+  FPStruct,
+  IntervalBounds,
+} from '../webgpu/util/floating_point.js';
 import {
   reinterpretU16AsF16,
   reinterpretU32AsF32,
@@ -7081,15 +7087,15 @@ g.test('modfInterval_f32')
     ]
   )
   .fn(t => {
-    const expected = {
-      fract: FP.f32.toInterval(t.params.fract),
-      whole: FP.f32.toInterval(t.params.whole),
-    };
+    const expected = new FPStruct(
+      FP.f32.toInterval(t.params.fract),
+      FP.f32.toInterval(t.params.whole)
+    );
 
     const got = FP.f32.modfInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+      `f32.modfInterval([${t.params.input}) returned { fract: [${got.elements[0]}], whole: [${got.elements[1]}] }. Expected { fract: [${expected.elements[0]}], whole: [${expected.elements[1]}] }`
     );
   });
 

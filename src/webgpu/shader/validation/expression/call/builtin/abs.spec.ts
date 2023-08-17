@@ -7,7 +7,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   TypeF16,
-  elementType,
+  elementScalarType,
   kAllFloatAndIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -38,7 +38,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+    if (elementScalarType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

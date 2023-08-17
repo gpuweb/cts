@@ -8,8 +8,8 @@ import {
 } from '../shader/execution/expression/case_cache.js';
 import { Expectation, toComparator } from '../shader/execution/expression/expression.js';
 
-import { isFloatValue, Matrix, Scalar, Value, Vector } from './conversion.js';
-import { FPInterval } from './floating_point.js';
+import { isFloatValue, Matrix, Scalar, Struct, Value, Vector } from './conversion.js';
+import { FPInterval, FPStruct } from './floating_point.js';
 
 /** Comparison describes the result of a Comparator function. */
 export interface Comparison {
@@ -109,6 +109,23 @@ function compareValue(got: Value, expected: Value): Comparison {
         return c.every((_, j) => {
           return compare(got.elements[i][j], e.elements[i][j]).matched;
         });
+      });
+    }
+
+    return {
+      matched,
+      got: `${got.toString()}`,
+      expected: matched ? Colors.green(e.toString()) : Colors.red(e.toString()),
+    };
+  }
+
+  if (got instanceof Struct) {
+    const e = expected as Struct;
+    let matched = e.elements.length === got.elements.length;
+    if (matched) {
+      // Iterating and calling compare instead of just using objectEquals to use the FP specific logic from above
+      matched = got.elements.every((_, idx) => {
+        return compare(got.elements[idx], e.elements[idx]).matched;
       });
     }
 
@@ -291,6 +308,55 @@ function compareMatrix(got: Value, expected: FPInterval[][]): Comparison {
 }
 
 /**
+ * Tests it a 'got' Value is contained in 'expected' struct, returning the Comparison information.
+ * @param got the Value obtained from the test, is expected to be a Vector
+ * @param expected the expected structure of FPStruct
+ * @returns the comparison results
+ */
+function compareStruct(got: Value, expected: FPStruct): Comparison {
+  // Check got type
+  if (!(got instanceof Struct)) {
+    return {
+      matched: false,
+      got: `${Colors.red((typeof got).toString())}(${got})`,
+      expected: `Vector`,
+    };
+  }
+
+  if (got.elements.length !== expected.elements.length) {
+    return {
+      matched: false,
+      got: `Struct of ${got.elements.length} elements`,
+      expected: `${expected.elements.length} elements`,
+    };
+  }
+
+  const results = got.elements.map((_, idx) => {
+    return compare(got.elements[idx], expected.elements[idx]);
+  });
+
+  const failures = results.filter(r => !r.matched).length;
+  if (failures > 0) {
+    const expected_string = results.map((r, idx) =>
+      !r.matched
+        ? Colors.red(`[${expected.elements[idx]}]`)
+        : Colors.green(`[${expected.elements[idx]}]`)
+    );
+    return {
+      matched: false,
+      got: `[${got.elements}]`,
+      expected: `[${expected_string}]`,
+    };
+  }
+
+  return {
+    matched: true,
+    got: `[${got.elements}]`,
+    expected: `[${Colors.green(expected.toString())}]`,
+  };
+}
+
+/**
  * compare() compares 'got' to 'expected', returning the Comparison information.
  * @param got the result obtained from the test
  * @param expected the expected result
@@ -298,7 +364,7 @@ function compareMatrix(got: Value, expected: FPInterval[][]): Comparison {
  */
 export function compare(
   got: Value,
-  expected: Value | FPInterval | FPInterval[] | FPInterval[][]
+  expected: Value | FPInterval | FPInterval[] | FPInterval[][] | FPStruct
 ): Comparison {
   if (expected instanceof Array) {
     if (expected[0] instanceof Array) {
@@ -312,6 +378,10 @@ export function compare(
 
   if (expected instanceof FPInterval) {
     return compareInterval(got, expected);
+  }
+
+  if (expected instanceof FPStruct) {
+    return compareStruct(got, expected);
   }
 
   return compareValue(got, expected);

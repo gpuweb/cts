@@ -9,7 +9,7 @@ import { kValue } from '../../../../../util/constants.js';
 import {
   TypeF16,
   TypeF32,
-  elementType,
+  elementScalarType,
   kAllFloatScalarsAndVectors,
   kAllIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
@@ -65,13 +65,13 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       ])
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+    if (elementScalarType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
     const type = kValuesTypes[t.params.type];
-    const expectedResult = isRepresentable(Math.exp(t.params.value), elementType(type));
+    const expectedResult = isRepresentable(Math.exp(t.params.value), elementScalarType(type));
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,

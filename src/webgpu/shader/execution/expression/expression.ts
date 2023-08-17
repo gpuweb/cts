@@ -17,9 +17,11 @@ import {
   Matrix,
   MatrixType,
   ScalarBuilder,
-  scalarTypeOf,
+  scalarTypesOf,
+  StructType,
+  Struct,
 } from '../../../util/conversion.js';
-import { FPInterval } from '../../../util/floating_point.js';
+import { FPInterval, FPStruct } from '../../../util/floating_point.js';
 import {
   cartesianProduct,
   QuantizeFunc,
@@ -27,7 +29,13 @@ import {
   quantizeToU32,
 } from '../../../util/math.js';
 
-export type Expectation = Value | FPInterval | FPInterval[] | FPInterval[][] | Comparator;
+export type Expectation =
+  | Value
+  | FPInterval
+  | FPInterval[]
+  | FPInterval[][]
+  | FPStruct
+  | Comparator;
 
 /** @returns if this Expectation actually a Comparator */
 export function isComparator(e: Expectation): e is Comparator {
@@ -36,7 +44,9 @@ export function isComparator(e: Expectation): e is Comparator {
     e instanceof Scalar ||
     e instanceof Vector ||
     e instanceof Matrix ||
-    e instanceof Array
+    e instanceof Struct ||
+    e instanceof Array ||
+    e instanceof FPStruct
   );
 }
 
@@ -121,6 +131,12 @@ function valueStride(ty: Type): number {
     unreachable(
       `Attempted to get stride length for a matrix with dimensions (${ty.cols}x${ty.rows}), which isn't currently handled`
     );
+  }
+
+  if (ty instanceof StructType) {
+    return ty.elementTypes.reduce((sum, cur) => {
+      return sum + valueStride(cur);
+    }, 0);
   }
 
   // Handles scalars and vectors
@@ -455,7 +471,7 @@ function wgslValuesArray(
   expressionBuilder: ExpressionBuilder
 ): string {
   // AbstractFloat values cannot be stored in an array
-  if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')) {
+  if (parameterTypes.some(ty => scalarTypesOf(ty).some(t => t.kind === 'abstract-float'))) {
     return '';
   }
   return `
@@ -485,9 +501,24 @@ function wgslInputVar(inputSource: InputSource, count: number) {
  */
 function wgslHeader(parameterTypes: Array<Type>, resultType: Type) {
   const usedF16 =
-    scalarTypeOf(resultType).kind === 'f16' ||
-    parameterTypes.some((ty: Type) => scalarTypeOf(ty).kind === 'f16');
-  const header = usedF16 ? 'enable f16;\n' : '';
+    scalarTypesOf(resultType).some(t => t.kind === 'f16') ||
+    parameterTypes.some((ty: Type) => scalarTypesOf(ty).some(t => t.kind === 'f16'));
+  let header = usedF16 ? 'enable f16;\n' : '';
+
+  const structTypes: StructType[] = [];
+  if (resultType instanceof StructType) {
+    structTypes.push(resultType);
+  }
+
+  structTypes.push(...(parameterTypes.filter(t => t instanceof StructType) as StructType[]));
+
+  // Passing through set to make sure added decls are unique
+  header += [...new Set(structTypes)].map(s => {
+    const elemDecls = s.elementTypes.map((ty, idx) => `e${idx} : ${ty}`);
+    // const elemDecls = s.elementTypes.map((ty, idx) => `@size(${valueStride(ty)}) e${idx} : ${ty}`);
+    return `struct ${s.name} {\n  ${elemDecls.join(',\n  ')}\n}`;
+  });
+
   return header;
 }
 
@@ -495,13 +526,30 @@ function wgslHeader(parameterTypes: Array<Type>, resultType: Type) {
  * ExpressionBuilder returns the WGSL used to evaluate an expression with the
  * given input values.
  */
-export type ExpressionBuilder = (values: Array<string>) => string;
+export type ExpressionBuilder = (values: string[]) => string;
 
 /**
- * Returns a ShaderBuilder that builds a basic expression test shader.
- * @param expressionBuilder the expression builder
+ * AssignmentBuilder returns the WGSL used to take the result of an expression
+ * and assign it to the output value
  */
-export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): ShaderBuilder {
+export type AssignmentBuilder = (result: string) => string;
+
+/**
+ * @returns a ShaderBuilder that builds a shader for expressions that take in
+ * one input expression and return one result value.
+ *
+ * @param expressionBuilder defines the expression being tested
+ * @param assignmentBuilder defines how the result of expressionBuilder should
+ *                          be assigned to the output. The default should be
+ *                          sufficient for most usages, but needs to be defined
+ *                          when the result is a struct.
+ */
+export function basicExpressionBuilder(
+  expressionBuilder: ExpressionBuilder,
+  assignmentBuilder: AssignmentBuilder = result => {
+    return `${result}`;
+  }
+): ShaderBuilder {
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
@@ -514,8 +562,8 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
       //////////////////////////////////////////////////////////////////////////
       let body = '';
       if (
-        scalarTypeOf(resultType).kind !== 'abstract-float' &&
-        parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')
+        scalarTypesOf(resultType).every(r => r.kind !== 'abstract-float') &&
+        parameterTypes.some(ty => scalarTypesOf(ty).some(t => t.kind === 'abstract-float'))
       ) {
         // Directly assign the expression to the output, to avoid an
         // intermediate store, which will concretize the value early
@@ -524,11 +572,11 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
             (c, i) =>
               `  outputs[${i}].value = ${toStorage(
                 resultType,
-                expressionBuilder(map(c.input, v => v.wgsl()))
+                assignmentBuilder(expressionBuilder(map(c.input, v => v.wgsl())))
               )};`
           )
           .join('\n  ');
-      } else if (scalarTypeOf(resultType).kind === 'abstract-float') {
+      } else if (scalarTypesOf(resultType).some(r => r.kind === 'abstract-float')) {
         // AbstractFloats are f64s under the hood. WebGPU does not support
         // putting f64s in buffers, so the result needs to be split up into u32s
         // and rebuilt in the test framework.
@@ -622,13 +670,13 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
         body = cases
           .map((_, i) => {
             const value = `values[${i}]`;
-            return `  outputs[${i}].value = ${toStorage(resultType, value)};`;
+            return `  outputs[${i}].value = ${assignmentBuilder(toStorage(resultType, value))};`;
           })
           .join('\n  ');
       } else {
         body = `
   for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = ${toStorage(resultType, `values[i]`)};
+    outputs[i].value = ${assignmentBuilder(toStorage(resultType, `values[i]`))};
   }`;
       }
 
@@ -670,7 +718,7 @@ ${wgslInputVar(inputSource, cases.length)}
 @compute @workgroup_size(1)
 fn main() {
   for (var i = 0; i < ${cases.length}; i++) {
-    outputs[i].value = ${expr};
+    outputs[i].value = ${assignmentBuilder(expr)};
   }
 }
 `;
@@ -679,7 +727,8 @@ fn main() {
 }
 
 /**
- * Returns a ShaderBuilder that builds a compound assignment operator test shader.
+ * @returns a ShaderBuilder that builds shaders that applu a compound assignment
+ * operator to generate results.
  * @param op the compound operator
  */
 export function compoundAssignmentBuilder(op: string): ShaderBuilder {

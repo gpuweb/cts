@@ -10,7 +10,7 @@ import {
   TypeF32,
   Vector,
   VectorType,
-  elementType,
+  elementScalarType,
   kAllFloatScalarsAndVectors,
   kAllIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
@@ -46,7 +46,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .expand('x', u => unique(kMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+    if (elementScalarType(kValuesTypes[t.params.type]) === TypeF16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -54,7 +54,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const type = kValuesTypes[t.params.type];
     const expectedResult = isRepresentable(
       Math.abs(Math.atan2(t.params.y, t.params.x)),
-      elementType(type)
+      elementScalarType(type)
     );
     validateConstOrOverrideBuiltinEval(
       t,
