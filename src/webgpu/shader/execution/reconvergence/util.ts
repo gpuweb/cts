@@ -20,6 +20,18 @@ function getReplicatedMask(submask: bigint, size: number, total: number = 128): 
   return mask;
 }
 
+/** @returns a mask with only the least significant 1 in |value| set for each subgroup. */
+function getElectMask(value: bigint, size: number, total: number = 128): bigint {
+  let mask = value;
+  let count = 0;
+  while (!(mask & 1n)) {
+    mask >>= 1n;
+    count++;
+  }
+  mask = value & (1n << BigInt(count));
+  return getReplicatedMask(mask, size, total);
+}
+
 /**
  * Produce the subgroup mask for local invocation |id| within |fullMask|
  *
@@ -99,28 +111,41 @@ enum OpType {
   ForUniform,
   EndForUniform,
 
+  // Equivalent to:
+  // for (var i = 0u; ; i++, ballot)
+  // Always includes an "elect"-based break in the loop.
+  ForInf,
+  EndForInf,
+
   // Function return
   Return,
+
+  // Emulated elect for breaks from infinite loops.
+  Elect,
 
   MAX,
 }
 
 function serializeOpType(op: OpType): string {
+  // prettier-ignore
   switch (op) {
-    case OpType.Ballot: return 'Ballot';
-    case OpType.Store:  return 'Store';
-    case OpType.IfMask: return 'IfMask';
-    case OpType.ElseMask: return 'ElseMask';
-    case OpType.EndIf:    return 'EndIf';
-    case OpType.IfLoopCount: return 'IfLoopCount';
+    case OpType.Ballot:        return 'Ballot';
+    case OpType.Store:         return 'Store';
+    case OpType.IfMask:        return 'IfMask';
+    case OpType.ElseMask:      return 'ElseMask';
+    case OpType.EndIf:         return 'EndIf';
+    case OpType.IfLoopCount:   return 'IfLoopCount';
     case OpType.ElseLoopCount: return 'ElseLoopCount';
-    case OpType.IfId:         return 'IfId';
-    case OpType.ElseId:       return 'ElseId';
+    case OpType.IfId:          return 'IfId';
+    case OpType.ElseId:        return 'ElseId';
     case OpType.Break:         return 'Break';
     case OpType.Continue:      return 'Continue';
     case OpType.ForUniform:    return 'ForUniform';
     case OpType.EndForUniform: return 'EndForUniform';
+    case OpType.ForInf:        return 'ForInf';
+    case OpType.EndForInf:     return 'EndForInf';
     case OpType.Return:        return 'Return';
+    case OpType.Elect:         return 'Elect';
     default:
       unreachable('Unhandled op');
       break;
@@ -171,6 +196,8 @@ export class Program {
   private indents: number[];
   private readonly storeBase: number;
   public refData: Uint32Array;
+  private isLoopInf: Map<number, boolean>;
+  private doneInfLoopBreak: Map<number, boolean>;
 
   /**
    * constructor
@@ -208,6 +235,8 @@ export class Program {
     this.indents.push(2);
     this.storeBase = 0x10000;
     this.refData = new Uint32Array();
+    this.isLoopInf = new Map();
+    this.doneInfLoopBreak = new Map();
   }
 
   /** @returns A random float between 0 and 1 */
@@ -247,10 +276,12 @@ export class Program {
             break;
           }
           case 4: {
-            if (this.loopNesting <= 3) {
+            // Avoid very deep loop nests to limit memory and runtime.
+            if (this.loopNesting <= 2) {
               const r2 = this.getRandomUint(3);
               switch (r2) {
                 case 0: this.genForUniform(); break;
+                case 1: this.genForInf(); break;
                 case 2:
                 default: {
                   break;
@@ -278,41 +309,42 @@ export class Program {
           }
         }
       }
+      this.genBallot();
     }
   }
 
   private genBallot() {
-		// Optionally insert ballots, stores, and noise.
+    // Optionally insert ballots, stores, and noise.
     // Ballots and stores are used to determine correctness.
-		if (this.getRandomFloat() < 0.2) {
+    if (this.getRandomFloat() < 0.2) {
       const cur_length = this.ops.length;
-			if (cur_length < 2 ||
-			   !(this.ops[cur_length - 1].type == OpType.Ballot ||
-				 (this.ops[cur_length-1].type == OpType.Store && this.ops[cur_length - 2].type == OpType.Ballot))) {
+      if (cur_length < 2 ||
+         !(this.ops[cur_length - 1].type == OpType.Ballot ||
+         (this.ops[cur_length-1].type == OpType.Store && this.ops[cur_length - 2].type == OpType.Ballot))) {
         // Perform a store with each ballot so the results can be correlated.
-				//if (this.style != Style.Maximal)
-					this.ops.push(new Op(OpType.Store, cur_length + this.storeBase));
-				this.ops.push(new Op(OpType.Ballot, 0));
-			}
-		}
+        //if (this.style != Style.Maximal)
+          this.ops.push(new Op(OpType.Store, cur_length + this.storeBase));
+        this.ops.push(new Op(OpType.Ballot, 0));
+      }
+    }
 
-		if (this.getRandomFloat() < 0.1) {
+    if (this.getRandomFloat() < 0.1) {
       const cur_length = this.ops.length;
-			if (cur_length < 2 ||
-			   !(this.ops[cur_length - 1].type == OpType.Store ||
-				 (this.ops[cur_length - 1].type == OpType.Ballot && this.ops[cur_length - 2].type == OpType.Store))) {
-				// Subgroup and workgroup styles do a store with every ballot.
+      if (cur_length < 2 ||
+         !(this.ops[cur_length - 1].type == OpType.Store ||
+         (this.ops[cur_length - 1].type == OpType.Ballot && this.ops[cur_length - 2].type == OpType.Store))) {
+        // Subgroup and workgroup styles do a store with every ballot.
         // Don't bloat the code by adding more.
-				if (this.style == Style.Maximal)
-					this.ops.push(new Op(OpType.Store, cur_length + this.storeBase));
-			}
-		}
+        if (this.style == Style.Maximal)
+          this.ops.push(new Op(OpType.Store, cur_length + this.storeBase));
+      }
+    }
 
-		//deUint32 r = this.getRandomUint(10000);
-		//if (r < 3) {
-		//	ops.push_back({OP_NOISE, 0});
+    //deUint32 r = this.getRandomUint(10000);
+    //if (r < 3) {
+    //  ops.push_back({OP_NOISE, 0});
     //} else if (r < 10) {
-		//	ops.push_back({OP_NOISE, 1});
+    //  ops.push_back({OP_NOISE, 1});
     //}
   }
 
@@ -363,8 +395,8 @@ export class Program {
 
   private genForUniform() {
     const n = this.getRandomUint(5) + 1; // [1, 5]
+    const header = this.ops.length;
     this.ops.push(new Op(OpType.ForUniform, n));
-    const header = this.ops.length - 1;
     this.nesting++;
     this.loopNesting++;
     this.loopNestingThisFunction++;
@@ -375,39 +407,85 @@ export class Program {
     this.nesting--;
   }
 
+  private genForInf() {
+    const header = this.ops.length;
+    this.ops.push(new Op(OpType.ForInf, 0));
+    this.nesting++;
+    this.loopNesting++;
+    this.loopNestingThisFunction++;
+    this.isLoopInf.set(this.loopNesting, true);
+    this.doneInfLoopBreak.set(this.loopNesting, false);
+
+    this.pickOp(2);
+
+    this.genElect(true);
+    this.doneInfLoopBreak.set(this.loopNesting, true);
+
+    this.pickOp(2);
+
+    this.ops.push(new Op(OpType.EndForInf, header));
+    this.isLoopInf.set(this.loopNesting, false);
+    this.doneInfLoopBreak.set(this.loopNesting, false);
+    this.loopNestingThisFunction--;
+    this.loopNesting--;
+    this.nesting--;
+  }
+
+  private genElect(forceBreak: boolean) {
+    this.ops.push(new Op(OpType.Elect, 0));
+    this.nesting++;
+
+    if (forceBreak) {
+      this.genBallot();
+      this.genBallot();
+      if (this.getRandomFloat() < 0.1) {
+        this.pickOp(1);
+      }
+
+      // Sometimes use a return if we're in a call.
+      if (this.callNesting > 0 && this.getRandomFloat() < 0.3) {
+        this.ops.push(new Op(OpType.Return, 0));
+      } else {
+        this.genBreak();
+      }
+    } else {
+      this.pickOp(2);
+    }
+
+    this.ops.push(new Op(OpType.EndIf, 0));
+    this.nesting--;
+  }
+
   private genBreak() {
-		if (this.loopNestingThisFunction > 0)
-		{
-			// Sometimes put the break in a divergent if
-			if (this.getRandomFloat() < 0.1) {
+    if (this.loopNestingThisFunction > 0) {
+      // Sometimes put the break in a divergent if
+      if (this.getRandomFloat() < 0.1) {
         const r = this.getRandomUint(this.numMasks-1) + 1;
         this.ops.push(new Op(OpType.IfMask, r));
         this.ops.push(new Op(OpType.Break, 0));
         this.ops.push(new Op(OpType.ElseMask, r));
         this.ops.push(new Op(OpType.Break, 0));
         this.ops.push(new Op(OpType.EndIf, 0));
-			} else {
-				this.ops.push(new Op(OpType.Break, 0));
+      } else {
+        this.ops.push(new Op(OpType.Break, 0));
       }
-		}
+    }
   }
 
   private genContinue() {
-    // TODO: need to avoid infinite loops
-		if (this.loopNestingThisFunction > 0)
-		{
-			// Sometimes put the continue in a divergent if
-			if (this.getRandomFloat() < 0.1) {
+    if (this.loopNestingThisFunction > 0 && !this.isLoopInf.get(this.loopNesting)) {
+      // Sometimes put the continue in a divergent if
+      if (this.getRandomFloat() < 0.1) {
         const r = this.getRandomUint(this.numMasks-1) + 1;
         this.ops.push(new Op(OpType.IfMask, r));
         this.ops.push(new Op(OpType.Continue, 0));
         this.ops.push(new Op(OpType.ElseMask, r));
         this.ops.push(new Op(OpType.Break, 0));
         this.ops.push(new Op(OpType.EndIf, 0));
-			} else {
-				this.ops.push(new Op(OpType.Continue, 0));
+      } else {
+        this.ops.push(new Op(OpType.Continue, 0));
       }
-		}
+    }
   }
 
   private genReturn() {
@@ -429,6 +507,7 @@ export class Program {
     }
   }
 
+  /** @returns The WGSL code for the program */
   public genCode(): string {
     for (let i = 0; i < this.ops.length; i++) {
       const op = this.ops[i];
@@ -507,11 +586,25 @@ export class Program {
           this.loopNesting++;
           break;
         }
-        case OpType.EndForUniform: {
+        case OpType.EndForUniform:
+        case OpType.EndForInf: {
           this.loopNesting--;
           this.decreaseIndent();
           this.genIndent();
           this.addCode(`}\n`);
+          break;
+        }
+        case OpType.ForInf: {
+          this.genIndent();
+          const iter = `i${this.loopNesting}`;
+          this.addCode(`for (var ${iter} = 0u; true; ${iter} = infLoopIncrement(${iter})) {\n`);
+          this.loopNesting++;
+          this.increaseIndent();
+          // Safety mechanism for hardware runs.
+          this.genIndent();
+          this.addCode(`// Safety valve\n`);
+          this.genIndent();
+          this.addCode(`if ${iter} >= 128u { break; }\n\n`);
           break;
         }
         case OpType.Break: {
@@ -527,6 +620,12 @@ export class Program {
         case OpType.Return: {
           this.genIndent();
           this.addCode(`return;\n`);
+          break;
+        }
+        case OpType.Elect: {
+          this.genIndent();
+          this.addCode(`if subgroupElect() {\n`);
+          this.increaseIndent();
           break;
         }
       }
@@ -575,6 +674,24 @@ fn main(
   }
 
   f0();
+}
+
+fn infLoopIncrement(iter : u32) -> u32 {
+  ballots[stride * output_loc + local_id] = subgroupBallot();
+  output_loc++;
+  return iter + 1;
+}
+
+fn subgroupElect() -> bool {
+  let b = subgroupBallot();
+  let lsb = firstTrailingBit(b);
+  let x_m1 = lsb.x != 0xffffffffu;
+  let y_m1 = lsb.y != 0xffffffffu;
+  let z_m1 = lsb.z != 0xffffffffu;
+  let w_or_z = select(lsb.w + 96, lsb.z + 64, z_m1);
+  let wz_or_y = select(w_or_z, lsb.y + 32, y_m1);
+  let val = select(wz_or_y, lsb.x, x_m1);
+  return val == subgroup_id;
 }
 
 fn testBit(mask : vec4u, id : u32) -> bool {
@@ -632,7 +749,7 @@ ${this.functions[i]}
   /**
    * Sizes the simulation buffer.
    *
-   * The total size is # of invocations * |locs| * 4 (uint4 is written).
+   * The total size is (# of invocations) * |locs| * 4 (uint4 is written).
    */
   public sizeRefData(locs: number) {
     this.refData = new Uint32Array(locs * 4 * this.invocations);
@@ -640,6 +757,14 @@ ${this.functions[i]}
   }
 
   // TODO: Reconvergence guarantees are not as strong as this simulation.
+  /**
+   * Simulate the program for the given subgroup size
+   *
+   * @param countOnly    If true, the reference output is not generated just max locations
+   * @param subgroupSize The subgroup size to simulate
+   *
+   * BigInt is not the fastest value to manipulate. Care should be taken to optimize it's use.
+   */
   public simulate(countOnly: boolean, subgroupSize: number): number {
     class State {
       // Active invocations
@@ -706,7 +831,7 @@ ${this.functions[i]}
       switch (op.type) {
         case OpType.Ballot: {
           const curMask = stack[nesting].activeMask;
-				  // Flag if this ballot is not workgroup uniform.
+          // Flag if this ballot is not workgroup uniform.
           if (this.style == Style.Workgroup && any(curMask) && !all(curMask, this.invocations)) {
             op.uniform = false;
           }
@@ -721,22 +846,26 @@ ${this.functions[i]}
             }
           }
 
+          if (!any(curMask)) {
+            break;
+          }
+
+          let mask = new Uint32Array();
           for (let id = 0; id < this.invocations; id++) {
+            if (id % subgroupSize === 0) {
+              mask = getSubgroupMask(curMask, subgroupSize, id);
+            }
             if (testBit(curMask, id)) {
               if (!countOnly) {
                 const idx = this.baseIndex(id, locs[id]);
                 if (op.uniform) {
-                  let mask = getSubgroupMask(curMask, subgroupSize, id);
                   this.refData[idx + 0] = mask[0];
                   this.refData[idx + 1] = mask[1];
                   this.refData[idx + 2] = mask[2];
                   this.refData[idx + 3] = mask[3];
                 } else {
                   // Emit a magic value to indicate that we shouldn't validate this ballot
-                  this.refData[idx + 0] = 0x12345678
-                  this.refData[idx + 1] = 0x12345678
-                  this.refData[idx + 2] = 0x12345678
-                  this.refData[idx + 3] = 0x12345678
+                  this.refData.fill(0x12345678, idx, idx + 4);
                 }
               }
               locs[id]++;
@@ -745,14 +874,15 @@ ${this.functions[i]}
           break;
         }
         case OpType.Store: {
+          if (!any(stack[nesting].activeMask)) {
+            break;
+          }
+
           for (let id = 0; id < this.invocations; id++) {
             if (testBit(stack[nesting].activeMask, id)) {
               if (!countOnly) {
                 const idx = this.baseIndex(id, locs[id]);
-                this.refData[idx + 0] = op.value;
-                this.refData[idx + 1] = op.value;
-                this.refData[idx + 2] = op.value;
-                this.refData[idx + 3] = op.value;
+                this.refData.fill(op.value, idx, idx + 4);
               }
               locs[id]++;
             }
@@ -768,7 +898,7 @@ ${this.functions[i]}
           cur.isLoop = 0;
           cur.isSwitch = 0;
           // O is always uniform true.
-          if (op.value != 0) {
+          if (op.value != 0 && any(cur.activeMask)) {
             let subMask = this.getValueMask(op.value);
             subMask &= getMask(subgroupSize);
             cur.activeMask &= getReplicatedMask(subMask, subgroupSize, this.invocations);
@@ -780,7 +910,7 @@ ${this.functions[i]}
           const cur = stack[nesting];
           if (op.value == 0) {
             cur.activeMask = 0n;
-          } else {
+          } else if (any(cur.activeMask)) {
             const prev = stack[nesting-1];
             let subMask = this.getValueMask(op.value);
             subMask &= getMask(subgroupSize);
@@ -797,15 +927,19 @@ ${this.functions[i]}
           cur.header = i;
           cur.isLoop = 0;
           cur.isSwitch = 0;
-          // All invocations with subgroup invocation id less than op.value are active.
-          cur.activeMask &= getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+          if (any(cur.activeMask)) {
+            // All invocations with subgroup invocation id less than op.value are active.
+            cur.activeMask &= getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+          }
           break;
         }
         case OpType.ElseId: {
           const prev = stack[nesting-1];
           // All invocations with a subgroup invocation id greater or equal to op.value are active.
           stack[nesting].activeMask = prev.activeMask;
-          stack[nesting].activeMask &= ~getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+          if (any(prev.activeMask)) {
+            stack[nesting].activeMask &= ~getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+          }
           break;
         }
         case OpType.IfLoopCount: {
@@ -822,7 +956,9 @@ ${this.functions[i]}
           cur.header = i;
           cur.isLoop = 0;
           cur.isSwitch = 0;
-          cur.activeMask &= getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
+          if (any(cur.activeMask)) {
+            cur.activeMask &= getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
+          }
           break;
         }
         case OpType.ElseLoopCount: {
@@ -835,7 +971,9 @@ ${this.functions[i]}
           }
 
           stack[nesting].activeMask = stack[nesting-1].activeMask;
-          stack[nesting].activeMask &= ~getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
+          if (any(stack[nesting].activeMask)) {
+            stack[nesting].activeMask &= ~getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
+          }
           break;
         }
         case OpType.EndIf: {
@@ -859,10 +997,51 @@ ${this.functions[i]}
           // Determine which invocations have another iteration of the loop to execute.
           const cur = stack[nesting];
           cur.tripCount++;
-          cur.activeMask |= stack[nesting].continueMask;
+          cur.activeMask |= cur.continueMask;
           cur.continueMask = 0n;
           if (cur.tripCount < this.ops[cur.header].value &&
               any(cur.activeMask)) {
+            i = cur.header + 1;
+            continue;
+          } else {
+            loopNesting--;
+            nesting--;
+            stack.pop();
+          }
+          break;
+        }
+        case OpType.ForInf: {
+          nesting++;
+          loopNesting++;
+          stack.push(new State());
+          const cur = stack[nesting];
+          cur.header = i;
+          cur.isLoop = true;
+          cur.activeMask = stack[nesting-1].activeMask;
+          break;
+        }
+        case OpType.EndForInf: {
+          const cur = stack[nesting];
+          cur.tripCount++;
+          cur.activeMask |= cur.continueMask;
+          cur.continueMask = 0n;
+          if (any(cur.activeMask)) {
+            let maskArray = new Uint32Array();
+            for (let id = 0; id < this.invocations; id++) {
+              if (id % subgroupSize === 0) {
+                maskArray = getSubgroupMask(cur.activeMask, subgroupSize, id);
+              }
+              if (testBit(cur.activeMask, id)) {
+                if (!countOnly) {
+                  const idx = this.baseIndex(id, locs[id]);
+                  this.refData[idx + 0] = maskArray[0];
+                  this.refData[idx + 1] = maskArray[1];
+                  this.refData[idx + 2] = maskArray[2];
+                  this.refData[idx + 3] = maskArray[3];
+                }
+                locs[id]++;
+              }
+            }
             i = cur.header + 1;
             continue;
           } else {
@@ -876,6 +1055,10 @@ ${this.functions[i]}
           // Remove this active mask from all stack entries for the current loop/switch.
           let n = nesting;
           let mask: bigint = stack[nesting].activeMask;
+          if (!any(mask)) {
+            break;
+          }
+
           while (true) {
             stack[n].activeMask &= ~mask;
             if (stack[n].isLoop || stack[n].isSwitch) {
@@ -891,6 +1074,10 @@ ${this.functions[i]}
           // Add this mask to the loop's continue mask for the next iteration.
           let n = nesting;
           let mask: bigint = stack[nesting].activeMask;
+          if (!any(mask)) {
+            break;
+          }
+
           while (true) {
             stack[n].activeMask &= ~mask;
             if (stack[n].isLoop) {
@@ -904,6 +1091,10 @@ ${this.functions[i]}
         case OpType.Return: {
           // Remove this active mask from all stack entries for this function.
           let mask: bigint = stack[nesting].activeMask;
+          if (!any(mask)) {
+            break;
+          }
+
           for (let n = nesting; n >= 0; n--) {
             stack[n].activeMask &= ~mask;
             if (stack[n].isCall) {
@@ -912,8 +1103,21 @@ ${this.functions[i]}
           }
           break;
         }
+        case OpType.Elect: {
+          nesting++;
+          stack.push(new State());
+          const cur = stack[nesting];
+          cur.copy(stack[nesting-1]);
+          cur.header = i;
+          cur.isLoop = 0;
+          cur.isSwitch = 0;
+          if (any(cur.activeMask)) {
+            cur.activeMask = getElectMask(cur.activeMask, subgroupSize, this.invocations);
+          }
+          break;
+        }
         default: {
-          unreachable(`Unhandled op ${op.type}`);
+          unreachable(`Unhandled op ${serializeOpType(op.type)}`);
         }
       }
       i++;
@@ -931,7 +1135,9 @@ ${this.functions[i]}
     return maxLoc;
   }
 
-  // Returns an active mask for the mask at the given index.
+  /**
+   * @returns a mask formed from |masks[idx]|
+   */
   private getValueMask(idx: number): bigint {
     const x = this.masks[4*idx];
     const y = this.masks[4*idx+1];
@@ -952,6 +1158,7 @@ ${this.functions[i]}
       while (this.ops.length < this.minCount) {
         this.pickOp(1);
       }
+      //break;
 
       // If this is an uniform control flow case, make sure a uniform ballot is
       // generated. A subgroup size of 64 is used for testing purposes here.
@@ -961,6 +1168,7 @@ ${this.functions[i]}
     } while (this.style != Style.Maximal && !this.isUCF());
   }
 
+  /** @returns true if the program has uniform control flow for some ballot */
   private isUCF(): boolean {
     let ucf: boolean = false;
     for (let i = 0; i < this.ops.length; i++) {
@@ -1033,7 +1241,7 @@ ${this.functions[i]}
             // Fully converged simulation
 
             // Search for the corresponding store in the result data.
-            const storeRefLoc = refLoc - 1;
+            let storeRefLoc = refLoc - 1;
             while (resLoc < numLocs &&
                    !this.matchResult(ballots, this.baseIndex(id, resLoc),
                                      this.refData, this.baseIndex(id, storeRefLoc))) {
@@ -1041,7 +1249,8 @@ ${this.functions[i]}
             }
 
             if (resLoc >= numLocs) {
-              return Error(`Failure for invocation ${id}: could not find associated store for reference location ${storeRefLoc}`);
+              const refIdx = this.baseIndex(id, storeRefLoc);
+              return Error(`Failure for invocation ${id}: could not find associated store for reference location ${storeRefLoc}: ${this.refData[refIdx]},${this.refData[refIdx+1]},${this.refData[refIdx+2]},${this.refData[refIdx+3]}`);
             } else {
               // Found a matching store, now check the ballot.
               const resIdx = this.baseIndex(id, resLoc + 1);
@@ -1259,6 +1468,34 @@ ${this.functions[i]}
     this.ops.push(new Op(OpType.EndIf, 0));
 
     this.ops.push(new Op(OpType.EndIf, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * for (var i = 0; ; i++, ballot()) {
+   *   ballot();
+   *   if (subgroupElect()) {
+   *     ballot();
+   *     break;
+   *   }
+   * }
+   * ballot();
+   */
+  public predefinedProgram4() {
+    this.ops.push(new Op(OpType.ForInf, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.Elect, 0));
+
+    this.ops.push(new Op(OpType.Break, 0));
+
+    this.ops.push(new Op(OpType.EndIf, 0));
+    this.ops.push(new Op(OpType.EndForInf, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
   }
 };
 

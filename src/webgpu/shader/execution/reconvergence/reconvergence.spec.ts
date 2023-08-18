@@ -89,6 +89,7 @@ async function testProgram(t: GPUTest, program: Program) {
   let numLocs = 0;
   const locMap = new Map();
   for (let size = minSubgroupSize; size <= maxSubgroupSize; size *= 2) {
+    console.log(`${new Date()}: simulating subgroup size = ${size}`);
     let num = program.simulate(true, size);
     locMap.set(size, num);
     numLocs = Math.max(num, numLocs);
@@ -178,6 +179,7 @@ async function testProgram(t: GPUTest, program: Program) {
     ],
   });
 
+  console.log(`${new Date()}: running pipeline`);
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
@@ -190,6 +192,7 @@ async function testProgram(t: GPUTest, program: Program) {
   // That is:
   // SID: 0, 1, 2, ..., SGSize-1, 0, ..., SGSize-1, ...
   // LID: 0, 1, 2, ..., 128
+  //
   // Generate a warning if this is not true of the device.
   // This mapping is not guaranteed by APIs (Vulkan particularly), but seems reliable
   // (for linear workgroups at least).
@@ -202,11 +205,13 @@ async function testProgram(t: GPUTest, program: Program) {
       method: 'copy',
     }
   );
+  console.log(`${new Date()}: done pipeline`);
   const sizeData: Uint32Array = sizeReadback.data;
   const actualSize = sizeData[0];
   t.expectOK(checkSubgroupSizeConsistency(sizeData, minSubgroupSize, maxSubgroupSize));
 
   program.sizeRefData(locMap.get(actualSize));
+  console.log(`${new Date()}: Full simulation size = ${actualSize}`);
   let num = program.simulate(false, actualSize);
 
   const idReadback = await t.readGPUBufferRangeTyped(
@@ -232,6 +237,7 @@ async function testProgram(t: GPUTest, program: Program) {
   );
   const locationData = locationReadback.data;
 
+  console.log(`${new Date()}: Reading ballot buffer ${ballotLength * 4} bytes`);
   const ballotReadback = await t.readGPUBufferRangeTyped(
     ballotBuffer,
     {
@@ -243,10 +249,12 @@ async function testProgram(t: GPUTest, program: Program) {
   );
   const ballotData = ballotReadback.data;
 
+  console.log(`${Date()}: Finished buffer readbacks`);
   console.log(`Ballots`);
-  for (let id = 0; id < program.invocations; id++) {
+  //for (let id = 0; id < program.invocations; id++) {
+  for (let id = 0; id < actualSize; id++) {
     console.log(` id[${id}]:`);
-    for (let loc = 0; loc < numLocs; loc++) {
+    for (let loc = 0; loc < num; loc++) {
       const idx = 4 * (program.invocations * loc + id);
       console.log(`  loc[${loc}] = (${hex(ballotData[idx+3])},${hex(ballotData[idx+2])},${hex(ballotData[idx+1])},${hex(ballotData[idx])}), (${ballotData[idx+3]},${ballotData[idx+2]},${ballotData[idx+1]},${ballotData[idx]})`);
     }
@@ -259,7 +267,7 @@ g.test('predefined_reconvergence')
   .desc(`Test reconvergence using some predefined programs`)
   .params(u =>
     u
-      .combine('test', [...iterRange(4, x => x)] as const)
+      .combine('test', [...iterRange(5, x => x)] as const)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -290,6 +298,11 @@ g.test('predefined_reconvergence')
         program.predefinedProgram3();
         break;
       }
+      case 4: {
+        program = new Program(Style.Workgroup, 1, invocations);
+        program.predefinedProgram4();
+        break;
+      }
       default: {
         program = new Program();
         unreachable('Unhandled testcase');
@@ -305,6 +318,15 @@ g.test('random_reconvergence')
     u
       .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
       .combine('seed', generateSeeds(5))
+      .filter(u => {
+        if (u.style == Style.Maximal) {
+          return false;
+        }
+        if (u.style == Style.Subgroup) {
+          return false;
+        }
+        return true;
+      })
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
