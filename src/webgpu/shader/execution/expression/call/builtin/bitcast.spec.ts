@@ -42,10 +42,9 @@ import {
   TypeU32,
   TypeF16,
   TypeVec,
-  vec2,
-  vec4,
   Vector,
   Scalar,
+  toVector,
 } from '../../../../../util/conversion.js';
 import { FPInterval, FP } from '../../../../../util/floating_point.js';
 import {
@@ -144,7 +143,7 @@ function u32ToU16x2(u32: number): number[] {
  */
 function u16x2ToVec2F16(u16x2: number[]): Vector {
   assert(u16x2.length === 2);
-  return vec2(f16(reinterpretU16AsF16(u16x2[0])), f16(reinterpretU16AsF16(u16x2[1])));
+  return toVector(u16x2.map(reinterpretU16AsF16), f16);
 }
 
 /**
@@ -152,12 +151,7 @@ function u16x2ToVec2F16(u16x2: number[]): Vector {
  */
 function u16x4ToVec4F16(u16x4: number[]): Vector {
   assert(u16x4.length === 4);
-  return vec4(
-    f16(reinterpretU16AsF16(u16x4[0])),
-    f16(reinterpretU16AsF16(u16x4[1])),
-    f16(reinterpretU16AsF16(u16x4[2])),
-    f16(reinterpretU16AsF16(u16x4[3]))
-  );
+  return toVector(u16x4.map(reinterpretU16AsF16), f16);
 }
 
 /**
@@ -594,8 +588,8 @@ function bitcastVec4F16ToVec2U32Comparator(vec4F16InU16x4: number[]): Comparator
     return alwaysPass('any vec2<u32>');
   }
   return anyOf(
-    ...cartesianProduct(...expectationsPerElement.map(e => e.possibleExpectations)).map(e =>
-      vec2(e[0] as Scalar, e[1] as Scalar)
+    ...cartesianProduct(...expectationsPerElement.map(e => e.possibleExpectations)).map(
+      e => new Vector(e as Scalar[])
     )
   );
 }
@@ -616,8 +610,8 @@ function bitcastVec4F16ToVec2I32Comparator(vec4F16InU16x4: number[]): Comparator
     return alwaysPass('any vec2<i32>');
   }
   return anyOf(
-    ...cartesianProduct(...expectationsPerElement.map(e => e.possibleExpectations)).map(e =>
-      vec2(e[0] as Scalar, e[1] as Scalar)
+    ...cartesianProduct(...expectationsPerElement.map(e => e.possibleExpectations)).map(
+      e => new Vector(e as Scalar[])
     )
   );
 }
@@ -732,32 +726,32 @@ export const d = makeCaseCache('bitcast', {
   // vec2<i32>, vec2<u32>, vec2<f32> to vec4<f16>
   vec2_i32_to_vec4_f16_inf_nan: () =>
     slidingSlice(i32RangeForF16Vec2FiniteInfNaN, 2).map(e => ({
-      input: vec2(i32(e[0]), i32(e[1])),
+      input: toVector(e, i32),
       expected: bitcastVec2I32ToVec4F16Comparator(e),
     })),
   vec2_i32_to_vec4_f16: () =>
     slidingSlice(i32RangeForF16Vec2Finite, 2).map(e => ({
-      input: vec2(i32(e[0]), i32(e[1])),
+      input: toVector(e, i32),
       expected: bitcastVec2I32ToVec4F16Comparator(e),
     })),
   vec2_u32_to_vec4_f16_inf_nan: () =>
     slidingSlice(u32RangeForF16Vec2FiniteInfNaN, 2).map(e => ({
-      input: vec2(u32(e[0]), u32(e[1])),
+      input: toVector(e, u32),
       expected: bitcastVec2U32ToVec4F16Comparator(e),
     })),
   vec2_u32_to_vec4_f16: () =>
     slidingSlice(u32RangeForF16Vec2Finite, 2).map(e => ({
-      input: vec2(u32(e[0]), u32(e[1])),
+      input: toVector(e, u32),
       expected: bitcastVec2U32ToVec4F16Comparator(e),
     })),
   vec2_f32_inf_nan_to_vec4_f16_inf_nan: () =>
     slidingSlice(f32RangeWithInfAndNaNForF16Vec2FiniteInfNaN, 2).map(e => ({
-      input: vec2(f32(e[0]), f32(e[1])),
+      input: toVector(e, f32),
       expected: bitcastVec2F32ToVec4F16Comparator(e),
     })),
   vec2_f32_to_vec4_f16: () =>
     slidingSlice(f32FiniteRangeForF16Vec2Finite, 2).map(e => ({
-      input: vec2(f32(e[0]), f32(e[1])),
+      input: toVector(e, f32),
       expected: bitcastVec2F32ToVec4F16Comparator(e),
     })),
 
