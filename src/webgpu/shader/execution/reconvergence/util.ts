@@ -117,6 +117,11 @@ enum OpType {
   ForInf,
   EndForInf,
 
+  // Equivalent to:
+  // for (var i = 0u; i < subgroup_invocation_id + 1; i++)
+  ForVar,
+  EndForVar,
+
   // Function return
   Return,
 
@@ -144,6 +149,8 @@ function serializeOpType(op: OpType): string {
     case OpType.EndForUniform: return 'EndForUniform';
     case OpType.ForInf:        return 'ForInf';
     case OpType.EndForInf:     return 'EndForInf';
+    case OpType.ForVar:        return 'ForVar';
+    case OpType.EndForVar:     return 'EndForVar';
     case OpType.Return:        return 'Return';
     case OpType.Elect:         return 'Elect';
     default:
@@ -282,7 +289,7 @@ export class Program {
               switch (r2) {
                 case 0: this.genForUniform(); break;
                 case 1: this.genForInf(); break;
-                case 2:
+                case 2: this.genForVar(); break;
                 default: {
                   break;
                 }
@@ -426,6 +433,21 @@ export class Program {
     this.ops.push(new Op(OpType.EndForInf, header));
     this.isLoopInf.set(this.loopNesting, false);
     this.doneInfLoopBreak.set(this.loopNesting, false);
+    this.loopNestingThisFunction--;
+    this.loopNesting--;
+    this.nesting--;
+  }
+
+  private genForVar() {
+    const header = this.ops.length;
+    this.ops.push(new Op(OpType.ForVar, 0));
+    this.nesting++;
+    this.loopNesting++;
+    this.loopNestingThisFunction++;
+
+    this.pickOp(2);
+
+    this.ops.push(new Op(OpType.EndForVar, header));
     this.loopNestingThisFunction--;
     this.loopNesting--;
     this.nesting--;
@@ -586,14 +608,6 @@ export class Program {
           this.loopNesting++;
           break;
         }
-        case OpType.EndForUniform:
-        case OpType.EndForInf: {
-          this.loopNesting--;
-          this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`}\n`);
-          break;
-        }
         case OpType.ForInf: {
           this.genIndent();
           const iter = `i${this.loopNesting}`;
@@ -605,6 +619,23 @@ export class Program {
           this.addCode(`// Safety valve\n`);
           this.genIndent();
           this.addCode(`if ${iter} >= 128u { break; }\n\n`);
+          break;
+        }
+        case OpType.ForVar: {
+          this.genIndent();
+          const iter = `i${this.loopNesting}`;
+          this.addCode(`for (var ${iter} = 0u; ${iter} < subgroup_id + 1; ${iter}++) {\n`);
+          this.loopNesting++;
+          this.increaseIndent();
+          break;
+        }
+        case OpType.EndForUniform:
+        case OpType.EndForInf:
+        case OpType.EndForVar: {
+          this.loopNesting--;
+          this.decreaseIndent();
+          this.genIndent();
+          this.addCode(`}\n`);
           break;
         }
         case OpType.Break: {
@@ -1051,6 +1082,38 @@ ${this.functions[i]}
           }
           break;
         }
+        case OpType.ForVar: {
+          nesting++;
+          loopNesting++;
+          stack.push(new State());
+          const cur = stack[nesting];
+          cur.header = i;
+          cur.isLoop = true;
+          cur.activeMask = stack[nesting-1].activeMask;
+          break;
+        }
+        case OpType.EndForVar: {
+          const cur = stack[nesting];
+          cur.tripCount++;
+          cur.activeMask |= cur.continueMask;
+          cur.continueMask = 0n;
+          let done = !any(cur.activeMask) || cur.tripCount === subgroupSize;
+          if (!done) {
+            let submask = getMask(subgroupSize) & ~getMask(cur.tripCount);
+            let mask = getReplicatedMask(submask, subgroupSize, this.invocations);
+            cur.activeMask &= mask;
+            done = !any(cur.activeMask);
+          }
+
+          if (done) {
+            loopNesting--;
+            nesting--;
+            stack.pop();
+          } else {
+            i = cur.header + 1;
+          }
+          break;
+        }
         case OpType.Break: {
           // Remove this active mask from all stack entries for the current loop/switch.
           let n = nesting;
@@ -1482,7 +1545,7 @@ ${this.functions[i]}
    * }
    * ballot();
    */
-  public predefinedProgram4() {
+  public predefinedProgramForInf() {
     this.ops.push(new Op(OpType.ForInf, 0));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
@@ -1493,6 +1556,38 @@ ${this.functions[i]}
 
     this.ops.push(new Op(OpType.EndIf, 0));
     this.ops.push(new Op(OpType.EndForInf, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * for (var i = 0; i < subgroup_invocation_id + 1; i++) {
+   *   ballot();
+   * }
+   * ballot();
+   * for (var i = 0; i < subgroup_invocation_id + 1; i++) {
+   *   ballot();
+   * }
+   * ballot();
+   */
+  public predefinedProgramForVar() {
+    this.ops.push(new Op(OpType.ForVar, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndForVar, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+
+    this.ops.push(new Op(OpType.ForVar, 0));
+
+    this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndForVar, 0));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
