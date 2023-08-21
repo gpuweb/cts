@@ -79,7 +79,7 @@ export enum Style {
   Maximal,
 };
 
-enum OpType {
+export enum OpType {
   // Store a ballot.
   // During simulation, uniform is set to false if the
   // ballot is not fully uniform for the given style.
@@ -122,6 +122,10 @@ enum OpType {
   ForVar,
   EndForVar,
 
+  // var i = 0; loop { ... continuing { i++; break if i >= inputs[value]; } }
+  LoopUniform,
+  EndLoopUniform,
+
   // Function return
   Return,
 
@@ -138,27 +142,29 @@ enum OpType {
 function serializeOpType(op: OpType): string {
   // prettier-ignore
   switch (op) {
-    case OpType.Ballot:        return 'Ballot';
-    case OpType.Store:         return 'Store';
-    case OpType.IfMask:        return 'IfMask';
-    case OpType.ElseMask:      return 'ElseMask';
-    case OpType.EndIf:         return 'EndIf';
-    case OpType.IfLoopCount:   return 'IfLoopCount';
-    case OpType.ElseLoopCount: return 'ElseLoopCount';
-    case OpType.IfId:          return 'IfId';
-    case OpType.ElseId:        return 'ElseId';
-    case OpType.Break:         return 'Break';
-    case OpType.Continue:      return 'Continue';
-    case OpType.ForUniform:    return 'ForUniform';
-    case OpType.EndForUniform: return 'EndForUniform';
-    case OpType.ForInf:        return 'ForInf';
-    case OpType.EndForInf:     return 'EndForInf';
-    case OpType.ForVar:        return 'ForVar';
-    case OpType.EndForVar:     return 'EndForVar';
-    case OpType.Return:        return 'Return';
-    case OpType.Elect:         return 'Elect';
-    case OpType.Call:          return 'Call';
-    case OpType.EndCall:       return 'EndCall';
+    case OpType.Ballot:         return 'Ballot';
+    case OpType.Store:          return 'Store';
+    case OpType.IfMask:         return 'IfMask';
+    case OpType.ElseMask:       return 'ElseMask';
+    case OpType.EndIf:          return 'EndIf';
+    case OpType.IfLoopCount:    return 'IfLoopCount';
+    case OpType.ElseLoopCount:  return 'ElseLoopCount';
+    case OpType.IfId:           return 'IfId';
+    case OpType.ElseId:         return 'ElseId';
+    case OpType.Break:          return 'Break';
+    case OpType.Continue:       return 'Continue';
+    case OpType.ForUniform:     return 'ForUniform';
+    case OpType.EndForUniform:  return 'EndForUniform';
+    case OpType.ForInf:         return 'ForInf';
+    case OpType.EndForInf:      return 'EndForInf';
+    case OpType.ForVar:         return 'ForVar';
+    case OpType.EndForVar:      return 'EndForVar';
+    case OpType.LoopUniform:    return 'LoopUniform';
+    case OpType.EndLoopUniform: return 'EndLoopUniform';
+    case OpType.Return:         return 'Return';
+    case OpType.Elect:          return 'Elect';
+    case OpType.Call:           return 'Call';
+    case OpType.EndCall:        return 'EndCall';
     default:
       unreachable('Unhandled op');
       break;
@@ -290,7 +296,7 @@ export class Program {
           }
           case 4: {
             // Avoid very deep loop nests to limit memory and runtime.
-            if (this.loopNesting <= 2) {
+            if (this.loopNesting <= 3) {
               const r2 = this.getRandomUint(3);
               switch (r2) {
                 case 0: this.genForUniform(); break;
@@ -304,11 +310,7 @@ export class Program {
             break;
           }
           case 5: {
-            if (this.getRandomFloat() < 0.2 && this.callNesting == 0 && this.nesting < this.maxNesting - 1) {
-              this.genCall();
-            } else {
-              this.genBreak();
-            }
+            this.genBreak();
             break;
           }
           case 6: {
@@ -317,8 +319,26 @@ export class Program {
           }
           case 7: {
             // Calls and returns.
-            // TODO: calls
-            this.genReturn();
+            if (this.getRandomFloat() < 0.2 && this.callNesting == 0 && this.nesting < this.maxNesting - 1) {
+              this.genCall();
+            } else {
+              this.genBreak();
+            }
+            break;
+            break;
+          }
+          case 8: {
+            if (this.loopNesting <= 3) {
+              const r2 = this.getRandomUint(3);
+              switch (r2) {
+                case 0: this.genLoopUniform(); break;
+                case 1:
+                case 2:
+                default: {
+                  break;
+                }
+              }
+            }
             break;
           }
           default: {
@@ -458,6 +478,22 @@ export class Program {
     this.pickOp(2);
 
     this.ops.push(new Op(OpType.EndForVar, header));
+    this.loopNestingThisFunction--;
+    this.loopNesting--;
+    this.nesting--;
+  }
+
+  private genLoopUniform() {
+    const n = this.getRandomUint(5) + 1;
+    const header = this.ops.length;
+    this.ops.push(new Op(OpType.LoopUniform, n));
+    this.nesting++;
+    this.loopNesting++;
+    this.loopNestingThisFunction++;
+
+    this.pickOp(2);
+
+    this.ops.push(new Op(OpType.EndLoopUniform, header));
     this.loopNestingThisFunction--;
     this.loopNesting--;
     this.nesting--;
@@ -658,6 +694,35 @@ export class Program {
         case OpType.EndForInf:
         case OpType.EndForVar: {
           this.loopNesting--;
+          this.decreaseIndent();
+          this.genIndent();
+          this.addCode(`}\n`);
+          break;
+        }
+        case OpType.LoopUniform: {
+          this.genIndent();
+          const iter = `i${this.loopNesting}`;
+          this.addCode(`var ${iter} = 0u;\n`);
+          this.genIndent();
+          this.addCode(`loop {\n`);
+          this.loopNesting++;
+          this.increaseIndent();
+          break;
+        }
+        case OpType.EndLoopUniform: {
+          this.loopNesting--;
+          const iter = `i${this.loopNesting}`;
+          this.genIndent();
+          this.addCode(`continuing {\n`);
+          this.increaseIndent();
+          this.genIndent();
+          this.addCode(`${iter}++;\n`);
+          this.genIndent();
+          const limit = this.ops[op.value].value;
+          this.addCode(`break if ${iter} >= inputs[${limit}];\n`);
+          this.decreaseIndent();
+          this.genIndent();
+          this.addCode(`}\n`);
           this.decreaseIndent();
           this.genIndent();
           this.addCode(`}\n`);
@@ -1164,6 +1229,32 @@ ${this.functions[i]}`;
           }
           break;
         }
+        case OpType.LoopUniform: {
+          nesting++;
+          loopNesting++;
+          stack.push(new State());
+          const cur = stack[nesting];
+          cur.header = i;
+          cur.isLoop = true;
+          cur.activeMask = stack[nesting-1].activeMask;
+          break;
+        }
+        case OpType.EndLoopUniform: {
+          const cur = stack[nesting];
+          cur.tripCount++;
+          cur.activeMask |= cur.continueMask;
+          cur.continueMask = 0n;
+          if (cur.tripCount < this.ops[cur.header].value &&
+              any(cur.activeMask)) {
+            i = cur.header + 1;
+            continue;
+          } else {
+            loopNesting--;
+            nesting--;
+            stack.pop();
+          }
+          break;
+        }
         case OpType.Break: {
           // Remove this active mask from all stack entries for the current loop/switch.
           let n = nesting;
@@ -1439,7 +1530,8 @@ ${this.functions[i]}`;
    * }
    * ballot(); // fully uniform
    */
-  public predefinedProgram1() {
+  public predefinedProgram1(beginLoop: OpType = OpType.ForUniform,
+                            endLoop: OpType = OpType.EndForUniform)  {
     // Set the mask for index 1
     this.masks[4*1 + 0] = 0xaaaaaaaa
     this.masks[4*1 + 1] = 0xaaaaaaaa
@@ -1452,7 +1544,8 @@ ${this.functions[i]}`;
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.ForUniform, 3));
+    const header = this.ops.length;
+    this.ops.push(new Op(beginLoop, 3));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
@@ -1466,7 +1559,7 @@ ${this.functions[i]}`;
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.EndForUniform, 0));
+    this.ops.push(new Op(endLoop, header));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
@@ -1708,7 +1801,7 @@ ${this.functions[i]}`;
 
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.EndForUniform, 0));
+    this.ops.push(new Op(OpType.EndForUniform, 3));
 
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
