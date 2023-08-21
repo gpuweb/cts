@@ -267,7 +267,7 @@ g.test('predefined_reconvergence')
   .desc(`Test reconvergence using some predefined programs`)
   .params(u =>
     u
-      .combine('test', [...iterRange(8, x => x)] as const)
+      .combine('test', [...iterRange(10, x => x)] as const)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -316,6 +316,16 @@ g.test('predefined_reconvergence')
       case 7: {
         program = new Program(Style.Maximal, 1, invocations);
         program.predefinedProgramForVar();
+        break;
+      }
+      case 8: {
+        program = new Program(Style.Workgroup, 1, invocations);
+        program.predefinedProgramCall();
+        break;
+      }
+      case 9: {
+        program = new Program(Style.Maximal, 1, invocations);
+        program.predefinedProgramCall();
         break;
       }
       default: {

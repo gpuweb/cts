@@ -128,6 +128,10 @@ enum OpType {
   // Emulated elect for breaks from infinite loops.
   Elect,
 
+  // Function call
+  Call,
+  EndCall,
+
   MAX,
 }
 
@@ -153,6 +157,8 @@ function serializeOpType(op: OpType): string {
     case OpType.EndForVar:     return 'EndForVar';
     case OpType.Return:        return 'Return';
     case OpType.Elect:         return 'Elect';
+    case OpType.Call:          return 'Call';
+    case OpType.EndCall:       return 'EndCall';
     default:
       unreachable('Unhandled op');
       break;
@@ -298,7 +304,11 @@ export class Program {
             break;
           }
           case 5: {
-            this.genBreak();
+            if (this.getRandomFloat() < 0.2 && this.callNesting == 0 && this.nesting < this.maxNesting - 1) {
+              this.genCall();
+            } else {
+              this.genBreak();
+            }
             break;
           }
           case 6: {
@@ -510,6 +520,21 @@ export class Program {
     }
   }
 
+  private genCall() {
+    this.ops.push(new Op(OpType.Call, 0));
+    this.callNesting++;
+    this.nesting++;
+    const curLoopNesting = this.loopNestingThisFunction;
+    this.loopNestingThisFunction = 0;
+
+    this.pickOp(2);
+
+    this.loopNestingThisFunction = curLoopNesting;
+    this.nesting--;
+    this.callNesting--;
+    this.ops.push(new Op(OpType.EndCall, 0));
+  }
+
   private genReturn() {
     const r = this.getRandomFloat();
     if (this.nesting > 0 &&
@@ -659,6 +684,30 @@ export class Program {
           this.increaseIndent();
           break;
         }
+        case OpType.Call: {
+          this.genIndent();
+          this.addCode(`f${this.functions.length}(`);
+          for (let i = 0; i < this.loopNesting; i++) {
+            this.addCode(`i${i},`);
+          }
+          this.addCode(`);\n`);
+
+          this.curFunc = this.functions.length;
+          this.functions.push(`fn f${this.curFunc}(`);
+          for (let i = 0; i < this.loopNesting; i++) {
+            this.addCode(`i${i} : u32,`);
+          }
+          this.addCode(`) {\n`);
+          this.indents.push(2);
+          break;
+        }
+        case OpType.EndCall: {
+          this.decreaseIndent();
+          this.addCode(`}\n`);
+          // Call nesting is limited to 1 so we always return to f0.
+          this.curFunc = 0;
+          break;
+        }
       }
     }
 
@@ -737,14 +786,15 @@ fn testBit(mask : vec4u, id : u32) -> bool {
   let selb = select(zbit, ybit, lt64);
   return select(selb, sela, lt32) == 1;
 }
-`;
+
+fn f0() {`;
 
     for (let i = 0; i < this.functions.length; i++) {
       code += `
-fn f${i}() {
-${this.functions[i]}
-}
-`;
+${this.functions[i]}`;
+      if (i == 0) {
+        code += `\n}\n`;
+      }
     }
     return code;
   }
@@ -1179,6 +1229,19 @@ ${this.functions[i]}
           }
           break;
         }
+        case OpType.Call: {
+          nesting++;
+          stack.push(new State());
+          const cur = stack[nesting];
+          cur.activeMask = stack[nesting-1].activeMask;
+          cur.isCall = 1;
+          break;
+        }
+        case OpType.EndCall: {
+          nesting--;
+          stack.pop();
+          break;
+        }
         default: {
           unreachable(`Unhandled op ${serializeOpType(op.type)}`);
         }
@@ -1590,6 +1653,81 @@ ${this.functions[i]}
     this.ops.push(new Op(OpType.EndForVar, 0));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
+    this.ops.push(new Op(OpType.Ballot, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * fn f0() {
+   *   for (var i = 0; i < inputs[3]; i++) {
+   *     f1(i);
+   *     ballot();
+   *   }
+   *   ballot();
+   *   if (inputs[3] == 3) {
+   *    f2();
+   *    ballot();
+   *   }
+   *   ballot()
+   * }
+   * fn f1(i : u32) {
+   *   ballot();
+   *   if (subgroup_invocation_id == i) {
+   *     ballot();
+   *     return;
+   *   }
+   * }
+   * fn f2() {
+   *   ballot();
+   *   if (testBit(vec4u(0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa), local_invocation_index)) {
+   *     ballot();
+   *     return;
+   *   }
+   * }
+   */
+  public predefinedProgramCall() {
+    this.masks[4 + 0] = 0xaaaaaaaa;
+    this.masks[4 + 1] = 0xaaaaaaaa;
+    this.masks[4 + 2] = 0xaaaaaaaa;
+    this.masks[4 + 3] = 0xaaaaaaaa;
+
+    this.ops.push(new Op(OpType.ForUniform, 3));
+
+    this.ops.push(new Op(OpType.Call, 0));
+    // f1
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.IfLoopCount, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.Return, 0));
+    this.ops.push(new Op(OpType.EndIf, 0));
+    // end f1
+    this.ops.push(new Op(OpType.EndCall, 0));
+
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndForUniform, 0));
+
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.IfMask, 0));
+
+    this.ops.push(new Op(OpType.Call, 0));
+    // f2
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.IfMask, 1));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.Return, 0));
+    this.ops.push(new Op(OpType.EndIf, 0));
+    // end f2
+    this.ops.push(new Op(OpType.EndCall, 0));
+
+    this.ops.push(new Op(OpType.EndIf, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
   }
 };
