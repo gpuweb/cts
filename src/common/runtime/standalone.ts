@@ -390,6 +390,19 @@ function makeTreeNodeHeaderHTML(
   const div = $('<details>').addClass('nodeheader');
   const header = $('<summary>').appendTo(div);
 
+  // prevent toggling if user is selecting text from an input element
+  {
+    let lastNodeName = '';
+    div.on('pointerdown', event => {
+      lastNodeName = event.target.nodeName;
+    });
+    div.on('click', event => {
+      if (lastNodeName === 'INPUT') {
+        event.preventDefault();
+      }
+    });
+  }
+
   const setChecked = () => {
     div.prop('open', true); // (does not fire onChange)
     onChange(true);
@@ -610,8 +623,11 @@ void (async () => {
 
   tree.dissolveSingleChildTrees();
 
+  console.log('h1');
   const { runSubtree, generateSubtreeHTML } = makeSubtreeHTML(tree.root, 1);
+  console.log('h2');
   const setTreeCheckedRecursively = generateSubtreeHTML(resultsVis);
+  console.log('h3');
 
   document.getElementById('expandall')!.addEventListener('click', () => {
     setTreeCheckedRecursively();
