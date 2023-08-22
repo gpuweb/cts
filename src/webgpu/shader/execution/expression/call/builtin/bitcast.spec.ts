@@ -119,23 +119,30 @@ const f16ZerosInterval: FPInterval = new FPInterval('f16', -0.0, 0.0);
 
 /**
  * @returns an u32 whose lower and higher 16bits are the two elements of the
- * given array of two u16 respectively.
+ * given array of two u16 respectively, in little-endian.
  */
 function u16x2ToU32(u16x2: number[]): number {
   assert(u16x2.length === 2);
-  const array = new Uint16Array(2);
-  [array[0], array[1]] = u16x2;
-  return new Uint32Array(array.buffer)[0];
+  // Create a DataView with 4 bytes buffer.
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+  // Enforce little-endian.
+  view.setUint16(0, u16x2[0], true);
+  view.setUint16(2, u16x2[1], true);
+  return view.getUint32(0, true);
 }
 
 /**
- * @returns an array of two u16, respectively the lower and higher 16bits of given u32.
+ * @returns an array of two u16, respectively the lower and higher 16bits of
+ * given u32 in little-endian.
  */
 function u32ToU16x2(u32: number): number[] {
-  const array = new Uint32Array(1);
-  array[0] = u32;
-  const dst_array = new Uint16Array(array.buffer);
-  return [dst_array[0], dst_array[1]];
+  // Create a DataView with 4 bytes buffer.
+  const buffer = new ArrayBuffer(4);
+  const view = new DataView(buffer);
+  // Enforce little-endian.
+  view.setUint32(0, u32, true);
+  return [view.getUint16(0, true), view.getUint16(2, true)];
 }
 
 /**
