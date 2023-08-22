@@ -81,7 +81,7 @@ subgroup_invocation_id = ${data[i]}`);
 
 async function testProgram(t: GPUTest, program: Program) {
   let wgsl = program.genCode();
-  console.log(wgsl);
+  //console.log(wgsl);
 
   // TODO: query the device
   const minSubgroupSize = 4;
@@ -251,15 +251,15 @@ async function testProgram(t: GPUTest, program: Program) {
   const ballotData = ballotReadback.data;
 
   console.log(`${Date()}: Finished buffer readbacks`);
-  console.log(`Ballots`);
-  //for (let id = 0; id < program.invocations; id++) {
-  for (let id = 0; id < actualSize; id++) {
-    console.log(` id[${id}]:`);
-    for (let loc = 0; loc < num; loc++) {
-      const idx = 4 * (program.invocations * loc + id);
-      console.log(`  loc[${loc}] = (${hex(ballotData[idx+3])},${hex(ballotData[idx+2])},${hex(ballotData[idx+1])},${hex(ballotData[idx])}), (${ballotData[idx+3]},${ballotData[idx+2]},${ballotData[idx+1]},${ballotData[idx]})`);
-    }
-  }
+  //console.log(`Ballots`);
+  ////for (let id = 0; id < program.invocations; id++) {
+  //for (let id = 0; id < actualSize; id++) {
+  //  console.log(` id[${id}]:`);
+  //  for (let loc = 0; loc < num; loc++) {
+  //    const idx = 4 * (program.invocations * loc + id);
+  //    console.log(`  loc[${loc}] = (${hex(ballotData[idx+3])},${hex(ballotData[idx+2])},${hex(ballotData[idx+1])},${hex(ballotData[idx])}), (${ballotData[idx+3]},${ballotData[idx+2]},${ballotData[idx+1]},${ballotData[idx]})`);
+  //  }
+  //}
 
   t.expectOK(program.checkResults(ballotData, locationData, actualSize, num));
 }
@@ -268,7 +268,8 @@ g.test('predefined_reconvergence')
   .desc(`Test reconvergence using some predefined programs`)
   .params(u =>
     u
-      .combine('test', [...iterRange(11, x => x)] as const)
+      .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
+      .combine('test', [...iterRange(7, x => x)] as const)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -276,61 +277,42 @@ g.test('predefined_reconvergence')
   //})
   .fn(async t => {
     const invocations = 128; // t.device.limits.maxSubgroupSize;
+    const style = t.params.style;
 
     let program: Program;
     switch (t.params.test) {
       case 0: {
-        program = new Program(Style.Workgroup, 1, invocations);
+        program = new Program(style, 1, invocations);
         program.predefinedProgram1();
         break;
       }
       case 1: {
-        program = new Program(Style.Subgroup, 1, invocations);
-        program.predefinedProgram1();
-        break;
-      }
-      case 2: {
-        program = new Program(Style.Subgroup, 1, invocations);
+        program = new Program(style, 1, invocations);
         program.predefinedProgram2();
         break;
       }
-      case 3: {
-        program = new Program(Style.Maximal, 1, invocations);
+      case 2: {
+        program = new Program(style, 1, invocations);
         program.predefinedProgram3();
         break;
       }
-      case 4: {
-        program = new Program(Style.Workgroup, 1, invocations);
+      case 3: {
+        program = new Program(style, 1, invocations);
         program.predefinedProgramForInf();
+        break;
+      }
+      case 4: {
+        program = new Program(style, 1, invocations);
+        program.predefinedProgramForVar();
         break;
       }
       case 5: {
-        program = new Program(Style.Subgroup, 1, invocations);
-        program.predefinedProgramForInf();
+        program = new Program(style, 1, invocations);
+        program.predefinedProgramCall();
         break;
       }
       case 6: {
-        program = new Program(Style.Subgroup, 1, invocations);
-        program.predefinedProgramForVar();
-        break;
-      }
-      case 7: {
-        program = new Program(Style.Maximal, 1, invocations);
-        program.predefinedProgramForVar();
-        break;
-      }
-      case 8: {
-        program = new Program(Style.Workgroup, 1, invocations);
-        program.predefinedProgramCall();
-        break;
-      }
-      case 9: {
-        program = new Program(Style.Maximal, 1, invocations);
-        program.predefinedProgramCall();
-        break;
-      }
-      case 10: {
-        program = new Program(Style.Workgroup, 1, invocations);
+        program = new Program(style, 1, invocations);
         program.predefinedProgram1(OpType.LoopUniform, OpType.EndLoopUniform);
         break;
       }
