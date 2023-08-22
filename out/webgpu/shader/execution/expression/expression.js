@@ -501,107 +501,107 @@ function wgslHeader(parameterTypes, resultType) {
  * Returns a ShaderBuilder that builds a basic expression test shader.
  * @param expressionBuilder the expression builder
  */
-export function basicExpressionBuilder(expressionBuilder) {
-  return (
-  parameterTypes,
-  resultType,
-  cases,
-  inputSource) =>
-  {
-    if (inputSource === 'const') {
-      //////////////////////////////////////////////////////////////////////////
-      // Constant eval
-      //////////////////////////////////////////////////////////////////////////
-      let body = '';
-      if (
-      scalarTypeOf(resultType).kind !== 'abstract-float' &&
-      parameterTypes.some((ty) => scalarTypeOf(ty).kind === 'abstract-float'))
-      {
-        // Directly assign the expression to the output, to avoid an
-        // intermediate store, which will concretize the value early
-        body = cases.
-        map(
-        (c, i) =>
-        `  outputs[${i}].value = ${toStorage(
-        resultType,
-        expressionBuilder(map(c.input, (v) => v.wgsl())))
-        };`).
+function basicExpressionShaderBody(
+expressionBuilder,
+parameterTypes,
+resultType,
+cases,
+inputSource)
+{
+  if (inputSource === 'const') {
+    //////////////////////////////////////////////////////////////////////////
+    // Constant eval
+    //////////////////////////////////////////////////////////////////////////
+    let body = '';
+    if (
+    scalarTypeOf(resultType).kind !== 'abstract-float' &&
+    parameterTypes.some((ty) => scalarTypeOf(ty).kind === 'abstract-float'))
+    {
+      // Directly assign the expression to the output, to avoid an
+      // intermediate store, which will concretize the value early
+      body = cases.
+      map(
+      (c, i) =>
+      `  outputs[${i}].value = ${toStorage(
+      resultType,
+      expressionBuilder(map(c.input, (v) => v.wgsl())))
+      };`).
 
-        join('\n  ');
-      } else if (scalarTypeOf(resultType).kind === 'abstract-float') {
-        // AbstractFloats are f64s under the hood. WebGPU does not support
-        // putting f64s in buffers, so the result needs to be split up into u32s
-        // and rebuilt in the test framework.
-        //
-        // This is complicated by the fact that user defined functions cannot
-        // take/return AbstractFloats, and AbstractFloats cannot be stored in
-        // variables, so the code cannot just inject a simple utility function
-        // at the top of the shader, instead this snippet needs to be inlined
-        // everywhere the test needs to return an AbstractFloat.
-        //
-        // select is used below, since ifs are not available during constant
-        // eval. This has the side effect of short-circuiting doesn't occur, so
-        // both sides of the select have to evaluate and be valid.
-        //
-        // This snippet implements FTZ for subnormals to bypass the need for
-        // complex subnormal specific logic.
-        //
-        // Expressions resulting in subnormals can still be reasonably tested,
-        // since this snippet will return 0 with the correct sign, which is
-        // always in the acceptance interval for a subnormal result, since an
-        // implementation may FTZ.
-        //
-        // Document for the snippet is included here in this code block, since
-        // shader length affects compilation time  significantly on some
-        // backends.
-        //
-        // Snippet with documentation:
-        //   const kExponentBias = 1022;
-        //
-        //   // Detect if the value is zero or subnormal, so that FTZ behaviour
-        //   // can occur
-        //   const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
-        //
-        //   // MSB of the upper u32 is 1 if the value is negative, otherwise 0
-        //   // Extract the sign bit early, so that abs() can be used with
-        //   // frexp() so negative cases do not need to be handled
-        //   const sign_bit : u32 = select(0, 0x80000000, ${expr} < 0);
-        //
-        //   // Use frexp() to obtain the exponent and fractional parts, and
-        //   // then perform FTZ if needed
-        //   const f = frexp(abs(${expr}));
-        //   const f_fract = select(f.fract, 0, subnormal_or_zero);
-        //   const f_exp = select(f.exp, -kExponentBias, subnormal_or_zero);
-        //
-        //   // Adjust for the exponent bias and shift for storing in bits
-        //   // [20..31] of the upper u32
-        //   const exponent_bits : u32 = (f_exp + kExponentBias) << 20;
-        //
-        //   // Extract the portion of the mantissa that appears in upper u32 as
-        //   // a float for later use
-        //   const high_mantissa = ldexp(f_fract, 21);
-        //
-        //   // Extract the portion of the mantissa that appears in upper u32 as
-        //   // as bits. This value is masked, because normals will explicitly
-        //   // have the implicit leading 1 that should not be in the final
-        //   // result.
-        //   const high_mantissa_bits : u32 = u32(ldexp(f_fract, 21)) & 0x000fffff;
-        //
-        //   // Calculate the mantissa stored in the lower u32 as a float
-        //   const low_mantissa = f_fract - ldexp(floor(high_mantissa), -21);
-        //
-        //   // Convert the lower u32 mantissa to bits
-        //   const low_mantissa_bits = u32(ldexp(low_mantissa, 53));
-        //
-        //   // Pack the result into 2x u32s for writing out to the testing
-        //   // framework
-        //   outputs[${i}].value.x = low_mantissa_bits;
-        //   outputs[${i}].value.y = sign_bit | exponent_bits | high_mantissa_bits;
-        body = cases.
-        map((c, i) => {
-          const expr = `${expressionBuilder(map(c.input, (v) => v.wgsl()))}`;
+      join('\n  ');
+    } else if (scalarTypeOf(resultType).kind === 'abstract-float') {
+      // AbstractFloats are f64s under the hood. WebGPU does not support
+      // putting f64s in buffers, so the result needs to be split up into u32s
+      // and rebuilt in the test framework.
+      //
+      // This is complicated by the fact that user defined functions cannot
+      // take/return AbstractFloats, and AbstractFloats cannot be stored in
+      // variables, so the code cannot just inject a simple utility function
+      // at the top of the shader, instead this snippet needs to be inlined
+      // everywhere the test needs to return an AbstractFloat.
+      //
+      // select is used below, since ifs are not available during constant
+      // eval. This has the side effect of short-circuiting doesn't occur, so
+      // both sides of the select have to evaluate and be valid.
+      //
+      // This snippet implements FTZ for subnormals to bypass the need for
+      // complex subnormal specific logic.
+      //
+      // Expressions resulting in subnormals can still be reasonably tested,
+      // since this snippet will return 0 with the correct sign, which is
+      // always in the acceptance interval for a subnormal result, since an
+      // implementation may FTZ.
+      //
+      // Document for the snippet is included here in this code block, since
+      // shader length affects compilation time  significantly on some
+      // backends.
+      //
+      // Snippet with documentation:
+      //   const kExponentBias = 1022;
+      //
+      //   // Detect if the value is zero or subnormal, so that FTZ behaviour
+      //   // can occur
+      //   const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
+      //
+      //   // MSB of the upper u32 is 1 if the value is negative, otherwise 0
+      //   // Extract the sign bit early, so that abs() can be used with
+      //   // frexp() so negative cases do not need to be handled
+      //   const sign_bit : u32 = select(0, 0x80000000, ${expr} < 0);
+      //
+      //   // Use frexp() to obtain the exponent and fractional parts, and
+      //   // then perform FTZ if needed
+      //   const f = frexp(abs(${expr}));
+      //   const f_fract = select(f.fract, 0, subnormal_or_zero);
+      //   const f_exp = select(f.exp, -kExponentBias, subnormal_or_zero);
+      //
+      //   // Adjust for the exponent bias and shift for storing in bits
+      //   // [20..31] of the upper u32
+      //   const exponent_bits : u32 = (f_exp + kExponentBias) << 20;
+      //
+      //   // Extract the portion of the mantissa that appears in upper u32 as
+      //   // a float for later use
+      //   const high_mantissa = ldexp(f_fract, 21);
+      //
+      //   // Extract the portion of the mantissa that appears in upper u32 as
+      //   // as bits. This value is masked, because normals will explicitly
+      //   // have the implicit leading 1 that should not be in the final
+      //   // result.
+      //   const high_mantissa_bits : u32 = u32(ldexp(f_fract, 21)) & 0x000fffff;
+      //
+      //   // Calculate the mantissa stored in the lower u32 as a float
+      //   const low_mantissa = f_fract - ldexp(floor(high_mantissa), -21);
+      //
+      //   // Convert the lower u32 mantissa to bits
+      //   const low_mantissa_bits = u32(ldexp(low_mantissa, 53));
+      //
+      //   // Pack the result into 2x u32s for writing out to the testing
+      //   // framework
+      //   outputs[${i}].value.x = low_mantissa_bits;
+      //   outputs[${i}].value.y = sign_bit | exponent_bits | high_mantissa_bits;
+      body = cases.
+      map((c, i) => {
+        const expr = `${expressionBuilder(map(c.input, (v) => v.wgsl()))}`;
 
-          return `  {
+        return `  {
     const kExponentBias = 1022;
     const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
     const sign_bit : u32 = select(0, 0x80000000, ${expr} < 0);
@@ -616,25 +616,23 @@ export function basicExpressionBuilder(expressionBuilder) {
     outputs[${i}].value.x = low_mantissa_bits;
     outputs[${i}].value.y = sign_bit | exponent_bits | high_mantissa_bits;
   }`;
-        }).
-        join('\n  ');
-      } else if (globalTestConfig.unrollConstEvalLoops) {
-        body = cases.
-        map((_, i) => {
-          const value = `values[${i}]`;
-          return `  outputs[${i}].value = ${toStorage(resultType, value)};`;
-        }).
-        join('\n  ');
-      } else {
-        body = `
+      }).
+      join('\n  ');
+    } else if (globalTestConfig.unrollConstEvalLoops) {
+      body = cases.
+      map((_, i) => {
+        const value = `values[${i}]`;
+        return `  outputs[${i}].value = ${toStorage(resultType, value)};`;
+      }).
+      join('\n  ');
+    } else {
+      body = `
   for (var i = 0u; i < ${cases.length}; i++) {
     outputs[i].value = ${toStorage(resultType, `values[i]`)};
   }`;
-      }
+    }
 
-      return `
-${wgslHeader(parameterTypes, resultType)}
-
+    return `
 ${wgslOutputs(resultType, cases.length)}
 
 ${wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder)}
@@ -643,24 +641,22 @@ ${wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder)}
 fn main() {
 ${body}
 }`;
-    } else {
-      //////////////////////////////////////////////////////////////////////////
-      // Runtime eval
-      //////////////////////////////////////////////////////////////////////////
+  } else {
+    //////////////////////////////////////////////////////////////////////////
+    // Runtime eval
+    //////////////////////////////////////////////////////////////////////////
 
-      // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-      const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
+    // returns the WGSL expression to load the ith parameter of the given type from the input buffer
+    const paramExpr = (ty, i) => fromStorage(ty, `inputs[i].param${i}`);
 
-      // resolves to the expression that calls the builtin
-      const expr = toStorage(resultType, expressionBuilder(parameterTypes.map(paramExpr)));
+    // resolves to the expression that calls the builtin
+    const expr = toStorage(resultType, expressionBuilder(parameterTypes.map(paramExpr)));
 
-      return `
-${wgslHeader(parameterTypes, resultType)}
-
+    return `
 struct Input {
 ${parameterTypes.
-      map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
-      join('\n')}
+    map((ty, i) => `  @size(${valueStride(ty)}) param${i} : ${storageType(ty)},`).
+    join('\n')}
 };
 
 ${wgslOutputs(resultType, cases.length)}
@@ -674,7 +670,49 @@ fn main() {
   }
 }
 `;
-    }
+  }
+}
+
+/**
+ * Returns a ShaderBuilder that builds a basic expression test shader.
+ * @param expressionBuilder the expression builder
+ */
+export function basicExpressionBuilder(expressionBuilder) {
+  return (
+  parameterTypes,
+  resultType,
+  cases,
+  inputSource) =>
+  {
+    return `\
+${wgslHeader(parameterTypes, resultType)}
+
+${basicExpressionShaderBody(expressionBuilder, parameterTypes, resultType, cases, inputSource)}`;
+  };
+}
+
+/**
+ * Returns a ShaderBuilder that builds a basic expression test shader with given predeclaration
+ * string goes after WGSL header (i.e. enable directives) if any but before anything else.
+ * @param expressionBuilder the expression builder
+ * @param predeclaration the predeclaration string
+ */
+export function basicExpressionWithPredeclarationBuilder(
+expressionBuilder,
+predeclaration)
+{
+  return (
+  parameterTypes,
+  resultType,
+  cases,
+  inputSource) =>
+  {
+    return `\
+${wgslHeader(parameterTypes, resultType)}
+
+${predeclaration}
+
+${basicExpressionShaderBody(expressionBuilder, parameterTypes, resultType, cases, inputSource)}`;
   };
 }
 
