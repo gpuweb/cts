@@ -390,6 +390,19 @@ onChange)
   const div = $('<details>').addClass('nodeheader');
   const header = $('<summary>').appendTo(div);
 
+  // prevent toggling if user is selecting text from an input element
+  {
+    let lastNodeName = '';
+    div.on('pointerdown', (event) => {
+      lastNodeName = event.target.nodeName;
+    });
+    div.on('click', (event) => {
+      if (lastNodeName === 'INPUT') {
+        event.preventDefault();
+      }
+    });
+  }
+
   const setChecked = () => {
     div.prop('open', true); // (does not fire onChange)
     onChange(true);
@@ -445,6 +458,9 @@ onChange)
     attr('type', 'text').
     prop('readonly', true).
     addClass('nodequery').
+    on('click', (event) => {
+      event.target.select();
+    }).
     val(n.query.toString()).
     appendTo(nodecolumns);
     if (n.subtreeCounts) {
