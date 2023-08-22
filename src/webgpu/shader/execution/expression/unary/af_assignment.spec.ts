@@ -4,48 +4,77 @@ Execution Tests for assignment of AbstractFloats
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
+import { anyOf } from '../../../../util/compare.js';
 import { kValue } from '../../../../util/constants.js';
-import { abstractFloat, TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../util/conversion.js';
-import { FP } from '../../../../util/floating_point.js';
 import {
-  filteredF64Range,
-  fullF64Range,
-  isSubnormalNumberF64,
-  reinterpretU64AsF64,
-} from '../../../../util/math.js';
+  abstractFloat,
+  abstractFloatLowerBits,
+  abstractFloatUpperBits,
+  TypeAbstractFloat,
+  TypeF16,
+  TypeF32,
+  TypeU32,
+} from '../../../../util/conversion.js';
+import { FP } from '../../../../util/floating_point.js';
+import { filteredF64Range, fullF64Range, reinterpretU64AsF64 } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, run } from '../expression.js';
+import {
+  abstractFloatShaderBuilder,
+  allInputSources,
+  basicExpressionBuilder,
+  run,
+  ShaderBuilder,
+} from '../expression.js';
 
-import { assignment } from './unary.js';
+function concrete_assignment(): ShaderBuilder {
+  return basicExpressionBuilder(value => `${value}`);
+}
+
+function abstract_upper_assignment(): ShaderBuilder {
+  return abstractFloatShaderBuilder('upper', value => `${value}`);
+}
+
+function abstract_lower_assignment(): ShaderBuilder {
+  return abstractFloatShaderBuilder('lower', value => `${value}`);
+}
 
 export const g = makeTestGroup(GPUTest);
 
+const abstract_inputs = [
+  // Values that are useful for debugging the underlying framework/shader code, since it cannot be directly unit tested.
+  0,
+  0.5,
+  0.5,
+  1,
+  -1,
+  reinterpretU64AsF64(0x7000_0000_0000_0001n), // smallest magnitude negative subnormal with non-zero mantissa
+  reinterpretU64AsF64(0x0000_0000_0000_0001n), // smallest magnitude positive subnormal with non-zero mantissa
+  reinterpretU64AsF64(0x600a_aaaa_5555_5555n), // negative subnormal with obvious pattern
+  reinterpretU64AsF64(0x000a_aaaa_5555_5555n), // positive subnormal with obvious pattern
+  reinterpretU64AsF64(0x0010_0000_0000_0001n), // smallest magnitude negative normal with non-zero mantissa
+  reinterpretU64AsF64(0x0010_0000_0000_0001n), // smallest magnitude positive normal with non-zero mantissa
+  reinterpretU64AsF64(0xf555_5555_aaaa_aaaan), // negative normal with obvious pattern
+  reinterpretU64AsF64(0x5555_5555_aaaa_aaaan), // positive normal with obvious pattern
+  reinterpretU64AsF64(0xffef_ffff_ffff_ffffn), // largest magnitude negative normal
+  reinterpretU64AsF64(0x7fef_ffff_ffff_ffffn), // largest magnitude positive normal
+  // WebGPU implementation stressing values
+  ...fullF64Range(),
+];
+
 export const d = makeCaseCache('unary/af_assignment', {
-  abstract: () => {
-    const inputs = [
-      // Values that are useful for debugging the underlying framework/shader code, since it cannot be directly unit tested.
-      0,
-      0.5,
-      0.5,
-      1,
-      -1,
-      reinterpretU64AsF64(0x7000_0000_0000_0001n), // smallest magnitude negative subnormal with non-zero mantissa
-      reinterpretU64AsF64(0x0000_0000_0000_0001n), // smallest magnitude positive subnormal with non-zero mantissa
-      reinterpretU64AsF64(0x600a_aaaa_5555_5555n), // negative subnormal with obvious pattern
-      reinterpretU64AsF64(0x000a_aaaa_5555_5555n), // positive subnormal with obvious pattern
-      reinterpretU64AsF64(0x0010_0000_0000_0001n), // smallest magnitude negative normal with non-zero mantissa
-      reinterpretU64AsF64(0x0010_0000_0000_0001n), // smallest magnitude positive normal with non-zero mantissa
-      reinterpretU64AsF64(0xf555_5555_aaaa_aaaan), // negative normal with obvious pattern
-      reinterpretU64AsF64(0x5555_5555_aaaa_aaaan), // positive normal with obvious pattern
-      reinterpretU64AsF64(0xffef_ffff_ffff_ffffn), // largest magnitude negative normal
-      reinterpretU64AsF64(0x7fef_ffff_ffff_ffffn), // largest magnitude positive normal
-      // WebGPU implementation stressing values
-      ...fullF64Range(),
-    ];
-    return inputs.map(f => {
+  abstract_upper: () => {
+    return abstract_inputs.map(f => {
       return {
         input: abstractFloat(f),
-        expected: isSubnormalNumberF64(f) ? abstractFloat(0) : abstractFloat(f),
+        expected: anyOf(...abstractFloatUpperBits(f)),
+      };
+    });
+  },
+  abstract_lower: () => {
+    return abstract_inputs.map(f => {
+      return {
+        input: abstractFloat(f),
+        expected: anyOf(...abstractFloatLowerBits(f)),
       };
     });
   },
@@ -61,7 +90,7 @@ export const d = makeCaseCache('unary/af_assignment', {
   },
 });
 
-g.test('abstract')
+g.test('abstract_upper')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion')
   .desc(
     `
@@ -70,8 +99,21 @@ testing that extracting abstract floats works
   )
   .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
   .fn(async t => {
-    const cases = await d.get('abstract');
-    await run(t, assignment(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
+    const cases = await d.get('abstract_upper');
+    await run(t, abstract_upper_assignment(), [TypeAbstractFloat], TypeU32, t.params, cases, 1);
+  });
+
+g.test('abstract_lower')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion')
+  .desc(
+    `
+testing that extracting abstract floats works
+`
+  )
+  .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
+  .fn(async t => {
+    const cases = await d.get('abstract_lower');
+    await run(t, abstract_lower_assignment(), [TypeAbstractFloat], TypeU32, t.params, cases, 1);
   });
 
 g.test('f32')
@@ -84,7 +126,7 @@ concretizing to f32
   .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
   .fn(async t => {
     const cases = await d.get('f32');
-    await run(t, assignment(), [TypeAbstractFloat], TypeF32, t.params, cases);
+    await run(t, concrete_assignment(), [TypeAbstractFloat], TypeF32, t.params, cases);
   });
 
 g.test('f16')
@@ -100,5 +142,5 @@ concretizing to f16
   .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
   .fn(async t => {
     const cases = await d.get('f16');
-    await run(t, assignment(), [TypeAbstractFloat], TypeF16, t.params, cases);
+    await run(t, concrete_assignment(), [TypeAbstractFloat], TypeF16, t.params, cases);
   });

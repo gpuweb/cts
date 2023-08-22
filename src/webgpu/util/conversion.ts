@@ -1183,6 +1183,18 @@ export function reinterpretU16AsF16(u16: number): number {
   return new Float16Array(array.buffer)[0];
 }
 
+/** @returns the possible upper 32-bits of an abstract-float as an u32 */
+export function abstractFloatUpperBits(val: number): Scalar[] {
+  return isSubnormalNumberF64(val)
+    ? [u32(0x80000000), u32(0x00000000)]
+    : [u32(reinterpretF64AsU32s(val)[1])];
+}
+
+/** @returns the possible lower 32-bits of an abstract-float as an u32 */
+export function abstractFloatLowerBits(val: number): Scalar[] {
+  return isSubnormalNumberF64(val) ? [u32(0x00000000)] : [u32(reinterpretF64AsU32s(val)[0])];
+}
+
 /**
  * Class that encapsulates a vector value.
  */
