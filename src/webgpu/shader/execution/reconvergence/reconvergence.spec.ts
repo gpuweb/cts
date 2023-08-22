@@ -82,6 +82,7 @@ subgroup_invocation_id = ${data[i]}`);
 async function testProgram(t: GPUTest, program: Program) {
   let wgsl = program.genCode();
   //console.log(wgsl);
+  //return;
 
   // TODO: query the device
   const minSubgroupSize = 4;
@@ -98,6 +99,7 @@ async function testProgram(t: GPUTest, program: Program) {
   // Add 1 to ensure there are no extraneous writes.
   numLocs++;
 
+  console.log(`${new Date()}: creating pipeline`);
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
     compute: {
@@ -269,7 +271,7 @@ g.test('predefined_reconvergence')
   .params(u =>
     u
       .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
-      .combine('test', [...iterRange(7, x => x)] as const)
+      .combine('test', [...iterRange(8, x => x)] as const)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -298,7 +300,7 @@ g.test('predefined_reconvergence')
       }
       case 3: {
         program = new Program(style, 1, invocations);
-        program.predefinedProgramForInf();
+        program.predefinedProgramInf();
         break;
       }
       case 4: {
@@ -314,6 +316,11 @@ g.test('predefined_reconvergence')
       case 6: {
         program = new Program(style, 1, invocations);
         program.predefinedProgram1(OpType.LoopUniform, OpType.EndLoopUniform);
+        break;
+      }
+      case 7: {
+        program = new Program(style, 1, invocations);
+        program.predefinedProgramInf(OpType.LoopInf, OpType.EndLoopInf);
         break;
       }
       default: {

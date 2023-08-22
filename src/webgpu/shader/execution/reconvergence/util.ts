@@ -13,7 +13,7 @@ function getMask(size: number): bigint {
 /** @returns A bitmask where submask is repeated every size bits for total bits. */
 function getReplicatedMask(submask: bigint, size: number, total: number = 128): bigint {
   const reps = Math.floor(total / size);
-  let mask: bigint = submask;
+  let mask: bigint = submask & ((1n << BigInt(size)) - 1n);
   for (let i = 1; i < reps; i++) {
     mask |= (mask << BigInt(size));
   }
@@ -126,6 +126,10 @@ export enum OpType {
   LoopUniform,
   EndLoopUniform,
 
+  // var i = 0; loop { /* break */ ... continuing { ballot(); i++; } }
+  LoopInf,
+  EndLoopInf,
+
   // Function return
   Return,
 
@@ -161,6 +165,8 @@ function serializeOpType(op: OpType): string {
     case OpType.EndForVar:      return 'EndForVar';
     case OpType.LoopUniform:    return 'LoopUniform';
     case OpType.EndLoopUniform: return 'EndLoopUniform';
+    case OpType.LoopInf:        return 'LoopInf';
+    case OpType.EndLoopInf:     return 'EndLoopInf';
     case OpType.Return:         return 'Return';
     case OpType.Elect:          return 'Elect';
     case OpType.Call:           return 'Call';
@@ -198,25 +204,28 @@ class Op {
 };
 
 export class Program {
-  public invocations: number;
+  public readonly invocations: number;
   private readonly prng: PRNG;
   private ops : Op[];
   public readonly style: Style;
   private readonly minCount: number;
+  private readonly maxCount: number;
   private readonly maxNesting: number;
+  private readonly maxLoopNesting: number;
   private nesting: number;
   private loopNesting: number;
   private loopNestingThisFunction: number;
   private callNesting: number;
-  private numMasks: number;
+  private readonly numMasks: number;
   private masks: number[];
   private curFunc: number;
   private functions: string[];
   private indents: number[];
   private readonly storeBase: number;
-  public refData: Uint32Array;
+  private refData: Uint32Array;
   private isLoopInf: Map<number, boolean>;
   private doneInfLoopBreak: Map<number, boolean>;
+  private maxProgramNesting;
 
   /**
    * constructor
@@ -230,7 +239,9 @@ export class Program {
     this.ops = [];
     this.style = style;
     this.minCount = 30;
+    this.maxCount = 50000; // TODO: what is a reasonable limit?
     this.maxNesting = this.getRandomUint(40) + 20; //this.getRandomUint(70) + 30; // [30,100)
+    this.maxLoopNesting = 4;
     this.nesting = 0;
     this.loopNesting = 0;
     this.loopNestingThisFunction = 0;
@@ -256,6 +267,7 @@ export class Program {
     this.refData = new Uint32Array();
     this.isLoopInf = new Map();
     this.doneInfLoopBreak = new Map();
+    this.maxProgramNesting = 10; // default stack allocation
   }
 
   /** @returns A random float between 0 and 1 */
@@ -270,6 +282,10 @@ export class Program {
 
   private pickOp(count : number) {
     for (let i = 0; i < count; i++) {
+      if (this.ops.length >= this.maxCount) {
+        return;
+      }
+
       this.genBallot();
       if (this.nesting < this.maxNesting) {
         const r = this.getRandomUint(12);
@@ -296,7 +312,7 @@ export class Program {
           }
           case 4: {
             // Avoid very deep loop nests to limit memory and runtime.
-            if (this.loopNesting <= 3) {
+            if (this.loopNesting < this.maxLoopNesting) {
               const r2 = this.getRandomUint(3);
               switch (r2) {
                 case 0: this.genForUniform(); break;
@@ -319,21 +335,21 @@ export class Program {
           }
           case 7: {
             // Calls and returns.
-            if (this.getRandomFloat() < 0.2 && this.callNesting == 0 && this.nesting < this.maxNesting - 1) {
+            if (this.getRandomFloat() < 0.2 &&
+                this.callNesting == 0 &&
+                this.nesting < this.maxNesting - 1) {
               this.genCall();
             } else {
               this.genReturn();
             }
             break;
-            break;
           }
           case 8: {
-            if (this.loopNesting <= 3) {
-              const r2 = this.getRandomUint(3);
+            if (this.loopNesting < this.maxLoopNesting) {
+              const r2 = this.getRandomUint(2);
               switch (r2) {
                 case 0: this.genLoopUniform(); break;
-                case 1:
-                case 2:
+                case 1: this.genLoopInf(); break;
                 default: {
                   break;
                 }
@@ -400,6 +416,7 @@ export class Program {
     }
 
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
 
     let beforeSize = this.ops.length;
     this.pickOp(2);
@@ -415,8 +432,10 @@ export class Program {
         this.ops.push(new Op(OpType.ElseMask, maskIdx));
       }
 
-      // Sometimes make the else identical to the if.
-      if (randElse < 0.1 && beforeSize != afterSize) {
+      // Sometimes make the else identical to the if, but don't just completely
+      // blow up the instruction count.
+      if (randElse < 0.1 && beforeSize != afterSize &&
+          (beforeSize + 2 * (afterSize - beforeSize)) < this.maxCount) {
         for (let i = beforeSize; i < afterSize; i++) {
           const op = this.ops[i];
           this.ops.push(new Op(op.type, op.value, op.uniform));
@@ -434,6 +453,7 @@ export class Program {
     const n = this.getRandomUint(5) + 1; // [1, 5]
     this.ops.push(new Op(OpType.ForUniform, n));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     this.loopNesting++;
     this.loopNestingThisFunction++;
     this.pickOp(2);
@@ -446,6 +466,7 @@ export class Program {
   private genForInf() {
     this.ops.push(new Op(OpType.ForInf, 0));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     this.loopNesting++;
     this.loopNestingThisFunction++;
     this.isLoopInf.set(this.loopNesting, true);
@@ -469,6 +490,7 @@ export class Program {
   private genForVar() {
     this.ops.push(new Op(OpType.ForVar, 0));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     this.loopNesting++;
     this.loopNestingThisFunction++;
 
@@ -484,6 +506,7 @@ export class Program {
     const n = this.getRandomUint(5) + 1;
     this.ops.push(new Op(OpType.LoopUniform, n));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     this.loopNesting++;
     this.loopNestingThisFunction++;
 
@@ -495,9 +518,37 @@ export class Program {
     this.nesting--;
   }
 
+  private genLoopInf() {
+    const header = this.ops.length;
+    this.ops.push(new Op(OpType.LoopInf, 0));
+
+    this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
+    this.loopNesting++;
+    this.loopNestingThisFunction++;
+    this.isLoopInf.set(this.loopNesting, true);
+    this.doneInfLoopBreak.set(this.loopNesting, false);
+
+    this.pickOp(2);
+
+    this.genElect(true);
+    this.doneInfLoopBreak.set(this.loopNesting, true);
+
+    this.pickOp(2);
+
+    this.ops.push(new Op(OpType.EndLoopInf, header));
+
+    this.isLoopInf.set(this.loopNesting, false);
+    this.doneInfLoopBreak.set(this.loopNesting, false);
+    this.loopNestingThisFunction--;
+    this.loopNesting--;
+    this.nesting--;
+  }
+
   private genElect(forceBreak: boolean) {
     this.ops.push(new Op(OpType.Elect, 0));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
 
     if (forceBreak) {
       this.genBallot();
@@ -530,6 +581,7 @@ export class Program {
         this.ops.push(new Op(OpType.ElseMask, r));
         this.ops.push(new Op(OpType.Break, 0));
         this.ops.push(new Op(OpType.EndIf, 0));
+        this.maxProgramNesting = Math.max(this.nesting + 1, this.maxProgramNesting);
       } else {
         this.ops.push(new Op(OpType.Break, 0));
       }
@@ -546,6 +598,7 @@ export class Program {
         this.ops.push(new Op(OpType.ElseMask, r));
         this.ops.push(new Op(OpType.Break, 0));
         this.ops.push(new Op(OpType.EndIf, 0));
+        this.maxProgramNesting = Math.max(this.nesting + 1, this.maxProgramNesting);
       } else {
         this.ops.push(new Op(OpType.Continue, 0));
       }
@@ -556,6 +609,7 @@ export class Program {
     this.ops.push(new Op(OpType.Call, 0));
     this.callNesting++;
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     const curLoopNesting = this.loopNestingThisFunction;
     this.loopNestingThisFunction = 0;
 
@@ -580,6 +634,7 @@ export class Program {
         this.ops.push(new Op(OpType.ElseMask, 0));
         this.ops.push(new Op(OpType.Return, 0));
         this.ops.push(new Op(OpType.EndIf, 0));
+        this.maxProgramNesting = Math.max(this.nesting + 1, this.maxProgramNesting);
       } else {
         this.ops.push(new Op(OpType.Return, 0));
       }
@@ -590,55 +645,45 @@ export class Program {
   public genCode(): string {
     for (let i = 0; i < this.ops.length; i++) {
       const op = this.ops[i];
-      this.genIndent()
-      this.addCode(`// ops[${i}] = ${serializeOpType(op.type)}\n`);
+      this.addCode(`// ops[${i}] = ${serializeOpType(op.type)}`);
       switch (op.type) {
         case OpType.Ballot: {
-          this.genIndent();
-          this.addCode(`ballots[stride * output_loc + local_id] = subgroupBallot();\n`);
-          this.genIndent();
-          this.addCode(`output_loc++;\n`);
+          this.addCode(`ballots[stride * output_loc + local_id] = subgroupBallot();`);
+          this.addCode(`output_loc++;`);
           break;
         }
         case OpType.Store: {
-          this.genIndent();
-          this.addCode(`locations[local_id]++;\n`);
-          this.genIndent();
-          this.addCode(`ballots[stride * output_loc + local_id] = vec4u(${op.value});\n`);
-          this.genIndent();
-          this.addCode(`output_loc++;\n`);
+          this.addCode(`locations[local_id]++;`);
+          this.addCode(`ballots[stride * output_loc + local_id] = vec4u(${op.value});`);
+          this.addCode(`output_loc++;`);
           break;
         }
         default: {
-          this.genIndent();
-          this.addCode(`/* missing op ${op.type} */\n`);
+          this.addCode(`/* missing op ${op.type} */`);
           break;
         }
         case OpType.IfMask: {
-          this.genIndent();
           if (op.value == 0) {
             const idx = this.getRandomUint(4);
-            this.addCode(`if inputs[${idx}] == ${idx} {\n`);
+            this.addCode(`if inputs[${idx}] == ${idx} {`);
           } else {
             const idx = op.value;
             const x = this.masks[4*idx];
             const y = this.masks[4*idx+1];
             const z = this.masks[4*idx+2];
             const w = this.masks[4*idx+3];
-            this.addCode(`if testBit(vec4u(0x${hex(x)},0x${hex(y)},0x${hex(z)},0x${hex(w)}), subgroup_id) {\n`);
+            this.addCode(`if testBit(vec4u(0x${hex(x)},0x${hex(y)},0x${hex(z)},0x${hex(w)}), subgroup_id) {`);
           }
           this.increaseIndent();
           break;
         }
         case OpType.IfId: {
-          this.genIndent();
-          this.addCode(`if subgroup_id < inputs[${op.value}] {\n`);
+          this.addCode(`if subgroup_id < inputs[${op.value}] {`);
           this.increaseIndent();
           break;
         }
         case OpType.IfLoopCount: {
-          this.genIndent();
-          this.addCode(`if subgroup_id == i${this.loopNesting-1} {\n`);
+          this.addCode(`if subgroup_id == i${this.loopNesting-1} {`);
           this.increaseIndent();
           break;
         }
@@ -646,42 +691,36 @@ export class Program {
         case OpType.ElseId:
         case OpType.ElseLoopCount: {
           this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`} else {\n`);
+          this.addCode(`} else {`);
           this.increaseIndent();
           break;
         }
         case OpType.EndIf: {
           this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`}\n`);
+          this.addCode(`}`);
           break;
         }
         case OpType.ForUniform: {
-          this.genIndent();
           const iter = `i${this.loopNesting}`;
-          this.addCode(`for (var ${iter} = 0u; ${iter} < inputs[${op.value}]; ${iter}++) {\n`);
+          this.addCode(`for (var ${iter} = 0u; ${iter} < inputs[${op.value}]; ${iter}++) {`);
           this.increaseIndent();
           this.loopNesting++;
           break;
         }
         case OpType.ForInf: {
-          this.genIndent();
           const iter = `i${this.loopNesting}`;
-          this.addCode(`for (var ${iter} = 0u; true; ${iter} = infLoopIncrement(${iter})) {\n`);
+          this.addCode(`for (var ${iter} = 0u; true; ${iter} = infLoopIncrement(${iter})) {`);
           this.loopNesting++;
           this.increaseIndent();
           // Safety mechanism for hardware runs.
-          this.genIndent();
-          this.addCode(`// Safety valve\n`);
-          this.genIndent();
-          this.addCode(`if ${iter} >= 128u { break; }\n\n`);
+          // Intention extra newline.
+          this.addCode(`// Safety valve`);
+          this.addCode(`if ${iter} >= 128u { break; }\n`);
           break;
         }
         case OpType.ForVar: {
-          this.genIndent();
           const iter = `i${this.loopNesting}`;
-          this.addCode(`for (var ${iter} = 0u; ${iter} < subgroup_id + 1; ${iter}++) {\n`);
+          this.addCode(`for (var ${iter} = 0u; ${iter} < subgroup_id + 1; ${iter}++) {`);
           this.loopNesting++;
           this.increaseIndent();
           break;
@@ -691,16 +730,13 @@ export class Program {
         case OpType.EndForVar: {
           this.loopNesting--;
           this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`}\n`);
+          this.addCode(`}`);
           break;
         }
         case OpType.LoopUniform: {
-          this.genIndent();
           const iter = `i${this.loopNesting}`;
-          this.addCode(`var ${iter} = 0u;\n`);
-          this.genIndent();
-          this.addCode(`loop {\n`);
+          this.addCode(`${iter} = 0u;`);
+          this.addCode(`loop {`);
           this.loopNesting++;
           this.increaseIndent();
           break;
@@ -708,62 +744,86 @@ export class Program {
         case OpType.EndLoopUniform: {
           this.loopNesting--;
           const iter = `i${this.loopNesting}`;
-          this.genIndent();
-          this.addCode(`continuing {\n`);
+          this.addCode(`continuing {`);
           this.increaseIndent();
-          this.genIndent();
-          this.addCode(`${iter}++;\n`);
-          this.genIndent();
-          this.addCode(`break if ${iter} >= inputs[${op.value}];\n`);
+          this.addCode(`${iter}++;`);
+          this.addCode(`break if ${iter} >= inputs[${op.value}];`);
           this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`}\n`);
+          this.addCode(`}`);
           this.decreaseIndent();
-          this.genIndent();
-          this.addCode(`}\n`);
+          this.addCode(`}`);
+          break;
+        }
+        case OpType.LoopInf: {
+          const iter = `i${this.loopNesting}`;
+          this.addCode(`${iter} = 0u;`);
+          this.addCode(`loop {`);
+          this.loopNesting++;
+          this.increaseIndent();
+          break;
+        }
+        case OpType.EndLoopInf: {
+          this.loopNesting--;
+          const iter = `i${this.loopNesting}`;
+          this.addCode(`continuing {`);
+          this.increaseIndent();
+          this.addCode(`${iter}++;`);
+          this.addCode(`ballots[stride * output_loc + local_id] = subgroupBallot();`);
+          this.addCode(`output_loc++;`);
+          // Safety mechanism for hardware runs.
+          // Intentional extra newlines.
+          this.addCode(``);
+          this.addCode(`// Safety mechanism`);
+          this.addCode(`break if ${iter} >= 128;`);
+          this.decreaseIndent();
+          this.addCode(`}`);
+          this.decreaseIndent();
+          this.addCode(`}`);
           break;
         }
         case OpType.Break: {
-          this.genIndent();
-          this.addCode(`break;\n`);
+          this.addCode(`break;`);
           break;
         }
         case OpType.Continue: {
-          this.genIndent();
-          this.addCode(`continue;\n`);
+          this.addCode(`continue;`);
           break;
         }
         case OpType.Return: {
-          this.genIndent();
-          this.addCode(`return;\n`);
+          this.addCode(`return;`);
           break;
         }
         case OpType.Elect: {
-          this.genIndent();
-          this.addCode(`if subgroupElect() {\n`);
+          this.addCode(`if subgroupElect() {`);
           this.increaseIndent();
           break;
         }
         case OpType.Call: {
-          this.genIndent();
-          this.addCode(`f${this.functions.length}(`);
+          let call = `f${this.functions.length}(`;
           for (let i = 0; i < this.loopNesting; i++) {
-            this.addCode(`i${i},`);
+            call += `i${i},`;
           }
-          this.addCode(`);\n`);
+          call += `);`;
+          this.addCode(call);
 
           this.curFunc = this.functions.length;
-          this.functions.push(`fn f${this.curFunc}(`);
+          this.functions.push(``);
+          this.indents.push(0);
+          let decl = `fn f${this.curFunc}(`
           for (let i = 0; i < this.loopNesting; i++) {
-            this.addCode(`i${i} : u32,`);
+            decl += `i${i} : u32,`;
           }
-          this.addCode(`) {\n`);
-          this.indents.push(2);
+          decl += `) {`;
+          this.addCode(decl);
+          this.increaseIndent();
+          for (let i = this.loopNesting; i < this.maxLoopNesting; i++) {
+            this.addCode(`var i${i} = 0u;`);
+          }
           break;
         }
         case OpType.EndCall: {
           this.decreaseIndent();
-          this.addCode(`}\n`);
+          this.addCode(`}`);
           // Call nesting is limited to 1 so we always return to f0.
           this.curFunc = 0;
           break;
@@ -846,7 +906,11 @@ fn testBit(mask : vec4u, id : u32) -> bool {
   return select(zwbit, xybit, lower64) == 1;
 }
 
-fn f0() {`;
+fn f0() {
+  var i0 = 0u;
+  var i1 = 0u;
+  var i2 = 0u;
+  var i3 = 0u;`;
 
     for (let i = 0; i < this.functions.length; i++) {
       code += `
@@ -880,10 +944,11 @@ ${this.functions[i]}`;
   }
 
   /**
-   * Adds 'code' to the current function
+   * Adds the line 'code' to the current function.
    */
   private addCode(code: string) {
-    this.functions[this.curFunc] += code;
+    this.genIndent();
+    this.functions[this.curFunc] += code + `\n`;
   }
 
   /**
@@ -946,8 +1011,13 @@ ${this.functions[i]}`;
       this.ops[idx].uniform = true;
     }
 
-    let stack = new Array();
-    stack.push(new State());
+    //let stack = new Array();
+    // Allocate the stack based on the maximum nesting in the program.
+    let stack: State[] = new Array(this.maxProgramNesting + 1);
+    for (let i = 0; i < stack.length; i++) {
+      stack[i] = new State();
+    }
+    //stack.push(new State());
     stack[0].activeMask = (1n << 128n) - 1n;
 
     let nesting = 0;
@@ -957,10 +1027,14 @@ ${this.functions[i]}`;
 
     if (!countOnly) {
       console.log(`Simulating subgroup size = ${subgroupSize}`);
+      console.log(` Max program nesting = ${this.maxProgramNesting}`);
     }
     let i = 0;
     while (i < this.ops.length) {
       const op = this.ops[i];
+      if (nesting >= stack.length) {
+        unreachable(`Max stack nesting surpassed (${stack.length} vs ${this.nesting}) at ops[${i}] = ${serializeOpType(op.type)}`);
+      }
       if (!countOnly) {
         //console.log(`ops[${i}] = ${serializeOpType(op.type)}, nesting = ${nesting}, loopNesting = ${loopNesting}`);
         //console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
@@ -968,6 +1042,32 @@ ${this.functions[i]}`;
         //for (let j = 0; j <= nesting; j++) {
         //  console.log(`  mask[${j}] = ${stack[j].activeMask.toString(16)}`);
         //}
+      }
+
+      // Early outs if no invocations are active.
+      switch (op.type) {
+        case OpType.Ballot:
+        case OpType.Store:
+        case OpType.Return:
+        case OpType.Continue:
+        case OpType.Break: {
+          if (!any(stack[nesting].activeMask)) {
+            i++;
+            continue;
+          }
+          break;
+        }
+        case OpType.ElseMask:
+        case OpType.ElseId:
+        case OpType.ElseLoopCount: {
+          if (!any(stack[nesting-1].activeMask)) {
+            stack[nesting].activeMask = 0n;
+            i++;
+            continue;
+          }
+        }
+        default:
+          break;
       }
       switch (op.type) {
         case OpType.Ballot: {
@@ -978,7 +1078,7 @@ ${this.functions[i]}`;
           }
 
           // Flag if this ballot is not subgroup uniform.
-          if (this.style == Style.Subgroup) {
+          if (this.style == Style.Subgroup && any(curMask)) {
             for (let id = 0; id < this.invocations; id += subgroupSize) {
               const subgroupMask = (curMask >> BigInt(id)) & getMask(subgroupSize);
               if (subgroupMask != 0n && !all(subgroupMask, subgroupSize)) {
@@ -1015,12 +1115,13 @@ ${this.functions[i]}`;
           break;
         }
         case OpType.Store: {
-          if (!any(stack[nesting].activeMask)) {
+          const cur = stack[nesting];
+          if (!any(cur.activeMask)) {
             break;
           }
 
           for (let id = 0; id < this.invocations; id++) {
-            if (testBit(stack[nesting].activeMask, id)) {
+            if (testBit(cur.activeMask, id)) {
               if (!countOnly) {
                 const idx = this.baseIndex(id, locs[id]);
                 this.refData.fill(op.value, idx, idx + 4);
@@ -1032,13 +1133,14 @@ ${this.functions[i]}`;
         }
         case OpType.IfMask: {
           nesting++;
-          stack.push(new State());
+          //stack.push(new State());
           const cur = stack[nesting];
-          cur.copy(stack[nesting-1]);
+          cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
           cur.isLoop = false;
           cur.isSwitch = false;
           cur.isCall = false;
+          cur.continueMask = 0n;
           // O is always uniform true.
           if (op.value != 0 && any(cur.activeMask)) {
             let subMask = this.getValueMask(op.value);
@@ -1050,10 +1152,10 @@ ${this.functions[i]}`;
         case OpType.ElseMask: {
           // 0 is always uniform true so the else will never be taken.
           const cur = stack[nesting];
+          const prev = stack[nesting-1];
           if (op.value == 0) {
             cur.activeMask = 0n;
-          } else if (any(cur.activeMask)) {
-            const prev = stack[nesting-1];
+          } else if (any(prev.activeMask)) {
             let subMask = this.getValueMask(op.value);
             subMask &= getMask(subgroupSize);
             cur.activeMask = prev.activeMask;
@@ -1063,16 +1165,18 @@ ${this.functions[i]}`;
         }
         case OpType.IfId: {
           nesting++;
-          stack.push(new State());
+          //stack.push(new State());
           const cur = stack[nesting];
-          cur.copy(stack[nesting-1]);
+          cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
           cur.isLoop = false;
           cur.isSwitch = false;
           cur.isCall = false;
+          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             // All invocations with subgroup invocation id less than op.value are active.
-            cur.activeMask &= getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+            const mask = getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+            cur.activeMask &= mask;
           }
           break;
         }
@@ -1081,7 +1185,8 @@ ${this.functions[i]}`;
           // All invocations with a subgroup invocation id greater or equal to op.value are active.
           stack[nesting].activeMask = prev.activeMask;
           if (any(prev.activeMask)) {
-            stack[nesting].activeMask &= ~getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+            const mask = getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
+            stack[nesting].activeMask &= ~mask;
           }
           break;
         }
@@ -1096,13 +1201,14 @@ ${this.functions[i]}`;
           }
 
           nesting++;
-          stack.push(new State());
+          //stack.push(new State());
           const cur = stack[nesting];
-          cur.copy(stack[nesting-1]);
+          cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
           cur.isLoop = false;
           cur.isSwitch = false;
           cur.isCall = false;
+          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             cur.activeMask &= getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
           }
@@ -1116,6 +1222,9 @@ ${this.functions[i]}`;
           while (!stack[n].isLoop) {
             n--;
           }
+          if (n < 0) {
+            unreachable(`Failed to find loop for ElseLoopCount`);
+          }
 
           stack[nesting].activeMask = stack[nesting-1].activeMask;
           if (any(stack[nesting].activeMask)) {
@@ -1126,20 +1235,25 @@ ${this.functions[i]}`;
         case OpType.EndIf: {
           // End the current if.
           nesting--;
-          stack.pop();
+          //stack.pop();
           break;
         }
         case OpType.ForUniform:
         case OpType.ForInf:
         case OpType.ForVar:
-        case OpType.LoopUniform: {
+        case OpType.LoopUniform:
+        case OpType.LoopInf: {
           nesting++;
           loopNesting++;
-          stack.push(new State());
+          assert(nesting < stack.length);
+          //stack.push(new State());
           const cur = stack[nesting];
           cur.header = i;
           cur.isLoop = true;
           cur.activeMask = stack[nesting-1].activeMask;
+          cur.isSwitch = false;
+          cur.isCall = false;
+          cur.continueMask = 0n;
           break;
         }
         case OpType.EndForUniform: {
@@ -1155,7 +1269,7 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            stack.pop();
+            //stack.pop();
           }
           break;
         }
@@ -1186,7 +1300,7 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            stack.pop();
+            //stack.pop();
           }
           break;
         }
@@ -1206,7 +1320,7 @@ ${this.functions[i]}`;
           if (done) {
             loopNesting--;
             nesting--;
-            stack.pop();
+            //stack.pop();
           } else {
             i = cur.header + 1;
             continue;
@@ -1225,7 +1339,37 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            stack.pop();
+            //stack.pop();
+          }
+          break;
+        }
+        case OpType.EndLoopInf: {
+          const cur = stack[nesting];
+          cur.tripCount++;
+          cur.activeMask |= cur.continueMask;
+          if (any(cur.activeMask)) {
+            let maskArray = new Uint32Array();
+            for (let id = 0; id < this.invocations; id++) {
+              if (id % subgroupSize === 0) {
+                maskArray = getSubgroupMask(cur.activeMask, subgroupSize, id);
+              }
+              if (testBit(cur.activeMask, id)) {
+                if (!countOnly) {
+                  const idx = this.baseIndex(id, locs[id]);
+                  this.refData[idx + 0] = maskArray[0];
+                  this.refData[idx + 1] = maskArray[1];
+                  this.refData[idx + 2] = maskArray[2];
+                  this.refData[idx + 3] = maskArray[3];
+                }
+                locs[id]++;
+              }
+            }
+            i = cur.header + 1;
+            continue;
+          } else {
+            loopNesting--;
+            nesting--;
+            //stack.pop();
           }
           break;
         }
@@ -1265,7 +1409,7 @@ ${this.functions[i]}`;
             }
           }
           if (n < 0) {
-            unreachable(`Failed to loop for continue`);
+            unreachable(`Failed to find loop for continue`);
           }
 
           break;
@@ -1284,17 +1428,22 @@ ${this.functions[i]}`;
               break;
             }
           }
+          if (n < 0) {
+            unreachable(`Failed to find call for return`);
+          }
+
           break;
         }
         case OpType.Elect: {
           nesting++;
-          stack.push(new State());
+          //stack.push(new State());
           const cur = stack[nesting];
-          cur.copy(stack[nesting-1]);
+          cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
           cur.isLoop = false;
           cur.isSwitch = false;
           cur.isCall = false;
+          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             cur.activeMask = getElectMask(cur.activeMask, subgroupSize, this.invocations);
           }
@@ -1302,15 +1451,18 @@ ${this.functions[i]}`;
         }
         case OpType.Call: {
           nesting++;
-          stack.push(new State());
+          //stack.push(new State());
           const cur = stack[nesting];
           cur.activeMask = stack[nesting-1].activeMask;
-          cur.isCall = 1;
+          cur.isCall = true;
+          cur.isLoop = false;
+          cur.isSwitch = false;
+          cur.continueMask = 0n;
           break;
         }
         case OpType.EndCall: {
           nesting--;
-          stack.pop();
+          //stack.pop();
           break;
         }
         default: {
@@ -1320,7 +1472,8 @@ ${this.functions[i]}`;
       i++;
     }
 
-    assert(stack.length == 1);
+    assert(nesting == 0);
+    //assert(stack.length == 1);
 
     let maxLoc = 0;
     for (let id = 0; id < this.invocations; id++) {
@@ -1355,7 +1508,7 @@ ${this.functions[i]}`;
       while (this.ops.length < this.minCount) {
         this.pickOp(1);
       }
-      //break;
+      break;
 
       // If this is an uniform control flow case, make sure a uniform ballot is
       // generated. A subgroup size of 64 is used for testing purposes here.
@@ -1510,6 +1663,13 @@ ${this.functions[i]}`;
    *   ballot(); // fully uniform
    * }
    * ballot(); // fully uniform
+   *
+   * @param beginLoop The loop type
+   * @param endLoop   The end loop type
+   *
+   * |beginLoop| and |endLoop| must be paired. Currently supported pairs:
+   *  * ForUniform and EndForUniform
+   *  * LoopUniform and EndLoopUniform
    */
   public predefinedProgram1(beginLoop: OpType = OpType.ForUniform,
                             endLoop: OpType = OpType.EndForUniform)  {
@@ -1660,7 +1820,7 @@ ${this.functions[i]}`;
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.ElseId, 0));
+    this.ops.push(new Op(OpType.ElseId, 112));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
@@ -1680,9 +1840,17 @@ ${this.functions[i]}`;
    *   }
    * }
    * ballot();
+   *
+   * @param beginType The loop type
+   * @param endType   The end loop type
+   *
+   * |beginType| and |endType| must be paired. Currently supported pairs:
+   *  * ForInf and EndForInf
+   *  * LoopInf and EndLoopInf
    */
-  public predefinedProgramForInf() {
-    this.ops.push(new Op(OpType.ForInf, 0));
+  public predefinedProgramInf(beginType: OpType = OpType.ForInf,
+                              endType: OpType = OpType.EndForInf) {
+    this.ops.push(new Op(beginType, 0));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
@@ -1691,7 +1859,7 @@ ${this.functions[i]}`;
     this.ops.push(new Op(OpType.Break, 0));
 
     this.ops.push(new Op(OpType.EndIf, 0));
-    this.ops.push(new Op(OpType.EndForInf, 0));
+    this.ops.push(new Op(endType, 0));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
