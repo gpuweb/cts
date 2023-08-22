@@ -193,9 +193,11 @@ g.test('floatBitsToULPFromZero,32').fn((t) => {
 g.test('scalarWGSL').fn((t) => {
   const cases = [
   [f32(0.0), '0.0f'],
-  // f32(-0.0) should map to '-0.0f'
-  // Tracked by https://github.com/gpuweb/cts/issues/2901
-  [f32(-0.0), '0.0f'],
+  // The number -0.0 can be remapped to 0.0 when stored in a Scalar
+  // object. It is not possible to guarantee that '-0.0f' will
+  // be emitted. So the WGSL scalar value printing does not try
+  // to handle this case.
+  [f32(-0.0), '0.0f'], // -0.0 can be remapped to 0.0
   [f32(1.0), '1.0f'],
   [f32(-1.0), '-1.0f'],
   [f32Bits(0x70000000), '1.5845632502852868e+29f'],
