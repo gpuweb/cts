@@ -458,6 +458,9 @@ function makeTreeNodeHeaderHTML(
       .attr('type', 'text')
       .prop('readonly', true)
       .addClass('nodequery')
+      .on('click', event => {
+        (event.target as HTMLInputElement).select();
+      })
       .val(n.query.toString())
       .appendTo(nodecolumns);
     if (n.subtreeCounts) {
@@ -623,11 +626,8 @@ void (async () => {
 
   tree.dissolveSingleChildTrees();
 
-  console.log('h1');
   const { runSubtree, generateSubtreeHTML } = makeSubtreeHTML(tree.root, 1);
-  console.log('h2');
   const setTreeCheckedRecursively = generateSubtreeHTML(resultsVis);
-  console.log('h3');
 
   document.getElementById('expandall')!.addEventListener('click', () => {
     setTreeCheckedRecursively();
