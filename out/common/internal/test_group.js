@@ -74,6 +74,9 @@ fixture)
   return new TestGroup(fixture);
 }
 
+/** Parameter name for batch number (see also TestBuilder.batch). */
+const kBatchParamName = 'batch__';
+
 
 
 
@@ -283,7 +286,7 @@ class TestBuilder {
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
-        assert(this.batchSize === 0 || !('batch__' in params));
+        assert(this.batchSize === 0 || !(kBatchParamName in params));
 
         // stringifyPublicParams also checks for invalid params values
         let testcaseString;
@@ -348,24 +351,53 @@ class TestBuilder {
 
   *iterate(caseFilter) {
     this.testCases ??= kUnitCaseParamsBuilder;
+
+    // Remove the batch__ from the caseFilter because the params builder doesn't
+    // know about it (we don't add it until later in this function).
+    let filterToBatch;
+    const caseFilterWithoutBatch = caseFilter ? { ...caseFilter } : null;
+    if (caseFilterWithoutBatch && kBatchParamName in caseFilterWithoutBatch) {
+      const batchParam = caseFilterWithoutBatch[kBatchParamName];
+      assert(typeof batchParam === 'number');
+      filterToBatch = batchParam;
+      delete caseFilterWithoutBatch[kBatchParamName];
+    }
+
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(
     this.testCases,
-    caseFilter))
+    caseFilterWithoutBatch))
     {
+      // If batches are not used, yield just one case.
       if (this.batchSize === 0 || subcases === undefined) {
         yield this.makeCaseSpecific(caseParams, subcases);
-      } else {
-        const subcaseArray = Array.from(subcases);
-        if (subcaseArray.length <= this.batchSize) {
-          yield this.makeCaseSpecific(caseParams, subcaseArray);
-        } else {
-          for (let i = 0; i < subcaseArray.length; i = i + this.batchSize) {
-            yield this.makeCaseSpecific(
-            { ...caseParams, batch__: i / this.batchSize },
-            subcaseArray.slice(i, Math.min(subcaseArray.length, i + this.batchSize)));
+        continue;
+      }
 
-          }
-        }
+      // Same if there ends up being only one batch.
+      const subcaseArray = Array.from(subcases);
+      if (subcaseArray.length <= this.batchSize) {
+        yield this.makeCaseSpecific(caseParams, subcaseArray);
+        continue;
+      }
+
+      // There are multiple batches. Helper function for this case:
+      const makeCaseForBatch = (batch) => {
+        const sliceStart = batch * this.batchSize;
+        return this.makeCaseSpecific(
+        { ...caseParams, [kBatchParamName]: batch },
+        subcaseArray.slice(sliceStart, Math.min(subcaseArray.length, sliceStart + this.batchSize)));
+
+      };
+
+      // If we filter to just one batch, yield it.
+      if (filterToBatch !== undefined) {
+        yield makeCaseForBatch(filterToBatch);
+        continue;
+      }
+
+      // Finally, if not, yield all of the batches.
+      for (let batch = 0; batch * this.batchSize < subcaseArray.length; ++batch) {
+        yield makeCaseForBatch(batch);
       }
     }
   }
