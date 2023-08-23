@@ -350,14 +350,14 @@ export async function loadTreeForQuery(
       subtreeL2.subtreeCounts ??= { tests: 1, nodesWithTODO: 0 };
       if (t.description) setSubtreeDescriptionAndCountTODOs(subtreeL2, t.description);
 
-      let paramsFilter = null;
+      let caseFilter = null;
       if ('params' in queryToLoad) {
-        paramsFilter = queryToLoad.params;
+        caseFilter = queryToLoad.params;
       }
 
       // MAINTENANCE_TODO: If tree generation gets too slow, avoid actually iterating the cases in a
       // file if there's no need to (based on the subqueriesToExpand).
-      for (const c of t.iterate(paramsFilter)) {
+      for (const c of t.iterate(caseFilter)) {
         // iterate() guarantees c's query is equal to or a subset of queryToLoad.
 
         if (queryToLoad instanceof TestQuerySingleCase) {
