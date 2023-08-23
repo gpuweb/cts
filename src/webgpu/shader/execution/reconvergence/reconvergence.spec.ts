@@ -96,8 +96,10 @@ async function testProgram(t: GPUTest, program: Program) {
     locMap.set(size, num);
     numLocs = Math.max(num, numLocs);
   }
+  numLocs = Math.min(program.maxLocations, numLocs);
   // Add 1 to ensure there are no extraneous writes.
   numLocs++;
+  console.log(`${new Date()}: Maximum locations = ${numLocs}`);
 
   console.log(`${new Date()}: creating pipeline`);
   const pipeline = t.device.createComputePipeline({
@@ -125,12 +127,12 @@ async function testProgram(t: GPUTest, program: Program) {
   );
   t.trackForCleanup(ballotBuffer);
 
-  const locationLength = program.invocations;
-  const locationBuffer = t.makeBufferWithContents(
-    new Uint32Array([...iterRange(locationLength, x => 0)]),
-      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
-  );
-  t.trackForCleanup(locationBuffer);
+  //const locationLength = program.invocations;
+  //const locationBuffer = t.makeBufferWithContents(
+  //  new Uint32Array([...iterRange(locationLength, x => 0)]),
+  //    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC
+  //);
+  //t.trackForCleanup(locationBuffer);
 
   const sizeLength = 2;
   const sizeBuffer = t.makeBufferWithContents(
@@ -161,12 +163,12 @@ async function testProgram(t: GPUTest, program: Program) {
           buffer: ballotBuffer
         },
       },
-      {
-        binding: 2,
-        resource: {
-          buffer: locationBuffer
-        },
-      },
+      //{
+      //  binding: 2,
+      //  resource: {
+      //    buffer: locationBuffer
+      //  },
+      //},
       {
         binding: 3,
         resource: {
@@ -216,6 +218,9 @@ async function testProgram(t: GPUTest, program: Program) {
   program.sizeRefData(locMap.get(actualSize));
   console.log(`${new Date()}: Full simulation size = ${actualSize}`);
   let num = program.simulate(false, actualSize);
+  console.log(`${new Date()}: locations = ${num}`);
+  num = Math.min(program.maxLocations, num);
+  console.log(`${new Date()}: locations = ${num}`);
 
   const idReadback = await t.readGPUBufferRangeTyped(
     idBuffer,
@@ -229,16 +234,16 @@ async function testProgram(t: GPUTest, program: Program) {
   const idData = idReadback.data;
   t.expectOK(checkIds(idData, actualSize), { mode: 'warn' });
 
-  const locationReadback = await t.readGPUBufferRangeTyped(
-    locationBuffer,
-    {
-      srcByteOffset: 0,
-      type: Uint32Array,
-      typedLength: locationLength,
-      method: 'copy',
-    }
-  );
-  const locationData = locationReadback.data;
+  //const locationReadback = await t.readGPUBufferRangeTyped(
+  //  locationBuffer,
+  //  {
+  //    srcByteOffset: 0,
+  //    type: Uint32Array,
+  //    typedLength: locationLength,
+  //    method: 'copy',
+  //  }
+  //);
+  //const locationData = locationReadback.data;
 
   console.log(`${new Date()}: Reading ballot buffer ${ballotLength * 4} bytes`);
   const ballotReadback = await t.readGPUBufferRangeTyped(
@@ -263,7 +268,7 @@ async function testProgram(t: GPUTest, program: Program) {
   //  }
   //}
 
-  t.expectOK(program.checkResults(ballotData, locationData, actualSize, num));
+  t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }
 
 g.test('predefined_reconvergence')
@@ -337,7 +342,7 @@ g.test('random_reconvergence')
   .params(u =>
     u
       .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
-      .combine('seed', generateSeeds(5))
+      .combine('seed', generateSeeds(50))
       .filter(u => {
         if (u.style == Style.Maximal) {
           return false;

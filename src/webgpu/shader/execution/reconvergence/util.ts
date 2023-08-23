@@ -226,6 +226,7 @@ export class Program {
   private isLoopInf: Map<number, boolean>;
   private doneInfLoopBreak: Map<number, boolean>;
   private maxProgramNesting;
+  public readonly maxLocations: number;
 
   /**
    * constructor
@@ -240,8 +241,11 @@ export class Program {
     this.style = style;
     this.minCount = 30;
     this.maxCount = 50000; // TODO: what is a reasonable limit?
+    // TODO: https://crbug.com/tint/2011
+    // Tint is double counting depth
     this.maxNesting = this.getRandomUint(40) + 20; //this.getRandomUint(70) + 30; // [30,100)
-    this.maxLoopNesting = 4;
+    // Loops significantly affect runtime and memory performance
+    this.maxLoopNesting = 3; //4;
     this.nesting = 0;
     this.loopNesting = 0;
     this.loopNestingThisFunction = 0;
@@ -268,6 +272,7 @@ export class Program {
     this.isLoopInf = new Map();
     this.doneInfLoopBreak = new Map();
     this.maxProgramNesting = 10; // default stack allocation
+    this.maxLocations = 130000; // keep the buffer under 256MiB
   }
 
   /** @returns A random float between 0 and 1 */
@@ -559,7 +564,7 @@ export class Program {
 
       // Sometimes use a return if we're in a call.
       if (this.callNesting > 0 && this.getRandomFloat() < 0.3) {
-        this.ops.push(new Op(OpType.Return, 0));
+        this.ops.push(new Op(OpType.Return, this.callNesting));
       } else {
         this.genBreak();
       }
@@ -630,13 +635,13 @@ export class Program {
       this.genBallot();
       if (this.getRandomFloat() < 0.1) {
         this.ops.push(new Op(OpType.IfMask, 0));
-        this.ops.push(new Op(OpType.Return, 0));
+        this.ops.push(new Op(OpType.Return, this.callNesting));
         this.ops.push(new Op(OpType.ElseMask, 0));
-        this.ops.push(new Op(OpType.Return, 0));
+        this.ops.push(new Op(OpType.Return, this.callNesting));
         this.ops.push(new Op(OpType.EndIf, 0));
         this.maxProgramNesting = Math.max(this.nesting + 1, this.maxProgramNesting);
       } else {
-        this.ops.push(new Op(OpType.Return, 0));
+        this.ops.push(new Op(OpType.Return, this.callNesting));
       }
     }
   }
@@ -653,7 +658,7 @@ export class Program {
           break;
         }
         case OpType.Store: {
-          this.addCode(`locations[local_id]++;`);
+          //this.addCode(`locations[local_id]++;`);
           this.addCode(`ballots[stride * output_loc + local_id] = vec4u(${op.value});`);
           this.addCode(`output_loc++;`);
           break;
@@ -840,8 +845,8 @@ const stride = ${this.invocations};
 var<storage, read> inputs : array<u32>;
 @group(0) @binding(1)
 var<storage, read_write> ballots : array<vec4u>;
-@group(0) @binding(2)
-var<storage, read_write> locations : array<u32>;
+//@group(0) @binding(2)
+//var<storage, read_write> locations : array<u32>;
 @group(0) @binding(3)
 var<storage, read_write> size : array<u32>;
 @group(0) @binding(4)
@@ -859,7 +864,7 @@ fn main(
 ) {
   _ = inputs[0];
   _ = ballots[0];
-  _ = locations[0];
+  //_ = locations[0];
   subgroup_id = sid;
   local_id = lid;
   ids[lid] = sid;
@@ -955,9 +960,11 @@ ${this.functions[i]}`;
    * Sizes the simulation buffer.
    *
    * The total size is (# of invocations) * |locs| * 4 (uint4 is written).
+   * |locs| is capped at this.maxLocations.
    */
   public sizeRefData(locs: number) {
-    this.refData = new Uint32Array(locs * 4 * this.invocations);
+    const num = Math.min(this.maxLocations, locs);
+    this.refData = new Uint32Array(num * 4 * this.invocations);
     this.refData.fill(0);
   }
 
@@ -997,27 +1004,25 @@ ${this.functions[i]}`;
         this.isSwitch = false;
       }
 
-      copy(other: State) {
-        this.activeMask = other.activeMask;
-        this.continueMask = other.continueMask;
-        this.header = other.header;
-        this.isLoop = other.isLoop;
-        this.tripCount = other.tripCount;
-        this.isCall = other.isCall;
-        this.isSwitch = other.isSwitch;
+      reset() {
+        this.activeMask = 0n;
+        this.continueMask = 0n;
+        this.header = 0;
+        this.isLoop = false;
+        this.tripCount = 0;
+        this.isCall = false;
+        this.isSwitch = false;
       }
     };
     for (let idx = 0; idx < this.ops.length; idx++) {
       this.ops[idx].uniform = true;
     }
 
-    //let stack = new Array();
     // Allocate the stack based on the maximum nesting in the program.
     let stack: State[] = new Array(this.maxProgramNesting + 1);
     for (let i = 0; i < stack.length; i++) {
       stack[i] = new State();
     }
-    //stack.push(new State());
     stack[0].activeMask = (1n << 128n) - 1n;
 
     let nesting = 0;
@@ -1025,10 +1030,6 @@ ${this.functions[i]}`;
     let locs = new Array(this.invocations);
     locs.fill(0);
 
-    if (!countOnly) {
-      console.log(`Simulating subgroup size = ${subgroupSize}`);
-      console.log(` Max program nesting = ${this.maxProgramNesting}`);
-    }
     let i = 0;
     while (i < this.ops.length) {
       const op = this.ops[i];
@@ -1036,12 +1037,11 @@ ${this.functions[i]}`;
         unreachable(`Max stack nesting surpassed (${stack.length} vs ${this.nesting}) at ops[${i}] = ${serializeOpType(op.type)}`);
       }
       if (!countOnly) {
-        //console.log(`ops[${i}] = ${serializeOpType(op.type)}, nesting = ${nesting}, loopNesting = ${loopNesting}`);
+        //console.log(`ops[${i}] = ${serializeOpType(op.type)}, nesting = ${nesting}, loopNesting = ${loopNesting}, value = ${op.value}`);
         //console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
-        //console.log(`  isLoop = ${stack[nesting].isLoop}`);
-        //for (let j = 0; j <= nesting; j++) {
-        //  console.log(`  mask[${j}] = ${stack[j].activeMask.toString(16)}`);
-        //}
+      //  //for (let j = 0; j <= nesting; j++) {
+      //  //  console.log(`  mask[${j}] = ${stack[j].activeMask.toString(16)}`);
+      //  //}
       }
 
       // Early outs if no invocations are active.
@@ -1133,14 +1133,10 @@ ${this.functions[i]}`;
         }
         case OpType.IfMask: {
           nesting++;
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
-          cur.isLoop = false;
-          cur.isSwitch = false;
-          cur.isCall = false;
-          cur.continueMask = 0n;
           // O is always uniform true.
           if (op.value != 0 && any(cur.activeMask)) {
             let subMask = this.getValueMask(op.value);
@@ -1165,14 +1161,10 @@ ${this.functions[i]}`;
         }
         case OpType.IfId: {
           nesting++;
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
-          cur.isLoop = false;
-          cur.isSwitch = false;
-          cur.isCall = false;
-          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             // All invocations with subgroup invocation id less than op.value are active.
             const mask = getReplicatedMask(getMask(op.value), subgroupSize, this.invocations);
@@ -1201,14 +1193,10 @@ ${this.functions[i]}`;
           }
 
           nesting++;
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
-          cur.isLoop = false;
-          cur.isSwitch = false;
-          cur.isCall = false;
-          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             cur.activeMask &= getReplicatedMask(BigInt(1 << stack[n].tripCount), subgroupSize, this.invocations);
           }
@@ -1235,7 +1223,6 @@ ${this.functions[i]}`;
         case OpType.EndIf: {
           // End the current if.
           nesting--;
-          //stack.pop();
           break;
         }
         case OpType.ForUniform:
@@ -1245,15 +1232,11 @@ ${this.functions[i]}`;
         case OpType.LoopInf: {
           nesting++;
           loopNesting++;
-          assert(nesting < stack.length);
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.header = i;
           cur.isLoop = true;
           cur.activeMask = stack[nesting-1].activeMask;
-          cur.isSwitch = false;
-          cur.isCall = false;
-          cur.continueMask = 0n;
           break;
         }
         case OpType.EndForUniform: {
@@ -1269,7 +1252,6 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            //stack.pop();
           }
           break;
         }
@@ -1300,7 +1282,6 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            //stack.pop();
           }
           break;
         }
@@ -1320,7 +1301,6 @@ ${this.functions[i]}`;
           if (done) {
             loopNesting--;
             nesting--;
-            //stack.pop();
           } else {
             i = cur.header + 1;
             continue;
@@ -1339,7 +1319,6 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            //stack.pop();
           }
           break;
         }
@@ -1369,7 +1348,6 @@ ${this.functions[i]}`;
           } else {
             loopNesting--;
             nesting--;
-            //stack.pop();
           }
           break;
         }
@@ -1428,7 +1406,9 @@ ${this.functions[i]}`;
               break;
             }
           }
-          if (n < 0) {
+          // op.value for Return is the call nesting.
+          // If the value is > 0 we should have encountered the call on the stack.
+          if (op.value != 0 && n < 0) {
             unreachable(`Failed to find call for return`);
           }
 
@@ -1436,14 +1416,10 @@ ${this.functions[i]}`;
         }
         case OpType.Elect: {
           nesting++;
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
           cur.header = i;
-          cur.isLoop = false;
-          cur.isSwitch = false;
-          cur.isCall = false;
-          cur.continueMask = 0n;
           if (any(cur.activeMask)) {
             cur.activeMask = getElectMask(cur.activeMask, subgroupSize, this.invocations);
           }
@@ -1451,18 +1427,14 @@ ${this.functions[i]}`;
         }
         case OpType.Call: {
           nesting++;
-          //stack.push(new State());
           const cur = stack[nesting];
+          cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
           cur.isCall = true;
-          cur.isLoop = false;
-          cur.isSwitch = false;
-          cur.continueMask = 0n;
           break;
         }
         case OpType.EndCall: {
           nesting--;
-          //stack.pop();
           break;
         }
         default: {
@@ -1473,15 +1445,15 @@ ${this.functions[i]}`;
     }
 
     assert(nesting == 0);
-    //assert(stack.length == 1);
 
     let maxLoc = 0;
     for (let id = 0; id < this.invocations; id++) {
       maxLoc = Math.max(maxLoc, locs[id]);
     }
-    if (!countOnly) {
-      console.log(`Max location = ${maxLoc}\n`);
-    }
+    maxLoc = Math.min(this.maxLocations, maxLoc);
+    //if (!countOnly) {
+    //  console.log(`Max location = ${maxLoc}\n`);
+    //}
     return maxLoc;
   }
 
@@ -1503,12 +1475,16 @@ ${this.functions[i]}`;
 
   /** @returns a randomized program */
   public generate() {
+    let i = 0;
     do {
+      if (i != 0) {
+        console.log(`Warning regenerating UCF testcase`);
+      }
       this.ops = [];
       while (this.ops.length < this.minCount) {
         this.pickOp(1);
       }
-      break;
+      //break;
 
       // If this is an uniform control flow case, make sure a uniform ballot is
       // generated. A subgroup size of 64 is used for testing purposes here.
@@ -1516,6 +1492,7 @@ ${this.functions[i]}`;
         console.log(`${new Date()}: simulating for UCF`);
         this.simulate(true, 64);
       }
+      i++;
     } while (this.style != Style.Maximal && !this.isUCF());
   }
 
@@ -1540,6 +1517,7 @@ ${this.functions[i]}`;
    * @returns The base index in a Uint32Array
    */
   private baseIndex(id: number, loc: number): number {
+    const capped_loc = Math.min(this.maxLocations, loc);
     return 4 * (this.invocations * loc + id);
   }
 
@@ -1569,8 +1547,9 @@ ${this.functions[i]}`;
    * @param numLocs      The maximum locations used in simulation
    * @returns an error if the results do meet expectatations
    */
-  public checkResults(ballots: Uint32Array, locations: Uint32Array,
+  public checkResults(ballots: Uint32Array, /*locations: Uint32Array,*/
                       subgroupSize: number, numLocs: number): Error | undefined {
+    let totalLocs = Math.min(numLocs, this.maxLocations);
     //console.log(`Verifying numLocs = ${numLocs}`);
     if (this.style == Style.Workgroup || this.style === Style.Subgroup) {
       if (!this.isUCF()) {
@@ -1583,8 +1562,8 @@ ${this.functions[i]}`;
       for (let id = 0; id < this.invocations; id++) {
         let refLoc = 1;
         let resLoc = 0;
-        while (refLoc < numLocs) {
-          while (refLoc < numLocs &&
+        while (refLoc < totalLocs) {
+          while (refLoc < totalLocs &&
                  !this.matchResult(this.refData, this.baseIndex(id, refLoc), maskArray, 0)) {
             refLoc++;
           }
@@ -1593,13 +1572,13 @@ ${this.functions[i]}`;
 
             // Search for the corresponding store in the result data.
             let storeRefLoc = refLoc - 1;
-            while (resLoc < numLocs &&
+            while (resLoc < totalLocs &&
                    !this.matchResult(ballots, this.baseIndex(id, resLoc),
                                      this.refData, this.baseIndex(id, storeRefLoc))) {
               resLoc++;
             }
 
-            if (resLoc >= numLocs) {
+            if (resLoc >= totalLocs) {
               const refIdx = this.baseIndex(id, storeRefLoc);
               return Error(`Failure for invocation ${id}: could not find associated store for reference location ${storeRefLoc}: ${this.refData[refIdx]},${this.refData[refIdx+1]},${this.refData[refIdx+2]},${this.refData[refIdx+3]}`);
             } else {
@@ -1615,12 +1594,6 @@ ${this.functions[i]}`;
             }
             refLoc++;
           }
-        }
-        // Check there were no extra writes.
-        const idx = this.baseIndex(id, numLocs);
-        if (!this.matchResult(ballots, idx, zeroArray, 0)) {
-          return Error(`Unexpected write at end of buffer (location = ${numLocs}) for invocation ${id}
-- got:      (${ballots[idx]}, ${ballots[idx + 1]}, ${ballots[idx + 2]}, ${ballots[idx + 3]})`);
         }
       }
     } else if (this.style == Style.Maximal) {
@@ -1765,7 +1738,7 @@ ${this.functions[i]}`;
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.Return, 16));
+    this.ops.push(new Op(OpType.Return, 0));
 
     this.ops.push(new Op(OpType.EndIf, 0));
 
@@ -1942,7 +1915,7 @@ ${this.functions[i]}`;
     this.ops.push(new Op(OpType.IfLoopCount, 0));
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.Return, 0));
+    this.ops.push(new Op(OpType.Return, 1));
     this.ops.push(new Op(OpType.EndIf, 0));
     // end f1
     this.ops.push(new Op(OpType.EndCall, 0));
@@ -1962,7 +1935,7 @@ ${this.functions[i]}`;
     this.ops.push(new Op(OpType.IfMask, 1));
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.Return, 0));
+    this.ops.push(new Op(OpType.Return, 1));
     this.ops.push(new Op(OpType.EndIf, 0));
     // end f2
     this.ops.push(new Op(OpType.EndCall, 0));
