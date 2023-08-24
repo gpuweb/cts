@@ -282,7 +282,7 @@ g.test('predefined_reconvergence')
   .params(u =>
     u
       .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
-      .combine('test', [...iterRange(8, x => x)] as const)
+      .combine('test', [...iterRange(9, x => x)] as const)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -292,50 +292,45 @@ g.test('predefined_reconvergence')
     const invocations = 128; // t.device.limits.maxSubgroupSize;
     const style = t.params.style;
 
-    let program: Program;
+    let program: Program = new Program(style, 1, invocations);;
     switch (t.params.test) {
       case 0: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgram1();
         break;
       }
       case 1: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgram2();
         break;
       }
       case 2: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgram3();
         break;
       }
       case 3: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgramInf();
         break;
       }
       case 4: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgramForVar();
         break;
       }
       case 5: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgramCall();
         break;
       }
       case 6: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgram1(OpType.LoopUniform, OpType.EndLoopUniform);
         break;
       }
       case 7: {
-        program = new Program(style, 1, invocations);
         program.predefinedProgramInf(OpType.LoopInf, OpType.EndLoopInf);
         break;
       }
+      case 8: {
+        program.predefinedProgramSwitchUniform();
+        break;
+      }
       default: {
-        program = new Program(style, 1, invocations);
         unreachable('Unhandled testcase');
       }
     }

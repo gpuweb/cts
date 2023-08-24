@@ -10,7 +10,7 @@ function getMask(size: number): bigint {
   return (1n << BigInt(size)) - 1n;
 }
 
-/** @returns A bitmask where submask is repeated every size bits for total bits. */
+/** @returns A bitmask where |submask| is repeated every |size| bits for |total| bits. */
 function getReplicatedMask(submask: bigint, size: number, total: number): bigint {
   const reps = Math.floor(total / size);
   let mask: bigint = submask & ((1n << BigInt(size)) - 1n);
@@ -140,6 +140,18 @@ export enum OpType {
   Call,
   EndCall,
 
+  // Equivalent to:
+  // switch (inputs[x]) {
+  //   case x*2: { ... } never taken
+  //   case x: { ... }   uniformly taken
+  //   case x*4: { ... } never taken
+  // }
+  SwitchUniform,
+  EndSwitch,
+
+  CaseMask,
+  EndCase,
+
   MAX,
 }
 
@@ -171,6 +183,10 @@ function serializeOpType(op: OpType): string {
     case OpType.Elect:          return 'Elect';
     case OpType.Call:           return 'Call';
     case OpType.EndCall:        return 'EndCall';
+    case OpType.SwitchUniform:  return 'SwitchUniform';
+    case OpType.EndSwitch:      return 'EndSwitch';
+    case OpType.CaseMask:       return 'CaseMask';
+    case OpType.EndCase:        return 'EndCase';
     default:
       unreachable('Unhandled op');
       break;
@@ -194,11 +210,13 @@ enum IfType {
 class Op {
   type : OpType;
   value : number;
+  caseValue: number;
   uniform : boolean;
 
-  constructor(type : OpType, value: number = 0, uniform: boolean = true) {
+  constructor(type : OpType, value: number, caseValue: number = 0, uniform: boolean = true) {
     this.type = type;
     this.value = value;
+    this.caseValue = caseValue;
     this.uniform = uniform;
   }
 };
@@ -365,6 +383,23 @@ export class Program {
             }
             break;
           }
+          case 9: {
+            const r2 = this.getRandomUint(4);
+            switch (r2) {
+              case 0: {
+                this.genSwitchUniform();
+                break;
+              }
+              case 1: {
+              }
+              case 2: {
+              }
+              case 3:
+              default: {
+                break;
+              }
+            }
+          }
           default: {
             break;
           }
@@ -446,7 +481,7 @@ export class Program {
           (beforeSize + 2 * (afterSize - beforeSize)) < this.maxCount) {
         for (let i = beforeSize; i < afterSize; i++) {
           const op = this.ops[i];
-          this.ops.push(new Op(op.type, op.value, op.uniform));
+          this.ops.push(new Op(op.type, op.value, op.caseValue, op.uniform));
           // Make stores unique.
           if (op.type == OpType.Store) {
             this.ops[this.ops.length-1].value = this.storeBase + this.ops.length - 1;
@@ -664,6 +699,27 @@ export class Program {
     }
   }
 
+  private genSwitchUniform() {
+    const r = this.getRandomUint(5);
+    this.ops.push(new Op(OpType.SwitchUniform, r));
+    this.nesting++;
+
+    this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+1)));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0xf, 1 << r));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+2)));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.nesting--;
+  }
+
   /** @returns The WGSL code for the program */
   public genCode(): string {
     for (let i = 0; i < this.ops.length; i++) {
@@ -849,6 +905,33 @@ export class Program {
           this.addCode(`}`);
           // Call nesting is limited to 1 so we always return to f0.
           this.curFunc = 0;
+          break;
+        }
+        case OpType.SwitchUniform: {
+          this.addCode(`switch inputs[${op.value}] {`);
+          this.increaseIndent();
+          this.addCode(`default { }`);
+          break;
+        }
+        case OpType.EndSwitch: {
+          this.decreaseIndent();
+          this.addCode(`}`);
+          break;
+        }
+        case OpType.CaseMask: {
+          let values = ``;
+          for (let b = 0; b < 32; b++) {
+            if ((1 << b) & op.caseValue) {
+              values += `${b},`;
+            }
+          }
+          this.addCode(`case ${values} {`);
+          this.increaseIndent();
+          break;
+        }
+        case OpType.EndCase: {
+          this.decreaseIndent();
+          this.addCode(`}`);
           break;
         }
       }
@@ -1155,13 +1238,17 @@ ${this.functions[i]}`;
         }
         case OpType.ElseMask:
         case OpType.ElseId:
-        case OpType.ElseLoopCount: {
+        case OpType.ElseLoopCount:
+        case OpType.CaseMask: {
           if (!any(stack[nesting-1].activeMask)) {
             stack[nesting].activeMask = 0n;
             i++;
             continue;
           }
         }
+        case OpType.EndCase:
+          // No work
+          break;
         default:
           break;
       }
@@ -1531,6 +1618,26 @@ ${this.functions[i]}`;
         }
         case OpType.EndCall: {
           nesting--;
+          break;
+        }
+        case OpType.SwitchUniform: {
+          nesting++;
+          const cur = stack[nesting];
+          cur.reset();
+          cur.activeMask = stack[nesting-1].activeMask;
+          cur.isSwitch = true;
+          break;
+        }
+        case OpType.EndSwitch: {
+          nesting--;
+          break;
+        }
+        case OpType.CaseMask: {
+          const mask = getReplicatedMask(BigInt(op.value), 4, this.invocations);
+          stack[nesting].activeMask = stack[nesting-1].activeMask & mask;
+          break;
+        }
+        case OpType.EndCase: {
           break;
         }
         default: {
@@ -2032,6 +2139,41 @@ ${this.functions[i]}`;
     this.ops.push(new Op(OpType.EndCall, 0));
 
     this.ops.push(new Op(OpType.EndIf, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * ballot()
+   * switch (inputs[5]) {
+   *   default { }
+   *   case 6 { ballot(); }
+   *   case 5 { ballot(); }
+   *   case 7 { ballot(); }
+   * }
+   * ballot();
+   *
+   */
+  public predefinedProgramSwitchUniform() {
+    const value = 5;
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.SwitchUniform, value));
+    this.ops.push(new Op(OpType.CaseMask, 0, 1 << (value + 1)));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0xf, 1 << value));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0, 1 << (value + 2)));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.EndSwitch, 0));
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
   }
