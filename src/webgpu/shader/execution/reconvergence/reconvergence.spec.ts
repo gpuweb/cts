@@ -65,6 +65,22 @@ function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: numbe
   return undefined;
 }
 
+function dumpBallots(ballots: Uint32Array, invocations: number, locations: number) {
+  let dump = `Ballots\n`;
+  for (let id = 0; id < invocations; id++) {
+    dump += `id[${id}]\n`;
+    for (let loc = 0; loc < locations; loc++) {
+      const idx = 4 * (invocations * loc + id);
+      const w = ballots[idx+3];
+      const z = ballots[idx+2];
+      const y = ballots[idx+1];
+      const x = ballots[idx+0];
+      dump += ` loc[${loc}] = (0x${hex(w)},0x${hex(z)},0x${hex(y)},0x${hex(x)}), (${w},${z},${y},${x})\n`;
+    }
+  }
+  console.log(dump);
+}
+
 /**
  * Checks the mapping of subgroup_invocation_id to local_invocation_index
  */
@@ -80,8 +96,9 @@ subgroup_invocation_id = ${data[i]}`);
 }
 
 async function testProgram(t: GPUTest, program: Program) {
-  let wgsl = program.genCode();
+  const wgsl = program.genCode();
   //console.log(wgsl);
+  //program.dumpStats(true);
   //return;
 
   // TODO: query the device
@@ -91,7 +108,6 @@ async function testProgram(t: GPUTest, program: Program) {
   let numLocs = 0;
   const locMap = new Map();
   for (let size = minSubgroupSize; size <= maxSubgroupSize; size *= 2) {
-    console.log(`${new Date()}: simulating subgroup size = ${size}`);
     let num = program.simulate(true, size);
     locMap.set(size, num);
     numLocs = Math.max(num, numLocs);
@@ -220,7 +236,6 @@ async function testProgram(t: GPUTest, program: Program) {
   let num = program.simulate(false, actualSize);
   console.log(`${new Date()}: locations = ${num}`);
   num = Math.min(program.maxLocations, num);
-  console.log(`${new Date()}: locations = ${num}`);
 
   const idReadback = await t.readGPUBufferRangeTyped(
     idBuffer,
@@ -245,7 +260,6 @@ async function testProgram(t: GPUTest, program: Program) {
   //);
   //const locationData = locationReadback.data;
 
-  console.log(`${new Date()}: Reading ballot buffer ${ballotLength * 4} bytes`);
   const ballotReadback = await t.readGPUBufferRangeTyped(
     ballotBuffer,
     {
@@ -258,15 +272,7 @@ async function testProgram(t: GPUTest, program: Program) {
   const ballotData = ballotReadback.data;
 
   console.log(`${Date()}: Finished buffer readbacks`);
-  //console.log(`Ballots`);
-  ////for (let id = 0; id < program.invocations; id++) {
-  //for (let id = 0; id < actualSize; id++) {
-  //  console.log(` id[${id}]:`);
-  //  for (let loc = 0; loc < num; loc++) {
-  //    const idx = 4 * (program.invocations * loc + id);
-  //    console.log(`  loc[${loc}] = (${hex(ballotData[idx+3])},${hex(ballotData[idx+2])},${hex(ballotData[idx+1])},${hex(ballotData[idx])}), (${ballotData[idx+3]},${ballotData[idx+2]},${ballotData[idx+1]},${ballotData[idx]})`);
-  //  }
-  //}
+  //dumpBallots(ballotData, program.invocations, num);
 
   t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }
@@ -329,7 +335,7 @@ g.test('predefined_reconvergence')
         break;
       }
       default: {
-        program = new Program();
+        program = new Program(style, 1, invocations);
         unreachable('Unhandled testcase');
       }
     }

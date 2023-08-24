@@ -11,7 +11,7 @@ function getMask(size: number): bigint {
 }
 
 /** @returns A bitmask where submask is repeated every size bits for total bits. */
-function getReplicatedMask(submask: bigint, size: number, total: number = 128): bigint {
+function getReplicatedMask(submask: bigint, size: number, total: number): bigint {
   const reps = Math.floor(total / size);
   let mask: bigint = submask & ((1n << BigInt(size)) - 1n);
   for (let i = 1; i < reps; i++) {
@@ -21,7 +21,7 @@ function getReplicatedMask(submask: bigint, size: number, total: number = 128): 
 }
 
 /** @returns a mask with only the least significant 1 in |value| set for each subgroup. */
-function getElectMask(value: bigint, size: number, total: number = 128): bigint {
+function getElectMask(value: bigint, size: number, total: number): bigint {
   let mask = value;
   let count = 0;
   while (!(mask & 1n)) {
@@ -225,8 +225,8 @@ export class Program {
   private refData: Uint32Array;
   private isLoopInf: Map<number, boolean>;
   private doneInfLoopBreak: Map<number, boolean>;
-  private maxProgramNesting;
   public readonly maxLocations: number;
+  private maxProgramNesting;
 
   /**
    * constructor
@@ -234,16 +234,19 @@ export class Program {
    * @param style Enum indicating the type of reconvergence being tested
    * @param seed  Value used to seed the PRNG
    */
-  constructor(style : Style = Style.Workgroup, seed: number = 1, invocations: number = 128) {
+  constructor(style : Style = Style.Workgroup, seed: number = 1, invocations: number) {
     this.invocations = invocations;
     this.prng = new PRNG(seed);
     this.ops = [];
     this.style = style;
     this.minCount = 30;
-    this.maxCount = 50000; // TODO: what is a reasonable limit?
+    //this.maxCount = 50000; // TODO: what is a reasonable limit?
+    this.maxCount = 20000; // TODO: what is a reasonable limit?
     // TODO: https://crbug.com/tint/2011
     // Tint is double counting depth
-    this.maxNesting = this.getRandomUint(40) + 20; //this.getRandomUint(70) + 30; // [30,100)
+    //this.maxNesting = this.getRandomUint(70) + 30; // [30,100)
+    //this.maxNesting = this.getRandomUint(40) + 20;
+    this.maxNesting = this.getRandomUint(20) + 20;
     // Loops significantly affect runtime and memory performance
     this.maxLoopNesting = 3; //4;
     this.nesting = 0;
@@ -380,7 +383,7 @@ export class Program {
          !(this.ops[cur_length - 1].type == OpType.Ballot ||
          (this.ops[cur_length-1].type == OpType.Store && this.ops[cur_length - 2].type == OpType.Ballot))) {
         // Perform a store with each ballot so the results can be correlated.
-        //if (this.style != Style.Maximal)
+        if (this.style != Style.Maximal)
           this.ops.push(new Op(OpType.Store, cur_length + this.storeBase));
         this.ops.push(new Op(OpType.Ballot, 0));
       }
@@ -411,7 +414,7 @@ export class Program {
     if (type == IfType.Uniform)
       maskIdx = 0;
 
-    const lid = this.getRandomUint(128);
+    const lid = this.getRandomUint(this.invocations);
     if (type == IfType.Lid) {
       this.ops.push(new Op(OpType.IfId, lid));
     } else if (type == IfType.LoopCount) {
@@ -444,6 +447,10 @@ export class Program {
         for (let i = beforeSize; i < afterSize; i++) {
           const op = this.ops[i];
           this.ops.push(new Op(op.type, op.value, op.uniform));
+          // Make stores unique.
+          if (op.type == OpType.Store) {
+            this.ops[this.ops.length-1].value = this.storeBase + this.ops.length - 1;
+          }
         }
       } else {
         this.pickOp(2);
@@ -479,7 +486,9 @@ export class Program {
 
     this.pickOp(2);
 
-    this.genElect(true);
+    // As loop become more deeply nested, execute fewer iterations.
+    const reduction = this.loopNesting === 1 ? 1 : this.loopNesting === 2 ? 2 : 4;
+    this.genElect(true, reduction);
     this.doneInfLoopBreak.set(this.loopNesting, true);
 
     this.pickOp(2);
@@ -493,7 +502,9 @@ export class Program {
   }
 
   private genForVar() {
-    this.ops.push(new Op(OpType.ForVar, 0));
+    // op.value is the iteration reduction factor.
+    const reduction = this.loopNesting === 0 ? 1 : this.loopNesting === 1 ? 2 : 4;
+    this.ops.push(new Op(OpType.ForVar, reduction));
     this.nesting++;
     this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
     this.loopNesting++;
@@ -501,7 +512,7 @@ export class Program {
 
     this.pickOp(2);
 
-    this.ops.push(new Op(OpType.EndForVar, 0));
+    this.ops.push(new Op(OpType.EndForVar, reduction));
     this.loopNestingThisFunction--;
     this.loopNesting--;
     this.nesting--;
@@ -536,7 +547,8 @@ export class Program {
 
     this.pickOp(2);
 
-    this.genElect(true);
+    const reduction = this.loopNesting === 1 ? 1 : this.loopNesting === 2 ? 2 : 4;
+    this.genElect(true, reduction);
     this.doneInfLoopBreak.set(this.loopNesting, true);
 
     this.pickOp(2);
@@ -550,7 +562,7 @@ export class Program {
     this.nesting--;
   }
 
-  private genElect(forceBreak: boolean) {
+  private genElect(forceBreak: boolean, reduction: number = 1) {
     this.ops.push(new Op(OpType.Elect, 0));
     this.nesting++;
     this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
@@ -574,6 +586,12 @@ export class Program {
 
     this.ops.push(new Op(OpType.EndIf, 0));
     this.nesting--;
+    // Reduction injects extra breaks to reduce the number of iterations.
+    for (let i = 1; i < reduction; i++) {
+      this.ops.push(new Op(OpType.Elect, 0));
+      this.ops.push(new Op(OpType.Break, 0));
+      this.ops.push(new Op(OpType.EndIf, 0));
+    }
   }
 
   private genBreak() {
@@ -720,12 +738,12 @@ export class Program {
           // Safety mechanism for hardware runs.
           // Intention extra newline.
           this.addCode(`// Safety valve`);
-          this.addCode(`if ${iter} >= 128u { break; }\n`);
+          this.addCode(`if ${iter} >= sgsize { break; }\n`);
           break;
         }
         case OpType.ForVar: {
           const iter = `i${this.loopNesting}`;
-          this.addCode(`for (var ${iter} = 0u; ${iter} < subgroup_id + 1; ${iter}++) {`);
+          this.addCode(`for (var ${iter} = 0u; ${iter} < (subgroup_id / ${op.value}) + 1; ${iter}++) {`);
           this.loopNesting++;
           this.increaseIndent();
           break;
@@ -779,7 +797,7 @@ export class Program {
           // Intentional extra newlines.
           this.addCode(``);
           this.addCode(`// Safety mechanism`);
-          this.addCode(`break if ${iter} >= 128;`);
+          this.addCode(`break if ${iter} >= sgsize;`);
           this.decreaseIndent();
           this.addCode(`}`);
           this.decreaseIndent();
@@ -855,6 +873,7 @@ var<storage, read_write> ids : array<u32>;
 var<private> subgroup_id : u32;
 var<private> local_id : u32;
 var<private> output_loc : u32 = 0;
+var<private> sgsize : u32 = 0;
 
 @compute @workgroup_size(stride,1,1)
 fn main(
@@ -868,6 +887,7 @@ fn main(
   subgroup_id = sid;
   local_id = lid;
   ids[lid] = sid;
+  sgsize = sg_size;
 
   // Store the subgroup size from the built-in value and ballot to check for
   // consistency.
@@ -956,6 +976,82 @@ ${this.functions[i]}`;
     this.functions[this.curFunc] += code + `\n`;
   }
 
+  public dumpStats(detailed: boolean = true) {
+    let stats = `Total instructions: ${this.ops.length}\n`;
+    let nesting = 0;
+    let stores = 0;
+    let totalStores = 0;
+    let totalLoops = 0;
+    let loopsAtNesting = new Array(this.maxLoopNesting);
+    loopsAtNesting.fill(0);
+    let storesAtNesting = new Array(this.maxLoopNesting + 1);
+    storesAtNesting.fill(0);
+    for (let i = 0; i < this.ops.length; i++) {
+      const op = this.ops[i];
+      switch (op.type) {
+        case OpType.Store:
+        case OpType.Ballot: {
+          stores++;
+          storesAtNesting[nesting]++;
+          break;
+        }
+        case OpType.ForUniform:
+        case OpType.LoopUniform:
+        case OpType.ForVar:
+        case OpType.ForInf:
+        case OpType.LoopInf: {
+          totalLoops++;
+          loopsAtNesting[nesting]++;
+          if (detailed) {
+            stats += ' '.repeat(nesting) + `${stores} stores\n`;
+          }
+          totalStores += stores;
+          stores = 0;
+
+          if (detailed) {
+            let iters = `subgroup size`;
+            if (op.type === OpType.ForUniform || op.type === OpType.LoopUniform) {
+              iters = `${op.value}`;
+            }
+            stats += ' '.repeat(nesting) + serializeOpType(op.type) + `: ${iters} iterations\n`;
+          }
+          nesting++;
+          break;
+        }
+        case OpType.EndForUniform:
+        case OpType.EndForInf:
+        case OpType.EndForVar:
+        case OpType.EndLoopUniform:
+        case OpType.EndLoopInf: {
+          if (detailed) {
+            stats += ' '.repeat(nesting) + `${stores} stores\n`;
+          }
+          totalStores += stores;
+          stores = 0;
+
+          nesting--;
+          if (detailed) {
+            stats += ' '.repeat(nesting) + serializeOpType(op.type) + '\n';
+          }
+          break;
+        }
+        default:
+          break;
+      }
+    }
+    totalStores += stores;
+    stats += `\n`;
+    stats += `${totalLoops} loops\n`;
+    for (let i = 0; i < loopsAtNesting.length; i++) {
+      stats += ` ${loopsAtNesting[i]} at nesting ${i}\n`;
+    }
+    stats += `${totalStores} stores\n`;
+    for (let i = 0; i < storesAtNesting.length; i++) {
+      stats += ` ${storesAtNesting[i]} at nesting ${i}\n`;
+    }
+    console.log(stats);
+  }
+
   /**
    * Sizes the simulation buffer.
    *
@@ -968,7 +1064,6 @@ ${this.functions[i]}`;
     this.refData.fill(0);
   }
 
-  // TODO: Reconvergence guarantees are not as strong as this simulation.
   /**
    * Simulate the program for the given subgroup size
    *
@@ -976,8 +1071,11 @@ ${this.functions[i]}`;
    * @param subgroupSize The subgroup size to simulate
    *
    * BigInt is not the fastest value to manipulate. Care should be taken to optimize it's use.
+   * TODO: would it be better to roll my own 128 bitvector?
+   *
+   * TODO: reconvergence guarantees in WGSL are not as strong as this simulation
    */
-  public simulate(countOnly: boolean, subgroupSize: number): number {
+  public simulate(countOnly: boolean, subgroupSize: number, debug: boolean = false): number {
     class State {
       // Active invocations
       activeMask: bigint;
@@ -1023,7 +1121,7 @@ ${this.functions[i]}`;
     for (let i = 0; i < stack.length; i++) {
       stack[i] = new State();
     }
-    stack[0].activeMask = (1n << 128n) - 1n;
+    stack[0].activeMask = (1n << BigInt(this.invocations)) - 1n;
 
     let nesting = 0;
     let loopNesting = 0;
@@ -1036,15 +1134,13 @@ ${this.functions[i]}`;
       if (nesting >= stack.length) {
         unreachable(`Max stack nesting surpassed (${stack.length} vs ${this.nesting}) at ops[${i}] = ${serializeOpType(op.type)}`);
       }
-      if (!countOnly) {
-        //console.log(`ops[${i}] = ${serializeOpType(op.type)}, nesting = ${nesting}, loopNesting = ${loopNesting}, value = ${op.value}`);
-        //console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
-      //  //for (let j = 0; j <= nesting; j++) {
-      //  //  console.log(`  mask[${j}] = ${stack[j].activeMask.toString(16)}`);
-      //  //}
+      if (debug) {
+        console.log(`ops[${i}] = ${serializeOpType(op.type)}, nesting = ${nesting}, loopNesting = ${loopNesting}, value = ${op.value}`);
+        console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
       }
 
       // Early outs if no invocations are active.
+      // Don't skip ops that change nesting.
       switch (op.type) {
         case OpType.Ballot:
         case OpType.Store:
@@ -1292,7 +1388,7 @@ ${this.functions[i]}`;
           cur.continueMask = 0n;
           let done = !any(cur.activeMask) || cur.tripCount === subgroupSize;
           if (!done) {
-            let submask = getMask(subgroupSize) & ~getMask(cur.tripCount);
+            let submask = getMask(Math.floor(subgroupSize / op.value)) & ~getMask(cur.tripCount);
             let mask = getReplicatedMask(submask, subgroupSize, this.invocations);
             cur.activeMask &= mask;
             done = !any(cur.activeMask);
@@ -1451,9 +1547,6 @@ ${this.functions[i]}`;
       maxLoc = Math.max(maxLoc, locs[id]);
     }
     maxLoc = Math.min(this.maxLocations, maxLoc);
-    //if (!countOnly) {
-    //  console.log(`Max location = ${maxLoc}\n`);
-    //}
     return maxLoc;
   }
 
@@ -1489,7 +1582,6 @@ ${this.functions[i]}`;
       // If this is an uniform control flow case, make sure a uniform ballot is
       // generated. A subgroup size of 64 is used for testing purposes here.
       if (this.style != Style.Maximal) {
-        console.log(`${new Date()}: simulating for UCF`);
         this.simulate(true, 64);
       }
       i++;
@@ -1550,7 +1642,6 @@ ${this.functions[i]}`;
   public checkResults(ballots: Uint32Array, /*locations: Uint32Array,*/
                       subgroupSize: number, numLocs: number): Error | undefined {
     let totalLocs = Math.min(numLocs, this.maxLocations);
-    //console.log(`Verifying numLocs = ${numLocs}`);
     if (this.style == Style.Workgroup || this.style === Style.Subgroup) {
       if (!this.isUCF()) {
         return Error(`Expected some uniform condition for this test`);
@@ -1851,20 +1942,20 @@ ${this.functions[i]}`;
    * ballot();
    */
   public predefinedProgramForVar() {
-    this.ops.push(new Op(OpType.ForVar, 0));
+    this.ops.push(new Op(OpType.ForVar, 1));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.EndForVar, 0));
+    this.ops.push(new Op(OpType.EndForVar, 1));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
 
-    this.ops.push(new Op(OpType.ForVar, 0));
+    this.ops.push(new Op(OpType.ForVar, 1));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
-    this.ops.push(new Op(OpType.EndForVar, 0));
+    this.ops.push(new Op(OpType.EndForVar, 1));
 
     this.ops.push(new Op(OpType.Store, this.ops.length + this.storeBase));
     this.ops.push(new Op(OpType.Ballot, 0));
