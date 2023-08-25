@@ -65,12 +65,13 @@ function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: numbe
   return undefined;
 }
 
-function dumpBallots(ballots: Uint32Array, invocations: number, locations: number) {
+function dumpBallots(ballots: Uint32Array, totalInvocations: number,
+                     invocations: number, locations: number) {
   let dump = `Ballots\n`;
   for (let id = 0; id < invocations; id++) {
     dump += `id[${id}]\n`;
     for (let loc = 0; loc < locations; loc++) {
-      const idx = 4 * (invocations * loc + id);
+      const idx = 4 * (totalInvocations * loc + id);
       const w = ballots[idx+3];
       const z = ballots[idx+2];
       const y = ballots[idx+1];
@@ -233,7 +234,7 @@ async function testProgram(t: GPUTest, program: Program) {
 
   program.sizeRefData(locMap.get(actualSize));
   console.log(`${new Date()}: Full simulation size = ${actualSize}`);
-  let num = program.simulate(false, actualSize);
+  let num = program.simulate(false, actualSize, /* debug = */ false);
   console.log(`${new Date()}: locations = ${num}`);
   num = Math.min(program.maxLocations, num);
 
@@ -271,88 +272,134 @@ async function testProgram(t: GPUTest, program: Program) {
   );
   const ballotData = ballotReadback.data;
 
-  console.log(`${Date()}: Finished buffer readbacks`);
-  //dumpBallots(ballotData, program.invocations, num);
+  console.log(`${new Date()}: Finished buffer readbacks`);
+  // Only dump a single subgroup
+  //console.log(`${new Date()}: Reference data`);
+  //dumpBallots(program.refData, program.invocations, actualSize, num);
+  //console.log(`${new Date()}: GPU data`);
+  //dumpBallots(ballotData, program.invocations, actualSize, num);
 
   t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }
 
-g.test('predefined_reconvergence')
+async function predefinedTest(t: GPUTest, style: Style, test: number) {
+  const invocations = 128; // t.device.limits.maxSubgroupSize;
+
+  let program: Program = new Program(style, 1, invocations);;
+  switch (test) {
+    case 0: {
+      program.predefinedProgram1();
+      break;
+    }
+    case 1: {
+      program.predefinedProgram2();
+      break;
+    }
+    case 2: {
+      program.predefinedProgram3();
+      break;
+    }
+    case 3: {
+      program.predefinedProgramInf();
+      break;
+    }
+    case 4: {
+      program.predefinedProgramForVar();
+      break;
+    }
+    case 5: {
+      program.predefinedProgramCall();
+      break;
+    }
+    case 6: {
+      program.predefinedProgram1(OpType.LoopUniform, OpType.EndLoopUniform);
+      break;
+    }
+    case 7: {
+      program.predefinedProgramInf(OpType.LoopInf, OpType.EndLoopInf);
+      break;
+    }
+    case 8: {
+      program.predefinedProgramSwitchUniform();
+      break;
+    }
+    case 9: {
+      program.predefinedProgramSwitchVar();
+      break;
+    }
+    case 10: {
+      program.predefinedProgramSwitchLoopCount(0);
+      break;
+    }
+    case 11: {
+      program.predefinedProgramSwitchLoopCount(1);
+      break;
+    }
+    case 12: {
+      program.predefinedProgramSwitchLoopCount(2);
+      break;
+    }
+    case 13: {
+      program.predefinedProgramSwitchMulticase();
+      break;
+    }
+    default: {
+      unreachable('Unhandled testcase');
+    }
+  }
+
+  await testProgram(t, program);
+}
+
+const kPredefinedTestCases = [...iterRange(14, x => x)];
+
+g.test('predefined_workgroup')
   .desc(`Test reconvergence using some predefined programs`)
   .params(u =>
     u
-      .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
-      .combine('test', [...iterRange(9, x => x)] as const)
+      .combine('test', kPredefinedTestCases)
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
   //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
   //})
   .fn(async t => {
-    const invocations = 128; // t.device.limits.maxSubgroupSize;
-    const style = t.params.style;
-
-    let program: Program = new Program(style, 1, invocations);;
-    switch (t.params.test) {
-      case 0: {
-        program.predefinedProgram1();
-        break;
-      }
-      case 1: {
-        program.predefinedProgram2();
-        break;
-      }
-      case 2: {
-        program.predefinedProgram3();
-        break;
-      }
-      case 3: {
-        program.predefinedProgramInf();
-        break;
-      }
-      case 4: {
-        program.predefinedProgramForVar();
-        break;
-      }
-      case 5: {
-        program.predefinedProgramCall();
-        break;
-      }
-      case 6: {
-        program.predefinedProgram1(OpType.LoopUniform, OpType.EndLoopUniform);
-        break;
-      }
-      case 7: {
-        program.predefinedProgramInf(OpType.LoopInf, OpType.EndLoopInf);
-        break;
-      }
-      case 8: {
-        program.predefinedProgramSwitchUniform();
-        break;
-      }
-      default: {
-        unreachable('Unhandled testcase');
-      }
-    }
-
-    await testProgram(t, program);
+    await predefinedTest(t, Style.Workgroup, t.params.test);
   });
 
-g.test('random_reconvergence')
+g.test('predefined_subgroup')
+  .desc(`Test reconvergence using some predefined programs`)
+  .params(u =>
+    u
+      .combine('test', kPredefinedTestCases)
+      .beginSubcases()
+  )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
+  //})
+  .fn(async t => {
+    await predefinedTest(t, Style.Subgroup, t.params.test);
+  });
+
+g.test('predefined_maximal')
+  .desc(`Test reconvergence using some predefined programs`)
+  .params(u =>
+    u
+      .combine('test', kPredefinedTestCases)
+      .beginSubcases()
+  )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
+  //})
+  .fn(async t => {
+    await predefinedTest(t, Style.Maximal, t.params.test);
+  });
+
+g.test('random_workgroup')
   .desc(`Test reconvergence using randomly generated programs`)
   .params(u =>
     u
-      .combine('style', [Style.Workgroup, Style.Subgroup, Style.Maximal] as const)
       .combine('seed', generateSeeds(50))
-      .filter(u => {
-        if (u.style == Style.Maximal) {
-          return false;
-        }
-        if (u.style == Style.Subgroup) {
-          return false;
-        }
-        return true;
-      })
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
@@ -361,7 +408,45 @@ g.test('random_reconvergence')
   .fn(async t => {
     const invocations = 128; // t.device.limits.maxSubgroupSize;
 
-    let program: Program = new Program(t.params.style, t.params.seed, invocations);
+    let program: Program = new Program(Style.Workgroup, t.params.seed, invocations);
+    program.generate();
+
+    await testProgram(t, program);
+  });
+
+g.test('random_subgroup')
+  .desc(`Test reconvergence using randomly generated programs`)
+  .params(u =>
+    u
+      .combine('seed', generateSeeds(50))
+      .beginSubcases()
+  )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
+  //})
+  .fn(async t => {
+    const invocations = 128; // t.device.limits.maxSubgroupSize;
+
+    let program: Program = new Program(Style.Subgroup, t.params.seed, invocations);
+    program.generate();
+
+    await testProgram(t, program);
+  });
+
+g.test('random_maximal')
+  .desc(`Test reconvergence using randomly generated programs`)
+  .params(u =>
+    u
+      .combine('seed', generateSeeds(50))
+      .beginSubcases()
+  )
+  //.beforeAllSubcases(t => {
+  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
+  //})
+  .fn(async t => {
+    const invocations = 128; // t.device.limits.maxSubgroupSize;
+
+    let program: Program = new Program(Style.Maximal, t.params.seed, invocations);
     program.generate();
 
     await testProgram(t, program);

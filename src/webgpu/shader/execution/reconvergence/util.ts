@@ -140,7 +140,6 @@ export enum OpType {
   Call,
   EndCall,
 
-  // Equivalent to:
   // switch (inputs[x]) {
   //   case x*2: { ... } never taken
   //   case x: { ... }   uniformly taken
@@ -149,7 +148,18 @@ export enum OpType {
   SwitchUniform,
   EndSwitch,
 
+  // switch (subgroup_invocation_id & 3)
+  SwitchVar,
+
+  // switch (i) {
+  //   case 1: { ... }
+  //   case 2: { ... }
+  //   default: { ... }
+  // }
+  SwitchLoopCount,
+
   CaseMask,
+  CaseLoopCount,
   EndCase,
 
   MAX,
@@ -158,35 +168,38 @@ export enum OpType {
 function serializeOpType(op: OpType): string {
   // prettier-ignore
   switch (op) {
-    case OpType.Ballot:         return 'Ballot';
-    case OpType.Store:          return 'Store';
-    case OpType.IfMask:         return 'IfMask';
-    case OpType.ElseMask:       return 'ElseMask';
-    case OpType.EndIf:          return 'EndIf';
-    case OpType.IfLoopCount:    return 'IfLoopCount';
-    case OpType.ElseLoopCount:  return 'ElseLoopCount';
-    case OpType.IfId:           return 'IfId';
-    case OpType.ElseId:         return 'ElseId';
-    case OpType.Break:          return 'Break';
-    case OpType.Continue:       return 'Continue';
-    case OpType.ForUniform:     return 'ForUniform';
-    case OpType.EndForUniform:  return 'EndForUniform';
-    case OpType.ForInf:         return 'ForInf';
-    case OpType.EndForInf:      return 'EndForInf';
-    case OpType.ForVar:         return 'ForVar';
-    case OpType.EndForVar:      return 'EndForVar';
-    case OpType.LoopUniform:    return 'LoopUniform';
-    case OpType.EndLoopUniform: return 'EndLoopUniform';
-    case OpType.LoopInf:        return 'LoopInf';
-    case OpType.EndLoopInf:     return 'EndLoopInf';
-    case OpType.Return:         return 'Return';
-    case OpType.Elect:          return 'Elect';
-    case OpType.Call:           return 'Call';
-    case OpType.EndCall:        return 'EndCall';
-    case OpType.SwitchUniform:  return 'SwitchUniform';
-    case OpType.EndSwitch:      return 'EndSwitch';
-    case OpType.CaseMask:       return 'CaseMask';
-    case OpType.EndCase:        return 'EndCase';
+    case OpType.Ballot:          return 'Ballot';
+    case OpType.Store:           return 'Store';
+    case OpType.IfMask:          return 'IfMask';
+    case OpType.ElseMask:        return 'ElseMask';
+    case OpType.EndIf:           return 'EndIf';
+    case OpType.IfLoopCount:     return 'IfLoopCount';
+    case OpType.ElseLoopCount:   return 'ElseLoopCount';
+    case OpType.IfId:            return 'IfId';
+    case OpType.ElseId:          return 'ElseId';
+    case OpType.Break:           return 'Break';
+    case OpType.Continue:        return 'Continue';
+    case OpType.ForUniform:      return 'ForUniform';
+    case OpType.EndForUniform:   return 'EndForUniform';
+    case OpType.ForInf:          return 'ForInf';
+    case OpType.EndForInf:       return 'EndForInf';
+    case OpType.ForVar:          return 'ForVar';
+    case OpType.EndForVar:       return 'EndForVar';
+    case OpType.LoopUniform:     return 'LoopUniform';
+    case OpType.EndLoopUniform:  return 'EndLoopUniform';
+    case OpType.LoopInf:         return 'LoopInf';
+    case OpType.EndLoopInf:      return 'EndLoopInf';
+    case OpType.Return:          return 'Return';
+    case OpType.Elect:           return 'Elect';
+    case OpType.Call:            return 'Call';
+    case OpType.EndCall:         return 'EndCall';
+    case OpType.SwitchUniform:   return 'SwitchUniform';
+    case OpType.SwitchVar:       return 'SwitchVar';
+    case OpType.SwitchLoopCount: return 'SwitchLoopCount';
+    case OpType.EndSwitch:       return 'EndSwitch';
+    case OpType.CaseMask:        return 'CaseMask';
+    case OpType.CaseLoopCount:   return 'CaseLoopCount';
+    case OpType.EndCase:         return 'EndCase';
     default:
       unreachable('Unhandled op');
       break;
@@ -222,29 +235,59 @@ class Op {
 };
 
 export class Program {
+  // Number of invocations in the program
+  // Max supported is 128
   public readonly invocations: number;
+  // Pseduo-random number generator
   private readonly prng: PRNG;
+  // Instruction list
   private ops : Op[];
+  // Reconvergence style
   public readonly style: Style;
+  // Minimum number of instructions in a program
   private readonly minCount: number;
+  // Maximum number of instructions in a program
+  // Note: this is a soft max to ensure functional programs.
   private readonly maxCount: number;
+  // Maximum nesting of scopes permitted
   private readonly maxNesting: number;
+  // Maximum loop nesting permitted
   private readonly maxLoopNesting: number;
+  // Current nesting
   private nesting: number;
+  // Current loop nesting
   private loopNesting: number;
+  // Current loop nesting in the current function
   private loopNestingThisFunction: number;
+  // Current call nesting
   private callNesting: number;
+  // Number of pregenerated masks for testing
   private readonly numMasks: number;
+  // Pregenerated masks.
+  // 4 * |numMasks| entries representing ballots.
   private masks: number[];
+  // Current function index
   private curFunc: number;
+  // WGSL code of each function
   private functions: string[];
+  // Indent level for each function
   private indents: number[];
+  // Offset value for OpType.Store
   private readonly storeBase: number;
-  private refData: Uint32Array;
+  // Reference simulation output
+  public refData: Uint32Array;
+  // Maps whether a particular loop nest is infinite or not
   private isLoopInf: Map<number, boolean>;
+  // Maps whether a particular infinite loop has had a break inserted
   private doneInfLoopBreak: Map<number, boolean>;
+  // Maximum number of locations per invocation
+  // Each location stores a vec4u
   public readonly maxLocations: number;
+  // Maximum nesting in the actual program
   private maxProgramNesting;
+  // Indicates if the program satisfies uniform control flow for |style|
+  // This depends on simulating a particular subgroup size
+  public ucf: boolean;
 
   /**
    * constructor
@@ -254,6 +297,7 @@ export class Program {
    */
   constructor(style : Style = Style.Workgroup, seed: number = 1, invocations: number) {
     this.invocations = invocations;
+    assert(invocations <= 128);
     this.prng = new PRNG(seed);
     this.ops = [];
     this.style = style;
@@ -294,6 +338,7 @@ export class Program {
     this.doneInfLoopBreak = new Map();
     this.maxProgramNesting = 10; // default stack allocation
     this.maxLocations = 130000; // keep the buffer under 256MiB
+    this.ucf = false;
   }
 
   /** @returns A random float between 0 and 1 */
@@ -391,11 +436,22 @@ export class Program {
                 break;
               }
               case 1: {
+                if (this.loopNesting >= 0) {
+                  this.genSwitchLoopCount();
+                  break;
+                }
+                // fallthrough
               }
               case 2: {
+                if (this.style != Style.Maximal) {
+                  this.genSwitchMulticase();
+                  break;
+                }
+                // fallthrough
               }
               case 3:
               default: {
+                this.genSwitchVar();
                 break;
               }
             }
@@ -703,6 +759,7 @@ export class Program {
     const r = this.getRandomUint(5);
     this.ops.push(new Op(OpType.SwitchUniform, r));
     this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
 
     this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+1)));
     this.pickOp(1);
@@ -714,6 +771,80 @@ export class Program {
 
     this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+2)));
     this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.nesting--;
+  }
+
+  private genSwitchVar() {
+    this.ops.push(new Op(OpType.SwitchVar, 0));
+    this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
+
+    this.ops.push(new Op(OpType.CaseMask, 0x1, 1<<0));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0x2, 1<<1));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0x4, 1<<2));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0x8, 1<<3));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.nesting--;
+  }
+
+  private genSwitchLoopCount() {
+    const r = this.getRandomUint(this.loopNesting);
+    this.ops.push(new Op(OpType.SwitchLoopCount, r));
+    this.nesting++;
+    this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 1<<1, 1));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 1<<2, 2));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 0xfffffff9, 0xffffffff));
+    this.pickOp(1);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.nesting--;
+  }
+
+  // switch (subgroup_invocation_id & 3) {
+  //   default { }
+  //   case 0x3: { ... }
+  //   case 0xc: { ... }
+  // }
+  //
+  // This is not generated for maximal style cases because it is not clear what
+  // convergence should be expected. There are multiple valid lowerings of a
+  // switch that would lead to different convergence scenarios. To test this
+  // properly would likely require a range of values which is difficult for
+  // this infrastructure to produce.
+  private genSwitchMulticase() {
+    this.ops.push(new Op(OpType.SwitchVar, 0));
+    this.nesting++;
+
+    this.ops.push(new Op(OpType.CaseMask, 0x3, (1<<0)|(1<<1)));
+    this.pickOp(2);
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0xc, (1<<2)|(1<<3)));
+    this.pickOp(2);
     this.ops.push(new Op(OpType.EndCase, 0));
 
     this.ops.push(new Op(OpType.EndSwitch, 0));
@@ -913,6 +1044,18 @@ export class Program {
           this.addCode(`default { }`);
           break;
         }
+        case OpType.SwitchVar: {
+          this.addCode(`switch subgroup_id & 0x3 {`);
+          this.increaseIndent();
+          this.addCode(`default { }`);
+          break;
+        }
+        case OpType.SwitchLoopCount: {
+          const iter = `i${op.value}`;
+          this.addCode(`switch ${iter} {`);
+          this.increaseIndent();
+          break;
+        }
         case OpType.EndSwitch: {
           this.decreaseIndent();
           this.addCode(`}`);
@@ -926,6 +1069,15 @@ export class Program {
             }
           }
           this.addCode(`case ${values} {`);
+          this.increaseIndent();
+          break;
+        }
+        case OpType.CaseLoopCount: {
+          if (op.caseValue === 0xffffffff) {
+            this.addCode(`default {`);
+          } else {
+            this.addCode(`case ${op.caseValue} {`);
+          }
           this.increaseIndent();
           break;
         }
@@ -1230,6 +1382,7 @@ ${this.functions[i]}`;
         case OpType.Return:
         case OpType.Continue:
         case OpType.Break: {
+          // No reason to simulate if the current stack entry is inactive.
           if (!any(stack[nesting].activeMask)) {
             i++;
             continue;
@@ -1239,7 +1392,9 @@ ${this.functions[i]}`;
         case OpType.ElseMask:
         case OpType.ElseId:
         case OpType.ElseLoopCount:
-        case OpType.CaseMask: {
+        case OpType.CaseMask:
+        case OpType.CaseLoopCount: {
+          // No reason to simulate if the previous stack entry is inactive.
           if (!any(stack[nesting-1].activeMask)) {
             stack[nesting].activeMask = 0n;
             i++;
@@ -1258,6 +1413,9 @@ ${this.functions[i]}`;
           // Flag if this ballot is not workgroup uniform.
           if (this.style == Style.Workgroup && any(curMask) && !all(curMask, this.invocations)) {
             op.uniform = false;
+          } else {
+            op.uniform = true;
+            this.ucf = true;
           }
 
           // Flag if this ballot is not subgroup uniform.
@@ -1266,6 +1424,9 @@ ${this.functions[i]}`;
               const subgroupMask = (curMask >> BigInt(id)) & getMask(subgroupSize);
               if (subgroupMask != 0n && !all(subgroupMask, subgroupSize)) {
                 op.uniform = false;
+              } else {
+                op.uniform = true;
+                this.ucf = true;
               }
             }
           }
@@ -1473,9 +1634,11 @@ ${this.functions[i]}`;
           cur.tripCount++;
           cur.activeMask |= cur.continueMask;
           cur.continueMask = 0n;
-          let done = !any(cur.activeMask) || cur.tripCount === subgroupSize;
+          let done = !any(cur.activeMask) || cur.tripCount === Math.floor(subgroupSize / op.value);
           if (!done) {
-            let submask = getMask(Math.floor(subgroupSize / op.value)) & ~getMask(cur.tripCount);
+            // i < (subgroup_invocation_id / reduction) + 1
+            // So remove all ids < tripCount * reduction
+            let submask = getMask(subgroupSize) & ~getMask(cur.tripCount * op.value);
             let mask = getReplicatedMask(submask, subgroupSize, this.invocations);
             cur.activeMask &= mask;
             done = !any(cur.activeMask);
@@ -1620,11 +1783,14 @@ ${this.functions[i]}`;
           nesting--;
           break;
         }
-        case OpType.SwitchUniform: {
+        case OpType.SwitchUniform:
+        case OpType.SwitchVar:
+        case OpType.SwitchLoopCount: {
           nesting++;
           const cur = stack[nesting];
           cur.reset();
           cur.activeMask = stack[nesting-1].activeMask;
+          cur.header = i;
           cur.isSwitch = true;
           break;
         }
@@ -1635,6 +1801,31 @@ ${this.functions[i]}`;
         case OpType.CaseMask: {
           const mask = getReplicatedMask(BigInt(op.value), 4, this.invocations);
           stack[nesting].activeMask = stack[nesting-1].activeMask & mask;
+          break;
+        }
+        case OpType.CaseLoopCount: {
+          let n = nesting;
+          let l = loopNesting;
+
+          const findLoop = this.ops[stack[nesting].header].value;
+          while (n >= 0 && l >= 0) {
+            if (stack[n].isLoop) {
+              l--;
+              if (l == findLoop) {
+                break;
+              }
+            }
+            n--;
+          }
+          if (n < 0 || l < 0) {
+            unreachable(`Failed to find loop for CaseLoopCount`);
+          }
+
+          if (((1 << stack[n].tripCount) & op.value) != 0) {
+            stack[nesting].activeMask = stack[nesting-1].activeMask;
+          } else {
+            stack[nesting].activeMask = 0n;
+          }
           break;
         }
         case OpType.EndCase: {
@@ -1692,19 +1883,12 @@ ${this.functions[i]}`;
         this.simulate(true, 64);
       }
       i++;
-    } while (this.style != Style.Maximal && !this.isUCF());
+    } while (this.style != Style.Maximal && !this.ucf);
   }
 
   /** @returns true if the program has uniform control flow for some ballot */
   private isUCF(): boolean {
-    let ucf: boolean = false;
-    for (let i = 0; i < this.ops.length; i++) {
-      const op = this.ops[i];
-      if (op.type === OpType.Ballot && op.uniform) {
-        ucf = true;
-      }
-    }
-    return ucf;
+    return this.ucf;
   }
 
   /**
@@ -1768,28 +1952,27 @@ ${this.functions[i]}`;
           if (refLoc < numLocs) {
             // Fully converged simulation
 
-            // Search for the corresponding store in the result data.
+            // Search for the corresponding data in the result.
             let storeRefLoc = refLoc - 1;
-            while (resLoc < totalLocs &&
-                   !this.matchResult(ballots, this.baseIndex(id, resLoc),
-                                     this.refData, this.baseIndex(id, storeRefLoc))) {
+            while (resLoc + 1 < totalLocs &&
+                   !(this.matchResult(ballots, this.baseIndex(id, resLoc),
+                                      this.refData, this.baseIndex(id, storeRefLoc)) &&
+                     this.matchResult(ballots, this.baseIndex(id, resLoc+1),
+                                      this.refData, this.baseIndex(id, refLoc)))) {
               resLoc++;
             }
 
-            if (resLoc >= totalLocs) {
-              const refIdx = this.baseIndex(id, storeRefLoc);
-              return Error(`Failure for invocation ${id}: could not find associated store for reference location ${storeRefLoc}: ${this.refData[refIdx]},${this.refData[refIdx+1]},${this.refData[refIdx+2]},${this.refData[refIdx+3]}`);
-            } else {
-              // Found a matching store, now check the ballot.
-              const resIdx = this.baseIndex(id, resLoc + 1);
-              const refIdx = this.baseIndex(id, refLoc);
-              if (!this.matchResult(ballots, resIdx, this.refData, refIdx)) {
-                return Error(`Failure for invocation ${id} at location ${resLoc}
-- expected: (0x${hex(this.refData[refIdx+3])},0x${hex(this.refData[refIdx+2])},0x${hex(this.refData[refIdx+1])},0x${hex(this.refData[refIdx])})
-- got:      (0x${hex(ballots[resIdx+3])},0x${hex(ballots[resIdx+2])},0x${hex(ballots[resIdx+1])},0x${hex(ballots[resIdx])})`);
-              }
-              resLoc++;
+            if (resLoc + 1 >= totalLocs) {
+              const sIdx = this.baseIndex(id, storeRefLoc);
+              const bIdx = this.baseIndex(id, refLoc);
+              const ref = this.refData;
+              let msg = `Failure for invocation ${id}: could not find match for:\n`;
+              msg += `- store[${storeRefLoc}] = ${this.refData[sIdx]}\n`;
+              msg += `- ballot[${refLoc}] = (0x${hex(ref[bIdx+3])},0x${hex(ref[bIdx+2])},0x${hex(ref[bIdx+1])},0x${hex(ref[bIdx])})`;
+              return Error(msg);
             }
+            // Match both locations so don't revisit them.
+            resLoc++;
             refLoc++;
           }
         }
@@ -1801,15 +1984,17 @@ ${this.functions[i]}`;
         const id = Math.floor(idx_uvec4 % this.invocations);
         const loc = Math.floor(idx_uvec4 / this.invocations);
         if (!this.matchResult(ballots, i, this.refData, i)) {
-          return Error(`Failure for invocation ${id} at location ${loc}:
-- expected: (0x${hex(this.refData[i+3])},0x${hex(this.refData[i+2])},0x${hex(this.refData[i+1])},0x${hex(this.refData[i])})
-- got:      (0x${hex(ballots[i+3])},0x${hex(ballots[i+2])},0x${hex(ballots[i+1])},0x${hex(ballots[i])})`);
+          let msg = `Failure for invocation ${id} at location ${loc}:\n`;
+          msg += `- expected: (0x${hex(this.refData[i+3])},0x${hex(this.refData[i+2])},0x${hex(this.refData[i+1])},0x${hex(this.refData[i])})\n`;
+          msg += `- got:      (0x${hex(ballots[i+3])},0x${hex(ballots[i+2])},0x${hex(ballots[i+1])},0x${hex(ballots[i])})`;
+          return Error(msg);
         }
       }
       for (let i = this.refData.length; i < ballots.length; i++) {
         if (ballots[i] !== 0) {
-          return Error(`Unexpected write at end of buffer (index = ${i}):
-- got:      (${ballots[i]})`);
+          let msg = `Unexpected write at end of buffer (index = ${i}):\n`;
+          msg += `- got:      (${ballots[i]})`;
+          return Error(msg);
         }
       }
     }
@@ -2173,6 +2358,123 @@ ${this.functions[i]}`;
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
     this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * ballot();
+   * switch subgroup_invocation_id & 3 {
+   *   default { }
+   *   case 0: { ballot(); }
+   *   case 1: { ballot(); }
+   *   case 2: { ballot(); }
+   *   case 3: { ballot(); }
+   * }
+   * ballot();
+   */
+  public predefinedProgramSwitchVar() {
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.SwitchVar, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0x1, 1<<0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0x2, 1<<1));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0x4, 1<<2));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.CaseMask, 0x8, 1<<3));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * for (var i0 = 0u; i0 < inputs[3]; i0++) {
+   *   for (var i1 = 0u; i1 < inputs[3]; i1++) {
+   *     for (var i2 = 0u; i2 < subgroup_invocation_id + 1; i2++) {
+   *       ballot();
+   *       switch i_loop {
+   *         case 1 { ballot(); }
+   *         case 2 { ballot(); }
+   *         default { ballot(); }
+   *       }
+   *       ballot();
+   *     }
+   *   }
+   * }
+   */
+  public predefinedProgramSwitchLoopCount(loop: number) {
+    this.ops.push(new Op(OpType.ForUniform, 1));
+    this.ops.push(new Op(OpType.ForUniform, 2));
+    this.ops.push(new Op(OpType.ForVar, 4));
+
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.SwitchLoopCount, loop));
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 1<<1, 1));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 1<<2, 2));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseLoopCount, 0xfffffff9, 0xffffffff));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.EndSwitch, 0));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+
+    this.ops.push(new Op(OpType.EndForVar, 4));
+    this.ops.push(new Op(OpType.EndForUniform, 3));
+    this.ops.push(new Op(OpType.EndForUniform, 3));
+  }
+
+  /**
+   * Equivalent to:
+   *
+   * switch subgroup_invocation_id & 0x3 {
+   *   default { }
+   *   case 0,1 { ballot(); }
+   *   case 2,3 { ballot(); }
+   * }
+   */
+  public predefinedProgramSwitchMulticase() {
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.SwitchVar, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0x3, (1<<0)|(1<<1)));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+
+    this.ops.push(new Op(OpType.CaseMask, 0xc, (1<<2)|(1<<3)));
+    this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
+    this.ops.push(new Op(OpType.Ballot, 0));
+    this.ops.push(new Op(OpType.EndCase, 0));
+
     this.ops.push(new Op(OpType.EndSwitch, 0));
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
     this.ops.push(new Op(OpType.Ballot, 0));
