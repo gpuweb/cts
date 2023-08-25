@@ -208,9 +208,17 @@ function serializeOpType(op: OpType): string {
 }
 
 enum IfType {
+  // If the mask is 0, generates a random uniform comparison
+  // Otherwise, tests subgroup_invocation_id against a mask
   Mask,
+
+  // Generates a uniform true comparison
   Uniform,
+
+  // if subgroup_invocation_id == iN
   LoopCount,
+
+  // if subgroup_id < inputs[N]
   Lid,
 };
 
@@ -221,9 +229,13 @@ enum IfType {
  * not the operation is uniform.
  */
 class Op {
+  // Instruction type
   type : OpType;
+  // Instruction specific value
   value : number;
+  // Case specific value
   caseValue: number;
+  // Indicates if the instruction is uniform or not
   uniform : boolean;
 
   constructor(type : OpType, value: number, caseValue: number = 0, uniform: boolean = true) {
@@ -351,6 +363,12 @@ export class Program {
     return this.prng.randomU32() % max;
   }
 
+  /**
+   * Pick |count| random instructions generators
+   *
+   * @param count the number of instructions
+   *
+   */
   private pickOp(count : number) {
     for (let i = 0; i < count; i++) {
       if (this.ops.length >= this.maxCount) {
@@ -1182,35 +1200,34 @@ ${this.functions[i]}`;
     return code;
   }
 
-  /**
-   * Adds indentation to the code for the current function.
-   */
+  /** Adds indentation to the code for the current function. */
   private genIndent() {
     this.functions[this.curFunc] += ' '.repeat(this.indents[this.curFunc]);
   }
 
-  /**
-   * Increase the amount of indenting for the current function.
-   */
+  /** Increase the amount of indenting for the current function. */
   private increaseIndent() {
     this.indents[this.curFunc] += 2;
   }
 
-  /**
-   * Decrease the amount of indenting for the current function.
-   */
+  /** Decrease the amount of indenting for the current function. */
   private decreaseIndent() {
     this.indents[this.curFunc] -= 2;
   }
 
-  /**
-   * Adds the line 'code' to the current function.
-   */
+  /** Adds the line 'code' to the current function. */
   private addCode(code: string) {
     this.genIndent();
     this.functions[this.curFunc] += code + `\n`;
   }
 
+  /**
+   * Debugging function that dump statistics about the program
+   *
+   * Reports number of instructions, stores, and loops.
+   *
+   * @param detailed If true, dumps more detailed stats
+   */
   public dumpStats(detailed: boolean = true) {
     let stats = `Total instructions: ${this.ops.length}\n`;
     let nesting = 0;
