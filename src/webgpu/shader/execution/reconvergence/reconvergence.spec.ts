@@ -57,10 +57,10 @@ function checkSubgroupSizeConsistency(data: Uint32Array, min: number, max: numbe
     return new Error(`Subgroup size ballot value (${ballot}) is greater than device maximum ${max}`);
 
   if (builtin != ballot) {
-    return new Error(`Subgroup size mismatch:
- - builtin value = ${builtin}
- - ballot = ${ballot}
-`);
+    let msg = `Subgroup size mismatch:\n`;
+    msg += `- builtin value = ${builtin}\n`;
+    msg += `- ballot = ${ballot}`;
+    return Error(msg);
   }
   return undefined;
 }
@@ -88,9 +88,10 @@ function dumpBallots(ballots: Uint32Array, totalInvocations: number,
 function checkIds(data: Uint32Array, subgroupSize: number): Error | undefined {
   for (let i = 0; i < data.length; i++) {
     if (data[i] !== (i % subgroupSize)) {
-      return Error(`subgroup_invocation_id does not map as assumed to local_invocation_index:
-location_invocation_index = ${i}
-subgroup_invocation_id = ${data[i]}`);
+      let msg = `subgroup_invocation_id does map as assumed to local_invocation_index:\n`;
+      msg += `location_invocation_index = ${i}\n`;
+      msg += `subgroup_invocation_id = ${data[i]}`;
+      return Error(msg);
     }
   }
   return undefined;
