@@ -454,7 +454,7 @@ export class Program {
                 break;
               }
               case 1: {
-                if (this.loopNesting >= 0) {
+                if (this.loopNesting > 0) {
                   this.genSwitchLoopCount();
                   break;
                 }
