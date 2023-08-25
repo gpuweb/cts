@@ -283,8 +283,10 @@ async function testProgram(t: GPUTest, program: Program) {
   t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }
 
+const kNumInvocations = 128;
+
 async function predefinedTest(t: GPUTest, style: Style, test: number) {
-  const invocations = 128; // t.device.limits.maxSubgroupSize;
+  const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
   let program: Program = new Program(style, 1, invocations);;
   switch (test) {
@@ -361,9 +363,11 @@ g.test('predefined_workgroup')
       .combine('test', kPredefinedTestCases)
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
-  //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
     await predefinedTest(t, Style.Workgroup, t.params.test);
   });
@@ -375,9 +379,11 @@ g.test('predefined_subgroup')
       .combine('test', kPredefinedTestCases)
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
-  //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
     await predefinedTest(t, Style.Subgroup, t.params.test);
   });
@@ -389,25 +395,34 @@ g.test('predefined_maximal')
       .combine('test', kPredefinedTestCases)
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['chromium-experimental-subgroups'] });
-  //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
     await predefinedTest(t, Style.Maximal, t.params.test);
   });
+
+const kNumRandomCases = 50;
 
 g.test('random_workgroup')
   .desc(`Test reconvergence using randomly generated programs`)
   .params(u =>
     u
-      .combine('seed', generateSeeds(50))
+      .combine('seed', generateSeeds(kNumRandomCases))
       .beginSubcases()
   )
   //.beforeAllSubcases(t => {
   //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
   //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
-    const invocations = 128; // t.device.limits.maxSubgroupSize;
+    const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
     let program: Program = new Program(Style.Workgroup, t.params.seed, invocations);
     program.generate();
@@ -419,14 +434,16 @@ g.test('random_subgroup')
   .desc(`Test reconvergence using randomly generated programs`)
   .params(u =>
     u
-      .combine('seed', generateSeeds(50))
+      .combine('seed', generateSeeds(kNumRandomCases))
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
-  //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
-    const invocations = 128; // t.device.limits.maxSubgroupSize;
+    const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
     let program: Program = new Program(Style.Subgroup, t.params.seed, invocations);
     program.generate();
@@ -438,14 +455,16 @@ g.test('random_maximal')
   .desc(`Test reconvergence using randomly generated programs`)
   .params(u =>
     u
-      .combine('seed', generateSeeds(50))
+      .combine('seed', generateSeeds(kNumRandomCases))
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
-  //})
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
   .fn(async t => {
-    const invocations = 128; // t.device.limits.maxSubgroupSize;
+    const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
     let program: Program = new Program(Style.Maximal, t.params.seed, invocations);
     program.generate();
