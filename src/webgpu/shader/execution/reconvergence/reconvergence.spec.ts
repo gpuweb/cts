@@ -413,9 +413,6 @@ g.test('random_workgroup')
       .combine('seed', generateSeeds(kNumRandomCases))
       .beginSubcases()
   )
-  //.beforeAllSubcases(t => {
-  //  t.selectDeviceOrSkipTestCase({requiredFeatures: ['chromium-experimental-subgroups']});
-  //})
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({
       requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
