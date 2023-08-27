@@ -346,6 +346,10 @@ async function predefinedTest(t: GPUTest, style: Style, test: number) {
       program.predefinedProgramSwitchMulticase();
       break;
     }
+    case 14: {
+      program.predefinedProgramWGSLv1();
+      break;
+    }
     default: {
       unreachable('Unhandled testcase');
     }
@@ -354,10 +358,10 @@ async function predefinedTest(t: GPUTest, style: Style, test: number) {
   await testProgram(t, program);
 }
 
-const kPredefinedTestCases = [...iterRange(14, x => x)];
+const kPredefinedTestCases = [...iterRange(15, x => x)];
 
 g.test('predefined_workgroup')
-  .desc(`Test reconvergence using some predefined programs`)
+  .desc(`Test workgroup reconvergence using some predefined programs`)
   .params(u =>
     u
       .combine('test', kPredefinedTestCases)
@@ -373,7 +377,7 @@ g.test('predefined_workgroup')
   });
 
 g.test('predefined_subgroup')
-  .desc(`Test reconvergence using some predefined programs`)
+  .desc(`Test subgroup reconvergence using some predefined programs`)
   .params(u =>
     u
       .combine('test', kPredefinedTestCases)
@@ -389,7 +393,7 @@ g.test('predefined_subgroup')
   });
 
 g.test('predefined_maximal')
-  .desc(`Test reconvergence using some predefined programs`)
+  .desc(`Test maximal reconvergence using some predefined programs`)
   .params(u =>
     u
       .combine('test', kPredefinedTestCases)
@@ -404,10 +408,26 @@ g.test('predefined_maximal')
     await predefinedTest(t, Style.Maximal, t.params.test);
   });
 
+g.test('predefined_wgslv1')
+  .desc(`Test WGSL v1 reconvergence using some predefined programs`)
+  .params(u =>
+    u
+      .combine('test', kPredefinedTestCases)
+      .beginSubcases()
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
+  .fn(async t => {
+    await predefinedTest(t, Style.WGSLv1, t.params.test);
+  });
+
 const kNumRandomCases = 50;
 
 g.test('random_workgroup')
-  .desc(`Test reconvergence using randomly generated programs`)
+  .desc(`Test workgroup reconvergence using randomly generated programs`)
   .params(u =>
     u
       .combine('seed', generateSeeds(kNumRandomCases))
@@ -428,7 +448,7 @@ g.test('random_workgroup')
   });
 
 g.test('random_subgroup')
-  .desc(`Test reconvergence using randomly generated programs`)
+  .desc(`Test subgroup reconvergence using randomly generated programs`)
   .params(u =>
     u
       .combine('seed', generateSeeds(kNumRandomCases))
@@ -449,7 +469,7 @@ g.test('random_subgroup')
   });
 
 g.test('random_maximal')
-  .desc(`Test reconvergence using randomly generated programs`)
+  .desc(`Test maximal reconvergence using randomly generated programs`)
   .params(u =>
     u
       .combine('seed', generateSeeds(kNumRandomCases))
@@ -464,6 +484,27 @@ g.test('random_maximal')
     const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
     let program: Program = new Program(Style.Maximal, t.params.seed, invocations);
+    program.generate();
+
+    await testProgram(t, program);
+  });
+
+g.test('random_wgslv1')
+  .desc(`Test WGSL v1 reconvergence using randomly generated programs`)
+  .params(u =>
+    u
+      .combine('seed', generateSeeds(kNumRandomCases))
+      .beginSubcases()
+  )
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName]
+    });
+  })
+  .fn(async t => {
+    const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
+
+    let program: Program = new Program(Style.WGSLv1, t.params.seed, invocations);
     program.generate();
 
     await testProgram(t, program);
