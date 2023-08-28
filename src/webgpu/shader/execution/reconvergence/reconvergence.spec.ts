@@ -424,7 +424,7 @@ g.test('predefined_wgslv1')
     await predefinedTest(t, Style.WGSLv1, t.params.test);
   });
 
-const kNumRandomCases = 50;
+const kNumRandomCases = 100;
 
 g.test('random_workgroup')
   .desc(`Test workgroup reconvergence using randomly generated programs`)

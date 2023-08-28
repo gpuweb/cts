@@ -166,6 +166,9 @@ export enum OpType {
   CaseLoopCount,
   EndCase,
 
+  // Fancy no-ops.
+  Noise,
+
   MAX,
 }
 
@@ -204,6 +207,7 @@ function serializeOpType(op: OpType): string {
     case OpType.CaseMask:        return 'CaseMask';
     case OpType.CaseLoopCount:   return 'CaseLoopCount';
     case OpType.EndCase:         return 'EndCase';
+    case OpType.Noise:           return 'Noise';
     default:
       unreachable('Unhandled op');
       break;
@@ -514,12 +518,12 @@ export class Program {
       }
     }
 
-    //deUint32 r = this.getRandomUint(10000);
-    //if (r < 3) {
-    //  ops.push_back({OP_NOISE, 0});
-    //} else if (r < 10) {
-    //  ops.push_back({OP_NOISE, 1});
-    //}
+    const r = this.getRandomUint(10000);
+    if (r < 3) {
+      this.ops.push(new Op(OpType.Noise, 0));
+    } else if (r < 10) {
+      this.ops.push(new Op(OpType.Noise, 1));
+    }
   }
 
   private genIf(type: IfType) {
@@ -1108,6 +1112,24 @@ export class Program {
           this.addCode(`}`);
           break;
         }
+        case OpType.Noise: {
+          if (op.value == 0) {
+            this.addCode(`while (!subgroupElect()) { }`);
+          } else {
+            // The if is uniform false.
+            this.addCode(`if inputs[0] == 1234 {`);
+            this.increaseIndent();
+            this.addCode(`var b = subgroupBallot();`);
+            this.addCode(`while b.x != 0 {`);
+            this.increaseIndent();
+            this.addCode(`b = subgroupBallot();`);
+            this.decreaseIndent();
+            this.addCode(`}`);
+            this.decreaseIndent();
+            this.addCode(`}`);
+          }
+          break;
+        }
       }
     }
 
@@ -1458,6 +1480,7 @@ ${this.functions[i]}`;
           }
         }
         case OpType.EndCase:
+        case OpType.Noise:
           // No work
           break;
         default:
@@ -1894,6 +1917,7 @@ ${this.functions[i]}`;
           }
           break;
         }
+        case OpType.Noise:
         case OpType.EndCase: {
           break;
         }
