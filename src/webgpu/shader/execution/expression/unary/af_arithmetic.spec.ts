@@ -18,7 +18,6 @@ export const d = makeCaseCache('unary/f32_arithmetic', {
   negation: () => {
     return FP.abstract.generateScalarToIntervalCases(
       fullF64Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
-      // [0, 1, 2],
       'unfiltered',
       FP.abstract.negationInterval
     );
