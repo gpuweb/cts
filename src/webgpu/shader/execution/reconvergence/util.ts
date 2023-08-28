@@ -68,6 +68,9 @@ function all(value: bigint, size: number): boolean {
   return value === ((1n << BigInt(size)) - 1n);
 }
 
+/**
+ * Reconvergence style being tested.
+ */
 export enum Style {
   // Workgroup uniform control flow
   Workgroup = 0,
@@ -83,6 +86,9 @@ export enum Style {
   WGSLv1 = 3,
 };
 
+/**
+ * Instruction type
+ */
 export enum OpType {
   // Store a ballot.
   // During simulation, uniform is set to false if the
@@ -172,6 +178,7 @@ export enum OpType {
   MAX,
 }
 
+/** @returns The stringified version of |op|. */
 function serializeOpType(op: OpType): string {
   // prettier-ignore
   switch (op) {
@@ -215,6 +222,9 @@ function serializeOpType(op: OpType): string {
   return '';
 }
 
+/**
+ * Different styles of if conditions
+ */
 enum IfType {
   // If the mask is 0, generates a random uniform comparison
   // Otherwise, tests subgroup_invocation_id against a mask
@@ -254,6 +264,18 @@ class Op {
   }
 };
 
+/**
+ * Main class for testcase generation.
+ *
+ * Major steps involved in a test:
+ * 1. Generation (either generate() or a predefined case)
+ * 2. Simulation
+ * 3. Result comparison
+ *
+ * The interface of the program is fixed and invariant of the particular
+ * program being tested.
+ *
+ */
 export class Program {
   // Number of invocations in the program
   // Max supported is 128
@@ -482,6 +504,10 @@ export class Program {
               }
             }
           }
+          case 10: {
+            this.genElect(false);
+            break;
+          }
           default: {
             break;
           }
@@ -491,6 +517,13 @@ export class Program {
     }
   }
 
+  /**
+   * Ballot generation
+   *
+   * Can insert ballots, stores, noise into the program.
+   * For non-maximal styles, if a ballot is generated, a store always precedes
+   * it.
+   */
   private genBallot() {
     // Optionally insert ballots, stores, and noise.
     // Ballots and stores are used to determine correctness.
@@ -526,6 +559,13 @@ export class Program {
     }
   }
 
+  /**
+   * Generate an if based on |type|
+   *
+   * @param type The type of the if condition, see IfType
+   *
+   * Generates if/else structures.
+   */
   private genIf(type: IfType) {
     let maskIdx = this.getRandomUint(this.numMasks);
     if (type == IfType.Uniform)
@@ -578,6 +618,11 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generate a uniform for loop
+   *
+   * The number of iterations is randomly selected [1, 5].
+   */
   private genForUniform() {
     const n = this.getRandomUint(5) + 1; // [1, 5]
     this.ops.push(new Op(OpType.ForUniform, n));
@@ -592,6 +637,19 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generate an infinite for loop
+   *
+   * The loop will always include an elect based break to prevent a truly
+   * infinite loop. The maximum number of iterations is the number of
+   * invocations in the program, but it is scaled by the loop nesting. Inside
+   * one loop the number of iterations is halved and inside two loops the
+   * number of iterations in quartered. This scaling is used to reduce runtime
+   * and memory.
+   *
+   * The for_update also performs a ballot.
+   *
+   */
   private genForInf() {
     this.ops.push(new Op(OpType.ForInf, 0));
     this.nesting++;
@@ -618,6 +676,14 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generate a for loop with variable iterations per invocation
+   *
+   * The loop condition is based on subgroup_invocation_id + 1. So each
+   * invocation executes a different number of iterations, though the this is
+   * scaled by the amount of loop nesting the same as |generateForInf|.
+   *
+   */
   private genForVar() {
     // op.value is the iteration reduction factor.
     const reduction = this.loopNesting === 0 ? 1 : this.loopNesting === 1 ? 2 : 4;
@@ -635,6 +701,11 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generate a loop construct with uniform iterations
+   *
+   * Same as |genForUniform|, but coded as a loop construct.
+   */
   private genLoopUniform() {
     const n = this.getRandomUint(5) + 1;
     this.ops.push(new Op(OpType.LoopUniform, n));
@@ -651,6 +722,11 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generate an infinite loop construct
+   *
+   * This is the same as |genForInf| but uses a loop construct.
+   */
   private genLoopInf() {
     const header = this.ops.length;
     this.ops.push(new Op(OpType.LoopInf, 0));
@@ -679,6 +755,13 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generates an if based on subgroupElect()
+   *
+   * @param forceBreak If true, forces the then statement to contain a break
+   * @param reduction This generates extra breaks
+   *
+   */
   private genElect(forceBreak: boolean, reduction: number = 1) {
     this.ops.push(new Op(OpType.Elect, 0));
     this.nesting++;
@@ -711,6 +794,13 @@ export class Program {
     }
   }
 
+  /**
+   * Generate a break if in a loop.
+   *
+   * Only generates a break within a loop, but may break out of a switch and
+   * not just a loop. Sometimes the break uses a non-uniform if/else to break.
+   *
+   */
   private genBreak() {
     if (this.loopNestingThisFunction > 0) {
       // Sometimes put the break in a divergent if
@@ -728,6 +818,11 @@ export class Program {
     }
   }
 
+  /**
+   * Generate a continue if in a loop
+   *
+   * Sometimes uses a non-uniform if/else to continue.
+   */
   private genContinue() {
     if (this.loopNestingThisFunction > 0 && !this.isLoopInf.get(this.loopNesting)) {
       // Sometimes put the continue in a divergent if
@@ -745,6 +840,10 @@ export class Program {
     }
   }
 
+  /**
+   * Generates a function call.
+   *
+   */
   private genCall() {
     this.ops.push(new Op(OpType.Call, 0));
     this.callNesting++;
@@ -761,6 +860,11 @@ export class Program {
     this.ops.push(new Op(OpType.EndCall, 0));
   }
 
+  /**
+   * Generates a return
+   *
+   * Rarely, this will return from the main function
+   */
   private genReturn() {
     const r = this.getRandomFloat();
     if (this.nesting > 0 &&
@@ -781,20 +885,28 @@ export class Program {
     }
   }
 
+  /**
+   * Generate a uniform switch.
+   *
+   * Some dead case constructs are also generated.
+   */
   private genSwitchUniform() {
     const r = this.getRandomUint(5);
     this.ops.push(new Op(OpType.SwitchUniform, r));
     this.nesting++;
     this.maxProgramNesting = Math.max(this.nesting, this.maxProgramNesting);
 
+    // Never taken
     this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+1)));
     this.pickOp(1);
     this.ops.push(new Op(OpType.EndCase, 0));
 
+    // Always taken
     this.ops.push(new Op(OpType.CaseMask, 0xf, 1 << r));
     this.pickOp(1);
     this.ops.push(new Op(OpType.EndCase, 0));
 
+    // Never taken
     this.ops.push(new Op(OpType.CaseMask, 0, 1 << (r+2)));
     this.pickOp(1);
     this.ops.push(new Op(OpType.EndCase, 0));
@@ -803,6 +915,10 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generates a non-uniform switch based on subgroup_invocation_id
+   *
+   */
   private genSwitchVar() {
     this.ops.push(new Op(OpType.SwitchVar, 0));
     this.nesting++;
@@ -828,6 +944,10 @@ export class Program {
     this.nesting--;
   }
 
+  /**
+   * Generates switch based on an active loop induction variable.
+   *
+   */
   private genSwitchLoopCount() {
     const r = this.getRandomUint(this.loopNesting);
     this.ops.push(new Op(OpType.SwitchLoopCount, r));
@@ -850,17 +970,20 @@ export class Program {
     this.nesting--;
   }
 
-  // switch (subgroup_invocation_id & 3) {
-  //   default { }
-  //   case 0x3: { ... }
-  //   case 0xc: { ... }
-  // }
-  //
-  // This is not generated for maximal style cases because it is not clear what
-  // convergence should be expected. There are multiple valid lowerings of a
-  // switch that would lead to different convergence scenarios. To test this
-  // properly would likely require a range of values which is difficult for
-  // this infrastructure to produce.
+  /**
+   * switch (subgroup_invocation_id & 3) {
+   *   default { }
+   *   case 0x3: { ... }
+   *   case 0xc: { ... }
+   * }
+   *
+   * This is not generated for maximal style cases because it is not clear what
+   * convergence should be expected. There are multiple valid lowerings of a
+   * switch that would lead to different convergence scenarios. To test this
+   * properly would likely require a range of values which is difficult for
+   * this infrastructure to produce.
+   *
+   */
   private genSwitchMulticase() {
     this.ops.push(new Op(OpType.SwitchVar, 0));
     this.nesting++;
@@ -1381,7 +1504,6 @@ ${this.functions[i]}`;
    * BigInt is not the fastest value to manipulate. Care should be taken to optimize it's use.
    * TODO: would it be better to roll my own 128 bitvector?
    *
-   * TODO: reconvergence guarantees in WGSL are not as strong as this simulation
    */
   public simulate(countOnly: boolean, subgroupSize: number, debug: boolean = false): number {
     class State {
@@ -1430,6 +1552,8 @@ ${this.functions[i]}`;
     }
 
     // Allocate the stack based on the maximum nesting in the program.
+    // Note: this has proven to be considerably more performant than pushing
+    // and popping from the array.
     let stack: State[] = new Array(this.maxProgramNesting + 1);
     for (let i = 0; i < stack.length; i++) {
       stack[i] = new State();
@@ -1479,10 +1603,6 @@ ${this.functions[i]}`;
             continue;
           }
         }
-        case OpType.EndCase:
-        case OpType.Noise:
-          // No work
-          break;
         default:
           break;
       }
@@ -1919,6 +2039,7 @@ ${this.functions[i]}`;
         }
         case OpType.Noise:
         case OpType.EndCase: {
+          // No work
           break;
         }
         default: {
@@ -1940,6 +2061,9 @@ ${this.functions[i]}`;
 
   /**
    * @returns a mask formed from |masks[idx]|
+   *
+   * @param idx The index in |this.masks| to use.
+   *
    */
   private getValueMask(idx: number): bigint {
     const x = this.masks[4*idx];
