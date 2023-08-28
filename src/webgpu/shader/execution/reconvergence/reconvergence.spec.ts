@@ -97,11 +97,31 @@ function checkIds(data: Uint32Array, subgroupSize: number): Error | undefined {
   return undefined;
 }
 
+/**
+ * Bitmask for debug information:
+ *
+ * 0x1  - wgsl
+ * 0x2  - stats
+ * 0x4  - terminate after wgsl
+ * 0x8  - simulation active masks
+ * 0x10 - simulation reference data
+ * 0x20 - gpu data
+ *
+ * So setting kDebugLevel to 0x5 would dump WGSL and end the test.
+ */
+const kDebugLevel = 0x0;
+
 async function testProgram(t: GPUTest, program: Program) {
   const wgsl = program.genCode();
-  //console.log(wgsl);
-  //program.dumpStats(true);
-  //return;
+  if (kDebugLevel & 0x1) {
+    console.log(wgsl);
+  }
+  if (kDebugLevel & 0x2) {
+    program.dumpStats(true);
+  }
+  if (kDebugLevel & 0x4) {
+    return;
+  }
 
   // TODO: query the device
   const minSubgroupSize = 4;
@@ -114,12 +134,14 @@ async function testProgram(t: GPUTest, program: Program) {
     locMap.set(size, num);
     numLocs = Math.max(num, numLocs);
   }
-  numLocs = Math.min(program.maxLocations, numLocs);
+  if (numLocs > program.maxLocations) {
+    t.expectOK(Error(`Total locations (${numLocs}) truncated to ${program.maxLocations}`),
+               { mode: 'warn' });
+    numLocs = program.maxLocations;
+  }
   // Add 1 to ensure there are no extraneous writes.
   numLocs++;
-  console.log(`${new Date()}: Maximum locations = ${numLocs}`);
 
-  console.log(`${new Date()}: creating pipeline`);
   const pipeline = t.device.createComputePipeline({
     layout: 'auto',
     compute: {
@@ -202,7 +224,6 @@ async function testProgram(t: GPUTest, program: Program) {
     ],
   });
 
-  console.log(`${new Date()}: running pipeline`);
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
@@ -228,15 +249,13 @@ async function testProgram(t: GPUTest, program: Program) {
       method: 'copy',
     }
   );
-  console.log(`${new Date()}: done pipeline`);
   const sizeData: Uint32Array = sizeReadback.data;
   const actualSize = sizeData[0];
   t.expectOK(checkSubgroupSizeConsistency(sizeData, minSubgroupSize, maxSubgroupSize));
 
   program.sizeRefData(locMap.get(actualSize));
-  console.log(`${new Date()}: Full simulation size = ${actualSize}`);
-  let num = program.simulate(false, actualSize, /* debug = */ false);
-  console.log(`${new Date()}: locations = ${num}`);
+  const debug = (kDebugLevel & 0x8) !== 0;
+  let num = program.simulate(false, actualSize, debug);
   num = Math.min(program.maxLocations, num);
 
   const idReadback = await t.readGPUBufferRangeTyped(
@@ -273,12 +292,15 @@ async function testProgram(t: GPUTest, program: Program) {
   );
   const ballotData = ballotReadback.data;
 
-  console.log(`${new Date()}: Finished buffer readbacks`);
   // Only dump a single subgroup
-  //console.log(`${new Date()}: Reference data`);
-  //dumpBallots(program.refData, program.invocations, actualSize, num);
-  //console.log(`${new Date()}: GPU data`);
-  //dumpBallots(ballotData, program.invocations, actualSize, num);
+  if (kDebugLevel & 0x10) {
+    console.log(`${new Date()}: Reference data`);
+    dumpBallots(program.refData, program.invocations, actualSize, num);
+  }
+  if (kDebugLevel & 0x20) {
+    console.log(`${new Date()}: GPU data`);
+    dumpBallots(ballotData, program.invocations, actualSize, num);
+  }
 
   t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }
