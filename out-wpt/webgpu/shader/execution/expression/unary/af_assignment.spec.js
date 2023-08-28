@@ -15,9 +15,20 @@ import {
   reinterpretU64AsF64,
 } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
-import { allInputSources, run } from '../expression.js';
+import {
+  abstractFloatShaderBuilder,
+  basicExpressionBuilder,
+  onlyConstInputSource,
+  run,
+} from '../expression.js';
 
-import { assignment } from './unary.js';
+function concrete_assignment() {
+  return basicExpressionBuilder(value => `${value}`);
+}
+
+function abstract_assignment() {
+  return abstractFloatShaderBuilder(value => `${value}`);
+}
 
 export const g = makeTestGroup(GPUTest);
 
@@ -70,10 +81,10 @@ g.test('abstract')
 testing that extracting abstract floats works
 `
   )
-  .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
+  .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
     const cases = await d.get('abstract');
-    await run(t, assignment(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
+    await run(t, abstract_assignment(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
   });
 
 g.test('f32')
@@ -83,10 +94,10 @@ g.test('f32')
 concretizing to f32
 `
   )
-  .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
+  .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
     const cases = await d.get('f32');
-    await run(t, assignment(), [TypeAbstractFloat], TypeF32, t.params, cases);
+    await run(t, concrete_assignment(), [TypeAbstractFloat], TypeF32, t.params, cases);
   });
 
 g.test('f16')
@@ -99,8 +110,8 @@ concretizing to f16
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
-  .params(u => u.combine('inputSource', [allInputSources[0]])) // Only defined for const-eval
+  .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
     const cases = await d.get('f16');
-    await run(t, assignment(), [TypeAbstractFloat], TypeF16, t.params, cases);
+    await run(t, concrete_assignment(), [TypeAbstractFloat], TypeF16, t.params, cases);
   });
