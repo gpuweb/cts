@@ -321,7 +321,7 @@ function makeSubtreeHTML(n: TestSubtree, parentLevel: TestQueryLevel): Visualize
       if (subtreeResult.fail > 0) {
         status += 'fail';
       }
-      if (subtreeResult.skip === subtreeResult.total) {
+      if (subtreeResult.skip === subtreeResult.total && subtreeResult.total > 0) {
         status += 'skip';
       }
       div.setAttribute('data-status', status);
