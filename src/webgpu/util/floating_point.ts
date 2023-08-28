@@ -5,9 +5,9 @@ import { Case, IntervalFilter } from '../shader/execution/expression/expression.
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
+  abstractFloat,
   f16,
   f32,
-  f64,
   isFloatType,
   reinterpretF16AsU16,
   reinterpretF32AsU32,
@@ -4820,7 +4820,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly isSubnormal = isSubnormalNumberF64;
   public readonly flushSubnormal = flushSubnormalNumberF64;
   public readonly oneULP = oneULPF64;
-  public readonly scalarBuilder = f64;
+  public readonly scalarBuilder = abstractFloat;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -4886,7 +4886,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
     this
   );
-  public readonly negationInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
