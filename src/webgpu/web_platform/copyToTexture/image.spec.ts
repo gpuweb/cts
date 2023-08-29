@@ -65,13 +65,7 @@ g.test('from_image')
     if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
   })
   .fn(async t => {
-    const {
-      width,
-      height,
-      dstColorFormat,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy,
-    } = t.params;
+    const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
 
     const imageCanvas = document.createElement('canvas');
     imageCanvas.width = width;

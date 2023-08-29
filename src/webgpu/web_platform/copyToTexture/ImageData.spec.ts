@@ -50,13 +50,7 @@ g.test('from_ImageData')
     t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
   })
   .fn(t => {
-    const {
-      width,
-      height,
-      dstColorFormat,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy,
-    } = t.params;
+    const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
 
     const testColors = kTestColorsAll;
 
