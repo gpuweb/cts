@@ -40,7 +40,6 @@ g.test('from_ImageData')
   )
   .params(u =>
     u
-      .combine('orientation', ['none', 'flipY'])
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstColorFormat', kValidTextureFormatsForCopyE2T)
       .combine('dstPremultiplied', [true, false])
@@ -52,14 +51,7 @@ g.test('from_ImageData')
     t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
   })
   .fn(t => {
-    const {
-      width,
-      height,
-      orientation,
-      dstColorFormat,
-      dstPremultiplied,
-      srcDoFlipYDuringCopy,
-    } = t.params;
+    const { width, height, dstColorFormat, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
 
     const testColors = kTestColorsAll;
 
@@ -88,7 +80,7 @@ g.test('from_ImageData')
     });
 
     const expFormat = kTextureFormatInfo[dstColorFormat].baseFormat ?? dstColorFormat;
-    const flipSrcBeforeCopy = orientation === 'flipY';
+    const flipSrcBeforeCopy = false;
     const texelViewExpected = t.getExpectedDstPixelsFromSrcPixels({
       srcPixels: imageData.data,
       srcOrigin: [0, 0],
@@ -156,14 +148,13 @@ g.test('copy_subrect_from_ImageData')
   )
   .params(u =>
     u
-      .combine('orientation', ['none', 'flipY'])
       .combine('srcDoFlipYDuringCopy', [true, false])
       .combine('dstPremultiplied', [true, false])
       .beginSubcases()
       .combine('copySubRectInfo', kCopySubrectInfo)
   )
   .fn(t => {
-    const { copySubRectInfo, orientation, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
+    const { copySubRectInfo, dstPremultiplied, srcDoFlipYDuringCopy } = t.params;
 
     const testColors = kTestColorsAll;
     const { srcOrigin, dstOrigin, srcSize, dstSize, copyExtent } = copySubRectInfo;
@@ -193,7 +184,7 @@ g.test('copy_subrect_from_ImageData')
         GPUTextureUsage.COPY_DST | GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
     });
 
-    const flipSrcBeforeCopy = orientation === 'flipY';
+    const flipSrcBeforeCopy = false;
     const texelViewExpected = t.getExpectedDstPixelsFromSrcPixels({
       srcPixels: imageData.data,
       srcOrigin,
