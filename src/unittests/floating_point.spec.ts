@@ -3246,37 +3246,37 @@ g.test('roundInterval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-      { input: 0, expected: 0 },
-      { input: 0.1, expected: 0 },
-      { input: 0.5, expected: 0 },  // Testing tie breaking
-      { input: 0.9, expected: 1 },
-      { input: 1.0, expected: 1 },
-      { input: 1.1, expected: 1 },
-      { input: 1.5, expected: 2 },  // Testing tie breaking
-      { input: 1.9, expected: 2 },
-      { input: -0.1, expected: 0 },
-      { input: -0.5, expected: 0 },  // Testing tie breaking
-      { input: -0.9, expected: -1 },
-      { input: -1.0, expected: -1 },
-      { input: -1.1, expected: -1 },
-      { input: -1.5, expected: -2 },  // Testing tie breaking
-      { input: -1.9, expected: -2 },
+          { input: 0, expected: 0 },
+          { input: 0.1, expected: 0 },
+          { input: 0.5, expected: 0 },  // Testing tie breaking
+          { input: 0.9, expected: 1 },
+          { input: 1.0, expected: 1 },
+          { input: 1.1, expected: 1 },
+          { input: 1.5, expected: 2 },  // Testing tie breaking
+          { input: 1.9, expected: 2 },
+          { input: -0.1, expected: 0 },
+          { input: -0.5, expected: 0 },  // Testing tie breaking
+          { input: -0.9, expected: -1 },
+          { input: -1.0, expected: -1 },
+          { input: -1.1, expected: -1 },
+          { input: -1.5, expected: -2 },  // Testing tie breaking
+          { input: -1.9, expected: -2 },
 
-      // Edge cases
-      { input: constants.positive.infinity, expected: kUnboundedBounds },
-      { input: constants.negative.infinity, expected: kUnboundedBounds },
-      { input: constants.positive.max, expected: constants.positive.max },
-      { input: constants.positive.min, expected: 0 },
-      { input: constants.negative.min, expected: constants.negative.min },
-      { input: constants.negative.max, expected: 0 },
-      ...kRoundIntervalCases[p.trait],
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: constants.positive.max },
+          { input: constants.positive.min, expected: 0 },
+          { input: constants.negative.min, expected: constants.negative.min },
+          { input: constants.negative.max, expected: 0 },
+          ...kRoundIntervalCases[p.trait],
 
-      // 32-bit subnormals
-      { input: constants.positive.subnormal.max, expected: 0 },
-      { input: constants.positive.subnormal.min, expected: 0 },
-      { input: constants.negative.subnormal.min, expected: 0 },
-      { input: constants.negative.subnormal.max, expected: 0 },
-    ];
+          // 32-bit subnormals
+          { input: constants.positive.subnormal.max, expected: 0 },
+          { input: constants.positive.subnormal.min, expected: 0 },
+          { input: constants.negative.subnormal.min, expected: 0 },
+          { input: constants.negative.subnormal.max, expected: 0 },
+        ];
       })
   )
   .fn(t => {
@@ -3327,35 +3327,42 @@ g.test('saturateInterval_f32')
     );
   });
 
-g.test('signInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: -1 },
-      { input: -10, expected: -1 },
-      { input: -1, expected: -1 },
-      { input: -0.1, expected: -1 },
-      { input: kValue.f32.negative.max, expected:  -1 },
-      { input: kValue.f32.subnormal.negative.min, expected: [-1, 0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [-1, 0] },
-      { input: 0, expected: 0 },
-      { input: kValue.f32.subnormal.positive.max, expected: [0, 1] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, 1] },
-      { input: kValue.f32.positive.min, expected: 1 },
-      { input: 0.1, expected: 1 },
-      { input: 1, expected: 1 },
-      { input: 10, expected: 1 },
-      { input: kValue.f32.positive.max, expected: 1 },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+g.test('signInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: -1 },
+          { input: -10, expected: -1 },
+          { input: -1, expected: -1 },
+          { input: -0.1, expected: -1 },
+          { input: constants.negative.max, expected:  -1 },
+          { input: constants.negative.subnormal.min, expected: [-1, 0] },
+          { input: constants.negative.subnormal.max, expected: [-1, 0] },
+          { input: 0, expected: 0 },
+          { input: constants.positive.subnormal.max, expected: [0, 1] },
+          { input: constants.positive.subnormal.min, expected: [0, 1] },
+          { input: constants.positive.min, expected: 1 },
+          { input: 0.1, expected: 1 },
+          { input: 1, expected: 1 },
+          { input: 10, expected: 1 },
+          { input: constants.positive.max, expected: 1 },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.signInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.signInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.signInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.signInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -4416,78 +4423,85 @@ g.test('remainderInterval_f32')
   });
 
 g.test('stepInterval_f32')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // 32-bit normals
-      { input: [0, 0], expected: 1 },
-      { input: [1, 1], expected: 1 },
-      { input: [0, 1], expected: 1 },
-      { input: [1, 0], expected: 0 },
-      { input: [-1, -1], expected: 1 },
-      { input: [0, -1], expected: 0 },
-      { input: [-1, 0], expected: 1 },
-      { input: [-1, 1], expected: 1 },
-      { input: [1, -1], expected: 0 },
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarPairToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          // 32-bit normals
+          { input: [0, 0], expected: 1 },
+          { input: [1, 1], expected: 1 },
+          { input: [0, 1], expected: 1 },
+          { input: [1, 0], expected: 0 },
+          { input: [-1, -1], expected: 1 },
+          { input: [0, -1], expected: 0 },
+          { input: [-1, 0], expected: 1 },
+          { input: [-1, 1], expected: 1 },
+          { input: [1, -1], expected: 0 },
 
-      // 64-bit normals
-      { input: [0.1, 0.1], expected: [0, 1] },
-      { input: [0, 0.1], expected: 1 },
-      { input: [0.1, 0], expected: 0 },
-      { input: [0.1, 1], expected: 1 },
-      { input: [1, 0.1], expected: 0 },
-      { input: [-0.1, -0.1], expected: [0, 1] },
-      { input: [0, -0.1], expected: 0 },
-      { input: [-0.1, 0], expected: 1 },
-      { input: [-0.1, -1], expected: 0 },
-      { input: [-1, -0.1], expected: 1 },
+          // 64-bit normals
+          { input: [0.1, 0.1], expected: [0, 1] },
+          { input: [0, 0.1], expected: 1 },
+          { input: [0.1, 0], expected: 0 },
+          { input: [0.1, 1], expected: 1 },
+          { input: [1, 0.1], expected: 0 },
+          { input: [-0.1, -0.1], expected: [0, 1] },
+          { input: [0, -0.1], expected: 0 },
+          { input: [-0.1, 0], expected: 1 },
+          { input: [-0.1, -1], expected: 0 },
+          { input: [-1, -0.1], expected: 1 },
 
-      // Subnormals
-      { input: [0, kValue.f32.subnormal.positive.max], expected: 1 },
-      { input: [0, kValue.f32.subnormal.positive.min], expected: 1 },
-      { input: [0, kValue.f32.subnormal.negative.max], expected: [0, 1] },
-      { input: [0, kValue.f32.subnormal.negative.min], expected: [0, 1] },
-      { input: [1, kValue.f32.subnormal.positive.max], expected: 0 },
-      { input: [1, kValue.f32.subnormal.positive.min], expected: 0 },
-      { input: [1, kValue.f32.subnormal.negative.max], expected: 0 },
-      { input: [1, kValue.f32.subnormal.negative.min], expected: 0 },
-      { input: [-1, kValue.f32.subnormal.positive.max], expected: 1 },
-      { input: [-1, kValue.f32.subnormal.positive.min], expected: 1 },
-      { input: [-1, kValue.f32.subnormal.negative.max], expected: 1 },
-      { input: [-1, kValue.f32.subnormal.negative.min], expected: 1 },
-      { input: [kValue.f32.subnormal.positive.max, 0], expected: [0, 1] },
-      { input: [kValue.f32.subnormal.positive.min, 0], expected: [0, 1] },
-      { input: [kValue.f32.subnormal.negative.max, 0], expected: 1 },
-      { input: [kValue.f32.subnormal.negative.min, 0], expected: 1 },
-      { input: [kValue.f32.subnormal.positive.max, 1], expected: 1 },
-      { input: [kValue.f32.subnormal.positive.min, 1], expected: 1 },
-      { input: [kValue.f32.subnormal.negative.max, 1], expected: 1 },
-      { input: [kValue.f32.subnormal.negative.min, 1], expected: 1 },
-      { input: [kValue.f32.subnormal.positive.max, -1], expected: 0 },
-      { input: [kValue.f32.subnormal.positive.min, -1], expected: 0 },
-      { input: [kValue.f32.subnormal.negative.max, -1], expected: 0 },
-      { input: [kValue.f32.subnormal.negative.min, -1], expected: 0 },
-      { input: [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.max], expected: 1 },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min], expected: [0, 1] },
+          // Subnormals
+          { input: [0, constants.positive.subnormal.max], expected: 1 },
+          { input: [0, constants.positive.subnormal.min], expected: 1 },
+          { input: [0, constants.negative.subnormal.max], expected: [0, 1] },
+          { input: [0, constants.negative.subnormal.min], expected: [0, 1] },
+          { input: [1, constants.positive.subnormal.max], expected: 0 },
+          { input: [1, constants.positive.subnormal.min], expected: 0 },
+          { input: [1, constants.negative.subnormal.max], expected: 0 },
+          { input: [1, constants.negative.subnormal.min], expected: 0 },
+          { input: [-1, constants.positive.subnormal.max], expected: 1 },
+          { input: [-1, constants.positive.subnormal.min], expected: 1 },
+          { input: [-1, constants.negative.subnormal.max], expected: 1 },
+          { input: [-1, constants.negative.subnormal.min], expected: 1 },
+          { input: [constants.positive.subnormal.max, 0], expected: [0, 1] },
+          { input: [constants.positive.subnormal.min, 0], expected: [0, 1] },
+          { input: [constants.negative.subnormal.max, 0], expected: 1 },
+          { input: [constants.negative.subnormal.min, 0], expected: 1 },
+          { input: [constants.positive.subnormal.max, 1], expected: 1 },
+          { input: [constants.positive.subnormal.min, 1], expected: 1 },
+          { input: [constants.negative.subnormal.max, 1], expected: 1 },
+          { input: [constants.negative.subnormal.min, 1], expected: 1 },
+          { input: [constants.positive.subnormal.max, -1], expected: 0 },
+          { input: [constants.positive.subnormal.min, -1], expected: 0 },
+          { input: [constants.negative.subnormal.max, -1], expected: 0 },
+          { input: [constants.negative.subnormal.min, -1], expected: 0 },
+          { input: [constants.negative.subnormal.min, constants.positive.subnormal.max], expected: 1 },
+          { input: [constants.positive.subnormal.max, constants.negative.subnormal.min], expected: [0, 1] },
 
-      // Infinities
-      { input: [0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-    ]
+          // Infinities
+          { input: [0, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const [edge, x] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.stepInterval(edge, x);
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.stepInterval(edge, x);
     t.expect(
       objectEquals(expected, got),
-      `f32.stepInterval(${edge}, ${x}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.stepInterval(${edge}, ${x}) returned ${got}. Expected ${expected}`
     );
   });
 
