@@ -4422,7 +4422,7 @@ g.test('remainderInterval_f32')
     );
   });
 
-g.test('stepInterval_f32')
+g.test('stepInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
