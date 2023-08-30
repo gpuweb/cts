@@ -6,7 +6,12 @@ import { generatePrettyTable } from '../pretty_diff_tables.js';
 import { reifyExtent3D, reifyOrigin3D } from '../unions.js';
 
 import { getTextureSubCopyLayout } from './layout.js';
-import { kTexelRepresentationInfo, PerTexelComponent, TexelComponent } from './texel_data.js';
+import {
+  fullSubrectCoordinates,
+  kTexelRepresentationInfo,
+  PerTexelComponent,
+  TexelComponent,
+} from './texel_data.js';
 import { TexelView } from './texel_view.js';
 
 type PerPixelAtLevel<T> = (coords: Required<GPUOrigin3DDict>) => T;
@@ -185,19 +190,6 @@ function createTextureCopyForMapRead(
   t.device.queue.submit([cmd.finish()]);
 
   return { buffer, bytesPerRow, rowsPerImage };
-}
-
-function* fullSubrectCoordinates(
-  subrectOrigin: Required<GPUOrigin3DDict>,
-  subrectSize: Required<GPUExtent3DDict>
-): Generator<Required<GPUOrigin3DDict>> {
-  for (let z = subrectOrigin.z; z < subrectOrigin.z + subrectSize.depthOrArrayLayers; ++z) {
-    for (let y = subrectOrigin.y; y < subrectOrigin.y + subrectSize.height; ++y) {
-      for (let x = subrectOrigin.x; x < subrectOrigin.x + subrectSize.width; ++x) {
-        yield { x, y, z };
-      }
-    }
-  }
 }
 
 export function findFailedPixels(
