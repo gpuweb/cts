@@ -4,7 +4,7 @@ import { assert, now } from '../util/util.js';
 
 import { TestFileLoader } from './file_loader.js';
 import { TestParamsRW } from './params_utils.js';
-import { compareQueries, Ordering } from './query/compare.js';
+import { comparePublicParamsPaths, compareQueries, Ordering } from './query/compare.js';
 import {
   TestQuery,
   TestQueryMultiCase,
@@ -350,21 +350,26 @@ export async function loadTreeForQuery(
       subtreeL2.subtreeCounts ??= { tests: 1, nodesWithTODO: 0 };
       if (t.description) setSubtreeDescriptionAndCountTODOs(subtreeL2, t.description);
 
+      let caseFilter = null;
+      if ('params' in queryToLoad) {
+        caseFilter = queryToLoad.params;
+      }
+
       // MAINTENANCE_TODO: If tree generation gets too slow, avoid actually iterating the cases in a
       // file if there's no need to (based on the subqueriesToExpand).
-      for (const c of t.iterate()) {
-        {
-          const queryL3 = new TestQuerySingleCase(suite, entry.file, c.id.test, c.id.params);
-          const orderingL3 = compareQueries(queryL3, queryToLoad);
-          if (orderingL3 === Ordering.Unordered || orderingL3 === Ordering.StrictSuperset) {
-            // Case is not matched by this query.
+      for (const c of t.iterate(caseFilter)) {
+        // iterate() guarantees c's query is equal to or a subset of queryToLoad.
+
+        if (queryToLoad instanceof TestQuerySingleCase) {
+          // A subset is OK if it's TestQueryMultiCase, but for SingleCase it must match exactly.
+          const ordering = comparePublicParamsPaths(c.id.params, queryToLoad.params);
+          if (ordering !== Ordering.Equal) {
             continue;
           }
         }
 
         // Leaf for case is suite:a,b:c,d:x=1;y=2
         addLeafForCase(subtreeL2, c, isCollapsible);
-
         foundCase = true;
       }
     }
