@@ -995,11 +995,10 @@ export class Program {
   }
 
   /**
-   * switch (subgroup_invocation_id & 3) {
-   *   default { }
-   *   case 0x3: { ... }
-   *   case 0xc: { ... }
-   * }
+   * switch (subgroup_invocation_id & 3)
+   *   default
+   *   case 0x3: ...
+   *   case 0xc: ...
    *
    * This is not generated for maximal style cases because it is not clear what
    * convergence should be expected. There are multiple valid lowerings of a
@@ -2279,18 +2278,15 @@ ${this.functions[i]}`;
    * Equivalent to:
    *
    * ballot(); // fully uniform
-   * if (inputs[1] == 1) {
+   * if (inputs[1] == 1)
    *   ballot(); // fullly uniform
-   *   for (var i = 0; i < 3; i++) {
+   *   for (var i = 0; i < 3; i++)
    *     ballot(); // Simulation expects fully uniform, WGSL does not.
-   *     if (testBit(vec4u(0xaaaaaaaa,0xaaaaaaa,0xaaaaaaaa,0xaaaaaaaa), subgroup_id)) {
+   *     if (testBit(vec4u(0xaaaaaaaa,0xaaaaaaa,0xaaaaaaaa,0xaaaaaaaa), subgroup_id))
    *       ballot(); // non-uniform
    *       continue;
-   *     }
    *     ballot(); // non-uniform
-   *   }
    *   ballot(); // fully uniform
-   * }
    * ballot(); // fully uniform
    *
    * @param beginLoop The loop type
@@ -2344,18 +2340,16 @@ ${this.functions[i]}`;
    * Equivalent to:
    *
    * ballot(); // uniform
-   * if (subgroup_id < 16) {
+   * if (subgroup_id < 16)
    *   ballot(); // 0xffff
-   *   if (testbit(vec4u(0x00ff00ff,00ff00ff,00ff00ff,00ff00ff), subgroup_id)) {
+   *   if (testbit(vec4u(0x00ff00ff,00ff00ff,00ff00ff,00ff00ff), subgroup_id))
    *     ballot(); // 0xff
-   *     if (inputs[1] == 1) {
+   *     if (inputs[1] == 1)
    *       ballot(); // 0xff
-   *     }
    *     ballot(); // 0xff
-   * } else {
+   * else
    *   ballot(); // 0xF..0000
    *   return;
-   * }
    * ballot; // 0xffff
    *
    * In this program, subgroups larger than 16 invocations diverge at the first if.
@@ -2407,19 +2401,16 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * if subgroup_id < inputs[107] {
-   *   if subgroup_id < inputs[112] {
+   * if subgroup_id < inputs[107]
+   *   if subgroup_id < inputs[112]
    *     ballot();
-   *     if testBit(vec4u(0xd2f269c6,0xffe83b3f,0xa279f695,0x58899224), subgroup_id) {
+   *     if testBit(vec4u(0xd2f269c6,0xffe83b3f,0xa279f695,0x58899224), subgroup_id)
    *       ballot();
-   *     } else {
+   *     else
    *       ballot()
-   *     }
    *     ballot();
-   *   } else {
+   *   else
    *     ballot();
-   *   }
-   * }
    *
    * The first two if statements are uniform for subgroup sizes 64 or less.
    * The third if statement is non-uniform for all subgroup sizes.
@@ -2463,13 +2454,11 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * for (var i = 0; ; i++, ballot()) {
+   * for (var i = 0; ; i++, ballot())
    *   ballot();
-   *   if (subgroupElect()) {
+   *   if (subgroupElect())
    *     ballot();
    *     break;
-   *   }
-   * }
    * ballot();
    *
    * @param beginType The loop type
@@ -2501,13 +2490,11 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * for (var i = 0; i < subgroup_invocation_id + 1; i++) {
+   * for (var i = 0; i < subgroup_invocation_id + 1; i++)
    *   ballot();
-   * }
    * ballot();
-   * for (var i = 0; i < subgroup_invocation_id + 1; i++) {
+   * for (var i = 0; i < subgroup_invocation_id + 1; i++)
    *   ballot();
-   * }
    * ballot();
    */
   public predefinedProgramForVar() {
@@ -2533,32 +2520,25 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * fn f0() {
-   *   for (var i = 0; i < inputs[3]; i++) {
+   * fn f0()
+   *   for (var i = 0; i < inputs[3]; i++)
    *     f1(i);
    *     ballot();
-   *   }
    *   ballot();
-   *   if (inputs[3] == 3) {
+   *   if (inputs[3] == 3)
    *    f2();
    *    ballot();
-   *   }
    *   ballot()
-   * }
-   * fn f1(i : u32) {
+   * fn f1(i : u32)
    *   ballot();
-   *   if (subgroup_invocation_id == i) {
+   *   if (subgroup_invocation_id == i)
    *     ballot();
    *     return;
-   *   }
-   * }
-   * fn f2() {
+   * fn f2()
    *   ballot();
-   *   if (testBit(vec4u(0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa), local_invocation_index)) {
+   *   if (testBit(vec4u(0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa,0xaaaaaaaa), local_invocation_index))
    *     ballot();
    *     return;
-   *   }
-   * }
    */
   public predefinedProgramCall() {
     this.masks[4 + 0] = 0xaaaaaaaa;
@@ -2609,12 +2589,11 @@ ${this.functions[i]}`;
    * Equivalent to:
    *
    * ballot()
-   * switch (inputs[5]) {
-   *   default { }
-   *   case 6 { ballot(); }
-   *   case 5 { ballot(); }
-   *   case 7 { ballot(); }
-   * }
+   * switch (inputs[5])
+   *   default
+   *   case 6 ballot();
+   *   case 5 ballot();
+   *   case 7 ballot();
    * ballot();
    *
    */
@@ -2644,13 +2623,12 @@ ${this.functions[i]}`;
    * Equivalent to:
    *
    * ballot();
-   * switch subgroup_invocation_id & 3 {
-   *   default { }
-   *   case 0: { ballot(); }
-   *   case 1: { ballot(); }
-   *   case 2: { ballot(); }
-   *   case 3: { ballot(); }
-   * }
+   * switch subgroup_invocation_id & 3
+   *   default
+   *   case 0: ballot();
+   *   case 1: ballot();
+   *   case 2: ballot();
+   *   case 3: ballot();
    * ballot();
    */
   public predefinedProgramSwitchVar() {
@@ -2681,19 +2659,15 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * for (var i0 = 0u; i0 < inputs[3]; i0++) {
-   *   for (var i1 = 0u; i1 < inputs[3]; i1++) {
-   *     for (var i2 = 0u; i2 < subgroup_invocation_id + 1; i2++) {
+   * for (var i0 = 0u; i0 < inputs[3]; i0++)
+   *   for (var i1 = 0u; i1 < inputs[3]; i1++)
+   *     for (var i2 = 0u; i2 < subgroup_invocation_id + 1; i2++)
    *       ballot();
-   *       switch i_loop {
-   *         case 1 { ballot(); }
-   *         case 2 { ballot(); }
-   *         default { ballot(); }
-   *       }
+   *       switch i_loop
+   *         case 1 ballot();
+   *         case 2 ballot();
+   *         default ballot();
    *       ballot();
-   *     }
-   *   }
-   * }
    */
   public predefinedProgramSwitchLoopCount(loop: number) {
     this.ops.push(new Op(OpType.ForUniform, 1));
@@ -2731,11 +2705,10 @@ ${this.functions[i]}`;
   /**
    * Equivalent to:
    *
-   * switch subgroup_invocation_id & 0x3 {
-   *   default { }
-   *   case 0,1 { ballot(); }
-   *   case 2,3 { ballot(); }
-   * }
+   * switch subgroup_invocation_id & 0x3
+   *   default
+   *   case 0,1 ballot();
+   *   case 2,3 ballot();
    */
   public predefinedProgramSwitchMulticase() {
     this.ops.push(new Op(OpType.Store, this.storeBase + this.ops.length));
@@ -2761,12 +2734,10 @@ ${this.functions[i]}`;
    * Equivalent to:
    *
    * ballot();
-   * for (var i = 0; i < inputs[3]; i++) {
+   * for (var i = 0; i < inputs[3]; i++)
    *   ballot();
-   *   if (subgroupElect()) {
+   *   if (subgroupElect())
    *     continue;
-   *   }
-   * }
    * ballot();
    *
    * This case can distinguish between Workgroup and WGSLv1 reconvergence.
