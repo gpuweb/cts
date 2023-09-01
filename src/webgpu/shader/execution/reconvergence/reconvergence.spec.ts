@@ -120,9 +120,9 @@ async function testProgram(t: GPUTest, program: Program) {
   //if (kDebugLevel & 0x1) {
   //  console.log(wgsl);
   //}
-  if (kDebugLevel & 0x2) {
-    program.dumpStats(true);
-  }
+  //if (kDebugLevel & 0x2) {
+  //  program.dumpStats(true);
+  //}
   if (kDebugLevel & 0x4) {
     return;
   }
