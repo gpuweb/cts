@@ -5,7 +5,7 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { iterRange, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 
-import { hex, Style, OpType, Program, generateSeeds } from './util.js';
+import { /*hex, */ Style, OpType, Program, generateSeeds } from './util.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -63,28 +63,28 @@ function checkSubgroupSizeConsistency(
   return undefined;
 }
 
-function dumpBallots(
-  ballots: Uint32Array,
-  totalInvocations: number,
-  invocations: number,
-  locations: number
-) {
-  let dump = `Ballots\n`;
-  for (let id = 0; id < invocations; id++) {
-    dump += `id[${id}]\n`;
-    for (let loc = 0; loc < locations; loc++) {
-      const idx = 4 * (totalInvocations * loc + id);
-      const w = ballots[idx + 3];
-      const z = ballots[idx + 2];
-      const y = ballots[idx + 1];
-      const x = ballots[idx + 0];
-      dump += ` loc[${loc}] = (0x${hex(w)},0x${hex(z)},0x${hex(y)},0x${hex(
-        x
-      )}), (${w},${z},${y},${x})\n`;
-    }
-  }
-  console.log(dump);
-}
+//function dumpBallots(
+//  ballots: Uint32Array,
+//  totalInvocations: number,
+//  invocations: number,
+//  locations: number
+//) {
+//  let dump = `Ballots\n`;
+//  for (let id = 0; id < invocations; id++) {
+//    dump += `id[${id}]\n`;
+//    for (let loc = 0; loc < locations; loc++) {
+//      const idx = 4 * (totalInvocations * loc + id);
+//      const w = ballots[idx + 3];
+//      const z = ballots[idx + 2];
+//      const y = ballots[idx + 1];
+//      const x = ballots[idx + 0];
+//      dump += ` loc[${loc}] = (0x${hex(w)},0x${hex(z)},0x${hex(y)},0x${hex(
+//        x
+//      )}), (${w},${z},${y},${x})\n`;
+//    }
+//  }
+//  console.log(dump);
+//}
 
 /**
  * Checks the mapping of subgroup_invocation_id to local_invocation_index
@@ -117,9 +117,9 @@ const kDebugLevel = 0x0;
 
 async function testProgram(t: GPUTest, program: Program) {
   const wgsl = program.genCode();
-  if (kDebugLevel & 0x1) {
-    console.log(wgsl);
-  }
+  //if (kDebugLevel & 0x1) {
+  //  console.log(wgsl);
+  //}
   if (kDebugLevel & 0x2) {
     program.dumpStats(true);
   }
@@ -127,7 +127,7 @@ async function testProgram(t: GPUTest, program: Program) {
     return;
   }
 
-  // TODO: Query the limits when they are wired up.
+  // Query the limits when they are wired up.
   const minSubgroupSize = 4;
   const maxSubgroupSize = 128;
 
@@ -289,14 +289,14 @@ async function testProgram(t: GPUTest, program: Program) {
   const ballotData = ballotReadback.data;
 
   // Only dump a single subgroup
-  if (kDebugLevel & 0x10) {
-    console.log(`${new Date()}: Reference data`);
-    dumpBallots(program.refData, program.invocations, actualSize, num);
-  }
-  if (kDebugLevel & 0x20) {
-    console.log(`${new Date()}: GPU data`);
-    dumpBallots(ballotData, program.invocations, actualSize, num);
-  }
+  //if (kDebugLevel & 0x10) {
+  //  console.log(`${new Date()}: Reference data`);
+  //  dumpBallots(program.refData, program.invocations, actualSize, num);
+  //}
+  //if (kDebugLevel & 0x20) {
+  //  console.log(`${new Date()}: GPU data`);
+  //  dumpBallots(ballotData, program.invocations, actualSize, num);
+  //}
 
   t.expectOK(program.checkResults(ballotData, /*locationData,*/ actualSize, num));
 }

@@ -344,12 +344,9 @@ export class Program {
     this.ops = [];
     this.style = style;
     this.minCount = 30;
-    //this.maxCount = 50000; // TODO: what is a reasonable limit?
-    this.maxCount = 20000; // TODO: what is a reasonable limit?
-    // TODO: https://crbug.com/tint/2011
+    this.maxCount = 20000; // what is a reasonable limit?
+    // https://crbug.com/tint/2011
     // Tint is double counting depth
-    //this.maxNesting = this.getRandomUint(70) + 30; // [30,100)
-    //this.maxNesting = this.getRandomUint(40) + 20;
     this.maxNesting = this.getRandomUint(20) + 20;
     // Loops significantly affect runtime and memory performance
     this.maxLoopNesting = 3; //4;
@@ -1408,81 +1405,80 @@ ${this.functions[i]}`;
    *
    * @param detailed If true, dumps more detailed stats
    */
-  public dumpStats(detailed: boolean = true) {
-    let stats = `Total instructions: ${this.ops.length}\n`;
-    let nesting = 0;
-    let stores = 0;
-    let totalStores = 0;
-    let totalLoops = 0;
-    const loopsAtNesting = new Array(this.maxLoopNesting);
-    loopsAtNesting.fill(0);
-    const storesAtNesting = new Array(this.maxLoopNesting + 1);
-    storesAtNesting.fill(0);
-    for (let i = 0; i < this.ops.length; i++) {
-      const op = this.ops[i];
-      switch (op.type) {
-        case OpType.Store:
-        case OpType.Ballot: {
-          stores++;
-          storesAtNesting[nesting]++;
-          break;
-        }
-        case OpType.ForUniform:
-        case OpType.LoopUniform:
-        case OpType.ForVar:
-        case OpType.ForInf:
-        case OpType.LoopInf: {
-          totalLoops++;
-          loopsAtNesting[nesting]++;
-          if (detailed) {
-            stats += ' '.repeat(nesting) + `${stores} stores\n`;
-          }
-          totalStores += stores;
-          stores = 0;
+  //public dumpStats(detailed: boolean = true) {
+  //  let stats = `Total instructions: ${this.ops.length}\n`;
+  //  let nesting = 0;
+  //  let stores = 0;
+  //  let totalStores = 0;
+  //  let totalLoops = 0;
+  //  const loopsAtNesting = new Array(this.maxLoopNesting);
+  //  loopsAtNesting.fill(0);
+  //  const storesAtNesting = new Array(this.maxLoopNesting + 1);
+  //  storesAtNesting.fill(0);
+  //  for (const op of this.ops) {
+  //    switch (op.type) {
+  //      case OpType.Store:
+  //      case OpType.Ballot: {
+  //        stores++;
+  //        storesAtNesting[nesting]++;
+  //        break;
+  //      }
+  //      case OpType.ForUniform:
+  //      case OpType.LoopUniform:
+  //      case OpType.ForVar:
+  //      case OpType.ForInf:
+  //      case OpType.LoopInf: {
+  //        totalLoops++;
+  //        loopsAtNesting[nesting]++;
+  //        if (detailed) {
+  //          stats += ' '.repeat(nesting) + `${stores} stores\n`;
+  //        }
+  //        totalStores += stores;
+  //        stores = 0;
 
-          if (detailed) {
-            let iters = `subgroup size`;
-            if (op.type === OpType.ForUniform || op.type === OpType.LoopUniform) {
-              iters = `${op.value}`;
-            }
-            stats += ' '.repeat(nesting) + serializeOpType(op.type) + `: ${iters} iterations\n`;
-          }
-          nesting++;
-          break;
-        }
-        case OpType.EndForUniform:
-        case OpType.EndForInf:
-        case OpType.EndForVar:
-        case OpType.EndLoopUniform:
-        case OpType.EndLoopInf: {
-          if (detailed) {
-            stats += ' '.repeat(nesting) + `${stores} stores\n`;
-          }
-          totalStores += stores;
-          stores = 0;
+  //        if (detailed) {
+  //          let iters = `subgroup size`;
+  //          if (op.type === OpType.ForUniform || op.type === OpType.LoopUniform) {
+  //            iters = `${op.value}`;
+  //          }
+  //          stats += ' '.repeat(nesting) + serializeOpType(op.type) + `: ${iters} iterations\n`;
+  //        }
+  //        nesting++;
+  //        break;
+  //      }
+  //      case OpType.EndForUniform:
+  //      case OpType.EndForInf:
+  //      case OpType.EndForVar:
+  //      case OpType.EndLoopUniform:
+  //      case OpType.EndLoopInf: {
+  //        if (detailed) {
+  //          stats += ' '.repeat(nesting) + `${stores} stores\n`;
+  //        }
+  //        totalStores += stores;
+  //        stores = 0;
 
-          nesting--;
-          if (detailed) {
-            stats += ' '.repeat(nesting) + serializeOpType(op.type) + '\n';
-          }
-          break;
-        }
-        default:
-          break;
-      }
-    }
-    totalStores += stores;
-    stats += `\n`;
-    stats += `${totalLoops} loops\n`;
-    for (let i = 0; i < loopsAtNesting.length; i++) {
-      stats += ` ${loopsAtNesting[i]} at nesting ${i}\n`;
-    }
-    stats += `${totalStores} stores\n`;
-    for (let i = 0; i < storesAtNesting.length; i++) {
-      stats += ` ${storesAtNesting[i]} at nesting ${i}\n`;
-    }
-    console.log(stats);
-  }
+  //        nesting--;
+  //        if (detailed) {
+  //          stats += ' '.repeat(nesting) + serializeOpType(op.type) + '\n';
+  //        }
+  //        break;
+  //      }
+  //      default:
+  //        break;
+  //    }
+  //  }
+  //  totalStores += stores;
+  //  stats += `\n`;
+  //  stats += `${totalLoops} loops\n`;
+  //  for (let i = 0; i < loopsAtNesting.length; i++) {
+  //    stats += ` ${loopsAtNesting[i]} at nesting ${i}\n`;
+  //  }
+  //  stats += `${totalStores} stores\n`;
+  //  for (let i = 0; i < storesAtNesting.length; i++) {
+  //    stats += ` ${storesAtNesting[i]} at nesting ${i}\n`;
+  //  }
+  //  console.log(stats);
+  //}
 
   /**
    * Sizes the simulation buffer.
@@ -1533,7 +1529,7 @@ ${this.functions[i]}`;
    * @param subgroupSize The subgroup size to simulate
    *
    * BigInt is not the fastest value to manipulate. Care should be taken to optimize it's use.
-   * TODO: would it be better to roll my own 128 bitvector?
+   * Would it be better to roll my own 128 bitvector?
    *
    */
   public simulate(countOnly: boolean, subgroupSize: number, debug: boolean = false): number {
@@ -1578,8 +1574,8 @@ ${this.functions[i]}`;
         this.isNonUniform = prev.isNonUniform;
       }
     }
-    for (let idx = 0; idx < this.ops.length; idx++) {
-      this.ops[idx].uniform = true;
+    for (const op of this.ops) {
+      op.uniform = true;
     }
 
     // Allocate the stack based on the maximum nesting in the program.
@@ -1606,16 +1602,16 @@ ${this.functions[i]}`;
           }) at ops[${i}] = ${serializeOpType(op.type)}`
         );
       }
-      if (debug) {
-        console.log(
-          `ops[${i}] = ${serializeOpType(
-            op.type
-          )}, nesting = ${nesting}, loopNesting = ${loopNesting}, value = ${
-            op.value
-          }, nonuniform = ${stack[nesting].isNonUniform}`
-        );
-        console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
-      }
+      //if (debug) {
+      //  console.log(
+      //    `ops[${i}] = ${serializeOpType(
+      //      op.type
+      //    )}, nesting = ${nesting}, loopNesting = ${loopNesting}, value = ${
+      //      op.value
+      //    }, nonuniform = ${stack[nesting].isNonUniform}`
+      //  );
+      //  console.log(`  mask = ${stack[nesting].activeMask.toString(16)}`);
+      //}
 
       // Early outs if no invocations are active.
       // Don't skip ops that change nesting.
@@ -2120,11 +2116,11 @@ ${this.functions[i]}`;
 
   /** @returns a randomized program */
   public generate() {
-    let i = 0;
+    //let i = 0;
     do {
-      if (i !== 0) {
-        console.log(`Warning regenerating UCF testcase`);
-      }
+      //if (i !== 0) {
+      //  console.log(`Warning regenerating UCF testcase`);
+      //}
       this.ops = [];
       while (this.ops.length < this.minCount) {
         this.pickOp(1);
@@ -2136,7 +2132,7 @@ ${this.functions[i]}`;
       if (this.style !== Style.Maximal) {
         this.simulate(true, 64);
       }
-      i++;
+      //i++;
     } while (this.style !== Style.Maximal && !this.ucf);
   }
 
