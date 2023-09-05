@@ -78,7 +78,7 @@ function generateIntegerTestCases(
     test_values.flatMap(high =>
       stage === 'const' && low > high
         ? []
-        : test_values.flatMap(e => ({
+        : test_values.map(e => ({
             input: [type.create(e), type.create(low), type.create(high)],
             expected: type.create(Math.min(Math.max(e, low), high)),
           }))
