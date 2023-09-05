@@ -5,9 +5,9 @@
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
+abstractFloat,
 f16,
 f32,
-f64,
 isFloatType,
 reinterpretF16AsU16,
 reinterpretF32AsU32,
@@ -4820,7 +4820,7 @@ class FPAbstractTraits extends FPTraits {
   isSubnormal = isSubnormalNumberF64;
   flushSubnormal = flushSubnormalNumberF64;
   oneULP = oneULPF64;
-  scalarBuilder = f64;
+  scalarBuilder = abstractFloat;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -4886,7 +4886,7 @@ class FPAbstractTraits extends FPTraits {
   multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
   this);
 
-  negationInterval = this.unimplementedScalarToInterval.bind(this);
+  negationInterval = this.negationIntervalImpl.bind(this);
   normalizeInterval = this.unimplementedVectorToVector.bind(this);
   powInterval = this.unimplementedScalarPairToInterval.bind(this);
   quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
