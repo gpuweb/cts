@@ -904,6 +904,7 @@ combine('dstCopyLevel', [0, 2])).
 
 beforeAllSubcases((t) => {
   const { srcFormat, dstFormat } = t.params;
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
   t.selectDeviceOrSkipTestCase([
   kTextureFormatInfo[srcFormat].feature,
   kTextureFormatInfo[dstFormat].feature]);
@@ -1058,7 +1059,7 @@ combine('dstCopyLevel', [0, 2])).
 
 beforeAllSubcases((t) => {
   const { srcFormat, dstFormat } = t.params;
-
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
   t.selectDeviceOrSkipTestCase([
   kTextureFormatInfo[srcFormat].feature,
   kTextureFormatInfo[dstFormat].feature]);
