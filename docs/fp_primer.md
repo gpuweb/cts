@@ -69,7 +69,7 @@ reference, see
 [binary64 on Wikipedia](https://en.wikipedia.org/wiki/Double-precision_floating-point_format),
 [binary32 on Wikipedia](https://en.wikipedia.org/wiki/Single-precision_floating-point_format),
 and
-[binar16 on Wikipedia](https://en.wikipedia.org/wiki/Half-precision_floating-point_format).
+[binary16 on Wikipedia](https://en.wikipedia.org/wiki/Half-precision_floating-point_format).
 
 In the floating points formats described above, there are two possible zero
 values, one with all bits being 0, called positive zero, and one all the same
@@ -144,7 +144,7 @@ This concept of near-overflow vs far-overflow divides the real number line into
 | -∞ < `x` <= `-(2 ** (exp_max + 1))`           | must round to -∞                |
 | `-(2 ** (exp_max + 1))` < `x` <= min fp value | must round to -∞ or min value   |
 | min fp value < `x` < max fp value             | round as discussed below        |
-| min fp value <= `x` < `2 ** (exp_max + 1)`    | must round to max value or ∞    |
+| max fp value <= `x` < `2 ** (exp_max + 1)`    | must round to max value or ∞    |
 | `2 ** (exp_max + 1))` < `x`                   | implementations must round to ∞ |
 
 
@@ -184,7 +184,7 @@ operations.
 Operations, which can be thought of as mathematical functions, are mappings from
 a set of inputs to a set of outputs.
 
-Denoted `f(x, y) = X`, where f is a placeholder or the name of the operation,
+Denoted `f(x, y) = X`, where `f` is a placeholder or the name of the operation,
 lower case variables are the inputs to the function, and uppercase variables are
 the outputs of the function.
 
@@ -208,7 +208,7 @@ Some examples of different types of operations:
 `multiplication(x, y) = X`, which represents the WGSL expression `x * y`, takes
 in floating point values, `x` and `y`, and produces a floating point value `X`.
 
-`lessThen(x, y) = X`, which represents the WGSL expression `x < y`, again takes
+`lessThan(x, y) = X`, which represents the WGSL expression `x < y`, again takes
 in floating point values, but in this case returns a boolean value.
 
 `ldexp(x, y) = X`, which builds a floating point value, takes in a floating
@@ -406,9 +406,9 @@ In more precise terms:
 
   X = [min(f(x)), max(f(x))]
   X = [min(f([a, b])), max(f([a, b]))]
-  X = [f(m), f(M)]
+  X = [f(m), f(n)]
 ```
-where m and M are in `[a, b]`, `m <= M`, and produce the min and max results
+where `m` and `n` are in `[a, b]`, `m <= n`, and produce the min and max results
 for `f` on the interval, respectively.
 
 So how do we find the minima and maxima for our operation in the domain?
@@ -499,15 +499,15 @@ literally pages of expanded intervals.
 
   sin(π/2) => [sin(π/2) - 2 ** -11, sin(π/2) + 2 ** -11]
            => [0 - 2 ** -11, 0 + 2 ** -11]
-           => [-0.000488.., 0.000488...]
+           => [-0.000488…, 0.000488…]
   cos(π/2) => [cos(π/2) - 2 ** -11, cos(π/2) + 2 ** -11]
-           => [-0.500488, -0.499511...]
+           => [-0.500488…, -0.499511…]
 
   tan(π/2) => sin(π/2)/cos(π/2)
-           => [-0.000488.., 0.000488...]/[-0.500488..., -0.499511...]
-           => [min({-0.000488.../-0.500488..., -0.000488.../-0.499511..., ...}),
-               max(min({-0.000488.../-0.500488..., -0.000488.../-0.499511..., ...}) ]
-           => [0.000488.../-0.499511..., 0.000488.../0.499511...]
+           => [-0.000488…, 0.000488…]/[-0.500488…, -0.499511…]
+           => [min(-0.000488…/-0.500488…, -0.000488…/-0.499511…, 0.000488…/-0.500488…, 0.000488…/-0.499511…),
+               max(-0.000488…/-0.500488…, -0.000488…/-0.499511…, 0.000488…/-0.500488…, 0.000488…/-0.499511…)]
+           => [0.000488…/-0.499511…, 0.000488…/0.499511…]
            => [-0.0009775171, 0.0009775171]
 ```
 
@@ -553,10 +553,10 @@ These are compile vs run time, and CPU vs GPU. Broadly speaking compile time
 execution happens on the host CPU, and run time evaluation occurs on a dedicated
 GPU.
 
-(SwiftShader technically breaks this by being a software emulation of a GPU that
-runs on the CPU, but conceptually one can think of SwiftShader has being a type
-of GPU in this context, since it has similar constraints when it comes to
-precision, etc.)
+(Software graphics implementations like WARP and SwiftShader technically break this by
+being a software emulation of a GPU that runs on the CPU, but conceptually one can
+think of these implementations being a type of GPU in this context, since it has 
+similar constraints when it comes to precision, etc.)
 
 Compile time evaluation is execution that occurs when setting up a shader
 module, i.e. when compiling WGSL to a platform specific shading language. It is
@@ -588,18 +588,18 @@ let c: f32 = a + b
 and
 ```
 // compile time
-const c: f32 = 1 + 2
+const c: f32 = 1.0f + 2.0f
 ```
-should produce the same result of `3` in the variable `c`, assuming `1` and `2`
-were passed in as `a` & `b`.
+should produce the same result of `3.0` in the variable `c`, assuming `1.0` and `2.0`
+were passed in as `a` and `b`.
 
 The only difference, is when/where the execution occurs.
 
 The difference in behaviour between these two occur when the result of the
 operation is not finite for the underlying floating point type.
 
-If instead of `1` and `2`, we had `10` and `f32.max`, so the true result is
-`f32.max + 10`, the user will see a difference. Specifically the runtime
+If instead of `1.0` and `2.0`, we had `10.0` and `f32.max`, so the true result is
+`f32.max + 10.0`, the behaviours differ. Specifically the runtime
 evaluated version will still run, but the result in `c` will be an indeterminate
 value, which is any finite f32 value. For the compile time example instead,
 compiling the shader will fail validation.
@@ -611,7 +611,7 @@ execution.
 
 Unfortunately we are dealing with intervals of results and not precise results.
 So this leads to more even conceptual complexity. For runtime evaluation, this
-isn't too bad, because the rule becomes if any part of the interval is
+isn't too bad, because the rule becomes: if any part of the interval is
 non-finite then an indeterminate value can be a result, and the interval for an
 indeterminate result `[fp min, fp max]`, will include any finite portions of the
 interval.
