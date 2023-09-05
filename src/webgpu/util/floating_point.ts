@@ -5127,8 +5127,8 @@ class F16Traits extends FPTraits {
   public readonly atan2Interval = this.atan2IntervalImpl.bind(this);
   public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
-  public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
+  public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this);
