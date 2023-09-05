@@ -32,7 +32,7 @@ module.exports = function (grunt) {
       },
       'generate-cache': {
         cmd: 'node',
-        args: ['tools/gen_cache', 'out/data', 'src/webgpu'],
+        args: ['tools/gen_cache', 'out', 'src/webgpu'],
       },
       unittest: {
         cmd: 'node',
@@ -193,6 +193,7 @@ module.exports = function (grunt) {
     'run:generate-listings',
     'build-wpt',
     'run:build-out-node',
+    'run:generate-cache',
     'build-done-message',
     'ts:check',
     'run:presubmit',
