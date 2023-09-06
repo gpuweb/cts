@@ -1744,7 +1744,7 @@ const kSparseVectorF64Values = {
 };
 
 /**
- * Minimal set of vectors, indexed by dimension, that contain interesting f16
+ * Minimal set of vectors, indexed by dimension, that contain interesting f64
  * values.
  *
  * This is an even more stripped down version of `vectorF64Range` for when

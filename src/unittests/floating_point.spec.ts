@@ -3673,7 +3673,7 @@ const kAdditionInterval64BitsNormalCases = {
     { input: [0, -0.1], expected: [-0.1] },
     // f64 0x3FB999999999999A+0x3FB999999999999A = 0x3FC999999999999A
     { input: [0.1, 0.1], expected: [reinterpretU64AsF64(0x3FC999999999999An)] },  // ~0.2
-    // f64 0xBFB999999999999A+0x3FB999999999999A = 0xBFC999999999999A
+    // f64 0xBFB999999999999A+0xBFB999999999999A = 0xBFC999999999999A
     { input: [-0.1, -0.1], expected: [reinterpretU64AsF64(0xBFC999999999999An)] },  // ~-0.2
     { input: [0.1, -0.1], expected: [0] },
     { input: [-0.1, 0.1], expected: [0] },
