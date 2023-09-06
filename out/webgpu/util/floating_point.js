@@ -5181,12 +5181,12 @@ class F16Traits extends FPTraits {
   remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
   roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.unimplementedScalarToInterval.bind(this);
-  signInterval = this.unimplementedScalarToInterval.bind(this);
+  signInterval = this.signIntervalImpl.bind(this);
   sinInterval = this.sinIntervalImpl.bind(this);
   sinhInterval = this.unimplementedScalarToInterval.bind(this);
   smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
   sqrtInterval = this.sqrtIntervalImpl.bind(this);
-  stepInterval = this.unimplementedScalarPairToInterval.bind(this);
+  stepInterval = this.stepIntervalImpl.bind(this);
   subtractionInterval = this.subtractionIntervalImpl.bind(this);
   subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   tanInterval = this.unimplementedScalarToInterval.bind(this);
