@@ -1728,6 +1728,38 @@ export function vectorF64Range(dim: number): number[][] {
   return kVectorF64Values[dim];
 }
 
+const kSparseVectorF64Values = {
+  2: sparseF64Range().map((f, idx) => [idx % 2 === 0 ? f : idx, idx % 2 === 1 ? f : -idx]),
+  3: sparseF64Range().map((f, idx) => [
+    idx % 3 === 0 ? f : idx,
+    idx % 3 === 1 ? f : -idx,
+    idx % 3 === 2 ? f : idx,
+  ]),
+  4: sparseF64Range().map((f, idx) => [
+    idx % 4 === 0 ? f : idx,
+    idx % 4 === 1 ? f : -idx,
+    idx % 4 === 2 ? f : idx,
+    idx % 4 === 3 ? f : -idx,
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting f64
+ * values.
+ *
+ * This is an even more stripped down version of `vectorF64Range` for when
+ * pairs of vectors are being tested.
+ * All the interesting floats from sparseF64 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseVectorF64Range(dim: number): number[][] {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorF64Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorF64Values[dim];
+}
+
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
