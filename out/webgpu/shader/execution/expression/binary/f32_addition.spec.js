@@ -134,14 +134,6 @@ export const d = makeCaseCache('binary/f32_addition', {
     'unfiltered',
     additionScalarVectorInterval);
 
-  },
-  subtraction_const: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-    sparseF32Range(),
-    sparseF32Range(),
-    'finite',
-    FP.f32.subtractionInterval);
-
   }
 });
 

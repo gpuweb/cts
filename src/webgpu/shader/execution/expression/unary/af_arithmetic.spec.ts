@@ -10,7 +10,7 @@ import { fullF64Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
-import { abstract_unary } from './unary.js';
+import { abstractUnary } from './unary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -39,5 +39,5 @@ Accuracy: Correctly rounded
   )
   .fn(async t => {
     const cases = await d.get('negation');
-    await run(t, abstract_unary('-'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
+    await run(t, abstractUnary('-'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
   });

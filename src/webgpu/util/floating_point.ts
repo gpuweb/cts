@@ -4834,7 +4834,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  public readonly additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   public readonly asinInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this);

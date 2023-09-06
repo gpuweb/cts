@@ -10,7 +10,7 @@ export function unary(op) {
 }
 
 /* @returns a ShaderBuilder that evaluates a prefix unary operation that returns AbstractFloats */
-export function abstract_unary(op) {
+export function abstractUnary(op) {
   return abstractFloatShaderBuilder((value) => `${op}(${value})`);
 }
 //# sourceMappingURL=unary.js.map
