@@ -860,6 +860,7 @@
   "webgpu:shader,execution,expression,binary,af_comparison:less_than:*": { "subcaseMS": 19.975 },
   "webgpu:shader,execution,expression,binary,af_comparison:not_equals:*": { "subcaseMS": 19.651 },
   "webgpu:shader,execution,expression,binary,af_matrix_addition:matrix:*": { "subcaseMS": 11169.534 },
+  "webgpu:shader,execution,expression,binary,af_matrix_subtraction:matrix:*": { "subcaseMS": 14060.956 },
   "webgpu:shader,execution,expression,binary,af_subtraction:scalar:*": { "subcaseMS": 960.626 },
   "webgpu:shader,execution,expression,binary,af_subtraction:scalar_vector:*": { "subcaseMS": 2336.534 },
   "webgpu:shader,execution,expression,binary,af_subtraction:vector_scalar:*": { "subcaseMS": 2437.701 },
