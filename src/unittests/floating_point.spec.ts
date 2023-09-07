@@ -2557,33 +2557,33 @@ g.test('ceilInterval')
         const constants = FP[p.trait].constants();
         // prettier-ignore
         return [
-        { input: 0, expected: 0 },
-        { input: 0.1, expected: 1 },
-        { input: 0.9, expected: 1 },
-        { input: 1.0, expected: 1 },
-        { input: 1.1, expected: 2 },
-        { input: 1.9, expected: 2 },
-        { input: -0.1, expected: 0 },
-        { input: -0.9, expected: 0 },
-        { input: -1.0, expected: -1 },
-        { input: -1.1, expected: -1 },
-        { input: -1.9, expected: -1 },
+          { input: 0, expected: 0 },
+          { input: 0.1, expected: 1 },
+          { input: 0.9, expected: 1 },
+          { input: 1.0, expected: 1 },
+          { input: 1.1, expected: 2 },
+          { input: 1.9, expected: 2 },
+          { input: -0.1, expected: 0 },
+          { input: -0.9, expected: 0 },
+          { input: -1.0, expected: -1 },
+          { input: -1.1, expected: -1 },
+          { input: -1.9, expected: -1 },
 
-        // Edge cases
-        { input: constants.positive.infinity, expected: kUnboundedBounds },
-        { input: constants.negative.infinity, expected: kUnboundedBounds },
-        { input: constants.positive.max, expected: constants.positive.max },
-        { input: constants.positive.min, expected: 1 },
-        { input: constants.negative.min, expected: constants.negative.min },
-        { input: constants.negative.max, expected: 0 },
-        ...kCeilIntervalCases[p.trait],
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: constants.positive.max },
+          { input: constants.positive.min, expected: 1 },
+          { input: constants.negative.min, expected: constants.negative.min },
+          { input: constants.negative.max, expected: 0 },
+          ...kCeilIntervalCases[p.trait],
 
-        // 32-bit subnormals
-        { input: constants.positive.subnormal.max, expected: [0, 1] },
-        { input: constants.positive.subnormal.min, expected: [0, 1] },
-        { input: constants.negative.subnormal.min, expected: 0 },
-        { input: constants.negative.subnormal.max, expected: 0 },
-      ];
+          // 32-bit subnormals
+          { input: constants.positive.subnormal.max, expected: [0, 1] },
+          { input: constants.positive.subnormal.min, expected: [0, 1] },
+          { input: constants.negative.subnormal.min, expected: 0 },
+          { input: constants.negative.subnormal.max, expected: 0 },
+        ];
       })
   )
   .fn(t => {
