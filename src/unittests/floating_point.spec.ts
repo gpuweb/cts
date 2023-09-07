@@ -2168,6 +2168,7 @@ const kAbsIntervalCases = [
     expected: {
       f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
       f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+      abstract: 0.1,
     },
   },
   {
@@ -2175,6 +2176,7 @@ const kAbsIntervalCases = [
     expected: {
       f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
       f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+      abstract: 0.1,
     },
   },
 ] as const;
@@ -2182,7 +2184,7 @@ const kAbsIntervalCases = [
 g.test('absInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -2201,15 +2203,11 @@ g.test('absInterval')
           { input: constants.negative.min, expected: constants.positive.max },
           { input: constants.negative.max, expected: constants.positive.min },
 
-          // 32-bit subnormals
+          // Subnormals
           { input: constants.positive.subnormal.max, expected: [0, constants.positive.subnormal.max] },
           { input: constants.positive.subnormal.min, expected: [0, constants.positive.subnormal.min] },
           { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
           { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] },
-
-          // 64-bit subnormals
-          { input: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, constants.positive.subnormal.min] },
-          { input: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [0, constants.positive.subnormal.min] },
 
           // Zero
           { input: 0, expected: 0 },

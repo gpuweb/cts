@@ -25,13 +25,14 @@ import {
   TypeI32,
   TypeU32,
   u32Bits,
+  TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
+import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -41,6 +42,13 @@ export const d = makeCaseCache('abs', {
   },
   f16: () => {
     return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.absInterval);
+  },
+  abstract: () => {
+    return FP.abstract.generateScalarToIntervalCases(
+      fullF64Range(),
+      'unfiltered',
+      FP.abstract.absInterval
+    );
   },
 });
 
@@ -153,9 +161,14 @@ g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`abstract float tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract');
+    await run(t, abstractBuiltin('abs'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+  });
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
