@@ -904,6 +904,7 @@ g.test('color_textures,compressed,non_array')
   )
   .beforeAllSubcases(t => {
     const { srcFormat, dstFormat } = t.params;
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     t.selectDeviceOrSkipTestCase([
       kTextureFormatInfo[srcFormat].feature,
       kTextureFormatInfo[dstFormat].feature,
@@ -1058,7 +1059,7 @@ g.test('color_textures,compressed,array')
   )
   .beforeAllSubcases(t => {
     const { srcFormat, dstFormat } = t.params;
-
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
     t.selectDeviceOrSkipTestCase([
       kTextureFormatInfo[srcFormat].feature,
       kTextureFormatInfo[dstFormat].feature,

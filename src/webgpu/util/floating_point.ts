@@ -5,9 +5,9 @@ import { Case, IntervalFilter } from '../shader/execution/expression/expression.
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
+  abstractFloat,
   f16,
   f32,
-  f64,
   isFloatType,
   reinterpretF16AsU16,
   reinterpretF32AsU32,
@@ -4820,7 +4820,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly isSubnormal = isSubnormalNumberF64;
   public readonly flushSubnormal = flushSubnormalNumberF64;
   public readonly oneULP = oneULPF64;
-  public readonly scalarBuilder = f64;
+  public readonly scalarBuilder = abstractFloat;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -4834,7 +4834,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  public readonly additionInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   public readonly asinInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this);
@@ -4886,7 +4886,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
     this
   );
-  public readonly negationInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
@@ -5127,8 +5127,8 @@ class F16Traits extends FPTraits {
   public readonly atan2Interval = this.atan2IntervalImpl.bind(this);
   public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
-  public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
+  public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this);
@@ -5181,12 +5181,12 @@ class F16Traits extends FPTraits {
   public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly signInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
-  public readonly stepInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(this);
   public readonly tanInterval = this.unimplementedScalarToInterval.bind(this);

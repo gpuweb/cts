@@ -213,6 +213,16 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
+  skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format && isCompressedTextureFormat(format)) {
+          this.skip(`copyTextureToTexture with ${format} is not supported`);
+        }
+      }
+    }
+  }
+
   skipIfTextureViewDimensionNotSupported(...dimensions: (GPUTextureViewDimension | undefined)[]) {
     if (this.isCompatibility) {
       for (const dimension of dimensions) {
