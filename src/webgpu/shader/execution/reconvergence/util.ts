@@ -1966,7 +1966,7 @@ ${this.functions[i]}`;
             break;
           }
 
-          const uniform = this.style === Style.WGSLv1 && this.isUniform(mask, subgroupSize);
+          const uniform = this.style !== Style.WGSLv1 || this.isUniform(mask, subgroupSize);
 
           let n = nesting;
           for (; n >= 0; n--) {
