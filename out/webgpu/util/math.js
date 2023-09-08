@@ -1,6 +1,10 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+**/import { assert } from '../../common/util/util.js';import { Float16Array,
+getFloat16,
+setFloat16 } from
+'../../external/petamoriken/float16/float16.js';
+
 import { kBit, kValue } from './constants.js';
 import {
 f32,
@@ -622,56 +626,135 @@ export function correctlyRoundedF16(n) {
 }
 
 /**
- * Once-allocated ArrayBuffer/views to avoid overhead of allocation in frexp
- *
- * This makes frexp non-reentrant due to shared state between calls.
- */
-const frexpData = new ArrayBuffer(4);
-const frexpDataU32 = new Uint32Array(frexpData);
-const frexpDataF32 = new Float32Array(frexpData);
-
-/**
  * Calculates WGSL frexp
  *
  * Splits val into a fraction and an exponent so that
  * val = fraction * 2 ^ exponent.
  * The fraction is 0.0 or its magnitude is in the range [0.5, 1.0).
  *
- * Inspired by golang's implementation of frexp.
- *
- * This code is non-reentrant due to the use of a non-local data buffer and
- * views.
- *
- * @param val the f32 to split
+ * @param val the float to split
+ * @param trait the float type, f32 or f16 or f64
  * @returns the results of splitting val
  */
-export function frexp(val) {
-  frexpDataF32[0] = val;
-  // Do not directly use val after this point, so that changes are reflected in
-  // both the f32 and u32 views.
+export function frexp(val, trait) {
+  const buffer = new ArrayBuffer(8);
+  const dataView = new DataView(buffer);
 
-  // Handles 0 and -0
-  if (frexpDataF32[0] === 0) {
-    return { fract: frexpDataF32[0], exp: 0 };
+  // expBitCount and fractBitCount is the bitwidth of exponent and fractional part of the given FP type.
+  // expBias is the bias constant of exponent of the given FP type.
+  // Biased exponent (unsigned integer, i.e. the exponent part of float) = unbiased exponent (signed integer) + expBias.
+  let expBitCount, fractBitCount, expBias;
+  // To handle the exponent bits of given FP types (f16, f32, and f64), considering the highest 16
+  // bits is enough.
+  // expMaskForHigh16Bits indicates the exponent bitfield in the highest 16 bits of the given FP
+  // type, and targetExpBitsForHigh16Bits is the exponent bits that corresponding to unbiased
+  // exponent -1, i.e. the exponent bits when the FP values is in range [0.5, 1.0).
+  let expMaskForHigh16Bits, targetExpBitsForHigh16Bits;
+  // Helper function that store the given FP value into buffer as the given FP types
+  let setFloatToBuffer;
+  // Helper function that read back FP value from buffer as the given FP types
+  let getFloatFromBuffer;
+
+  let isFinite;
+  let isSubnormal;
+
+  if (trait === 'f32') {
+    // f32 bit pattern: s_eeeeeeee_fffffff_ffffffffffffffff
+    expBitCount = 8;
+    fractBitCount = 23;
+    expBias = 127;
+    // The exponent bitmask for high 16 bits of f32.
+    expMaskForHigh16Bits = 0x7f80;
+    // The target exponent bits is equal to those for f32 0.5 = 0x3f000000.
+    targetExpBitsForHigh16Bits = 0x3f00;
+    isFinite = isFiniteF32;
+    isSubnormal = isSubnormalNumberF32;
+    // Enforce big-endian so that offset 0 is highest byte.
+    setFloatToBuffer = (v) => dataView.setFloat32(0, v, false);
+    getFloatFromBuffer = () => dataView.getFloat32(0, false);
+  } else if (trait === 'f16') {
+    // f16 bit pattern: s_eeeee_ffffffffff
+    expBitCount = 5;
+    fractBitCount = 10;
+    expBias = 15;
+    // The exponent bitmask for 16 bits of f16.
+    expMaskForHigh16Bits = 0x7c00;
+    // The target exponent bits is equal to those for f16 0.5 = 0x3800.
+    targetExpBitsForHigh16Bits = 0x3800;
+    isFinite = isFiniteF16;
+    isSubnormal = isSubnormalNumberF16;
+    // Enforce big-endian so that offset 0 is highest byte.
+    setFloatToBuffer = (v) => setFloat16(dataView, 0, v, false);
+    getFloatFromBuffer = () => getFloat16(dataView, 0, false);
+  } else {
+    assert(trait === 'f64');
+    // f64 bit pattern: s_eeeeeeeeeee_ffff_ffffffffffffffffffffffffffffffffffffffffffffffff
+    expBitCount = 11;
+    fractBitCount = 52;
+    expBias = 1023;
+    // The exponent bitmask for 16 bits of f64.
+    expMaskForHigh16Bits = 0x7ff0;
+    // The target exponent bits is equal to those for f64 0.5 = 0x3fe0_0000_0000_0000.
+    targetExpBitsForHigh16Bits = 0x3fe0;
+    isFinite = Number.isFinite;
+    isSubnormal = isSubnormalNumberF64;
+    // Enforce big-endian so that offset 0 is highest byte.
+    setFloatToBuffer = (v) => dataView.setFloat64(0, v, false);
+    getFloatFromBuffer = () => dataView.getFloat64(0, false);
+  }
+  // Helper function that extract the unbiased exponent of the float in buffer.
+  const extractUnbiasedExpFromNormalFloatInBuffer = () => {
+    // Assert the float in buffer is finite normal float.
+    assert(isFinite(getFloatFromBuffer()) && !isSubnormal(getFloatFromBuffer()));
+    // Get the highest 16 bits of float as uint16, which can contain the whole exponent part for both f16, f32, and f64.
+    const high16BitsAsUint16 = dataView.getUint16(0, false);
+    // Return the unbiased exp by masking, shifting and unbiasing.
+    return ((high16BitsAsUint16 & expMaskForHigh16Bits) >> 16 - 1 - expBitCount) - expBias;
+  };
+  // Helper function that modify the exponent of float in buffer to make it in range [0.5, 1.0).
+  // By setting the unbiased exponent to -1, the fp value will be in range 2**-1 * [1.0, 2.0), i.e. [0.5, 1.0).
+  const modifyExpOfNormalFloatInBuffer = () => {
+    // Assert the float in buffer is finite normal float.
+    assert(isFinite(getFloatFromBuffer()) && !isSubnormal(getFloatFromBuffer()));
+    // Get the highest 16 bits of float as uint16, which contains the whole exponent part for both f16, f32, and f64.
+    const high16BitsAsUint16 = dataView.getUint16(0, false);
+    // Modify the exponent bits.
+    const modifiedHigh16Bits =
+    high16BitsAsUint16 & ~expMaskForHigh16Bits | targetExpBitsForHigh16Bits;
+    // Set back to buffer
+    dataView.setUint16(0, modifiedHigh16Bits, false);
+  };
+
+  // +/- 0.0
+  if (val === 0) {
+    return { fract: val, exp: 0 };
+  }
+  // NaN and Inf
+  if (!isFinite(val)) {
+    return { fract: val, exp: 0 };
   }
 
-  // Covers NaNs, OOB and Infinities
-  if (!isFiniteF32(frexpDataF32[0])) {
-    return { fract: frexpDataF32[0], exp: 0 };
-  }
+  setFloatToBuffer(val);
+  // Don't use val below. Use helper functions working with buffer instead.
 
-  // Normalize if subnormal
   let exp = 0;
-  if (isSubnormalNumberF32(frexpDataF32[0])) {
-    frexpDataF32[0] = frexpDataF32[0] * (1 << 23);
-    exp = -23;
+  // Normailze the value if it is subnormal. Increase the exponent by multiplying a subnormal value
+  // with 2**fractBitCount will result in a finite normal FP value of the given FP type.
+  if (isSubnormal(getFloatFromBuffer())) {
+    setFloatToBuffer(getFloatFromBuffer() * 2 ** fractBitCount);
+    exp = -fractBitCount;
   }
-  exp += (frexpDataU32[0] >> 23 & 0xff) - 126; // shift & mask, minus the bias + 1
+  // A normal FP value v is represented as v = ((-1)**s)*(2**(unbiased exponent))*f, where f is in
+  // range [1.0, 2.0). By moving a factor 2 from f to exponent, we have
+  // v = ((-1)**s)*(2**(unbiased exponent + 1))*(f / 2), where (f / 2) is in range [0.5, 1.0), so
+  // the exp = (unbiased exponent + 1) and fract = ((-1)**s)*(f / 2) is what we expect to get from
+  // frexp function. Note that fract and v only differs in exponent bitfield as long as v is normal.
+  // Calc the result exp by getting the unbiased float exponent and plus 1.
+  exp += extractUnbiasedExpFromNormalFloatInBuffer() + 1;
+  // Modify the exponent of float in buffer to make it be in range [0.5, 1.0) to get fract.
+  modifyExpOfNormalFloatInBuffer();
 
-  frexpDataU32[0] &= 0x807fffff; // mask the exponent bits
-  frexpDataU32[0] |= 0x3f000000; // extract the mantissa bits
-  const fract = frexpDataF32[0]; // Convert from bits to number
-  return { fract, exp };
+  return { fract: getFloatFromBuffer(), exp };
 }
 
 /**

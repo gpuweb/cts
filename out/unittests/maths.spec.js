@@ -1058,37 +1058,79 @@ fn((t) => {
 
 
 
+
+const kFrexpCases = {
+  f32: [
+  { input: kValue.f32.positive.max, fract: 0.9999999403953552, exp: 128 },
+  { input: kValue.f32.positive.min, fract: 0.5, exp: -125 },
+  { input: kValue.f32.negative.max, fract: -0.5, exp: -125 },
+  { input: kValue.f32.negative.min, fract: -0.9999999403953552, exp: 128 },
+  { input: kValue.f32.subnormal.positive.max, fract: 0.9999998807907104, exp: -126 },
+  { input: kValue.f32.subnormal.positive.min, fract: 0.5, exp: -148 },
+  { input: kValue.f32.subnormal.negative.max, fract: -0.5, exp: -148 },
+  { input: kValue.f32.subnormal.negative.min, fract: -0.9999998807907104, exp: -126 }],
+
+  f16: [
+  { input: kValue.f16.positive.max, fract: 0.99951171875, exp: 16 },
+  { input: kValue.f16.positive.min, fract: 0.5, exp: -13 },
+  { input: kValue.f16.negative.max, fract: -0.5, exp: -13 },
+  { input: kValue.f16.negative.min, fract: -0.99951171875, exp: 16 },
+  { input: kValue.f16.subnormal.positive.max, fract: 0.9990234375, exp: -14 },
+  { input: kValue.f16.subnormal.positive.min, fract: 0.5, exp: -23 },
+  { input: kValue.f16.subnormal.negative.max, fract: -0.5, exp: -23 },
+  { input: kValue.f16.subnormal.negative.min, fract: -0.9990234375, exp: -14 }],
+
+  f64: [
+  { input: kValue.f64.positive.max, fract: reinterpretU64AsF64(0x3fef_ffff_ffff_ffffn) /* ~0.9999999999999999 */, exp: 1024 },
+  { input: kValue.f64.positive.min, fract: 0.5, exp: -1021 },
+  { input: kValue.f64.negative.max, fract: -0.5, exp: -1021 },
+  { input: kValue.f64.negative.min, fract: reinterpretU64AsF64(0xbfef_ffff_ffff_ffffn) /* ~-0.9999999999999999 */, exp: 1024 },
+  { input: kValue.f64.subnormal.positive.max, fract: reinterpretU64AsF64(0x3fef_ffff_ffff_fffen) /* ~0.9999999999999998 */, exp: -1022 },
+  { input: kValue.f64.subnormal.positive.min, fract: 0.5, exp: -1073 },
+  { input: kValue.f64.subnormal.negative.max, fract: -0.5, exp: -1073 },
+  { input: kValue.f64.subnormal.negative.min, fract: reinterpretU64AsF64(0xbfef_ffff_ffff_fffen) /* ~-0.9999999999999998 */, exp: -1022 }]
+
+};
+
 g.test('frexp').
-paramsSimple([
-{ input: 0, fract: 0, exp: 0 },
-{ input: -0, fract: -0, exp: 0 },
-{ input: Number.POSITIVE_INFINITY, fract: Number.POSITIVE_INFINITY, exp: 0 },
-{ input: Number.NEGATIVE_INFINITY, fract: Number.NEGATIVE_INFINITY, exp: 0 },
-{ input: 0.5, fract: 0.5, exp: 0 },
-{ input: -0.5, fract: -0.5, exp: 0 },
-{ input: 1, fract: 0.5, exp: 1 },
-{ input: -1, fract: -0.5, exp: 1 },
-{ input: 2, fract: 0.5, exp: 2 },
-{ input: -2, fract: -0.5, exp: 2 },
-{ input: 10000, fract: 0.6103515625, exp: 14 },
-{ input: -10000, fract: -0.6103515625, exp: 14 },
-{ input: kValue.f32.positive.max, fract: 0.9999999403953552, exp: 128 },
-{ input: kValue.f32.positive.min, fract: 0.5, exp: -125 },
-{ input: kValue.f32.negative.max, fract: -0.5, exp: -125 },
-{ input: kValue.f32.negative.min, fract: -0.9999999403953552, exp: 128 },
-{ input: kValue.f32.subnormal.positive.max, fract: 0.9999998807907104, exp: -126 },
-{ input: kValue.f32.subnormal.positive.min, fract: 0.5, exp: -148 },
-{ input: kValue.f32.subnormal.negative.max, fract: -0.5, exp: -148 },
-{ input: kValue.f32.subnormal.negative.min, fract: -0.9999998807907104, exp: -126 }]).
+params((u) =>
+u.
+combine('trait', ['f32', 'f16', 'f64']).
+beginSubcases().
+expandWithParams((p) => {
+
+  return [
+  // +/- 0.0
+  { input: 0, fract: 0, exp: 0 },
+  { input: -0, fract: -0, exp: 0 },
+  // Normal float values that can be exactly represented by all float types
+  { input: 0.171875, fract: 0.6875, exp: -2 },
+  { input: -0.171875, fract: -0.6875, exp: -2 },
+  { input: 0.5, fract: 0.5, exp: 0 },
+  { input: -0.5, fract: -0.5, exp: 0 },
+  { input: 1, fract: 0.5, exp: 1 },
+  { input: -1, fract: -0.5, exp: 1 },
+  { input: 2, fract: 0.5, exp: 2 },
+  { input: -2, fract: -0.5, exp: 2 },
+  { input: 10000, fract: 0.6103515625, exp: 14 },
+  { input: -10000, fract: -0.6103515625, exp: 14 },
+  // Normal ans subnormal cases that are different for each type
+  ...kFrexpCases[p.trait],
+  // Inf and NaN
+  { input: Number.POSITIVE_INFINITY, fract: Number.POSITIVE_INFINITY, exp: 0 },
+  { input: Number.NEGATIVE_INFINITY, fract: Number.NEGATIVE_INFINITY, exp: 0 },
+  { input: Number.NaN, fract: Number.NaN, exp: 0 }];
+
+})).
 
 fn((test) => {
   const input = test.params.input;
-  const got = frexp(input);
+  const got = frexp(input, test.params.trait);
   const expect = { fract: test.params.fract, exp: test.params.exp };
 
   test.expect(
   objectEquals(got, expect),
-  `frexp(${input}) returned { fract: ${got.fract}, exp: ${got.exp} }. Expected { fract: ${expect.fract}, exp: ${expect.exp} }`);
+  `frexp(${input}, ${test.params.trait}) returned { fract: ${got.fract}, exp: ${got.exp} }. Expected { fract: ${expect.fract}, exp: ${expect.exp} }`);
 
 });
 
