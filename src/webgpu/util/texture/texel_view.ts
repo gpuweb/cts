@@ -3,12 +3,8 @@ import { kTextureFormatInfo, EncodableTextureFormat } from '../../format_info.js
 import { generatePrettyTable } from '../pretty_diff_tables.js';
 import { reifyExtent3D, reifyOrigin3D } from '../unions.js';
 
-import {
-  fullSubrectCoordinates,
-  kTexelRepresentationInfo,
-  makeClampToRange,
-  PerTexelComponent,
-} from './texel_data.js';
+import { fullSubrectCoordinates } from './base.js';
+import { kTexelRepresentationInfo, makeClampToRange, PerTexelComponent } from './texel_data.js';
 
 /** Function taking some x,y,z coordinates and returning `Readonly<T>`. */
 export type PerPixelAtLevel<T> = (coords: Required<GPUOrigin3DDict>) => Readonly<T>;

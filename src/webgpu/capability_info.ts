@@ -588,13 +588,9 @@ export const kTextureSampleCounts = [1, 4] as const;
 
 // Sampler info
 
-/** List of all filter modes. */
-export const kFilterModes: readonly GPUFilterMode[] = ['nearest', 'linear'];
-assertTypeTrue<TypeEqual<GPUFilterMode, typeof kFilterModes[number]>>();
-
 /** List of all mipmap filter modes. */
 export const kMipmapFilterModes: readonly GPUMipmapFilterMode[] = ['nearest', 'linear'];
-assertTypeTrue<TypeEqual<GPUMipmapFilterMode, typeof kFilterModes[number]>>();
+assertTypeTrue<TypeEqual<GPUMipmapFilterMode, typeof kMipmapFilterModes[number]>>();
 
 /** List of address modes. */
 export const kAddressModes: readonly GPUAddressMode[] = [
