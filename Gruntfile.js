@@ -28,7 +28,11 @@ module.exports = function (grunt) {
       },
       'generate-wpt-cts-html': {
         cmd: 'node',
-        args: ['tools/gen_wpt_cts_html', 'out-wpt/cts.https.html', 'src/common/templates/cts.https.html'],
+        args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_unchunked.json'],
+      },
+      'generate-wpt-cts-html-chunked2sec': {
+        cmd: 'node',
+        args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_chunked2sec.json'],
       },
       'generate-cache': {
         cmd: 'node',
@@ -181,6 +185,7 @@ module.exports = function (grunt) {
     'copy:out-wpt-generated',
     'copy:out-wpt-htmlfiles',
     'run:generate-wpt-cts-html',
+    'run:generate-wpt-cts-html-chunked2sec',
   ]);
   grunt.registerTask('build-done-message', () => {
     process.stderr.write('\nBuild completed! Running checks/tests');

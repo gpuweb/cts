@@ -69,16 +69,21 @@ export abstract class TestFileLoader extends EventTarget {
     return ret;
   }
 
-  async loadTree(query: TestQuery, subqueriesToExpand: string[] = []): Promise<TestTree> {
-    const tree = await loadTreeForQuery(
-      this,
-      query,
-      subqueriesToExpand.map(s => {
+  async loadTree(
+    query: TestQuery,
+    {
+      subqueriesToExpand = [],
+      maxChunkTime = Infinity,
+    }: { subqueriesToExpand?: string[]; maxChunkTime?: number } = {}
+  ): Promise<TestTree> {
+    const tree = await loadTreeForQuery(this, query, {
+      subqueriesToExpand: subqueriesToExpand.map(s => {
         const q = parseQuery(s);
         assert(q.level >= 2, () => `subqueriesToExpand entries should not be multi-file:\n  ${q}`);
         return q;
-      })
-    );
+      }),
+      maxChunkTime,
+    });
     this.dispatchEvent(new MessageEvent<void>('finish'));
     return tree;
   }
