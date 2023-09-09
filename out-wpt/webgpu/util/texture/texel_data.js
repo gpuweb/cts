@@ -833,7 +833,7 @@ export function getSingleDataType(format) {
 }
 
 /**
- *  Get traits for generating code to readback data from a component.
+ * Get traits for generating code to readback data from a component.
  * @param {ComponentDataType} dataType - The input component data type.
  * @returns A dictionary containing the respective `ReadbackTypedArray` and `shaderType`.
  */

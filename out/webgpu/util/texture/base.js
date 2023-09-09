@@ -223,4 +223,22 @@ view)
     arrayLayerCount
   };
 }
+
+/**
+ * Get generator of all the coordinates in a subrect.
+ * @param subrectOrigin - Subrect origin
+ * @param subrectSize - Subrect size
+ */
+export function* fullSubrectCoordinates(
+subrectOrigin,
+subrectSize)
+{
+  for (let z = subrectOrigin.z; z < subrectOrigin.z + subrectSize.depthOrArrayLayers; ++z) {
+    for (let y = subrectOrigin.y; y < subrectOrigin.y + subrectSize.height; ++y) {
+      for (let x = subrectOrigin.x; x < subrectOrigin.x + subrectSize.width; ++x) {
+        yield { x, y, z };
+      }
+    }
+  }
+}
 //# sourceMappingURL=base.js.map

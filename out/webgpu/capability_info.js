@@ -586,6 +586,20 @@ export const kShaderStageCombinationsWithStage = [
  */
 export const kTextureSampleCounts = [1, 4];
 
+// Sampler info
+
+/** List of all mipmap filter modes. */
+export const kMipmapFilterModes = ['nearest', 'linear'];
+assertTypeTrue();
+
+/** List of address modes. */
+export const kAddressModes = [
+'clamp-to-edge',
+'repeat',
+'mirror-repeat'];
+
+assertTypeTrue();
+
 // Blend factors and Blend components
 
 /** List of all GPUBlendFactor values. */
