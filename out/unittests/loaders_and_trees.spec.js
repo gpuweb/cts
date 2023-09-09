@@ -699,7 +699,9 @@ expectedResult,
 includeEmptySubtrees = false)
 {
   t.debug(`expandThrough=${alwaysExpandThroughLevel} expectations=${expectations}`);
-  const treePromise = t.loader.loadTree(new TestQueryMultiFile('suite1', []), expectations);
+  const treePromise = t.loader.loadTree(new TestQueryMultiFile('suite1', []), {
+    subqueriesToExpand: expectations
+  });
   if (expectedResult === 'throws') {
     t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
     return;

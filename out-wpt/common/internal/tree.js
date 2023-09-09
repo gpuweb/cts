@@ -1,6 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { globalTestConfig } from '../framework/test_config.js';
+ **/ import { loadMetadataForSuite } from '../framework/metadata.js';
+import { globalTestConfig } from '../framework/test_config.js';
 import { assert, now } from '../util/util.js';
 
 import { comparePublicParamsPaths, compareQueries, Ordering } from './query/compare.js';
@@ -50,12 +51,25 @@ export class TestTree {
 
   constructor(forQuery, root) {
     this.forQuery = forQuery;
-    TestTree.propagateCounts(root);
     this.root = root;
     assert(
       root.query.level === 1 && root.query.depthInLevel === 0,
       'TestTree root must be the root (suite:*)'
     );
+  }
+
+  static async create(forQuery, root, maxChunkTime) {
+    const suite = forQuery.suite;
+
+    let chunking = undefined;
+    if (Number.isFinite(maxChunkTime)) {
+      const metadata = loadMetadataForSuite(`./src/${suite}`);
+      assert(metadata !== null, `metadata for ${suite} is missing, but maxChunkTime was requested`);
+      chunking = { metadata, maxChunkTime };
+    }
+    await TestTree.propagateCounts(root, chunking);
+
+    return new TestTree(forQuery, root);
   }
 
   /**
@@ -130,16 +144,48 @@ export class TestTree {
   }
 
   /** Propagate the subtreeTODOs/subtreeTests state upward from leaves to parent nodes. */
-  static propagateCounts(subtree) {
-    subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0 };
+  static async propagateCounts(subtree, chunking) {
+    subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0, totalTimeMS: 0 };
+    subtree.subcaseCount = 0;
     for (const [, child] of subtree.children) {
       if ('children' in child) {
-        const counts = TestTree.propagateCounts(child);
+        const counts = await TestTree.propagateCounts(child, chunking);
         subtree.subtreeCounts.tests += counts.tests;
         subtree.subtreeCounts.nodesWithTODO += counts.nodesWithTODO;
+        subtree.subtreeCounts.totalTimeMS += counts.totalTimeMS;
+        subtree.subcaseCount += counts.subcaseCount;
+      } else {
+        subtree.subcaseCount = child.subcaseCount;
       }
     }
-    return subtree.subtreeCounts;
+
+    // If we're chunking based on a maxChunkTime, then at each
+    // TestQueryMultiCase node of the tree we look at its total time. If the
+    // total time is larger than the maxChunkTime, we set collapsible=false to
+    // make sure it gets split up in the output. Note:
+    // - TestQueryMultiTest and higher nodes are never set to collapsible anyway, so we ignore them.
+    // - TestQuerySingleCase nodes can't be collapsed, so we ignore them.
+    if (chunking && subtree.query instanceof TestQueryMultiCase) {
+      const testLevelQuery = new TestQueryMultiCase(
+        subtree.query.suite,
+        subtree.query.filePathParts,
+        subtree.query.testPathParts,
+        {}
+      ).toString();
+
+      const metadata = chunking.metadata;
+
+      const subcaseTiming = metadata[testLevelQuery]?.subcaseMS;
+      if (subcaseTiming !== undefined) {
+        const totalTiming = subcaseTiming * subtree.subcaseCount;
+        subtree.subtreeCounts.totalTimeMS = totalTiming;
+        if (totalTiming > chunking.maxChunkTime) {
+          subtree.collapsible = false;
+        }
+      }
+    }
+
+    return { ...subtree.subtreeCounts, subcaseCount: subtree.subcaseCount ?? 0 };
   }
 
   /** Displays counts in the format `(Nodes with TODOs) / (Total test count)`. */
@@ -171,7 +217,11 @@ export class TestTree {
 
 // MAINTENANCE_TODO: Consider having subqueriesToExpand actually impact the depth-order of params
 // in the tree.
-export async function loadTreeForQuery(loader, queryToLoad, subqueriesToExpand) {
+export async function loadTreeForQuery(
+  loader,
+  queryToLoad,
+  { subqueriesToExpand, maxChunkTime = Infinity }
+) {
   const suite = queryToLoad.suite;
   const specs = await loader.listing(suite);
 
@@ -283,7 +333,7 @@ export async function loadTreeForQuery(loader, queryToLoad, subqueriesToExpand) 
       );
 
       // This is 1 test. Set tests=1 then count TODOs.
-      subtreeL2.subtreeCounts ??= { tests: 1, nodesWithTODO: 0 };
+      subtreeL2.subtreeCounts ??= { tests: 1, nodesWithTODO: 0, totalTimeMS: 0 };
       if (t.description) setSubtreeDescriptionAndCountTODOs(subtreeL2, t.description);
 
       let caseFilter = null;
@@ -327,13 +377,13 @@ export async function loadTreeForQuery(loader, queryToLoad, subqueriesToExpand) 
   }
   assert(foundCase, `Query \`${queryToLoad.toString()}\` does not match any cases`);
 
-  return new TestTree(queryToLoad, subtreeL0);
+  return TestTree.create(queryToLoad, subtreeL0, maxChunkTime);
 }
 
 function setSubtreeDescriptionAndCountTODOs(subtree, description) {
   assert(subtree.description === undefined);
   subtree.description = description.trim();
-  subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0 };
+  subtree.subtreeCounts ??= { tests: 0, nodesWithTODO: 0, totalTimeMS: 0 };
   if (subtree.description.indexOf('TODO') !== -1) {
     subtree.subtreeCounts.nodesWithTODO++;
   }
@@ -482,6 +532,7 @@ function insertLeaf(parent, query, t) {
     query,
     run: (rec, expectations) => t.run(rec, query, expectations || []),
     isUnimplemented: t.isUnimplemented,
+    subcaseCount: t.computeSubcaseCount(),
   };
 
   // This is a leaf (e.g. s:f:t:x=1;* -> s:f:t:x=1). The key is always ''.

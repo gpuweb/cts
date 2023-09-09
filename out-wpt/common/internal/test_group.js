@@ -19,6 +19,8 @@ import {
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { assert, unreachable } from '../util/util.js';
 
+import { logToWebsocket } from './websocket_logger.js';
+
 export function makeTestGroup(fixture) {
   return new TestGroup(fixture);
 }
@@ -77,6 +79,16 @@ export class TestGroup {
       test.validate();
     }
   }
+
+  collectNonEmptyTests() {
+    const testPaths = [];
+    for (const test of this.tests) {
+      if (test.computeCaseCount() > 0) {
+        testPaths.push({ testPath: test.testPath });
+      }
+    }
+    return testPaths;
+  }
 }
 
 class TestBuilder {
@@ -130,6 +142,7 @@ class TestBuilder {
     };
   }
 
+  /** Perform various validation/"lint" chenks. */
   validate() {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
@@ -168,6 +181,18 @@ class TestBuilder {
         seen.add(testcaseStringUnique);
       }
     }
+  }
+
+  computeCaseCount() {
+    if (this.testCases === undefined) {
+      return 1;
+    }
+
+    let caseCount = 0;
+    for (const [_caseParams, _subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
+      caseCount++;
+    }
+    return caseCount;
   }
 
   params(cases) {
@@ -283,6 +308,18 @@ class RunCaseSpecific {
     this.testCreationStack = testCreationStack;
   }
 
+  computeSubcaseCount() {
+    if (this.subcases) {
+      let count = 0;
+      for (const _subcase of this.subcases) {
+        count++;
+      }
+      return count;
+    } else {
+      return 1;
+    }
+  }
+
   async runTest(rec, sharedState, params, throwSkip, expectedStatus) {
     try {
       rec.beginSubCase();
@@ -303,10 +340,10 @@ class RunCaseSpecific {
       // An error from init or test may have been a SkipTestCase.
       // An error from finalize may have been an eventualAsyncExpectation failure
       // or unexpected validation/OOM error from the GPUDevice.
+      rec.threw(ex);
       if (throwSkip && ex instanceof SkipTestCase) {
         throw ex;
       }
-      rec.threw(ex);
     } finally {
       try {
         rec.endSubCase(expectedStatus);
@@ -495,6 +532,13 @@ class RunCaseSpecific {
       rec.threw(ex);
     } finally {
       rec.finish();
+
+      const msg = {
+        q: selfQuery.toString(),
+        timems: rec.result.timems,
+        nonskippedSubcaseCount: rec.nonskippedSubcaseCount,
+      };
+      logToWebsocket(JSON.stringify(msg));
     }
   }
 }
