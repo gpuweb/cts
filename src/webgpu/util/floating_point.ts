@@ -5171,7 +5171,7 @@ class F16Traits extends FPTraits {
   public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
     this
   );
-  public readonly negationInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
