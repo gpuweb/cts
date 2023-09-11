@@ -116,11 +116,11 @@ function valueStride(ty: Type): number {
         case 3:
           switch (ty.rows) {
             case 2:
-              return 64;
+              return 48;
             case 3:
-              return 128;
+              return 96;
             case 4:
-              return 128;
+              return 96;
           }
           break;
         case 4:
