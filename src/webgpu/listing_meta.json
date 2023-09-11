@@ -1401,6 +1401,7 @@
   "webgpu:shader,execution,expression,unary,bool_conversion:i32:*": { "subcaseMS": 8.219 },
   "webgpu:shader,execution,expression,unary,bool_conversion:u32:*": { "subcaseMS": 7.401 },
   "webgpu:shader,execution,expression,unary,bool_logical:negation:*": { "subcaseMS": 6.413 },
+  "webgpu:shader,execution,expression,unary,f16_arithmetic:negation:*": { "subcaseMS": 4.0 },
   "webgpu:shader,execution,expression,unary,f32_arithmetic:negation:*": { "subcaseMS": 16.400 },
   "webgpu:shader,execution,expression,unary,f32_conversion:bool:*": { "subcaseMS": 7.182 },
   "webgpu:shader,execution,expression,unary,f32_conversion:f16:*": { "subcaseMS": 15.908 },

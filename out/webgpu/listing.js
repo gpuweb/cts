@@ -3051,6 +3051,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "f16_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "f32_arithmetic"
     ]
   },
