@@ -28,8 +28,6 @@ import {
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { assert, unreachable } from '../util/util.js';
 
-import { logToWebsocket } from './websocket_logger.js';
-
 export type RunFn = (
   rec: TestCaseRecorder,
   expectations?: TestQueryWithExpectation[]
@@ -43,7 +41,6 @@ export interface TestCaseID {
 export interface RunCase {
   readonly id: TestCaseID;
   readonly isUnimplemented: boolean;
-  computeSubcaseCount(): number;
   run(
     rec: TestCaseRecorder,
     selfQuery: TestQuerySingleCase,
@@ -63,8 +60,6 @@ export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): Test
 export interface IterableTestGroup {
   iterate(): Iterable<IterableTest>;
   validate(): void;
-  /** Returns the file-relative test paths of tests which have >0 cases. */
-  collectNonEmptyTests(): { testPath: string[] }[];
 }
 export interface IterableTest {
   testPath: string[];
@@ -131,16 +126,6 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
     for (const test of this.tests) {
       test.validate();
     }
-  }
-
-  collectNonEmptyTests(): { testPath: string[] }[] {
-    const testPaths = [];
-    for (const test of this.tests) {
-      if (test.computeCaseCount() > 0) {
-        testPaths.push({ testPath: test.testPath });
-      }
-    }
-    return testPaths;
   }
 }
 
@@ -283,7 +268,6 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     };
   }
 
-  /** Perform various validation/"lint" chenks. */
   validate(): void {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
@@ -321,18 +305,6 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
         seen.add(testcaseStringUnique);
       }
     }
-  }
-
-  computeCaseCount(): number {
-    if (this.testCases === undefined) {
-      return 1;
-    }
-
-    let caseCount = 0;
-    for (const [_caseParams, _subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
-      caseCount++;
-    }
-    return caseCount;
   }
 
   params(
@@ -460,18 +432,6 @@ class RunCaseSpecific implements RunCase {
     this.fn = fn;
     this.beforeFn = beforeFn;
     this.testCreationStack = testCreationStack;
-  }
-
-  computeSubcaseCount(): number {
-    if (this.subcases) {
-      let count = 0;
-      for (const _subcase of this.subcases) {
-        count++;
-      }
-      return count;
-    } else {
-      return 1;
-    }
   }
 
   async runTest(
@@ -696,24 +656,6 @@ class RunCaseSpecific implements RunCase {
       rec.threw(ex);
     } finally {
       rec.finish();
-
-      const msg: CaseTimingLogLine = {
-        q: selfQuery.toString(),
-        timems: rec.result.timems,
-        nonskippedSubcaseCount: rec.nonskippedSubcaseCount,
-      };
-      logToWebsocket(JSON.stringify(msg));
     }
   }
 }
-
-export type CaseTimingLogLine = {
-  q: string;
-  /** Total time it took to execute the case. */
-  timems: number;
-  /**
-   * Number of subcases that ran in the case (excluding skipped subcases, so
-   * they don't dilute the average per-subcase time.
-   */
-  nonskippedSubcaseCount: number;
-};

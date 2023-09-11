@@ -699,9 +699,7 @@ async function testIterateCollapsed(
   includeEmptySubtrees = false
 ) {
   t.debug(`expandThrough=${alwaysExpandThroughLevel} expectations=${expectations}`);
-  const treePromise = t.loader.loadTree(new TestQueryMultiFile('suite1', []), {
-    subqueriesToExpand: expectations,
-  });
+  const treePromise = t.loader.loadTree(new TestQueryMultiFile('suite1', []), expectations);
   if (expectedResult === 'throws') {
     t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
     return;
