@@ -1629,6 +1629,15 @@ export const listing = [
       "compat",
       "api",
       "validation",
+      "render_pipeline",
+      "vertex_state"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
       "texture",
       "createTexture"
     ]

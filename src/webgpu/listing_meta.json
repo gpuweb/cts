@@ -823,6 +823,7 @@
   "webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,render_pass,used:*": { "subcaseMS": 0.000 },
   "webgpu:compat,api,validation,render_pipeline,fragment_state:colorState:*": { "subcaseMS": 32.604 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:sample_mask:*": { "subcaseMS": 14.801 },
+  "webgpu:compat,api,validation,render_pipeline,vertex_state:maxVertexAttributesVertexIndexInstanceIndex:*": { "subcaseMS": 3.7 },
   "webgpu:compat,api,validation,texture,createTexture:unsupportedTextureFormats:*": { "subcaseMS": 0.700 },
   "webgpu:compat,api,validation,texture,createTexture:unsupportedTextureViewFormats:*": { "subcaseMS": 0.601 },
   "webgpu:compat,api,validation,texture,cubeArray:cube_array:*": { "subcaseMS": 13.701 },
