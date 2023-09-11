@@ -113,7 +113,7 @@ function checkIds(data: Uint32Array, subgroupSize: number): Error | undefined {
  *
  * So setting kDebugLevel to 0x5 would dump WGSL and end the test.
  */
-const kDebugLevel = 0x0;
+const kDebugLevel = 0x00;
 
 async function testProgram(t: GPUTest, program: Program) {
   const wgsl = program.genCode();
@@ -159,7 +159,7 @@ async function testProgram(t: GPUTest, program: Program) {
 
   // Inputs have a value equal to their index.
   const inputBuffer = t.makeBufferWithContents(
-    new Uint32Array([...iterRange(128, x => x)]),
+    new Uint32Array([...iterRange(129, x => x)]),
     GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
   );
   t.trackForCleanup(inputBuffer);
@@ -368,6 +368,10 @@ async function predefinedTest(t: GPUTest, style: Style, test: number) {
       program.predefinedProgramWGSLv1();
       break;
     }
+    case 15: {
+      program.predefinedProgramAllUniform();
+      break;
+    }
     default: {
       unreachable('Unhandled testcase');
     }
@@ -376,7 +380,7 @@ async function predefinedTest(t: GPUTest, style: Style, test: number) {
   await testProgram(t, program);
 }
 
-const kPredefinedTestCases = [...iterRange(15, x => x)];
+const kPredefinedTestCases = [...iterRange(16, x => x)];
 
 g.test('predefined_workgroup')
   .desc(`Test workgroup reconvergence using some predefined programs`)
@@ -491,6 +495,24 @@ g.test('random_wgslv1')
     const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
 
     const program: Program = new Program(Style.WGSLv1, t.params.seed, invocations);
+    program.generate();
+
+    await testProgram(t, program);
+  });
+
+g.test('uniform_maximal')
+  .desc(`Test workgroup reconvergence with only uniform branches`)
+  .params(u => u.combine('seed', generateSeeds(500)).beginSubcases())
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({
+      requiredFeatures: ['chromium-experimental-subgroups' as GPUFeatureName],
+    });
+  })
+  .fn(async t => {
+    const invocations = kNumInvocations; // t.device.limits.maxSubgroupSize;
+
+    const onlyUniform: boolean = true;
+    const program: Program = new Program(Style.Maximal, t.params.seed, invocations, onlyUniform);
     program.generate();
 
     await testProgram(t, program);
