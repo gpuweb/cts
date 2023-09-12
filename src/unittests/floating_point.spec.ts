@@ -3695,16 +3695,16 @@ const kAdditionInterval64BitsNormalCases = {
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
-    { input: [0.1, 0], expected: [0.1] },
-    { input: [0, 0.1], expected: [0.1] },
-    { input: [-0.1, 0], expected: [-0.1] },
-    { input: [0, -0.1], expected: [-0.1] },
+    { input: [0.1, 0], expected: 0.1 },
+    { input: [0, 0.1], expected: 0.1 },
+    { input: [-0.1, 0], expected: -0.1 },
+    { input: [0, -0.1], expected: -0.1 },
     // f64 0x3FB999999999999A+0x3FB999999999999A = 0x3FC999999999999A
-    { input: [0.1, 0.1], expected: [reinterpretU64AsF64(0x3FC999999999999An)] },  // ~0.2
+    { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3FC999999999999An) },  // ~0.2
     // f64 0xBFB999999999999A+0xBFB999999999999A = 0xBFC999999999999A
-    { input: [-0.1, -0.1], expected: [reinterpretU64AsF64(0xBFC999999999999An)] },  // ~-0.2
-    { input: [0.1, -0.1], expected: [0] },
-    { input: [-0.1, 0.1], expected: [0] },
+    { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0xBFC999999999999An) },  // ~-0.2
+    { input: [0.1, -0.1], expected: 0 },
+    { input: [-0.1, 0.1], expected: 0 },
   ] as ScalarPairToIntervalCase[],
 } as const;
 
@@ -4310,12 +4310,31 @@ const kMultiplicationInterval64BitsNormalCases = {
     { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    // 0.1 isn't exactly representable in f64, but will be quantized to an
+    // exact value when storing to a 'number' (0x3FB999999999999A).
+    // This is why below the expectations are not intervals.
+    // Finite values multiply zero result in zero
+    { input: [0.1, 0], expected: 0 },
+    { input: [0, 0.1], expected: 0 },
+    { input: [-0.1, 0], expected: 0 },
+    { input: [0, -0.1], expected: 0 },
+    { input: [0.1, 1], expected: 0.1 },
+    { input: [-1, -0.1], expected: 0.1 },
+    { input: [-0.1, 1], expected: -0.1 },
+    { input: [-1, 0.1], expected: -0.1 },
+    // f64 0.1 * 0.1 = 0x3f847ae147ae147c,
+    { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
+    { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
+    { input: [0.1, -0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
+    { input: [-0.1, 0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('multiplicationInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4579,17 +4598,17 @@ const kSubtractionInterval64BitsNormalCases = {
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
-    { input: [0.1, 0], expected: [0.1] },
-    { input: [0, -0.1], expected: [0.1] },
-    { input: [-0.1, 0], expected: [-0.1] },
-    { input: [0, 0.1], expected: [-0.1] },
+    { input: [0.1, 0], expected: 0.1 },
+    { input: [0, -0.1], expected: 0.1 },
+    { input: [-0.1, 0], expected: -0.1 },
+    { input: [0, 0.1], expected: -0.1 },
 
-    { input: [0.1, 0.1], expected: [0] },
-    { input: [-0.1, -0.1], expected: [0] },
+    { input: [0.1, 0.1], expected: 0 },
+    { input: [-0.1, -0.1], expected: 0 },
     // f64 0x3FB999999999999A - 0xBFB999999999999A = 0x3FC999999999999A
-    { input: [0.1, -0.1], expected: [reinterpretU64AsF64(0x3fc999999999999an)] },  // ~0.2
+    { input: [0.1, -0.1], expected: reinterpretU64AsF64(0x3fc999999999999an) },  // ~0.2
     // f64 0xBFB999999999999A - 0x3FB999999999999A = 0xBFC999999999999A
-    { input: [-0.1, 0.1], expected: [reinterpretU64AsF64(0xbfc999999999999an) ] },  // ~-0.2,
+    { input: [-0.1, 0.1], expected: reinterpretU64AsF64(0xbfc999999999999an) },  // ~-0.2,
   ] as ScalarPairToIntervalCase[],
 } as const;
 
