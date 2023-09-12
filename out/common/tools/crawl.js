@@ -145,7 +145,7 @@ export async function crawl(suiteDir, validate) {
     }
     if (missingEntries.length) {
       console.error(
-      'ERROR: Tests missing from listing_meta.json. Please add the new tests (set subcaseMS to 0 if you cannot estimate it):');
+      'ERROR: Tests missing from listing_meta.json. Please add the new tests (See docs/adding_timing_metadata.md):');
 
       for (const metadataKey of missingEntries) {
         console.error(`  ${metadataKey}`);
