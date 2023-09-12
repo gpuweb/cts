@@ -1715,6 +1715,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "af_subtraction"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "bitwise"
     ]
   },

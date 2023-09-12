@@ -4573,14 +4573,30 @@ const kSubtractionInterval64BitsNormalCases = {
   // Expect f16 interval [0x2E66-0xAE66, 0x2E67-0xAE67]
   { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0x2e66) - reinterpretU16AsF16(0xae66), reinterpretU16AsF16(0x2e67) - reinterpretU16AsF16(0xae67)] },
   // Expect f16 interval [0xAE67-0x2E67, 0xAE66-0x2E66]
-  { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67) - reinterpretU16AsF16(0x2e67), reinterpretU16AsF16(0xae66) - reinterpretU16AsF16(0x2e66)] }]
+  { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67) - reinterpretU16AsF16(0x2e67), reinterpretU16AsF16(0xae66) - reinterpretU16AsF16(0x2e66)] }],
 
+  abstract: [
+  // 0.1 isn't exactly representable in f64, but will be quantized to an
+  // exact value when storing to a 'number' (0x3FB999999999999A).
+  // This is why below the expectations are not intervals.
+  { input: [0.1, 0], expected: [0.1] },
+  { input: [0, -0.1], expected: [0.1] },
+  { input: [-0.1, 0], expected: [-0.1] },
+  { input: [0, 0.1], expected: [-0.1] },
+
+  { input: [0.1, 0.1], expected: [0] },
+  { input: [-0.1, -0.1], expected: [0] },
+  // f64 0x3FB999999999999A - 0xBFB999999999999A = 0x3FC999999999999A
+  { input: [0.1, -0.1], expected: [reinterpretU64AsF64(0x3fc999999999999an)] }, // ~0.2
+  // f64 0xBFB999999999999A - 0x3FB999999999999A = 0xBFC999999999999A
+  { input: [-0.1, 0.1], expected: [reinterpretU64AsF64(0xbfc999999999999an)] } // ~-0.2,
+  ]
 };
 
 g.test('subtractionInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
