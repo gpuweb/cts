@@ -101,7 +101,41 @@ function valueStride(ty) {
       // vec3s have padding to make them the same size as vec4s
       return 32;
     }
-    unreachable('Matrices of AbstractFloats have not yet been implemented');
+    if (ty instanceof MatrixType) {
+      switch (ty.cols) {
+        case 2:
+          switch (ty.rows) {
+            case 2:
+              return 32;
+            case 3:
+              return 64;
+            case 4:
+              return 64;}
+
+          break;
+        case 3:
+          switch (ty.rows) {
+            case 2:
+              return 48;
+            case 3:
+              return 96;
+            case 4:
+              return 96;}
+
+          break;
+        case 4:
+          switch (ty.rows) {
+            case 2:
+              return 64;
+            case 3:
+              return 128;
+            case 4:
+              return 128;}
+
+          break;}
+
+    }
+    unreachable(`AbstractFloats have not yet been implemented for ${ty.toString()}`);
   }
 
   if (ty instanceof MatrixType) {
@@ -486,9 +520,23 @@ struct Output {
   @size(${valueStride(resultType)}) value: array<AF, ${dim}>,
 };`;
     }
-    // TBD: Implement Matrix result support
+
+    if (resultType instanceof MatrixType) {
+      const cols = resultType.cols;
+      const rows = resultType.rows === 2 ? 2 : 4; // 3 element rows have a padding element
+      output_struct = `struct AF {
+  low: u32,
+  high: u32,
+};
+
+struct Output {
+   @size(${valueStride(resultType)}) value: array<array<AF, ${rows}>, ${cols}>,
+};`;
+    }
+
+    assert(output_struct !== undefined, `No implementation for result type '${resultType}'`);
   }
-  assert(output_struct !== undefined, `No implementation for result type '${resultType}'`);
+
   return `${output_struct}
 @group(0) @binding(0) var<storage, read_write> outputs : array<Output, ${count}>;
 `;
@@ -771,11 +819,14 @@ fn main() {
  *             matrices, this string needs to include indexing into the
  *             container.
  * @param case_idx index in the case output array to assign the result
- * @param accessor string representing how access the AF that needs to be extracted.
- *              For scalars this should be left as ''.
- *              For vectors and matrices this will be an indexing operation,
- *              i.e. '[i]'
- * */
+ * @param accessor string representing how access to the AF that needs to be
+ *                 operated on.
+ *                 For scalars this should be left as ''.
+ *                 For vectors this will be an indexing operation,
+ *                 i.e. '[i]'
+ *                 For matrices this will double indexing operation,
+ *                 i.e. '[c][r]'
+ */
 function abstractFloatSnippet(expr, case_idx, accessor = '') {
   // AbstractFloats are f64s under the hood. WebGPU does not support
   // putting f64s in buffers, so the result needs to be split up into u32s
@@ -875,10 +926,23 @@ function abstractFloatCaseBody(expr, resultType, i) {
 
   if (resultType instanceof VectorType) {
     return [...Array(resultType.width).keys()].
-    map((dim_idx) => abstractFloatSnippet(expr, i, `[${dim_idx}]`)).
+    map((idx) => abstractFloatSnippet(expr, i, `[${idx}]`)).
     join('  \n');
   }
-  // TDB implement matrix support
+
+  if (resultType instanceof MatrixType) {
+    const cols = resultType.cols;
+    const rows = resultType.rows;
+    const results = [...Array(cols * rows)];
+
+    for (let c = 0; c < cols; c++) {
+      for (let r = 0; r < rows; r++) {
+        results[c * rows + r] = abstractFloatSnippet(expr, i, `[${c}][${r}]`);
+      }
+    }
+
+    return results.join('  \n');
+  }
 
   unreachable(`Results of type '${resultType}' not yet implemented`);
 }
@@ -911,8 +975,6 @@ export function abstractFloatShaderBuilder(expressionBuilder) {
 ${wgslHeader(parameterTypes, resultType)}
 
 ${wgslOutputs(resultType, cases.length)}
-
-${wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder)}
 
 @compute @workgroup_size(1)
 fn main() {

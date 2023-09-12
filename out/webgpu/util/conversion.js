@@ -714,8 +714,10 @@ export class MatrixType {
     this.cols = cols;
     this.rows = rows;
     assert(
-    elementType.kind === 'f32' || elementType.kind === 'f16',
-    "MatrixType can only have elementType of 'f32' or 'f16'");
+    elementType.kind === 'f32' ||
+    elementType.kind === 'f16' ||
+    elementType.kind === 'abstract-float',
+    "MatrixType can only have elementType of 'f32' or 'f16' or 'abstract-float'");
 
     this.elementType = elementType;
   }

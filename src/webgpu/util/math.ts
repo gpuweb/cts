@@ -1843,6 +1843,129 @@ export function sparseVectorF64Range(dim: number): number[][] {
   return kSparseVectorF64Values[dim];
 }
 
+const kSparseMatrixF64Values = {
+  2: {
+    2: kInterestingF64Values.map((f, idx) => [
+      [idx % 4 === 0 ? f : idx, idx % 4 === 1 ? f : -idx],
+      [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx],
+    ]),
+    3: kInterestingF64Values.map((f, idx) => [
+      [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx, idx % 6 === 2 ? f : idx],
+      [idx % 6 === 3 ? f : -idx, idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx],
+    ]),
+    4: kInterestingF64Values.map((f, idx) => [
+      [
+        idx % 8 === 0 ? f : idx,
+        idx % 8 === 1 ? f : -idx,
+        idx % 8 === 2 ? f : idx,
+        idx % 8 === 3 ? f : -idx,
+      ],
+      [
+        idx % 8 === 4 ? f : -idx,
+        idx % 8 === 5 ? f : idx,
+        idx % 8 === 6 ? f : -idx,
+        idx % 8 === 7 ? f : idx,
+      ],
+    ]),
+  },
+  3: {
+    2: kInterestingF64Values.map((f, idx) => [
+      [idx % 6 === 0 ? f : idx, idx % 6 === 1 ? f : -idx],
+      [idx % 6 === 2 ? f : -idx, idx % 6 === 3 ? f : idx],
+      [idx % 6 === 4 ? f : idx, idx % 6 === 5 ? f : -idx],
+    ]),
+    3: kInterestingF64Values.map((f, idx) => [
+      [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
+      [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
+      [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx],
+    ]),
+    4: kInterestingF64Values.map((f, idx) => [
+      [
+        idx % 12 === 0 ? f : idx,
+        idx % 12 === 1 ? f : -idx,
+        idx % 12 === 2 ? f : idx,
+        idx % 12 === 3 ? f : -idx,
+      ],
+      [
+        idx % 12 === 4 ? f : -idx,
+        idx % 12 === 5 ? f : idx,
+        idx % 12 === 6 ? f : -idx,
+        idx % 12 === 7 ? f : idx,
+      ],
+      [
+        idx % 12 === 8 ? f : idx,
+        idx % 12 === 9 ? f : -idx,
+        idx % 12 === 10 ? f : idx,
+        idx % 12 === 11 ? f : -idx,
+      ],
+    ]),
+  },
+  4: {
+    2: kInterestingF64Values.map((f, idx) => [
+      [idx % 8 === 0 ? f : idx, idx % 8 === 1 ? f : -idx],
+      [idx % 8 === 2 ? f : -idx, idx % 8 === 3 ? f : idx],
+      [idx % 8 === 4 ? f : idx, idx % 8 === 5 ? f : -idx],
+      [idx % 8 === 6 ? f : -idx, idx % 8 === 7 ? f : idx],
+    ]),
+    3: kInterestingF64Values.map((f, idx) => [
+      [idx % 12 === 0 ? f : idx, idx % 12 === 1 ? f : -idx, idx % 12 === 2 ? f : idx],
+      [idx % 12 === 3 ? f : -idx, idx % 12 === 4 ? f : idx, idx % 12 === 5 ? f : -idx],
+      [idx % 12 === 6 ? f : idx, idx % 12 === 7 ? f : -idx, idx % 12 === 8 ? f : idx],
+      [idx % 12 === 9 ? f : -idx, idx % 12 === 10 ? f : idx, idx % 12 === 11 ? f : -idx],
+    ]),
+    4: kInterestingF64Values.map((f, idx) => [
+      [
+        idx % 16 === 0 ? f : idx,
+        idx % 16 === 1 ? f : -idx,
+        idx % 16 === 2 ? f : idx,
+        idx % 16 === 3 ? f : -idx,
+      ],
+      [
+        idx % 16 === 4 ? f : -idx,
+        idx % 16 === 5 ? f : idx,
+        idx % 16 === 6 ? f : -idx,
+        idx % 16 === 7 ? f : idx,
+      ],
+      [
+        idx % 16 === 8 ? f : idx,
+        idx % 16 === 9 ? f : -idx,
+        idx % 16 === 10 ? f : idx,
+        idx % 16 === 11 ? f : -idx,
+      ],
+      [
+        idx % 16 === 12 ? f : -idx,
+        idx % 16 === 13 ? f : idx,
+        idx % 16 === 14 ? f : -idx,
+        idx % 16 === 15 ? f : idx,
+      ],
+    ]),
+  },
+};
+
+/**
+ * Returns a minimal set of matrices, indexed by dimension containing interesting
+ * float values.
+ *
+ * This is the matrix analogue of `sparseVectorF64Range`, so it is producing a
+ * minimal coverage set of matrices that test all the interesting f64 values.
+ * There is not a more expansive set of matrices, since matrices are even more
+ * expensive than vectors for increasing runtime with coverage.
+ *
+ * All the interesting floats from sparseF64 are guaranteed to be tested, but
+ * not in every position.
+ */
+export function sparseMatrixF64Range(c: number, r: number): number[][][] {
+  assert(
+    c === 2 || c === 3 || c === 4,
+    'sparseMatrixF64Range only accepts column counts of 2, 3, and 4'
+  );
+  assert(
+    r === 2 || r === 3 || r === 4,
+    'sparseMatrixF64Range only accepts row counts of 2, 3, and 4'
+  );
+  return kSparseMatrixF64Values[c][r];
+}
+
 /**
  * @returns the result matrix in Array<Array<number>> type.
  *
