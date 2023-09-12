@@ -1,7 +1,7 @@
 ## Problem
 
 When adding new tests to the CTS you may occasionally see an error like this
-when running `npm test` or `npm run wpt`
+when running `npm test` or `npm run standalone`
 
 ```
 ERROR: Tests missing from listing_meta.json. Please add the new tests (set subcaseMS to 0 if you cannot estimate it):
