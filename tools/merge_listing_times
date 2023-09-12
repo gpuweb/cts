@@ -5,6 +5,9 @@ require('../src/common/tools/setup-ts-in-node.js');
 // See help message in this file for info on how to use the tool.
 require('../src/common/tools/merge_listing_times.ts');
 
+// See docs/adding_timing_metadata.md for a basic walkthrough on adding entries
+// for new tests
+//
 // ## listing_meta.json File Maintenance ##
 //
 // listing_meta.json files are SEMI AUTO-GENERATED.
