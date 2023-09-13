@@ -4434,53 +4434,74 @@ g.test('powInterval_f32')
     );
   });
 
-g.test('remainderInterval_f32')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // 32-bit normals
-      { input: [0, 1], expected: [0, 0] },
-      { input: [0, -1], expected: [0, 0] },
-      { input: [1, 1], expected: [0, 1] },
-      { input: [1, -1], expected: [0, 1] },
-      { input: [-1, 1], expected: [-1, 0] },
-      { input: [-1, -1], expected: [-1, 0] },
-      { input: [4, 2], expected: [0, 2] },
-      { input: [-4, 2], expected: [-2, 0] },
-      { input: [4, -2], expected: [0, 2] },
-      { input: [-4, -2], expected: [-2, 0] },
-      { input: [2, 4], expected: [2, 2] },
-      { input: [-2, 4], expected: [-2, -2] },
-      { input: [2, -4], expected: [2, 2] },
-      { input: [-2, -4], expected: [-2, -2] },
+// prettier-ignore
+const kRemainderCases = {
+  f32: [
+    { input: [1, 0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
+    { input: [-1, 0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
+    { input: [1, -0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
+    { input: [-1, -0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
+  ] as ScalarPairToIntervalCase[],
+  f16: [
+    { input: [1, 0.1], expected: [reinterpretU16AsF16(0x9400), reinterpretU16AsF16(0x2e70)] }, // ~[0, 0.1]
+    { input: [-1, 0.1], expected: [reinterpretU16AsF16(0xae70), reinterpretU16AsF16(0x1400)] }, // ~[-0.1, 0]
+    { input: [1, -0.1], expected: [reinterpretU16AsF16(0x9400), reinterpretU16AsF16(0x2e70)] }, // ~[0, 0.1]
+    { input: [-1, -0.1], expected: [reinterpretU16AsF16(0xae70), reinterpretU16AsF16(0x1400)] }, // ~[-0.1, 0]
+  ] as ScalarPairToIntervalCase[],
+} as const;
 
-      // 64-bit normals
-      { input: [0, 0.1], expected: [0, 0] },
-      { input: [0, -0.1], expected: [0, 0] },
-      { input: [1, 0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
-      { input: [-1, 0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
-      { input: [1, -0.1], expected: [reinterpretU32AsF32(0xb4000000), reinterpretU32AsF32(0x3dccccd8)] }, // ~[0, 0.1]
-      { input: [-1, -0.1], expected: [reinterpretU32AsF32(0xbdccccd8), reinterpretU32AsF32(0x34000000)] }, // ~[-0.1, 0]
+g.test('remainderInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarPairToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kRemainderCases[p.trait],
+          // Normals
+          { input: [0, 1], expected: 0 },
+          { input: [0, -1], expected: 0 },
+          { input: [1, 1], expected: [0, 1] },
+          { input: [1, -1], expected: [0, 1] },
+          { input: [-1, 1], expected: [-1, 0] },
+          { input: [-1, -1], expected: [-1, 0] },
+          { input: [4, 2], expected: [0, 2] },
+          { input: [-4, 2], expected: [-2, 0] },
+          { input: [4, -2], expected: [0, 2] },
+          { input: [-4, -2], expected: [-2, 0] },
+          { input: [2, 4], expected: [2, 2] },
+          { input: [-2, 4], expected: -2 },
+          { input: [2, -4], expected: 2 },
+          { input: [-2, -4], expected: [-2, -2] },
+          { input: [0, 0.1], expected: 0 },
+          { input: [0, -0.1], expected: 0 },
+          { input: [8.5, 2], expected: 0.5 },
+          { input: [1.125, 1], expected: 0.125 },
 
-      // Denominator out of range
-      { input: [1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [1, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [1, kValue.f32.positive.max], expected: kUnboundedBounds },
-      { input: [1, kValue.f32.negative.min], expected: kUnboundedBounds },
-      { input: [1, 0], expected: kUnboundedBounds },
-      { input: [1, kValue.f32.subnormal.positive.max], expected: kUnboundedBounds },
-    ]
+          // Denominator out of range
+          { input: [1, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [1, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [1, constants.positive.max], expected: kUnboundedBounds },
+          { input: [1, constants.negative.min], expected: kUnboundedBounds },
+          { input: [1, 0], expected: kUnboundedBounds },
+          { input: [1, constants.positive.subnormal.max], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const [x, y] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.remainderInterval(x, y);
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.remainderInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+      `FP.${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
