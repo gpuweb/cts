@@ -1016,7 +1016,7 @@
   "webgpu:shader,execution,expression,binary,u32_comparison:less_equals:*": { "subcaseMS": 7.844 },
   "webgpu:shader,execution,expression,binary,u32_comparison:less_than:*": { "subcaseMS": 6.700 },
   "webgpu:shader,execution,expression,binary,u32_comparison:not_equals:*": { "subcaseMS": 6.850 },
-  "webgpu:shader,execution,expression,call,builtin,abs:abstract_float:*": { "subcaseMS": 16.809 },
+  "webgpu:shader,execution,expression,call,builtin,abs:abstract_float:*": { "subcaseMS": 464.126 },
   "webgpu:shader,execution,expression,call,builtin,abs:abstract_int:*": { "subcaseMS": 16.810 },
   "webgpu:shader,execution,expression,call,builtin,abs:f16:*": { "subcaseMS": 22.910 },
   "webgpu:shader,execution,expression,call,builtin,abs:f32:*": { "subcaseMS": 9.844 },

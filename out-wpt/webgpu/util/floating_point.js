@@ -4042,7 +4042,7 @@ class FPAbstractTraits extends FPTraits {
   ulpInterval = this.unboundedUlpInterval.bind(this);
 
   // Framework - API - Overrides
-  absInterval = this.unimplementedScalarToInterval.bind(this);
+  absInterval = this.absIntervalImpl.bind(this);
   acosInterval = this.unimplementedScalarToInterval.bind(this);
   acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
   acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
