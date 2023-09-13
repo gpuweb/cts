@@ -1,4 +1,5 @@
 import {
+  abstractFloatShaderBuilder,
   basicExpressionBuilder,
   basicExpressionWithPredeclarationBuilder,
   ShaderBuilder,
@@ -7,6 +8,11 @@ import {
 /* @returns a ShaderBuilder that calls the builtin with the given name */
 export function builtin(name: string): ShaderBuilder {
   return basicExpressionBuilder(values => `${name}(${values.join(', ')})`);
+}
+
+/* @returns a ShaderBuilder that calls the builtin with the given name that returns AbstractFloats */
+export function abstractBuiltin(name: string): ShaderBuilder {
+  return abstractFloatShaderBuilder(values => `${name}(${values.join(', ')})`);
 }
 
 /* @returns a ShaderBuilder that calls the builtin with the given name and has given predeclaration */
