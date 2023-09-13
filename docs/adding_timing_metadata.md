@@ -66,8 +66,8 @@ throughout the following steps.
 
 At `tools/websocket-logger/`
 ```
-npm install
-npm run
+npm ci
+npm start
 ```
 
 The output from this command will indicate where the results are being logged,

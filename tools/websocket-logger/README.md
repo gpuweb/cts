@@ -5,5 +5,5 @@ It can be used to receive logs from CTS in a way that's resistant to test crashe
 independent of which runtime is being used (e.g. standalone, WPT, Node).
 It's used in particular to capture timing results for predefining "chunking" of the CTS for WPT.
 
-To set up, use `npm install`.
+To set up, use `npm ci`.
 To launch, use `npm start`.
