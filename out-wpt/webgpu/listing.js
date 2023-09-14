@@ -1805,15 +1805,6 @@ export const listing = [
       "execution",
       "expression",
       "binary",
-      "f16_remainder"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "binary",
       "f16_subtraction"
     ]
   },
