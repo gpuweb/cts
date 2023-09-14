@@ -142,11 +142,11 @@ g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x / y
+Expression: x / y, where x and y are scalars
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u => u.combine('inputSource', allInputSources))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
@@ -155,6 +155,25 @@ Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
 
+    await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
+  });
+
+g.test('vector')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x / y, where x and y are vectors
+Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
+`
+  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [2, 3, 4]))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
+    );
     await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
   });
 

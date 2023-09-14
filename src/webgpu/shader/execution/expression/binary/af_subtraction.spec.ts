@@ -85,17 +85,36 @@ g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x - y
+Expression: x - y, where x and y are scalars
+Accuracy: Correctly rounded
+`
+  )
+  .params(u => u.combine('inputSource', onlyConstInputSource))
+  .fn(async t => {
+    const cases = await d.get('scalar');
+    await run(
+      t,
+      abstractBinary('-'),
+      [TypeAbstractFloat, TypeAbstractFloat],
+      TypeAbstractFloat,
+      t.params,
+      cases
+    );
+  });
+
+g.test('vector')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x - y, where x and y are vectors
 Accuracy: Correctly rounded
 `
   )
   .params(u =>
-    u
-      .combine('inputSource', onlyConstInputSource)
-      .combine('vectorize', [undefined, 2, 3, 4] as const)
+    u.combine('inputSource', onlyConstInputSource).combine('vectorize', [2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('scalar');
+    const cases = await d.get('scalar'); // Using vectorize to generate vector cases based on scalar cases
     await run(
       t,
       abstractBinary('-'),

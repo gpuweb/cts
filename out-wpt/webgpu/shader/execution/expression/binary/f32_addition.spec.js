@@ -142,16 +142,32 @@ g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x + y
+Expression: x + y, where x and y are scalars
 Accuracy: Correctly rounded
 `
   )
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4]))
+  .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const cases = await d.get(
       t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
     );
 
+    await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  });
+
+g.test('vector')
+  .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
+  .desc(
+    `
+Expression: x + y, where x and y are vectors
+Accuracy: Correctly rounded
+`
+  )
+  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [2, 3, 4]))
+  .fn(async t => {
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
+    );
     await run(t, binary('+'), [TypeF32, TypeF32], TypeF32, t.params, cases);
   });
 
