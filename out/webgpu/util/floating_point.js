@@ -4909,7 +4909,7 @@ class FPAbstractTraits extends FPTraits {
   tanInterval = this.unimplementedScalarToInterval.bind(this);
   tanhInterval = this.unimplementedScalarToInterval.bind(this);
   transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
-  truncInterval = this.unimplementedScalarToInterval.bind(this);
+  truncInterval = this.truncIntervalImpl.bind(this);
 }
 
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
