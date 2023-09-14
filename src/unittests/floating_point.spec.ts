@@ -5426,6 +5426,14 @@ const kDotIntervalCases = {
     { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)]},  // ~0.1
     // vec4
     { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)]},  // ~0.1
+    // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
+    // 3.0*3.0 = 9.0 is much smaller than kValue.f32.positive.max, as a result
+    // kValue.f32.positive.max + 9.0 = kValue.f32.positive.max in f32 and even f64. So, if the
+    // positive and negative large number cancel each other first, the result would be
+    // 2.0*2.0+3.0*3.0 = 13. Otherwise, the resule would be 0.0 or 4.0 or 9.0.
+    // https://github.com/gpuweb/cts/issues/2155
+    { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] },
+    { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: [0, 13] },
   ] as VectorPairToIntervalCase[],
   f16: [
     // vec2
@@ -5434,6 +5442,14 @@ const kDotIntervalCases = {
     { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)]},  // ~0.1
     // vec4
     { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)]},  // ~0.1
+    // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
+    // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
+    // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
+    // positive and negative large number don't cancel each other first, the computation will
+    // overflow f16 and result in unbuounded bounds.
+    // https://github.com/gpuweb/cts/issues/2155
+    { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedBounds },
+    { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedBounds },
   ] as VectorPairToIntervalCase[],
 } as const;
 
@@ -5480,11 +5496,6 @@ g.test('dotInterval')
           { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
           { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
           { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-
-          // https://github.com/gpuweb/cts/issues/2155
-          // Inputs with large values but cancel out to finite result.
-          { input: [[constants.positive.max, 1.0, 2.0, 3.0], [-1.0, constants.positive.max, -2.0, -3.0]], expected: [-13, 0] },
-          { input: [[constants.positive.max, 1.0, 2.0, 3.0], [1.0, constants.negative.max, 2.0, 3.0]], expected: [0, 13] },
         ];
       })
   )
@@ -6327,6 +6338,8 @@ g.test('multiplicationMatrixMatrixInterval')
         // multiplicationMatrixMatrixInterval uses and transposeInterval &
         // dotInterval for calculating intervals, so the testing for those functions
         // will cover the actual interval calculations.
+        // Keep all expected result integer no larger than 2047 to ensure that all result is exactly
+        // represeantable in both f32 and f16.
         {
           input: [
             [
@@ -6461,6 +6474,24 @@ g.test('multiplicationMatrixMatrixInterval')
               [11, 22],
               [33, 44],
               [55, 66],
+            ],
+          ],
+          expected: [
+            [121, 154, 187, 220],
+            [253, 330, 407, 484],
+            [385, 506, 627, 748],
+          ],
+        },
+        {
+          input: [
+            [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+            [
+              [11, 22],
+              [33, 44],
+              [55, 66],
               [77, 88],
             ],
           ],
@@ -6518,14 +6549,14 @@ g.test('multiplicationMatrixMatrixInterval')
               [11, 22, 33],
               [44, 55, 66],
               [77, 88, 99],
-              [1010, 1111, 1212],
+              [10, 11, 12],
             ],
           ],
           expected: [
             [242, 308],
             [539, 704],
             [836, 1100],
-            [10403, 13736],
+            [103, 136],
           ],
         },
         {
@@ -6575,14 +6606,14 @@ g.test('multiplicationMatrixMatrixInterval')
               [11, 22, 33],
               [44, 55, 66],
               [77, 88, 99],
-              [1010, 1111, 1212],
+              [10, 11, 12],
             ],
           ],
           expected: [
             [330, 396, 462],
             [726, 891, 1056],
             [1122, 1386, 1650],
-            [13938, 17271, 20604],
+            [138, 171, 204],
           ],
         },
         {
@@ -6590,16 +6621,16 @@ g.test('multiplicationMatrixMatrixInterval')
             [
               [1, 2, 3, 4],
               [5, 6, 7, 8],
-              [9, 11, 11, 12],
+              [9, 10, 11, 12],
             ],
             [
-              [11, 22, 33],
-              [44, 55, 66],
+              [11, 12, 13],
+              [21, 22, 23],
             ],
           ],
           expected: [
-            [418, 517, 550, 616],
-            [913, 1144, 1243, 1408],
+            [188, 224, 260, 296],
+            [338, 404, 470, 536],
           ],
         },
         {
@@ -6607,18 +6638,18 @@ g.test('multiplicationMatrixMatrixInterval')
             [
               [1, 2, 3, 4],
               [5, 6, 7, 8],
-              [9, 11, 11, 12],
+              [9, 10, 11, 12],
             ],
             [
-              [11, 22, 33],
-              [44, 55, 66],
-              [77, 88, 99],
+              [11, 12, 13],
+              [21, 22, 23],
+              [31, 32, 33],
             ],
           ],
           expected: [
-            [418, 517, 550, 616],
-            [913, 1144, 1243, 1408],
-            [1408, 1771, 1936, 2200],
+            [188, 224, 260, 296],
+            [338, 404, 470, 536],
+            [488, 584, 680, 776],
           ],
         },
         {
@@ -6626,20 +6657,20 @@ g.test('multiplicationMatrixMatrixInterval')
             [
               [1, 2, 3, 4],
               [5, 6, 7, 8],
-              [9, 11, 11, 12],
+              [9, 10, 11, 12],
             ],
             [
-              [11, 22, 33],
-              [44, 55, 66],
-              [77, 88, 99],
-              [1010, 1111, 1212],
+              [11, 12, 13],
+              [21, 22, 23],
+              [31, 32, 33],
+              [41, 42, 43],
             ],
           ],
           expected: [
-            [418, 517, 550, 616],
-            [913, 1144, 1243, 1408],
-            [1408, 1771, 1936, 2200],
-            [17473, 22018, 24139, 27472],
+            [188, 224, 260, 296],
+            [338, 404, 470, 536],
+            [488, 584, 680, 776],
+            [638, 764, 890, 1016],
           ],
         },
         {
@@ -6669,15 +6700,15 @@ g.test('multiplicationMatrixMatrixInterval')
               [7, 8],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
             ],
           ],
           expected: [
-            [550, 660],
-            [1254, 1540],
-            [17168, 20600],
+            [210, 260],
+            [370, 460],
+            [530, 660],
           ],
         },
         {
@@ -6689,17 +6720,17 @@ g.test('multiplicationMatrixMatrixInterval')
               [7, 8],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
-              [1313, 1414, 1515, 1616],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
+              [41, 42, 43, 44],
             ],
           ],
           expected: [
-            [550, 660],
-            [1254, 1540],
-            [17168, 20600],
-            [24442, 30300],
+            [210, 260],
+            [370, 460],
+            [530, 660],
+            [690, 860],
           ],
         },
         {
@@ -6708,16 +6739,16 @@ g.test('multiplicationMatrixMatrixInterval')
               [1, 2, 3],
               [4, 5, 6],
               [7, 8, 9],
-              [11, 11, 12],
+              [10, 11, 12],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
             ],
           ],
           expected: [
-            [814, 880, 990],
-            [1826, 2024, 2310],
+            [290, 340, 390],
+            [510, 600, 690],
           ],
         },
         {
@@ -6726,18 +6757,18 @@ g.test('multiplicationMatrixMatrixInterval')
               [1, 2, 3],
               [4, 5, 6],
               [7, 8, 9],
-              [11, 11, 12],
+              [10, 11, 12],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
             ],
           ],
           expected: [
-            [814, 880, 990],
-            [1826, 2024, 2310],
-            [25248, 27468, 30900],
+            [290, 340, 390],
+            [510, 600, 690],
+            [730, 860, 990],
           ],
         },
         {
@@ -6746,20 +6777,20 @@ g.test('multiplicationMatrixMatrixInterval')
               [1, 2, 3],
               [4, 5, 6],
               [7, 8, 9],
-              [11, 11, 12],
+              [10, 11, 12],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
-              [1313, 1414, 1515, 1616],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
+              [41, 42, 43, 44],
             ],
           ],
           expected: [
-            [814, 880, 990],
-            [1826, 2024, 2310],
-            [25248, 27468, 30900],
-            [35350, 39592, 45450],
+            [290, 340, 390],
+            [510, 600, 690],
+            [730, 860, 990],
+            [950, 1120, 1290],
           ],
         },
         {
@@ -6767,19 +6798,17 @@ g.test('multiplicationMatrixMatrixInterval')
             [
               [1, 2, 3, 4],
               [5, 6, 7, 8],
-              [9, 11, 11, 12],
+              [9, 10, 11, 12],
               [13, 14, 15, 16],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
             ],
           ],
           expected: [
-            [990, 1133, 1210, 1320],
-            [2222, 2585, 2794, 3080],
-            [30904, 35447, 37768, 41200],
+            [370, 420, 470, 520],
+            [650, 740, 830, 920],
           ],
         },
         {
@@ -6787,21 +6816,41 @@ g.test('multiplicationMatrixMatrixInterval')
             [
               [1, 2, 3, 4],
               [5, 6, 7, 8],
-              [9, 11, 11, 12],
+              [9, 10, 11, 12],
               [13, 14, 15, 16],
             ],
             [
-              [11, 22, 33, 44],
-              [55, 66, 77, 88],
-              [99, 1010, 1111, 1212],
-              [1313, 1414, 1515, 1616],
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
             ],
           ],
           expected: [
-            [990, 1133, 1210, 1320],
-            [2222, 2585, 2794, 3080],
-            [30904, 35447, 37768, 41200],
-            [43026, 50399, 54742, 60600],
+            [370, 420, 470, 520],
+            [650, 740, 830, 920],
+            [930, 1060, 1190, 1320],
+          ],
+        },
+        {
+          input: [
+            [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+            [
+              [11, 12, 13, 14],
+              [21, 22, 23, 24],
+              [31, 32, 33, 34],
+              [41, 42, 43, 44],
+            ],
+          ],
+          expected: [
+            [370, 420, 470, 520],
+            [650, 740, 830, 920],
+            [930, 1060, 1190, 1320],
+            [1210, 1380, 1550, 1720],
           ],
         },
       ])
@@ -7108,6 +7157,8 @@ g.test('multiplicationVectorMatrixInterval_f32')
         // multiplicationVectorMatrixInterval uses DotIntervalOp for calculating
         // intervals, so the testing for dotInterval covers the actual interval
         // calculations.
+        // Keep all expected result integer no larger than 2047 to ensure that all result is exactly
+        // represeantable in both f32 and f16.
         {
           vector: [1, 2],
           matrix: [
@@ -7138,56 +7189,56 @@ g.test('multiplicationVectorMatrixInterval_f32')
         {
           vector: [1, 2, 3],
           matrix: [
-            [11, 22, 33],
-            [44, 55, 66],
+            [11, 12, 13],
+            [21, 22, 23],
           ],
-          expected: [154, 352],
+          expected: [74, 134],
         },
         {
           vector: [1, 2, 3],
           matrix: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
+            [11, 12, 13],
+            [21, 22, 23],
+            [31, 32, 33],
           ],
-          expected: [154, 352, 550],
+          expected: [74, 134, 194],
         },
         {
           vector: [1, 2, 3],
           matrix: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
-            [1010, 1111, 1212],
+            [11, 12, 13],
+            [21, 22, 23],
+            [31, 32, 33],
+            [41, 42, 43],
           ],
-          expected: [154, 352, 550, 6868],
+          expected: [74, 134, 194, 254],
         },
         {
           vector: [1, 2, 3, 4],
           matrix: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
+            [11, 12, 13, 14],
+            [21, 22, 23, 24],
           ],
-          expected: [330, 770],
+          expected: [130, 230],
         },
         {
           vector: [1, 2, 3, 4],
           matrix: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
+            [11, 12, 13, 14],
+            [21, 22, 23, 24],
+            [31, 32, 33, 34],
           ],
-          expected: [330, 770, 10300],
+          expected: [130, 230, 330],
         },
         {
           vector: [1, 2, 3, 4],
           matrix: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
-            [1313, 1414, 1515, 1616],
+            [11, 12, 13, 14],
+            [21, 22, 23, 24],
+            [31, 32, 33, 34],
+            [41, 42, 43, 44],
           ],
-          expected: [330, 770, 10300, 15150],
+          expected: [130, 230, 330, 430],
         },
       ])
   )
