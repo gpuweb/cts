@@ -430,9 +430,10 @@ fn((t) => {
   const vertexCount = 4;
   const instanceCount = 4;
 
-  const attributesPerVertexBuffer =
-  t.params.vertex_attribute_count / t.params.vertex_buffer_count;
-  assert(Math.round(attributesPerVertexBuffer) === attributesPerVertexBuffer);
+  // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute.
+  const maxAttributes = t.device.limits.maxVertexAttributes - (t.isCompatibility ? 2 : 0);
+  const numAttributes = Math.min(maxAttributes, t.params.vertex_attribute_count);
+  const maxAttributesPerVertexBuffer = Math.ceil(numAttributes / t.params.vertex_buffer_count);
 
   let shaderLocation = 0;
   let attributeValue = 0;
@@ -477,7 +478,12 @@ fn((t) => {
 
 
     const attributes = [];
-    for (let a = 0; a < attributesPerVertexBuffer; ++a) {
+    const numAttributesForBuffer = Math.min(
+    maxAttributesPerVertexBuffer,
+    maxAttributes - b * maxAttributesPerVertexBuffer);
+
+
+    for (let a = 0; a < numAttributesForBuffer; ++a) {
       const attribute = {
         format: t.params.vertex_format,
         shaderLocation,
@@ -490,7 +496,7 @@ fn((t) => {
     }
 
     for (let v = 0; v < vertexOrInstanceCount; ++v) {
-      for (let a = 0; a < attributesPerVertexBuffer; ++a) {
+      for (let a = 0; a < numAttributesForBuffer; ++a) {
         vertexBufferValues.push(attributeValue);
         attributeValue += 1.234; // Values will get rounded later if we make a Uint32Array.
       }
@@ -570,7 +576,7 @@ fn((t) => {
   let accumulateVariableDeclarationsInFragmentShader = '';
   let accumulateVariableAssignmentsInFragmentShader = '';
   // The remaining 3 vertex attributes
-  if (t.params.vertex_attribute_count === 16) {
+  if (numAttributes === 16) {
     accumulateVariableDeclarationsInVertexShader = `
         @location(13) @interpolate(flat) outAttrib13 : vec4<${wgslFormat}>,
       `;
@@ -586,6 +592,21 @@ fn((t) => {
       outBuffer.primitives[input.primitiveId].attrib13 = input.attrib13.y;
       outBuffer.primitives[input.primitiveId].attrib14 = input.attrib13.z;
       outBuffer.primitives[input.primitiveId].attrib15 = input.attrib13.w;
+      `;
+  } else if (numAttributes === 14) {
+    accumulateVariableDeclarationsInVertexShader = `
+        @location(13) @interpolate(flat) outAttrib13 : vec4<${wgslFormat}>,
+      `;
+    accumulateVariableAssignmentsInVertexShader = `
+      output.outAttrib13 =
+          vec4<${wgslFormat}>(input.attrib12, input.attrib13, 0, 0);
+      `;
+    accumulateVariableDeclarationsInFragmentShader = `
+      @location(13) @interpolate(flat) attrib13 : vec4<${wgslFormat}>,
+      `;
+    accumulateVariableAssignmentsInFragmentShader = `
+      outBuffer.primitives[input.primitiveId].attrib12 = input.attrib13.x;
+      outBuffer.primitives[input.primitiveId].attrib13 = input.attrib13.y;
       `;
   }
 
