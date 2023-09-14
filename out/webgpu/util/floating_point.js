@@ -5180,7 +5180,7 @@ class F16Traits extends FPTraits {
   radiansInterval = this.unimplementedScalarToInterval.bind(this);
   reflectInterval = this.unimplementedVectorPairToVector.bind(this);
   refractInterval = this.unimplementedRefract.bind(this);
-  remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
+  remainderInterval = this.remainderIntervalImpl.bind(this);
   roundInterval = this.roundIntervalImpl.bind(this);
   saturateInterval = this.unimplementedScalarToInterval.bind(this);
   signInterval = this.signIntervalImpl.bind(this);
