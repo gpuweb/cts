@@ -5481,56 +5481,96 @@ fn((t) => {
 
 });
 
-g.test('dotInterval_f32').
-paramsSubcasesOnly(
 
-[
-// vec2
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 1.0], [0.0, 1.0]], expected: 1.0 },
-{ input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
-{ input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
-{ input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
-{ input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
+const kDotIntervalCases = {
+  f32: [
+  // vec2
+  { input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  // vec3
+  { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  // vec4
+  { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+  // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
+  // 3.0*3.0 = 9.0 is much smaller than kValue.f32.positive.max, as a result
+  // kValue.f32.positive.max + 9.0 = kValue.f32.positive.max in f32 and even f64. So, if the
+  // positive and negative large number cancel each other first, the result would be
+  // 2.0*2.0+3.0*3.0 = 13. Otherwise, the resule would be 0.0 or 4.0 or 9.0.
+  // https://github.com/gpuweb/cts/issues/2155
+  { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] },
+  { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: [0, 13] }],
 
-// vec3
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: 1.0 },
-{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
-{ input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
-{ input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
-{ input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
+  f16: [
+  // vec2
+  { input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] }, // ~0.1
+  // vec3
+  { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] }, // ~0.1
+  // vec4
+  { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] }, // ~0.1
+  // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
+  // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
+  // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
+  // positive and negative large number don't cancel each other first, the computation will
+  // overflow f16 and result in unbounded bounds.
+  // https://github.com/gpuweb/cts/issues/2155
+  { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedBounds },
+  { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedBounds }]
 
-// vec4
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: 1.0 },
-{ input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: 1.0 },
-{ input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
-{ input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
-{ input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
-{ input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] }, // ~0.1
+};
 
-// Test that going out of bounds in the intermediate calculations is caught correctly.
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+g.test('dotInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
-// https://github.com/gpuweb/cts/issues/2155
-{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [-13, 0] }]).
+  return [
+  // vec2
+  { input: [[1.0, 0.0], [1.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 1.0], [0.0, 1.0]], expected: 1.0 },
+  { input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
+  { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
+  { input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
 
+  // vec3
+  { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: 1.0 },
+  { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
+  { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
+  { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
+
+  // vec4
+  { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: 1.0 },
+  { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 1.0]], expected: 1.0 },
+  { input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
+  { input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
+  { input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
+
+  ...kDotIntervalCases[p.trait],
+
+  // Test that going out of bounds in the intermediate calculations is caught correctly.
+  { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+  { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+  { input: [[constants.positive.max, constants.positive.nearest_max, constants.negative.min], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+  { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+  { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
+  { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds }];
+
+})).
 
 fn((t) => {
   const [x, y] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.dotInterval(x, y);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.dotInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
 
 });
 
@@ -5960,188 +6000,186 @@ fn((t) => {
 g.test('additionMatrixMatrixInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'abstract']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
-expandWithParams((_) => {
-  // Only testing that different shapes of matrices are handled correctly
-  // here, to reduce test duplication.
-  // additionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
-  // so the testing for additionInterval covers the actual interval
-  // calculations.
-  return [
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4]],
+combineWithParams([
+// Only testing that different shapes of matrices are handled correctly
+// here, to reduce test duplication.
+// additionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
+// so the testing for additionInterval covers the actual interval
+// calculations.
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4]],
 
-    [
-    [10, 20],
-    [30, 40]]],
-
-
-    expected: [
-    [11, 22],
-    [33, 44]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4],
-    [5, 6]],
-
-    [
-    [10, 20],
-    [30, 40],
-    [50, 60]]],
+  [
+  [10, 20],
+  [30, 40]]],
 
 
-    expected: [
-    [11, 22],
-    [33, 44],
-    [55, 66]]
+  expected: [
+  [11, 22],
+  [33, 44]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4],
-    [5, 6],
-    [7, 8]],
+},
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
 
-    [
-    [10, 20],
-    [30, 40],
-    [50, 60],
-    [70, 80]]],
+  [
+  [10, 20],
+  [30, 40],
+  [50, 60]]],
 
 
-    expected: [
-    [11, 22],
-    [33, 44],
-    [55, 66],
-    [77, 88]]
+  expected: [
+  [11, 22],
+  [33, 44],
+  [55, 66]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6]],
+},
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
 
-    [
-    [10, 20, 30],
-    [40, 50, 60]]],
-
-
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]],
-
-    [
-    [10, 20, 30],
-    [40, 50, 60],
-    [70, 80, 90]]],
+  [
+  [10, 20],
+  [30, 40],
+  [50, 60],
+  [70, 80]]],
 
 
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66],
-    [77, 88, 99]]
+  expected: [
+  [11, 22],
+  [33, 44],
+  [55, 66],
+  [77, 88]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-    [10, 11, 12]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6]],
 
-    [
-    [10, 20, 30],
-    [40, 50, 60],
-    [70, 80, 90],
-    [1000, 1100, 1200]]],
+  [
+  [10, 20, 30],
+  [40, 50, 60]]],
 
 
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66],
-    [77, 88, 99],
-    [1010, 1111, 1212]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
 
-    [
-    [10, 20, 30, 40],
-    [50, 60, 70, 80]]],
-
-
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12]],
-
-    [
-    [10, 20, 30, 40],
-    [50, 60, 70, 80],
-    [90, 1000, 1100, 1200]]],
+  [
+  [10, 20, 30],
+  [40, 50, 60],
+  [70, 80, 90]]],
 
 
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88],
-    [99, 1010, 1111, 1212]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12],
-    [13, 14, 15, 16]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
 
-    [
-    [10, 20, 30, 40],
-    [50, 60, 70, 80],
-    [90, 1000, 1100, 1200],
-    [1300, 1400, 1500, 1600]]],
+  [
+  [10, 20, 30],
+  [40, 50, 60],
+  [70, 80, 90],
+  [1000, 1100, 1200]]],
 
 
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88],
-    [99, 1010, 1111, 1212],
-    [1313, 1414, 1515, 1616]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99],
+  [1010, 1111, 1212]]
 
-  }];
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
 
-})).
+  [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88]]
+
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80],
+  [90, 1000, 1100, 1200]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212]]
+
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  [
+  [10, 20, 30, 40],
+  [50, 60, 70, 80],
+  [90, 1000, 1100, 1200],
+  [1300, 1400, 1500, 1600]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212],
+  [1313, 1414, 1515, 1616]]
+
+}])).
+
 
 fn((t) => {
   const [x, y] = t.params.input;
@@ -6159,188 +6197,186 @@ fn((t) => {
 g.test('subtractionMatrixMatrixInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'abstract']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
-expandWithParams((_) => {
-  // Only testing that different shapes of matrices are handled correctly
-  // here, to reduce test duplication.
-  // subtractionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
-  // so the testing for subtractionInterval covers the actual interval
-  // calculations.
-  return [
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4]],
+combineWithParams([
+// Only testing that different shapes of matrices are handled correctly
+// here, to reduce test duplication.
+// subtractionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
+// so the testing for subtractionInterval covers the actual interval
+// calculations.
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4]],
 
-    [
-    [-10, -20],
-    [-30, -40]]],
-
-
-    expected: [
-    [11, 22],
-    [33, 44]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4],
-    [5, 6]],
-
-    [
-    [-10, -20],
-    [-30, -40],
-    [-50, -60]]],
+  [
+  [-10, -20],
+  [-30, -40]]],
 
 
-    expected: [
-    [11, 22],
-    [33, 44],
-    [55, 66]]
+  expected: [
+  [11, 22],
+  [33, 44]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2],
-    [3, 4],
-    [5, 6],
-    [7, 8]],
+},
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4],
+  [5, 6]],
 
-    [
-    [-10, -20],
-    [-30, -40],
-    [-50, -60],
-    [-70, -80]]],
+  [
+  [-10, -20],
+  [-30, -40],
+  [-50, -60]]],
 
 
-    expected: [
-    [11, 22],
-    [33, 44],
-    [55, 66],
-    [77, 88]]
+  expected: [
+  [11, 22],
+  [33, 44],
+  [55, 66]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6]],
+},
+{
+  input: [
+  [
+  [1, 2],
+  [3, 4],
+  [5, 6],
+  [7, 8]],
 
-    [
-    [-10, -20, -30],
-    [-40, -50, -60]]],
-
-
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9]],
-
-    [
-    [-10, -20, -30],
-    [-40, -50, -60],
-    [-70, -80, -90]]],
+  [
+  [-10, -20],
+  [-30, -40],
+  [-50, -60],
+  [-70, -80]]],
 
 
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66],
-    [77, 88, 99]]
+  expected: [
+  [11, 22],
+  [33, 44],
+  [55, 66],
+  [77, 88]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3],
-    [4, 5, 6],
-    [7, 8, 9],
-    [10, 11, 12]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6]],
 
-    [
-    [-10, -20, -30],
-    [-40, -50, -60],
-    [-70, -80, -90],
-    [-1000, -1100, -1200]]],
+  [
+  [-10, -20, -30],
+  [-40, -50, -60]]],
 
 
-    expected: [
-    [11, 22, 33],
-    [44, 55, 66],
-    [77, 88, 99],
-    [1010, 1111, 1212]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
 
-    [
-    [-10, -20, -30, -40],
-    [-50, -60, -70, -80]]],
-
-
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88]]
-
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12]],
-
-    [
-    [-10, -20, -30, -40],
-    [-50, -60, -70, -80],
-    [-90, -1000, -1100, -1200]]],
+  [
+  [-10, -20, -30],
+  [-40, -50, -60],
+  [-70, -80, -90]]],
 
 
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88],
-    [99, 1010, 1111, 1212]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99]]
 
-  },
-  {
-    input: [
-    [
-    [1, 2, 3, 4],
-    [5, 6, 7, 8],
-    [9, 10, 11, 12],
-    [13, 14, 15, 16]],
+},
+{
+  input: [
+  [
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9],
+  [10, 11, 12]],
 
-    [
-    [-10, -20, -30, -40],
-    [-50, -60, -70, -80],
-    [-90, -1000, -1100, -1200],
-    [-1300, -1400, -1500, -1600]]],
+  [
+  [-10, -20, -30],
+  [-40, -50, -60],
+  [-70, -80, -90],
+  [-1000, -1100, -1200]]],
 
 
-    expected: [
-    [11, 22, 33, 44],
-    [55, 66, 77, 88],
-    [99, 1010, 1111, 1212],
-    [1313, 1414, 1515, 1616]]
+  expected: [
+  [11, 22, 33],
+  [44, 55, 66],
+  [77, 88, 99],
+  [1010, 1111, 1212]]
 
-  }];
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
 
-})).
+  [
+  [-10, -20, -30, -40],
+  [-50, -60, -70, -80]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88]]
+
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12]],
+
+  [
+  [-10, -20, -30, -40],
+  [-50, -60, -70, -80],
+  [-90, -1000, -1100, -1200]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212]]
+
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  [
+  [-10, -20, -30, -40],
+  [-50, -60, -70, -80],
+  [-90, -1000, -1100, -1200],
+  [-1300, -1400, -1500, -1600]]],
+
+
+  expected: [
+  [11, 22, 33, 44],
+  [55, 66, 77, 88],
+  [99, 1010, 1111, 1212],
+  [1313, 1414, 1515, 1616]]
+
+}])).
+
 
 fn((t) => {
   const [x, y] = t.params.input;
@@ -6355,13 +6391,19 @@ fn((t) => {
 
 });
 
-g.test('multiplicationMatrixMatrixInterval_f32').
-paramsSubcasesOnly([
+g.test('multiplicationMatrixMatrixInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
 // here, to reduce test duplication.
 // multiplicationMatrixMatrixInterval uses and transposeInterval &
 // dotInterval for calculating intervals, so the testing for those functions
 // will cover the actual interval calculations.
+// Keep all expected result integer no larger than 2047 to ensure that all result is exactly
+// represeantable in both f32 and f16.
 {
   input: [
   [
@@ -6495,6 +6537,24 @@ paramsSubcasesOnly([
   [
   [11, 22],
   [33, 44],
+  [55, 66]]],
+
+
+  expected: [
+  [121, 154, 187, 220],
+  [253, 330, 407, 484],
+  [385, 506, 627, 748]]
+
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8]],
+
+  [
+  [11, 22],
+  [33, 44],
   [55, 66],
   [77, 88]]],
 
@@ -6553,14 +6613,14 @@ paramsSubcasesOnly([
   [11, 22, 33],
   [44, 55, 66],
   [77, 88, 99],
-  [1010, 1111, 1212]]],
+  [10, 11, 12]]],
 
 
   expected: [
   [242, 308],
   [539, 704],
   [836, 1100],
-  [10403, 13736]]
+  [103, 136]]
 
 },
 {
@@ -6610,14 +6670,14 @@ paramsSubcasesOnly([
   [11, 22, 33],
   [44, 55, 66],
   [77, 88, 99],
-  [1010, 1111, 1212]]],
+  [10, 11, 12]]],
 
 
   expected: [
   [330, 396, 462],
   [726, 891, 1056],
   [1122, 1386, 1650],
-  [13938, 17271, 20604]]
+  [138, 171, 204]]
 
 },
 {
@@ -6625,16 +6685,16 @@ paramsSubcasesOnly([
   [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
-  [9, 11, 11, 12]],
+  [9, 10, 11, 12]],
 
   [
-  [11, 22, 33],
-  [44, 55, 66]]],
+  [11, 12, 13],
+  [21, 22, 23]]],
 
 
   expected: [
-  [418, 517, 550, 616],
-  [913, 1144, 1243, 1408]]
+  [188, 224, 260, 296],
+  [338, 404, 470, 536]]
 
 },
 {
@@ -6642,18 +6702,18 @@ paramsSubcasesOnly([
   [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
-  [9, 11, 11, 12]],
+  [9, 10, 11, 12]],
 
   [
-  [11, 22, 33],
-  [44, 55, 66],
-  [77, 88, 99]]],
+  [11, 12, 13],
+  [21, 22, 23],
+  [31, 32, 33]]],
 
 
   expected: [
-  [418, 517, 550, 616],
-  [913, 1144, 1243, 1408],
-  [1408, 1771, 1936, 2200]]
+  [188, 224, 260, 296],
+  [338, 404, 470, 536],
+  [488, 584, 680, 776]]
 
 },
 {
@@ -6661,20 +6721,20 @@ paramsSubcasesOnly([
   [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
-  [9, 11, 11, 12]],
+  [9, 10, 11, 12]],
 
   [
-  [11, 22, 33],
-  [44, 55, 66],
-  [77, 88, 99],
-  [1010, 1111, 1212]]],
+  [11, 12, 13],
+  [21, 22, 23],
+  [31, 32, 33],
+  [41, 42, 43]]],
 
 
   expected: [
-  [418, 517, 550, 616],
-  [913, 1144, 1243, 1408],
-  [1408, 1771, 1936, 2200],
-  [17473, 22018, 24139, 27472]]
+  [188, 224, 260, 296],
+  [338, 404, 470, 536],
+  [488, 584, 680, 776],
+  [638, 764, 890, 1016]]
 
 },
 {
@@ -6704,15 +6764,15 @@ paramsSubcasesOnly([
   [7, 8]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34]]],
 
 
   expected: [
-  [550, 660],
-  [1254, 1540],
-  [17168, 20600]]
+  [210, 260],
+  [370, 460],
+  [530, 660]]
 
 },
 {
@@ -6724,17 +6784,17 @@ paramsSubcasesOnly([
   [7, 8]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212],
-  [1313, 1414, 1515, 1616]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34],
+  [41, 42, 43, 44]]],
 
 
   expected: [
-  [550, 660],
-  [1254, 1540],
-  [17168, 20600],
-  [24442, 30300]]
+  [210, 260],
+  [370, 460],
+  [530, 660],
+  [690, 860]]
 
 },
 {
@@ -6743,16 +6803,16 @@ paramsSubcasesOnly([
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
-  [11, 11, 12]],
+  [10, 11, 12]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24]]],
 
 
   expected: [
-  [814, 880, 990],
-  [1826, 2024, 2310]]
+  [290, 340, 390],
+  [510, 600, 690]]
 
 },
 {
@@ -6761,18 +6821,18 @@ paramsSubcasesOnly([
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
-  [11, 11, 12]],
+  [10, 11, 12]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34]]],
 
 
   expected: [
-  [814, 880, 990],
-  [1826, 2024, 2310],
-  [25248, 27468, 30900]]
+  [290, 340, 390],
+  [510, 600, 690],
+  [730, 860, 990]]
 
 },
 {
@@ -6781,20 +6841,20 @@ paramsSubcasesOnly([
   [1, 2, 3],
   [4, 5, 6],
   [7, 8, 9],
-  [11, 11, 12]],
+  [10, 11, 12]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212],
-  [1313, 1414, 1515, 1616]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34],
+  [41, 42, 43, 44]]],
 
 
   expected: [
-  [814, 880, 990],
-  [1826, 2024, 2310],
-  [25248, 27468, 30900],
-  [35350, 39592, 45450]]
+  [290, 340, 390],
+  [510, 600, 690],
+  [730, 860, 990],
+  [950, 1120, 1290]]
 
 },
 {
@@ -6802,19 +6862,17 @@ paramsSubcasesOnly([
   [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
-  [9, 11, 11, 12],
+  [9, 10, 11, 12],
   [13, 14, 15, 16]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24]]],
 
 
   expected: [
-  [990, 1133, 1210, 1320],
-  [2222, 2585, 2794, 3080],
-  [30904, 35447, 37768, 41200]]
+  [370, 420, 470, 520],
+  [650, 740, 830, 920]]
 
 },
 {
@@ -6822,33 +6880,57 @@ paramsSubcasesOnly([
   [
   [1, 2, 3, 4],
   [5, 6, 7, 8],
-  [9, 11, 11, 12],
+  [9, 10, 11, 12],
   [13, 14, 15, 16]],
 
   [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212],
-  [1313, 1414, 1515, 1616]]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34]]],
 
 
   expected: [
-  [990, 1133, 1210, 1320],
-  [2222, 2585, 2794, 3080],
-  [30904, 35447, 37768, 41200],
-  [43026, 50399, 54742, 60600]]
+  [370, 420, 470, 520],
+  [650, 740, 830, 920],
+  [930, 1060, 1190, 1320]]
 
-}]).
+},
+{
+  input: [
+  [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+  [13, 14, 15, 16]],
+
+  [
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34],
+  [41, 42, 43, 44]]],
+
+
+  expected: [
+  [370, 420, 470, 520],
+  [650, 740, 830, 920],
+  [930, 1060, 1190, 1320],
+  [1210, 1380, 1550, 1720]]
+
+}])).
+
 
 fn((t) => {
   const [x, y] = t.params.input;
-  const expected = FP.f32.toMatrix(t.params.expected);
-  const got = FP.f32.multiplicationMatrixMatrixInterval(x, y);
+  const trait = FP[t.params.trait];
+  const expected = trait.toMatrix(t.params.expected);
+  const got = trait.multiplicationMatrixMatrixInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.multiplicationMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
-  y)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+  `${t.params.trait}.multiplicationMatrixMatrixInterval([${JSON.stringify(
+  x)
+  }], [${JSON.stringify(y)}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(
+  expected)
+  }]'`);
 
 });
 
@@ -6858,8 +6940,12 @@ fn((t) => {
 
 
 
-g.test('multiplicationMatrixScalarInterval_f32').
-paramsSubcasesOnly([
+g.test('multiplicationMatrixScalarInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
 // here, to reduce test duplication.
 // multiplicationMatrixScalarInterval uses MultiplicationIntervalOp for calculating intervals,
@@ -6981,16 +7067,18 @@ paramsSubcasesOnly([
   [90, 100, 110, 120],
   [130, 140, 150, 160]]
 
-}]).
+}])).
+
 
 fn((t) => {
   const matrix = t.params.matrix;
   const scalar = t.params.scalar;
-  const expected = FP.f32.toMatrix(t.params.expected);
-  const got = FP.f32.multiplicationMatrixScalarInterval(matrix, scalar);
+  const trait = FP[t.params.trait];
+  const expected = trait.toMatrix(t.params.expected);
+  const got = trait.multiplicationMatrixScalarInterval(matrix, scalar);
   t.expect(
   objectEquals(expected, got),
-  `f32.multiplicationMatrixScalarInterval([${JSON.stringify(
+  `${t.params.trait}.multiplicationMatrixScalarInterval([${JSON.stringify(
   matrix)
   }], ${scalar}) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
 
@@ -7005,8 +7093,12 @@ fn((t) => {
 
 
 
-g.test('multiplicationMatrixVectorInterval_f32').
-paramsSubcasesOnly([
+g.test('multiplicationMatrixVectorInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
 // here, to reduce test duplication.
 // multiplicationMatrixVectorInterval uses DotIntervalOp &
@@ -7093,18 +7185,22 @@ paramsSubcasesOnly([
 
   vector: [11, 22, 33, 44],
   expected: [990, 1100, 1210, 1320]
-}]).
+}])).
+
 
 fn((t) => {
   const matrix = t.params.matrix;
   const vector = t.params.vector;
-  const expected = FP.f32.toVector(t.params.expected);
-  const got = FP.f32.multiplicationMatrixVectorInterval(matrix, vector);
+  const trait = FP[t.params.trait];
+  const expected = trait.toVector(t.params.expected);
+  const got = trait.multiplicationMatrixVectorInterval(matrix, vector);
   t.expect(
   objectEquals(expected, got),
-  `f32multiplicationMatrixVectorInterval([${JSON.stringify(matrix)}], [${JSON.stringify(
-  vector)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+  `${t.params.trait}.multiplicationMatrixVectorInterval([${JSON.stringify(
+  matrix)
+  }], [${JSON.stringify(vector)}]) returned '[${JSON.stringify(
+  got)
+  }]'. Expected '[${JSON.stringify(expected)}]'`);
 
 });
 
@@ -7115,12 +7211,18 @@ fn((t) => {
 
 
 g.test('multiplicationVectorMatrixInterval_f32').
-paramsSubcasesOnly([
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
 // here, to reduce test duplication.
 // multiplicationVectorMatrixInterval uses DotIntervalOp for calculating
 // intervals, so the testing for dotInterval covers the actual interval
 // calculations.
+// Keep all expected result integer no larger than 2047 to ensure that all result is exactly
+// represeantable in both f32 and f16.
 {
   vector: [1, 2],
   matrix: [
@@ -7151,68 +7253,72 @@ paramsSubcasesOnly([
 {
   vector: [1, 2, 3],
   matrix: [
-  [11, 22, 33],
-  [44, 55, 66]],
+  [11, 12, 13],
+  [21, 22, 23]],
 
-  expected: [154, 352]
+  expected: [74, 134]
 },
 {
   vector: [1, 2, 3],
   matrix: [
-  [11, 22, 33],
-  [44, 55, 66],
-  [77, 88, 99]],
+  [11, 12, 13],
+  [21, 22, 23],
+  [31, 32, 33]],
 
-  expected: [154, 352, 550]
+  expected: [74, 134, 194]
 },
 {
   vector: [1, 2, 3],
   matrix: [
-  [11, 22, 33],
-  [44, 55, 66],
-  [77, 88, 99],
-  [1010, 1111, 1212]],
+  [11, 12, 13],
+  [21, 22, 23],
+  [31, 32, 33],
+  [41, 42, 43]],
 
-  expected: [154, 352, 550, 6868]
+  expected: [74, 134, 194, 254]
 },
 {
   vector: [1, 2, 3, 4],
   matrix: [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24]],
 
-  expected: [330, 770]
+  expected: [130, 230]
 },
 {
   vector: [1, 2, 3, 4],
   matrix: [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34]],
 
-  expected: [330, 770, 10300]
+  expected: [130, 230, 330]
 },
 {
   vector: [1, 2, 3, 4],
   matrix: [
-  [11, 22, 33, 44],
-  [55, 66, 77, 88],
-  [99, 1010, 1111, 1212],
-  [1313, 1414, 1515, 1616]],
+  [11, 12, 13, 14],
+  [21, 22, 23, 24],
+  [31, 32, 33, 34],
+  [41, 42, 43, 44]],
 
-  expected: [330, 770, 10300, 15150]
-}]).
+  expected: [130, 230, 330, 430]
+}])).
+
 
 fn((t) => {
   const vector = t.params.vector;
   const matrix = t.params.matrix;
-  const expected = FP.f32.toVector(t.params.expected);
-  const got = FP.f32.multiplicationVectorMatrixInterval(vector, matrix);
+  const trait = FP[t.params.trait];
+  const expected = trait.toVector(t.params.expected);
+  const got = trait.multiplicationVectorMatrixInterval(vector, matrix);
   t.expect(
   objectEquals(expected, got),
-  `f32.multiplicationVectorMatrixInterval([${JSON.stringify(vector)}], [${JSON.stringify(
-  matrix)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
+  `${t.params.trait}.multiplicationVectorMatrixInterval([${JSON.stringify(
+  vector)
+  }], [${JSON.stringify(matrix)}]) returned '[${JSON.stringify(
+  got)
+  }]'. Expected '[${JSON.stringify(expected)}]'`);
 
 });
 
