@@ -3212,33 +3212,41 @@ g.test('quantizeToF16Interval_f32')
     );
   });
 
-g.test('radiansInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: -180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.whole)] },
-      { input: -135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters)] },
-      { input: -90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.half)] },
-      { input: -60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] },
-      { input: -45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
-      { input: -30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] },
-      { input: 0, expected: 0 },
-      { input: 30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth)] },
-      { input: 45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter)] },
-      { input: 60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.third)] },
-      { input: 90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.half)] },
-      { input: 135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters)] },
-      { input: 180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.whole)] },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+g.test('radiansInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = p.trait;
+        const constants = FP[trait].constants();
+        // prettier-ignore
+        return [
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: -180, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.whole), kPlusOneULPFunctions[trait](constants.negative.pi.whole)] },
+          { input: -135, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.three_quarters), kPlusOneULPFunctions[trait](constants.negative.pi.three_quarters)] },
+          { input: -90, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.half), kPlusOneULPFunctions[trait](constants.negative.pi.half)] },
+          { input: -60, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.third), kPlusOneULPFunctions[trait](constants.negative.pi.third)] },
+          { input: -45, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.quarter), kPlusOneULPFunctions[trait](constants.negative.pi.quarter)] },
+          { input: -30, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.sixth), kPlusOneULPFunctions[trait](constants.negative.pi.sixth)] },
+          { input: 0, expected: 0 },
+          { input: 30, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.sixth), kPlusOneULPFunctions[trait](constants.positive.pi.sixth)] },
+          { input: 45, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.quarter), kPlusOneULPFunctions[trait](constants.positive.pi.quarter)] },
+          { input: 60, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.third), kPlusOneULPFunctions[trait](constants.positive.pi.third)] },
+          { input: 90, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.half), kPlusOneULPFunctions[trait](constants.positive.pi.half)] },
+          { input: 135, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.three_quarters), kPlusOneULPFunctions[trait](constants.positive.pi.three_quarters)] },
+          { input: 180, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.whole), kPlusOneULPFunctions[trait](constants.positive.pi.whole)] },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.radiansInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.radiansInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.radiansInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.radiansInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
