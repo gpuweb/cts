@@ -5446,7 +5446,7 @@ const kDotIntervalCases = {
     // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
     // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
     // positive and negative large number don't cancel each other first, the computation will
-    // overflow f16 and result in unbuounded bounds.
+    // overflow f16 and result in unbounded bounds.
     // https://github.com/gpuweb/cts/issues/2155
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedBounds },
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedBounds },
