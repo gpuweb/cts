@@ -10,13 +10,13 @@ Converts degrees to radians, approximating e1 * π / 180.
 Component-wise when T is a vector
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -34,6 +34,13 @@ export const d = makeCaseCache('radians', {
     'unfiltered',
     FP.f16.radiansInterval);
 
+  },
+  abstract: () => {
+    return FP.abstract.generateScalarToIntervalCases(
+    fullF16Range(),
+    'unfiltered',
+    FP.abstract.radiansInterval);
+
   }
 });
 
@@ -41,9 +48,21 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
+u.
+combine('inputSource', onlyConstInputSource).
+combine('vectorize', [undefined, 2, 3, 4])).
 
-unimplemented();
+fn(async (t) => {
+  const cases = await d.get('abstract');
+  await run(
+  t,
+  abstractBuiltin('radians'),
+  [TypeAbstractFloat],
+  TypeAbstractFloat,
+  t.params,
+  cases);
+
+});
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
