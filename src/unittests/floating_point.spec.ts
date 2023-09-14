@@ -3611,7 +3611,7 @@ g.test('tanhInterval_f32')
 g.test('truncInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = FP[p.trait];

@@ -10,7 +10,7 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeF32 } from '../../../../../util/conversion.js';
+import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
@@ -23,6 +23,9 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('trunc', {
   f32: () => {
     return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.truncInterval);
+  },
+  f16: () => {
+    return FP.f16.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f16.truncInterval);
   },
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
@@ -63,4 +66,10 @@ g.test('f16')
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(async t => {
+    const cases = await d.get('f16');
+    await run(t, builtin('trunc'), [TypeF16], TypeF16, t.params, cases);
+  });
