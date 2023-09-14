@@ -941,13 +941,15 @@ desc(
 params((u) => u.combine('format', kVertexFormats)).
 fn((t) => {
   const { format } = t.params;
-  const attributesPerBuffer = Math.ceil(kMaxVertexAttributes / kMaxVertexBuffers);
+  // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
+  const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
+  const attributesPerBuffer = Math.ceil(maxVertexAttributes / kMaxVertexBuffers);
   let attributesEmitted = 0;
 
   const state = [];
   for (let i = 0; i < kMaxVertexBuffers; i++) {
     const attributes = [];
-    for (let j = 0; j < attributesPerBuffer && attributesEmitted < kMaxVertexAttributes; j++) {
+    for (let j = 0; j < attributesPerBuffer && attributesEmitted < maxVertexAttributes; j++) {
       attributes.push({ format, offset: 0, shaderLocation: attributesEmitted });
       attributesEmitted++;
     }
@@ -1080,8 +1082,10 @@ params((u) => u.combine('format', kVertexFormats)).
 fn((t) => {
   const { format } = t.params;
 
+  // In compat mode, @builtin(vertex_index) and @builtin(instance_index) each take an attribute
+  const maxVertexAttributes = t.isCompatibility ? kMaxVertexAttributes - 2 : kMaxVertexAttributes;
   const attributes = [];
-  for (let i = 0; i < kMaxVertexAttributes; i++) {
+  for (let i = 0; i < maxVertexAttributes; i++) {
     attributes.push({ format, offset: 0, shaderLocation: i });
   }
 
