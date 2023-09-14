@@ -3212,10 +3212,56 @@ g.test('quantizeToF16Interval_f32')
     );
   });
 
+// prettier-ignore
+const kRadiansIntervalCases = {
+  f32: [
+    { input: -180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.whole)] },
+    { input: -135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.three_quarters)] },
+    { input: -90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.half)] },
+    { input: -60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.third)] },
+    { input: -45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.quarter)] },
+    { input: -30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.negative.pi.sixth)] },
+    { input: 30, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.sixth)] },
+    { input: 45, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.quarter)] },
+    { input: 60, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.third), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.third)] },
+    { input: 90, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.half), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.half)] },
+    { input: 135, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.three_quarters)] },
+    { input: 180, expected: [kMinusOneULPFunctions['f32'](kValue.f32.positive.pi.whole), kPlusOneULPFunctions['f32'](kValue.f32.positive.pi.whole)] },
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -180, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.whole), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.whole)] },
+    { input: -135, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.three_quarters), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.three_quarters)] },
+    { input: -90, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.half), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.half)] },
+    { input: -60, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.third), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.third)] },
+    { input: -45, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.quarter), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.quarter)] },
+    { input: -30, expected: [kMinusOneULPFunctions['f16'](kValue.f16.negative.pi.sixth), kPlusOneULPFunctions['f16'](kValue.f16.negative.pi.sixth)] },
+    { input: 30, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.sixth), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.sixth)] },
+    { input: 45, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.quarter), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.quarter)] },
+    { input: 60, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.third), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.third)] },
+    { input: 90, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.half), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.half)] },
+    { input: 135, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.three_quarters), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.three_quarters)] },
+    { input: 180, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.whole), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.whole)] },
+  ] as ScalarToIntervalCase[],
+  abstract: [
+    { input: -180, expected: kValue.f64.negative.pi.whole },
+    { input: -135, expected: kValue.f64.negative.pi.three_quarters },
+    { input: -90, expected: kValue.f64.negative.pi.half },
+    { input: -60, expected: kValue.f64.negative.pi.third },
+    { input: -45, expected: kValue.f64.negative.pi.quarter },
+    { input: -30, expected: kValue.f64.negative.pi.sixth },
+    { input: 30, expected: kValue.f64.positive.pi.sixth },
+    { input: 45, expected: kValue.f64.positive.pi.quarter },
+    { input: 60, expected: kValue.f64.positive.pi.third },
+    { input: 90, expected: kValue.f64.positive.pi.half },
+    { input: 135, expected: kValue.f64.positive.pi.three_quarters },
+    { input: 180, expected: kValue.f64.positive.pi.whole },
+  ] as ScalarToIntervalCase[],
+} as const;
+
 g.test('radiansInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = p.trait;
@@ -3223,20 +3269,9 @@ g.test('radiansInterval')
         // prettier-ignore
         return [
           { input: constants.positive.infinity, expected: kUnboundedBounds },
-          { input: -180, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.whole), kPlusOneULPFunctions[trait](constants.negative.pi.whole)] },
-          { input: -135, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.three_quarters), kPlusOneULPFunctions[trait](constants.negative.pi.three_quarters)] },
-          { input: -90, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.half), kPlusOneULPFunctions[trait](constants.negative.pi.half)] },
-          { input: -60, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.third), kPlusOneULPFunctions[trait](constants.negative.pi.third)] },
-          { input: -45, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.quarter), kPlusOneULPFunctions[trait](constants.negative.pi.quarter)] },
-          { input: -30, expected: [kMinusOneULPFunctions[trait](constants.negative.pi.sixth), kPlusOneULPFunctions[trait](constants.negative.pi.sixth)] },
           { input: 0, expected: 0 },
-          { input: 30, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.sixth), kPlusOneULPFunctions[trait](constants.positive.pi.sixth)] },
-          { input: 45, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.quarter), kPlusOneULPFunctions[trait](constants.positive.pi.quarter)] },
-          { input: 60, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.third), kPlusOneULPFunctions[trait](constants.positive.pi.third)] },
-          { input: 90, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.half), kPlusOneULPFunctions[trait](constants.positive.pi.half)] },
-          { input: 135, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.three_quarters), kPlusOneULPFunctions[trait](constants.positive.pi.three_quarters)] },
-          { input: 180, expected: [kMinusOneULPFunctions[trait](constants.positive.pi.whole), kPlusOneULPFunctions[trait](constants.positive.pi.whole)] },
           { input: constants.negative.infinity, expected: kUnboundedBounds },
+          ...kRadiansIntervalCases[trait]
         ];
       })
   )
