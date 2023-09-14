@@ -441,6 +441,14 @@ function makeTreeNodeHeaderHTML(
     .attr('alt', kOpenTestLinkAltText)
     .attr('title', kOpenTestLinkAltText)
     .appendTo(header);
+  $('<button>')
+    .addClass('copybtn')
+    .attr('alt', 'copy query')
+    .attr('title', 'copy query')
+    .on('click', () => {
+      void navigator.clipboard.writeText(n.query.toString());
+    })
+    .appendTo(header);
   if ('testCreationStack' in n && n.testCreationStack) {
     $('<button>')
       .addClass('testcaselogbtn')
