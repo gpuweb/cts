@@ -2689,35 +2689,64 @@ fn((t) => {
 
 });
 
-g.test('degreesInterval_f32').
-paramsSubcasesOnly(
 
-[
-{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
-{ input: kValue.f32.negative.pi.whole, expected: [kMinusOneULPFunctions['f32'](-180), kPlusOneULPFunctions['f32'](-180)] },
-{ input: kValue.f32.negative.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](-135), kPlusOneULPFunctions['f32'](-135)] },
-{ input: kValue.f32.negative.pi.half, expected: [kMinusOneULPFunctions['f32'](-90), kPlusOneULPFunctions['f32'](-90)] },
-{ input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](-60), kPlusOneULPFunctions['f32'](-60)] },
-{ input: kValue.f32.negative.pi.quarter, expected: [kMinusOneULPFunctions['f32'](-45), kPlusOneULPFunctions['f32'](-45)] },
-{ input: kValue.f32.negative.pi.sixth, expected: [kMinusOneULPFunctions['f32'](-30), kPlusOneULPFunctions['f32'](-30)] },
-{ input: 0, expected: 0 },
-{ input: kValue.f32.positive.pi.sixth, expected: [kMinusOneULPFunctions['f32'](30), kPlusOneULPFunctions['f32'](30)] },
-{ input: kValue.f32.positive.pi.quarter, expected: [kMinusOneULPFunctions['f32'](45), kPlusOneULPFunctions['f32'](45)] },
-{ input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](60), kPlusOneULPFunctions['f32'](60)] },
-{ input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](90), kPlusOneULPFunctions['f32'](90)] },
-{ input: kValue.f32.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](135), kPlusOneULPFunctions['f32'](135)] },
-{ input: kValue.f32.positive.pi.whole, expected: [kMinusOneULPFunctions['f32'](180), kPlusOneULPFunctions['f32'](180)] },
-{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
-{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds }]).
+const kDegreesIntervalCases = {
+  f32: [
+  { input: kValue.f32.negative.pi.whole, expected: [kMinusOneULPFunctions['f32'](-180), kPlusOneULPFunctions['f32'](-180)] },
+  { input: kValue.f32.negative.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](-135), kPlusOneULPFunctions['f32'](-135)] },
+  { input: kValue.f32.negative.pi.half, expected: [kMinusOneULPFunctions['f32'](-90), kPlusOneULPFunctions['f32'](-90)] },
+  { input: kValue.f32.negative.pi.third, expected: [kMinusOneULPFunctions['f32'](-60), kPlusOneULPFunctions['f32'](-60)] },
+  { input: kValue.f32.negative.pi.quarter, expected: [kMinusOneULPFunctions['f32'](-45), kPlusOneULPFunctions['f32'](-45)] },
+  { input: kValue.f32.negative.pi.sixth, expected: [kMinusOneULPFunctions['f32'](-30), kPlusOneULPFunctions['f32'](-30)] },
+  { input: kValue.f32.positive.pi.sixth, expected: [kMinusOneULPFunctions['f32'](30), kPlusOneULPFunctions['f32'](30)] },
+  { input: kValue.f32.positive.pi.quarter, expected: [kMinusOneULPFunctions['f32'](45), kPlusOneULPFunctions['f32'](45)] },
+  { input: kValue.f32.positive.pi.third, expected: [kMinusOneULPFunctions['f32'](60), kPlusOneULPFunctions['f32'](60)] },
+  { input: kValue.f32.positive.pi.half, expected: [kMinusOneULPFunctions['f32'](90), kPlusOneULPFunctions['f32'](90)] },
+  { input: kValue.f32.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f32'](135), kPlusOneULPFunctions['f32'](135)] },
+  { input: kValue.f32.positive.pi.whole, expected: [kMinusOneULPFunctions['f32'](180), kPlusOneULPFunctions['f32'](180)] }],
 
+  f16: [
+  { input: kValue.f16.negative.pi.whole, expected: [-180, kPlusOneULPFunctions['f16'](-180)] },
+  { input: kValue.f16.negative.pi.three_quarters, expected: [-135, kPlusOneULPFunctions['f16'](-135)] },
+  { input: kValue.f16.negative.pi.half, expected: [-90, kPlusOneULPFunctions['f16'](-90)] },
+  { input: kValue.f16.negative.pi.third, expected: [-60, kPlusNULPFunctions['f16'](-60, 2)] },
+  { input: kValue.f16.negative.pi.quarter, expected: [-45, kPlusOneULPFunctions['f16'](-45)] },
+  { input: kValue.f16.negative.pi.sixth, expected: [-30, kPlusNULPFunctions['f16'](-30, 2)] },
+  { input: kValue.f16.positive.pi.sixth, expected: [kMinusNULPFunctions['f16'](30, 2), 30] },
+  { input: kValue.f16.positive.pi.quarter, expected: [kMinusOneULPFunctions['f16'](45), 45] },
+  { input: kValue.f16.positive.pi.third, expected: [kMinusNULPFunctions['f16'](60, 2), 60] },
+  { input: kValue.f16.positive.pi.half, expected: [kMinusOneULPFunctions['f16'](90), 90] },
+  { input: kValue.f16.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f16'](135), 135] },
+  { input: kValue.f16.positive.pi.whole, expected: [kMinusOneULPFunctions['f16'](180), 180] }]
+
+};
+
+g.test('degreesInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = p.trait;
+  const constants = FP[trait].constants();
+
+  return [
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.min, expected: kUnboundedBounds },
+  { input: 0, expected: 0 },
+  { input: constants.positive.max, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  ...kDegreesIntervalCases[trait]];
+
+})).
 
 fn((t) => {
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.degreesInterval(t.params.input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.degreesInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.degreesInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.degreesInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
