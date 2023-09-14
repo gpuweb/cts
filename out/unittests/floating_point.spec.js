@@ -5739,142 +5739,152 @@ fn((t) => {
 
 
 
-g.test('transposeInterval_f32').
-paramsSubcasesOnly([
-{
-  input: [
-  [1, 2],
-  [3, 4]],
+g.test('transposeInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
+  return [
+  {
+    input: [
+    [1, 2],
+    [3, 4]],
 
-  expected: [
-  [1, 3],
-  [2, 4]]
+    expected: [
+    [1, 3],
+    [2, 4]]
 
-},
-{
-  input: [
-  [1, 2],
-  [3, 4],
-  [5, 6]],
+  },
+  {
+    input: [
+    [1, 2],
+    [3, 4],
+    [5, 6]],
 
-  expected: [
-  [1, 3, 5],
-  [2, 4, 6]]
+    expected: [
+    [1, 3, 5],
+    [2, 4, 6]]
 
-},
-{
-  input: [
-  [1, 2],
-  [3, 4],
-  [5, 6],
-  [7, 8]],
+  },
+  {
+    input: [
+    [1, 2],
+    [3, 4],
+    [5, 6],
+    [7, 8]],
 
-  expected: [
-  [1, 3, 5, 7],
-  [2, 4, 6, 8]]
+    expected: [
+    [1, 3, 5, 7],
+    [2, 4, 6, 8]]
 
-},
-{
-  input: [
-  [1, 2, 3],
-  [4, 5, 6]],
+  },
+  {
+    input: [
+    [1, 2, 3],
+    [4, 5, 6]],
 
-  expected: [
-  [1, 4],
-  [2, 5],
-  [3, 6]]
+    expected: [
+    [1, 4],
+    [2, 5],
+    [3, 6]]
 
-},
-{
-  input: [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9]],
+  },
+  {
+    input: [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]],
 
-  expected: [
-  [1, 4, 7],
-  [2, 5, 8],
-  [3, 6, 9]]
+    expected: [
+    [1, 4, 7],
+    [2, 5, 8],
+    [3, 6, 9]]
 
-},
-{
-  input: [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-  [10, 11, 12]],
+  },
+  {
+    input: [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12]],
 
-  expected: [
-  [1, 4, 7, 10],
-  [2, 5, 8, 11],
-  [3, 6, 9, 12]]
+    expected: [
+    [1, 4, 7, 10],
+    [2, 5, 8, 11],
+    [3, 6, 9, 12]]
 
-},
-{
-  input: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8]],
+  },
+  {
+    input: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8]],
 
-  expected: [
-  [1, 5],
-  [2, 6],
-  [3, 7],
-  [4, 8]]
+    expected: [
+    [1, 5],
+    [2, 6],
+    [3, 7],
+    [4, 8]]
 
-},
-{
-  input: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8],
-  [9, 10, 11, 12]],
+  },
+  {
+    input: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+    [9, 10, 11, 12]],
 
-  expected: [
-  [1, 5, 9],
-  [2, 6, 10],
-  [3, 7, 11],
-  [4, 8, 12]]
+    expected: [
+    [1, 5, 9],
+    [2, 6, 10],
+    [3, 7, 11],
+    [4, 8, 12]]
 
-},
-{
-  input: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8],
-  [9, 10, 11, 12],
-  [13, 14, 15, 16]],
+  },
+  {
+    input: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+    [9, 10, 11, 12],
+    [13, 14, 15, 16]],
 
-  expected: [
-  [1, 5, 9, 13],
-  [2, 6, 10, 14],
-  [3, 7, 11, 15],
-  [4, 8, 12, 16]]
+    expected: [
+    [1, 5, 9, 13],
+    [2, 6, 10, 14],
+    [3, 7, 11, 15],
+    [4, 8, 12, 16]]
 
-},
-{
-  input: [
-  [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min],
-  [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max]],
+  },
+  {
+    input: [
+    [constants.positive.subnormal.max, constants.positive.subnormal.min],
+    [constants.negative.subnormal.min, constants.negative.subnormal.max]],
 
-  expected: [
-  [
-  [0, kValue.f32.subnormal.positive.max],
-  [kValue.f32.subnormal.negative.min, 0]],
+    expected: [
+    [
+    [0, constants.positive.subnormal.max],
+    [constants.negative.subnormal.min, 0]],
 
-  [
-  [0, kValue.f32.subnormal.positive.min],
-  [kValue.f32.subnormal.negative.max, 0]]]
+    [
+    [0, constants.positive.subnormal.min],
+    [constants.negative.subnormal.max, 0]]]
 
 
-}]).
+  }];
+
+})).
 
 fn((t) => {
   const input = t.params.input;
-  const expected = FP.f32.toMatrix(t.params.expected);
-  const got = FP.f32.transposeInterval(input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toMatrix(t.params.expected);
+  const got = trait.transposeInterval(input);
   t.expect(
   objectEquals(expected, got),
-  `f32.transposeInterval([${JSON.stringify(input)}]) returned '[${JSON.stringify(
-  got)
-  }]'. Expected '[${JSON.stringify(expected)}]'`);
+  `FP.${t.params.trait}.transposeInterval([${JSON.stringify(
+  input)
+  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
 
 });
 
