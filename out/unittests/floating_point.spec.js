@@ -3611,7 +3611,7 @@ fn((t) => {
 g.test('truncInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'abstract']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];

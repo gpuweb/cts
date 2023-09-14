@@ -1403,7 +1403,7 @@
   "webgpu:shader,execution,expression,call,builtin,transpose:f16:*": { "subcaseMS": 33.311 },
   "webgpu:shader,execution,expression,call,builtin,transpose:f32:*": { "subcaseMS": 8.184 },
   "webgpu:shader,execution,expression,call,builtin,trunc:abstract_float:*": { "subcaseMS": 455.726 },
-  "webgpu:shader,execution,expression,call,builtin,trunc:f16:*": { "subcaseMS": 81.305 },
+  "webgpu:shader,execution,expression,call,builtin,trunc:f16:*": { "subcaseMS": 120.204 },
   "webgpu:shader,execution,expression,call,builtin,trunc:f32:*": { "subcaseMS": 48.544 },
   "webgpu:shader,execution,expression,call,builtin,unpack2x16float:unpack:*": { "subcaseMS": 11.651 },
   "webgpu:shader,execution,expression,call,builtin,unpack2x16snorm:unpack:*": { "subcaseMS": 9.275 },

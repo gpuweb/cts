@@ -5194,7 +5194,7 @@ class F16Traits extends FPTraits {
   tanInterval = this.unimplementedScalarToInterval.bind(this);
   tanhInterval = this.unimplementedScalarToInterval.bind(this);
   transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
-  truncInterval = this.unimplementedScalarToInterval.bind(this);
+  truncInterval = this.truncIntervalImpl.bind(this);
 
   /** quantizeToF16 has no f16 overload. */
   quantizeToF16IntervalNotAvailable(n) {
