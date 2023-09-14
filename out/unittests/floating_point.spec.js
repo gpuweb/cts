@@ -5742,7 +5742,7 @@ fn((t) => {
 g.test('transposeInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];

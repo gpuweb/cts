@@ -1399,7 +1399,7 @@
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_2d_coords:*": { "subcaseMS": 28.809 },
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_3d_coords:*": { "subcaseMS": 37.206 },
   "webgpu:shader,execution,expression,call,builtin,textureStore:store_array_2d_coords:*": { "subcaseMS": 98.804 },
-  "webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:*": { "subcaseMS": 315.915 },
+  "webgpu:shader,execution,expression,call,builtin,transpose:abstract_float:*": { "subcaseMS": 755.012 },
   "webgpu:shader,execution,expression,call,builtin,transpose:f16:*": { "subcaseMS": 33.311 },
   "webgpu:shader,execution,expression,call,builtin,transpose:f32:*": { "subcaseMS": 75.887 },
   "webgpu:shader,execution,expression,call,builtin,trunc:abstract_float:*": { "subcaseMS": 455.726 },

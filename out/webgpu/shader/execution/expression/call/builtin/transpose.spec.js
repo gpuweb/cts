@@ -8,17 +8,84 @@ T is AbstractFloat, f32, or f16
 Returns the transpose of e.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
+import { TypeAbstractFloat, TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseMatrixF16Range, sparseMatrixF32Range } from '../../../../../util/math.js';
+import {
+sparseMatrixF16Range,
+sparseMatrixF32Range,
+sparseMatrixF64Range } from
+'../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
 export const d = makeCaseCache('transpose', {
+  abstract_mat2x2: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(2, 2),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat2x3: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(2, 3),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat2x4: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(2, 4),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat3x2: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(3, 2),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat3x3: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(3, 3),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat3x4: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(3, 4),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat4x2: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(4, 2),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat4x3: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(4, 3),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
+  abstract_mat4x4: () => {
+    return FP.abstract.generateMatrixToMatrixCases(
+    sparseMatrixF64Range(4, 4),
+    'finite',
+    FP.abstract.transposeInterval);
+
+  },
   f32_mat2x2_const: () => {
     return FP.f32.generateMatrixToMatrixCases(
     sparseMatrixF32Range(2, 2),
@@ -278,11 +345,23 @@ specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
 u.
-combine('inputSource', allInputSources).
+combine('inputSource', onlyConstInputSource).
 combine('cols', [2, 3, 4]).
 combine('rows', [2, 3, 4])).
 
-unimplemented();
+fn(async (t) => {
+  const cols = t.params.cols;
+  const rows = t.params.rows;
+  const cases = await d.get(`abstract_mat${cols}x${rows}`);
+  await run(
+  t,
+  abstractBuiltin('transpose'),
+  [TypeMat(cols, rows, TypeAbstractFloat)],
+  TypeMat(rows, cols, TypeAbstractFloat),
+  t.params,
+  cases);
+
+});
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').

@@ -4908,7 +4908,7 @@ class FPAbstractTraits extends FPTraits {
 
   tanInterval = this.unimplementedScalarToInterval.bind(this);
   tanhInterval = this.unimplementedScalarToInterval.bind(this);
-  transposeInterval = this.unimplementedMatrixToMatrix.bind(this);
+  transposeInterval = this.transposeIntervalImpl.bind(this);
   truncInterval = this.truncIntervalImpl.bind(this);
 }
 
