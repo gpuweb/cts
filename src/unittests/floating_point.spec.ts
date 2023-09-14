@@ -5742,7 +5742,7 @@ interface MatrixToMatrixCase {
 g.test('transposeInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<MatrixToMatrixCase>(p => {
         const trait = FP[p.trait];
