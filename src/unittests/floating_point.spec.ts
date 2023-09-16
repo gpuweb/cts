@@ -2719,12 +2719,26 @@ const kDegreesIntervalCases = {
     { input: kValue.f16.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f16'](135), 135] },
     { input: kValue.f16.positive.pi.whole, expected: [kMinusOneULPFunctions['f16'](180), 180] },
   ] as ScalarToIntervalCase[],
+  abstract: [
+    { input: kValue.f64.negative.pi.whole, expected: -180 },
+    { input: kValue.f64.negative.pi.three_quarters, expected: -135 },
+    { input: kValue.f64.negative.pi.half, expected: -90 },
+    { input: kValue.f64.negative.pi.third, expected: kPlusOneULPFunctions['abstract'](-60) },
+    { input: kValue.f64.negative.pi.quarter, expected: -45 },
+    { input: kValue.f64.negative.pi.sixth, expected: kPlusOneULPFunctions['abstract'](-30) },
+    { input: kValue.f64.positive.pi.sixth, expected: kMinusOneULPFunctions['abstract'](30) },
+    { input: kValue.f64.positive.pi.quarter, expected: 45 },
+    { input: kValue.f64.positive.pi.third, expected: kMinusOneULPFunctions['abstract'](60) },
+    { input: kValue.f64.positive.pi.half, expected: 90 },
+    { input: kValue.f64.positive.pi.three_quarters, expected: 135 },
+    { input: kValue.f64.positive.pi.whole, expected: 180 },
+  ] as ScalarToIntervalCase[],
 } as const;
 
 g.test('degreesInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = p.trait;
