@@ -2717,14 +2717,28 @@ const kDegreesIntervalCases = {
   { input: kValue.f16.positive.pi.third, expected: [kMinusNULPFunctions['f16'](60, 2), 60] },
   { input: kValue.f16.positive.pi.half, expected: [kMinusOneULPFunctions['f16'](90), 90] },
   { input: kValue.f16.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f16'](135), 135] },
-  { input: kValue.f16.positive.pi.whole, expected: [kMinusOneULPFunctions['f16'](180), 180] }]
+  { input: kValue.f16.positive.pi.whole, expected: [kMinusOneULPFunctions['f16'](180), 180] }],
+
+  abstract: [
+  { input: kValue.f64.negative.pi.whole, expected: -180 },
+  { input: kValue.f64.negative.pi.three_quarters, expected: -135 },
+  { input: kValue.f64.negative.pi.half, expected: -90 },
+  { input: kValue.f64.negative.pi.third, expected: kPlusOneULPFunctions['abstract'](-60) },
+  { input: kValue.f64.negative.pi.quarter, expected: -45 },
+  { input: kValue.f64.negative.pi.sixth, expected: kPlusOneULPFunctions['abstract'](-30) },
+  { input: kValue.f64.positive.pi.sixth, expected: kMinusOneULPFunctions['abstract'](30) },
+  { input: kValue.f64.positive.pi.quarter, expected: 45 },
+  { input: kValue.f64.positive.pi.third, expected: kMinusOneULPFunctions['abstract'](60) },
+  { input: kValue.f64.positive.pi.half, expected: 90 },
+  { input: kValue.f64.positive.pi.three_quarters, expected: 135 },
+  { input: kValue.f64.positive.pi.whole, expected: 180 }]
 
 };
 
 g.test('degreesInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = p.trait;
