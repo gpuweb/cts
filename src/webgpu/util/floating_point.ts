@@ -5186,7 +5186,7 @@ class F16Traits extends FPTraits {
   public readonly refractInterval = this.unimplementedRefract.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
-  public readonly saturateInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
