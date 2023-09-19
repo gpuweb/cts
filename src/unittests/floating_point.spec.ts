@@ -4401,12 +4401,20 @@ const kMinInterval64BitsCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
     { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    { input: [-0.1, 0], expected: -0.1 },
+    { input: [0, -0.1], expected: -0.1 },
+    { input: [0.1, 0.1], expected: 0.1 },
+    { input: [0.1, -0.1], expected: -0.1 },
+    { input: [-0.1, 0.1], expected: -0.1 },
+    { input: [-0.1, -0.1], expected: -0.1 },
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('minInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
