@@ -1152,7 +1152,7 @@
   "webgpu:shader,execution,expression,call,builtin,countTrailingZeros:i32:*": { "subcaseMS": 7.844 },
   "webgpu:shader,execution,expression,call,builtin,countTrailingZeros:u32:*": { "subcaseMS": 7.851 },
   "webgpu:shader,execution,expression,call,builtin,cross:abstract_float:*": { "subcaseMS": 3.002 },
-  "webgpu:shader,execution,expression,call,builtin,cross:f16:*": { "subcaseMS": 16.101 },
+  "webgpu:shader,execution,expression,call,builtin,cross:f16:*": { "subcaseMS": 115.503 },
   "webgpu:shader,execution,expression,call,builtin,cross:f32:*": { "subcaseMS": 664.926 },
   "webgpu:shader,execution,expression,call,builtin,degrees:abstract_float:*": { "subcaseMS": 533.052 },
   "webgpu:shader,execution,expression,call,builtin,degrees:f16:*": { "subcaseMS": 29.308 },
