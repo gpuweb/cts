@@ -4869,14 +4869,8 @@ class FPAbstractTraits extends FPTraits {
   );
   public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
   public readonly ceilInterval = this.unimplementedScalarToInterval.bind(this, 'ceilInterval');
-  public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(
-    this,
-    'clampMedianInterval'
-  );
-  public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(
-    this,
-    'clampMinMaxInterval'
-  );
+  public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
+  public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.unimplementedScalarToInterval.bind(this, 'cosInterval');
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
