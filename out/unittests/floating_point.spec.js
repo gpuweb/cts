@@ -3463,41 +3463,71 @@ fn((t) => {
 
 });
 
-g.test('saturateInterval_f32').
-paramsSubcasesOnly(
+// Need to explicitly coerce expected value to IntervalBounds, because TS
+// doesn't correctly infer the type later.
+const kSaturateIntervalCases = {
+  f32: [
+  {
+    input: 0.1,
+    expected: [
+    kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)),
+    reinterpretU32AsF32(0x3dcccccd)]
 
-[
-// Normals
-{ input: 0, expected: 0 },
-{ input: 1, expected: 1.0 },
-{ input: -0.1, expected: 0 },
-{ input: -1, expected: 0 },
-{ input: -10, expected: 0 },
-{ input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-{ input: 10, expected: 1.0 },
-{ input: 11.1, expected: 1.0 },
-{ input: kValue.f32.positive.max, expected: 1.0 },
-{ input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-{ input: kValue.f32.negative.max, expected: 0.0 },
-{ input: kValue.f32.negative.min, expected: 0.0 },
+  } // ~0.1
+  ],
+  f16: [
+  {
+    input: 0.1,
+    expected: [
+    reinterpretU16AsF16(0x2e66),
+    kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))]
 
-// Subnormals
-{ input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
-{ input: kValue.f32.subnormal.positive.min, expected: [0.0, kValue.f32.subnormal.positive.min] },
-{ input: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0.0] },
-{ input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
+  } // ~0.1
+  ]
+};
 
-// Infinities
-{ input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds }]).
+g.test('saturateInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const constants = FP[p.trait].constants();
 
+  return [
+  // Normals
+  { input: 0, expected: 0 },
+  { input: 1, expected: 1.0 },
+  { input: -0.1, expected: 0 },
+  { input: -1, expected: 0 },
+  { input: -10, expected: 0 },
+  { input: 10, expected: 1.0 },
+  { input: 11.1, expected: 1.0 },
+  { input: constants.positive.max, expected: 1.0 },
+  { input: constants.positive.min, expected: constants.positive.min },
+  { input: constants.negative.max, expected: 0.0 },
+  { input: constants.negative.min, expected: 0.0 },
+
+  // Subnormals
+  { input: constants.positive.subnormal.max, expected: [0.0, constants.positive.subnormal.max] },
+  { input: constants.positive.subnormal.min, expected: [0.0, constants.positive.subnormal.min] },
+  { input: constants.negative.subnormal.min, expected: [constants.negative.subnormal.min, 0.0] },
+  { input: constants.negative.subnormal.max, expected: [constants.negative.subnormal.max, 0.0] },
+
+  // Infinities
+  { input: constants.positive.infinity, expected: kUnboundedBounds },
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  ...kSaturateIntervalCases[p.trait]];
+
+})).
 
 fn((t) => {
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.saturateInterval(t.params.input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.saturateInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
