@@ -3219,7 +3219,9 @@ export abstract class FPTraits {
 
   private readonly ExpIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
-      return this.ulpInterval(Math.exp(n), 3 + 2 * Math.abs(n));
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const ulp_error = this.kind === 'f32' ? 3 + 2 * Math.abs(n) : 1 + 2 * Math.abs(n);
+      return this.ulpInterval(Math.exp(n), ulp_error);
     },
   };
 
@@ -3232,7 +3234,9 @@ export abstract class FPTraits {
 
   private readonly Exp2IntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
-      return this.ulpInterval(Math.pow(2, n), 3 + 2 * Math.abs(n));
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const ulp_error = this.kind === 'f32' ? 3 + 2 * Math.abs(n) : 1 + 2 * Math.abs(n);
+      return this.ulpInterval(Math.pow(2, n), ulp_error);
     },
   };
 
@@ -5140,8 +5144,8 @@ class F16Traits extends FPTraits {
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
-  public readonly expInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this);
+  public readonly expInterval = this.expIntervalImpl.bind(this);
+  public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);

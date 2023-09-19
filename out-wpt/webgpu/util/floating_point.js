@@ -2508,7 +2508,9 @@ export class FPTraits {
 
   ExpIntervalOp = {
     impl: n => {
-      return this.ulpInterval(Math.exp(n), 3 + 2 * Math.abs(n));
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const ulp_error = this.kind === 'f32' ? 3 + 2 * Math.abs(n) : 1 + 2 * Math.abs(n);
+      return this.ulpInterval(Math.exp(n), ulp_error);
     },
   };
 
@@ -2520,7 +2522,9 @@ export class FPTraits {
 
   Exp2IntervalOp = {
     impl: n => {
-      return this.ulpInterval(Math.pow(2, n), 3 + 2 * Math.abs(n));
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const ulp_error = this.kind === 'f32' ? 3 + 2 * Math.abs(n) : 1 + 2 * Math.abs(n);
+      return this.ulpInterval(Math.pow(2, n), ulp_error);
     },
   };
 
@@ -4362,8 +4366,8 @@ class F16Traits extends FPTraits {
   distanceInterval = this.unimplementedDistance.bind(this);
   divisionInterval = this.divisionIntervalImpl.bind(this);
   dotInterval = this.dotIntervalImpl.bind(this);
-  expInterval = this.unimplementedScalarToInterval.bind(this);
-  exp2Interval = this.unimplementedScalarToInterval.bind(this);
+  expInterval = this.expIntervalImpl.bind(this);
+  exp2Interval = this.exp2IntervalImpl.bind(this);
   faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   floorInterval = this.floorIntervalImpl.bind(this);
   fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);

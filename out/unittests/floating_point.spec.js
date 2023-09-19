@@ -2764,55 +2764,124 @@ fn((t) => {
 
 });
 
-g.test('expInterval_f32').
-paramsSubcasesOnly(
 
-[
-{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-{ input: 0, expected: 1 },
-{ input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
-{ input: 89, expected: kUnboundedBounds }]).
+const kExpIntervalCases = {
+  f32: [
+  { input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
+  // exp(88) = 1.6516362549940018555283297962649e+38 = 0x7ef882b6/7.
+  { input: 88, expected: [reinterpretU32AsF32(0x7ef882b6), reinterpretU32AsF32(0x7ef882b7)] },
+  // exp(89) overflow f32.
+  { input: 89, expected: kUnboundedBounds }],
 
+  f16: [
+  { input: 1, expected: [kValue.f16.positive.e, kPlusOneULPFunctions['f16'](kValue.f16.positive.e)] },
+  // exp(11) = 59874.141715197818455326485792258 = 0x7b4f/0x7b50.
+  { input: 11, expected: [reinterpretU16AsF16(0x7b4f), reinterpretU16AsF16(0x7b50)] },
+  // exp(12) = 162754.79141900392080800520489849 overflow f16.
+  { input: 12, expected: kUnboundedBounds }]
+
+};
+
+g.test('expInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = p.trait;
+  const constants = FP[trait].constants();
+
+  return [
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: 0, expected: 1 },
+  ...kExpIntervalCases[trait]];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const error = (x) => {
-    const n = 3 + 2 * Math.abs(t.params.input);
-    return n * oneULPF32(x);
+    let ulp_error;
+    switch (t.params.trait) {
+      case 'f32':{
+          ulp_error = 3 + 2 * Math.abs(t.params.input);
+          break;
+        }
+      case 'f16':{
+          ulp_error = 1 + 2 * Math.abs(t.params.input);
+          break;
+        }}
+
+    return ulp_error * trait.oneULP(x);
   };
 
   t.params.expected = applyError(t.params.expected, error);
-  const expected = FP.f32.toInterval(t.params.expected);
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.expInterval(t.params.input);
 
-  const got = FP.f32.expInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
-g.test('exp2Interval_f32').
-paramsSubcasesOnly(
 
-[
-{ input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-{ input: 0, expected: 1 },
-{ input: 1, expected: 2 },
-{ input: 128, expected: kUnboundedBounds }]).
+const kExp2IntervalCases = {
+  f32: [
+  // exp2(127) = 1.7014118346046923173168730371588e+38 = 0x7f000000, 3 + 2 * 127 = 258 ulps.
+  { input: 127, expected: reinterpretU32AsF32(0x7f000000) },
+  // exp2(128) overflow f32.
+  { input: 128, expected: kUnboundedBounds }],
 
+  f16: [
+  // exp2(15) = 32768 = 0x7800, 1 + 2 * 15 = 31 ulps
+  { input: 15, expected: reinterpretU16AsF16(0x7800) },
+  // exp2(16) = 65536 overflow f16.
+  { input: 16, expected: kUnboundedBounds }]
+
+};
+
+g.test('exp2Interval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = p.trait;
+  const constants = FP[trait].constants();
+
+  return [
+  { input: constants.negative.infinity, expected: kUnboundedBounds },
+  { input: 0, expected: 1 },
+  { input: 1, expected: 2 },
+  ...kExp2IntervalCases[trait]];
+
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const error = (x) => {
-    const n = 3 + 2 * Math.abs(t.params.input);
-    return n * oneULPF32(x);
+    let ulp_error;
+    switch (t.params.trait) {
+      case 'f32':{
+          ulp_error = 3 + 2 * Math.abs(t.params.input);
+          break;
+        }
+      case 'f16':{
+          ulp_error = 1 + 2 * Math.abs(t.params.input);
+          break;
+        }}
+
+    return ulp_error * trait.oneULP(x);
   };
 
   t.params.expected = applyError(t.params.expected, error);
-  const expected = FP.f32.toInterval(t.params.expected);
+  const expected = trait.toInterval(t.params.expected);
 
-  const got = FP.f32.exp2Interval(t.params.input);
+  const got = trait.exp2Interval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`);
 
 });
 
