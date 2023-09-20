@@ -5205,7 +5205,7 @@ class F16Traits extends FPTraits {
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   cosInterval = this.cosIntervalImpl.bind(this);
   coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
-  crossInterval = this.unimplementedVectorPairToVector.bind(this, 'crossInterval');
+  crossInterval = this.crossIntervalImpl.bind(this);
   degreesInterval = this.degreesIntervalImpl.bind(this);
   determinantInterval = this.unimplementedMatrixToInterval.bind(
   this,
