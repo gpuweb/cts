@@ -3484,12 +3484,18 @@ const kSaturateIntervalCases = {
       ],
     }, // ~0.1
   ] as ScalarToIntervalCase[],
+  abstract: [
+    {
+      input: 0.1,
+      expected: 0.1,
+    }, // ~0.1
+  ] as ScalarToIntervalCase[],
 } as const;
 
 g.test('saturateInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -4906,7 +4912,7 @@ interface ScalarTripleToIntervalCase {
 g.test('clampMedianInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4964,7 +4970,7 @@ g.test('clampMedianInterval')
 g.test('clampMinMaxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
