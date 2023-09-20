@@ -5141,7 +5141,7 @@ class F16Traits extends FPTraits {
   public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(this);
-  public readonly distanceInterval = this.unimplementedDistance.bind(this);
+  public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
@@ -5152,7 +5152,7 @@ class F16Traits extends FPTraits {
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this);
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly lengthInterval = this.unimplementedLength.bind(this);
+  public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
