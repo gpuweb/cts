@@ -3483,13 +3483,19 @@ const kSaturateIntervalCases = {
     kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))]
 
   } // ~0.1
+  ],
+  abstract: [
+  {
+    input: 0.1,
+    expected: 0.1
+  } // ~0.1
   ]
 };
 
 g.test('saturateInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
