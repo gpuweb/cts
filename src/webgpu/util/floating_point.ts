@@ -4874,7 +4874,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.unimplementedScalarToInterval.bind(this, 'cosInterval');
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
-  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this, 'crossInterval');
+  public readonly crossInterval = this.crossIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
   public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
     this,
