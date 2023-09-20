@@ -4309,13 +4309,21 @@ const kMaxInterval64BitsCases = {
   { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
   { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
   { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] } // ~-0.1
-  ]
+  ],
+  abstract: [
+  { input: [0.1, 0], expected: 0.1 },
+  { input: [0, 0.1], expected: 0.1 },
+  { input: [0.1, 0.1], expected: 0.1 },
+  { input: [0.1, -0.1], expected: 0.1 },
+  { input: [-0.1, 0.1], expected: 0.1 },
+  { input: [-0.1, -0.1], expected: -0.1 }]
+
 };
 
 g.test('maxInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
