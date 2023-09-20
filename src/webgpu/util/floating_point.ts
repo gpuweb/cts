@@ -854,124 +854,138 @@ export abstract class FPTraits {
   }
 
   /** Stub for scalar to interval generator */
-  protected unimplementedScalarToInterval(_x: number | FPInterval): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedScalarToInterval(name: string, _x: number | FPInterval): FPInterval {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for scalar pair to interval generator */
   protected unimplementedScalarPairToInterval(
+    name: string,
     _x: number | FPInterval,
     _y: number | FPInterval
   ): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is yet implemented for '${this.kind}'`);
   }
 
   /** Stub for scalar triple to interval generator */
   protected unimplementedScalarTripleToInterval(
+    name: string,
     _x: number | FPInterval,
     _y: number | FPInterval,
     _z: number | FPInterval
   ): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for scalar to vector generator */
-  protected unimplementedScalarToVector(_x: number | FPInterval): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedScalarToVector(name: string, _x: number | FPInterval): FPVector {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector to interval generator */
-  protected unimplementedVectorToInterval(_x: (number | FPInterval)[]): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedVectorToInterval(name: string, _x: (number | FPInterval)[]): FPInterval {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector pair to interval generator */
   protected unimplementedVectorPairToInterval(
+    name: string,
     _x: (number | FPInterval)[],
     _y: (number | FPInterval)[]
   ): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector to vector generator */
-  protected unimplementedVectorToVector(_x: (number | FPInterval)[]): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedVectorToVector(name: string, _x: (number | FPInterval)[]): FPVector {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector pair to vector generator */
   protected unimplementedVectorPairToVector(
+    name: string,
     _x: (number | FPInterval)[],
     _y: (number | FPInterval)[]
   ): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector-scalar to vector generator */
   protected unimplementedVectorScalarToVector(
+    name: string,
     _x: (number | FPInterval)[],
     _y: number | FPInterval
   ): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for scalar-vector to vector generator */
   protected unimplementedScalarVectorToVector(
+    name: string,
     _x: number | FPInterval,
     _y: (number | FPInterval)[]
   ): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for matrix to interval generator */
-  protected unimplementedMatrixToInterval(_x: Array2D<number>): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedMatrixToInterval(name: string, _x: Array2D<number>): FPInterval {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
-  /** Stub for matrix to matix generator */
-  protected unimplementedMatrixToMatrix(_x: Array2D<number>): FPMatrix {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  /** Stub for matrix to matirx generator */
+  protected unimplementedMatrixToMatrix(name: string, _x: Array2D<number>): FPMatrix {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for matrix pair to matrix generator */
-  protected unimplementedMatrixPairToMatrix(_x: Array2D<number>, _y: Array2D<number>): FPMatrix {
-    unreachable(`Not yet implemented for ${this.kind}`);
+  protected unimplementedMatrixPairToMatrix(
+    name: string,
+    _x: Array2D<number>,
+    _y: Array2D<number>
+  ): FPMatrix {
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for matrix-scalar to matrix generator  */
   protected unimplementedMatrixScalarToMatrix(
+    name: string,
     _x: Array2D<number>,
     _y: number | FPInterval
   ): FPMatrix {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for scalar-matrix to matrix generator  */
   protected unimplementedScalarMatrixToMatrix(
+    name: string,
     _x: number | FPInterval,
     _y: Array2D<number>
   ): FPMatrix {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for matrix-vector to vector generator  */
   protected unimplementedMatrixVectorToVector(
+    name: string,
     _x: Array2D<number>,
     _y: (number | FPInterval)[]
   ): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector-matrix to vector generator  */
   protected unimplementedVectorMatrixToVector(
+    name: string,
     _x: (number | FPInterval)[],
     _y: Array2D<number>
   ): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for distance generator */
   protected unimplementedDistance(_x: number | number[], _y: number | number[]): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'distance' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for faceForward */
@@ -980,22 +994,22 @@ export abstract class FPTraits {
     _y: number[],
     _z: number[]
   ): (FPVector | undefined)[] {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'faceForward' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for length generator */
   protected unimplementedLength(_x: number | FPInterval | number[] | FPVector): FPInterval {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'length' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for modf generator */
   protected unimplementedModf(_x: number): { fract: FPInterval; whole: FPInterval } {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'modf' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for refract generator */
   protected unimplementedRefract(_i: number[], _s: number[], _r: number): FPVector {
-    unreachable(`Not yet implemented for ${this.kind}`);
+    unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
   /** Version of absoluteErrorInterval that always returns the unboundedInterval */
@@ -4834,84 +4848,140 @@ class FPAbstractTraits extends FPTraits {
 
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
-  public readonly acosInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly acosInterval = this.unimplementedScalarToInterval.bind(this, 'acosInterval');
+  public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'acoshAlternativeInterval'
+  );
+  public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'acoshPrimaryInterval'
+  );
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
-  public readonly asinInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly atanInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly atan2Interval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly ceilInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly asinInterval = this.unimplementedScalarToInterval.bind(this, 'asinInterval');
+  public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this, 'asinhInterval');
+  public readonly atanInterval = this.unimplementedScalarToInterval.bind(this, 'atanInterval');
+  public readonly atan2Interval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'atan2Interval'
+  );
+  public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
+  public readonly ceilInterval = this.unimplementedScalarToInterval.bind(this, 'ceilInterval');
+  public readonly clampMedianInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'clampMedianInterval'
+  );
+  public readonly clampMinMaxInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'clampMinMaxInterval'
+  );
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
-  public readonly cosInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly coshInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this);
+  public readonly cosInterval = this.unimplementedScalarToInterval.bind(this, 'cosInterval');
+  public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
+  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this, 'crossInterval');
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
-  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(this);
+  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
+    this,
+    'determinantInterval'
+  );
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
-  public readonly divisionInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this);
-  public readonly expInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this);
+  public readonly divisionInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'divisionInterval'
+  );
+  public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
+  public readonly expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
+  public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
-  public readonly floorInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly fractInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly floorInterval = this.unimplementedScalarToInterval.bind(this, 'floorInterval');
+  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
+  public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
+  public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'inverseSqrtInterval'
+  );
+  public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'ldexpInterval'
+  );
   public readonly lengthInterval = this.unimplementedLength.bind(this);
-  public readonly logInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly log2Interval = this.unimplementedScalarToInterval.bind(this);
-  public readonly maxInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly minInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly logInterval = this.unimplementedScalarToInterval.bind(this, 'logInterval');
+  public readonly log2Interval = this.unimplementedScalarToInterval.bind(this, 'log2Interval');
+  public readonly maxInterval = this.unimplementedScalarPairToInterval.bind(this, 'maxInterval');
+  public readonly minInterval = this.unimplementedScalarPairToInterval.bind(this, 'minInterval');
+  public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixImpreciseInterval'
+  );
+  public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixPreciseInterval'
+  );
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.unimplementedModf.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
-    this
+    this,
+    'multiplicationMatrixMatrixInterval'
   );
   public readonly multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(
-    this
+    this,
+    'multiplicationMatrixScalarInterval'
   );
   public readonly multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(
-    this
+    this,
+    'multiplicationScalarMatrixInterval'
   );
   public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
-    this
+    this,
+    'multiplicationMatrixVectorInterval'
   );
   public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
-    this
+    this,
+    'multiplicationVectorMatrixInterval'
   );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
-  public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
-  public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly quantizeToF16Interval = this.unimplementedScalarToInterval.bind(this);
+  public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
+    this,
+    'normalizeInterval'
+  );
+  public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
+  public readonly quantizeToF16Interval = this.unimplementedScalarToInterval.bind(
+    this,
+    'quantizeToF16Interval'
+  );
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
-  public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(this);
+  public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
+    this,
+    'reflectInterval'
+  );
   public readonly refractInterval = this.unimplementedRefract.bind(this);
-  public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(this);
-  public readonly roundInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly saturateInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly signInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly sinInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly stepInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'remainderInterval'
+  );
+  public readonly roundInterval = this.unimplementedScalarToInterval.bind(this, 'roundInterval');
+  public readonly saturateInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'saturateInterval'
+  );
+  public readonly signInterval = this.unimplementedScalarToInterval.bind(this, 'signInterval');
+  public readonly sinInterval = this.unimplementedScalarToInterval.bind(this, 'sinInterval');
+  public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this, 'sinhInterval');
+  public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'smoothStepInterval'
+  );
+  public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this, 'sqrtInterval');
+  public readonly stepInterval = this.unimplementedScalarPairToInterval.bind(this, 'stepInterval');
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(
     this
   );
-  public readonly tanInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly tanInterval = this.unimplementedScalarToInterval.bind(this, 'tanInterval');
+  public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
   public readonly transposeInterval = this.transposeIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
 }
@@ -5122,25 +5192,34 @@ class F16Traits extends FPTraits {
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
   public readonly acosInterval = this.acosIntervalImpl.bind(this);
-  public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'acoshAlternativeInterval'
+  );
+  public readonly acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'acoshPrimaryInterval'
+  );
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   public readonly additionInterval = this.additionIntervalImpl.bind(this);
   public readonly additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
   public readonly asinInterval = this.asinIntervalImpl.bind(this);
-  public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this, 'asinhInterval');
   public readonly atanInterval = this.atanIntervalImpl.bind(this);
   public readonly atan2Interval = this.atan2IntervalImpl.bind(this);
-  public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
   public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.cosIntervalImpl.bind(this);
-  public readonly coshInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this);
+  public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
+  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this, 'crossInterval');
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
-  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(this);
+  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
+    this,
+    'determinantInterval'
+  );
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
@@ -5148,17 +5227,26 @@ class F16Traits extends FPTraits {
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
-  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly fractInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
+  public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
-  public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'ldexpInterval'
+  );
   public readonly lengthInterval = this.unimplementedLength.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
   public readonly minInterval = this.minIntervalImpl.bind(this);
-  public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
-  public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixImpreciseInterval'
+  );
+  public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixPreciseInterval'
+  );
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.unimplementedModf.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
@@ -5178,27 +5266,36 @@ class F16Traits extends FPTraits {
     this
   );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
-  public readonly normalizeInterval = this.unimplementedVectorToVector.bind(this);
-  public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this);
+  public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
+    this,
+    'normalizeInterval'
+  );
+  public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
-  public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(this);
+  public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
+    this,
+    'reflectInterval'
+  );
   public readonly refractInterval = this.unimplementedRefract.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
-  public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(this);
+  public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this, 'sinhInterval');
+  public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'smoothStepInterval'
+  );
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(
     this
   );
-  public readonly tanInterval = this.unimplementedScalarToInterval.bind(this);
-  public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this);
+  public readonly tanInterval = this.unimplementedScalarToInterval.bind(this, 'tanInterval');
+  public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
   public readonly transposeInterval = this.transposeIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
 
