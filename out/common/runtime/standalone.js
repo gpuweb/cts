@@ -11,7 +11,7 @@ import { parseQuery } from '../internal/query/parseQuery.js';
 
 import { TestTree } from '../internal/tree.js';
 import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
-import { assert, unreachable } from '../util/util.js';
+import { unreachable } from '../util/util.js';
 
 import {
 kCTSOptionsInfo,
@@ -543,6 +543,14 @@ function createSearchQuery(queries, params) {
   return `?${params}${params ? '&' : ''}${queries.map((q) => 'q=' + q).join('&')}`;
 }
 
+/**
+ * Show an info message on the page.
+ * @param msg Message to show
+ */
+function showInfo(msg) {
+  $('#info')[0].textContent = msg;
+}
+
 void (async () => {
   const loader = new DefaultTestFileLoader();
 
@@ -609,26 +617,37 @@ void (async () => {
   };
   addOptionsToPage(options, kStandaloneOptionsInfos);
 
-  assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const rootQuery = parseQuery(qs[0]);
+  if (qs.length !== 1) {
+    showInfo('currently, there must be exactly one ?q=');
+    return;
+  }
+
+  let rootQuery;
+  try {
+    rootQuery = parseQuery(qs[0]);
+  } catch (e) {
+    showInfo(e.toString());
+    return;
+  }
+
   if (rootQuery.level > lastQueryLevelToExpand) {
     lastQueryLevelToExpand = rootQuery.level;
   }
   loader.addEventListener('import', (ev) => {
-    $('#info')[0].textContent = `loading: ${ev.data.url}`;
+    showInfo(`loading: ${ev.data.url}`);
   });
   loader.addEventListener('imported', (ev) => {
-    $('#info')[0].textContent = `imported: ${ev.data.url}`;
+    showInfo(`imported: ${ev.data.url}`);
   });
   loader.addEventListener('finish', () => {
-    $('#info')[0].textContent = '';
+    showInfo('');
   });
 
   let tree;
   try {
     tree = await loader.loadTree(rootQuery);
   } catch (err) {
-    $('#info')[0].textContent = err.toString();
+    showInfo(err.toString());
     return;
   }
 
