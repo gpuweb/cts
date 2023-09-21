@@ -5211,7 +5211,7 @@ class F16Traits extends FPTraits {
     this,
     'determinantInterval'
   );
-  public readonly distanceInterval = this.unimplementedDistance.bind(this);
+  public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
   public readonly expInterval = this.expIntervalImpl.bind(this);
@@ -5225,7 +5225,7 @@ class F16Traits extends FPTraits {
     this,
     'ldexpInterval'
   );
-  public readonly lengthInterval = this.unimplementedLength.bind(this);
+  public readonly lengthInterval = this.lengthIntervalImpl.bind(this);
   public readonly logInterval = this.logIntervalImpl.bind(this);
   public readonly log2Interval = this.log2IntervalImpl.bind(this);
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
