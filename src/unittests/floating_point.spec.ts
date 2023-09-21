@@ -3513,12 +3513,18 @@ const kSaturateIntervalCases = {
       ],
     }, // ~0.1
   ] as ScalarToIntervalCase[],
+  abstract: [
+    {
+      input: 0.1,
+      expected: 0.1,
+    }, // ~0.1
+  ] as ScalarToIntervalCase[],
 } as const;
 
 g.test('saturateInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -4344,12 +4350,20 @@ const kMaxInterval64BitsCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
     { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    { input: [0.1, 0], expected: 0.1 },
+    { input: [0, 0.1], expected: 0.1 },
+    { input: [0.1, 0.1], expected: 0.1 },
+    { input: [0.1, -0.1], expected: 0.1 },
+    { input: [-0.1, 0.1], expected: 0.1 },
+    { input: [-0.1, -0.1], expected: -0.1 },
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('maxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4427,12 +4441,20 @@ const kMinInterval64BitsCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
     { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    { input: [-0.1, 0], expected: -0.1 },
+    { input: [0, -0.1], expected: -0.1 },
+    { input: [0.1, 0.1], expected: 0.1 },
+    { input: [0.1, -0.1], expected: -0.1 },
+    { input: [-0.1, 0.1], expected: -0.1 },
+    { input: [-0.1, -0.1], expected: -0.1 },
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('minInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4924,7 +4946,7 @@ interface ScalarTripleToIntervalCase {
 g.test('clampMedianInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4982,7 +5004,7 @@ g.test('clampMedianInterval')
 g.test('clampMinMaxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5802,45 +5824,106 @@ interface VectorPairToVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('crossInterval_f32')
-  .paramsSubcasesOnly<VectorPairToVectorCase>(
-    // prettier-ignore
-    [
-      // parallel vectors, AXB == 0
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[kValue.f32.subnormal.positive.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+// prettier-ignore
+const kCrossIntervalCases = {
+  f32: [
+    { input: [
+        [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
+        [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]
+      ],
+      expected: [
+        [0.0, reinterpretU32AsF32(0x00000002)], // ~0
+        [0.0, reinterpretU32AsF32(0x00000002)], // ~0
+        [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] // ~0
+      ]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)], // ~0.02
+        [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)], // ~0.02
+        [reinterpretU32AsF32(0xb1400000), reinterpretU32AsF32(0x31400000)], // ~0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+  f16: [
+    { input: [
+        [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, kValue.f16.subnormal.negative.min],
+        [kValue.f16.subnormal.negative.min, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.negative.max]
+      ],
+      expected: [
+        [0.0, reinterpretU16AsF16(0x0002)], // ~0
+        [0.0, reinterpretU16AsF16(0x0002)], // ~0
+        [kValue.f16.subnormal.negative.max, kValue.f16.subnormal.positive.min] // ~0
+      ]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        [reinterpretU16AsF16(0x251e), reinterpretU16AsF16(0x2520)], // ~0.02
+        [reinterpretU16AsF16(0x251e), reinterpretU16AsF16(0x2520)], // ~0.02
+        [reinterpretU16AsF16(0x8100), reinterpretU16AsF16(0x0100)] // ~0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+  abstract: [
+    { input: [
+        [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.negative.max, kValue.f64.subnormal.negative.min],
+        [kValue.f64.subnormal.negative.min, kValue.f64.subnormal.positive.min, kValue.f64.subnormal.negative.max]
+      ],
+      expected: [0.0, 0.0, 0.0]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
+        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
+        0.0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+} as const;
 
-      // non-parallel vectors, AXB != 0
-      // f32 normals
-      { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
-      { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
+g.test('crossInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorPairToVectorCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // parallel vectors, AXB == 0
+          { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[constants.positive.subnormal.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
 
-      // f64 normals
-      { input: [[0.1, -0.1, -0.1], [-0.1, 0.1, -0.1]],
-        expected: [[reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
-          [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
-          [reinterpretU32AsF32(0xb1400000), reinterpretU32AsF32(0x31400000)]] },  // ~0
-
-      // f32 subnormals
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
-          [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]],
-        expected: [[0.0, reinterpretU32AsF32(0x00000002)],  // ~0
-          [0.0, reinterpretU32AsF32(0x00000002)],  // ~0
-          [reinterpretU32AsF32(0x80000001), reinterpretU32AsF32(0x00000001)]] },  // ~0
-    ]
+          // non-parallel vectors, AXB != 0
+          { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
+          { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
+          ...kCrossIntervalCases[p.trait],
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = FP.f32.toVector(t.params.expected);
-    const got = FP.f32.crossInterval(x, y);
+    const trait = FP[t.params.trait];
+    const expected = trait.toVector(t.params.expected);
+    const got = trait.crossInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
     );
   });
 
