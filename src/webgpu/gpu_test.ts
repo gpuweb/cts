@@ -11,14 +11,16 @@ import {
 import { globalTestConfig } from '../common/framework/test_config.js';
 import {
   assert,
+  makeSpecValue,
   memcpy,
   range,
+  SpecValue,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
 } from '../common/util/util.js';
 
-import { kQueryTypeInfo } from './capability_info.js';
+import { getDefaultLimits, kLimits, kQueryTypeInfo } from './capability_info.js';
 import {
   kTextureFormatInfo,
   kEncodableTextureFormats,
@@ -117,6 +119,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     return globalTestConfig.compatibility;
   }
 
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
   /**
    * Some tests or cases need particular feature flags or limits to be enabled.
    * Call this function with a descriptor or feature name (or `undefined`) to select a
@@ -200,6 +206,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     throw new SkipTestCase(msg);
   }
 
+  /** Throws an exception making the subcase as skipped if condition is true */
+  skipIf(cond: boolean, msg: string = '') {
+    if (cond) {
+      this.skip(msg);
+    }
+  }
+
   /**
    * Skips test if any format is not supported.
    */
@@ -261,6 +274,18 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
+  getDefaultLimit(limit: typeof kLimits[number]) {
+    return this.getDefaultLimits()[limit].default;
+  }
+
+  makeSpecValue(limit: typeof kLimits[number], spec: SpecValue) {
+    return makeSpecValue(this.device.limits[limit], spec);
   }
 
   canCallCopyTextureToBufferWithTextureFormat(format: GPUTextureFormat) {

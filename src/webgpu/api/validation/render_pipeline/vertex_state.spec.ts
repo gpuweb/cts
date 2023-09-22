@@ -3,13 +3,8 @@ This test dedicatedly tests validation of GPUVertexState of createRenderPipeline
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import {
-  kMaxVertexAttributes,
-  kMaxVertexBufferArrayStride,
-  kMaxVertexBuffers,
-  kVertexFormats,
-  kVertexFormatInfo,
-} from '../../../capability_info.js';
+import { filterUniqueSpecValues, makeSpecValue } from '../../../../common/util/util.js';
+import { kVertexFormats, kVertexFormatInfo } from '../../../capability_info.js';
 import { ValidationTest } from '../validation_test.js';
 
 const VERTEX_SHADER_CODE_WITH_NO_INPUT = `
@@ -149,12 +144,17 @@ g.test('max_vertex_buffer_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('count', [0, 1, kMaxVertexBuffers, kMaxVertexBuffers + 1])
+      .combine('countSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: 0 },
+        { mult: 1, add: 1 },
+      ])
       .combine('lastEmpty', [false, true])
   )
   .fn(t => {
-    const { count, lastEmpty } = t.params;
-
+    const { countSpec, lastEmpty } = t.params;
+    const count = t.makeSpecValue('maxVertexBuffers', countSpec);
     const vertexBuffers = [];
     for (let i = 0; i < count; i++) {
       if (lastEmpty || i !== count - 1) {
@@ -167,7 +167,7 @@ g.test('max_vertex_buffer_limit')
       }
     }
 
-    const success = count <= kMaxVertexBuffers;
+    const success = count <= t.device.limits.maxVertexBuffers;
     t.testVertexState(success, vertexBuffers);
   });
 
@@ -179,11 +179,17 @@ g.test('max_vertex_attribute_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('attribCount', [0, 1, kMaxVertexAttributes, kMaxVertexAttributes + 1])
+      .combine('attribCountSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: 0 },
+        { mult: 1, add: 1 },
+      ])
       .combine('attribsPerBuffer', [0, 1, 4])
   )
   .fn(t => {
-    const { attribCount, attribsPerBuffer } = t.params;
+    const { attribCountSpec, attribsPerBuffer } = t.params;
+    const attribCount = t.makeSpecValue('maxVertexAttributes', attribCountSpec);
 
     const vertexBuffers = [];
 
@@ -191,7 +197,7 @@ g.test('max_vertex_attribute_limit')
     while (attribsAdded !== attribCount) {
       // Choose how many attributes to add for this buffer. The last buffer gets all remaining attributes.
       let targetCount = Math.min(attribCount, attribsAdded + attribsPerBuffer);
-      if (vertexBuffers.length === kMaxVertexBuffers - 1) {
+      if (vertexBuffers.length === t.device.limits.maxVertexBuffers - 1) {
         targetCount = attribCount;
       }
 
@@ -204,7 +210,7 @@ g.test('max_vertex_attribute_limit')
       vertexBuffers.push({ arrayStride: 0, attributes });
     }
 
-    const success = attribCount <= kMaxVertexAttributes;
+    const success = attribCount <= t.device.limits.maxVertexAttributes;
     t.testVertexState(success, vertexBuffers);
   });
 
@@ -216,23 +222,28 @@ g.test('max_vertex_buffer_array_stride_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('arrayStride', [
-        0,
-        4,
-        256,
-        kMaxVertexBufferArrayStride - 4,
-        kMaxVertexBufferArrayStride,
-        kMaxVertexBufferArrayStride + 4,
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('arrayStrideSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 4 },
+        { mult: 0, add: 256 },
+        { mult: 1, add: -4 },
+        { mult: 1, add: 0 },
+        { mult: 1, add: +4 },
       ])
   )
   .fn(t => {
-    const { vertexBufferIndex, arrayStride } = t.params;
-
+    const { vertexBufferIndexSpec, arrayStrideSpec } = t.params;
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const arrayStride = t.makeSpecValue('maxVertexBufferArrayStride', arrayStrideSpec);
     const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride, attributes: [] };
 
-    const success = arrayStride <= kMaxVertexBufferArrayStride;
+    const success = arrayStride <= t.device.limits.maxVertexBufferArrayStride;
     t.testVertexState(success, vertexBuffers);
   });
 
@@ -244,19 +255,25 @@ g.test('vertex_buffer_array_stride_limit_alignment')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('arrayStride', [
-        0,
-        1,
-        2,
-        4,
-        kMaxVertexBufferArrayStride - 4,
-        kMaxVertexBufferArrayStride - 2,
-        kMaxVertexBufferArrayStride,
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('arrayStrideSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 0, add: 2 },
+        { mult: 0, add: 4 },
+        { mult: 1, add: -4 },
+        { mult: 1, add: -2 },
+        { mult: 1, add: 0 },
       ])
   )
   .fn(t => {
-    const { vertexBufferIndex, arrayStride } = t.params;
+    const { vertexBufferIndexSpec, arrayStrideSpec } = t.params;
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const arrayStride = t.makeSpecValue('maxVertexBufferArrayStride', arrayStrideSpec);
 
     const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride, attributes: [] };
@@ -274,18 +291,34 @@ g.test('vertex_attribute_shaderLocation_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1])
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('extraAttributeCountSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
       .combine('testAttributeAtStart', [false, true])
-      .combine('testShaderLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes])
+      .combine('testShaderLocationSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+        { mult: 1, add: 0 },
+      ])
   )
   .fn(t => {
     const {
-      vertexBufferIndex,
-      extraAttributeCount,
-      testShaderLocation,
+      vertexBufferIndexSpec,
+      extraAttributeCountSpec,
+      testShaderLocationSpec,
       testAttributeAtStart,
     } = t.params;
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const extraAttributeCount = t.makeSpecValue('maxVertexAttributes', extraAttributeCountSpec);
+    const testShaderLocation = t.makeSpecValue('maxVertexAttributes', testShaderLocationSpec);
 
     const attributes: GPUVertexAttribute[] = [];
     addTestAttributes(attributes, {
@@ -298,7 +331,7 @@ g.test('vertex_attribute_shaderLocation_limit')
     const vertexBuffers = [];
     vertexBuffers[vertexBufferIndex] = { arrayStride: 256, attributes };
 
-    const success = testShaderLocation < kMaxVertexAttributes;
+    const success = testShaderLocation < t.device.limits.maxVertexAttributes;
     t.testVertexState(success, vertexBuffers);
   });
 
@@ -311,24 +344,46 @@ g.test('vertex_attribute_shaderLocation_unique')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('vertexBufferIndexA', [0, 1, kMaxVertexBuffers - 1])
-      .combine('vertexBufferIndexB', [0, 1, kMaxVertexBuffers - 1])
+      .combine('vertexBufferIndexASpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('vertexBufferIndexBSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
       .combine('testAttributeAtStartA', [false, true])
       .combine('testAttributeAtStartB', [false, true])
-      .combine('shaderLocationA', [0, 1, 7, kMaxVertexAttributes - 1])
-      .combine('shaderLocationB', [0, 1, 7, kMaxVertexAttributes - 1])
+      .combine('shaderLocationASpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 0, add: 7 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('shaderLocationBSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 0, add: 7 },
+        { mult: 1, add: -1 },
+      ])
       .combine('extraAttributeCount', [0, 4])
   )
   .fn(t => {
     const {
-      vertexBufferIndexA,
-      vertexBufferIndexB,
+      vertexBufferIndexASpec,
+      vertexBufferIndexBSpec,
       testAttributeAtStartA,
       testAttributeAtStartB,
-      shaderLocationA,
-      shaderLocationB,
+      shaderLocationASpec,
+      shaderLocationBSpec,
       extraAttributeCount,
     } = t.params;
+    const vertexBufferIndexA = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexASpec);
+    const vertexBufferIndexB = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexBSpec);
+    const shaderLocationA = t.makeSpecValue('maxVertexAttributes', shaderLocationASpec);
+    const shaderLocationB = t.makeSpecValue('maxVertexAttributes', shaderLocationBSpec);
 
     // Depending on the params, the vertexBuffer for A and B can be the same or different. To support
     // both cases without code changes we treat `vertexBufferAttributes` as a map from indices to
@@ -374,10 +429,17 @@ g.test('vertex_shader_input_location_limit')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('testLocation', [0, 1, kMaxVertexAttributes - 1, kMaxVertexAttributes, 2 ** 31 - 1])
+      .combine('testLocationSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+        { mult: 1, add: 0 },
+        { mult: 0, add: 2 ** 31 - 1 },
+      ])
   )
   .fn(t => {
-    const { testLocation } = t.params;
+    const { testLocationSpec } = t.params;
+    const testLocation = t.makeSpecValue('maxVertexAttributes', testLocationSpec);
 
     const shader = t.generateTestVertexShader([
       {
@@ -399,7 +461,7 @@ g.test('vertex_shader_input_location_limit')
       },
     ];
 
-    const success = testLocation < kMaxVertexAttributes;
+    const success = testLocation < t.device.limits.maxVertexAttributes;
     t.testVertexState(success, vertexBuffers, shader);
   });
 
@@ -411,18 +473,35 @@ g.test('vertex_shader_input_location_in_vertex_state')
   )
   .paramsSubcasesOnly(u =>
     u //
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1])
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('extraAttributeCountSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
       .combine('testAttributeAtStart', [false, true])
-      .combine('testShaderLocation', [0, 1, 4, 7, kMaxVertexAttributes - 1])
+      .combine('testShaderLocationSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 0, add: 4 },
+        { mult: 0, add: 5 },
+        { mult: 1, add: -1 },
+      ])
   )
   .fn(t => {
     const {
-      vertexBufferIndex,
-      extraAttributeCount,
+      vertexBufferIndexSpec,
+      extraAttributeCountSpec,
       testAttributeAtStart,
-      testShaderLocation,
+      testShaderLocationSpec,
     } = t.params;
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const extraAttributeCount = t.makeSpecValue('maxVertexAttributes', extraAttributeCountSpec);
+    const testShaderLocation = t.makeSpecValue('maxVertexAttributes', testShaderLocationSpec);
     // We have a shader using `testShaderLocation`.
     const shader = t.generateTestVertexShader([
       {
@@ -512,37 +591,51 @@ g.test('vertex_attribute_offset_alignment')
   .params(u =>
     u
       .combine('format', kVertexFormats)
-      .combine('arrayStride', [256, kMaxVertexBufferArrayStride])
-      .expand('offset', p => {
+      .combine('arrayStrideSpec', [
+        { mult: 0, add: 256 },
+        { mult: 1, add: 0 },
+      ])
+      .expand('offsetSpec', p => {
         const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
         const formatSize = bytesPerComponent * componentCount;
-
-        return new Set([
-          0,
-          Math.floor(formatSize / 2),
-          formatSize,
-          2,
-          4,
-          p.arrayStride - formatSize,
-          p.arrayStride - formatSize - Math.floor(formatSize / 2),
-          p.arrayStride - formatSize - 4,
-          p.arrayStride - formatSize - 2,
+        return filterUniqueSpecValues([
+          { mult: 0, add: 0 },
+          { mult: 0, add: Math.floor(formatSize / 2) },
+          { mult: 0, add: formatSize },
+          { mult: 0, add: 2 },
+          { mult: 0, add: 4 },
+          { mult: 1, add: -formatSize },
+          { mult: 1, add: -formatSize - Math.floor(formatSize / 2) },
+          { mult: 1, add: -formatSize - 4 },
+          { mult: 1, add: -formatSize - 2 },
         ]);
       })
       .beginSubcases()
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1])
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('extraAttributeCountSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
       .combine('testAttributeAtStart', [false, true])
   )
   .fn(t => {
     const {
       format,
-      arrayStride,
-      offset,
-      vertexBufferIndex,
-      extraAttributeCount,
+      arrayStrideSpec,
+      offsetSpec,
+      vertexBufferIndexSpec,
+      extraAttributeCountSpec,
       testAttributeAtStart,
     } = t.params;
+    const arrayStride = t.makeSpecValue('maxVertexBufferArrayStride', arrayStrideSpec);
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const extraAttributeCount = t.makeSpecValue('maxVertexAttributes', extraAttributeCountSpec);
+    const offset = makeSpecValue(arrayStride, offsetSpec);
 
     const attributes: GPUVertexAttribute[] = [];
     addTestAttributes(attributes, {
@@ -575,46 +668,57 @@ g.test('vertex_attribute_contained_in_stride')
     u
       .combine('format', kVertexFormats)
       .beginSubcases()
-      .combine('arrayStride', [
-        0,
-        256,
-        kMaxVertexBufferArrayStride - 4,
-        kMaxVertexBufferArrayStride,
+      .combine('arrayStrideSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 256 },
+        { mult: 1, add: -4 },
+        { mult: 1, add: 0 },
       ])
-      .expand('offset', function* (p) {
+      .expand('offsetSpec', function* (p) {
         // Compute a bunch of test offsets to test.
         const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
         const formatSize = bytesPerComponent * componentCount;
-        yield 0;
-        yield 4;
-
-        // arrayStride = 0 is a special case because for the offset validation it acts the same
-        // as arrayStride = kMaxVertexBufferArrayStride. We special case here so as to avoid adding
-        // negative offsets that would cause an IDL exception to be thrown instead of a validation
-        // error.
-        const stride = p.arrayStride !== 0 ? p.arrayStride : kMaxVertexBufferArrayStride;
-        yield stride - formatSize;
-        yield stride - formatSize + 4;
+        yield { mult: 0, add: 0 };
+        yield { mult: 0, add: 4 };
+        yield { mult: 1, add: -formatSize };
+        yield { mult: 1, add: -formatSize + 4 };
 
         // Avoid adding duplicate cases when formatSize == 4 (it is already tested above)
         if (formatSize !== 4) {
-          yield formatSize;
-          yield stride;
+          yield { mult: 0, add: formatSize };
+          yield { mult: 1, add: 0 };
         }
       })
-      .combine('vertexBufferIndex', [0, 1, kMaxVertexBuffers - 1])
-      .combine('extraAttributeCount', [0, 1, kMaxVertexAttributes - 1])
+      .combine('vertexBufferIndexSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
+      .combine('extraAttributeCountSpec', [
+        { mult: 0, add: 0 },
+        { mult: 0, add: 1 },
+        { mult: 1, add: -1 },
+      ])
       .combine('testAttributeAtStart', [false, true])
   )
   .fn(t => {
     const {
       format,
-      arrayStride,
-      offset,
-      vertexBufferIndex,
-      extraAttributeCount,
+      arrayStrideSpec,
+      offsetSpec,
+      vertexBufferIndexSpec,
+      extraAttributeCountSpec,
       testAttributeAtStart,
     } = t.params;
+    const arrayStride = t.makeSpecValue('maxVertexBufferArrayStride', arrayStrideSpec);
+    const vertexBufferIndex = t.makeSpecValue('maxVertexBuffers', vertexBufferIndexSpec);
+    const extraAttributeCount = t.makeSpecValue('maxVertexAttributes', extraAttributeCountSpec);
+    // arrayStride = 0 is a special case because for the offset validation it acts the same
+    // as arrayStride = device.limits.maxVertexBufferArrayStride. We special case here so as to avoid adding
+    // negative offsets that would cause an IDL exception to be thrown instead of a validation
+    // error.
+    const stride = arrayStride !== 0 ? arrayStride : t.device.limits.maxVertexBufferArrayStride;
+    const offset = makeSpecValue(stride, offsetSpec);
 
     const attributes: GPUVertexAttribute[] = [];
     addTestAttributes(attributes, {
@@ -629,7 +733,7 @@ g.test('vertex_attribute_contained_in_stride')
 
     const formatInfo = kVertexFormatInfo[format];
     const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
-    const limit = arrayStride === 0 ? kMaxVertexBufferArrayStride : arrayStride;
+    const limit = arrayStride === 0 ? t.device.limits.maxVertexBufferArrayStride : arrayStride;
 
     const success = offset + formatSize <= limit;
     t.testVertexState(success, vertexBuffers);
@@ -641,7 +745,7 @@ g.test('many_attributes_overlapping')
     // Create many attributes, each of them intersects with at least 3 others.
     const attributes = [];
     const formats = ['float32x4', 'uint32x4', 'sint32x4'] as const;
-    for (let i = 0; i < kMaxVertexAttributes; i++) {
+    for (let i = 0; i < t.device.limits.maxVertexAttributes; i++) {
       attributes.push({ format: formats[i % 3], offset: i * 4, shaderLocation: i } as const);
     }
 
