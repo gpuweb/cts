@@ -1346,7 +1346,7 @@
   "webgpu:shader,execution,expression,call,builtin,storageBarrier:barrier:*": { "subcaseMS": 0.801 },
   "webgpu:shader,execution,expression,call,builtin,storageBarrier:stage:*": { "subcaseMS": 2.402 },
   "webgpu:shader,execution,expression,call,builtin,tan:abstract_float:*": { "subcaseMS": 31.007 },
-  "webgpu:shader,execution,expression,call,builtin,tan:f16:*": { "subcaseMS": 31.306 },
+  "webgpu:shader,execution,expression,call,builtin,tan:f16:*": { "subcaseMS": 116.157 },
   "webgpu:shader,execution,expression,call,builtin,tan:f32:*": { "subcaseMS": 13.532 },
   "webgpu:shader,execution,expression,call,builtin,tanh:abstract_float:*": { "subcaseMS": 18.406 },
   "webgpu:shader,execution,expression,call,builtin,tanh:f16:*": { "subcaseMS": 25.211 },
