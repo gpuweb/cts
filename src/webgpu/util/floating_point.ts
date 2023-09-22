@@ -5261,7 +5261,7 @@ class F16Traits extends FPTraits {
     this,
     'normalizeInterval'
   );
-  public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
+  public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
   public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
