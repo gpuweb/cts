@@ -286,6 +286,7 @@
   "webgpu:api,validation,capability_checks,limits,maxColorAttachments:createRenderBundle,at_over:*": { "subcaseMS": 12.681 },
   "webgpu:api,validation,capability_checks,limits,maxColorAttachments:createRenderPipeline,at_over:*": { "subcaseMS": 10.450 },
   "webgpu:api,validation,capability_checks,limits,maxColorAttachments:validate,maxColorAttachmentBytesPerSample:*": { "subcaseMS": 1.101 },
+  "webgpu:api,validation,capability_checks,limits,maxColorAttachments:validate,kMaxColorAttachmentsToTest:*": { "subcaseMS": 1.101 },
   "webgpu:api,validation,capability_checks,limits,maxComputeInvocationsPerWorkgroup:createComputePipeline,at_over:*": { "subcaseMS": 13.735 },
   "webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeX:createComputePipeline,at_over:*": { "subcaseMS": 14.465 },
   "webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeY:createComputePipeline,at_over:*": { "subcaseMS": 14.131 },
