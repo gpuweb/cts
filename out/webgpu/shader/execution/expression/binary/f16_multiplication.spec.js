@@ -22,119 +22,53 @@ const multiplicationScalarVectorInterval = (s, v) => {
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('binary/f16_multiplication', {
-  scalar_const: () => {
+const scalar_cases = [true, false].
+map((nonConst) => ({
+  [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateScalarPairToIntervalCases(
     sparseF16Range(),
     sparseF16Range(),
-    'finite',
+    nonConst ? 'unfiltered' : 'finite',
     FP.f16.multiplicationInterval);
 
-  },
-  scalar_non_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-    sparseF16Range(),
-    sparseF16Range(),
-    'unfiltered',
-    FP.f16.multiplicationInterval);
+  }
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
 
-  },
-  vec2_scalar_const: () => {
+const vector_scalar_cases = [2, 3, 4].
+flatMap((dim) =>
+[true, false].map((nonConst) => ({
+  [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(2),
+    sparseVectorF16Range(dim),
     sparseF16Range(),
-    'finite',
+    nonConst ? 'unfiltered' : 'finite',
     multiplicationVectorScalarInterval);
 
-  },
-  vec2_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(2),
-    sparseF16Range(),
-    'unfiltered',
-    multiplicationVectorScalarInterval);
+  }
+}))).
 
-  },
-  vec3_scalar_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(3),
-    sparseF16Range(),
-    'finite',
-    multiplicationVectorScalarInterval);
+reduce((a, b) => ({ ...a, ...b }), {});
 
-  },
-  vec3_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(3),
-    sparseF16Range(),
-    'unfiltered',
-    multiplicationVectorScalarInterval);
-
-  },
-  vec4_scalar_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(4),
-    sparseF16Range(),
-    'finite',
-    multiplicationVectorScalarInterval);
-
-  },
-  vec4_scalar_non_const: () => {
-    return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(4),
-    sparseF16Range(),
-    'unfiltered',
-    multiplicationVectorScalarInterval);
-
-  },
-  scalar_vec2_const: () => {
+const scalar_vector_cases = [2, 3, 4].
+flatMap((dim) =>
+[true, false].map((nonConst) => ({
+  [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateScalarVectorToVectorCases(
     sparseF16Range(),
-    sparseVectorF16Range(2),
-    'finite',
-    multiplicationScalarVectorInterval);
-
-  },
-  scalar_vec2_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(2),
-    'unfiltered',
-    multiplicationScalarVectorInterval);
-
-  },
-  scalar_vec3_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(3),
-    'finite',
-    multiplicationScalarVectorInterval);
-
-  },
-  scalar_vec3_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(3),
-    'unfiltered',
-    multiplicationScalarVectorInterval);
-
-  },
-  scalar_vec4_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(4),
-    'finite',
-    multiplicationScalarVectorInterval);
-
-  },
-  scalar_vec4_non_const: () => {
-    return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(4),
-    'unfiltered',
+    sparseVectorF16Range(dim),
+    nonConst ? 'unfiltered' : 'finite',
     multiplicationScalarVectorInterval);
 
   }
+}))).
+
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('binary/f16_multiplication', {
+  ...scalar_cases,
+  ...vector_scalar_cases,
+  ...scalar_vector_cases
 });
 
 g.test('scalar').

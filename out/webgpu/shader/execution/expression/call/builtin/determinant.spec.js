@@ -64,49 +64,23 @@ const kDeterminantMatrixF32Values = {
 
 };
 
-export const d = makeCaseCache('determinant', {
-  f32_mat2x2_const: () => {
+// Cases: f32_matDxD_[non_]const
+const f32_cases = [2, 3, 4].
+flatMap((dim) =>
+[true, false].map((nonConst) => ({
+  [`f32_mat${dim}x${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[2],
-    'finite',
-    FP.f32.determinantInterval);
-
-  },
-  f32_mat2x2_non_const: () => {
-    return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[2],
-    'unfiltered',
-    FP.f32.determinantInterval);
-
-  },
-  f32_mat3x3_const: () => {
-    return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[3],
-    'finite',
-    FP.f32.determinantInterval);
-
-  },
-  f32_mat3x3_non_const: () => {
-    return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[3],
-    'unfiltered',
-    FP.f32.determinantInterval);
-
-  },
-  f32_mat4x4_const: () => {
-    return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[4],
-    'finite',
-    FP.f32.determinantInterval);
-
-  },
-  f32_mat4x4_non_const: () => {
-    return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixF32Values[4],
-    'unfiltered',
+    kDeterminantMatrixF32Values[dim],
+    nonConst ? 'unfiltered' : 'finite',
     FP.f32.determinantInterval);
 
   }
+}))).
+
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('determinant', {
+  ...f32_cases
 });
 
 g.test('abstract_float').

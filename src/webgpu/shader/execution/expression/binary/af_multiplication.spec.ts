@@ -22,8 +22,8 @@ const multiplicationScalarVectorInterval = (s: number, v: number[]): FPVector =>
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('abstractBinary/af_multiplication', {
-  scalar: () => {
+const scalar_cases = {
+  ['scalar']: () => {
     return FP.abstract.generateScalarPairToIntervalCases(
       sparseF64Range(),
       sparseF64Range(),
@@ -31,54 +31,38 @@ export const d = makeCaseCache('abstractBinary/af_multiplication', {
       FP.abstract.multiplicationInterval
     );
   },
-  vec2_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(2),
-      sparseF64Range(),
-      'finite',
-      multiplicationVectorScalarInterval
-    );
-  },
-  vec3_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(3),
-      sparseF64Range(),
-      'finite',
-      multiplicationVectorScalarInterval
-    );
-  },
-  vec4_scalar: () => {
-    return FP.abstract.generateVectorScalarToVectorCases(
-      sparseVectorF64Range(4),
-      sparseF64Range(),
-      'finite',
-      multiplicationVectorScalarInterval
-    );
-  },
-  scalar_vec2: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(2),
-      'finite',
-      multiplicationScalarVectorInterval
-    );
-  },
-  scalar_vec3: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(3),
-      'finite',
-      multiplicationScalarVectorInterval
-    );
-  },
-  scalar_vec4: () => {
-    return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
-      sparseVectorF64Range(4),
-      'finite',
-      multiplicationScalarVectorInterval
-    );
-  },
+};
+
+const vector_scalar_cases = ([2, 3, 4] as const)
+  .map(dim => ({
+    [`vec${dim}_scalar`]: () => {
+      return FP.abstract.generateVectorScalarToVectorCases(
+        sparseVectorF64Range(dim),
+        sparseF64Range(),
+        'finite',
+        multiplicationVectorScalarInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const scalar_vector_cases = ([2, 3, 4] as const)
+  .map(dim => ({
+    [`scalar_vec${dim}`]: () => {
+      return FP.abstract.generateScalarVectorToVectorCases(
+        sparseF64Range(),
+        sparseVectorF64Range(dim),
+        'finite',
+        multiplicationScalarVectorInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('binary/af_multiplication', {
+  ...scalar_cases,
+  ...vector_scalar_cases,
+  ...scalar_vector_cases,
 });
 
 g.test('scalar')
