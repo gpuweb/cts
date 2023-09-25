@@ -61,9 +61,9 @@ export function makeTable<
  *
  * ```
  * const t = makeTableWithDefaults(
- *   'c',                    // defaultName
- *   ['a', 'default', 'd'],  // members
- *   ['a', 'b', 'c', 'd'],   // dataMembers
+ *   { c: 'default' },       // columnRenames
+ *   ['a', 'default', 'd'],  // columnsKept
+ *   ['a', 'b', 'c', 'd'],   // columns
  *   [123, 456, 789, 1011],  // defaults
  *   {                       // table
  *     foo: [1, 2, 3, 4],
@@ -79,21 +79,31 @@ export function makeTable<
  * // };
  * ```
  *
- * @param defaultName the name of the column in the table that will be assigned to the 'default' property of each entry.
- * @param members the names of properties you want in the generated lookup table. This must be a subset of the columns of the tables except for the name 'default' which is looked from the previous argument.
- * @param dataMembers the names of the columns of the name
+ * MAINTENANCE_TODO: `ZipKeysWithValues<Members, Table[k], Defaults>` is incorrect
+ * because Members no longer maps to Table[k]. It's not clear if this is even possible to fix
+ * because it requires mapping, not zipping. Maybe passing in a index mapping
+ * would fix it (which is gross) but if you have columnsKept as [0, 2, 3] then maybe it would
+ * be possible to generate the correct type? I don't think we can generate the map at compile time
+ * so we'd have to hand code it. Other ideas, don't generate kLimitsInfoCore and kLimitsInfoCompat
+ * where they are keys of infos. Instead, generate kLimitsInfoCoreDefaults, kLimitsInfoCoreMaximums,
+ * kLimitsInfoCoreClasses where each is just a `{[k: string]: type}`. Could zip those after or,
+ * maybe that suggests passing in the hard coded indices would work.
+ *
+ * @param columnRenames the name of the column in the table that will be assigned to the 'default' property of each entry.
+ * @param columnsKept the names of properties you want in the generated lookup table. This must be a subset of the columns of the tables except for the name 'default' which is looked from the previous argument.
+ * @param columns the names of the columns of the name
  * @param defaults the default value by column for any element in a row of the table that is undefined
  * @param table named table rows.
  */
-export function makeTableWithDefaults<
+export function makeTableRenameAndFilter<
   Members extends readonly string[],
   DataMembers extends readonly string[],
   Defaults extends readonly unknown[],
   Table extends { readonly [k: string]: readonly unknown[] }
 >(
-  defaultName: string,
-  members: Members,
-  dataMembers: DataMembers,
+  columnRenames: { [key: string]: string },
+  columnsKept: Members,
+  columns: DataMembers,
   defaults: Defaults,
   table: Table
 ): {
@@ -101,11 +111,14 @@ export function makeTableWithDefaults<
 } {
   const result: { [k: string]: { [m: string]: unknown } } = {};
   const keyToIndex = new Map<string, number>(
-    members.map(name => [name, dataMembers.indexOf(name === 'default' ? defaultName : name)])
+    columnsKept.map(name => {
+      const remappedName = columnRenames[name] === undefined ? name : columnRenames[name];
+      return [name, columns.indexOf(remappedName)];
+    })
   );
   for (const [k, v] of Object.entries<readonly unknown[]>(table)) {
     const item: { [m: string]: unknown } = {};
-    for (const member of members) {
+    for (const member of columnsKept) {
       const ndx = keyToIndex.get(member)!;
       item[member] = v[ndx] ?? defaults[ndx];
     }

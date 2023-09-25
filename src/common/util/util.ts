@@ -428,7 +428,7 @@ export function memcpy(
  * Used to create a value that is specified by multiplying some runtime value
  * by a constant and then adding a constant to it.
  */
-export interface SpecValue {
+export interface ValueTestVariant {
   mult: number;
   add: number;
 }
@@ -436,8 +436,10 @@ export interface SpecValue {
 /**
  * Filters out SpecValues that are the same.
  */
-export function filterUniqueSpecValues(specValues: SpecValue[]) {
-  return new Map<string, SpecValue>(specValues.map(v => [`m:${v.mult},a:${v.add}`, v])).values();
+export function filterUniqueValueTestVariants(valueTestVariants: ValueTestVariant[]) {
+  return new Map<string, ValueTestVariant>(
+    valueTestVariants.map(v => [`m:${v.mult},a:${v.add}`, v])
+  ).values();
 }
 
 /**
@@ -446,6 +448,6 @@ export function filterUniqueSpecValues(specValues: SpecValue[]) {
  * with limits that can only be known at runtime and yet we need a way to
  * add parameters to a test and those parameters must be constants.
  */
-export function makeSpecValue(base: number, spec: SpecValue) {
-  return base * spec.mult + spec.add;
+export function makeValueTestVariant(base: number, variant: ValueTestVariant) {
+  return base * variant.mult + variant.add;
 }

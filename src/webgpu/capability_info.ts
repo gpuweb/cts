@@ -6,7 +6,7 @@
 import {
   keysOf,
   makeTable,
-  makeTableWithDefaults,
+  makeTableRenameAndFilter,
   numericKeysOf,
   valueof,
 } from '../common/util/data_tables.js';
@@ -694,21 +694,27 @@ const [
   'maxComputeWorkgroupsPerDimension':          [           ,     65535,           65535,                          ],
 } as const];
 
+/**
+ * Feature levels corresponding to core WebGPU and WebGPU
+ * in compatibility mode. They can be passed to
+ * getDefaultLimits though if you have access to an adapter
+ * it's preferred to use getDefaultLimitsForAdapter.
+ */
 export const kFeatureLevels = ['core', 'compatibility'] as const;
 export type FeatureLevel = typeof kFeatureLevels[number];
 
 const kLimitKeys = ['class', 'default', 'maximumValue'] as const;
 
-const kLimitInfoCore = makeTableWithDefaults(
-  'core',
+const kLimitInfoCore = makeTableRenameAndFilter(
+  { default: 'core' },
   kLimitKeys,
   kLimitInfoKeys,
   kLimitInfoDefaults,
   kLimitInfoData
 );
 
-const kLimitInfoCompatibility = makeTableWithDefaults(
-  'compatibility',
+const kLimitInfoCompatibility = makeTableRenameAndFilter(
+  { default: 'compatibility' },
   kLimitKeys,
   kLimitInfoKeys,
   kLimitInfoDefaults,

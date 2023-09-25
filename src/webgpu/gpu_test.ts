@@ -11,10 +11,10 @@ import {
 import { globalTestConfig } from '../common/framework/test_config.js';
 import {
   assert,
-  makeSpecValue,
+  makeValueTestVariant,
   memcpy,
   range,
-  SpecValue,
+  ValueTestVariant,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
@@ -207,9 +207,9 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   }
 
   /** Throws an exception making the subcase as skipped if condition is true */
-  skipIf(cond: boolean, msg: string = '') {
+  skipIf(cond: boolean, msg: string | (() => string) = '') {
     if (cond) {
-      this.skip(msg);
+      this.skip(typeof msg === 'function' ? msg() : msg);
     }
   }
 
@@ -284,8 +284,8 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     return this.getDefaultLimits()[limit].default;
   }
 
-  makeSpecValue(limit: typeof kLimits[number], spec: SpecValue) {
-    return makeSpecValue(this.device.limits[limit], spec);
+  makeLimitVariant(limit: typeof kLimits[number], variant: ValueTestVariant) {
+    return makeValueTestVariant(this.device.limits[limit], variant);
   }
 
   canCallCopyTextureToBufferWithTextureFormat(format: GPUTextureFormat) {
