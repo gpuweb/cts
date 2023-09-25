@@ -62,7 +62,7 @@ g.test('maximum_binding_limit')
   `
   )
   .paramsSubcasesOnly(u =>
-    u.combine('bindingVariant', [1, 4, 8, 256, 'default', 'default-minus-one'])
+    u.combine('bindingVariant', [1, 4, 8, 256, 'default', 'default-minus-one'] as const)
   )
   .fn(t => {
     const { bindingVariant } = t.params;
@@ -73,7 +73,7 @@ g.test('maximum_binding_limit')
         ? t.device.limits.maxBindingsPerBindGroup
         : bindingVariant === 'default-minus-one'
         ? t.device.limits.maxBindingsPerBindGroup - 1
-        : (bindingVariant as number);
+        : bindingVariant;
 
     entries.push({
       binding,
