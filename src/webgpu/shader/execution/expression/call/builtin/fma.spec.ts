@@ -9,9 +9,9 @@ Returns e1 * e2 + e3. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32 } from '../../../../../util/conversion.js';
+import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseF32Range } from '../../../../../util/math.js';
+import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -36,6 +36,24 @@ export const d = makeCaseCache('fma', {
       sparseF32Range(),
       'unfiltered',
       FP.f32.fmaInterval
+    );
+  },
+  f16_const: () => {
+    return FP.f16.generateScalarTripleToIntervalCases(
+      sparseF16Range(),
+      sparseF16Range(),
+      sparseF16Range(),
+      'finite',
+      FP.f16.fmaInterval
+    );
+  },
+  f16_non_const: () => {
+    return FP.f16.generateScalarTripleToIntervalCases(
+      sparseF16Range(),
+      sparseF16Range(),
+      sparseF16Range(),
+      'unfiltered',
+      FP.f16.fmaInterval
     );
   },
 });
@@ -65,4 +83,10 @@ g.test('f16')
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
+    await run(t, builtin('fma'), [TypeF16, TypeF16, TypeF16], TypeF16, t.params, cases);
+  });
