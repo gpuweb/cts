@@ -2,9 +2,9 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { Fixture, SkipTestCase, SubcaseBatchState } from '../common/framework/fixture.js';
 import { globalTestConfig } from '../common/framework/test_config.js';
-import { assert, memcpy, range, unreachable } from '../common/util/util.js';
+import { assert, makeValueTestVariant, memcpy, range, unreachable } from '../common/util/util.js';
 
-import { kQueryTypeInfo } from './capability_info.js';
+import { getDefaultLimits, kQueryTypeInfo } from './capability_info.js';
 import {
   kTextureFormatInfo,
   kEncodableTextureFormats,
@@ -84,6 +84,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
   }
 
   /**
@@ -169,6 +173,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     throw new SkipTestCase(msg);
   }
 
+  /** Throws an exception making the subcase as skipped if condition is true */
+  skipIf(cond, msg = '') {
+    if (cond) {
+      this.skip(typeof msg === 'function' ? msg() : msg);
+    }
+  }
+
   /**
    * Skips test if any format is not supported.
    */
@@ -227,6 +238,18 @@ export class GPUTestBase extends Fixture {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
+  getDefaultLimit(limit) {
+    return this.getDefaultLimits()[limit].default;
+  }
+
+  makeLimitVariant(limit, variant) {
+    return makeValueTestVariant(this.device.limits[limit], variant);
   }
 
   canCallCopyTextureToBufferWithTextureFormat(format) {
