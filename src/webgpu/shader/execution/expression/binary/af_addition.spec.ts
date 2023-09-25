@@ -28,7 +28,7 @@ const scalar_cases = {
       sparseF64Range(),
       sparseF64Range(),
       'finite',
-      FP.f16.additionInterval
+      FP.abstract.additionInterval
     );
   },
 };

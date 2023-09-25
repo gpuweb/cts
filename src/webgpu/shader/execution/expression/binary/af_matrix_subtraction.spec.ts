@@ -14,7 +14,7 @@ import { abstractBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
-// Cases: matCxR_[non_]const
+// Cases: matCxR
 const mat_cases = ([2, 3, 4] as const)
   .flatMap(cols =>
     ([2, 3, 4] as const).map(rows => ({
