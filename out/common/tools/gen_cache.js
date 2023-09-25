@@ -14,6 +14,7 @@ DataCache will load this instead of building the expensive data at CTS runtime.
 Options:
   --help          Print this message and exit.
   --list          Print the list of output files without writing them.
+  --validate      Check that cache should build (Tests for collisions).
   --verbose       Print each action taken.
 `);
   process.exit(rc);
@@ -34,6 +35,9 @@ for (const a of process.argv) {
         break;
       case '--verbose':
         verbose = true;
+        break;
+      case '--validate':
+        mode = 'validate';
         break;
       default:
         console.log('unrecognized flag: ', a);
@@ -146,6 +150,10 @@ and
             }
           case 'list':{
               console.log(outPath);
+              break;
+            }
+          case 'validate':{
+              // Only check currently performed is the collision detection above
               break;
             }}
 
