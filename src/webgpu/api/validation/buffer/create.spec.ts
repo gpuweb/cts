@@ -48,7 +48,7 @@ g.test('limit')
   .params(u => u.beginSubcases().combine('sizeAddition', [-1, 0, +1]))
   .fn(t => {
     const { sizeAddition } = t.params;
-    const size = t.device.limits.maxBufferSize + sizeAddition;
+    const size = t.makeLimitVariant('maxBufferSize', { mult: 1, add: sizeAddition });
     const isValid = size <= t.device.limits.maxBufferSize;
     const usage = BufferUsage.COPY_SRC;
     t.expectGPUError('validation', () => t.device.createBuffer({ size, usage }), !isValid);
