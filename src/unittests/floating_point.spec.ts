@@ -5108,161 +5108,251 @@ g.test('fmaInterval_f32')
     );
   });
 
-g.test('mixImpreciseInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kMixImpreciseIntervalCases = {
+  f32: [
       // [0.0, 1.0] cases
-      { input: [0.0, 1.0, -1.0], expected: -1.0 },
-      { input: [0.0, 1.0, 0.0], expected: 0.0 },
       { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
-      { input: [0.0, 1.0, 0.5], expected: 0.5 },
       { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [0.0, 1.0, 1.0], expected: 1.0 },
-      { input: [0.0, 1.0, 2.0], expected: 2.0 },
-
       // [1.0, 0.0] cases
-      { input: [1.0, 0.0, -1.0], expected: 2.0 },
-      { input: [1.0, 0.0, 0.0], expected: 1.0 },
       { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [1.0, 0.0, 0.5], expected: 0.5 },
       { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
-      { input: [1.0, 0.0, 1.0], expected: 0.0 },
-      { input: [1.0, 0.0, 2.0], expected: -1.0 },
-
       // [0.0, 10.0] cases
-      { input: [0.0, 10.0, -1.0], expected: -10.0 },
-      { input: [0.0, 10.0, 0.0], expected: 0.0 },
       { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
-      { input: [0.0, 10.0, 0.5], expected: 5.0 },
       { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
-      { input: [0.0, 10.0, 1.0], expected: 10.0 },
-      { input: [0.0, 10.0, 2.0], expected: 20.0 },
-
       // [2.0, 10.0] cases
-      { input: [2.0, 10.0, -1.0], expected: -6.0 },
-      { input: [2.0, 10.0, 0.0], expected: 2.0 },
       { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_6000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
-      { input: [2.0, 10.0, 0.5], expected: 6.0 },
       { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_6000_0000n), reinterpretU64AsF64(0x4022_6666_8000_0000n)] },  // ~9.2
-      { input: [2.0, 10.0, 1.0], expected: 10.0 },
-      { input: [2.0, 10.0, 2.0], expected: 18.0 },
-
       // [-1.0, 1.0] cases
-      { input: [-1.0, 1.0, -2.0], expected: -5.0 },
-      { input: [-1.0, 1.0, 0.0], expected: -1.0 },
       { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_a000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
-      { input: [-1.0, 1.0, 0.5], expected: 0.0 },
       { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
-      { input: [-1.0, 1.0, 1.0], expected: 1.0 },
-      { input: [-1.0, 1.0, 2.0], expected: 3.0 },
-
-      // Infinities
-      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
-      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
 
       // Showing how precise and imprecise versions diff
+      // Note that this expectation is 0 only in f32 as 10.0 is much smaller that f32.negative.min,
+      // So that 10 - f32.negative.min == f32.negative.min even in f64. But for f16, there is not
+      // a exactly-represenatble f16 value v that make v - f16.negative.min == f16.negative.min
+      // in f64, in fact that require v being smaller than 2**-37.
       { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 },
-    ]
+      // -10.0 is the same, much smaller than f32.negative.min
+      { input: [kValue.f32.negative.min, -10.0, 1.0], expected: 0.0 },
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
+      // [0.0, 1.0] cases
+      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9800_0000_0000n), reinterpretU64AsF64(0x3fb9_9c00_0000_0000n)] },  // ~0.1
+      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+      // [1.0, 0.0] cases
+      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_8000_0000_0000n), reinterpretU64AsF64(0x3fb9_a000_0000_0000n)] },  // ~0.1
+      // [0.0, 10.0] cases
+      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0400_0000_0000n)] },  // ~1
+      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_fc00_0000_0000n), reinterpretU64AsF64(0x4022_0400_0000_0000n)] },  // ~9
+      // [2.0, 10.0] cases
+      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6400_0000_0000n), reinterpretU64AsF64(0x4006_6800_0000_0000n)] },  // ~2.8
+      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6400_0000_0000n), reinterpretU64AsF64(0x4022_6800_0000_0000n)] },  // ~9.2
+      // [-1.0, 1.0] cases
+      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9c00_0000_0000n), reinterpretU64AsF64(0xbfe9_9800_0000_0000n)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] },  // ~0.8
+
+      // Showing how precise and imprecise versions diff
+      // In imprecise version, we compute (y - x), where y = 10 and x = -65504, the result is 65514
+      // and cause an overflow in f16.
+      { input: [kValue.f16.negative.min, 10.0, 1.0], expected: kUnboundedBounds },
+      // (y - x) * 1.0, where y = -10 and x = -65504, the result is 65494 rounded to 65472 or 65504.
+      // The result is -65504 + 65472 = -32 or -65504 + 65504 = 0.
+      { input: [kValue.f16.negative.min, -10.0, 1.0], expected: [-32, 0] },
+  ] as ScalarTripleToIntervalCase[],
+} as const;
+
+g.test('mixImpreciseInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kMixImpreciseIntervalCases[p.trait],
+
+          // [0.0, 1.0] cases
+          { input: [0.0, 1.0, -1.0], expected: -1.0 },
+          { input: [0.0, 1.0, 0.0], expected: 0.0 },
+          { input: [0.0, 1.0, 0.5], expected: 0.5 },
+          { input: [0.0, 1.0, 1.0], expected: 1.0 },
+          { input: [0.0, 1.0, 2.0], expected: 2.0 },
+
+          // [1.0, 0.0] cases
+          { input: [1.0, 0.0, -1.0], expected: 2.0 },
+          { input: [1.0, 0.0, 0.0], expected: 1.0 },
+          { input: [1.0, 0.0, 0.5], expected: 0.5 },
+          { input: [1.0, 0.0, 1.0], expected: 0.0 },
+          { input: [1.0, 0.0, 2.0], expected: -1.0 },
+
+          // [0.0, 10.0] cases
+          { input: [0.0, 10.0, -1.0], expected: -10.0 },
+          { input: [0.0, 10.0, 0.0], expected: 0.0 },
+          { input: [0.0, 10.0, 0.5], expected: 5.0 },
+          { input: [0.0, 10.0, 1.0], expected: 10.0 },
+          { input: [0.0, 10.0, 2.0], expected: 20.0 },
+
+          // [2.0, 10.0] cases
+          { input: [2.0, 10.0, -1.0], expected: -6.0 },
+          { input: [2.0, 10.0, 0.0], expected: 2.0 },
+          { input: [2.0, 10.0, 0.5], expected: 6.0 },
+          { input: [2.0, 10.0, 1.0], expected: 10.0 },
+          { input: [2.0, 10.0, 2.0], expected: 18.0 },
+
+          // [-1.0, 1.0] cases
+          { input: [-1.0, 1.0, -2.0], expected: -5.0 },
+          { input: [-1.0, 1.0, 0.0], expected: -1.0 },
+          { input: [-1.0, 1.0, 0.5], expected: 0.0 },
+          { input: [-1.0, 1.0, 1.0], expected: 1.0 },
+          { input: [-1.0, 1.0, 2.0], expected: 3.0 },
+
+          // Infinities
+          { input: [0.0, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 0.0, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 1.0, 0.5], expected: kUnboundedBounds },
+          { input: [1.0, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedBounds },
+
+          // The [negative.min, +/-10.0, 1.0] cases has different result for different trait on
+          // imprecise version.
+        ];
+      })
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.mixImpreciseInterval(x, y, z);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.mixImpreciseInterval(x, y, z);
     t.expect(
       objectEquals(expected, got),
-      `f32.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('mixPreciseInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kMixPreciseIntervalCases = {
+  f32: [
+    // [0.0, 1.0] cases
+    { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
+    { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+    // [1.0, 0.0] cases
+    { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+    { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
+    // [0.0, 10.0] cases
+    { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
+    { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
+    // [2.0, 10.0] cases
+    { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_4000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
+    { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] },  // ~9.2
+    // [-1.0, 1.0] cases
+    { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
+    { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
+    // [0.0, 1.0] cases
+    { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9800_0000_0000n), reinterpretU64AsF64(0x3fb9_9c00_0000_0000n)] },  // ~0.1
+    { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+    // [1.0, 0.0] cases
+    { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+    { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_8000_0000_0000n), reinterpretU64AsF64(0x3fb9_a000_0000_0000n)] },  // ~0.1
+    // [0.0, 10.0] cases
+    { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0400_0000_0000n)] },  // ~1
+    { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_fc00_0000_0000n), reinterpretU64AsF64(0x4022_0400_0000_0000n)] },  // ~9
+    // [2.0, 10.0] cases
+    { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6400_0000_0000n), reinterpretU64AsF64(0x4006_6c00_0000_0000n)] },  // ~2.8
+    { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6000_0000_0000n), reinterpretU64AsF64(0x4022_6c00_0000_0000n)] },  // ~9.2
+    // [-1.0, 1.0] cases
+    { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_a000_0000_0000n), reinterpretU64AsF64(0xbfe9_9800_0000_0000n)] },  // ~-0.8
+    { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] },  // ~0.8
+  ] as ScalarTripleToIntervalCase[],
+} as const;
 
-      // [0.0, 1.0] cases
-      { input: [0.0, 1.0, -1.0], expected: -1.0 },
-      { input: [0.0, 1.0, 0.0], expected: 0.0 },
-      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
-      { input: [0.0, 1.0, 0.5], expected: 0.5 },
-      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [0.0, 1.0, 1.0], expected: 1.0 },
-      { input: [0.0, 1.0, 2.0], expected: 2.0 },
+g.test('mixPreciseInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kMixPreciseIntervalCases[p.trait],
 
-      // [1.0, 0.0] cases
-      { input: [1.0, 0.0, -1.0], expected: 2.0 },
-      { input: [1.0, 0.0, 0.0], expected: 1.0 },
-      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [1.0, 0.0, 0.5], expected: 0.5 },
-      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
-      { input: [1.0, 0.0, 1.0], expected: 0.0 },
-      { input: [1.0, 0.0, 2.0], expected: -1.0 },
+          // [0.0, 1.0] cases
+          { input: [0.0, 1.0, -1.0], expected: -1.0 },
+          { input: [0.0, 1.0, 0.0], expected: 0.0 },
+          { input: [0.0, 1.0, 0.5], expected: 0.5 },
+          { input: [0.0, 1.0, 1.0], expected: 1.0 },
+          { input: [0.0, 1.0, 2.0], expected: 2.0 },
 
-      // [0.0, 10.0] cases
-      { input: [0.0, 10.0, -1.0], expected: -10.0 },
-      { input: [0.0, 10.0, 0.0], expected: 0.0 },
-      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
-      { input: [0.0, 10.0, 0.5], expected: 5.0 },
-      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
-      { input: [0.0, 10.0, 1.0], expected: 10.0 },
-      { input: [0.0, 10.0, 2.0], expected: 20.0 },
+          // [1.0, 0.0] cases
+          { input: [1.0, 0.0, -1.0], expected: 2.0 },
+          { input: [1.0, 0.0, 0.0], expected: 1.0 },
+          { input: [1.0, 0.0, 0.5], expected: 0.5 },
+          { input: [1.0, 0.0, 1.0], expected: 0.0 },
+          { input: [1.0, 0.0, 2.0], expected: -1.0 },
 
-      // [2.0, 10.0] cases
-      { input: [2.0, 10.0, -1.0], expected: -6.0 },
-      { input: [2.0, 10.0, 0.0], expected: 2.0 },
-      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_4000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
-      { input: [2.0, 10.0, 0.5], expected: 6.0 },
-      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] },  // ~9.2
-      { input: [2.0, 10.0, 1.0], expected: 10.0 },
-      { input: [2.0, 10.0, 2.0], expected: 18.0 },
+          // [0.0, 10.0] cases
+          { input: [0.0, 10.0, -1.0], expected: -10.0 },
+          { input: [0.0, 10.0, 0.0], expected: 0.0 },
+          { input: [0.0, 10.0, 0.5], expected: 5.0 },
+          { input: [0.0, 10.0, 1.0], expected: 10.0 },
+          { input: [0.0, 10.0, 2.0], expected: 20.0 },
 
-      // [-1.0, 1.0] cases
-      { input: [-1.0, 1.0, -2.0], expected: -5.0 },
-      { input: [-1.0, 1.0, 0.0], expected: -1.0 },
-      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
-      { input: [-1.0, 1.0, 0.5], expected: 0.0 },
-      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
-      { input: [-1.0, 1.0, 1.0], expected: 1.0 },
-      { input: [-1.0, 1.0, 2.0], expected: 3.0 },
+          // [2.0, 10.0] cases
+          { input: [2.0, 10.0, -1.0], expected: -6.0 },
+          { input: [2.0, 10.0, 0.0], expected: 2.0 },
+          { input: [2.0, 10.0, 0.5], expected: 6.0 },
+          { input: [2.0, 10.0, 1.0], expected: 10.0 },
+          { input: [2.0, 10.0, 2.0], expected: 18.0 },
 
-      // Infinities
-      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
-      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+          // [-1.0, 1.0] cases
+          { input: [-1.0, 1.0, -2.0], expected: -5.0 },
+          { input: [-1.0, 1.0, 0.0], expected: -1.0 },
+          { input: [-1.0, 1.0, 0.5], expected: 0.0 },
+          { input: [-1.0, 1.0, 1.0], expected: 1.0 },
+          { input: [-1.0, 1.0, 2.0], expected: 3.0 },
 
-      // Showing how precise and imprecise versions diff
-      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10.0 },
-    ]
+          // Infinities
+          { input: [0.0, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 0.0, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 1.0, 0.5], expected: kUnboundedBounds },
+          { input: [1.0, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedBounds },
+
+          // Showing how precise and imprecise versions diff
+          { input: [constants.negative.min, 10.0, 1.0], expected: 10.0 },
+          { input: [constants.negative.min, -10.0, 1.0], expected: -10.0 },
+        ];
+      })
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.mixPreciseInterval(x, y, z);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.mixPreciseInterval(x, y, z);
     t.expect(
       objectEquals(expected, got),
-      `f32.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
     );
   });
 
