@@ -11,11 +11,10 @@ TODO: merge these notes and implement.
 >     - {null, compatible, incompatible} current pipeline (should have no effect without draw/dispatch)
 >     - setBindGroup in different orders (e.g. 0,1,2 vs 2,0,1)
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { range, unreachable } from '../../../../../common/util/util.js';
+import { makeValueTestVariant, range, unreachable } from '../../../../../common/util/util.js';
 import {
 kBufferBindingTypes,
-kMinDynamicBufferOffsetAlignment,
-kLimitInfo } from
+kMinDynamicBufferOffsetAlignment } from
 '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
@@ -389,27 +388,23 @@ u //
 .combine('type', kBufferBindingTypes).
 combine('encoderType', kProgrammableEncoderTypes).
 beginSubcases().
-expand('dynamicOffset', ({ type }) =>
-type === 'uniform' ?
-[
-kLimitInfo.minUniformBufferOffsetAlignment.default,
-kLimitInfo.minUniformBufferOffsetAlignment.default * 0.5,
-kLimitInfo.minUniformBufferOffsetAlignment.default * 1.5,
-kLimitInfo.minUniformBufferOffsetAlignment.default * 2,
-kLimitInfo.minUniformBufferOffsetAlignment.default + 2] :
-
-[
-kLimitInfo.minStorageBufferOffsetAlignment.default,
-kLimitInfo.minStorageBufferOffsetAlignment.default * 0.5,
-kLimitInfo.minStorageBufferOffsetAlignment.default * 1.5,
-kLimitInfo.minStorageBufferOffsetAlignment.default * 2,
-kLimitInfo.minStorageBufferOffsetAlignment.default + 2])).
-
+combine('dynamicOffsetVariant', [
+{ mult: 1, add: 0 },
+{ mult: 0.5, add: 0 },
+{ mult: 1.5, add: 0 },
+{ mult: 2, add: 0 },
+{ mult: 1, add: 2 }])).
 
 
 fn((t) => {
-  const { type, dynamicOffset, encoderType } = t.params;
+  const { type, dynamicOffsetVariant, encoderType } = t.params;
   const kBindingSize = 12;
+
+  const minAlignment =
+  t.device.limits[
+  type === 'uniform' ? 'minUniformBufferOffsetAlignment' : 'minStorageBufferOffsetAlignment'];
+
+  const dynamicOffset = makeValueTestVariant(minAlignment, dynamicOffsetVariant);
 
   const bindGroupLayout = t.device.createBindGroupLayout({
     entries: [
@@ -421,14 +416,8 @@ fn((t) => {
 
   });
 
-  let usage, isValid;
-  if (type === 'uniform') {
-    usage = GPUBufferUsage.UNIFORM;
-    isValid = dynamicOffset % kLimitInfo.minUniformBufferOffsetAlignment.default === 0;
-  } else {
-    usage = GPUBufferUsage.STORAGE;
-    isValid = dynamicOffset % kLimitInfo.minStorageBufferOffsetAlignment.default === 0;
-  }
+  const usage = type === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE;
+  const isValid = dynamicOffset % minAlignment === 0;
 
   const buffer = t.device.createBuffer({
     size: 3 * kMinDynamicBufferOffsetAlignment,
