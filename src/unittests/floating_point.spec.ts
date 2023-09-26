@@ -5060,7 +5060,7 @@ g.test('clampMinMaxInterval')
   });
 
 // prettier-ignore
-const kFMACases = {
+const kFmaIntervalCases = {
   f32: [
     // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
     { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.min] },
@@ -5147,7 +5147,7 @@ g.test('fmaInterval')
           { input: [constants.negative.infinity, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
           { input: [constants.negative.infinity, constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
           { input: [constants.positive.max, constants.positive.max, constants.positive.subnormal.min], expected: kUnboundedBounds },
-          ...kFMACases[p.trait],
+          ...kFmaIntervalCases[p.trait],
         ];
       })
   )
