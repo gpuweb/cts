@@ -423,3 +423,31 @@ export function memcpy(
 ): void {
   subarrayAsU8(dst.dst, dst).set(subarrayAsU8(src.src, src));
 }
+
+/**
+ * Used to create a value that is specified by multiplying some runtime value
+ * by a constant and then adding a constant to it.
+ */
+export interface ValueTestVariant {
+  mult: number;
+  add: number;
+}
+
+/**
+ * Filters out SpecValues that are the same.
+ */
+export function filterUniqueValueTestVariants(valueTestVariants: ValueTestVariant[]) {
+  return new Map<string, ValueTestVariant>(
+    valueTestVariants.map(v => [`m:${v.mult},a:${v.add}`, v])
+  ).values();
+}
+
+/**
+ * Used to create a value that is specified by multiplied some runtime value
+ * by a constant and then adding a constant to it. This happens often in test
+ * with limits that can only be known at runtime and yet we need a way to
+ * add parameters to a test and those parameters must be constants.
+ */
+export function makeValueTestVariant(base: number, variant: ValueTestVariant) {
+  return base * variant.mult + variant.add;
+}
