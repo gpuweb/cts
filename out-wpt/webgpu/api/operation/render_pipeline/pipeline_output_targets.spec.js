@@ -5,8 +5,11 @@
 `;
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kLimitInfo } from '../../../capability_info.js';
-import { kRenderableColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
+import {
+  computeBytesPerSampleFromFormats,
+  kRenderableColorTextureFormats,
+  kTextureFormatInfo,
+} from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
@@ -49,14 +52,6 @@ g.test('color,attachments')
       .combine('format', kRenderableColorTextureFormats)
       .beginSubcases()
       .combine('attachmentCount', [2, 3, 4])
-      .filter(t => {
-        // We only need to test formats that have a valid color attachment bytes per sample.
-        const pixelByteCost = kTextureFormatInfo[t.format].colorRender?.byteCost;
-        return (
-          pixelByteCost !== undefined &&
-          pixelByteCost * t.attachmentCount <= kLimitInfo.maxColorAttachmentBytesPerSample.default
-        );
-      })
       .expand('emptyAttachmentId', p => range(p.attachmentCount, i => i))
   )
   .beforeAllSubcases(t => {
@@ -68,6 +63,14 @@ g.test('color,attachments')
     const { format, attachmentCount, emptyAttachmentId } = t.params;
     const componentCount = kTexelRepresentationInfo[format].componentOrder.length;
     const info = kTextureFormatInfo[format];
+
+    // We only need to test formats that have a valid color attachment bytes per sample.
+    const pixelByteCost = kTextureFormatInfo[format].colorRender?.byteCost;
+    t.skipIf(
+      pixelByteCost === undefined ||
+        computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
+          t.device.limits.maxColorAttachmentBytesPerSample
+    );
 
     const writeValues =
       info.color.type === 'sint' || info.color.type === 'uint'

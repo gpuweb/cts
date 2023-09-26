@@ -2,9 +2,8 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { align, roundDown } from '../../../../util/math.js';import {
 kMaximumLimitBaseParams,
-makeLimitTestGroup,
+makeLimitTestGroup } from
 
-getDefaultLimit } from
 
 
 './limit_utils.js';
@@ -149,7 +148,7 @@ g.test('validate,maxBufferSize').
 desc(`Test that ${limit} <= maxBufferSize`).
 fn((t) => {
   const { adapter, defaultLimit, adapterLimit } = t;
-  t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+  t.expect(defaultLimit <= t.getDefaultLimit('maxBufferSize'));
   t.expect(adapterLimit <= adapter.limits.maxBufferSize);
 });
 //# sourceMappingURL=maxStorageBufferBindingSize.spec.js.map
