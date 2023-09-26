@@ -5120,10 +5120,58 @@ fn((t) => {
 
 });
 
+
+const kFmaIntervalCases = {
+  f32: [
+  // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
+  { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+  // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
+  // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
+  { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.positive.min] },
+  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+  // negative.subnormal.max may flushed to 0,
+  // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
+  // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
+  { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
+  // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
+  // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
+  // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
+  // maximum case: -0.0 + -0.0 = 0.
+  { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [-2 * FP['f32'].oneULP(0, 'no-flush'), 0] }],
+
+  f16: [
+  // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
+  { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max, 0], expected: [0, kValue.f16.subnormal.positive.min] },
+  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+  // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
+  // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
+  { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max], expected: [0, kValue.f16.positive.min] },
+  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+  // negative.subnormal.max may flushed to 0,
+  // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
+  // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
+  { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.negative.max], expected: [kValue.f16.subnormal.negative.max, kValue.f16.subnormal.positive.min] },
+  // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
+  // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
+  // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
+  // maximum case: -0.0 + -0.0 = 0.
+  { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] }],
+  abstract: [
+  // These operations break down in the CTS, because `number` is a f64 under the hood, so precision is sometimes lost
+  // if intermediate results are  closer to 0 than the smallest subnormal will be precisely 0.
+  // See https://github.com/gpuweb/cts/issues/2993 for details
+  { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max, 0], expected: 0 },
+  { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max], expected: [0, kValue.f64.subnormal.positive.max] },
+  { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.min, kValue.f64.subnormal.negative.max], expected: [kValue.f64.subnormal.negative.max, 0] },
+  { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.negative.min, kValue.f64.subnormal.negative.max], expected: [kValue.f64.subnormal.negative.max, 0] }]
+
+};
+
 g.test('fmaInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -5152,30 +5200,15 @@ expandWithParams((p) => {
   { input: [0, constants.positive.subnormal.max, 0], expected: 0 },
   { input: [0, 0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
   { input: [constants.positive.subnormal.max, 0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
-  // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
-  { input: [constants.positive.subnormal.max, constants.positive.subnormal.max, 0], expected: [0, constants.positive.subnormal.min] },
   { input: [0, constants.positive.subnormal.max, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
-  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
-  // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
-  // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
-  { input: [constants.positive.subnormal.max, constants.positive.subnormal.max, constants.positive.subnormal.max], expected: [0, constants.positive.min] },
-  // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
-  // negative.subnormal.max may flushed to 0,
-  // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
-  // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
-  { input: [constants.positive.subnormal.max, constants.positive.subnormal.min, constants.negative.subnormal.max], expected: [constants.negative.subnormal.max, constants.positive.subnormal.min] },
-  // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
-  // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
-  // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
-  // maximum case: -0.0 + -0.0 = 0.
-  { input: [constants.positive.subnormal.max, constants.negative.subnormal.min, constants.negative.subnormal.max], expected: [-2 * FP[p.trait].oneULP(0, 'no-flush'), 0] },
 
   // Infinities
   { input: [0, 1, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [0, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.negative.infinity, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.negative.infinity, constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
-  { input: [constants.positive.max, constants.positive.max, constants.positive.subnormal.min], expected: kUnboundedBounds }];
+  { input: [constants.positive.max, constants.positive.max, constants.positive.subnormal.min], expected: kUnboundedBounds },
+  ...kFmaIntervalCases[p.trait]];
 
 })).
 
