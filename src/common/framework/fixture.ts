@@ -166,6 +166,13 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
     throw new SkipTestCase(msg);
   }
 
+  /** Throws an exception marking the subcase as skipped if condition is true */
+  skipIf(cond: boolean, msg: string | (() => string) = '') {
+    if (cond) {
+      this.skip(typeof msg === 'function' ? msg() : msg);
+    }
+  }
+
   /** Log a warning and increase the result status to "Warn". */
   warn(msg?: string): void {
     this.rec.warn(new Error(msg));

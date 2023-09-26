@@ -3,7 +3,13 @@
 
 /* eslint-disable no-sparse-arrays */
 
-import { keysOf, makeTable, numericKeysOf, valueof } from '../common/util/data_tables.js';
+import {
+  keysOf,
+  makeTable,
+  makeTableRenameAndFilter,
+  numericKeysOf,
+  valueof,
+} from '../common/util/data_tables.js';
 import { assertTypeTrue, TypeEqual } from '../common/util/types.js';
 import { unreachable } from '../common/util/util.js';
 
@@ -347,6 +353,7 @@ assertTypeTrue<TypeEqual<BindableResource, typeof kBindableResources[number]>>()
 /** Dynamic buffer offsets require offset to be divisible by 256, by spec. */
 export const kMinDynamicBufferOffsetAlignment = 256;
 
+// MAINTENANCE_TODO: remove these as tests need to use different limits for compatibility mode
 /** Default `PerShaderStage` binding limits, by spec. */
 export const kPerStageBindingLimits: {
   readonly [k in PerStageBindingLimitClass]: {
@@ -642,50 +649,107 @@ export const kIndexFormat: readonly GPUIndexFormat[] = ['uint16', 'uint32'];
 assertTypeTrue<TypeEqual<GPUIndexFormat, typeof kIndexFormat[number]>>();
 
 /** Info for each entry of GPUSupportedLimits */
-export const kLimitInfo = /* prettier-ignore */ makeTable(
-                                               [    'class', 'default',            'maximumValue'] as const,
-                                               [  'maximum',          ,     kMaxUnsignedLongValue] as const, {
-  'maxTextureDimension1D':                     [           ,      8192,                          ],
-  'maxTextureDimension2D':                     [           ,      8192,                          ],
-  'maxTextureDimension3D':                     [           ,      2048,                          ],
-  'maxTextureArrayLayers':                     [           ,       256,                          ],
+const [
+  kLimitInfoKeys,
+  kLimitInfoDefaults,
+  kLimitInfoData,
+] = /* prettier-ignore */ [
+                                               [    'class',    'core', 'compatibility',            'maximumValue'] as const,
+                                               [  'maximum',          ,                ,     kMaxUnsignedLongValue] as const, {
+  'maxTextureDimension1D':                     [           ,      8192,            4096,                          ],
+  'maxTextureDimension2D':                     [           ,      8192,            4096,                          ],
+  'maxTextureDimension3D':                     [           ,      2048,            1024,                          ],
+  'maxTextureArrayLayers':                     [           ,       256,             256,                          ],
 
-  'maxBindGroups':                             [           ,         4,                          ],
-  'maxBindingsPerBindGroup':                   [           ,      1000,                          ],
-  'maxDynamicUniformBuffersPerPipelineLayout': [           ,         8,                          ],
-  'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,                          ],
-  'maxSampledTexturesPerShaderStage':          [           ,        16,                          ],
-  'maxSamplersPerShaderStage':                 [           ,        16,                          ],
-  'maxStorageBuffersPerShaderStage':           [           ,         8,                          ],
-  'maxStorageTexturesPerShaderStage':          [           ,         4,                          ],
-  'maxUniformBuffersPerShaderStage':           [           ,        12,                          ],
+  'maxBindGroups':                             [           ,         4,               4,                          ],
+  'maxBindingsPerBindGroup':                   [           ,      1000,            1000,                          ],
+  'maxDynamicUniformBuffersPerPipelineLayout': [           ,         8,               8,                          ],
+  'maxDynamicStorageBuffersPerPipelineLayout': [           ,         4,               4,                          ],
+  'maxSampledTexturesPerShaderStage':          [           ,        16,              16,                          ],
+  'maxSamplersPerShaderStage':                 [           ,        16,              16,                          ],
+  'maxStorageBuffersPerShaderStage':           [           ,         8,               4,                          ],
+  'maxStorageTexturesPerShaderStage':          [           ,         4,               4,                          ],
+  'maxUniformBuffersPerShaderStage':           [           ,        12,              12,                          ],
 
-  'maxUniformBufferBindingSize':               [           ,     65536, kMaxUnsignedLongLongValue],
-  'maxStorageBufferBindingSize':               [           , 134217728, kMaxUnsignedLongLongValue],
-  'minUniformBufferOffsetAlignment':           ['alignment',       256,                          ],
-  'minStorageBufferOffsetAlignment':           ['alignment',       256,                          ],
+  'maxUniformBufferBindingSize':               [           ,     65536,           16384, kMaxUnsignedLongLongValue],
+  'maxStorageBufferBindingSize':               [           , 134217728,       134217728, kMaxUnsignedLongLongValue],
+  'minUniformBufferOffsetAlignment':           ['alignment',       256,             256,                          ],
+  'minStorageBufferOffsetAlignment':           ['alignment',       256,             256,                          ],
 
-  'maxVertexBuffers':                          [           ,         8,                          ],
-  'maxBufferSize':                             [           , 268435456, kMaxUnsignedLongLongValue],
-  'maxVertexAttributes':                       [           ,        16,                          ],
-  'maxVertexBufferArrayStride':                [           ,      2048,                          ],
-  'maxInterStageShaderComponents':             [           ,        60,                          ],
-  'maxInterStageShaderVariables':              [           ,        16,                          ],
+  'maxVertexBuffers':                          [           ,         8,               8,                          ],
+  'maxBufferSize':                             [           , 268435456,       268435456, kMaxUnsignedLongLongValue],
+  'maxVertexAttributes':                       [           ,        16,              16,                          ],
+  'maxVertexBufferArrayStride':                [           ,      2048,            2048,                          ],
+  'maxInterStageShaderComponents':             [           ,        60,              60,                          ],
+  'maxInterStageShaderVariables':              [           ,        16,              16,                          ],
 
-  'maxColorAttachments':                       [           ,         8,                          ],
-  'maxColorAttachmentBytesPerSample':          [           ,        32,                          ],
+  'maxColorAttachments':                       [           ,         8,               4,                          ],
+  'maxColorAttachmentBytesPerSample':          [           ,        32,              32,                          ],
 
-  'maxComputeWorkgroupStorageSize':            [           ,     16384,                          ],
-  'maxComputeInvocationsPerWorkgroup':         [           ,       256,                          ],
-  'maxComputeWorkgroupSizeX':                  [           ,       256,                          ],
-  'maxComputeWorkgroupSizeY':                  [           ,       256,                          ],
-  'maxComputeWorkgroupSizeZ':                  [           ,        64,                          ],
-  'maxComputeWorkgroupsPerDimension':          [           ,     65535,                          ],
-} as const);
+  'maxComputeWorkgroupStorageSize':            [           ,     16384,           16384,                          ],
+  'maxComputeInvocationsPerWorkgroup':         [           ,       256,             128,                          ],
+  'maxComputeWorkgroupSizeX':                  [           ,       256,             128,                          ],
+  'maxComputeWorkgroupSizeY':                  [           ,       256,             128,                          ],
+  'maxComputeWorkgroupSizeZ':                  [           ,        64,              64,                          ],
+  'maxComputeWorkgroupsPerDimension':          [           ,     65535,           65535,                          ],
+} as const];
+
+/**
+ * Feature levels corresponding to core WebGPU and WebGPU
+ * in compatibility mode. They can be passed to
+ * getDefaultLimits though if you have access to an adapter
+ * it's preferred to use getDefaultLimitsForAdapter.
+ */
+export const kFeatureLevels = ['core', 'compatibility'] as const;
+export type FeatureLevel = typeof kFeatureLevels[number];
+
+const kLimitKeys = ['class', 'default', 'maximumValue'] as const;
+
+const kLimitInfoCore = makeTableRenameAndFilter(
+  { default: 'core' },
+  kLimitKeys,
+  kLimitInfoKeys,
+  kLimitInfoDefaults,
+  kLimitInfoData
+);
+
+const kLimitInfoCompatibility = makeTableRenameAndFilter(
+  { default: 'compatibility' },
+  kLimitKeys,
+  kLimitInfoKeys,
+  kLimitInfoDefaults,
+  kLimitInfoData
+);
+
+// MAINTENANCE_TODO: remove this as tests need to use different limits for compatibility mode
+export const kLimitInfo = kLimitInfoCore;
+
+const kLimitInfos = {
+  core: kLimitInfoCore,
+  compatibility: kLimitInfoCompatibility,
+} as const;
+
+export const kLimitClasses = Object.fromEntries(
+  Object.entries(kLimitInfoCore).map(([k, { class: c }]) => [k, c])
+);
+
+export function getDefaultLimits(featureLevel: FeatureLevel) {
+  return kLimitInfos[featureLevel];
+}
+
+export function getDefaultLimitsForAdapter(adapter: GPUAdapter) {
+  // MAINTENANCE_TODO: Remove casts when GPUAdapter IDL has isCompatibilityMode.
+  return getDefaultLimits(
+    ((adapter as unknown) as { isCompatibilityMode: boolean }).isCompatibilityMode
+      ? 'compatibility'
+      : 'core'
+  );
+}
 
 /** List of all entries of GPUSupportedLimits. */
-export const kLimits = keysOf(kLimitInfo);
+export const kLimits = keysOf(kLimitInfoCore);
 
+// MAINTENANCE_TODO: remove these as tests need to use different limits for compatibility mode
 // Pipeline limits
 
 /** Maximum number of color attachments to a render pass, by spec. */
@@ -696,6 +760,17 @@ export const kMaxVertexBuffers = kLimitInfo.maxVertexBuffers.default;
 export const kMaxVertexAttributes = kLimitInfo.maxVertexAttributes.default;
 /** `maxVertexBufferArrayStride` in a vertex buffer in a GPURenderPipeline, by spec. */
 export const kMaxVertexBufferArrayStride = kLimitInfo.maxVertexBufferArrayStride.default;
+/**
+ * The number of color attachments to test.
+ * The CTS needs to generate a consistent list of tests.
+ * We can't use any default limits since they different from core to compat mode
+ * So, tests should use this value and filter out any values that are out of
+ * range for the current device.
+ *
+ * The test in maxColorAttachments.spec.ts tests that kMaxColorAttachmentsToTest
+ * is large enough to cover all devices tested.
+ */
+export const kMaxColorAttachmentsToTest = 32;
 
 /** The size of indirect draw parameters in the indirectBuffer of drawIndirect */
 export const kDrawIndirectParametersSize = 4;
