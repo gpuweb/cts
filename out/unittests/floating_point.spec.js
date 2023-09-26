@@ -5301,58 +5301,96 @@ fn((t) => {
 
 });
 
-g.test('smoothStepInterval_f32').
-paramsSubcasesOnly(
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
 
-[
-// Some of these are hard coded, since the error intervals are difficult
-// to express in a closed human-readable form due to the inherited nature
-// of the errors.
+const kSmoothStepIntervalCases = {
+  f32: [
+  // Normals
+  { input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+  { input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] }, // ~1
+  { input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
+  { input: [2, 0, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [2, 0, 1.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
+  { input: [0, 100, 50], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [0, 100, 25], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
+  { input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
+  // Subnormals
+  { input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
+  { input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
+  { input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
+  { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
+  { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] }],
 
-// Normals
-{ input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] }, // ~1
-{ input: [0, 1, 10], expected: 1 },
-{ input: [0, 1, -10], expected: 0 },
-{ input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
-{ input: [2, 0, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [2, 0, 1.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
-{ input: [0, 100, 50], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [0, 100, 25], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
-{ input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] }, // ~0.15625...
+  f16: [
+  // Normals
+  { input: [0, 1, 0], expected: [0, reinterpretU16AsF16(0x0002)] },
+  { input: [0, 1, 1], expected: [reinterpretU16AsF16(0x3bfa), reinterpretU16AsF16(0x3c03)] }, // ~1
+  { input: [0, 2, 1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] }, // ~0.5
+  { input: [0, 2, 0.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] }, // ~0.15625...
+  { input: [2, 0, 1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] }, // ~0.5
+  { input: [2, 0, 1.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] }, // ~0.15625...
+  { input: [0, 100, 50], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] }, // ~0.5
+  { input: [0, 100, 25], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] }, // ~0.15625...
+  { input: [0, -2, -1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] }, // ~0.5
+  { input: [0, -2, -0.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] }, // ~0.15625...
+  // Subnormals
+  { input: [kValue.f16.subnormal.positive.max, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] }, // ~0.5
+  { input: [kValue.f16.subnormal.positive.min, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] }, // ~0.5
+  { input: [kValue.f16.subnormal.negative.max, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] }, // ~0.5
+  { input: [kValue.f16.subnormal.negative.min, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] }, // ~0.5
+  { input: [0, 2, kValue.f16.subnormal.positive.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+  { input: [0, 2, kValue.f16.subnormal.positive.min], expected: [0, reinterpretU16AsF16(0x0002)] },
+  { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+  { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, reinterpretU16AsF16(0x0002)] }]
 
-// Subnormals
-{ input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] }, // ~0.5
-{ input: [0, kValue.f32.subnormal.positive.max, 1], expected: kUnboundedBounds },
-{ input: [0, kValue.f32.subnormal.positive.min, 1], expected: kUnboundedBounds },
-{ input: [0, kValue.f32.subnormal.negative.max, 1], expected: kUnboundedBounds },
-{ input: [0, kValue.f32.subnormal.negative.min, 1], expected: kUnboundedBounds },
+};
 
-// Infinities
-{ input: [0, 2, Number.POSITIVE_INFINITY], expected: kUnboundedBounds },
-{ input: [0, 2, Number.NEGATIVE_INFINITY], expected: kUnboundedBounds },
-{ input: [Number.POSITIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
-{ input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
-{ input: [0, Number.POSITIVE_INFINITY, 1], expected: kUnboundedBounds },
-{ input: [0, Number.NEGATIVE_INFINITY, 1], expected: kUnboundedBounds }]).
+g.test('smoothStepInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
+  return [
+  ...kSmoothStepIntervalCases[p.trait],
+
+  // Normals
+  { input: [0, 1, 10], expected: 1 },
+  { input: [0, 1, -10], expected: 0 },
+
+  // Subnormals
+  { input: [0, constants.positive.subnormal.max, 1], expected: kUnboundedBounds },
+  { input: [0, constants.positive.subnormal.min, 1], expected: kUnboundedBounds },
+  { input: [0, constants.negative.subnormal.max, 1], expected: kUnboundedBounds },
+  { input: [0, constants.negative.subnormal.min, 1], expected: kUnboundedBounds },
+
+  // Infinities
+  { input: [0, 2, constants.positive.infinity], expected: kUnboundedBounds },
+  { input: [0, 2, constants.negative.infinity], expected: kUnboundedBounds },
+  { input: [constants.positive.infinity, 2, 1], expected: kUnboundedBounds },
+  { input: [constants.negative.infinity, 2, 1], expected: kUnboundedBounds },
+  { input: [0, constants.positive.infinity, 1], expected: kUnboundedBounds },
+  { input: [0, constants.negative.infinity, 1], expected: kUnboundedBounds }];
+
+})).
 
 fn((t) => {
   const [low, high, x] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.smoothStepInterval(low, high, x);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.smoothStepInterval(low, high, x);
   t.expect(
   objectEquals(expected, got),
-  `f32.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`);
 
 });
 
