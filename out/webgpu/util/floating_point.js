@@ -5282,7 +5282,7 @@ class F16Traits extends FPTraits {
   subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(
   this);
 
-  tanInterval = this.unimplementedScalarToInterval.bind(this, 'tanInterval');
+  tanInterval = this.tanIntervalImpl.bind(this);
   tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
   transposeInterval = this.transposeIntervalImpl.bind(this);
   truncInterval = this.truncIntervalImpl.bind(this);
