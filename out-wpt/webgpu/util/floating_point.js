@@ -4411,7 +4411,7 @@ class F16Traits extends FPTraits {
   exp2Interval = this.exp2IntervalImpl.bind(this);
   faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   floorInterval = this.floorIntervalImpl.bind(this);
-  fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
+  fmaInterval = this.fmaIntervalImpl.bind(this);
   fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   ldexpInterval = this.unimplementedScalarPairToInterval.bind(this, 'ldexpInterval');
