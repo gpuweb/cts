@@ -5314,7 +5314,7 @@ class F16Traits extends FPTraits {
   public readonly mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
   public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
-  public readonly modfInterval = this.unimplementedModf.bind(this);
+  public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
   public readonly multiplicationMatrixMatrixInterval = this.multiplicationMatrixMatrixIntervalImpl.bind(
     this
