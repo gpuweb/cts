@@ -2,10 +2,8 @@ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_b
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
-import { kLimitInfo } from '../../../../capability_info.js';
-import { kTextureFormatInfo } from '../../../../format_info.js';
+import { kLimitInfo, getDefaultLimitsForAdapter } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
-import { align } from '../../../../util/math.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
 
@@ -74,19 +72,6 @@ function getWGSLBindings(
         )}) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`
     )
   ).join('\n        ');
-}
-
-/**
- * Given an array of GPUColorTargetState return the number of bytes per sample
- */
-export function computeBytesPerSample(targets: GPUColorTargetState[]) {
-  let bytesPerSample = 0;
-  for (const { format } of targets) {
-    const info = kTextureFormatInfo[format];
-    const alignedBytesPerSample = align(bytesPerSample, info.colorRender!.alignment);
-    bytesPerSample = alignedBytesPerSample + info.colorRender!.byteCost;
-  }
-  return bytesPerSample;
 }
 
 export function getPerStageWGSLForBindingCombinationImpl(
@@ -272,6 +257,12 @@ export const kMinimumLimitValueTests = [
 ] as const;
 export type MinimumLimitValueTest = typeof kMinimumLimitValueTests[number];
 
+export function getDefaultLimitForAdapter(adapter: GPUAdapter, limit: GPUSupportedLimit): number {
+  const limitInfo = getDefaultLimitsForAdapter(adapter);
+  return limitInfo[limit as keyof typeof limitInfo].default;
+}
+
+// MAINTENANCE_TODO: remove as soon as compat refactor is done and this is no longer used.
 export function getDefaultLimit(limit: GPUSupportedLimit): number {
   return (kLimitInfo as Record<string, { default: number }>)[limit].default;
 }
@@ -321,7 +312,7 @@ export class LimitTestsImpl extends GPUTestBase {
     const gpu = getGPU(this.rec);
     this._adapter = await gpu.requestAdapter();
     const limit = this.limit;
-    this.defaultLimit = getDefaultLimit(limit);
+    this.defaultLimit = getDefaultLimitForAdapter(this.adapter, limit);
     this.adapterLimit = this.adapter.limits[limit] as number;
     assert(!Number.isNaN(this.defaultLimit));
     assert(!Number.isNaN(this.adapterLimit));
@@ -354,7 +345,7 @@ export class LimitTestsImpl extends GPUTestBase {
   getDefaultOrAdapterLimit(limit: GPUSupportedLimit, limitMode: LimitMode) {
     switch (limitMode) {
       case 'defaultLimit':
-        return getDefaultLimit(limit);
+        return getDefaultLimitForAdapter(this.adapter, limit);
       case 'adapterLimit':
         return this.adapter.limits[limit];
     }
@@ -380,7 +371,7 @@ export class LimitTestsImpl extends GPUTestBase {
         const extraLimit = extraLimitStr as GPUSupportedLimit;
         requiredLimits[extraLimit] =
           limitMode === 'defaultLimit'
-            ? getDefaultLimit(extraLimit)
+            ? getDefaultLimitForAdapter(adapter, extraLimit)
             : (adapter.limits[extraLimit] as number);
       }
     }

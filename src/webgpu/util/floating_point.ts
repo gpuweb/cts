@@ -5296,7 +5296,7 @@ class F16Traits extends FPTraits {
   public readonly exp2Interval = this.exp2IntervalImpl.bind(this);
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
-  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
+  public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   public readonly inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
   public readonly ldexpInterval = this.unimplementedScalarPairToInterval.bind(
@@ -5329,10 +5329,7 @@ class F16Traits extends FPTraits {
     this
   );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
-  public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
-    this,
-    'normalizeInterval'
-  );
+  public readonly normalizeInterval = this.normalizeIntervalImpl.bind(this);
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
@@ -5347,17 +5344,14 @@ class F16Traits extends FPTraits {
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.sinIntervalImpl.bind(this);
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this, 'sinhInterval');
-  public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(
-    this,
-    'smoothStepInterval'
-  );
+  public readonly smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
   public readonly sqrtInterval = this.sqrtIntervalImpl.bind(this);
   public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(
     this
   );
-  public readonly tanInterval = this.unimplementedScalarToInterval.bind(this, 'tanInterval');
+  public readonly tanInterval = this.tanIntervalImpl.bind(this);
   public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
   public readonly transposeInterval = this.transposeIntervalImpl.bind(this);
   public readonly truncInterval = this.truncIntervalImpl.bind(this);
