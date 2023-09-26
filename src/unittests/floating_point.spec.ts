@@ -3762,44 +3762,79 @@ g.test('sqrtInterval')
     );
   });
 
-g.test('tanInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // All of these are hard coded, since the error intervals are difficult to
-      // express in a closed human--readable form.
-      // Some easy looking cases like f(x = -π|π) = 0 are actually quite
-      // difficult. This is because the interval is calculated from the results
-      // of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is
-      // irrational, thus does not have an exact representation as a f32.
-      //
-      // Even at 0, which has a precise f32 value, there is still the problem
-      // that result of sin(0) and cos(0) will be intervals due to the inherited
-      // nature of errors, so the proper interval will be an interval calculated
-      // from dividing an interval by another interval and applying an error
-      // function to that.
-      //
-      // This complexity is why the entire interval framework was developed.
-      //
-      // The examples here have been manually traced to confirm the expectation
-      // values are correct.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] },  // ~0.0
-      { input: kValue.f32.negative.pi.half, expected: kUnboundedBounds },
-      { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] },  // ~0.0
-      { input: kValue.f32.positive.pi.half, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// All of these are hard coded, since the error intervals are difficult to express in a closed
+// human--readable form.
+// Some easy looking cases like f(x = -π|π) = 0 are actually quite difficult. This is because the
+// interval is calculated from the results of sin(x)/cos(x), which becomes very messy at x = -π|π,
+// since π is irrational, thus does not have an exact representation as a float.
+//
+// Even at 0, which has a precise f32/f16 value, there is still the problem that result of sin(0)
+// and cos(0) will be intervals due to the inherited nature of errors, so the proper interval will
+// be an interval calculated from dividing an interval by another interval and applying an error
+// function to that.
+//
+// This complexity is why the entire interval framework was developed.
+//
+// The examples here have been manually traced to confirm the expectation values are correct.
+// prettier-ignore
+const kTanIntervalCases = {
+  f32: [
+    { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] },  // ~0.0
+    { input: kValue.f32.negative.pi.three_quarters, expected: [reinterpretU64AsF64(0x3fef_f4b1_3000_0000n), reinterpretU64AsF64(0x3ff0_05a9_9000_0000n)] },  // ~1.0
+    { input: kValue.f32.negative.pi.third, expected: [reinterpretU64AsF64(0xbffb_c16b_d000_0000n), reinterpretU64AsF64(0xbffb_ab8f_9000_0000n)] },  // ~-√3
+    { input: kValue.f32.negative.pi.quarter, expected: [reinterpretU64AsF64(0xbff0_05a9_b000_0000n), reinterpretU64AsF64(0xbfef_f4b1_5000_0000n)] },  // ~-1.0
+    { input: kValue.f32.negative.pi.sixth, expected: [reinterpretU64AsF64(0xbfe2_80f1_f000_0000n), reinterpretU64AsF64(0xbfe2_725e_d000_0000n)] },  // ~-1/√3
+    { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] },  // ~0.0
+    { input: kValue.f32.positive.pi.sixth, expected: [reinterpretU64AsF64(0x3fe2_725e_d000_0000n), reinterpretU64AsF64(0x3fe2_80f1_f000_0000n)] },  // ~1/√3
+    { input: kValue.f32.positive.pi.quarter, expected: [reinterpretU64AsF64(0x3fef_f4b1_5000_0000n), reinterpretU64AsF64(0x3ff0_05a9_b000_0000n)] },  // ~1.0
+    { input: kValue.f32.positive.pi.third, expected: [reinterpretU64AsF64(0x3ffb_ab8f_9000_0000n), reinterpretU64AsF64(0x3ffb_c16b_d000_0000n)] },  // ~√3
+    { input: kValue.f32.positive.pi.three_quarters, expected: [reinterpretU64AsF64(0xbff0_05a9_9000_0000n), reinterpretU64AsF64(0xbfef_f4b1_3000_0000n)] },  // ~-1.0
+    { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: kValue.f16.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf7c_5600_0000_0000n), reinterpretU64AsF64(0x3f82_2e00_0000_0000n)] },  // ~0.0
+    { input: kValue.f16.negative.pi.three_quarters, expected: [reinterpretU64AsF64(0x3fef_4600_0000_0000n), reinterpretU64AsF64(0x3ff0_7200_0000_0000n)] },  // ~1.0
+    { input: kValue.f16.negative.pi.third, expected: [reinterpretU64AsF64(0xbffc_7600_0000_0000n), reinterpretU64AsF64(0xbffa_f600_0000_0000n)] },  // ~-√3
+    { input: kValue.f16.negative.pi.quarter, expected: [reinterpretU64AsF64(0xbff0_6600_0000_0000n), reinterpretU64AsF64(0xbfef_3600_0000_0000n)] },  // ~-1.0
+    { input: kValue.f16.negative.pi.sixth, expected: [reinterpretU64AsF64(0xbfe2_fe00_0000_0000n), reinterpretU64AsF64(0xbfe1_f600_0000_0000n)] },  // ~-1/√3
+    { input: 0, expected: [reinterpretU64AsF64(0xbf80_2e00_0000_0000n), reinterpretU64AsF64(0x3f80_2e00_0000_0000n)] },  // ~0.0
+    { input: kValue.f16.positive.pi.sixth, expected: [reinterpretU64AsF64(0x3fe1_f600_0000_0000n), reinterpretU64AsF64(0x3fe2_fe00_0000_0000n)] },  // ~1/√3
+    { input: kValue.f16.positive.pi.quarter, expected: [reinterpretU64AsF64(0x3fef_3600_0000_0000n), reinterpretU64AsF64(0x3ff0_6600_0000_0000n)] },  // ~1.0
+    { input: kValue.f16.positive.pi.third, expected: [reinterpretU64AsF64(0x3ffa_f600_0000_0000n), reinterpretU64AsF64(0x3ffc_7600_0000_0000n)] },  // ~√3
+    { input: kValue.f16.positive.pi.three_quarters, expected: [reinterpretU64AsF64(0xbff0_7200_0000_0000n), reinterpretU64AsF64(0xbfef_4600_0000_0000n)] },  // ~-1.0
+    { input: kValue.f16.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf82_2e00_0000_0000n), reinterpretU64AsF64(0x3f7c_5600_0000_0000n)] },  // ~0.0
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('tanInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kTanIntervalCases[p.trait],
+
+          // Cases that result in unbounded interval.
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.negative.pi.half, expected: kUnboundedBounds },
+          { input: constants.positive.pi.half, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.tanInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.tanInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
