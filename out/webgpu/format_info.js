@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { keysOf } from '../common/util/data_tables.js';import { assert } from '../common/util/util.js';
+import { align } from './util/math.js';
 
 
 //
@@ -1240,4 +1241,24 @@ export function isCompressedTextureFormat(format) {
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
+
+/**
+ * Given an array of texture formats return the number of bytes per sample.
+ */
+export function computeBytesPerSampleFromFormats(formats) {
+  let bytesPerSample = 0;
+  for (const format of formats) {
+    const info = kTextureFormatInfo[format];
+    const alignedBytesPerSample = align(bytesPerSample, info.colorRender.alignment);
+    bytesPerSample = alignedBytesPerSample + info.colorRender.byteCost;
+  }
+  return bytesPerSample;
+}
+
+/**
+ * Given an array of GPUColorTargetState return the number of bytes per sample
+ */
+export function computeBytesPerSample(targets) {
+  return computeBytesPerSampleFromFormats(targets.map(({ format }) => format));
+}
 //# sourceMappingURL=format_info.js.map
