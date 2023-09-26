@@ -1481,6 +1481,84 @@ export class FPTraits {
   }
 
   /**
+   * @returns a Case for the params and the component-wise interval generator provided.
+   * The Case will use an interval comparator for matching results.
+   * @param param0 the first vector param to pass in
+   * @param param1 the second vector param to pass in
+   * @param param2 the scalar param to pass in
+   * @param filter what interval filtering to apply
+   * @param componentWiseOps callbacks that implement generating a component-wise acceptance interval,
+   *                         one component result at a time.
+   */
+  makeVectorPairScalarToVectorComponentWiseCase(
+  param0,
+  param1,
+  param2,
+  filter,
+  ...componentWiseOps)
+  {
+    // Width of input vector
+    const width = param0.length;
+    assert(2 <= width && width <= 4, 'input vector width must between 2 and 4');
+    assert(param1.length === width, 'two input vectors must have the same width');
+    param0 = param0.map(this.quantize);
+    param1 = param1.map(this.quantize);
+    param2 = this.quantize(param2);
+
+    // Call the component-wise interval generator and build the expectation FPVector
+    const results = componentWiseOps.map((o) => {
+      return param0.map((el0, index) => o(el0, param1[index], param2));
+    });
+    if (filter === 'finite' && results.some((r) => r.some((e) => !e.isFinite()))) {
+      return undefined;
+    }
+    return {
+      input: [
+      toVector(param0, this.scalarBuilder),
+      toVector(param1, this.scalarBuilder),
+      this.scalarBuilder(param2)],
+
+      expected: anyOf(...results)
+    };
+  }
+
+  /**
+   * @returns an array of Cases for operations over a range of inputs
+   * @param param0s array of first vector inputs to try
+   * @param param1s array of second vector inputs to try
+   * @param param2s array of scalar inputs to try
+   * @param filter what interval filtering to apply
+   * @param componentWiseOpscallbacks that implement generating a component-wise acceptance interval
+   */
+  generateVectorPairScalarToVectorComponentWiseCase(
+  param0s,
+  param1s,
+  param2s,
+  filter,
+  ...componentWiseOps)
+  {
+    // Cannot use cartesianProduct here, due to heterogeneous types
+    const cases = [];
+    param0s.forEach((param0) => {
+      param1s.forEach((param1) => {
+        param2s.forEach((param2) => {
+          const c = this.makeVectorPairScalarToVectorComponentWiseCase(
+          param0,
+          param1,
+          param2,
+          filter,
+          ...componentWiseOps);
+
+          if (c !== undefined) {
+            cases.push(c);
+          }
+        });
+      });
+    });
+    return cases;
+  }
+
+  /**
    * @returns a Case for the param and an array of interval generators provided
    * @param param the param to pass in
    * @param filter what interval filtering to apply
