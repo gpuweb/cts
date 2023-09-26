@@ -2292,57 +2292,95 @@ g.test('acosInterval')
     );
   });
 
-g.test('acoshAlternativeInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: 0, expected: kUnboundedBounds },
-      { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
-      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAcoshAlternativeIntervalCases = {
+  f32: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdb_bc00_0000_0000n), reinterpretU64AsF64(0x3fdd_1000_0000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_e000_0000_0000n), reinterpretU64AsF64(0x4008_0400_0000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('acoshAlternativeInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAcoshAlternativeIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 0, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.acoshAlternativeInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.acoshAlternativeInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.acoshAlternativeInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('acoshPrimaryInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: 0, expected: kUnboundedBounds },
-      { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
-      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAcoshPrimaryIntervalCases = {
+  f32: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdb_bc00_0000_0000n), reinterpretU64AsF64(0x3fdd_1c00_0000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_e000_0000_0000n), reinterpretU64AsF64(0x4008_0400_0000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('acoshPrimaryInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAcoshPrimaryIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 0, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.acoshPrimaryInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.acoshPrimaryInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.acoshPrimaryInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2406,28 +2444,48 @@ g.test('asinInterval')
     );
   });
 
-g.test('asinhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
-      { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] },  // ~0
-      { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAsinhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
+    { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfec_b800_0000_0000n), reinterpretU64AsF64(0xbfeb_b800_0000_0000n)] },  // ~-0.88137...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf85_0200_0000_0000n), reinterpretU64AsF64(0x3f89_fa00_0000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fec_1000_0000_0000n), reinterpretU64AsF64(0x3fec_5400_0000_0000n)] },  // ~0.88137...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('asinhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAsinhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.asinhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.asinhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2506,29 +2564,50 @@ g.test('atanInterval')
     );
   });
 
-g.test('atanhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
-      { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] },  // ~0
-      { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
-      { input: 1, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAtanhIntervalCases = {
+  f32: [
+    { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
+    { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] },  // ~0
+    { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -0.1, expected: [reinterpretU64AsF64(0xbfbb_0c00_0000_0000n), reinterpretU64AsF64(0xbfb8_5800_0000_0000n)] },  // ~-0.1003...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf73_0400_0000_0000n), reinterpretU64AsF64(0x3f74_0000_0000_0000n)] },  // ~0
+    { input: 0.1, expected: [reinterpretU64AsF64(0x3fb8_3800_0000_0000n), reinterpretU64AsF64(0x3fbb_2400_0000_0000n)] },  // ~0.1003...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('atanhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAtanhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.atanhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.atanhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2663,29 +2742,48 @@ g.test('cosInterval')
     );
   });
 
-g.test('coshInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
-      { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] },  // ~1
-      { input: 1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kCoshIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
+    { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] },  // ~1
+    { input: 1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU16AsF16(0x3e27), reinterpretU16AsF16(0x3e30)] },  // ~1.1543...
+    { input: 0, expected: [reinterpretU16AsF16(0x3bff), reinterpretU16AsF16(0x3c01)] },  // ~1
+    { input: 1, expected: [reinterpretU16AsF16(0x3e27), reinterpretU16AsF16(0x3e30)] },  // ~1.1543...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('coshInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kCoshIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-
-    const got = FP.f32.coshInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.coshInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -3647,28 +3745,48 @@ g.test('sinInterval')
     );
   });
 
-g.test('sinhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [ reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] },  // ~-1.175...
-      { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] },  // ~0
-      { input: 1, expected: [ reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] },  // ~1.175...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kSinhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] },  // ~-1.175...
+    { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] },  // ~0
+    { input: 1, expected: [reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] },  // ~1.175...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU16AsF16(0xbcb8), reinterpretU16AsF16(0xbcaf)] },  // ~-1.175...
+    { input: 0, expected: [reinterpretU16AsF16(0x9200), reinterpretU16AsF16(0x1200)] },  // ~0
+    { input: 1, expected: [reinterpretU16AsF16(0x3caf), reinterpretU16AsF16(0x3cb8)] },  // ~1.175...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('sinhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kSinhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.sinhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.sinhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -3838,28 +3956,48 @@ g.test('tanInterval')
     );
   });
 
-g.test('tanhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
-      { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] },  // ~0
-      { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kTanhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
+    { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfe8_9600_0000_0000n), reinterpretU64AsF64(0xbfe8_2e00_0000_0000n)] },  // ~-0.7615...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf48_0e00_0000_0000n), reinterpretU64AsF64(0x3f48_0e00_0000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fe8_2e00_0000_0000n), reinterpretU64AsF64(0x3fe8_9600_0000_0000n)] },  // ~0.7615...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('tanhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kTanhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.tanhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.tanhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
