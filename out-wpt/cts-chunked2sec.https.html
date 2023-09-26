@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8009 variants generated from 1963 tests in 443 files -->
+<!-- Prefix: "?q="; 8024 variants generated from 1963 tests in 443 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -6753,7 +6753,22 @@
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f32:inputSource="uniform";*'><!-- estimated: 605.076 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f32:inputSource="storage_r";*'><!-- estimated: 605.076 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f32:inputSource="storage_rw";*'><!-- estimated: 605.076 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:*'><!-- estimated: 294.512 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="const";vectorize="_undef_";*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="const";vectorize=2;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="const";vectorize=3;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="const";vectorize=4;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="uniform";vectorize="_undef_";*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="uniform";vectorize=2;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="uniform";vectorize=3;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="uniform";vectorize=4;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_r";vectorize="_undef_";*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_r";vectorize=2;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_r";vectorize=3;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_r";vectorize=4;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_rw";vectorize="_undef_";*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_rw";vectorize=2;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_rw";vectorize=3;*'><!-- estimated: 816.063 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,pow:f16:inputSource="storage_rw";vectorize=4;*'><!-- estimated: 816.063 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,quantizeToF16:f32:*'><!-- estimated: 177.008 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,radians:abstract_float:*'><!-- estimated: 1971.308 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,radians:f32:*'><!-- estimated: 1190.912 ms -->

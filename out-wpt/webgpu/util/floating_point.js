@@ -4523,7 +4523,7 @@ class F16Traits extends FPTraits {
 
   negationInterval = this.negationIntervalImpl.bind(this);
   normalizeInterval = this.normalizeIntervalImpl.bind(this);
-  powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
+  powInterval = this.powIntervalImpl.bind(this);
   quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   radiansInterval = this.radiansIntervalImpl.bind(this);
   reflectInterval = this.unimplementedVectorPairToVector.bind(this, 'reflectInterval');
