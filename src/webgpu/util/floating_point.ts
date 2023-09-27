@@ -5279,10 +5279,7 @@ class F16Traits extends FPTraits {
   public readonly coshInterval = this.coshIntervalImpl.bind(this);
   public readonly crossInterval = this.crossIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
-  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
-    this,
-    'determinantInterval'
-  );
+  public readonly determinantInterval = this.determinantIntervalImpl.bind(this);
   public readonly distanceInterval = this.distanceIntervalImpl.bind(this);
   public readonly divisionInterval = this.divisionIntervalImpl.bind(this);
   public readonly dotInterval = this.dotIntervalImpl.bind(this);
