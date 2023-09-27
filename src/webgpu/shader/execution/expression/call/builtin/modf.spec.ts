@@ -18,9 +18,16 @@ Returns the result_struct for the given type.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { toVector, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
-import { fullF32Range, vectorF32Range } from '../../../../../util/math.js';
+import {
+  fullF16Range,
+  fullF32Range,
+  fullF64Range,
+  vectorF16Range,
+  vectorF32Range,
+  vectorF64Range,
+} from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
@@ -40,6 +47,24 @@ function wholeBuilder(): ShaderBuilder {
 /** @returns an ShaderBuilder that evaluates modf and returns .fract from the result structure */
 function fractBuilder(): ShaderBuilder {
   return basicExpressionBuilder(value => `modf(${value}).fract`);
+}
+
+/** @returns a fract Case for a scalar vector input */
+function makeScalarCaseFract(kind: FPKind, n: number): Case {
+  const fp = FP[kind];
+  n = fp.quantize(n);
+  const result = fp.modfInterval(n).fract;
+
+  return { input: fp.scalarBuilder(n), expected: result };
+}
+
+/** @returns a whole Case for a scalar vector input */
+function makeScalarCaseWhole(kind: FPKind, n: number): Case {
+  const fp = FP[kind];
+  n = fp.quantize(n);
+  const result = fp.modfInterval(n).whole;
+
+  return { input: fp.scalarBuilder(n), expected: result };
 }
 
 /** @returns a fract Case for a given vector input */
@@ -64,39 +89,59 @@ function makeVectorCaseWhole(kind: FPKind, v: number[]): Case {
   return { input: toVector(v, fp.scalarBuilder), expected: ws };
 }
 
+const scalar_range = {
+  f32: fullF32Range(),
+  f16: fullF16Range(),
+  abstract: fullF64Range(),
+};
+
+const vector_range = {
+  f32: {
+    2: vectorF32Range(2),
+    3: vectorF32Range(3),
+    4: vectorF32Range(4),
+  },
+  f16: {
+    2: vectorF16Range(2),
+    3: vectorF16Range(3),
+    4: vectorF16Range(4),
+  },
+  abstract: {
+    2: vectorF64Range(2),
+    3: vectorF64Range(3),
+    4: vectorF64Range(4),
+  },
+};
+
+// Cases: [f32|f16]_[fract|whole]
+const scalar_cases = (['f32', 'f16'] as const)
+  .flatMap(kind =>
+    (['whole', 'fract'] as const).map(portion => ({
+      [`${kind}_${portion}`]: () => {
+        const makeCase = portion === 'whole' ? makeScalarCaseWhole : makeScalarCaseFract;
+        return scalar_range[kind].map(makeCase.bind(null, kind));
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+// Cases: [f32|f16]_vecN_[fract|whole]
+const vec_cases = (['f32', 'f16'] as const)
+  .flatMap(kind =>
+    ([2, 3, 4] as const).flatMap(n =>
+      (['whole', 'fract'] as const).map(portion => ({
+        [`${kind}_vec${n}_${portion}`]: () => {
+          const makeCase = portion === 'whole' ? makeVectorCaseWhole : makeVectorCaseFract;
+          return vector_range[kind][n].map(makeCase.bind(null, kind));
+        },
+      }))
+    )
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('modf', {
-  f32_fract: () => {
-    const makeCase = (n: number): Case => {
-      n = FP.f32.quantize(n);
-      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).fract };
-    };
-    return fullF32Range().map(makeCase);
-  },
-  f32_whole: () => {
-    const makeCase = (n: number): Case => {
-      n = FP.f32.quantize(n);
-      return { input: FP.f32.scalarBuilder(n), expected: FP.f32.modfInterval(n).whole };
-    };
-    return fullF32Range().map(makeCase);
-  },
-  f32_vec2_fract: () => {
-    return vectorF32Range(2).map(makeVectorCaseFract.bind(null, 'f32'));
-  },
-  f32_vec2_whole: () => {
-    return vectorF32Range(2).map(makeVectorCaseWhole.bind(null, 'f32'));
-  },
-  f32_vec3_fract: () => {
-    return vectorF32Range(3).map(makeVectorCaseFract.bind(null, 'f32'));
-  },
-  f32_vec3_whole: () => {
-    return vectorF32Range(3).map(makeVectorCaseWhole.bind(null, 'f32'));
-  },
-  f32_vec4_fract: () => {
-    return vectorF32Range(4).map(makeVectorCaseFract.bind(null, 'f32'));
-  },
-  f32_vec4_whole: () => {
-    return vectorF32Range(4).map(makeVectorCaseWhole.bind(null, 'f32'));
-  },
+  ...scalar_cases,
+  ...vec_cases,
 });
 
 g.test('f32_fract')
@@ -256,7 +301,13 @@ struct __modf_result_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_fract');
+    await run(t, fractBuilder(), [TypeF16], TypeF16, t.params, cases);
+  });
 
 g.test('f16_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -271,7 +322,13 @@ struct __modf_result_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_whole');
+    await run(t, wholeBuilder(), [TypeF16], TypeF16, t.params, cases);
+  });
 
 g.test('f16_vec2_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -286,7 +343,13 @@ struct __modf_result_vec2_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec2_fract');
+    await run(t, fractBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
+  });
 
 g.test('f16_vec2_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -301,7 +364,13 @@ struct __modf_result_vec2_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec2_whole');
+    await run(t, wholeBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
+  });
 
 g.test('f16_vec3_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -316,7 +385,13 @@ struct __modf_result_vec3_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec3_fract');
+    await run(t, fractBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
+  });
 
 g.test('f16_vec3_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -331,7 +406,13 @@ struct __modf_result_vec3_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec3_whole');
+    await run(t, wholeBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
+  });
 
 g.test('f16_vec4_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -346,7 +427,13 @@ struct __modf_result_vec4_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec4_fract');
+    await run(t, fractBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
+  });
 
 g.test('f16_vec4_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
@@ -361,4 +448,10 @@ struct __modf_result_vec4_f16 {
 `
   )
   .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  })
+  .fn(async t => {
+    const cases = await d.get('f16_vec4_whole');
+    await run(t, wholeBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
+  });

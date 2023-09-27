@@ -8043,44 +8043,51 @@ fn((t) => {
 
 
 
-g.test('modfInterval_f32').
-paramsSubcasesOnly(
+g.test('modfInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const constants = FP[p.trait].constants();
 
-[
-// Normals
-{ input: 0, fract: 0, whole: 0 },
-{ input: 1, fract: 0, whole: 1 },
-{ input: -1, fract: 0, whole: -1 },
-{ input: 0.5, fract: 0.5, whole: 0 },
-{ input: -0.5, fract: -0.5, whole: 0 },
-{ input: 2.5, fract: 0.5, whole: 2 },
-{ input: -2.5, fract: -0.5, whole: -2 },
-{ input: 10.0, fract: 0, whole: 10 },
-{ input: -10.0, fract: 0, whole: -10 },
+  return [
+  // Normals
+  { input: 0, fract: 0, whole: 0 },
+  { input: 1, fract: 0, whole: 1 },
+  { input: -1, fract: 0, whole: -1 },
+  { input: 0.5, fract: 0.5, whole: 0 },
+  { input: -0.5, fract: -0.5, whole: 0 },
+  { input: 2.5, fract: 0.5, whole: 2 },
+  { input: -2.5, fract: -0.5, whole: -2 },
+  { input: 10.0, fract: 0, whole: 10 },
+  { input: -10.0, fract: 0, whole: -10 },
 
-// Subnormals
-{ input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: 0 },
-{ input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: 0 },
-{ input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: 0 },
-{ input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: 0 },
+  // Subnormals
+  { input: constants.positive.subnormal.min, fract: [0, constants.positive.subnormal.min], whole: 0 },
+  { input: constants.positive.subnormal.max, fract: [0, constants.positive.subnormal.max], whole: 0 },
+  { input: constants.negative.subnormal.min, fract: [constants.negative.subnormal.min, 0], whole: 0 },
+  { input: constants.negative.subnormal.max, fract: [constants.negative.subnormal.max, 0], whole: 0 },
 
-// Boundaries
-{ input: kValue.f32.negative.min, fract: 0, whole: kValue.f32.negative.min },
-{ input: kValue.f32.negative.max, fract: kValue.f32.negative.max, whole: 0 },
-{ input: kValue.f32.positive.min, fract: kValue.f32.positive.min, whole: 0 },
-{ input: kValue.f32.positive.max, fract: 0, whole: kValue.f32.positive.max }]).
+  // Boundaries
+  { input: constants.negative.min, fract: 0, whole: constants.negative.min },
+  { input: constants.negative.max, fract: constants.negative.max, whole: 0 },
+  { input: constants.positive.min, fract: constants.positive.min, whole: 0 },
+  { input: constants.positive.max, fract: 0, whole: constants.positive.max }];
 
+})).
 
 fn((t) => {
+  const trait = FP[t.params.trait];
   const expected = {
-    fract: FP.f32.toInterval(t.params.fract),
-    whole: FP.f32.toInterval(t.params.whole)
+    fract: trait.toInterval(t.params.fract),
+    whole: trait.toInterval(t.params.whole)
   };
 
-  const got = FP.f32.modfInterval(t.params.input);
+  const got = trait.modfInterval(t.params.input);
   t.expect(
   objectEquals(expected, got),
-  `f32.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`);
+  `${trait}.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`);
 
 });
 
