@@ -8046,7 +8046,7 @@ fn((t) => {
 g.test('modfInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
