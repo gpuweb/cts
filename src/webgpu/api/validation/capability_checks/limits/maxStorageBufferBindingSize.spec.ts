@@ -4,7 +4,6 @@ import {
   kMaximumLimitBaseParams,
   makeLimitTestGroup,
   LimitMode,
-  getDefaultLimit,
   MaximumLimitValueTest,
   MaximumTestValue,
 } from './limit_utils.js';
@@ -149,6 +148,6 @@ g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
   .fn(t => {
     const { adapter, defaultLimit, adapterLimit } = t;
-    t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+    t.expect(defaultLimit <= t.getDefaultLimit('maxBufferSize'));
     t.expect(adapterLimit <= adapter.limits.maxBufferSize);
   });
