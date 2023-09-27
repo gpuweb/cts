@@ -408,6 +408,16 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 
     // plain, mixed component width, 32 bits per texel
 
+    rgb10a2uint: {
+      color: { type: 'uint', copySrc: true, copyDst: true, storage: false, bytes: 4 },
+      colorRender: { blend: false, resolve: false, byteCost: 8, alignment: 4 },
+      renderable: true,
+      /*prettier-ignore*/ get renderTargetComponentAlignment() { return this.colorRender.alignment; },
+      /*prettier-ignore*/ get renderTargetPixelByteCost() { return this.colorRender.byteCost; },
+      multisample: true,
+      /*prettier-ignore*/ get sampleType() { return this.color.type; },
+      /*prettier-ignore*/ get bytesPerBlock() { return this.color.bytes; },
+    },
     rgb10a2unorm: {
       color: { type: 'float', copySrc: true, copyDst: true, storage: false, bytes: 4 },
       colorRender: { blend: true, resolve: true, byteCost: 8, alignment: 4 },

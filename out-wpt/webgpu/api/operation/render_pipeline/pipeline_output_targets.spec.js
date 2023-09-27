@@ -31,11 +31,14 @@ export const g = makeTestGroup(TextureTestMixin(GPUTest));
 // Values to write into each attachment
 // We make values different for each attachment index and each channel
 // to make sure they didn't get mixed up
+
+// Clamp alpha to 3 to avoid comparing a large expected value with a max 3 value for rgb10a2uint
+// MAINTENANCE_TODO: Make TexelRepresentation.numericRange per-component and use that.
 const attachmentsIntWriteValues = [
-  { R: 1, G: 2, B: 3, A: 4 },
-  { R: 5, G: 6, B: 7, A: 8 },
-  { R: 9, G: 10, B: 11, A: 12 },
-  { R: 13, G: 14, B: 15, A: 16 },
+  { R: 1, G: 2, B: 3, A: 1 },
+  { R: 5, G: 6, B: 7, A: 2 },
+  { R: 9, G: 10, B: 11, A: 3 },
+  { R: 13, G: 14, B: 15, A: 0 },
 ];
 
 const attachmentsFloatWriteValues = [
