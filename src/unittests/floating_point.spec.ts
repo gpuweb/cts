@@ -2990,7 +2990,7 @@ g.test('fractInterval')
           { input: constants.positive.infinity, expected: kUnboundedBounds },
           { input: constants.negative.infinity, expected: kUnboundedBounds },
           { input: constants.positive.max, expected: 0 },
-          { input: constants.positive.min, expected: [constants.positive.min, constants.positive.min] },
+          { input: constants.positive.min, expected: constants.positive.min },
           { input: constants.negative.min, expected: 0 },
           { input: constants.negative.max, expected: [constants.positive.less_than_one, 1.0] },
         ];
