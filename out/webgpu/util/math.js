@@ -920,9 +920,6 @@ counts =
   kBit.f32.subnormal.negative.max,
   counts.neg_sub),
 
-  // -0.0
-  0x80000000,
-  // +0.0
   0,
   ...linearRange(
   kBit.f32.subnormal.positive.min,
@@ -987,9 +984,6 @@ counts =
   kBit.f16.subnormal.negative.max,
   counts.neg_sub),
 
-  // -0.0
-  0x8000,
-  // +0.0
   0,
   ...linearRange(
   kBit.f16.subnormal.positive.min,
@@ -1038,9 +1032,6 @@ counts =
   kBit.f64.subnormal.negative.max,
   counts.neg_sub),
 
-  // -0.0
-  0x8000_0000_0000_0000n,
-  // +0.0
   0n,
   ...linearRangeBigInt(
   kBit.f64.subnormal.positive.min,
@@ -1097,9 +1088,6 @@ counts = {
   kBit.f64.subnormal.negative.max,
   counts.neg_sub),
 
-  // -0.0
-  0x8000_0000_0000_0000n,
-  // +0.0
   0n,
   ...linearRangeBigInt(
   kBit.f64.subnormal.positive.min,
