@@ -3045,38 +3045,62 @@ g.test('floorInterval')
     );
   });
 
-g.test('fractInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: 0, expected: 0 },
-      { input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-      { input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
-      { input: 1.0, expected: 0 },
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fb9_9998_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-      { input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
-      { input: -0.9, expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-      { input: -1.0, expected: 0 },
-      { input: -1.1, expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
+// prettier-ignore
+const kFractIntervalCases = {
+  f32: [
+    { input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+    { input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
+    { input: 1.1, expected: [reinterpretU32AsF32(0x3dccccc0), reinterpretU32AsF32(0x3dccccd0)] }, // ~0.1
+    { input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
+    { input: -0.9, expected: [reinterpretU32AsF32(0x3dccccc8), reinterpretU32AsF32(0x3dccccd0)] }, // ~0.1
+    { input: -1.1, expected: [reinterpretU32AsF32(0x3f666666), reinterpretU32AsF32(0x3f666668)] }, // ~0.9
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.max, expected: 0 },
-      { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
-      { input: kValue.f32.negative.min, expected: 0 },
-      { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] },
+    // https://github.com/gpuweb/cts/issues/2766
+    { input: 0x80000000, expected: 0 },
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 0.1, expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] }, // ~0.1
+    { input: 0.9, expected: [reinterpretU16AsF16(0x3b33), reinterpretU16AsF16(0x3b34)] },  // ~0.9
+    { input: 1.1, expected: [reinterpretU16AsF16(0x2e60), reinterpretU16AsF16(0x2e70)] }, // ~0.1
+    { input: -0.1, expected: [reinterpretU16AsF16(0x3b33), reinterpretU16AsF16(0x3b34)] },  // ~0.9
+    { input: -0.9, expected: [reinterpretU16AsF16(0x2e60), reinterpretU16AsF16(0x2e68)] }, // ~0.1
+    { input: -1.1, expected: [reinterpretU16AsF16(0x3b32), reinterpretU16AsF16(0x3b34)] }, // ~0.9
+    { input: 658.5, expected: 0.5 },
+  ] as ScalarToIntervalCase[],
+} as const;
 
-      // https://github.com/gpuweb/cts/issues/2766
-      { input: 0x80000000, expected: 0 },
-]
+g.test('fractInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          { input: 0, expected: 0 },
+          { input: 1.0, expected: 0 },
+          { input: -1.0, expected: 0 },
+
+          ...kFractIntervalCases[p.trait],
+
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: 0 },
+          { input: constants.positive.min, expected: constants.positive.min },
+          { input: constants.negative.min, expected: 0 },
+          { input: constants.negative.max, expected: [constants.positive.less_than_one, 1.0] },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.fractInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.fractInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
