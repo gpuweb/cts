@@ -2162,15 +2162,23 @@ type ConstantNumberFrequentlyUsedInCases = '0.1' | '-0.1' | '1.9' | '-1.9';
 // Correctly rounded expectation of frequently used JS Number value in test cases
 const kConstantCorrectlyRoundedExpectation = {
   f32: {
+    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD
     '0.1': [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
+    // -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
     '-0.1': [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)],
+    // 1.9 falls between f32 0x3FF33333 and 0x3FF33334
     '1.9': [reinterpretU32AsF32(0x3ff33333), reinterpretU32AsF32(0x3ff33334)],
+    // -1.9 falls between f32 0xBFF33334 and 0xBFF33333
     '-1.9': [reinterpretU32AsF32(0xbff33334), reinterpretU32AsF32(0xbff33333)],
   } as { [value in ConstantNumberFrequentlyUsedInCases]: IntervalBounds },
   f16: {
+    // 0.1 falls between f16 0x2E66 and 0x2E67
     '0.1': [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+    // -0.1 falls between f16 0xAE67 and 0xAE66
     '-0.1': [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)],
+    // 1.9 falls between f16 0x3F99 and 0x3F9A
     '1.9': [reinterpretU16AsF16(0x3f99), reinterpretU16AsF16(0x3f9a)],
+    // 1.9 falls between f16 0xBF9A and 0xBF99
     '-1.9': [reinterpretU16AsF16(0xbf9a), reinterpretU16AsF16(0xbf99)],
   } as { [value in ConstantNumberFrequentlyUsedInCases]: IntervalBounds },
   // Since abstract is actually f64 and JS number is also f64, the JS number value will map to
@@ -2203,7 +2211,7 @@ g.test('absInterval')
           // abs(+/-0.1) is correctly rounded interval of 0.1
           { input: 0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},
           { input: -0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},
-          // abs(+/-1.9) is correctly rounded interval of 0.1
+          // abs(+/-1.9) is correctly rounded interval of 1.9
           { input: 1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['1.9']},
           { input: -1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['1.9']},
 
