@@ -131,7 +131,7 @@ const vector_range = {
   },
 };
 
-// Cases: [f32|f16]_[fract|whole]
+// Cases: [f32|f16|abstract]_[fract|whole]
 const scalar_cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(kind =>
     (['whole', 'fract'] as const).map(portion => ({
@@ -143,7 +143,7 @@ const scalar_cases = (['f32', 'f16', 'abstract'] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-// Cases: [f32|f16]_vecN_[fract|whole]
+// Cases: [f32|f16|abstract]_vecN_[fract|whole]
 const vec_cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(kind =>
     ([2, 3, 4] as const).flatMap(n =>
