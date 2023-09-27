@@ -4455,51 +4455,101 @@ fn((t) => {
 
 });
 
-g.test('ldexpInterval_f32').
-paramsSubcasesOnly(
+const kLdexpIntervalCases = {
+  f32: [
+  // 64-bit normals
+  { input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f32'](2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
+  { input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f32'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
+  // Edge Cases
+  // f32 0b0_01111111_11111111111111111111111 = 1.9999998807907104,
+  // 1.9999998807907104 * 2 ** 127 = f32.positive.max
+  { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
+  // f32.positive.min = 1 * 2 ** -126
+  { input: [1, -126], expected: kValue.f32.positive.min },
+  // f32.subnormal.positive.max = 0.9999998807907104 * 2 ** -126
+  { input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
+  // f32.subnormal.positive.min = 1.1920928955078125e-07 * 2 ** -126
+  { input: [1.1920928955078125e-7, -126], expected: [0, kValue.f32.subnormal.positive.min] },
+  { input: [-1.1920928955078125e-7, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
+  { input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
+  { input: [-1, -126], expected: kValue.f32.negative.max },
+  { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
+  // e2 + bias <= 0, expect correctly rounded intervals.
+  { input: [2 ** 120, -130], expected: 2 ** -10 },
+  // Out of Bounds
+  { input: [1, 128], expected: kUnboundedBounds },
+  { input: [-1, 128], expected: kUnboundedBounds },
+  { input: [100, 126], expected: kUnboundedBounds },
+  { input: [-100, 126], expected: kUnboundedBounds },
+  { input: [2 ** 100, 100], expected: kUnboundedBounds }],
 
-[
-// 32-bit normals
-{ input: [0, 0], expected: 0 },
-{ input: [0, 1], expected: 0 },
-{ input: [0, -1], expected: 0 },
-{ input: [1, 1], expected: 2 },
-{ input: [1, -1], expected: 0.5 },
-{ input: [-1, 1], expected: -2 },
-{ input: [-1, -1], expected: -0.5 },
+  f16: [
+  // 64-bit normals
+  { input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f16'](2, 2)] }, // ~2, additional ULP error due to first param not being f16 precise
+  { input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f16'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f16 precise
+  // Edge Cases
+  // f16 0b0_01111_1111111111 = 1.9990234375, 1.9990234375 * 2 ** 15 = f16.positive.max
+  { input: [1.9990234375, 15], expected: kValue.f16.positive.max },
+  // f16.positive.min = 1 * 2 ** -14
+  { input: [1, -14], expected: kValue.f16.positive.min },
+  // f16.subnormal.positive.max = 0.9990234375 * 2 ** -14
+  { input: [0.9990234375, -14], expected: [0, kValue.f16.subnormal.positive.max] },
+  // f16.subnormal.positive.min = 1 * 2 ** -10 * 2 ** -14 = 0.0009765625 * 2 ** -14
+  { input: [0.0009765625, -14], expected: [0, kValue.f16.subnormal.positive.min] },
+  { input: [-0.0009765625, -14], expected: [kValue.f16.subnormal.negative.max, 0] },
+  { input: [-0.9990234375, -14], expected: [kValue.f16.subnormal.negative.min, 0] },
+  { input: [-1, -14], expected: kValue.f16.negative.max },
+  { input: [-1.9990234375, 15], expected: kValue.f16.negative.min },
+  // e2 + bias <= 0, expect correctly rounded intervals.
+  { input: [2 ** 12, -18], expected: 2 ** -6 },
+  // Out of Bounds
+  { input: [1, 16], expected: kUnboundedBounds },
+  { input: [-1, 16], expected: kUnboundedBounds },
+  { input: [100, 14], expected: kUnboundedBounds },
+  { input: [-100, 14], expected: kUnboundedBounds },
+  { input: [2 ** 10, 10], expected: kUnboundedBounds }]
 
-// 64-bit normals
-{ input: [0, 0.1], expected: 0 },
-{ input: [0, -0.1], expected: 0 },
-{ input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f32'](2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
-{ input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f32'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
+};
 
-// Edge Cases
-{ input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
-{ input: [1, -126], expected: kValue.f32.positive.min },
-{ input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
-{ input: [1.1920928955078125e-07, -126], expected: [0, kValue.f32.subnormal.positive.min] },
-{ input: [-1.1920928955078125e-07, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
-{ input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
-{ input: [-1, -126], expected: kValue.f32.negative.max },
-{ input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
+g.test('ldexpInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
-// Out of Bounds
-{ input: [1, 128], expected: kUnboundedBounds },
-{ input: [-1, 128], expected: kUnboundedBounds },
-{ input: [100, 126], expected: kUnboundedBounds },
-{ input: [-100, 126], expected: kUnboundedBounds },
-{ input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
-{ input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds }]).
+  return [
+  // always exactly represeantable cases
+  { input: [0, 0], expected: 0 },
+  { input: [0, 1], expected: 0 },
+  { input: [0, -1], expected: 0 },
+  { input: [1, 1], expected: 2 },
+  { input: [1, -1], expected: 0.5 },
+  { input: [-1, 1], expected: -2 },
+  { input: [-1, -1], expected: -0.5 },
 
+  ...kLdexpIntervalCases[p.trait],
+
+  // Extremely negative e2, any float value should be scale to 0.0 as the ground truth
+  // f64 e1 * 2 ** e2 would be 0.0 for e2 = -2147483648.
+  { input: [constants.positive.max, kValue.i32.negative.min], expected: 0 },
+  { input: [constants.negative.min, kValue.i32.negative.min], expected: 0 },
+  // Out of Bounds
+  { input: [constants.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
+  { input: [constants.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds }];
+
+})).
 
 fn((t) => {
   const [x, y] = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.ldexpInterval(x, y);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.ldexpInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 

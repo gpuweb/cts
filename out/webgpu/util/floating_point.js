@@ -3485,37 +3485,52 @@ export class FPTraits {
   /** Calculate an acceptance interval of inverseSqrt(x) */
 
 
-  // This op should be implemented differently for f32 and f16.
   LdexpIntervalOp = {
-    impl: this.limitScalarPairToIntervalDomain(
-    // Implementing SPIR-V's more restrictive domain until
-    // https://github.com/gpuweb/gpuweb/issues/3134 is resolved
-    {
-      x: [this.toInterval([kValue.f32.negative.min, kValue.f32.positive.max])],
-      y: [this.toInterval([-126, 128])]
-    },
-    (e1, e2) => {
-      // Though the spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, the
-      // accuracy is listed as correctly rounded to the true value, so the
-      // inheritance framework does not need to be invoked to determine
-      // bounds.
+    impl: (e1, e2) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      assert(Number.isInteger(e2), 'the second param of ldexp must be an integer');
+      const bias = this.kind === 'f32' ? 127 : 15;
+      // Spec explicitly calls indeterminate value if e2 > bias + 1
+      if (e2 > bias + 1) {
+        return this.constants().unboundedInterval;
+      }
+      // The spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, and the accuracy is correctly
+      // rounded to the true value, so the inheritance framework does not need to be invoked to
+      // determine bounds.
       // Instead, the value at a higher precision is calculated and passed to
       // correctlyRoundedInterval.
       const result = e1 * 2 ** e2;
-      if (Number.isNaN(result)) {
-        // Overflowed TS's number type, so definitely out of bounds for f32
+      if (!Number.isFinite(result)) {
+        // Overflowed TS's number type, so definitely out of bounds for f32/f16
         return this.constants().unboundedInterval;
       }
+      // The result may be zero if e2 + bias <= 0, but we can't simply span the interval to 0.0.
+      // For example, for f32 input e1 = 2**120 and e2 = -130, e2 + bias = -3 <= 0, but
+      // e1 * 2 ** e2 = 2**-10, so the valid result is 2**-10 or 0.0, instead of [0.0, 2**-10].
+      // Always return the correctly-rounded interval, and special examination should be taken when
+      // using the result.
       return this.correctlyRoundedInterval(result);
-    })
-
+    }
   };
 
   ldexpIntervalImpl(e1, e2) {
-    return this.roundAndFlushScalarPairToInterval(e1, e2, this.LdexpIntervalOp);
+    // Only round and flush e1, as e2 is of integer type (i32 or abstract integer) and should be
+    // precise.
+    return this.roundAndFlushScalarToInterval(e1, {
+      impl: (e1) => this.LdexpIntervalOp.impl(e1, e2)
+    });
   }
 
-  /** Calculate an acceptance interval of ldexp(e1, e2) */
+  /**
+   * Calculate an acceptance interval of ldexp(e1, e2), where e2 is integer
+   *
+   * Spec indicate that the result may be zero if e2 + bias <= 0, no matter how large
+   * was e1 * 2 ** e2, i.e. the actual valid result is correctlyRounded(e1 * 2 ** e2) or 0.0, if
+   * e2 + bias <= 0. Such discontinious flush-to-zero behavior is hard to be expressed using
+   * FPInterval, therefore in the situation of e2 + bias <= 0 the returned interval would be just
+   * correctlyRounded(e1 * 2 ** e2), and special examination should be taken when using the result.
+   *
+   */
 
 
   LengthIntervalScalarOp = {
@@ -5290,10 +5305,7 @@ class F16Traits extends FPTraits {
   fmaInterval = this.fmaIntervalImpl.bind(this);
   fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   inverseSqrtInterval = this.inverseSqrtIntervalImpl.bind(this);
-  ldexpInterval = this.unimplementedScalarPairToInterval.bind(
-  this,
-  'ldexpInterval');
-
+  ldexpInterval = this.ldexpIntervalImpl.bind(this);
   lengthInterval = this.lengthIntervalImpl.bind(this);
   logInterval = this.logIntervalImpl.bind(this);
   log2Interval = this.log2IntervalImpl.bind(this);
