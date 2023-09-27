@@ -6339,62 +6339,89 @@ fn((t) => {
 
 });
 
-g.test('reflectInterval_f32').
-paramsSubcasesOnly(
 
-[
-// vec2s
-{ input: [[1.0, 0.0], [1.0, 0.0]], expected: [-1.0, 0.0] },
-{ input: [[1.0, 0.0], [0.0, 1.0]], expected: [1.0, 0.0] },
-{ input: [[0.0, 1.0], [0.0, 1.0]], expected: [0.0, -1.0] },
-{ input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
-{ input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
-{ input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
-{ input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] }, // [~-0.3, ~-0.3]
-{ input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0]
+const kReflectIntervalCases = {
+  f32: [
+  // vec2s
+  { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] }, // [~-0.3, ~-0.3]
+  { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0]
+  // vec3s
+  { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] }, // [~-0.5, ~-0.5, ~-0.5]
+  { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0]
+  // vec4s
+  { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] }, // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
+  { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] } // [~0.0, ~0.0, ~0.0, ~0.0]
+  ],
+  f16: [
+  // vec2s
+  { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)], [reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)]] }, // [~-0.3, ~-0.3]
+  { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)]] }, // [~0.0, ~0.0]
+  // vec3s
+  { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)]] }, // [~-0.5, ~-0.5, ~-0.5]
+  { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] }, // [~0.0, ~0.0, ~0.0]
+  // vec4s
+  { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)]] }, // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
+  { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] } // [~0.0, ~0.0, ~0.0, ~0.0]
+  ]
+};
 
-// vec3s
-{ input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
-{ input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
-{ input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0] },
-{ input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0] },
-{ input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
-{ input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
-{ input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
-{ input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] }, // [~-0.5, ~-0.5, ~-0.5]
-{ input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0]
+g.test('reflectInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+expandWithParams((p) => {
+  const trait = FP[p.trait];
+  const constants = trait.constants();
 
-// vec4s
-{ input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
-{ input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
-{ input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0, 0.0] },
-{ input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0, 1.0] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-{ input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-{ input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
-{ input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] }, // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
-{ input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] }, // [~0.0, ~0.0, ~0.0, ~0.0]
+  return [
+  ...kReflectIntervalCases[p.trait],
 
-// Test that dot going OOB bounds in the intermediate calculations propagates
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-{ input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-{ input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-{ input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-{ input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  // vec2s
+  { input: [[1.0, 0.0], [1.0, 0.0]], expected: [-1.0, 0.0] },
+  { input: [[1.0, 0.0], [0.0, 1.0]], expected: [1.0, 0.0] },
+  { input: [[0.0, 1.0], [0.0, 1.0]], expected: [0.0, -1.0] },
+  { input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
+  { input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
+  { input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
+  // vec3s
+  { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
+  { input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
+  { input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0] },
+  { input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0] },
+  { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
+  { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
+  { input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
+  // vec4s
+  { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
+  { input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
+  { input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0, 0.0] },
+  { input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0, 1.0] },
+  { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+  { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+  { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+  { input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
+  // Test that dot going OOB bounds in the intermediate calculations propagates
+  { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[constants.positive.max, constants.positive.nearest_max, constants.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+  { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
 
-// Test that post-dot going OOB propagates
-{ input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }]).
+  // Test that post-dot going OOB propagates
+  { input: [[constants.positive.max, 1.0, 2.0, 3.0], [-1.0, constants.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }];
 
+})).
 
 fn((t) => {
   const [x, y] = t.params.input;
-  const expected = FP.f32.toVector(t.params.expected);
-  const got = FP.f32.reflectInterval(x, y);
+  const trait = FP[t.params.trait];
+  const expected = trait.toVector(t.params.expected);
+  const got = trait.reflectInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `f32.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
+  `${t.params.trait}.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
   got)
   }. Expected ${JSON.stringify(expected)}`);
 
@@ -8136,60 +8163,98 @@ fn((t) => {
 // Scope for refractInterval tests so that they can have constants for magic
 // numbers that don't pollute the global namespace or have unwieldy long names.
 {
-  const kNegativeOneBounds = [
-  reinterpretU64AsF64(0xbff0_0000_c000_0000n),
-  reinterpretU64AsF64(0xbfef_ffff_4000_0000n)];
+  const kNegativeOneBounds = {
+    f32: [
+    reinterpretU64AsF64(0xbff0_0000_c000_0000n),
+    reinterpretU64AsF64(0xbfef_ffff_4000_0000n)],
+
+    f16: [reinterpretU16AsF16(0xbc06), reinterpretU16AsF16(0xbbfa)]
+  };
 
 
-  g.test('refractInterval_f32').
-  paramsSubcasesOnly(
-  // Some of these are hard coded, since the error intervals are difficult
-  // to express in a closed human-readable form due to the inherited nature
-  // of the errors.
+  const kRefractIntervalCases = {
+    f32: [
+    // k > 0
+    // vec2
+    { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU32AsF32(0x40ce87a4), reinterpretU32AsF32(0x40ce8840)], // ~6.454...
+      [reinterpretU32AsF32(0xc100fae8), reinterpretU32AsF32(0xc100fa80)]] }, // ~-8.061...
+    // vec3
+    { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU32AsF32(0x40d24480), reinterpretU32AsF32(0x40d24c00)], // ~6.571...
+      [reinterpretU32AsF32(0xc1576f80), reinterpretU32AsF32(0xc1576ad0)], // ~-13.464...
+      [reinterpretU32AsF32(0x41a2d9b0), reinterpretU32AsF32(0x41a2dc80)]] }, // ~20.356...
+    // vec4
+    { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [[reinterpretU32AsF32(0x410ae480), reinterpretU32AsF32(0x410af240)], // ~8.680...
+      [reinterpretU32AsF32(0xc18cf7c0), reinterpretU32AsF32(0xc18cef80)], // ~-17.620...
+      [reinterpretU32AsF32(0x41d46cc0), reinterpretU32AsF32(0x41d47660)], // ~26.553...
+      [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] } // ~-35.494...
+    ],
+    f16: [
+    // k > 0
+    // vec2
+    { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU16AsF16(0x4620), reinterpretU16AsF16(0x46bc)], // ~6.454...
+      [reinterpretU16AsF16(0xc840), reinterpretU16AsF16(0xc7b0)]] }, // ~-8.061...
+    // vec3
+    { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU16AsF16(0x4100), reinterpretU16AsF16(0x4940)], // ~6.571...
+      [reinterpretU16AsF16(0xcc98), reinterpretU16AsF16(0xc830)], // ~-13.464...
+      [reinterpretU16AsF16(0x4b20), reinterpretU16AsF16(0x4e90)]] }, // ~20.356...
+    // vec4
+    // x = [1, -2, 3, -4], y = [-5, 6, -7, 8], z = 9,
+    // dot(y, x) = -71, k = 1.0 - 9 * 9 * (1.0 - 71 * 71) = 408241 overflow f16.
+    { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    // x = [1, -2, 3, -4], y = [-5, 4, -3, 2], z = 2.5,
+    // dot(y, x) = -30, k = 1.0 - 2.5 * 2.5 * (1.0 - 30 * 30) = 5619.75.
+    // a = z * dot(y, x) + sqrt(k) = ~-0.035, result is about z * x - a * y = [~2.325, ~-4.86, ~7.4025, ~-9.93]
+    { input: [[1, -2, 3, -4], [-5, 4, -3, 2], 2.5], expected: [[reinterpretU16AsF16(0x3900), reinterpretU16AsF16(0x4410)], // ~2.325
+      [reinterpretU16AsF16(0xc640), reinterpretU16AsF16(0xc300)], // ~-4.86
+      [reinterpretU16AsF16(0x4660), reinterpretU16AsF16(0x4838)], // ~7.4025
+      [reinterpretU16AsF16(0xc950), reinterpretU16AsF16(0xc8a0)]] } // ~-9.93
+    ]
+  };
 
+  g.test('refractInterval').
+  params((u) =>
+  u.
+  combine('trait', ['f32', 'f16']).
+  beginSubcases().
+  expandWithParams((p) => {
+    const trait = FP[p.trait];
+    const constants = trait.constants();
 
-  [
-  // k < 0
-  { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
+    return [
+    ...kRefractIntervalCases[p.trait],
 
-  // k contains 0
-  { input: [[1, 1], [0.1, 0], 1.005038], expected: [kUnboundedBounds, kUnboundedBounds] },
+    // k < 0
+    { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
 
-  // k > 0
-  // vec2
-  { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, 1] },
-  { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU32AsF32(0x40ce87a4), reinterpretU32AsF32(0x40ce8840)], // ~6.454...
-    [reinterpretU32AsF32(0xc100fae8), reinterpretU32AsF32(0xc100fa80)]] }, // ~-8.061...
+    // k contains 0
+    { input: [[1, 1], [0.1, 0], 1.005038], expected: [kUnboundedBounds, kUnboundedBounds] },
 
-  // vec3
-  { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1] },
-  { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU32AsF32(0x40d24480), reinterpretU32AsF32(0x40d24c00)], // ~6.571...
-    [reinterpretU32AsF32(0xc1576f80), reinterpretU32AsF32(0xc1576ad0)], // ~-13.464...
-    [reinterpretU32AsF32(0x41a2d9b0), reinterpretU32AsF32(0x41a2dc80)]] }, // ~20.356...
+    // k > 0
+    // vec2
+    { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds[p.trait], 1] },
+    // vec3
+    { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds[p.trait], 1, 1] },
+    // vec4
+    { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds[p.trait], 1, 1, 1] },
 
-  // vec4
-  { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1, 1] },
-  { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [[reinterpretU32AsF32(0x410ae480), reinterpretU32AsF32(0x410af240)], // ~8.680...
-    [reinterpretU32AsF32(0xc18cf7c0), reinterpretU32AsF32(0xc18cef80)], // ~-17.620...
-    [reinterpretU32AsF32(0x41d46cc0), reinterpretU32AsF32(0x41d47660)], // ~26.553...
-    [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] }, // ~-35.494...
+    // Test that dot going OOB bounds in the intermediate calculations propagates
+    { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    { input: [[constants.positive.max, constants.positive.nearest_max, constants.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+    { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }];
 
-  // Test that dot going OOB bounds in the intermediate calculations propagates
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-  { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-  { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-  { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-  { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }]).
-
+  })).
 
   fn((t) => {
     const [i, s, r] = t.params.input;
-    const expected = FP.f32.toVector(t.params.expected);
-    const got = FP.f32.refractInterval(i, s, r);
+    const trait = FP[t.params.trait];
+    const expected = trait.toVector(t.params.expected);
+    const got = trait.refractInterval(i, s, r);
     t.expect(
     objectEquals(expected, got),
-    `refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`);
+    `${t.params.trait}.refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`);
 
   });
 }

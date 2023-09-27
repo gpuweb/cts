@@ -3908,7 +3908,7 @@ export abstract class FPTraits {
 
   /**
    * refract is a singular function in the sense that it is the only builtin that
-   * takes in (FPVector, FPVector, F32) and returns FPVector and is basically
+   * takes in (FPVector, FPVector, F32/F16) and returns FPVector and is basically
    * defined in terms of other functions.
    *
    * Instead of implementing all the framework code to integrate it with its
@@ -5324,11 +5324,8 @@ class F16Traits extends FPTraits {
   public readonly powInterval = this.powIntervalImpl.bind(this);
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalNotAvailable.bind(this);
   public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
-  public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
-    this,
-    'reflectInterval'
-  );
-  public readonly refractInterval = this.unimplementedRefract.bind(this);
+  public readonly reflectInterval = this.reflectIntervalImpl.bind(this);
+  public readonly refractInterval = this.refractIntervalImpl.bind(this);
   public readonly remainderInterval = this.remainderIntervalImpl.bind(this);
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
