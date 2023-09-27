@@ -8046,7 +8046,7 @@ interface ModfCase {
 g.test('modfInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ModfCase>(p => {
         const constants = FP[p.trait].constants();
