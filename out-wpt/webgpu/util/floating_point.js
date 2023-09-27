@@ -4459,27 +4459,22 @@ class F16Traits extends FPTraits {
   // Framework - API - Overrides
   absInterval = this.absIntervalImpl.bind(this);
   acosInterval = this.acosIntervalImpl.bind(this);
-  acoshAlternativeInterval = this.unimplementedScalarToInterval.bind(
-    this,
-    'acoshAlternativeInterval'
-  );
-
-  acoshPrimaryInterval = this.unimplementedScalarToInterval.bind(this, 'acoshPrimaryInterval');
-
+  acoshAlternativeInterval = this.acoshAlternativeIntervalImpl.bind(this);
+  acoshPrimaryInterval = this.acoshPrimaryIntervalImpl.bind(this);
   acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
   additionInterval = this.additionIntervalImpl.bind(this);
   additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
   asinInterval = this.asinIntervalImpl.bind(this);
-  asinhInterval = this.unimplementedScalarToInterval.bind(this, 'asinhInterval');
+  asinhInterval = this.asinhIntervalImpl.bind(this);
   atanInterval = this.atanIntervalImpl.bind(this);
   atan2Interval = this.atan2IntervalImpl.bind(this);
-  atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
+  atanhInterval = this.atanhIntervalImpl.bind(this);
   ceilInterval = this.ceilIntervalImpl.bind(this);
   clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   cosInterval = this.cosIntervalImpl.bind(this);
-  coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
+  coshInterval = this.coshIntervalImpl.bind(this);
   crossInterval = this.crossIntervalImpl.bind(this);
   degreesInterval = this.degreesIntervalImpl.bind(this);
   determinantInterval = this.unimplementedMatrixToInterval.bind(this, 'determinantInterval');
@@ -4529,7 +4524,7 @@ class F16Traits extends FPTraits {
   saturateInterval = this.saturateIntervalImpl.bind(this);
   signInterval = this.signIntervalImpl.bind(this);
   sinInterval = this.sinIntervalImpl.bind(this);
-  sinhInterval = this.unimplementedScalarToInterval.bind(this, 'sinhInterval');
+  sinhInterval = this.sinhIntervalImpl.bind(this);
   smoothStepInterval = this.smoothStepIntervalImpl.bind(this);
   sqrtInterval = this.sqrtIntervalImpl.bind(this);
   stepInterval = this.stepIntervalImpl.bind(this);
@@ -4537,7 +4532,7 @@ class F16Traits extends FPTraits {
   subtractionMatrixMatrixInterval = this.subtractionMatrixMatrixIntervalImpl.bind(this);
 
   tanInterval = this.tanIntervalImpl.bind(this);
-  tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
+  tanhInterval = this.tanhIntervalImpl.bind(this);
   transposeInterval = this.transposeIntervalImpl.bind(this);
   truncInterval = this.truncIntervalImpl.bind(this);
 
