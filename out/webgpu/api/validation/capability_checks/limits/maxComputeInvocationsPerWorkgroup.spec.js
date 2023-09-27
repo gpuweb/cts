@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { kMaximumLimitBaseParams, getDefaultLimit,
+**/import {
+kMaximumLimitBaseParams,
 
 
 makeLimitTestGroup } from
@@ -75,11 +76,15 @@ maximumLimit)
 
 }
 
-function getTestWorkgroupSize(testValueName, requestedLimit) {
+function getTestWorkgroupSize(
+t,
+testValueName,
+requestedLimit)
+{
   const maxDimensions = [
-  getDefaultLimit('maxComputeWorkgroupSizeX'),
-  getDefaultLimit('maxComputeWorkgroupSizeY'),
-  getDefaultLimit('maxComputeWorkgroupSizeZ')];
+  t.getDefaultLimit('maxComputeWorkgroupSizeX'),
+  t.getDefaultLimit('maxComputeWorkgroupSizeY'),
+  t.getDefaultLimit('maxComputeWorkgroupSizeZ')];
 
 
   switch (testValueName) {
@@ -91,13 +96,14 @@ function getTestWorkgroupSize(testValueName, requestedLimit) {
 }
 
 function getDeviceLimitToRequestAndValueToTest(
+t,
 limitValueTest,
 testValueName,
 defaultLimit,
 maximumLimit)
 {
   const requestedLimit = getDeviceLimitToRequest(limitValueTest, defaultLimit, maximumLimit);
-  const workgroupSize = getTestWorkgroupSize(testValueName, requestedLimit);
+  const workgroupSize = getTestWorkgroupSize(t, testValueName, requestedLimit);
   return {
     requestedLimit,
     workgroupSize
@@ -115,6 +121,7 @@ fn(async (t) => {
   const { defaultLimit, adapterLimit: maximumLimit } = t;
 
   const { requestedLimit, workgroupSize } = getDeviceLimitToRequestAndValueToTest(
+  t,
   limitTest,
   testValueName,
   defaultLimit,
