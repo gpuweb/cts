@@ -6405,8 +6405,12 @@ fn((t) => {
 
 
 
-g.test('determinantInterval_f32').
-paramsSubcasesOnly([
+g.test('determinantInterval').
+params((u) =>
+u.
+combine('trait', ['f32', 'f16']).
+beginSubcases().
+combineWithParams([
 // Extreme values, i.e. subnormals, very large magnitudes, and those lead to
 // non-precise products, are intentionally not tested, since the accuracy of
 // determinant is restricted to well behaving inputs. Handling all cases
@@ -6472,9 +6476,9 @@ paramsSubcasesOnly([
 },
 {
   input: [
-  [11, 22, 33],
-  [44, 55, 66],
-  [77, 88, 99]],
+  [1, 2, 3],
+  [4, 5, 6],
+  [7, 8, 9]],
 
   expected: 0
 },
@@ -6503,15 +6507,19 @@ paramsSubcasesOnly([
   [2, 3, 3, 1]],
 
   expected: -240
-}]).
+}])).
+
 
 fn((t) => {
   const input = t.params.input;
-  const expected = FP.f32.toInterval(t.params.expected);
-  const got = FP.f32.determinantInterval(input);
+  const trait = FP[t.params.trait];
+  const expected = trait.toInterval(t.params.expected);
+  const got = trait.determinantInterval(input);
   t.expect(
   objectEquals(expected, got),
-  `f32.determinantInterval([${JSON.stringify(input)}]) returned '${got}. Expected '${expected}'`);
+  `${t.params.trait}.determinantInterval([${JSON.stringify(
+  input)
+  }]) returned '${got}. Expected '${expected}'`);
 
 });
 
