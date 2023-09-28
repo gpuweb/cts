@@ -920,9 +920,6 @@ export function fullF32Range(
       kBit.f32.negative.subnormal.max,
       counts.neg_sub
     ),
-    // -0.0
-    0x80000000,
-    // +0.0
     0,
     ...linearRange(
       kBit.f32.positive.subnormal.min,
@@ -987,9 +984,6 @@ export function fullF16Range(
       kBit.f16.negative.subnormal.max,
       counts.neg_sub
     ),
-    // -0.0
-    0x8000,
-    // +0.0
     0,
     ...linearRange(
       kBit.f16.positive.subnormal.min,
@@ -1038,9 +1032,6 @@ export function fullF64Range(
       kBit.f64.negative.subnormal.max,
       counts.neg_sub
     ),
-    // -0.0
-    0x8000_0000_0000_0000n,
-    // +0.0
     0n,
     ...linearRangeBigInt(
       kBit.f64.positive.subnormal.min,
@@ -1097,9 +1088,6 @@ export function filteredF64Range(
       kBit.f64.negative.subnormal.max,
       counts.neg_sub
     ),
-    // -0.0
-    0x8000_0000_0000_0000n,
-    // +0.0
     0n,
     ...linearRangeBigInt(
       kBit.f64.positive.subnormal.min,
