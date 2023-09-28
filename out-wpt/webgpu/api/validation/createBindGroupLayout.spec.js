@@ -232,7 +232,10 @@ g.test('max_dynamic_buffers')
     const { type, extraDynamicBuffers, staticBuffers } = t.params;
     const info = bufferBindingTypeInfo({ type });
 
-    const dynamicBufferCount = info.perPipelineLimitClass.maxDynamic + extraDynamicBuffers;
+    const limitName = info.perPipelineLimitClass.maxDynamicLimit;
+    const bufferCount = limitName ? t.getDefaultLimit(limitName) : 0;
+    const dynamicBufferCount = bufferCount + extraDynamicBuffers;
+    const perStageLimit = t.getDefaultLimit(info.perStageLimitClass.maxLimit);
 
     const entries = [];
     for (let i = 0; i < dynamicBufferCount; i++) {
@@ -257,7 +260,7 @@ g.test('max_dynamic_buffers')
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout(descriptor);
-    }, extraDynamicBuffers > 0);
+    }, extraDynamicBuffers > 0 || entries.length > perStageLimit);
   });
 
 /**
@@ -311,7 +314,7 @@ g.test('max_resources_per_stage,in_bind_group_layout')
   .fn(t => {
     const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = bindingTypeInfo(maxedEntry);
-    const maxedCount = maxedTypeInfo.perStageLimitClass.max;
+    const maxedCount = t.getDefaultLimit(maxedTypeInfo.perStageLimitClass.maxLimit);
     const extraTypeInfo = bindingTypeInfo(extraEntry);
 
     const maxResourceBindings = [];
@@ -362,7 +365,7 @@ g.test('max_resources_per_stage,in_pipeline_layout')
   .fn(t => {
     const { maxedEntry, extraEntry, maxedVisibility, extraVisibility } = t.params;
     const maxedTypeInfo = bindingTypeInfo(maxedEntry);
-    const maxedCount = maxedTypeInfo.perStageLimitClass.max;
+    const maxedCount = t.getDefaultLimit(maxedTypeInfo.perStageLimitClass.maxLimit);
     const extraTypeInfo = bindingTypeInfo(extraEntry);
 
     const maxResourceBindings = [];

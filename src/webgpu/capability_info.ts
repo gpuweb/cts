@@ -360,15 +360,15 @@ export const kPerStageBindingLimits: {
     /** Which `PerShaderStage` binding limit class. */
     readonly class: k;
     /** Maximum number of allowed bindings in that class. */
-    readonly max: number;
+    readonly maxLimit: typeof kLimits[number];
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  'uniformBuf': { class: 'uniformBuf', max: 12, },
-  'storageBuf': { class: 'storageBuf', max:  8, },
-  'sampler':    { class: 'sampler',    max: 16, },
-  'sampledTex': { class: 'sampledTex', max: 16, },
-  'storageTex': { class: 'storageTex', max:  4, },
+  'uniformBuf': { class: 'uniformBuf', maxLimit: 'maxUniformBuffersPerShaderStage', },
+  'storageBuf': { class: 'storageBuf', maxLimit: 'maxStorageBuffersPerShaderStage', },
+  'sampler':    { class: 'sampler',    maxLimit: 'maxSamplersPerShaderStage', },
+  'sampledTex': { class: 'sampledTex', maxLimit: 'maxSampledTexturesPerShaderStage', },
+  'storageTex': { class: 'storageTex', maxLimit: 'maxStorageTexturesPerShaderStage', },
 };
 
 /**
@@ -378,16 +378,18 @@ export const kPerPipelineBindingLimits: {
   readonly [k in PerPipelineBindingLimitClass]: {
     /** Which `PerPipelineLayout` binding limit class. */
     readonly class: k;
-    /** Maximum number of allowed bindings with `hasDynamicOffset: true` in that class. */
-    readonly maxDynamic: number;
+    /**
+     * The name of the limit for the maximum number of allowed bindings with `hasDynamicOffset: true` in that class.
+     */
+    readonly maxDynamicLimit: typeof kLimits[number] | '';
     // Add fields as needed
   };
 } = /* prettier-ignore */ {
-  'uniformBuf': { class: 'uniformBuf', maxDynamic: 8, },
-  'storageBuf': { class: 'storageBuf', maxDynamic: 4, },
-  'sampler':    { class: 'sampler',    maxDynamic: 0, },
-  'sampledTex': { class: 'sampledTex', maxDynamic: 0, },
-  'storageTex': { class: 'storageTex', maxDynamic: 0, },
+  'uniformBuf': { class: 'uniformBuf', maxDynamicLimit: 'maxDynamicUniformBuffersPerPipelineLayout', },
+  'storageBuf': { class: 'storageBuf', maxDynamicLimit: 'maxDynamicStorageBuffersPerPipelineLayout', },
+  'sampler':    { class: 'sampler',    maxDynamicLimit: '', },
+  'sampledTex': { class: 'sampledTex', maxDynamicLimit: '', },
+  'storageTex': { class: 'storageTex', maxDynamicLimit: '', },
 };
 
 interface BindingKindInfo {

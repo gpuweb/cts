@@ -364,11 +364,11 @@ export const kPerStageBindingLimits =
 
 
 {
-  'uniformBuf': { class: 'uniformBuf', max: 12 },
-  'storageBuf': { class: 'storageBuf', max: 8 },
-  'sampler': { class: 'sampler', max: 16 },
-  'sampledTex': { class: 'sampledTex', max: 16 },
-  'storageTex': { class: 'storageTex', max: 4 }
+  'uniformBuf': { class: 'uniformBuf', maxLimit: 'maxUniformBuffersPerShaderStage' },
+  'storageBuf': { class: 'storageBuf', maxLimit: 'maxStorageBuffersPerShaderStage' },
+  'sampler': { class: 'sampler', maxLimit: 'maxSamplersPerShaderStage' },
+  'sampledTex': { class: 'sampledTex', maxLimit: 'maxSampledTexturesPerShaderStage' },
+  'storageTex': { class: 'storageTex', maxLimit: 'maxStorageTexturesPerShaderStage' }
 };
 
 /**
@@ -382,12 +382,14 @@ export const kPerPipelineBindingLimits =
 
 
 
+
+
 {
-  'uniformBuf': { class: 'uniformBuf', maxDynamic: 8 },
-  'storageBuf': { class: 'storageBuf', maxDynamic: 4 },
-  'sampler': { class: 'sampler', maxDynamic: 0 },
-  'sampledTex': { class: 'sampledTex', maxDynamic: 0 },
-  'storageTex': { class: 'storageTex', maxDynamic: 0 }
+  'uniformBuf': { class: 'uniformBuf', maxDynamicLimit: 'maxDynamicUniformBuffersPerPipelineLayout' },
+  'storageBuf': { class: 'storageBuf', maxDynamicLimit: 'maxDynamicStorageBuffersPerPipelineLayout' },
+  'sampler': { class: 'sampler', maxDynamicLimit: '' },
+  'sampledTex': { class: 'sampledTex', maxDynamicLimit: '' },
+  'storageTex': { class: 'storageTex', maxDynamicLimit: '' }
 };
 
 
