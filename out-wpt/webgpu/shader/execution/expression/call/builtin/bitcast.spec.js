@@ -71,13 +71,13 @@ const f32InfAndNaNInU32 = [
   // The positive NaN with the lowest integer representation is the integer
   // for infinity, plus one.
   // The positive NaN with the highest integer representation is i32.max (!)
-  ...linearRange(kBit.f32.infinity.positive + 1, kBit.i32.positive.max, numNaNs),
+  ...linearRange(kBit.f32.positive.infinity + 1, kBit.i32.positive.max, numNaNs),
   // The negative NaN with the lowest integer representation is the integer
   // for negative infinity, plus one.
   // The negative NaN with the highest integer representation is u32.max (!)
-  ...linearRange(kBit.f32.infinity.negative + 1, kBit.u32.max, numNaNs),
-  kBit.f32.infinity.positive,
-  kBit.f32.infinity.negative,
+  ...linearRange(kBit.f32.negative.infinity + 1, kBit.u32.max, numNaNs),
+  kBit.f32.positive.infinity,
+  kBit.f32.negative.infinity,
 ];
 
 const f32InfAndNaNInF32 = f32InfAndNaNInU32.map(u => reinterpretU32AsF32(u));
@@ -102,13 +102,13 @@ const f16InfAndNaNInU16 = [
   // The positive NaN with the lowest integer representation is the integer
   // for infinity, plus one.
   // The positive NaN with the highest integer representation is u16 0x7fff i.e. 32767.
-  ...linearRange(kBit.f16.infinity.positive + 1, 32767, numNaNs).map(v => Math.ceil(v)),
+  ...linearRange(kBit.f16.positive.infinity + 1, 32767, numNaNs).map(v => Math.ceil(v)),
   // The negative NaN with the lowest integer representation is the integer
   // for negative infinity, plus one.
   // The negative NaN with the highest integer representation is u16 0xffff i.e. 65535
-  ...linearRange(kBit.f16.infinity.negative + 1, 65535, numNaNs).map(v => Math.floor(v)),
-  kBit.f16.infinity.positive,
-  kBit.f16.infinity.negative,
+  ...linearRange(kBit.f16.negative.infinity + 1, 65535, numNaNs).map(v => Math.floor(v)),
+  kBit.f16.positive.infinity,
+  kBit.f16.negative.infinity,
 ];
 
 const f16InfAndNaNInF16 = f16InfAndNaNInU16.map(u => reinterpretU16AsF16(u));

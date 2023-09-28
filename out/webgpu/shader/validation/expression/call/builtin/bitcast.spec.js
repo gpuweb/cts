@@ -33,13 +33,13 @@ const f32InfAndNaNInU32 = [
 // The positive NaN with the lowest integer representation is the integer
 // for infinity, plus one.
 // The positive NaN with the highest integer representation is i32.max (!)
-...linearRange(kBit.f32.infinity.positive + 1, kBit.i32.positive.max, numNaNs),
+...linearRange(kBit.f32.positive.infinity + 1, kBit.i32.positive.max, numNaNs),
 // The negative NaN with the lowest integer representation is the integer
 // for negative infinity, plus one.
 // The negative NaN with the highest integer representation is u32.max (!)
-...linearRange(kBit.f32.infinity.negative + 1, kBit.u32.max, numNaNs),
-kBit.f32.infinity.positive,
-kBit.f32.infinity.negative];
+...linearRange(kBit.f32.negative.infinity + 1, kBit.u32.max, numNaNs),
+kBit.f32.positive.infinity,
+kBit.f32.negative.infinity];
 
 
 g.test('bad_const_to_f32').

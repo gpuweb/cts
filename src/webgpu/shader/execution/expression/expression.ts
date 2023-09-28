@@ -865,7 +865,7 @@ function abstractFloatSnippet(expr: string, case_idx: number, accessor: string =
   //
   //   // Detect if the value is zero or subnormal, so that FTZ behaviour
   //   // can occur
-  //   const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.subnormal.positive.max}) && (${expr} >= ${kValue.f64.subnormal.negative.min});
+  //   const subnormal_or_zero : bool = (${expr} <= ${kValue.f64.positive.subnormal.max}) && (${expr} >= ${kValue.f64.negative.subnormal.min});
   //
   //   // MSB of the upper u32 is 1 if the value is negative, otherwise 0
   //   // Extract the sign bit early, so that abs() can be used with
@@ -903,7 +903,7 @@ function abstractFloatSnippet(expr: string, case_idx: number, accessor: string =
   // prettier-ignore
   return `  {
     const kExponentBias = 1022;
-    const subnormal_or_zero : bool = (${expr}${accessor} <= ${kValue.f64.subnormal.positive.max}) && (${expr}${accessor} >= ${kValue.f64.subnormal.negative.min});
+    const subnormal_or_zero : bool = (${expr}${accessor} <= ${kValue.f64.positive.subnormal.max}) && (${expr}${accessor} >= ${kValue.f64.negative.subnormal.min});
     const sign_bit : u32 = select(0, 0x80000000, ${expr}${accessor} < 0);
     const f = frexp(abs(${expr}${accessor}));
     const f_fract = select(f.fract, 0, subnormal_or_zero);

@@ -122,11 +122,11 @@ export function nextAfterF64(val, dir, mode) {
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f64.infinity.positive;
+    return kValue.f64.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f64.infinity.negative;
+    return kValue.f64.negative.infinity;
   }
 
   assert(
@@ -139,9 +139,9 @@ export function nextAfterF64(val, dir, mode) {
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f64.positive.min : kValue.f64.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f64.positive.min : kValue.f64.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f64.negative.max : kValue.f64.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f64.negative.max : kValue.f64.negative.subnormal.max;
     }
   }
 
@@ -156,9 +156,9 @@ export function nextAfterF64(val, dir, mode) {
   // Checking for overflow
   if ((nextAfterF64Int[0] & 0x7ff0_0000_0000_0000n) === 0x7ff0_0000_0000_0000n) {
     if (dir === 'positive') {
-      return kValue.f64.infinity.positive;
+      return kValue.f64.positive.infinity;
     } else {
-      return kValue.f64.infinity.negative;
+      return kValue.f64.negative.infinity;
     }
   }
 
@@ -195,11 +195,11 @@ export function nextAfterF32(val, dir, mode) {
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f32.infinity.positive;
+    return kValue.f32.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f32.infinity.negative;
+    return kValue.f32.negative.infinity;
   }
 
   assert(
@@ -212,9 +212,9 @@ export function nextAfterF32(val, dir, mode) {
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f32.positive.min : kValue.f32.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f32.positive.min : kValue.f32.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f32.negative.max : kValue.f32.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f32.negative.max : kValue.f32.negative.subnormal.max;
     }
   }
 
@@ -237,9 +237,9 @@ export function nextAfterF32(val, dir, mode) {
   // Checking for overflow
   if ((nextAfterF32Int[0] & 0x7f800000) === 0x7f800000) {
     if (dir === 'positive') {
-      return kValue.f32.infinity.positive;
+      return kValue.f32.positive.infinity;
     } else {
-      return kValue.f32.infinity.negative;
+      return kValue.f32.negative.infinity;
     }
   }
 
@@ -276,11 +276,11 @@ export function nextAfterF16(val, dir, mode) {
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f16.infinity.positive;
+    return kValue.f16.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f16.infinity.negative;
+    return kValue.f16.negative.infinity;
   }
 
   assert(
@@ -293,9 +293,9 @@ export function nextAfterF16(val, dir, mode) {
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f16.positive.min : kValue.f16.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f16.positive.min : kValue.f16.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f16.negative.max : kValue.f16.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f16.negative.max : kValue.f16.negative.subnormal.max;
     }
   }
 
@@ -318,9 +318,9 @@ export function nextAfterF16(val, dir, mode) {
   // Checking for overflow
   if ((nextAfterF16Hex[0] & 0x7c00) === 0x7c00) {
     if (dir === 'positive') {
-      return kValue.f16.infinity.positive;
+      return kValue.f16.positive.infinity;
     } else {
-      return kValue.f16.infinity.negative;
+      return kValue.f16.negative.infinity;
     }
   }
 
@@ -916,14 +916,14 @@ counts =
   const bit_fields = [
   ...linearRange(kBit.f32.negative.min, kBit.f32.negative.max, counts.neg_norm),
   ...linearRange(
-  kBit.f32.subnormal.negative.min,
-  kBit.f32.subnormal.negative.max,
+  kBit.f32.negative.subnormal.min,
+  kBit.f32.negative.subnormal.max,
   counts.neg_sub),
 
   0,
   ...linearRange(
-  kBit.f32.subnormal.positive.min,
-  kBit.f32.subnormal.positive.max,
+  kBit.f32.positive.subnormal.min,
+  kBit.f32.positive.subnormal.max,
   counts.pos_sub),
 
   ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm)].
@@ -980,14 +980,14 @@ counts =
   const bit_fields = [
   ...linearRange(kBit.f16.negative.min, kBit.f16.negative.max, counts.neg_norm),
   ...linearRange(
-  kBit.f16.subnormal.negative.min,
-  kBit.f16.subnormal.negative.max,
+  kBit.f16.negative.subnormal.min,
+  kBit.f16.negative.subnormal.max,
   counts.neg_sub),
 
   0,
   ...linearRange(
-  kBit.f16.subnormal.positive.min,
-  kBit.f16.subnormal.positive.max,
+  kBit.f16.positive.subnormal.min,
+  kBit.f16.positive.subnormal.max,
   counts.pos_sub),
 
   ...linearRange(kBit.f16.positive.min, kBit.f16.positive.max, counts.pos_norm)].
@@ -1028,14 +1028,14 @@ counts =
   const bit_fields = [
   ...linearRangeBigInt(kBit.f64.negative.min, kBit.f64.negative.max, counts.neg_norm),
   ...linearRangeBigInt(
-  kBit.f64.subnormal.negative.min,
-  kBit.f64.subnormal.negative.max,
+  kBit.f64.negative.subnormal.min,
+  kBit.f64.negative.subnormal.max,
   counts.neg_sub),
 
   0n,
   ...linearRangeBigInt(
-  kBit.f64.subnormal.positive.min,
-  kBit.f64.subnormal.positive.max,
+  kBit.f64.positive.subnormal.min,
+  kBit.f64.positive.subnormal.max,
   counts.pos_sub),
 
   ...linearRangeBigInt(kBit.f64.positive.min, kBit.f64.positive.max, counts.pos_norm)];
@@ -1084,14 +1084,14 @@ counts = {
   const bit_fields = [
   ...linearRangeBigInt(u64_begin, kBit.f64.negative.max, counts.neg_norm),
   ...linearRangeBigInt(
-  kBit.f64.subnormal.negative.min,
-  kBit.f64.subnormal.negative.max,
+  kBit.f64.negative.subnormal.min,
+  kBit.f64.negative.subnormal.max,
   counts.neg_sub),
 
   0n,
   ...linearRangeBigInt(
-  kBit.f64.subnormal.positive.min,
-  kBit.f64.subnormal.positive.max,
+  kBit.f64.positive.subnormal.min,
+  kBit.f64.positive.subnormal.max,
   counts.pos_sub),
 
   ...linearRangeBigInt(kBit.f64.positive.min, u64_end, counts.pos_norm)];
@@ -1265,12 +1265,12 @@ kValue.f32.negative.min,
 -1.0,
 -0.125,
 kValue.f32.negative.max,
-kValue.f32.subnormal.negative.min,
-kValue.f32.subnormal.negative.max,
+kValue.f32.negative.subnormal.min,
+kValue.f32.negative.subnormal.max,
 -0.0,
 0.0,
-kValue.f32.subnormal.positive.min,
-kValue.f32.subnormal.positive.max,
+kValue.f32.positive.subnormal.min,
+kValue.f32.positive.subnormal.max,
 kValue.f32.positive.min,
 0.125,
 1.0,
@@ -1501,12 +1501,12 @@ kValue.f16.negative.min,
 -1.0,
 -0.125,
 kValue.f16.negative.max,
-kValue.f16.subnormal.negative.min,
-kValue.f16.subnormal.negative.max,
+kValue.f16.negative.subnormal.min,
+kValue.f16.negative.subnormal.max,
 -0.0,
 0.0,
-kValue.f16.subnormal.positive.min,
-kValue.f16.subnormal.positive.max,
+kValue.f16.positive.subnormal.min,
+kValue.f16.positive.subnormal.max,
 kValue.f16.positive.min,
 0.125,
 1.0,
@@ -1737,12 +1737,12 @@ kValue.f64.negative.min,
 -1.0,
 -0.125,
 kValue.f64.negative.max,
-kValue.f64.subnormal.negative.min,
-kValue.f64.subnormal.negative.max,
+kValue.f64.negative.subnormal.min,
+kValue.f64.negative.subnormal.max,
 -0.0,
 0.0,
-kValue.f64.subnormal.positive.min,
-kValue.f64.subnormal.positive.max,
+kValue.f64.positive.subnormal.min,
+kValue.f64.positive.subnormal.max,
 kValue.f64.positive.min,
 0.125,
 1.0,

@@ -4279,12 +4279,12 @@ class F32Traits extends FPTraits {
     positive: {
       min: kValue.f32.positive.min,
       max: kValue.f32.positive.max,
-      infinity: kValue.f32.infinity.positive,
+      infinity: kValue.f32.positive.infinity,
       nearest_max: kValue.f32.positive.nearest_max,
       less_than_one: kValue.f32.positive.less_than_one,
       subnormal: {
-        min: kValue.f32.subnormal.positive.min,
-        max: kValue.f32.subnormal.positive.max
+        min: kValue.f32.positive.subnormal.min,
+        max: kValue.f32.positive.subnormal.max
       },
       pi: {
         whole: kValue.f32.positive.pi.whole,
@@ -4299,12 +4299,12 @@ class F32Traits extends FPTraits {
     negative: {
       min: kValue.f32.negative.min,
       max: kValue.f32.negative.max,
-      infinity: kValue.f32.infinity.negative,
+      infinity: kValue.f32.negative.infinity,
       nearest_min: kValue.f32.negative.nearest_min,
       less_than_one: kValue.f32.negative.less_than_one,
       subnormal: {
-        min: kValue.f32.subnormal.negative.min,
-        max: kValue.f32.subnormal.negative.max
+        min: kValue.f32.negative.subnormal.min,
+        max: kValue.f32.negative.subnormal.max
       },
       pi: {
         whole: kValue.f32.negative.pi.whole,
@@ -4326,7 +4326,7 @@ class F32Traits extends FPTraits {
 
     greaterThanZeroInterval: new FPInterval(
     'f32',
-    kValue.f32.subnormal.positive.min,
+    kValue.f32.positive.subnormal.min,
     kValue.f32.positive.max),
 
     zeroVector: {
@@ -4742,12 +4742,12 @@ class FPAbstractTraits extends FPTraits {
     positive: {
       min: kValue.f64.positive.min,
       max: kValue.f64.positive.max,
-      infinity: kValue.f64.infinity.positive,
+      infinity: kValue.f64.positive.infinity,
       nearest_max: kValue.f64.positive.nearest_max,
       less_than_one: kValue.f64.positive.less_than_one,
       subnormal: {
-        min: kValue.f64.subnormal.positive.min,
-        max: kValue.f64.subnormal.positive.max
+        min: kValue.f64.positive.subnormal.min,
+        max: kValue.f64.positive.subnormal.max
       },
       pi: {
         whole: kValue.f64.positive.pi.whole,
@@ -4762,12 +4762,12 @@ class FPAbstractTraits extends FPTraits {
     negative: {
       min: kValue.f64.negative.min,
       max: kValue.f64.negative.max,
-      infinity: kValue.f64.infinity.negative,
+      infinity: kValue.f64.negative.infinity,
       nearest_min: kValue.f64.negative.nearest_min,
       less_than_one: kValue.f64.negative.less_than_one,
       subnormal: {
-        min: kValue.f64.subnormal.negative.min,
-        max: kValue.f64.subnormal.negative.max
+        min: kValue.f64.negative.subnormal.min,
+        max: kValue.f64.negative.subnormal.max
       },
       pi: {
         whole: kValue.f64.negative.pi.whole,
@@ -4789,7 +4789,7 @@ class FPAbstractTraits extends FPTraits {
 
     greaterThanZeroInterval: new FPInterval(
     'abstract',
-    kValue.f64.subnormal.positive.min,
+    kValue.f64.positive.subnormal.min,
     kValue.f64.positive.max),
 
     zeroVector: {
@@ -5085,12 +5085,12 @@ class F16Traits extends FPTraits {
     positive: {
       min: kValue.f16.positive.min,
       max: kValue.f16.positive.max,
-      infinity: kValue.f16.infinity.positive,
+      infinity: kValue.f16.positive.infinity,
       nearest_max: kValue.f16.positive.nearest_max,
       less_than_one: kValue.f16.positive.less_than_one,
       subnormal: {
-        min: kValue.f16.subnormal.positive.min,
-        max: kValue.f16.subnormal.positive.max
+        min: kValue.f16.positive.subnormal.min,
+        max: kValue.f16.positive.subnormal.max
       },
       pi: {
         whole: kValue.f16.positive.pi.whole,
@@ -5105,12 +5105,12 @@ class F16Traits extends FPTraits {
     negative: {
       min: kValue.f16.negative.min,
       max: kValue.f16.negative.max,
-      infinity: kValue.f16.infinity.negative,
+      infinity: kValue.f16.negative.infinity,
       nearest_min: kValue.f16.negative.nearest_min,
       less_than_one: kValue.f16.negative.less_than_one,
       subnormal: {
-        min: kValue.f16.subnormal.negative.min,
-        max: kValue.f16.subnormal.negative.max
+        min: kValue.f16.negative.subnormal.min,
+        max: kValue.f16.negative.subnormal.max
       },
       pi: {
         whole: kValue.f16.negative.pi.whole,
@@ -5132,7 +5132,7 @@ class F16Traits extends FPTraits {
 
     greaterThanZeroInterval: new FPInterval(
     'f16',
-    kValue.f16.subnormal.positive.min,
+    kValue.f16.positive.subnormal.min,
     kValue.f16.positive.max),
 
     zeroVector: {
