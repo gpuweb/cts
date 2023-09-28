@@ -3416,27 +3416,27 @@ g.test('quantizeToF16Interval_f32')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+      { input: kValue.f32.negative.infinity, expected: kUnboundedBounds },
       { input: kValue.f32.negative.min, expected: kUnboundedBounds },
       { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
       { input: -1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['-1.9'] },  // ~-1.9
       { input: -1, expected: -1 },
       { input: -0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['-0.1'] },  // ~-0.1
       { input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
-      { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
-      { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { input: kValue.f16.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.min, 0] },
+      { input: kValue.f16.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
+      { input: kValue.f32.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
       { input: 0, expected: 0 },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-      { input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-      { input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
+      { input: kValue.f32.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+      { input: kValue.f16.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+      { input: kValue.f16.positive.subnormal.max, expected: [0, kValue.f16.positive.subnormal.max] },
       { input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
       { input: 0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['0.1'] },  // ~0.1
       { input: 1, expected: 1 },
       { input: 1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['1.9'] },  // ~1.9
       { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
       { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+      { input: kValue.f32.positive.infinity, expected: kUnboundedBounds },
     ]
   )
   .fn(t => {
@@ -4428,12 +4428,12 @@ const kLdexpIntervalCases = {
     { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
     // f32.positive.min = 1 * 2 ** -126
     { input: [1, -126], expected: kValue.f32.positive.min },
-    // f32.subnormal.positive.max = 0.9999998807907104 * 2 ** -126
-    { input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
-    // f32.subnormal.positive.min = 1.1920928955078125e-07 * 2 ** -126
-    { input: [1.1920928955078125e-7, -126], expected: [0, kValue.f32.subnormal.positive.min] },
-    { input: [-1.1920928955078125e-7, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
-    { input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
+    // f32.positive.subnormal.max = 0.9999998807907104 * 2 ** -126
+    { input: [0.9999998807907104, -126], expected: [0, kValue.f32.positive.subnormal.max] },
+    // f32.positive.subnormal.min = 1.1920928955078125e-07 * 2 ** -126
+    { input: [1.1920928955078125e-7, -126], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [-1.1920928955078125e-7, -126], expected: [kValue.f32.negative.subnormal.max, 0] },
+    { input: [-0.9999998807907104, -126], expected: [kValue.f32.negative.subnormal.min, 0] },
     { input: [-1, -126], expected: kValue.f32.negative.max },
     { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
     // e2 + bias <= 0, expect correctly rounded intervals.
@@ -4454,12 +4454,12 @@ const kLdexpIntervalCases = {
     { input: [1.9990234375, 15], expected: kValue.f16.positive.max },
     // f16.positive.min = 1 * 2 ** -14
     { input: [1, -14], expected: kValue.f16.positive.min },
-    // f16.subnormal.positive.max = 0.9990234375 * 2 ** -14
-    { input: [0.9990234375, -14], expected: [0, kValue.f16.subnormal.positive.max] },
-    // f16.subnormal.positive.min = 1 * 2 ** -10 * 2 ** -14 = 0.0009765625 * 2 ** -14
-    { input: [0.0009765625, -14], expected: [0, kValue.f16.subnormal.positive.min] },
-    { input: [-0.0009765625, -14], expected: [kValue.f16.subnormal.negative.max, 0] },
-    { input: [-0.9990234375, -14], expected: [kValue.f16.subnormal.negative.min, 0] },
+    // f16.positive.subnormal.max = 0.9990234375 * 2 ** -14
+    { input: [0.9990234375, -14], expected: [0, kValue.f16.positive.subnormal.max] },
+    // f16.positive.subnormal.min = 1 * 2 ** -10 * 2 ** -14 = 0.0009765625 * 2 ** -14
+    { input: [0.0009765625, -14], expected: [0, kValue.f16.positive.subnormal.min] },
+    { input: [-0.0009765625, -14], expected: [kValue.f16.negative.subnormal.max, 0] },
+    { input: [-0.9990234375, -14], expected: [kValue.f16.negative.subnormal.min, 0] },
     { input: [-1, -14], expected: kValue.f16.negative.max },
     { input: [-1.9990234375, 15], expected: kValue.f16.negative.min },
     // e2 + bias <= 0, expect correctly rounded intervals.
@@ -5193,47 +5193,47 @@ g.test('clampMinMaxInterval')
 const kFmaIntervalCases = {
   f32: [
     // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
-    { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max, 0], expected: [0, kValue.f32.positive.subnormal.min] },
     // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
     // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
     // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
-    { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.positive.min] },
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max], expected: [0, kValue.f32.positive.min] },
     // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
     // negative.subnormal.max may flushed to 0,
     // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
     // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
-    { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.min, kValue.f32.negative.subnormal.max], expected: [kValue.f32.negative.subnormal.max, kValue.f32.positive.subnormal.min] },
     // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
     // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
     // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
     // maximum case: -0.0 + -0.0 = 0.
-    { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [-2 * FP['f32'].oneULP(0, 'no-flush'), 0] },
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max], expected: [-2 * FP['f32'].oneULP(0, 'no-flush'), 0] },
   ] as ScalarTripleToIntervalCase[],
   f16: [
     // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
-    { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max, 0], expected: [0, kValue.f16.subnormal.positive.min] },
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max, 0], expected: [0, kValue.f16.positive.subnormal.min] },
     // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
     // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
     // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
-    { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.max], expected: [0, kValue.f16.positive.min] },
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max], expected: [0, kValue.f16.positive.min] },
     // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
     // negative.subnormal.max may flushed to 0,
     // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
     // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
-    { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.negative.max], expected: [kValue.f16.subnormal.negative.max, kValue.f16.subnormal.positive.min] },
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.min, kValue.f16.negative.subnormal.max], expected: [kValue.f16.negative.subnormal.max, kValue.f16.positive.subnormal.min] },
     // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
     // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
     // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
     // maximum case: -0.0 + -0.0 = 0.
-    { input: [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] },  ] as ScalarTripleToIntervalCase[],
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] },  ] as ScalarTripleToIntervalCase[],
   abstract: [
     // These operations break down in the CTS, because `number` is a f64 under the hood, so precision is sometimes lost
     // if intermediate results are  closer to 0 than the smallest subnormal will be precisely 0.
     // See https://github.com/gpuweb/cts/issues/2993 for details
-    { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max, 0], expected: 0 },
-    { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.max], expected: [0, kValue.f64.subnormal.positive.max] },
-    { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.positive.min, kValue.f64.subnormal.negative.max], expected: [kValue.f64.subnormal.negative.max, 0] },
-    { input: [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.negative.min, kValue.f64.subnormal.negative.max], expected: [kValue.f64.subnormal.negative.max, 0] },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, 0], expected: 0 },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max], expected: [0, kValue.f64.positive.subnormal.max] },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
   ] as ScalarTripleToIntervalCase[],
 } as const;
 
@@ -5547,7 +5547,7 @@ g.test('mixPreciseInterval')
 const kSmoothStepIntervalCases = {
   f32: [
     // Normals
-    { input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
+    { input: [0, 1, 0], expected: [0, kValue.f32.positive.subnormal.min] },
     { input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] },  // ~1
     { input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
     { input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
@@ -5558,14 +5558,14 @@ const kSmoothStepIntervalCases = {
     { input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
     { input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
     // Subnormals
-    { input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-    { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-    { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-    { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-    { input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
-    { input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-    { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
-    { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] },
+    { input: [kValue.f32.positive.subnormal.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.positive.subnormal.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.negative.subnormal.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.negative.subnormal.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [0, 2, kValue.f32.positive.subnormal.max], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.positive.subnormal.min], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.negative.subnormal.max], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.negative.subnormal.min], expected: [0, kValue.f32.positive.subnormal.min] },
   ] as ScalarTripleToIntervalCase[],
   f16: [
     // Normals
@@ -5580,14 +5580,14 @@ const kSmoothStepIntervalCases = {
     { input: [0, -2, -1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] },  // ~0.5
     { input: [0, -2, -0.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] },  // ~0.15625...
     // Subnormals
-    { input: [kValue.f16.subnormal.positive.max, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
-    { input: [kValue.f16.subnormal.positive.min, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
-    { input: [kValue.f16.subnormal.negative.max, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
-    { input: [kValue.f16.subnormal.negative.min, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
-    { input: [0, 2, kValue.f16.subnormal.positive.max], expected: [0, reinterpretU16AsF16(0x0002)] },
-    { input: [0, 2, kValue.f16.subnormal.positive.min], expected: [0, reinterpretU16AsF16(0x0002)] },
-    { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, reinterpretU16AsF16(0x0002)] },
-    { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [kValue.f16.positive.subnormal.max, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
+    { input: [kValue.f16.positive.subnormal.min, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
+    { input: [kValue.f16.negative.subnormal.max, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
+    { input: [kValue.f16.negative.subnormal.min, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
+    { input: [0, 2, kValue.f16.positive.subnormal.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f16.positive.subnormal.min], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f32.negative.subnormal.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f32.negative.subnormal.min], expected: [0, reinterpretU16AsF16(0x0002)] },
   ] as ScalarTripleToIntervalCase[],
 } as const;
 
@@ -5656,8 +5656,8 @@ g.test('unpack2x16floatInterval')
       { input: 0xc900c900, expected: [-10, -10] },
 
       // f16 subnormals
-      { input: 0x000003ff, expected: [[0, kValue.f16.subnormal.positive.max], 0] },
-      { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], 0] },
+      { input: 0x000003ff, expected: [[0, kValue.f16.positive.subnormal.max], 0] },
+      { input: 0x000083ff, expected: [[kValue.f16.negative.subnormal.min, 0], 0] },
 
       // f16 out of bounds
       { input: 0x7c000000, expected: [kUnboundedBounds, kUnboundedBounds] },
@@ -6162,13 +6162,13 @@ interface VectorPairToVectorCase {
 const kCrossIntervalCases = {
   f32: [
     { input: [
-        [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
-        [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]
+        [kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, kValue.f32.negative.subnormal.min],
+        [kValue.f32.negative.subnormal.min, kValue.f32.positive.subnormal.min, kValue.f32.negative.subnormal.max]
       ],
       expected: [
         [0.0, reinterpretU32AsF32(0x00000002)], // ~0
         [0.0, reinterpretU32AsF32(0x00000002)], // ~0
-        [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] // ~0
+        [kValue.f32.negative.subnormal.max, kValue.f32.positive.subnormal.min] // ~0
       ]
     },
     { input: [
@@ -6184,13 +6184,13 @@ const kCrossIntervalCases = {
   ] as VectorPairToVectorCase[],
   f16: [
     { input: [
-        [kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, kValue.f16.subnormal.negative.min],
-        [kValue.f16.subnormal.negative.min, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.negative.max]
+        [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, kValue.f16.negative.subnormal.min],
+        [kValue.f16.negative.subnormal.min, kValue.f16.positive.subnormal.min, kValue.f16.negative.subnormal.max]
       ],
       expected: [
         [0.0, reinterpretU16AsF16(0x0002)], // ~0
         [0.0, reinterpretU16AsF16(0x0002)], // ~0
-        [kValue.f16.subnormal.negative.max, kValue.f16.subnormal.positive.min] // ~0
+        [kValue.f16.negative.subnormal.max, kValue.f16.positive.subnormal.min] // ~0
       ]
     },
     { input: [
@@ -6206,8 +6206,8 @@ const kCrossIntervalCases = {
   ] as VectorPairToVectorCase[],
   abstract: [
     { input: [
-        [kValue.f64.subnormal.positive.max, kValue.f64.subnormal.negative.max, kValue.f64.subnormal.negative.min],
-        [kValue.f64.subnormal.negative.min, kValue.f64.subnormal.positive.min, kValue.f64.subnormal.negative.max]
+        [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.max, kValue.f64.negative.subnormal.min],
+        [kValue.f64.negative.subnormal.min, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max]
       ],
       expected: [0.0, 0.0, 0.0]
     },
@@ -6266,24 +6266,24 @@ const kReflectIntervalCases = {
   f32: [
     // vec2s
     { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] },  // [~-0.3, ~-0.3]
-    { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0]
     // vec3s
     { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] },  // [~-0.5, ~-0.5, ~-0.5]
-    { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
     // vec4s
     { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
-    { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
   ] as VectorPairToVectorCase[],
   f16: [
     // vec2s
     { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)], [reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)]] },  // [~-0.3, ~-0.3]
-    { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0]
     // vec3s
     { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)]] },  // [~-0.5, ~-0.5, ~-0.5]
-    { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0]
     // vec4s
     { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
-    { input: [[kValue.f16.subnormal.positive.max, kValue.f16.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
   ] as VectorPairToVectorCase[],
 } as const;
 
