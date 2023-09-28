@@ -4,11 +4,16 @@
 This test dedicatedly tests validation of GPUFragmentState of createRenderPipeline.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kBlendFactors, kBlendOperations, kMaxColorAttachments } from '../../../capability_info.js';
+import {
+kBlendFactors,
+kBlendOperations,
+kMaxColorAttachmentsToTest } from
+'../../../capability_info.js';
 import {
 kTextureFormats,
 kRenderableColorTextureFormats,
-kTextureFormatInfo } from
+kTextureFormatInfo,
+computeBytesPerSampleFromFormats } from
 '../../../format_info.js';
 import {
 getFragmentShaderCodeWithOutput,
@@ -66,9 +71,15 @@ g.test('limits,maxColorAttachments').
 desc(
 `Tests that color state targets length must not be larger than device.limits.maxColorAttachments.`).
 
-params((u) => u.combine('isAsync', [false, true]).combine('targetsLength', [8, 9])).
+params((u) =>
+u.combine('isAsync', [false, true]).combine('targetsLengthVariant', [
+{ mult: 1, add: 0 },
+{ mult: 1, add: 1 }])).
+
+
 fn((t) => {
-  const { isAsync, targetsLength } = t.params;
+  const { isAsync, targetsLengthVariant } = t.params;
+  const targetsLength = t.makeLimitVariant('maxColorAttachments', targetsLengthVariant);
 
   const descriptor = t.getDescriptor({
     targets: range(targetsLength, (i) => {
@@ -103,7 +114,7 @@ combine('format', kRenderableColorTextureFormats).
 beginSubcases().
 combine(
 'attachmentCount',
-range(kMaxColorAttachments, (i) => i + 1)).
+range(kMaxColorAttachmentsToTest, (i) => i + 1)).
 
 combine('isAsync', [false, true])).
 
@@ -113,6 +124,11 @@ beforeAllSubcases((t) => {
 fn((t) => {
   const { format, attachmentCount, isAsync } = t.params;
   const info = kTextureFormatInfo[format];
+
+  t.skipIf(
+  attachmentCount > t.device.limits.maxColorAttachments,
+  `attachmentCount: ${attachmentCount} > maxColorAttachments: ${t.device.limits.maxColorAttachments}`);
+
 
   const descriptor = t.getDescriptor({
     targets: range(attachmentCount, () => {
@@ -147,9 +163,8 @@ combineWithParams([
   'r32float',
   'rgba8unorm',
   'rgba32float',
-  'r8unorm'],
+  'r8unorm']
 
-  _success: false
 },
 {
   formats: [
@@ -157,16 +172,23 @@ combineWithParams([
   'rgba8unorm',
   'rgba32float',
   'r8unorm',
-  'r8unorm'],
+  'r8unorm']
 
-  _success: true
 }]).
 
 beginSubcases().
 combine('isAsync', [false, true])).
 
 fn((t) => {
-  const { formats, _success, isAsync } = t.params;
+  const { formats, isAsync } = t.params;
+
+  t.skipIf(
+  formats.length > t.device.limits.maxColorAttachments,
+  `numColorAttachments: ${formats.length} > maxColorAttachments: ${t.device.limits.maxColorAttachments}`);
+
+
+  const success =
+  computeBytesPerSampleFromFormats(formats) <= t.device.limits.maxColorAttachmentBytesPerSample;
 
   const descriptor = t.getDescriptor({
     targets: formats.map((f) => {
@@ -174,7 +196,7 @@ fn((t) => {
     })
   });
 
-  t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+  t.doCreateRenderPipelineTest(isAsync, success, descriptor);
 });
 
 g.test('targets_format_filterable').
