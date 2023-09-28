@@ -262,43 +262,43 @@ export type VertexFormatInfo = {
 export const kVertexFormatInfo: {
   readonly [k in GPUVertexFormat]: VertexFormatInfo;
 } = /* prettier-ignore */ makeTable(
-               ['bytesPerComponent',   'type', 'componentCount', 'byteSize',  'wgslType'] as const,
-               [                   ,         ,                 ,           ,            ] as const, {
+                     ['bytesPerComponent',   'type', 'componentCount', 'byteSize',  'wgslType'] as const,
+                     [                   ,         ,                 ,           ,            ] as const, {
   // 8 bit components
-  'uint8x2':   [                  1,   'uint',                2,          2, 'vec2<u32>'],
-  'uint8x4':   [                  1,   'uint',                4,          4, 'vec4<u32>'],
-  'sint8x2':   [                  1,   'sint',                2,          2, 'vec2<i32>'],
-  'sint8x4':   [                  1,   'sint',                4,          4, 'vec4<i32>'],
-  'unorm8x2':  [                  1,  'unorm',                2,          2, 'vec2<f32>'],
-  'unorm8x4':  [                  1,  'unorm',                4,          4, 'vec4<f32>'],
-  'snorm8x2':  [                  1,  'snorm',                2,          2, 'vec2<f32>'],
-  'snorm8x4':  [                  1,  'snorm',                4,          4, 'vec4<f32>'],
+  'uint8x2':         [                  1,   'uint',                2,          2, 'vec2<u32>'],
+  'uint8x4':         [                  1,   'uint',                4,          4, 'vec4<u32>'],
+  'sint8x2':         [                  1,   'sint',                2,          2, 'vec2<i32>'],
+  'sint8x4':         [                  1,   'sint',                4,          4, 'vec4<i32>'],
+  'unorm8x2':        [                  1,  'unorm',                2,          2, 'vec2<f32>'],
+  'unorm8x4':        [                  1,  'unorm',                4,          4, 'vec4<f32>'],
+  'snorm8x2':        [                  1,  'snorm',                2,          2, 'vec2<f32>'],
+  'snorm8x4':        [                  1,  'snorm',                4,          4, 'vec4<f32>'],
   // 16 bit components
-  'uint16x2':  [                  2,   'uint',                2,          4, 'vec2<u32>'],
-  'uint16x4':  [                  2,   'uint',                4,          8, 'vec4<u32>'],
-  'sint16x2':  [                  2,   'sint',                2,          4, 'vec2<i32>'],
-  'sint16x4':  [                  2,   'sint',                4,          8, 'vec4<i32>'],
-  'unorm16x2': [                  2,  'unorm',                2,          4, 'vec2<f32>'],
-  'unorm16x4': [                  2,  'unorm',                4,          8, 'vec4<f32>'],
-  'snorm16x2': [                  2,  'snorm',                2,          4, 'vec2<f32>'],
-  'snorm16x4': [                  2,  'snorm',                4,          8, 'vec4<f32>'],
-  'float16x2': [                  2,  'float',                2,          4, 'vec2<f32>'],
-  'float16x4': [                  2,  'float',                4,          8, 'vec4<f32>'],
+  'uint16x2':        [                  2,   'uint',                2,          4, 'vec2<u32>'],
+  'uint16x4':        [                  2,   'uint',                4,          8, 'vec4<u32>'],
+  'sint16x2':        [                  2,   'sint',                2,          4, 'vec2<i32>'],
+  'sint16x4':        [                  2,   'sint',                4,          8, 'vec4<i32>'],
+  'unorm16x2':       [                  2,  'unorm',                2,          4, 'vec2<f32>'],
+  'unorm16x4':       [                  2,  'unorm',                4,          8, 'vec4<f32>'],
+  'snorm16x2':       [                  2,  'snorm',                2,          4, 'vec2<f32>'],
+  'snorm16x4':       [                  2,  'snorm',                4,          8, 'vec4<f32>'],
+  'float16x2':       [                  2,  'float',                2,          4, 'vec2<f32>'],
+  'float16x4':       [                  2,  'float',                4,          8, 'vec4<f32>'],
   // 32 bit components
-  'float32':   [                  4,  'float',                1,          4,       'f32'],
-  'float32x2': [                  4,  'float',                2,          8, 'vec2<f32>'],
-  'float32x3': [                  4,  'float',                3,         12, 'vec3<f32>'],
-  'float32x4': [                  4,  'float',                4,         16, 'vec4<f32>'],
-  'uint32':    [                  4,   'uint',                1,          4,       'u32'],
-  'uint32x2':  [                  4,   'uint',                2,          8, 'vec2<u32>'],
-  'uint32x3':  [                  4,   'uint',                3,         12, 'vec3<u32>'],
-  'uint32x4':  [                  4,   'uint',                4,         16, 'vec4<u32>'],
-  'sint32':    [                  4,   'sint',                1,          4,       'i32'],
-  'sint32x2':  [                  4,   'sint',                2,          8, 'vec2<i32>'],
-  'sint32x3':  [                  4,   'sint',                3,         12, 'vec3<i32>'],
-  'sint32x4':  [                  4,   'sint',                4,         16, 'vec4<i32>'],
+  'float32':         [                  4,  'float',                1,          4,       'f32'],
+  'float32x2':       [                  4,  'float',                2,          8, 'vec2<f32>'],
+  'float32x3':       [                  4,  'float',                3,         12, 'vec3<f32>'],
+  'float32x4':       [                  4,  'float',                4,         16, 'vec4<f32>'],
+  'uint32':          [                  4,   'uint',                1,          4,       'u32'],
+  'uint32x2':        [                  4,   'uint',                2,          8, 'vec2<u32>'],
+  'uint32x3':        [                  4,   'uint',                3,         12, 'vec3<u32>'],
+  'uint32x4':        [                  4,   'uint',                4,         16, 'vec4<u32>'],
+  'sint32':          [                  4,   'sint',                1,          4,       'i32'],
+  'sint32x2':        [                  4,   'sint',                2,          8, 'vec2<i32>'],
+  'sint32x3':        [                  4,   'sint',                3,         12, 'vec3<i32>'],
+  'sint32x4':        [                  4,   'sint',                4,         16, 'vec4<i32>'],
   // 32 bit packed
-  'rgb10a2':   [           'packed',  'unorm',                4,          4, 'vec4<f32>']
+  'unorm10-10-10-2': [           'packed',  'unorm',                4,          4, 'vec4<f32>']
 } as const);
 /** List of all GPUVertexFormat values. */
 export const kVertexFormats = keysOf(kVertexFormatInfo);

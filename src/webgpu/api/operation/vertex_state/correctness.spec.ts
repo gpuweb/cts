@@ -427,7 +427,7 @@ struct VSOutputs {
 
       case 'unorm': {
         if (formatInfo.bytesPerComponent === 'packed') {
-          assert(format === 'rgb10a2'); // This is the only packed format for now.
+          assert(format === 'unorm10-10-10-2'); // This is the only packed format for now.
           assert(bitSize === 0);
 
           /* prettier-ignore */
