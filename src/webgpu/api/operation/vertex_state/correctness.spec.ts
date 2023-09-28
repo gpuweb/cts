@@ -97,9 +97,9 @@ class VertexStateTest extends GPUTest {
     // than maxVertexAttributes = 16.
     // However this might not work in the future for implementations that allow even more vertex
     // attributes so there will need to be larger changes when that happens.
-    const maxUniformBuffers = kPerStageBindingLimits['uniformBuf'].max;
+    const maxUniformBuffers = this.getDefaultLimit(kPerStageBindingLimits['uniformBuf'].maxLimit);
     assert(
-      maxUniformBuffers + kPerStageBindingLimits['storageBuf'].max >=
+      maxUniformBuffers + this.getDefaultLimit(kPerStageBindingLimits['storageBuf'].maxLimit) >=
         this.device.limits.maxVertexAttributes
     );
 
