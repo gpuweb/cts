@@ -2,7 +2,7 @@ import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_b
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
-import { kLimitInfo, getDefaultLimitsForAdapter } from '../../../../capability_info.js';
+import { getDefaultLimitsForAdapter } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
 type GPUSupportedLimit = keyof GPUSupportedLimits;
@@ -260,11 +260,6 @@ export type MinimumLimitValueTest = typeof kMinimumLimitValueTests[number];
 export function getDefaultLimitForAdapter(adapter: GPUAdapter, limit: GPUSupportedLimit): number {
   const limitInfo = getDefaultLimitsForAdapter(adapter);
   return limitInfo[limit as keyof typeof limitInfo].default;
-}
-
-// MAINTENANCE_TODO: remove as soon as compat refactor is done and this is no longer used.
-export function getDefaultLimit(limit: GPUSupportedLimit): number {
-  return (kLimitInfo as Record<string, { default: number }>)[limit].default;
 }
 
 export type DeviceAndLimits = {
