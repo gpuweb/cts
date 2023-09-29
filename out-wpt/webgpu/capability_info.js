@@ -266,7 +266,6 @@ assertTypeTrue();
 /** Dynamic buffer offsets require offset to be divisible by 256, by spec. */
 export const kMinDynamicBufferOffsetAlignment = 256;
 
-// MAINTENANCE_TODO: remove these as tests need to use different limits for compatibility mode
 /** Default `PerShaderStage` binding limits, by spec. */
 export const kPerStageBindingLimits = {
   uniformBuf: { class: 'uniformBuf', maxLimit: 'maxUniformBuffersPerShaderStage' },
@@ -644,9 +643,6 @@ const kLimitInfoCompatibility = makeTableRenameAndFilter(
   kLimitInfoData
 );
 
-// MAINTENANCE_TODO: remove this as tests need to use different limits for compatibility mode
-export const kLimitInfo = kLimitInfoCore;
-
 const kLimitInfos = {
   core: kLimitInfoCore,
   compatibility: kLimitInfoCompatibility,
@@ -668,17 +664,6 @@ export function getDefaultLimitsForAdapter(adapter) {
 /** List of all entries of GPUSupportedLimits. */
 export const kLimits = keysOf(kLimitInfoCore);
 
-// MAINTENANCE_TODO: remove these as tests need to use different limits for compatibility mode
-// Pipeline limits
-
-/** Maximum number of color attachments to a render pass, by spec. */
-export const kMaxColorAttachments = kLimitInfo.maxColorAttachments.default;
-/** `maxVertexBuffers` per GPURenderPipeline, by spec. */
-export const kMaxVertexBuffers = kLimitInfo.maxVertexBuffers.default;
-/** `maxVertexAttributes` per GPURenderPipeline, by spec. */
-export const kMaxVertexAttributes = kLimitInfo.maxVertexAttributes.default;
-/** `maxVertexBufferArrayStride` in a vertex buffer in a GPURenderPipeline, by spec. */
-export const kMaxVertexBufferArrayStride = kLimitInfo.maxVertexBufferArrayStride.default;
 /**
  * The number of color attachments to test.
  * The CTS needs to generate a consistent list of tests.

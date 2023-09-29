@@ -4,7 +4,7 @@
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert, range, reorder } from '../../../../../common/util/util.js';
-import { kLimitInfo, getDefaultLimitsForAdapter } from '../../../../capability_info.js';
+import { getDefaultLimitsForAdapter } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
 export const kCreatePipelineTypes = [
@@ -239,11 +239,6 @@ export const kMinimumLimitValueTests = [
 export function getDefaultLimitForAdapter(adapter, limit) {
   const limitInfo = getDefaultLimitsForAdapter(adapter);
   return limitInfo[limit].default;
-}
-
-// MAINTENANCE_TODO: remove as soon as compat refactor is done and this is no longer used.
-export function getDefaultLimit(limit) {
-  return kLimitInfo[limit].default;
 }
 
 const kMinimumLimits = new Set([
