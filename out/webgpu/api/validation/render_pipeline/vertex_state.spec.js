@@ -605,8 +605,7 @@ combine('arrayStrideVariant', [
 { mult: 1, add: 0 }]).
 
 expand('offsetVariant', (p) => {
-  const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
-  const formatSize = bytesPerComponent * componentCount;
+  const formatSize = kVertexFormatInfo[p.format].byteSize;
   return filterUniqueValueTestVariants([
   { mult: 0, add: 0 },
   { mult: 0, add: Math.floor(formatSize / 2) },
@@ -661,7 +660,7 @@ fn((t) => {
   vertexBuffers[vertexBufferIndex] = { arrayStride, attributes };
 
   const formatInfo = kVertexFormatInfo[format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
   const success = offset % Math.min(4, formatSize) === 0;
 
   t.testVertexState(success, vertexBuffers);
@@ -688,8 +687,7 @@ combine('arrayStrideVariant', [
 
 expand('offsetVariant', function* (p) {
   // Compute a bunch of test offsets to test.
-  const { bytesPerComponent, componentCount } = kVertexFormatInfo[p.format];
-  const formatSize = bytesPerComponent * componentCount;
+  const formatSize = kVertexFormatInfo[p.format].byteSize;
   yield { mult: 0, add: 0 };
   yield { mult: 0, add: 4 };
   yield { mult: 1, add: -formatSize };
@@ -746,8 +744,7 @@ fn((t) => {
   const vertexBuffers = [];
   vertexBuffers[vertexBufferIndex] = { arrayStride, attributes };
 
-  const formatInfo = kVertexFormatInfo[format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = kVertexFormatInfo[format].byteSize;
   const limit = arrayStride === 0 ? t.device.limits.maxVertexBufferArrayStride : arrayStride;
 
   const success = offset + formatSize <= limit;

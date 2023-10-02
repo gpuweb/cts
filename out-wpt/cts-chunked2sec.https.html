@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8514 variants generated from 1977 tests in 443 files -->
+<!-- Prefix: "?q="; 8520 variants generated from 1977 tests in 443 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -1734,6 +1734,7 @@
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:format="sint32x2";*'><!-- estimated: 133.092 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:format="sint32x3";*'><!-- estimated: 133.092 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:format="sint32x4";*'><!-- estimated: 133.092 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_format_to_shader_format_conversion:format="unorm10-10-10-2";*'><!-- estimated: 133.092 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="uint8x2";*'><!-- estimated: 102.528 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="uint8x4";*'><!-- estimated: 79.744 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="sint8x2";*'><!-- estimated: 102.528 ms -->
@@ -1764,6 +1765,7 @@
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="sint32x2";*'><!-- estimated: 102.528 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="sint32x3";*'><!-- estimated: 125.312 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="sint32x4";*'><!-- estimated: 125.312 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:setVertexBuffer_offset_and_attribute_offset:format="unorm10-10-10-2";*'><!-- estimated: 79.744 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="uint8x2";*'><!-- estimated: 80.136 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="uint8x4";*'><!-- estimated: 80.136 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="sint8x2";*'><!-- estimated: 80.136 ms -->
@@ -1794,10 +1796,11 @@
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="sint32x2";*'><!-- estimated: 80.136 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="sint32x3";*'><!-- estimated: 80.136 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="sint32x4";*'><!-- estimated: 80.136 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:non_zero_array_stride_and_attribute_offset:format="unorm10-10-10-2";*'><!-- estimated: 80.136 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:buffers_with_varying_step_mode:*'><!-- estimated: 24.400 ms -->
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_overlapped:*'><!-- estimated: 1454.760 ms -->
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_interleaved:*'><!-- estimated: 1457.460 ms -->
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:max_buffers_and_attribs:*'><!-- estimated: 557.310 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_overlapped:*'><!-- estimated: 1503.252 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:vertex_buffer_used_multiple_times_interleaved:*'><!-- estimated: 1506.042 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:max_buffers_and_attribs:*'><!-- estimated: 575.887 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="uint8x2";*'><!-- estimated: 76.428 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="uint8x4";*'><!-- estimated: 59.444 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="sint8x2";*'><!-- estimated: 76.428 ms -->
@@ -1828,8 +1831,9 @@
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="sint32x2";*'><!-- estimated: 67.936 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="sint32x3";*'><!-- estimated: 84.920 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="sint32x4";*'><!-- estimated: 84.920 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:array_stride_zero:format="unorm10-10-10-2";*'><!-- estimated: 59.444 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:discontiguous_location_and_attribs:*'><!-- estimated: 15.100 ms -->
-<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:overlapping_attributes:*'><!-- estimated: 524.100 ms -->
+<meta name=variant content='?q=webgpu:api,operation,vertex_state,correctness:overlapping_attributes:*'><!-- estimated: 541.570 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,uint16:*'><!-- estimated: 15.900 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,uint32:*'><!-- estimated: 17.700 ms -->
 <meta name=variant content='?q=webgpu:api,operation,vertex_state,index_format:index_format,change_pipeline_after_setIndexBuffer:*'><!-- estimated: 25.100 ms -->
@@ -5479,7 +5483,7 @@
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_shaderLocation_unique:*'><!-- estimated: 230.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_input_location_limit:*'><!-- estimated: 35.000 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_input_location_in_vertex_state:*'><!-- estimated: 73.710 ms -->
-<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_type_matches_attribute_format:*'><!-- estimated: 592.920 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_shader_type_matches_attribute_format:*'><!-- estimated: 612.684 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="uint8x2";*'><!-- estimated: 349.344 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="uint8x4";*'><!-- estimated: 262.008 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="sint8x2";*'><!-- estimated: 349.344 ms -->
@@ -5510,6 +5514,7 @@
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="sint32x2";*'><!-- estimated: 305.676 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="sint32x3";*'><!-- estimated: 393.012 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="sint32x4";*'><!-- estimated: 393.012 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_offset_alignment:format="unorm10-10-10-2";*'><!-- estimated: 262.008 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="uint8x2";*'><!-- estimated: 105.408 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="uint8x4";*'><!-- estimated: 70.272 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="sint8x2";*'><!-- estimated: 105.408 ms -->
@@ -5540,6 +5545,7 @@
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="sint32x2";*'><!-- estimated: 105.408 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="sint32x3";*'><!-- estimated: 105.408 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="sint32x4";*'><!-- estimated: 105.408 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:vertex_attribute_contained_in_stride:format="unorm10-10-10-2";*'><!-- estimated: 70.272 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,vertex_state:many_attributes_overlapping:*'><!-- estimated: 2.000 ms -->
 <meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_compute_pass_with_no_dispatch:*'><!-- estimated: 137.736 ms -->
 <meta name=variant content='?q=webgpu:api,validation,resource_usages,buffer,in_pass_encoder:subresources,buffer_usage_in_one_compute_pass_with_one_dispatch:*'><!-- estimated: 225.180 ms -->

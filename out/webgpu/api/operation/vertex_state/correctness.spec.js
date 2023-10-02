@@ -61,6 +61,20 @@ f)
   return buffers.map((b) => mapBufferAttribs(b, f));
 }
 
+function makeRgb10a2(rgba) {
+  const [r, g, b, a] = rgba;
+  assert((r & 0x3ff) === r);
+  assert((g & 0x3ff) === g);
+  assert((b & 0x3ff) === b);
+  assert((a & 0x3) === a);
+  return r | g << 10 | b << 20 | a << 30;
+}
+
+function normalizeRgb10a2(rgba, index) {
+  const normalizationFactor = index % 4 === 3 ? 3 : 1023;
+  return rgba / normalizationFactor;
+}
+
 
 
 
@@ -308,7 +322,8 @@ struct VSOutputs {
   // test value in a test is still meaningful.
   generateTestData(format) {
     const formatInfo = kVertexFormatInfo[format];
-    const bitSize = formatInfo.bytesPerComponent * 8;
+    const bitSize =
+    formatInfo.bytesPerComponent === 'packed' ? 0 : formatInfo.bytesPerComponent * 8;
 
     switch (formatInfo.type) {
       case 'float':{
@@ -411,6 +426,28 @@ struct VSOutputs {
         }
 
       case 'unorm':{
+          if (formatInfo.bytesPerComponent === 'packed') {
+            assert(format === 'unorm10-10-10-2'); // This is the only packed format for now.
+            assert(bitSize === 0);
+
+
+            const data = [
+            [0, 0, 0, 0],
+            [1023, 1023, 1023, 3],
+            [243, 567, 765, 2]];
+
+            const vertexData = new Uint32Array(data.map(makeRgb10a2)).buffer;
+            const expectedData = new Float32Array(data.flat().map(normalizeRgb10a2)).buffer;
+
+            return {
+              shaderBaseType: 'f32',
+              testComponentCount: data.flat().length,
+              expectedData,
+              vertexData,
+              floatTolerance: 0.1 / 1023
+            };
+          }
+
 
           const data = [
           42,
@@ -561,7 +598,7 @@ struct VSOutputs {
         this.interleaveVertexDataInto(vertexData, attrib.vertexData, {
           targetStride: buffer.arrayStride,
           offset: (buffer.vbOffset ?? 0) + attrib.offset,
-          size: formatInfo.componentCount * formatInfo.bytesPerComponent
+          size: formatInfo.byteSize
         });
       }
 
@@ -653,7 +690,7 @@ combine('vbOffset', [0, 4, 400, 1004]).
 combine('arrayStride', [128]).
 expand('offset', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
   return new Set([
   0,
   4,
@@ -701,7 +738,7 @@ u //
 beginSubcases().
 expand('arrayStrideVariant', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
 
   return [
   { mult: 0, add: align(formatSize, 4) },
@@ -711,7 +748,7 @@ expand('arrayStrideVariant', (p) => {
 }).
 expand('offsetVariant', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
   return [
   { mult: 0, add: 0 },
   { mult: 0, add: formatSize },
@@ -727,7 +764,7 @@ fn((t) => {
   const { format, arrayStrideVariant, offsetVariant } = t.params;
   const arrayStride = t.makeLimitVariant('maxVertexBufferArrayStride', arrayStrideVariant);
   const formatInfo = kVertexFormatInfo[format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
   const offset = clamp(makeValueTestVariant(arrayStride, offsetVariant), {
     min: 0,
     max: arrayStride - formatSize
@@ -803,7 +840,7 @@ fn((t) => {
   const kVertexCount = 20;
   const kInstanceCount = 1;
   const formatInfo = kVertexFormatInfo[format];
-  const formatByteSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatByteSize = formatInfo.byteSize;
   // We need to align so the offset for non-0 setVertexBuffer don't fail validation.
   const alignedFormatByteSize = align(formatByteSize, 4);
 
@@ -907,7 +944,7 @@ fn((t) => {
   const kVertexCount = 20;
   const kInstanceCount = 1;
   const formatInfo = kVertexFormatInfo[format];
-  const formatByteSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatByteSize = formatInfo.byteSize;
   // We need to align so the offset for non-0 setVertexBuffer don't fail validation.
   const alignedFormatByteSize = align(formatByteSize, 4);
 
@@ -1014,7 +1051,7 @@ beginSubcases().
 combine('stepMode', ['vertex', 'instance']).
 expand('offsetVariant', (p) => {
   const formatInfo = kVertexFormatInfo[p.format];
-  const formatSize = formatInfo.bytesPerComponent * formatInfo.componentCount;
+  const formatSize = formatInfo.byteSize;
   return filterUniqueValueTestVariants([
   { mult: 0, add: 0 },
   { mult: 0, add: 4 },
