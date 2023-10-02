@@ -15,11 +15,29 @@ export const g = makeTestGroup(GPUTest);
 //     pattern: 0|1|2|3
 //       Pattern 0: Identity: invocation i: dst[i] = src[i]
 //       Pattern 1: Try to prevent write coalescing.
+//          Even elements stay in place.
+//          Reverse order of odd elements.
 //          invocation 2k:   dst[2k] = src[2k]
-//          invocation 2k+1: dst[2k+1] = src[N - 2k+1]
+//          invocation 2k+1: dst[2k+1] = src[N - (2k+1)]
+//          Example: with N=6
+//             dst[0] = src[0]
+//             dst[1] = src[5]
+//             dst[2] = src[2]
+//             dst[3] = src[3]
+//             dst[4] = src[4]
+//             dst[5] = src[1]
 //       Pattern 2: Try to prevent write coalescing.
-//          invocation 2k:   dst[2k] = src[N-2k]
+//          Reverse order of even elements.
+//          Odd elements stay in place.
+//          invocation 2k:   dst[2k] = src[N - 2 - 2k]
 //          invocation 2k+1: dst[2k+1] = src[2k+1]
+//          Example: with N=6
+//             dst[0] = src[4]
+//             dst[1] = src[1]
+//             dst[2] = src[2]
+//             dst[3] = src[3]
+//             dst[4] = src[0]
+//             dst[5] = src[5]
 //       Pattern 3: Reverse elements: dst[i] = src[N-1-i]
 //     addressSpace: workgroup|storage
 //          Where dst is allocated.
