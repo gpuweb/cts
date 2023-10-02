@@ -445,7 +445,7 @@ success/error as expected. Such set of buffer parameters should include cases li
     } = t.params;
 
     const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
-    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
+    const formatSize = attributeFormatInfo.byteSize;
     const attributeOffset = attributeOffsetFactor * Math.min(4, formatSize);
     const lastStride = attributeOffset + formatSize;
     let arrayStride = 0;
@@ -609,7 +609,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     // Compute the array stride for vertex step mode and instance step mode attribute
     const attributeFormat = 'float32x4';
     const attributeFormatInfo = kVertexFormatInfo[attributeFormat];
-    const formatSize = attributeFormatInfo.bytesPerComponent * attributeFormatInfo.componentCount;
+    const formatSize = attributeFormatInfo.byteSize;
     const attributeOffset = 0;
     const lastStride = attributeOffset + formatSize;
     let arrayStride = 0;
