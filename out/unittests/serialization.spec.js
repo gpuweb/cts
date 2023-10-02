@@ -117,14 +117,14 @@ g.test('value').fn((t) => {
   f16(-1),
   f16(0.5),
   f16(-0.5),
-  f16(kValue.f32.positive.max),
-  f16(kValue.f32.positive.min),
-  f16(kValue.f32.positive.subnormal.max),
-  f16(kValue.f32.positive.subnormal.min),
-  f16(kValue.f32.negative.subnormal.max),
-  f16(kValue.f32.negative.subnormal.min),
-  f16(kValue.f32.positive.infinity),
-  f16(kValue.f32.negative.infinity),
+  f16(kValue.f16.positive.max),
+  f16(kValue.f16.positive.min),
+  f16(kValue.f16.positive.subnormal.max),
+  f16(kValue.f16.positive.subnormal.min),
+  f16(kValue.f16.negative.subnormal.max),
+  f16(kValue.f16.negative.subnormal.min),
+  f16(kValue.f16.positive.infinity),
+  f16(kValue.f16.negative.infinity),
 
   bool(true),
   bool(false),
@@ -145,7 +145,7 @@ g.test('value').fn((t) => {
   [0.0, 1.0, 2.0],
   [3.0, 4.0, 5.0]],
 
-  f32),
+  f16),
 
   toMatrix(
   [
@@ -160,7 +160,7 @@ g.test('value').fn((t) => {
   [2.0, 3.0],
   [4.0, 5.0]],
 
-  f32),
+  f16),
 
   toMatrix(
   [
@@ -176,7 +176,7 @@ g.test('value').fn((t) => {
   [4.0, 5.0, 6.0, 7.0],
   [8.0, 9.0, 10.0, 11.0]],
 
-  f32),
+  f16),
 
   toMatrix(
   [
@@ -194,7 +194,7 @@ g.test('value').fn((t) => {
   [6.0, 7.0, 8.0],
   [9.0, 10.0, 11.0]],
 
-  f32),
+  f16),
 
   toMatrix(
   [
@@ -239,6 +239,40 @@ g.test('fpinterval_f32').fn((t) => {
   FP.f32.toInterval([kValue.f32.positive.subnormal.min, kValue.f32.positive.subnormal.max]),
   FP.f32.toInterval([kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max]),
   FP.f32.toInterval([kValue.f32.negative.infinity, kValue.f32.positive.infinity])])
+  {
+    const serialized = serializeFPInterval(interval);
+    const deserialized = deserializeFPInterval(serialized);
+    t.expect(
+    objectEquals(interval, deserialized),
+    `interval ${interval} -> serialize -> deserialize -> ${deserialized}`);
+
+  }
+});
+
+g.test('fpinterval_f16').fn((t) => {
+  for (const interval of [
+  FP.f16.toInterval(0),
+  FP.f16.toInterval(-0),
+  FP.f16.toInterval(1),
+  FP.f16.toInterval(-1),
+  FP.f16.toInterval(0.5),
+  FP.f16.toInterval(-0.5),
+  FP.f16.toInterval(kValue.f16.positive.max),
+  FP.f16.toInterval(kValue.f16.positive.min),
+  FP.f16.toInterval(kValue.f16.positive.subnormal.max),
+  FP.f16.toInterval(kValue.f16.positive.subnormal.min),
+  FP.f16.toInterval(kValue.f16.negative.subnormal.max),
+  FP.f16.toInterval(kValue.f16.negative.subnormal.min),
+  FP.f16.toInterval(kValue.f16.positive.infinity),
+  FP.f16.toInterval(kValue.f16.negative.infinity),
+
+  FP.f16.toInterval([-0, 0]),
+  FP.f16.toInterval([-1, 1]),
+  FP.f16.toInterval([-0.5, 0.5]),
+  FP.f16.toInterval([kValue.f16.positive.min, kValue.f16.positive.max]),
+  FP.f16.toInterval([kValue.f16.positive.subnormal.min, kValue.f16.positive.subnormal.max]),
+  FP.f16.toInterval([kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max]),
+  FP.f16.toInterval([kValue.f16.negative.infinity, kValue.f16.positive.infinity])])
   {
     const serialized = serializeFPInterval(interval);
     const deserialized = deserializeFPInterval(serialized);
