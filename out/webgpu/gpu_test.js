@@ -410,6 +410,16 @@ export class GPUTestBase extends Fixture {
     }
   }
 
+  skipIfCopyTextureToTextureNotSupportedForFormat(...formats) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format && isCompressedTextureFormat(format)) {
+          this.skip(`copyTextureToTexture with ${format} is not supported`);
+        }
+      }
+    }
+  }
+
   /**
    * Expect a GPUBuffer's contents to pass the provided check.
    *

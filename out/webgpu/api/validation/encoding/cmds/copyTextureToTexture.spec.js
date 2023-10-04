@@ -363,10 +363,12 @@ beforeAllSubcases((t) => {
 }).
 fn((t) => {
   const { srcFormat, dstFormat } = t.params;
-  const srcFormatInfo = kTextureFormatInfo[srcFormat];
-  const dstFormatInfo = kTextureFormatInfo[dstFormat];
 
   t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
+
+  const srcFormatInfo = kTextureFormatInfo[srcFormat];
+  const dstFormatInfo = kTextureFormatInfo[dstFormat];
 
   const textureSize = {
     width: lcm(srcFormatInfo.blockWidth, dstFormatInfo.blockWidth),
