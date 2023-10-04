@@ -49,8 +49,10 @@ beforeAllSubcases((t) => {
 }).
 fn((t) => {
   const type = kValuesTypes[t.params.type];
-  const smallestPositive = fpTraitsFor(elementType(type)).constants().positive.min;
-  const expectedResult = Math.abs(Math.cos(t.params.value)) > smallestPositive;
+  const fp = fpTraitsFor(elementType(type));
+  const smallestPositive = fp.constants().positive.min;
+  const v = fp.quantize(t.params.value);
+  const expectedResult = Math.abs(Math.cos(v)) > smallestPositive;
   validateConstOrOverrideBuiltinEval(
   t,
   builtin,
