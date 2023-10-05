@@ -480,6 +480,7 @@ combine('addressModeU', kAddressModes).
 combine('addressModeV', kAddressModes)).
 
 beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -602,6 +603,7 @@ combine('addressModeU', kAddressModes).
 combine('addressModeV', kAddressModes)).
 
 beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -736,6 +738,7 @@ combine('addressModeU', kAddressModes).
 combine('addressModeV', kAddressModes)).
 
 beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -868,6 +871,7 @@ combine('addressModeU', kAddressModes).
 combine('addressModeV', kAddressModes)).
 
 beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
@@ -963,6 +967,7 @@ beginSubcases().
 combine('filterMode', kMipmapFilterModes)).
 
 beforeAllSubcases((t) => {
+  t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
   }
