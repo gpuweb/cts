@@ -206,17 +206,6 @@ combine('bundleCount', kColorAttachmentCounts)).
 
 fn((t) => {
   const { passCount, bundleCount } = t.params;
-
-  const { maxColorAttachments } = t.device.limits;
-  t.skipIf(
-  passCount > maxColorAttachments,
-  `passCount: ${passCount} > maxColorAttachments for device: ${maxColorAttachments}`);
-
-  t.skipIf(
-  bundleCount > maxColorAttachments,
-  `bundleCount: ${bundleCount} > maxColorAttachments for device: ${maxColorAttachments}`);
-
-
   const bundleEncoder = t.device.createRenderBundleEncoder({
     colorFormats: range(bundleCount, () => 'rgba8uint')
   });
@@ -253,7 +242,7 @@ p.attachmentCount === p.bundleAttachments.length)).
 fn((t) => {
   const { passAttachments, bundleAttachments } = t.params;
 
-  const { maxColorAttachments } = t.device.limits;
+  const maxColorAttachments = t.device.limits.maxColorAttachments;
   t.skipIf(
   passAttachments.length > maxColorAttachments,
   `num passAttachments: ${passAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`);
@@ -413,17 +402,6 @@ combine('pipelineCount', kColorAttachmentCounts)).
 
 fn((t) => {
   const { encoderType, encoderCount, pipelineCount } = t.params;
-
-  const { maxColorAttachments } = t.device.limits;
-  t.skipIf(
-  pipelineCount > maxColorAttachments,
-  `pipelineCount: ${pipelineCount} > maxColorAttachments for device: ${maxColorAttachments}`);
-
-  t.skipIf(
-  encoderCount > maxColorAttachments,
-  `encoderCount: ${encoderCount} > maxColorAttachments for device: ${maxColorAttachments}`);
-
-
   const pipeline = t.createRenderPipeline(
   range(pipelineCount, () => ({ format: 'rgba8uint', writeMask: 0 })));
 
@@ -457,7 +435,7 @@ p.attachmentCount === p.pipelineAttachments.length)).
 
 fn((t) => {
   const { encoderType, encoderAttachments, pipelineAttachments } = t.params;
-  const { maxColorAttachments } = t.device.limits;
+  const maxColorAttachments = t.device.limits.maxColorAttachments;
   t.skipIf(
   encoderAttachments.length > maxColorAttachments,
   `num encoderAttachments: ${encoderAttachments.length} > maxColorAttachments for device: ${maxColorAttachments}`);
