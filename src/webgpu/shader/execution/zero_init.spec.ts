@@ -228,6 +228,14 @@ g.test('compute,zero_init')
   )
   .batch(15)
   .fn(t => {
+    const { workgroupSize } = t.params;
+    const { maxComputeInvocationsPerWorkgroup } = t.device.limits;
+    const numWorkgroupInvocations = workgroupSize.reduce((a, b) => a * b);
+    t.skipIf(
+      numWorkgroupInvocations > maxComputeInvocationsPerWorkgroup,
+      `workgroupSize: ${workgroupSize} > maxComputeInvocationsPerWorkgroup: ${maxComputeInvocationsPerWorkgroup}`
+    );
+
     let moduleScope = `
       struct Output {
         failed : atomic<u32>
