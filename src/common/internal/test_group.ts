@@ -491,6 +491,7 @@ class RunCaseSpecific implements RunCase {
       try {
         await inst.init();
         await this.fn(inst as Fixture & { params: {} });
+        rec.passed();
       } finally {
         // Runs as long as constructor succeeded, even if initialization or the test failed.
         await inst.finalize();
