@@ -77,7 +77,7 @@ g.test('skip').fn(t => {
   t.expect(res.timems >= 0);
 });
 
-// Tests if there's some skips and at last one pass it's pass.
+// Tests if there's some skips and at least one pass it's pass.
 g.test('skip_pass').fn(t => {
   const mylog = new Logger({ overrideDebugMode: true });
   const [rec, res] = mylog.record('one');
