@@ -262,6 +262,29 @@ g.test('subcases').fn(async (t0) => {
   t0.expect(Array.from(result.values()).every((v) => v.status === 'pass'));
 });
 
+g.test('subcases,skip').
+desc(
+'If all tests are skipped then status is "skip". If at least one test passed, status is "pass"').
+
+params((u) => u.combine('allSkip', [false, true])).
+fn(async (t0) => {
+  const { allSkip } = t0.params;
+  const g = makeTestGroupForUnitTesting(UnitTest);
+  g.test('a').
+  params((u) => u.beginSubcases().combine('do', ['pass', 'skip', 'pass'])).
+  fn((t) => {
+    t.skipIf(allSkip || t.params.do === 'skip');
+  });
+  const result = await t0.run(g);
+  const values = Array.from(result.values());
+  t0.expect(values.length === 1);
+  const expectedStatus = allSkip ? 'skip' : 'pass';
+  t0.expect(
+  values[0].status === expectedStatus,
+  `expect: ${values[0].status} === ${expectedStatus}}, allSkip: ${allSkip}`);
+
+});
+
 g.test('exceptions').
 params((u) =>
 u.
