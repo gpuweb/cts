@@ -1010,7 +1010,7 @@ const resultShaderCommonCode = [
   shaderEntryPoint,
 ].join('\n');
 
-/*
+/**
  * Defines the types of possible memory a test is operating on. Used as part of the process of building shader code from
  * its composite parts.
  */
