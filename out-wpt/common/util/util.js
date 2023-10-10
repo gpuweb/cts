@@ -177,14 +177,20 @@ export function sortObjectByKey(v) {
 
 /**
  * Determines whether two JS values are equal, recursing into objects and arrays.
- * NaN is treated specially, such that `objectEquals(NaN, NaN)`.
+ * NaN is treated specially, such that `objectEquals(NaN, NaN)`. +/-0.0 are treated as equal
+ * by default, but can be opted to be distinguished.
+ * @param x the first JS values that get compared
+ * @param y the second JS values that get compared
+ * @param distinguishSignedZero if set to true, treat 0.0 and -0.0 as unequal. Default to false.
  */
-export function objectEquals(x, y) {
+export function objectEquals(x, y, distinguishSignedZero = false) {
   if (typeof x !== 'object' || typeof y !== 'object') {
     if (typeof x === 'number' && typeof y === 'number' && Number.isNaN(x) && Number.isNaN(y)) {
       return true;
     }
-    return x === y;
+    // Object.is(0.0, -0.0) is false while (0.0 === -0.0) is true. Other than +/-0.0 and NaN cases,
+    // Object.is works in the same way as ===.
+    return distinguishSignedZero ? Object.is(x, y) : x === y;
   }
   if (x === null || y === null) return x === y;
   if (x.constructor !== y.constructor) return false;
