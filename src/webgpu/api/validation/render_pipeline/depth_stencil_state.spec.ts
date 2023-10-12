@@ -40,7 +40,7 @@ g.test('depthCompare_optional')
     u
       .combine('isAsync', [false, true])
       .combine('format', kDepthStencilFormats)
-      .combine('depthCompare', ['always' as GPUCompareFunction, undefined])
+      .combine('depthCompare', ['always', undefined] as const)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
@@ -73,7 +73,7 @@ g.test('depthWriteEnabled_optional')
     const { isAsync, format } = t.params;
     const info = kTextureFormatInfo[format];
     const descriptor = t.getDescriptor({
-      depthStencil: { format, depthCompare: 'always' },
+      depthStencil: { format, depthCompare: 'always', depthWriteEnabled: undefined },
     });
 
     t.doCreateRenderPipelineTest(isAsync, !info.depth, descriptor);
