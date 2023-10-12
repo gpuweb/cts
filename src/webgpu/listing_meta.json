@@ -676,6 +676,8 @@
   "webgpu:api,validation,render_pass,render_pass_descriptor:timestampWrite,query_index:*": { "subcaseMS": 0.200 },
   "webgpu:api,validation,render_pass,render_pass_descriptor:timestampWrites,query_set_type:*": { "subcaseMS": 0.501 },
   "webgpu:api,validation,render_pass,resolve:resolve_attachment:*": { "subcaseMS": 6.205 },
+  "webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:*": { "subcaseMS": 21.401 },
+  "webgpu:api,validation,render_pipeline,depth_stencil_state:depthWriteEnabled_optional:*": { "subcaseMS": 16.950 },
   "webgpu:api,validation,render_pipeline,depth_stencil_state:depth_test:*": { "subcaseMS": 3.407 },
   "webgpu:api,validation,render_pipeline,depth_stencil_state:depth_write,frag_depth:*": { "subcaseMS": 6.465 },
   "webgpu:api,validation,render_pipeline,depth_stencil_state:depth_write:*": { "subcaseMS": 4.113 },
