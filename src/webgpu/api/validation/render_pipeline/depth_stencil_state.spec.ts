@@ -32,9 +32,16 @@ g.test('format')
     t.doCreateRenderPipelineTest(isAsync, !!info.depth || !!info.stencil, descriptor);
   });
 
-g.test('depthCompare')
-  .desc(`The depthCompare in depthStencilState is optional for stencil-only formats.`)
-  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
+g.test('depthCompare_optional')
+  .desc(
+    `The depthCompare in depthStencilState is optional for stencil-only formats but required for formats with a depth.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('format', kDepthStencilFormats)
+      .combine('depthCompare', ['always' as GPUCompareFunction, undefined])
+  )
   .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
@@ -42,19 +49,20 @@ g.test('depthCompare')
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const { isAsync, format } = t.params;
+    const { isAsync, format, depthCompare } = t.params;
     const info = kTextureFormatInfo[format];
-    const depthWriteEnabled = !!info.depth;
     const descriptor = t.getDescriptor({
-      depthStencil: { format, depthWriteEnabled },
+      depthStencil: { format, depthCompare, depthWriteEnabled: false },
     });
 
-    t.doCreateRenderPipelineTest(isAsync, !info.depth && !!info.stencil, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !(info.depth && depthCompare === undefined), descriptor);
   });
 
-g.test('depthWriteEnabled')
-  .desc(`The depthWriteEnabled in depthStencilState is optional for stencil-only formats.`)
-  .params(u => u.combine('isAsync', [false, true]).combine('format', kTextureFormats))
+g.test('depthWriteEnabled_optional')
+  .desc(
+    `The depthWriteEnabled in depthStencilState is optional for stencil-only formats but required for formats with a depth.`
+  )
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kDepthStencilFormats))
   .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
@@ -68,7 +76,7 @@ g.test('depthWriteEnabled')
       depthStencil: { format, depthCompare: 'always' },
     });
 
-    t.doCreateRenderPipelineTest(isAsync, !info.depth && !!info.stencil, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, !info.depth, descriptor);
   });
 
 g.test('depth_test')
