@@ -40,6 +40,7 @@ g.test('depthCompare_optional')
     u
       .combine('isAsync', [false, true])
       .combine('format', kDepthStencilFormats)
+      .beginSubcases()
       .combine('depthCompare', ['always', undefined] as const)
   )
   .beforeAllSubcases(t => {
