@@ -217,6 +217,13 @@ ${main_wgsl.extra}
         // returns an Error with the given message and WGSL source
         const fail = (err: string) => Error(`${err}\nWGSL:\n${Colors.dim(Colors.blue(wgsl))}`);
 
+        // returns a string that shows the outputted values to help understand the whole trace.
+        const print_output_value = () => {
+          return `Output values (length: ${outputCount}): ${outputs.data
+            .slice(1, outputCount + 1)
+            .join(', ')}`;
+        };
+
         // returns a colorized string of the expect_order() call, highlighting
         // the event number that caused an error.
         const expect_order_err = (expectation: ExpectedEvents, err_idx: number) => {
@@ -243,27 +250,35 @@ ${main_wgsl.extra}
           const expectationIndex = outputs.data[1 + event]; // 0 is count
           if (expectationIndex >= expectations.length) {
             return fail(
-              `outputs.data[${event}] value (${expectationIndex}) exceeds number of expectations (${expectations.length})`
+              `outputs.data[${event}] value (${expectationIndex}) exceeds number of expectations (${
+                expectations.length
+              })\n${print_output_value()}`
             );
           }
           const expectation = expectations[expectationIndex];
           switch (expectation.kind) {
             case 'not-reached':
-              return fail(`expect_not_reached() reached at event ${event}\n${expectation.stack}`);
+              return fail(
+                `expect_not_reached() reached at event ${event}\n${print_output_value()}\n${
+                  expectation.stack
+                }`
+              );
             case 'events':
               if (expectation.counter >= expectation.values.length) {
                 return fail(
                   `${expect_order_err(
                     expectation,
                     expectation.counter
-                  )}) unexpectedly reached at event ${Colors.red(`${event}`)}\n${expectation.stack}`
+                  )}) unexpectedly reached at event ${Colors.red(
+                    `${event}`
+                  )}\n${print_output_value()}\n${expectation.stack}`
                 );
               }
               if (event !== expectation.values[expectation.counter]) {
                 return fail(
                   `${expect_order_err(expectation, expectation.counter)} expected event ${
                     expectation.values[expectation.counter]
-                  }, got ${event}\n${expectation.stack}`
+                  }, got ${event}\n${print_output_value()}\n${expectation.stack}`
                 );
               }
 
@@ -278,7 +293,7 @@ ${main_wgsl.extra}
             return fail(
               `${expect_order_err(expectation, expectation.counter)} event ${
                 expectation.values[expectation.counter]
-              } was not reached\n${expectation.stack}`
+              } was not reached\n${expectation.stack}\n${print_output_value()}`
             );
           }
         }
