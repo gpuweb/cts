@@ -1,5 +1,5 @@
 {
-  "_comment": "SEMI AUTO-GENERATED: Please read tools/merge_listing_times.",
+  "_comment": "SEMI AUTO-GENERATED: Please read docs/adding_timing_metadata.md.",
   "webgpu:api,operation,adapter,requestAdapter:requestAdapter:*": { "subcaseMS": 152.083 },
   "webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*": { "subcaseMS": 384.601 },
   "webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*": { "subcaseMS": 136.601 },
