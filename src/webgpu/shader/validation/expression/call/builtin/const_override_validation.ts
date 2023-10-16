@@ -67,6 +67,25 @@ export const kMinus3PiTo3Pi = [
   3 * Math.PI,
 ] as const;
 
+/// A minimal array of values ranging from -3π to 3π, with a focus on multiples
+/// of π. Used when multiple parameters are being passed in, so the number of
+/// cases becomes the square or more of this list.
+export const kSparseMinus3PiTo3Pi = [
+  -3 * Math.PI,
+  -2.5 * Math.PI,
+  -2.0 * Math.PI,
+  -1.5 * Math.PI,
+  -1.0 * Math.PI,
+  -0.5 * Math.PI,
+  0,
+  0.5 * Math.PI,
+  Math.PI,
+  1.5 * Math.PI,
+  2.0 * Math.PI,
+  2.5 * Math.PI,
+  3 * Math.PI,
+] as const;
+
 /// The evaluation stages to test
 export const kConstantAndOverrideStages = ['constant', 'override'] as const;
 
