@@ -7574,135 +7574,171 @@ fn((t) => {
 
 
 
+const kMultiplicationMatrixScalarIntervalCases = {
+  f32: [
+  // From https://github.com/gpuweb/cts/issues/3044
+  {
+    matrix: [
+    [kValue.f32.negative.min, 0],
+    [0, 0]],
+
+    scalar: kValue.f32.negative.subnormal.min,
+    expected: [
+    [[0, reinterpretU32AsF32(0x407ffffe)], 0], // [[0, 3.9999995...], 0],
+    [0, 0]]
+
+  }],
+
+  f16: [
+  // From https://github.com/gpuweb/cts/issues/3044
+  {
+    matrix: [
+    [kValue.f16.negative.min, 0],
+    [0, 0]],
+
+    scalar: kValue.f16.negative.subnormal.min,
+    expected: [
+    [[0, reinterpretU16AsF16(0x43fe)], 0], // [[0, 3.99609375], 0]
+    [0, 0]]
+
+  }]
+
+};
+
 g.test('multiplicationMatrixScalarInterval').
 params((u) =>
 u.
 combine('trait', ['f32', 'f16']).
 beginSubcases().
-combineWithParams([
-// Only testing that different shapes of matrices are handled correctly
-// here, to reduce test duplication.
-// multiplicationMatrixScalarInterval uses MultiplicationIntervalOp for calculating intervals,
-// so the testing for multiplcationInterval covers the actual interval
-// calculations.
-{
-  matrix: [
-  [1, 2],
-  [3, 4]],
+expandWithParams((p) => {
+  // Primarily testing that different shapes of matrices are handled correctly
+  // here, to reduce test duplication. Additional testing for edge case
+  // discovered in https://github.com/gpuweb/cts/issues/3044.
+  //
+  // multiplicationMatrixScalarInterval uses for calculating intervals,
+  // so the testing for multiplicationInterval covers the actual interval
+  // calculations.
+  return [
+  {
+    matrix: [
+    [1, 2],
+    [3, 4]],
 
-  scalar: 10,
-  expected: [
-  [10, 20],
-  [30, 40]]
+    scalar: 10,
+    expected: [
+    [10, 20],
+    [30, 40]]
 
-},
-{
-  matrix: [
-  [1, 2],
-  [3, 4],
-  [5, 6]],
+  },
+  {
+    matrix: [
+    [1, 2],
+    [3, 4],
+    [5, 6]],
 
-  scalar: 10,
-  expected: [
-  [10, 20],
-  [30, 40],
-  [50, 60]]
+    scalar: 10,
+    expected: [
+    [10, 20],
+    [30, 40],
+    [50, 60]]
 
-},
-{
-  matrix: [
-  [1, 2],
-  [3, 4],
-  [5, 6],
-  [7, 8]],
+  },
+  {
+    matrix: [
+    [1, 2],
+    [3, 4],
+    [5, 6],
+    [7, 8]],
 
-  scalar: 10,
-  expected: [
-  [10, 20],
-  [30, 40],
-  [50, 60],
-  [70, 80]]
+    scalar: 10,
+    expected: [
+    [10, 20],
+    [30, 40],
+    [50, 60],
+    [70, 80]]
 
-},
-{
-  matrix: [
-  [1, 2, 3],
-  [4, 5, 6]],
+  },
+  {
+    matrix: [
+    [1, 2, 3],
+    [4, 5, 6]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30],
-  [40, 50, 60]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30],
+    [40, 50, 60]]
 
-},
-{
-  matrix: [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9]],
+  },
+  {
+    matrix: [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30],
-  [40, 50, 60],
-  [70, 80, 90]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30],
+    [40, 50, 60],
+    [70, 80, 90]]
 
-},
-{
-  matrix: [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-  [10, 11, 12]],
+  },
+  {
+    matrix: [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+    [10, 11, 12]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30],
-  [40, 50, 60],
-  [70, 80, 90],
-  [100, 110, 120]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30],
+    [40, 50, 60],
+    [70, 80, 90],
+    [100, 110, 120]]
 
-},
-{
-  matrix: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8]],
+  },
+  {
+    matrix: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30, 40],
-  [50, 60, 70, 80]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30, 40],
+    [50, 60, 70, 80]]
 
-},
-{
-  matrix: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8],
-  [9, 10, 11, 12]],
+  },
+  {
+    matrix: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+    [9, 10, 11, 12]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30, 40],
-  [50, 60, 70, 80],
-  [90, 100, 110, 120]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30, 40],
+    [50, 60, 70, 80],
+    [90, 100, 110, 120]]
 
-},
-{
-  matrix: [
-  [1, 2, 3, 4],
-  [5, 6, 7, 8],
-  [9, 10, 11, 12],
-  [13, 14, 15, 16]],
+  },
+  {
+    matrix: [
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+    [9, 10, 11, 12],
+    [13, 14, 15, 16]],
 
-  scalar: 10,
-  expected: [
-  [10, 20, 30, 40],
-  [50, 60, 70, 80],
-  [90, 100, 110, 120],
-  [130, 140, 150, 160]]
+    scalar: 10,
+    expected: [
+    [10, 20, 30, 40],
+    [50, 60, 70, 80],
+    [90, 100, 110, 120],
+    [130, 140, 150, 160]]
 
-}])).
+  },
+  ...kMultiplicationMatrixScalarIntervalCases[p.trait]];
 
+})).
 
 fn((t) => {
   const matrix = t.params.matrix;

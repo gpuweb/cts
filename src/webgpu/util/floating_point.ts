@@ -3748,7 +3748,7 @@ export abstract class FPTraits {
     const rows = mat[0].length;
     return this.toMatrix(
       unflatten2DArray(
-        flatten2DArray(mat).map(e => this.MultiplicationIntervalOp.impl(e, scalar)),
+        flatten2DArray(mat).map(e => this.multiplicationInterval(e, scalar)),
         cols,
         rows
       )
