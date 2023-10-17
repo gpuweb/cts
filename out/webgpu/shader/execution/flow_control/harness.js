@@ -119,14 +119,16 @@ build_wgsl)
         values: expected,
         counter: 0
       });
-      return `push_output(${expectations.length - 1});`;
+      // Expectation id starts from 1 to distinguish from initialization 0.
+      return `push_output(${expectations.length}); // expect_order(${expected.join(', ')})`;
     },
     expect_not_reached: () => {
       expectations.push({
         kind: 'not-reached',
         stack: Error().stack
       });
-      return `push_output(${expectations.length - 1});`;
+      // Expectation id starts from 1 to distinguish from initialization 0.
+      return `push_output(${expectations.length}); // expect_not_reached()`;
     }
   });
 
@@ -247,7 +249,14 @@ ${main_wgsl.extra}
     // Each of the outputted values represents an event
     // Check that each event is as expected
     for (let event = 0; event < outputCount; event++) {
-      const expectationIndex = outputs.data[1 + event]; // 0 is count
+      const eventValue = outputs.data[1 + event]; // outputs.data[0] is count
+      // Expectation id starts from 1, and 0 is invalid value.
+      if (eventValue === 0) {
+        return fail(
+        `outputs.data[${event}] is initial value 0, doesn't refer to any valid expectations)\n${print_output_value()}`);
+
+      }
+      const expectationIndex = eventValue - 1;
       if (expectationIndex >= expectations.length) {
         return fail(
         `outputs.data[${event}] value (${expectationIndex}) exceeds number of expectations (${
