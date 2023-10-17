@@ -33,6 +33,54 @@ g.test('format')
     t.doCreateRenderPipelineTest(isAsync, !!info.depth || !!info.stencil, descriptor);
   });
 
+g.test('depthCompare_optional')
+  .desc(
+    `The depthCompare in depthStencilState is optional for stencil-only formats but required for formats with a depth.`
+  )
+  .params(u =>
+    u
+      .combine('isAsync', [false, true])
+      .combine('format', kDepthStencilFormats)
+      .beginSubcases()
+      .combine('depthCompare', ['always', undefined])
+  )
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(t => {
+    const { isAsync, format, depthCompare } = t.params;
+    const info = kTextureFormatInfo[format];
+    const descriptor = t.getDescriptor({
+      depthStencil: { format, depthCompare, depthWriteEnabled: false },
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, !(info.depth && depthCompare === undefined), descriptor);
+  });
+
+g.test('depthWriteEnabled_optional')
+  .desc(
+    `The depthWriteEnabled in depthStencilState is optional for stencil-only formats but required for formats with a depth.`
+  )
+  .params(u => u.combine('isAsync', [false, true]).combine('format', kDepthStencilFormats))
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.skipIfTextureFormatNotSupported(format);
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(t => {
+    const { isAsync, format } = t.params;
+    const info = kTextureFormatInfo[format];
+    const descriptor = t.getDescriptor({
+      depthStencil: { format, depthCompare: 'always', depthWriteEnabled: undefined },
+    });
+
+    t.doCreateRenderPipelineTest(isAsync, !info.depth, descriptor);
+  });
+
 g.test('depth_test')
   .desc(
     `Depth aspect must be contained in the format if depth test is enabled in depthStencilState.`
