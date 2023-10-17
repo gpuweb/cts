@@ -75,15 +75,21 @@ g.test('depthCompare_optional')
 
     const areDepthFailOpKeep =
       stencilFrontDepthFailOp === 'keep' && stencilBackDepthFailOp === 'keep';
-    const success =
+
+    let success = false;
+    if (!info.depth) {
       // depthCompare is optional for stencil-only formats.
-      (!info.depth && depthWriteEnabled !== true) ||
-      // depthCompare is optional for formats with a depth if it is not used for anything.
-      (!!info.depth &&
-        ((depthWriteEnabled === false && areDepthFailOpKeep) ||
-          (!!depthCompare &&
-            ((!!info.stencil && depthWriteEnabled !== undefined) ||
-              (!!depthWriteEnabled && areDepthFailOpKeep)))));
+      if (!depthWriteEnabled) success = true;
+    } else {
+      // depthCompare is optional for formats with a depth if it's not used for anything.
+      if (depthWriteEnabled === false && areDepthFailOpKeep) success = true;
+      if (depthCompare) {
+        // validation will succeed normally for formats with depth aspect.
+        if (depthWriteEnabled && areDepthFailOpKeep) success = true;
+        // validation will succeed as well for formats with stencil and depth aspect.
+        if (info.stencil && depthWriteEnabled !== undefined) success = true;
+      }
+    }
 
     t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });
