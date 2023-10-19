@@ -14,7 +14,7 @@ import { parseQuery } from '../internal/query/parseQuery.js';
 
 
 import { Colors } from '../util/colors.js';
-import { setGPUProvider } from '../util/navigator_gpu.js';
+import { setDefaultRequestAdapterOptions, setGPUProvider } from '../util/navigator_gpu.js';
 
 import sys from './helper/sys.js';
 
@@ -23,6 +23,7 @@ function usage(rc) {
   tools/run_${sys.type} [OPTIONS...]
 Options:
   --colors                  Enable ANSI colors in output.
+  --compat                  Run tests in compatibility mode.
   --coverage                Add coverage data to each result.
   --data                    Path to the data cache directory.
   --verbose                 Print result/log of every test as it runs.
@@ -84,6 +85,8 @@ for (let i = 0; i < sys.args.length; ++i) {
   if (a.startsWith('-')) {
     if (a === '--colors') {
       Colors.enabled = true;
+    } else if (a === '--compat') {
+      globalTestConfig.compatibility = true;
     } else if (a === '--coverage') {
       emitCoverage = true;
     } else if (a === '--data') {
@@ -106,6 +109,11 @@ for (let i = 0; i < sys.args.length; ++i) {
 }
 
 let codeCoverage = undefined;
+
+if (globalTestConfig.compatibility) {
+  // MAINTENANCE_TODO: remove the cast once compatibilityMode is officially added
+  setDefaultRequestAdapterOptions({ compatibilityMode: true });
+}
 
 if (gpuProviderModule) {
   setGPUProvider(() => gpuProviderModule.create(gpuProviderFlags));
