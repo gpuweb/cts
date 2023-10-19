@@ -40,7 +40,6 @@ import {
   map2DArray,
   oneULPF16,
   oneULPF32,
-  oneULPF64,
   quantizeToF32,
   quantizeToF16,
   unflatten2DArray,
@@ -3228,11 +3227,10 @@ export abstract class FPTraits {
 
   // This op is implemented differently for f32 and f16.
   private DivisionIntervalOpBuilder(): ScalarPairToIntervalOp {
-    assert(this.kind === 'f32' || this.kind === 'f16');
     const constants = this.constants();
     const domain_x = [this.toInterval([constants.negative.min, constants.positive.max])];
     const domain_y =
-      this.kind === 'f32'
+      this.kind === 'f32' || this.kind === 'abstract'
         ? [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])]
         : [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
     return {
@@ -3259,7 +3257,6 @@ export abstract class FPTraits {
   }
 
   protected divisionIntervalImpl(x: number | FPInterval, y: number | FPInterval): FPInterval {
-    assert(this.kind === 'f32' || this.kind === 'f16');
     return this.runScalarPairToIntervalOp(
       this.toInterval(x),
       this.toInterval(y),
@@ -4727,6 +4724,10 @@ class F32Traits extends FPTraits {
   public readonly quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
 }
 
+// Need to separately allocate f32 traits, so they can be referenced by
+// FPAbstractTraits for forwarding.
+const kF32Traits = new F32Traits();
+
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
 // executes before they are defined.
 const kAbstractUnboundedInterval = new FPInterval(
@@ -4920,6 +4921,36 @@ class FPAbstractTraits extends FPTraits {
     return FPAbstractTraits._constants;
   }
 
+  // Utilities - Proxies
+  // Wrappers for forwarding ULP and absolute error interval calls to f32.
+  // AbstractFloat accuracies are technically unbounded for ULP and absolute
+  // error interval, but testing that implementations are at least as good as
+  // f32.
+
+  /** Forwarder for ULPInterval */
+  protected forwardUlpInterval(n: number, numULP: number): FPInterval {
+    const result = FP['f32'].ulpInterval(n, numULP);
+    if (!result.isFinite()) {
+      return this.constants().unboundedInterval;
+    }
+
+    return this.toInterval(result.bounds());
+  }
+
+  /** Forwarder for scalar pair to interval generator */
+  protected forwardScalarPairToInterval(
+    func: (x: number | FPInterval, y: number | FPInterval) => FPInterval,
+    x: number | FPInterval,
+    y: number | FPInterval
+  ): FPInterval {
+    const result = func(x, y);
+    if (!result.isFinite()) {
+      return this.constants().unboundedInterval;
+    }
+
+    return this.toInterval(result.bounds());
+  }
+
   // Utilities - Overrides
   // number is represented as a f64 internally, so all number values are already
   // quantized to f64
@@ -4930,14 +4961,16 @@ class FPAbstractTraits extends FPTraits {
   public readonly isFinite = Number.isFinite;
   public readonly isSubnormal = isSubnormalNumberF64;
   public readonly flushSubnormal = flushSubnormalNumberF64;
-  public readonly oneULP = oneULPF64;
+  public readonly oneULP = (_target: number, _mode: FlushMode = 'flush'): number => {
+    unreachable(`'FPAbstractTraits.oneULP should never be called`);
+  };
   public readonly scalarBuilder = abstractFloat;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
   public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
-  public readonly ulpInterval = this.unboundedUlpInterval.bind(this);
+  public readonly ulpInterval = this.forwardUlpInterval.bind(this);
 
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
@@ -4974,9 +5007,9 @@ class FPAbstractTraits extends FPTraits {
     'determinantInterval'
   );
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
-  public readonly divisionInterval = this.unimplementedScalarPairToInterval.bind(
+  public readonly divisionInterval = this.forwardScalarPairToInterval.bind(
     this,
-    'divisionInterval'
+    kF32Traits.divisionInterval
   );
   public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
@@ -5364,7 +5397,7 @@ class F16Traits extends FPTraits {
 }
 
 export const FP = {
-  f32: new F32Traits(),
+  f32: kF32Traits,
   f16: new F16Traits(),
   abstract: new FPAbstractTraits(),
 };
