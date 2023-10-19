@@ -73,21 +73,20 @@ g.test('depthCompare_optional')
       },
     });
 
-    const areDepthFailOpKeep =
+    const depthFailOpsAreKeep =
       stencilFrontDepthFailOp === 'keep' && stencilBackDepthFailOp === 'keep';
-
-    let success = false;
-    if (!info.depth) {
-      // depthCompare is optional for stencil-only formats.
-      if (!depthWriteEnabled) success = true;
-    } else {
-      // depthCompare is optional for formats with a depth if it's not used for anything.
-      if (depthWriteEnabled === false && areDepthFailOpKeep) success = true;
-      if (depthCompare) {
-        // validation will succeed normally for formats with depth aspect.
-        if (depthWriteEnabled && areDepthFailOpKeep) success = true;
-        // validation will succeed as well for formats with stencil and depth aspect.
-        if (info.stencil && depthWriteEnabled !== undefined) success = true;
+    const stencilStateIsDefault = depthFailOpsAreKeep;
+    let success = true;
+    if (depthWriteEnabled || (depthCompare && depthCompare !== 'always')) {
+      if (!info.depth) success = false;
+    }
+    if (!stencilStateIsDefault) {
+      if (!info.stencil) success = false;
+    }
+    if (info.depth) {
+      if (depthWriteEnabled === undefined) success = false;
+      if (depthWriteEnabled || !depthFailOpsAreKeep) {
+        if (depthCompare === undefined) success = false;
       }
     }
 
