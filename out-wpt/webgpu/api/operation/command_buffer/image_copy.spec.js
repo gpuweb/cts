@@ -1018,16 +1018,21 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
       // Check the valid data in outputStagingBuffer once per row.
       for (let y = 0; y < copyFromOutputTextureLayout.mipSize[1]; ++y) {
+        const rowOffset = expectedStencilTextureDataBytesPerRow * y;
+        const dataStart =
+          expectedStencilTextureDataOffset +
+          expectedStencilTextureDataBytesPerRow *
+            expectedStencilTextureDataRowsPerImage *
+            stencilTextureLayer +
+          rowOffset;
         this.expectGPUBufferValuesEqual(
           outputStagingBuffer,
           expectedStencilTextureData.slice(
-            expectedStencilTextureDataOffset +
-              expectedStencilTextureDataBytesPerRow *
-                expectedStencilTextureDataRowsPerImage *
-                stencilTextureLayer +
-              expectedStencilTextureDataBytesPerRow * y,
-            copyFromOutputTextureLayout.mipSize[0]
-          )
+            dataStart,
+            dataStart + copyFromOutputTextureLayout.mipSize[0]
+          ),
+
+          rowOffset
         );
       }
     }
