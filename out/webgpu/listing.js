@@ -1742,6 +1742,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "af_remainder"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "af_subtraction"
     ]
   },

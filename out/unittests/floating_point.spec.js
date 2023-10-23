@@ -4853,14 +4853,15 @@ const kRemainderCases = {
 g.test('remainderInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['abstract', 'f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
-  const trait = FP[p.trait];
-  const constants = trait.constants();
+  const trait = kFPTraitForULP[p.trait];
+  const constants = FP[trait].constants();
+
 
   return [
-  ...kRemainderCases[p.trait],
+  ...kRemainderCases[trait],
   // Normals
   { input: [0, 1], expected: 0 },
   { input: [0, -1], expected: 0 },
@@ -4901,7 +4902,7 @@ fn((t) => {
   const got = trait.remainderInterval(x, y);
   t.expect(
   objectEquals(expected, got),
-  `FP.${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
+  `${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
 
 });
 
