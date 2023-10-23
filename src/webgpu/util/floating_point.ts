@@ -4998,7 +4998,6 @@ class FPAbstractTraits extends FPTraits {
   ): FPInterval => {
     return this.toInterval(kF32Traits.divisionInterval(x, y));
   };
-
   public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
@@ -5066,10 +5065,9 @@ class FPAbstractTraits extends FPTraits {
     'reflectInterval'
   );
   public readonly refractInterval = this.unimplementedRefract.bind(this);
-  public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(
-    this,
-    'remainderInterval'
-  );
+  public readonly remainderInterval = (x: number, y: number): FPInterval => {
+    return this.toInterval(kF32Traits.remainderInterval(x, y));
+  };
   public readonly roundInterval = this.unimplementedScalarToInterval.bind(this, 'roundInterval');
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.unimplementedScalarToInterval.bind(this, 'signInterval');
