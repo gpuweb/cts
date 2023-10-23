@@ -2250,18 +2250,10 @@ export function map2DArray<T, S>(m: T[][], op: (input: T) => S): S[][] {
  * @returns a boolean indicating if the test passed for every element
  */
 export function every2DArray<T>(m: T[][], op: (input: T) => boolean): boolean {
-  const c = m.length;
   const r = m[0].length;
   assert(
     m.every(c => c.length === r),
     `Unexpectedly received jagged array to map`
   );
-  for (let i = 0; i < c; i++) {
-    for (let j = 0; j < r; j++) {
-      if (!op(m[i][j])) {
-        return false;
-      }
-    }
-  }
-  return true;
+  return m.every(col => col.every(el => op(el)));
 }
