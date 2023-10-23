@@ -40,10 +40,10 @@ isSubnormalNumberF64,
 map2DArray,
 oneULPF16,
 oneULPF32,
-oneULPF64,
 quantizeToF32,
 quantizeToF16,
-unflatten2DArray } from
+unflatten2DArray,
+every2DArray } from
 './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
@@ -631,12 +631,19 @@ export class FPTraits {
 
 
   // Utilities - Implemented
+
   /** @returns an interval containing the point or the original interval */
   toInterval(n) {
     if (n instanceof FPInterval) {
       if (n.kind === this.kind) {
         return n;
       }
+
+      // Preserve if the original interval was unbounded or bounded
+      if (!n.isFinite()) {
+        return this.constants().unboundedInterval;
+      }
+
       return new FPInterval(this.kind, ...n.bounds());
     }
 
@@ -700,7 +707,7 @@ export class FPTraits {
 
   /** @returns an FPVector representation of an array of values if possible */
   toVector(v) {
-    if (this.isVector(v)) {
+    if (this.isVector(v) && v.every((e) => e.kind === this.kind)) {
       return v;
     }
 
@@ -764,7 +771,12 @@ export class FPTraits {
 
   /** @returns an FPMatrix representation of an array of an array of values if possible */
   toMatrix(m) {
-    if (this.isMatrix(m)) {
+    if (
+    this.isMatrix(m) &&
+    every2DArray(m, (e) => {
+      return e.kind === this.kind;
+    }))
+    {
       return m;
     }
 
@@ -3228,11 +3240,10 @@ export class FPTraits {
 
   // This op is implemented differently for f32 and f16.
   DivisionIntervalOpBuilder() {
-    assert(this.kind === 'f32' || this.kind === 'f16');
     const constants = this.constants();
     const domain_x = [this.toInterval([constants.negative.min, constants.positive.max])];
     const domain_y =
-    this.kind === 'f32' ?
+    this.kind === 'f32' || this.kind === 'abstract' ?
     [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])] :
     [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
     return {
@@ -3259,7 +3270,6 @@ export class FPTraits {
   }
 
   divisionIntervalImpl(x, y) {
-    assert(this.kind === 'f32' || this.kind === 'f16');
     return this.runScalarPairToIntervalOp(
     this.toInterval(x),
     this.toInterval(y),
@@ -4727,6 +4737,10 @@ class F32Traits extends FPTraits {
   quantizeToF16Interval = this.quantizeToF16IntervalImpl.bind(this);
 }
 
+// Need to separately allocate f32 traits, so they can be referenced by
+// FPAbstractTraits for forwarding.
+const kF32Traits = new F32Traits();
+
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
 // executes before they are defined.
 const kAbstractUnboundedInterval = new FPInterval(
@@ -4930,14 +4944,18 @@ class FPAbstractTraits extends FPTraits {
   isFinite = Number.isFinite;
   isSubnormal = isSubnormalNumberF64;
   flushSubnormal = flushSubnormalNumberF64;
-  oneULP = oneULPF64;
+  oneULP = (_target, _mode = 'flush') => {
+    unreachable(`'FPAbstractTraits.oneULP should never be called`);
+  };
   scalarBuilder = abstractFloat;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
   correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
-  ulpInterval = this.unboundedUlpInterval.bind(this);
+  ulpInterval = (n, numULP) => {
+    return this.toInterval(kF32Traits.ulpInterval(n, numULP));
+  };
 
   // Framework - API - Overrides
   absInterval = this.absIntervalImpl.bind(this);
@@ -4974,9 +4992,12 @@ class FPAbstractTraits extends FPTraits {
   'determinantInterval');
 
   distanceInterval = this.unimplementedDistance.bind(this);
-  divisionInterval = this.unimplementedScalarPairToInterval.bind(
-  this,
-  'divisionInterval');
+  divisionInterval = (
+  x,
+  y) =>
+  {
+    return this.toInterval(kF32Traits.divisionInterval(x, y));
+  };
 
   dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
   expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
@@ -5364,7 +5385,7 @@ class F16Traits extends FPTraits {
 }
 
 export const FP = {
-  f32: new F32Traits(),
+  f32: kF32Traits,
   f16: new F16Traits(),
   abstract: new FPAbstractTraits()
 };

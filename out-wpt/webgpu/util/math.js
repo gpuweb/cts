@@ -2271,3 +2271,20 @@ export function map2DArray(m, op) {
   }
   return result;
 }
+
+/**
+ * Performs a .every over a matrix and return the result
+ *
+ * @param m input matrix of type T
+ * @param op operation that performs a test on an element
+ * @returns a boolean indicating if the test passed for every element
+ */
+export function every2DArray(m, op) {
+  const r = m[0].length;
+  assert(
+    m.every(c => c.length === r),
+    `Unexpectedly received jagged array to map`
+  );
+
+  return m.every(col => col.every(el => op(el)));
+}

@@ -20,6 +20,16 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
+/**
+ * For ULP purposes, abstract float behaves like f32, so need to swizzle it in
+ * for expectations.
+ */
+const kFPTraitForULP = {
+  abstract: 'f32',
+  f32: 'f32',
+  f16: 'f16'
+};
+
 /** Bounds indicating an expectation of unbounded error */
 const kUnboundedBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
@@ -2079,15 +2089,16 @@ const kULPErrorValue = {
 g.test('ulpInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['abstract', 'f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
-  const constants = FP[p.trait].constants();
-  const ULPValue = kULPErrorValue[p.trait];
-  const plusOneULP = kPlusOneULPFunctions[p.trait];
-  const plusNULP = kPlusNULPFunctions[p.trait];
-  const minusOneULP = kMinusOneULPFunctions[p.trait];
-  const minusNULP = kMinusNULPFunctions[p.trait];
+  const trait = kFPTraitForULP[p.trait];
+  const constants = FP[trait].constants();
+  const ULPValue = kULPErrorValue[trait];
+  const plusOneULP = kPlusOneULPFunctions[trait];
+  const plusNULP = kPlusNULPFunctions[trait];
+  const minusOneULP = kMinusOneULPFunctions[trait];
+  const minusNULP = kMinusNULPFunctions[trait];
 
   return [
   // Edge Cases
@@ -4364,11 +4375,14 @@ const kDivisionInterval64BitsNormalCases = {
 g.test('divisionInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['abstract', 'f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
-  const trait = FP[p.trait];
-  const constants = trait.constants();
+  // This is a ULP based interval, so abstract should behave like f32, so
+  // swizzling the trait as needed.
+  const trait = p.trait === 'abstract' ? 'f32' : p.trait;
+  const fp = FP[trait];
+  const constants = fp.constants();
 
   return [
   // Representable normals
@@ -4384,7 +4398,7 @@ expandWithParams((p) => {
   { input: [-4, -2], expected: 2 },
 
   // 64-bit normals that can not be exactly represented
-  ...kDivisionInterval64BitsNormalCases[p.trait],
+  ...kDivisionInterval64BitsNormalCases[trait],
 
   // Denominator out of range
   { input: [1, constants.positive.infinity], expected: kUnboundedBounds },
@@ -4400,17 +4414,21 @@ expandWithParams((p) => {
 })).
 
 fn((t) => {
-  const trait = FP[t.params.trait];
+  // This is a ULP based interval, so abstract should behave like f32, so
+  // swizzling the trait as needed for calculating the expected result.
+  const trait = t.params.trait === 'abstract' ? 'f32' : t.params.trait;
+  const fp = FP[trait];
 
   const error = (n) => {
-    return 2.5 * trait.oneULP(n);
+    return 2.5 * fp.oneULP(n);
   };
 
   const [x, y] = t.params.input;
   t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
 
-  const got = trait.divisionInterval(x, y);
+  // Do not swizzle here, so the correct implementation under test is called.
+  const expected = FP[t.params.trait].toInterval(t.params.expected);
+  const got = FP[t.params.trait].divisionInterval(x, y);
   t.expect(
   objectEquals(expected, got),
   `${t.params.trait}.divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
