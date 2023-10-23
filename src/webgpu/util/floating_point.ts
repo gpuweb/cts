@@ -5070,7 +5070,7 @@ class FPAbstractTraits extends FPTraits {
   };
   public readonly roundInterval = this.unimplementedScalarToInterval.bind(this, 'roundInterval');
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
-  public readonly signInterval = this.unimplementedScalarToInterval.bind(this, 'signInterval');
+  public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.unimplementedScalarToInterval.bind(this, 'sinInterval');
   public readonly sinhInterval = this.unimplementedScalarToInterval.bind(this, 'sinhInterval');
   public readonly smoothStepInterval = this.unimplementedScalarTripleToInterval.bind(
