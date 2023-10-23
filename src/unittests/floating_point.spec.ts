@@ -20,6 +20,16 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
+/**
+ * For ULP purposes, abstract float behaves like f32, so need to swizzle it in
+ * for expectations.
+ */
+const kFPTraitForULP = {
+  abstract: 'f32',
+  f32: 'f32',
+  f16: 'f16',
+} as const;
+
 /** Bounds indicating an expectation of unbounded error */
 const kUnboundedBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
@@ -2082,8 +2092,7 @@ g.test('ulpInterval')
       .combine('trait', ['abstract', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ULPCase>(p => {
-        // For ULP purposes, abstract float behaves like f32, so swizzling it in.
-        const trait = p.trait === 'abstract' ? 'f32' : p.trait;
+        const trait = kFPTraitForULP[p.trait];
         const constants = FP[trait].constants();
         const ULPValue = kULPErrorValue[trait];
         const plusOneULP = kPlusOneULPFunctions[trait];
