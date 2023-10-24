@@ -17,7 +17,6 @@ import { FP } from '../../../../../util/floating_point.js';
 import {
   fullF32Range,
   fullF16Range,
-  reinterpretU64AsF64,
   fullF64Range,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
@@ -51,7 +50,7 @@ export const d = makeCaseCache('round', {
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
       [
-        reinterpretU64AsF64(0x8000_0000_0000_0000n), // https://github.com/gpuweb/cts/issues/2766
+        0x8000_0000_0000_0000, // https://github.com/gpuweb/cts/issues/2766
         ...fullF64Range(),
       ],
       'unfiltered',
