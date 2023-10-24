@@ -3547,8 +3547,8 @@ const kRoundIntervalCases = {
     { input: 2 ** 62, expected: 2 ** 62 },
     { input: -(2 ** 62), expected: -(2 ** 62) },
     {
-      input: reinterpretU64AsF64(0x8000_0000_0000_0000n),
-      expected: reinterpretU64AsF64(0x8000_0000_0000_0000n),
+      input: 0x8000_0000_0000_0000,
+      expected: 0x8000_0000_0000_0000,
     }, // https://github.com/gpuweb/cts/issues/2766
   ],
 } as const;
