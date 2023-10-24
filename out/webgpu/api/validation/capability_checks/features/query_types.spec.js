@@ -14,7 +14,7 @@ desc(
   'timestamp-query'.
     - createQuerySet
       - type {occlusion, timestamp}
-      - x= {pipeline statistics, timestamp} query {enable, disable}
+      - x= timestamp query {enable, disable}
   `).
 
 params((u) =>

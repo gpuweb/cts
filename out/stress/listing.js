@@ -140,12 +140,6 @@ export const listing = [
   {
     "file": [
       "queries",
-      "pipeline_statistics"
-    ]
-  },
-  {
-    "file": [
-      "queries",
       "resolve"
     ]
   },
