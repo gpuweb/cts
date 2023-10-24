@@ -14,11 +14,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeAbstractFloat } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  fullF32Range,
-  fullF16Range,
-  fullF64Range,
-} from '../../../../../util/math.js';
+import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
