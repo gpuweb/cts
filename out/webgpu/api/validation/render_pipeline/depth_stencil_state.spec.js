@@ -34,14 +34,18 @@ fn((t) => {
 
 g.test('depthCompare_optional').
 desc(
-`The depthCompare in depthStencilState is optional for stencil-only formats but required for formats with a depth.`).
+`The depthCompare in depthStencilState is optional for stencil-only formats but
+    required for formats with a depth if depthCompare is not used for anything.`).
 
 params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('format', kDepthStencilFormats).
 beginSubcases().
-combine('depthCompare', ['always', undefined])).
+combine('depthCompare', ['always', undefined]).
+combine('depthWriteEnabled', [false, true, undefined]).
+combine('stencilFrontDepthFailOp', ['keep', 'zero']).
+combine('stencilBackDepthFailOp', ['keep', 'zero'])).
 
 beforeAllSubcases((t) => {
   const { format } = t.params;
@@ -50,13 +54,43 @@ beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
-  const { isAsync, format, depthCompare } = t.params;
+  const {
+    isAsync,
+    format,
+    depthCompare,
+    depthWriteEnabled,
+    stencilFrontDepthFailOp,
+    stencilBackDepthFailOp
+  } = t.params;
   const info = kTextureFormatInfo[format];
   const descriptor = t.getDescriptor({
-    depthStencil: { format, depthCompare, depthWriteEnabled: false }
+    depthStencil: {
+      format,
+      depthCompare,
+      depthWriteEnabled,
+      stencilFront: { depthFailOp: stencilFrontDepthFailOp },
+      stencilBack: { depthFailOp: stencilBackDepthFailOp }
+    }
   });
 
-  t.doCreateRenderPipelineTest(isAsync, !(info.depth && depthCompare === undefined), descriptor);
+  const depthFailOpsAreKeep =
+  stencilFrontDepthFailOp === 'keep' && stencilBackDepthFailOp === 'keep';
+  const stencilStateIsDefault = depthFailOpsAreKeep;
+  let success = true;
+  if (depthWriteEnabled || depthCompare && depthCompare !== 'always') {
+    if (!info.depth) success = false;
+  }
+  if (!stencilStateIsDefault) {
+    if (!info.stencil) success = false;
+  }
+  if (info.depth) {
+    if (depthWriteEnabled === undefined) success = false;
+    if (depthWriteEnabled || !depthFailOpsAreKeep) {
+      if (depthCompare === undefined) success = false;
+    }
+  }
+
+  t.doCreateRenderPipelineTest(isAsync, success, descriptor);
 });
 
 g.test('depthWriteEnabled_optional').

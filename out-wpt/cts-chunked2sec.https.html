@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8529 variants generated from 1989 tests in 446 files -->
+<!-- Prefix: "?q="; 8540 variants generated from 1989 tests in 446 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -5395,7 +5395,18 @@
 <meta name=variant content='?q=webgpu:api,validation,render_pass,render_pass_descriptor:occlusionQuerySet,query_set_type:*'><!-- estimated: 64.800 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pass,resolve:resolve_attachment:*'><!-- estimated: 124.100 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:format:*'><!-- estimated: 668.990 ms -->
-<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="stencil8";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="depth16unorm";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="depth32float";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="depth24plus";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="depth24plus-stencil8";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=false;format="depth32float-stencil8";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="stencil8";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="depth16unorm";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="depth32float";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="depth24plus";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="depth24plus-stencil8";*'><!-- estimated: 513.624 ms -->
+<meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthCompare_optional:isAsync=true;format="depth32float-stencil8";*'><!-- estimated: 513.624 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depthWriteEnabled_optional:*'><!-- estimated: 203.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depth_test:*'><!-- estimated: 327.072 ms -->
 <meta name=variant content='?q=webgpu:api,validation,render_pipeline,depth_stencil_state:depth_write:*'><!-- estimated: 98.712 ms -->
