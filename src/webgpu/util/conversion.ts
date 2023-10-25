@@ -983,12 +983,15 @@ export interface ScalarBuilder {
   (value: number): Scalar;
 }
 
-/** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it. */
+/** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
+ * The working data array *must* be an alias of `workingData`.
+ */
 function scalarFromValue(
   type: ScalarType,
   workingDataArray: TypedArrayBufferView,
   value: number
 ): Scalar {
+  // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
   workingDataU32[0] = 0;
   workingDataArray[0] = value;
@@ -997,6 +1000,7 @@ function scalarFromValue(
 
 /** Create a Scalar of `type` by storing `value` as an element of `workingDataStoreArray` and
  * reinterpreting it as an element of `workingDataLoadArray`.
+ * Both working data arrays *must* be aliases of `workingData`.
  */
 function scalarFromBits(
   type: ScalarType,
@@ -1004,6 +1008,7 @@ function scalarFromBits(
   workingDataLoadArray: TypedArrayBufferView,
   bits: number
 ): Scalar {
+  // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
   workingDataU32[0] = 0;
   workingDataStoreArray[0] = bits;
