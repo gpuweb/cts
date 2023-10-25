@@ -1,3 +1,4 @@
+import { ROArrayArray, ROArrayArrayArray } from '../../common/util/types.js';
 import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 import { Case, IntervalFilter } from '../shader/execution/expression/expression.js';
@@ -38,8 +39,6 @@ import {
   quantizeToF16,
   unflatten2DArray,
   every2DArray,
-  ROArrayArray,
-  ROArrayArrayArray,
 } from './math.js';
 import {
   reinterpretF16AsU16,

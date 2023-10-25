@@ -1,4 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
+import { ROArrayArray } from '../../common/util/types.js';
 import { assert, objectEquals, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
@@ -11,7 +12,6 @@ import {
   isSubnormalNumberF16,
   isSubnormalNumberF32,
   isSubnormalNumberF64,
-  ROArrayArray,
 } from './math.js';
 
 /**

@@ -11,6 +11,7 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
@@ -19,7 +20,6 @@ import {
   sparseVectorF16Range,
   sparseF32Range,
   sparseF16Range,
-  ROArrayArray,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';

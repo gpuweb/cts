@@ -13,6 +13,11 @@ export type TypeEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function assertTypeTrue<T extends true>() {}
 
+/** `ReadonlyArray` of `ReadonlyArray`s. */
+export type ROArrayArray<T> = ReadonlyArray<ReadonlyArray<T>>;
+/** `ReadonlyArray` of `ReadonlyArray`s of `ReadonlyArray`s. */
+export type ROArrayArrayArray<T> = ReadonlyArray<ReadonlyArray<ReadonlyArray<T>>>;
+
 /**
  * Deep version of the Readonly<> type, with support for tuples (up to length 7).
  * <https://gist.github.com/masterkidan/7322752f569b1bba53e0426266768623>

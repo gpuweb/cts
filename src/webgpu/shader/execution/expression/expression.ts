@@ -1,4 +1,5 @@
 import { globalTestConfig } from '../../../../common/framework/test_config.js';
+import { ROArrayArray } from '../../../../common/util/types.js';
 import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, ComparatorImpl } from '../../../util/compare.js';
@@ -25,7 +26,6 @@ import {
   QuantizeFunc,
   quantizeToI32,
   quantizeToU32,
-  ROArrayArray,
 } from '../../../util/math.js';
 
 export type Expectation =

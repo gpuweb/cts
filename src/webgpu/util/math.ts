@@ -1,3 +1,4 @@
+import { ROArrayArray, ROArrayArrayArray } from '../../common/util/types.js';
 import { assert } from '../../common/util/util.js';
 import {
   Float16Array,
@@ -13,9 +14,6 @@ import {
   reinterpretU32AsF32,
   reinterpretU16AsF16,
 } from './reinterpret.js';
-
-export type ROArrayArray<T> = ReadonlyArray<ReadonlyArray<T>>;
-export type ROArrayArrayArray<T> = ReadonlyArray<ReadonlyArray<ReadonlyArray<T>>>;
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).

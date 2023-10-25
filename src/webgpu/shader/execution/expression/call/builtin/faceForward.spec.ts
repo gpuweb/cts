@@ -7,6 +7,7 @@ Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
@@ -15,7 +16,6 @@ import {
   cartesianProduct,
   sparseVectorF32Range,
   sparseVectorF16Range,
-  ROArrayArray,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
