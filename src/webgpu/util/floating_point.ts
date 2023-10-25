@@ -9,12 +9,6 @@ import {
   f16,
   f32,
   isFloatType,
-  reinterpretF16AsU16,
-  reinterpretF32AsU32,
-  reinterpretF64AsU32s,
-  reinterpretU16AsF16,
-  reinterpretU32AsF32,
-  reinterpretU32sAsF64,
   Scalar,
   ScalarType,
   toMatrix,
@@ -45,6 +39,14 @@ import {
   unflatten2DArray,
   every2DArray,
 } from './math.js';
+import {
+  reinterpretF16AsU16,
+  reinterpretF32AsU32,
+  reinterpretF64AsU32s,
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU32sAsF64,
+} from './reinterpret.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
 export type FPKind = 'f32' | 'f16' | 'abstract';
