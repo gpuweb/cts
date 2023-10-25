@@ -59,7 +59,7 @@ export type FPKind = 'f32' | 'f16' | 'abstract';
  * two elements, the first is the lower bound of the interval and the second is
  * the upper bound.
  */
-export type IntervalBounds = [number] | [number, number];
+export type IntervalBounds = readonly [number] | readonly [number, number];
 
 /** Represents a closed interval of floating point numbers */
 export class FPInterval {
@@ -224,7 +224,7 @@ export type FPVector =
   | [FPInterval, FPInterval, FPInterval, FPInterval];
 
 /** Shorthand for an Array of Arrays that contains a column-major matrix */
-type Array2D<T> = T[][];
+type Array2D<T> = ReadonlyArray<ReadonlyArray<T>>;
 
 /**
  * Representation of a matCxR of floating point intervals as an array of arrays
@@ -808,7 +808,7 @@ export abstract class FPTraits {
       `Matrix span is not defined for Matrices of differing dimensions`
     );
 
-    const result: Array2D<FPInterval> = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
+    const result: FPInterval[][] = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
     for (let i = 0; i < num_cols; i++) {
       for (let j = 0; j < num_rows; j++) {
         result[i][j] = this.spanIntervals(...ms.map(m => m[i][j]));

@@ -26,6 +26,7 @@ import {
   stringifyPublicParamsUniquely,
 } from '../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
+import { DeepReadonly } from '../util/types.js';
 import { assert, unreachable } from '../util/util.js';
 
 import { logToWebsocket } from './websocket_logger.js';
@@ -216,7 +217,7 @@ interface TestBuilderWithParams<F extends Fixture, CaseP extends {}, SubcaseP ex
    * Set the test function.
    * @param fn the test function.
    */
-  fn(fn: TestFn<F, Merged<CaseP, SubcaseP>>): void;
+  fn(fn: TestFn<F, DeepReadonly<Merged<CaseP, SubcaseP>>>): void;
   /**
    * Mark the test as unimplemented.
    */

@@ -143,7 +143,7 @@ export function builderIterateCasesWithSubcases(
  */
 export class CaseParamsBuilder<CaseP extends {}>
   extends ParamsBuilderBase<CaseP, {}>
-  implements Iterable<CaseP>, ParamsBuilder {
+  implements Iterable<Readonly<CaseP>>, ParamsBuilder {
   *iterateCasesWithSubcases(caseFilter: TestParams | null): CaseSubcaseIterable<CaseP, {}> {
     for (const caseP of this.cases(caseFilter)) {
       if (caseFilter) {
@@ -159,7 +159,7 @@ export class CaseParamsBuilder<CaseP extends {}>
     }
   }
 
-  [Symbol.iterator](): Iterator<CaseP> {
+  [Symbol.iterator](): Iterator<Readonly<CaseP>> {
     return this.cases(null);
   }
 

@@ -13,6 +13,20 @@ export type TypeEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function assertTypeTrue<T extends true>() {}
 
+export type DeepReadonly<T> = T extends (infer R)[]
+  ? DeepReadonlyArray<R>
+  : T extends Function
+  ? T
+  : T extends object
+  ? DeepReadonlyObject<T>
+  : T;
+
+type DeepReadonlyArray<T> = ReadonlyArray<DeepReadonly<T>>;
+
+type DeepReadonlyObject<T> = {
+  readonly [P in keyof T]: DeepReadonly<T[P]>;
+};
+
 /**
  * Computes the intersection of a set of types, given the union of those types.
  *
