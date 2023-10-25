@@ -6,15 +6,12 @@ Floating Point unit tests.
 import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, FPInterval } from '../webgpu/util/floating_point.js';
+import { map2DArray, oneULPF32, oneULPF16, oneULPF64 } from '../webgpu/util/math.js';
 import {
 reinterpretU16AsF16,
 reinterpretU32AsF32,
-reinterpretU64AsF64,
-map2DArray,
-oneULPF32,
-oneULPF16,
-oneULPF64 } from
-'../webgpu/util/math.js';
+reinterpretU64AsF64 } from
+'../webgpu/util/reinterpret.js';
 
 import { UnitTest } from './unit_test.js';
 

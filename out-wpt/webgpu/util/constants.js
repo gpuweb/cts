@@ -1,6 +1,12 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+ **/ import {
+  reinterpretU64AsF64,
+  reinterpretF64AsU64,
+  reinterpretU32AsF32,
+  reinterpretU16AsF16,
+} from './reinterpret.js';
+
 export const kBit = {
   // Limits of int32
   i32: {
@@ -236,49 +242,6 @@ export const kBit = {
     to31: 0x8000_0000,
   },
 };
-
-/**
- * @returns a 64-bit float value via interpreting the input as the bit
- * representation as a 64-bit integer
- *
- * Using a locally defined function here to avoid compile time dependency
- * issues.
- */
-function reinterpretU64AsF64(input) {
-  return new Float64Array(new BigUint64Array([input]).buffer)[0];
-}
-
-/**
- * @returns the 64-bit integer bit representation of 64-bit float value
- *
- * Using a locally defined function here to avoid compile time dependency
- * issues.
- */
-function reinterpretF64AsU64(input) {
-  return new BigUint64Array(new Float64Array([input]).buffer)[0];
-}
-
-/**
- * @returns a 32-bit float value via interpreting the input as the bit
- * representation as a 32-bit integer
- *
- * Using a locally defined function here to avoid compile time dependency
- * issues.
- */
-function reinterpretU32AsF32(input) {
-  return new Float32Array(new Uint32Array([input]).buffer)[0];
-}
-
-/**
- * @returns a 16-bit float value via interpreting the input as the bit
- * representation as a 64-bit integer
- *
- * Using a locally defined function here to avoid compile time dependency
- * issues.
- */
-function reinterpretU16AsF16(input) {
-  return new Float16Array(new Uint16Array([input]).buffer)[0];
-}
 
 export const kValue = {
   // Limits of i32

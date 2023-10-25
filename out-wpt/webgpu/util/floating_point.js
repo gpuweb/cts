@@ -5,21 +5,7 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
-import {
-  abstractFloat,
-  f16,
-  f32,
-  isFloatType,
-  reinterpretF16AsU16,
-  reinterpretF32AsU32,
-  reinterpretF64AsU32s,
-  reinterpretU16AsF16,
-  reinterpretU32AsF32,
-  reinterpretU32sAsF64,
-  toMatrix,
-  toVector,
-  u32,
-} from './conversion.js';
+import { abstractFloat, f16, f32, isFloatType, toMatrix, toVector, u32 } from './conversion.js';
 import {
   calculatePermutations,
   cartesianProduct,
@@ -43,6 +29,14 @@ import {
   unflatten2DArray,
   every2DArray,
 } from './math.js';
+import {
+  reinterpretF16AsU16,
+  reinterpretF32AsU32,
+  reinterpretF64AsU32s,
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU32sAsF64,
+} from './reinterpret.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
 

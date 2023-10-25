@@ -10,7 +10,6 @@ bool,
 f32,
 f16,
 i32,
-reinterpretI32AsU32,
 TypeBool,
 TypeF32,
 TypeF16,
@@ -26,6 +25,7 @@ fullU32Range,
 quantizeToF32,
 quantizeToF16 } from
 '../../../../util/math.js';
+import { reinterpretI32AsU32 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 

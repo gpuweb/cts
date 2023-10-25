@@ -11,7 +11,6 @@ import {
   f32,
   f16,
   i32,
-  reinterpretU32AsI32,
   TypeBool,
   TypeF32,
   TypeF16,
@@ -27,6 +26,7 @@ import {
   quantizeToF32,
   quantizeToF16,
 } from '../../../../util/math.js';
+import { reinterpretU32AsI32 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 

@@ -25,14 +25,6 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { alwaysPass, anyOf } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import {
-  reinterpretI32AsF32,
-  reinterpretI32AsU32,
-  reinterpretF32AsI32,
-  reinterpretF32AsU32,
-  reinterpretU32AsF32,
-  reinterpretU32AsI32,
-  reinterpretU16AsF16,
-  reinterpretF16AsU16,
   f32,
   i32,
   u32,
@@ -58,6 +50,16 @@ import {
   isFiniteF32,
   isFiniteF16,
 } from '../../../../../util/math.js';
+import {
+  reinterpretI32AsF32,
+  reinterpretI32AsU32,
+  reinterpretF32AsI32,
+  reinterpretF32AsU32,
+  reinterpretU32AsF32,
+  reinterpretU32AsI32,
+  reinterpretU16AsF16,
+  reinterpretF16AsU16,
+} from '../../../../../util/reinterpret.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
