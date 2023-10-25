@@ -3431,7 +3431,7 @@ fn((t) => {
 
 });
 
-g.test('quantizeToF16Interval_f32').
+g.test('quantizeToF16Interval').
 paramsSubcasesOnly(
 
 [
