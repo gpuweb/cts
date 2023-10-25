@@ -232,40 +232,47 @@ type Array2D<T> = ROArrayArray<T>;
  * of FPIntervals. This maps onto the WGSL concept of matrix. Internally
  */
 export type FPMatrix =
-  | [[FPInterval, FPInterval], [FPInterval, FPInterval]]
-  | [[FPInterval, FPInterval], [FPInterval, FPInterval], [FPInterval, FPInterval]]
-  | [
-      [FPInterval, FPInterval],
-      [FPInterval, FPInterval],
-      [FPInterval, FPInterval],
-      [FPInterval, FPInterval]
+  | readonly [readonly [FPInterval, FPInterval], readonly [FPInterval, FPInterval]]
+  | readonly [
+      readonly [FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval]
     ]
-  | [[FPInterval, FPInterval, FPInterval], [FPInterval, FPInterval, FPInterval]]
-  | [
-      [FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval]
+  | readonly [
+      readonly [FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval]
     ]
-  | [
-      [FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval]
     ]
-  | [
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval]
     ]
-  | [
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval]
     ]
-  | [
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval],
-      [FPInterval, FPInterval, FPInterval, FPInterval]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval]
+    ]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval]
+    ]
+  | readonly [
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval],
+      readonly [FPInterval, FPInterval, FPInterval, FPInterval]
     ];
 
 // Utilities
@@ -752,13 +759,13 @@ export abstract class FPTraits {
     if (!m.every(c => c.every(e => e instanceof FPInterval && e.kind === this.kind))) {
       return false;
     }
-    // At this point m guaranteed to be a readonly FPInterval[][], but maybe typed as a
+    // At this point m guaranteed to be a ROArrayArray<FPInterval>, but maybe typed as a
     // FPVector[].
     // Coercing the type since FPVector[] is functionally equivalent to
-    // readonly FPInterval[][] for .length and .every, but they are type compatible,
+    // ROArrayArray<FPInterval> for .length and .every, but they are type compatible,
     // since tuples are not equivalent to arrays, so TS considers c in .every to
     // be unresolvable below, even though our usage is safe.
-    m = m as readonly FPInterval[][];
+    m = m as ROArrayArray<FPInterval>;
 
     if (m.length > 4 || m.length < 2) {
       return false;
@@ -785,7 +792,7 @@ export abstract class FPTraits {
 
     const result = map2DArray(m, this.toInterval.bind(this));
 
-    // The return of the map above is a readonly FPInterval[][], which needs to be
+    // The return of the map above is a ROArrayArray<FPInterval>, which needs to be
     // narrowed to FPMatrix, since FPMatrix is defined as fixed length tuples.
     if (this.isMatrix(result)) {
       return result;
@@ -809,7 +816,7 @@ export abstract class FPTraits {
       `Matrix span is not defined for Matrices of differing dimensions`
     );
 
-    const result: readonly FPInterval[][] = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
+    const result: FPInterval[][] = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
     for (let i = 0; i < num_cols; i++) {
       for (let j = 0; j < num_rows; j++) {
         result[i][j] = this.spanIntervals(...ms.map(m => m[i][j]));
@@ -2498,7 +2505,7 @@ export abstract class FPTraits {
     const result_cols = result.length;
     const result_rows = result[0].length;
 
-    // FPMatrix has to be coerced to readonly FPInterval[][] to use .every. This should
+    // FPMatrix has to be coerced to ROArrayArray<FPInterval> to use .every. This should
     // always be safe, since FPMatrix are defined as fixed length array of
     // arrays.
     return (result as ROArrayArray<FPInterval>).every(c => c.every(r => r.isFinite()))
@@ -3823,7 +3830,7 @@ export abstract class FPTraits {
       });
     });
 
-    return result as FPMatrix;
+    return result as ROArrayArray<FPInterval> as FPMatrix;
   }
 
   /** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
