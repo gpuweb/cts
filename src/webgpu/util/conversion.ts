@@ -3,6 +3,7 @@ import { ROArrayArray } from '../../common/util/types.js';
 import { assert, objectEquals, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
+import BinaryStream from './binary_stream.js';
 import { kBit } from './constants.js';
 import {
   cartesianProduct,
@@ -888,11 +889,11 @@ export class Scalar {
   }
 
   /**
-   * Copies the scalar value to the Uint8Array buffer at the provided byte offset.
+   * Copies the scalar value to the buffer at the provided byte offset.
    * @param buffer the destination buffer
-   * @param offset the byte offset within buffer
+   * @param offset the offset in buffer, in units of @p buffer
    */
-  public copyTo(buffer: Uint8Array, offset: number) {
+  public copyTo(buffer: TypedArrayBufferView, offset: number) {
     assert(this.type.kind !== 'f64', `Copying f64 values to/from buffers is not defined`);
     workingDataU32[1] = this.bits1;
     workingDataU32[0] = this.bits0;
@@ -1301,86 +1302,222 @@ export type SerializedValueMatrix = {
   value: ROArrayArray<number>;
 };
 
-export type SerializedValue = SerializedValueScalar | SerializedValueVector | SerializedValueMatrix;
+enum SerializedScalarKind {
+  AbstractFloat,
+  F64,
+  F32,
+  F16,
+  U32,
+  U16,
+  U8,
+  I32,
+  I16,
+  I8,
+  Bool,
+}
 
-export function serializeValue(v: Value): SerializedValue {
-  const value = (kind: ScalarKind, s: Scalar) => {
+/** serializeScalarKind() serializes a ScalarKind to a BinaryStream */
+function serializeScalarKind(s: BinaryStream, v: ScalarKind) {
+  switch (v) {
+    case 'abstract-float':
+      s.writeU8(SerializedScalarKind.AbstractFloat);
+      return;
+    case 'f64':
+      s.writeU8(SerializedScalarKind.F64);
+      return;
+    case 'f32':
+      s.writeU8(SerializedScalarKind.F32);
+      return;
+    case 'f16':
+      s.writeU8(SerializedScalarKind.F16);
+      return;
+    case 'u32':
+      s.writeU8(SerializedScalarKind.U32);
+      return;
+    case 'u16':
+      s.writeU8(SerializedScalarKind.U16);
+      return;
+    case 'u8':
+      s.writeU8(SerializedScalarKind.U8);
+      return;
+    case 'i32':
+      s.writeU8(SerializedScalarKind.I32);
+      return;
+    case 'i16':
+      s.writeU8(SerializedScalarKind.I16);
+      return;
+    case 'i8':
+      s.writeU8(SerializedScalarKind.I8);
+      return;
+    case 'bool':
+      s.writeU8(SerializedScalarKind.Bool);
+      return;
+  }
+}
+
+/** deserializeScalarKind() deserializes a ScalarKind from a BinaryStream */
+function deserializeScalarKind(s: BinaryStream): ScalarKind {
+  const kind = s.readU8();
+  switch (kind) {
+    case SerializedScalarKind.AbstractFloat:
+      return 'abstract-float';
+    case SerializedScalarKind.F64:
+      return 'f64';
+    case SerializedScalarKind.F32:
+      return 'f32';
+    case SerializedScalarKind.F16:
+      return 'f16';
+    case SerializedScalarKind.U32:
+      return 'u32';
+    case SerializedScalarKind.U16:
+      return 'u16';
+    case SerializedScalarKind.U8:
+      return 'u8';
+    case SerializedScalarKind.I32:
+      return 'i32';
+    case SerializedScalarKind.I16:
+      return 'i16';
+    case SerializedScalarKind.I8:
+      return 'i8';
+    case SerializedScalarKind.Bool:
+      return 'bool';
+    default:
+      unreachable(`invalid serialized ScalarKind: ${kind}`);
+  }
+}
+
+enum SerializedValueKind {
+  Scalar,
+  Vector,
+  Matrix,
+}
+
+/** serializeValue() serializes a Value to a BinaryStream */
+export function serializeValue(s: BinaryStream, v: Value) {
+  const serializeScalar = (scalar: Scalar, kind: ScalarKind) => {
     switch (kind) {
+      case 'abstract-float':
+        s.writeF64(scalar.value as number);
+        return;
+      case 'f64':
+        s.writeF64(scalar.value as number);
+        return;
       case 'f32':
-        return s.bits0;
+        s.writeF32(scalar.value as number);
+        return;
       case 'f16':
-        return s.bits0;
-      default:
-        return s.value;
+        s.writeF16(scalar.value as number);
+        return;
+      case 'u32':
+        s.writeU32(scalar.value as number);
+        return;
+      case 'u16':
+        s.writeU16(scalar.value as number);
+        return;
+      case 'u8':
+        s.writeU8(scalar.value as number);
+        return;
+      case 'i32':
+        s.writeI32(scalar.value as number);
+        return;
+      case 'i16':
+        s.writeI16(scalar.value as number);
+        return;
+      case 'i8':
+        s.writeI8(scalar.value as number);
+        return;
+      case 'bool':
+        s.writeBool(scalar.value as boolean);
+        return;
     }
   };
+
   if (v instanceof Scalar) {
-    const kind = v.type.kind;
-    return {
-      kind: 'scalar',
-      type: kind,
-      value: value(kind, v),
-    };
+    s.writeU8(SerializedValueKind.Scalar);
+    serializeScalarKind(s, v.type.kind);
+    serializeScalar(v, v.type.kind);
+    return;
   }
   if (v instanceof Vector) {
-    const kind = v.type.elementType.kind;
-    return {
-      kind: 'vector',
-      type: kind,
-      value: v.elements.map(e => value(kind, e)) as boolean[] | readonly number[],
-    };
+    s.writeU8(SerializedValueKind.Vector);
+    serializeScalarKind(s, v.type.elementType.kind);
+    s.writeU8(v.type.width);
+    for (const element of v.elements) {
+      serializeScalar(element, v.type.elementType.kind);
+    }
+    return;
   }
   if (v instanceof Matrix) {
-    const kind = v.type.elementType.kind;
-    return {
-      kind: 'matrix',
-      type: kind,
-      value: v.elements.map(c => c.map(r => value(kind, r))) as ROArrayArray<number>,
-    };
+    s.writeU8(SerializedValueKind.Matrix);
+    serializeScalarKind(s, v.type.elementType.kind);
+    s.writeU8(v.type.cols);
+    s.writeU8(v.type.rows);
+    for (const column of v.elements) {
+      for (const element of column) {
+        serializeScalar(element, v.type.elementType.kind);
+      }
+    }
+    return;
   }
 
   unreachable(`unhandled value type: ${v}`);
 }
 
-export function deserializeValue(data: SerializedValue): Value {
-  const buildScalar = (v: ScalarValue): Scalar => {
-    switch (data.type) {
+/** deserializeValue() deserializes a Value from a BinaryStream */
+export function deserializeValue(s: BinaryStream): Value {
+  const deserializeScalar = (kind: ScalarKind) => {
+    switch (kind) {
       case 'abstract-float':
-        return abstractFloat(v as number);
+        return abstractFloat(s.readF64());
       case 'f64':
-        return f64(v as number);
-      case 'i32':
-        return i32(v as number);
-      case 'u32':
-        return u32(v as number);
+        return f64(s.readF64());
       case 'f32':
-        return f32Bits(v as number);
-      case 'i16':
-        return i16(v as number);
-      case 'u16':
-        return u16(v as number);
+        return f32(s.readF32());
       case 'f16':
-        return f16Bits(v as number);
-      case 'i8':
-        return i8(v as number);
+        return f16(s.readF16());
+      case 'u32':
+        return u32(s.readU32());
+      case 'u16':
+        return u16(s.readU16());
       case 'u8':
-        return u8(v as number);
+        return u8(s.readU8());
+      case 'i32':
+        return i32(s.readI32());
+      case 'i16':
+        return i16(s.readI16());
+      case 'i8':
+        return i8(s.readI8());
       case 'bool':
-        return bool(v as boolean);
-      default:
-        unreachable(`unhandled value type: ${data.type}`);
+        return bool(s.readBool());
     }
   };
-  switch (data.kind) {
-    case 'scalar': {
-      return buildScalar(data.value);
+  const valueKind = s.readU8();
+  const scalarKind = deserializeScalarKind(s);
+  switch (valueKind) {
+    case SerializedValueKind.Scalar:
+      return deserializeScalar(scalarKind);
+    case SerializedValueKind.Vector: {
+      const width = s.readU8();
+      const scalars = new Array<Scalar>(width);
+      for (let i = 0; i < width; i++) {
+        scalars[i] = deserializeScalar(scalarKind);
+      }
+      return new Vector(scalars);
     }
-    case 'vector': {
-      return new Vector(data.value.map(v => buildScalar(v)));
+    case SerializedValueKind.Matrix: {
+      const numCols = s.readU8();
+      const numRows = s.readU8();
+      const columns = new Array<Scalar[]>(numCols);
+      for (let c = 0; c < numCols; c++) {
+        columns[c] = new Array<Scalar>(numRows);
+        for (let i = 0; i < numRows; i++) {
+          columns[c][i] = deserializeScalar(scalarKind);
+        }
+      }
+      return new Matrix(columns);
     }
-    case 'matrix': {
-      return new Matrix(data.value.map(c => c.map(buildScalar)));
-    }
+    default:
+      unreachable(`invalid serialized value kind: ${valueKind}`);
   }
 }
 
