@@ -156,7 +156,7 @@ export class CaseParamsBuilder<CaseP extends {}>
         }
       }
 
-      yield [caseP as DeepReadonly<CaseP>, undefined];
+      yield [caseP as DeepReadonly<typeof caseP>, undefined];
     }
   }
 
@@ -303,7 +303,10 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
 
       const subcases = Array.from(this.subcases(caseP));
       if (subcases.length) {
-        yield [caseP as DeepReadonly<CaseP>, subcases as DeepReadonly<SubcaseP>[]];
+        yield [
+          caseP as DeepReadonly<typeof caseP>,
+          subcases as DeepReadonly<typeof subcases[number]>[],
+        ];
       }
     }
   }

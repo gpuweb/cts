@@ -13,7 +13,10 @@ export type TypeEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export function assertTypeTrue<T extends true>() {}
 
-export type Primitive = string | number | boolean | undefined | null | Function | symbol;
+/**
+ * Deep version of the Readonly<> type, with support for tuples (up to length 7).
+ * <https://gist.github.com/masterkidan/7322752f569b1bba53e0426266768623>
+ */
 export type DeepReadonly<T> = T extends [infer A]
   ? DeepReadonlyObject<[A]>
   : T extends [infer A, infer B]
@@ -40,6 +43,7 @@ export type DeepReadonly<T> = T extends [infer A]
   ? DeepReadonlyArray<A>
   : DeepReadonlyObject<T>;
 
+type Primitive = string | number | boolean | undefined | null | Function | symbol;
 type DeepReadonlyArray<T> = ReadonlyArray<DeepReadonly<T>>;
 type DeepReadonlyObject<T> = { readonly [P in keyof T]: DeepReadonly<T[P]> };
 

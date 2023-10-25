@@ -83,9 +83,11 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
 /** Parameter name for batch number (see also TestBuilder.batch). */
 const kBatchParamName = 'batch__';
 
-type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type TestFn<F extends Fixture, P extends {}> = (
+  t: F & { params: DeepReadonly<P> }
+) => Promise<void> | void;
 type BeforeAllSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
-  s: S & { params: P }
+  s: S & { params: DeepReadonly<P> }
 ) => Promise<void> | void;
 
 export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
@@ -217,7 +219,7 @@ interface TestBuilderWithParams<F extends Fixture, CaseP extends {}, SubcaseP ex
    * Set the test function.
    * @param fn the test function.
    */
-  fn(fn: TestFn<F, DeepReadonly<Merged<CaseP, SubcaseP>>>): void;
+  fn(fn: TestFn<F, Merged<CaseP, SubcaseP>>): void;
   /**
    * Mark the test as unimplemented.
    */
