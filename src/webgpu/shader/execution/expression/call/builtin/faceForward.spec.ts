@@ -15,6 +15,7 @@ import {
   cartesianProduct,
   sparseVectorF32Range,
   sparseVectorF16Range,
+  ROArrayArray,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
@@ -41,9 +42,9 @@ export const g = makeTestGroup(GPUTest);
  * */
 function makeCase(
   kind: FPKind,
-  x: number[],
-  y: number[],
-  z: number[],
+  x: readonly number[],
+  y: readonly number[],
+  z: readonly number[],
   check: IntervalFilter
 ): Case | undefined {
   const fp = FP[kind];
@@ -81,9 +82,9 @@ function makeCase(
  */
 function generateCases(
   kind: FPKind,
-  xs: number[][],
-  ys: number[][],
-  zs: number[][],
+  xs: ROArrayArray<number>,
+  ys: ROArrayArray<number>,
+  zs: ROArrayArray<number>,
   check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types

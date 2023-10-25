@@ -123,7 +123,7 @@ const f16ZerosInterval: FPInterval = new FPInterval('f16', -0.0, 0.0);
  * @returns an u32 whose lower and higher 16bits are the two elements of the
  * given array of two u16 respectively, in little-endian.
  */
-function u16x2ToU32(u16x2: number[]): number {
+function u16x2ToU32(u16x2: readonly number[]): number {
   assert(u16x2.length === 2);
   // Create a DataView with 4 bytes buffer.
   const buffer = new ArrayBuffer(4);
@@ -531,7 +531,7 @@ function possible32BitScalarIntervalsFromF16x2(
   }
   const possibleU16Bits = f16x2InU16x2.map(possibleBitsInU16FromFiniteF16InU16);
   const possibleExpectations = cartesianProduct(...possibleU16Bits).flatMap<Scalar | FPInterval>(
-    (possibleBitsU16x2: number[]) => {
+    (possibleBitsU16x2: readonly number[]) => {
       assert(possibleBitsU16x2.length === 2);
       return expectationsForValue(reinterpretFromU32(u16x2ToU32(possibleBitsU16x2)));
     }

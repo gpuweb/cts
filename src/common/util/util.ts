@@ -346,7 +346,7 @@ interface TypedArrayMap {
 
 type TypedArrayParam<K extends keyof TypedArrayMap> = {
   type: K;
-  data: number[];
+  data: readonly number[];
 };
 
 /**

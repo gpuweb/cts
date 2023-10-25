@@ -72,8 +72,8 @@ function withinOneULPF32(got: number, expected: number, mode: FlushMode): boolea
  *              FTZ occur during comparison
  **/
 function compareArrayOfNumbersF32(
-  got: Array<number>,
-  expect: Array<number>,
+  got: readonly number[],
+  expect: readonly number[],
   mode: FlushMode = 'flush'
 ): boolean {
   return (

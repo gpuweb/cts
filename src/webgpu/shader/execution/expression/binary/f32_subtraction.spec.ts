@@ -12,11 +12,11 @@ import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
-const subtractionVectorScalarInterval = (v: number[], s: number): FPVector => {
+const subtractionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.subtractionInterval(e, s)));
 };
 
-const subtractionScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const subtractionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.subtractionInterval(s, e)));
 };
 

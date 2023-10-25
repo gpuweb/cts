@@ -38,6 +38,8 @@ import {
   quantizeToF16,
   unflatten2DArray,
   every2DArray,
+  ROArrayArray,
+  ROArrayArrayArray,
 } from './math.js';
 import {
   reinterpretF16AsU16,
@@ -224,7 +226,7 @@ export type FPVector =
   | [FPInterval, FPInterval, FPInterval, FPInterval];
 
 /** Shorthand for an Array of Arrays that contains a column-major matrix */
-type Array2D<T> = ReadonlyArray<ReadonlyArray<T>>;
+type Array2D<T> = ROArrayArray<T>;
 
 /**
  * Representation of a matCxR of floating point intervals as an array of arrays
@@ -272,7 +274,7 @@ export type FPMatrix =
 /** @returns input with an appended 0, if inputs contains non-zero subnormals */
 // When f16 traits is defined, this can be replaced with something like
 // `FP.f16..addFlushIfNeeded`
-function addFlushedIfNeededF16(values: number[]): number[] {
+function addFlushedIfNeededF16(values: readonly number[]): readonly number[] {
   return values.some(v => v !== 0 && isSubnormalNumberF16(v)) ? values.concat(0) : values;
 }
 
@@ -343,8 +345,8 @@ interface ScalarPairToIntervalOp {
 /** Domain for a ScalarPairToInterval implementation */
 interface ScalarPairToIntervalDomain {
   // Arrays to support discrete valid domain intervals
-  x: FPInterval[];
-  y: FPInterval[];
+  x: readonly FPInterval[];
+  y: readonly FPInterval[];
 }
 
 /**
@@ -384,7 +386,7 @@ export interface ScalarToVector {
  * from tests.
  */
 export interface VectorToInterval {
-  (x: number[]): FPInterval;
+  (x: readonly number[]): FPInterval;
 }
 
 /** Operation used to implement a VectorToInterval */
@@ -400,7 +402,7 @@ interface VectorToIntervalOp {
  * from tests.
  */
 export interface VectorPairToInterval {
-  (x: number[], y: number[]): FPInterval;
+  (x: readonly number[], y: readonly number[]): FPInterval;
 }
 
 /** Operation used to implement a VectorPairToInterval */
@@ -416,7 +418,7 @@ interface VectorPairToIntervalOp {
  * from tests.
  */
 export interface VectorToVector {
-  (x: number[]): FPVector;
+  (x: readonly number[]): FPVector;
 }
 
 /** Operation used to implement a VectorToVector */
@@ -433,7 +435,7 @@ interface VectorToVectorOp {
  * from tests.
  */
 export interface VectorPairToVector {
-  (x: number[], y: number[]): FPVector;
+  (x: readonly number[], y: readonly number[]): FPVector;
 }
 
 /** Operation used to implement a VectorPairToVector */
@@ -450,7 +452,7 @@ interface VectorPairToVectorOp {
  * from tests.
  */
 export interface VectorScalarToVector {
-  (x: number[], y: number): FPVector;
+  (x: readonly number[], y: number): FPVector;
 }
 
 /**
@@ -460,7 +462,7 @@ export interface VectorScalarToVector {
  * from tests.
  */
 export interface ScalarVectorToVector {
-  (x: number, y: number[]): FPVector;
+  (x: number, y: readonly number[]): FPVector;
 }
 
 /**
@@ -525,7 +527,7 @@ export interface ScalarMatrixToMatrix {
  * from tests.
  */
 export interface MatrixVectorToVector {
-  (x: Array2D<number>, y: number[]): FPVector;
+  (x: Array2D<number>, y: readonly number[]): FPVector;
 }
 
 /**
@@ -535,7 +537,7 @@ export interface MatrixVectorToVector {
  * from tests.
  */
 export interface VectorMatrixToVector {
-  (x: number[], y: Array2D<number>): FPVector;
+  (x: readonly number[], y: Array2D<number>): FPVector;
 }
 
 // Traits
@@ -684,7 +686,7 @@ export abstract class FPTraits {
    * @returns an interval with the tightest bounds that includes all provided
    *          intervals
    */
-  public spanIntervals(...intervals: FPInterval[]): FPInterval {
+  public spanIntervals(...intervals: readonly FPInterval[]): FPInterval {
     assert(intervals.length > 0, `span of an empty list of FPIntervals is not allowed`);
     assert(
       intervals.every(i => i.kind === this.kind),
@@ -700,7 +702,7 @@ export abstract class FPTraits {
   }
 
   /** Narrow an array of values to FPVector if possible */
-  public isVector(v: (number | IntervalBounds | FPInterval)[]): v is FPVector {
+  public isVector(v: ReadonlyArray<number | IntervalBounds | FPInterval>): v is FPVector {
     if (v.every(e => e instanceof FPInterval && e.kind === this.kind)) {
       return v.length === 2 || v.length === 3 || v.length === 4;
     }
@@ -708,13 +710,13 @@ export abstract class FPTraits {
   }
 
   /** @returns an FPVector representation of an array of values if possible */
-  public toVector(v: (number | IntervalBounds | FPInterval)[]): FPVector {
+  public toVector(v: ReadonlyArray<number | IntervalBounds | FPInterval>): FPVector {
     if (this.isVector(v) && v.every(e => e.kind === this.kind)) {
       return v;
     }
 
     const f = v.map(e => this.toInterval(e));
-    // The return of the map above is a FPInterval[], which needs to be narrowed
+    // The return of the map above is a readonly FPInterval[], which needs to be narrowed
     // to FPVector, since FPVector is defined as fixed length tuples.
     if (this.isVector(f)) {
       return f;
@@ -751,13 +753,13 @@ export abstract class FPTraits {
     if (!m.every(c => c.every(e => e instanceof FPInterval && e.kind === this.kind))) {
       return false;
     }
-    // At this point m guaranteed to be a FPInterval[][], but maybe typed as a
+    // At this point m guaranteed to be a readonly FPInterval[][], but maybe typed as a
     // FPVector[].
     // Coercing the type since FPVector[] is functionally equivalent to
-    // FPInterval[][] for .length and .every, but they are type compatible,
+    // readonly FPInterval[][] for .length and .every, but they are type compatible,
     // since tuples are not equivalent to arrays, so TS considers c in .every to
     // be unresolvable below, even though our usage is safe.
-    m = m as FPInterval[][];
+    m = m as readonly FPInterval[][];
 
     if (m.length > 4 || m.length < 2) {
       return false;
@@ -784,7 +786,7 @@ export abstract class FPTraits {
 
     const result = map2DArray(m, this.toInterval.bind(this));
 
-    // The return of the map above is a FPInterval[][], which needs to be
+    // The return of the map above is a readonly FPInterval[][], which needs to be
     // narrowed to FPMatrix, since FPMatrix is defined as fixed length tuples.
     if (this.isMatrix(result)) {
       return result;
@@ -808,7 +810,7 @@ export abstract class FPTraits {
       `Matrix span is not defined for Matrices of differing dimensions`
     );
 
-    const result: FPInterval[][] = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
+    const result: readonly FPInterval[][] = [...Array(num_cols)].map(_ => [...Array(num_rows)]);
     for (let i = 0; i < num_cols; i++) {
       for (let j = 0; j < num_rows; j++) {
         result[i][j] = this.spanIntervals(...ms.map(m => m[i][j]));
@@ -819,7 +821,7 @@ export abstract class FPTraits {
   }
 
   /** @returns input with an appended 0, if inputs contains non-zero subnormals */
-  public addFlushedIfNeeded(values: number[]): number[] {
+  public addFlushedIfNeeded(values: readonly number[]): readonly number[] {
     const subnormals = values.filter(this.isSubnormal);
     const needs_zero = subnormals.length > 0 && subnormals.every(s => s !== 0);
     return needs_zero ? values.concat(0) : values;
@@ -904,22 +906,25 @@ export abstract class FPTraits {
   /** Stub for vector pair to interval generator */
   protected unimplementedVectorPairToInterval(
     name: string,
-    _x: (number | FPInterval)[],
-    _y: (number | FPInterval)[]
+    _x: readonly (number | FPInterval)[],
+    _y: readonly (number | FPInterval)[]
   ): FPInterval {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector to vector generator */
-  protected unimplementedVectorToVector(name: string, _x: (number | FPInterval)[]): FPVector {
+  protected unimplementedVectorToVector(
+    name: string,
+    _x: readonly (number | FPInterval)[]
+  ): FPVector {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for vector pair to vector generator */
   protected unimplementedVectorPairToVector(
     name: string,
-    _x: (number | FPInterval)[],
-    _y: (number | FPInterval)[]
+    _x: readonly (number | FPInterval)[],
+    _y: readonly (number | FPInterval)[]
   ): FPVector {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
@@ -927,7 +932,7 @@ export abstract class FPTraits {
   /** Stub for vector-scalar to vector generator */
   protected unimplementedVectorScalarToVector(
     name: string,
-    _x: (number | FPInterval)[],
+    _x: readonly (number | FPInterval)[],
     _y: number | FPInterval
   ): FPVector {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
@@ -983,7 +988,7 @@ export abstract class FPTraits {
   protected unimplementedMatrixVectorToVector(
     name: string,
     _x: Array2D<number>,
-    _y: (number | FPInterval)[]
+    _y: readonly (number | FPInterval)[]
   ): FPVector {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
@@ -991,28 +996,33 @@ export abstract class FPTraits {
   /** Stub for vector-matrix to vector generator  */
   protected unimplementedVectorMatrixToVector(
     name: string,
-    _x: (number | FPInterval)[],
+    _x: readonly (number | FPInterval)[],
     _y: Array2D<number>
   ): FPVector {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for distance generator */
-  protected unimplementedDistance(_x: number | number[], _y: number | number[]): FPInterval {
+  protected unimplementedDistance(
+    _x: number | readonly number[],
+    _y: number | readonly number[]
+  ): FPInterval {
     unreachable(`'distance' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for faceForward */
   protected unimplementedFaceForward(
-    _x: number[],
-    _y: number[],
-    _z: number[]
+    _x: readonly number[],
+    _y: readonly number[],
+    _z: readonly number[]
   ): (FPVector | undefined)[] {
     unreachable(`'faceForward' is not yet implemented for '${this.kind}'`);
   }
 
   /** Stub for length generator */
-  protected unimplementedLength(_x: number | FPInterval | number[] | FPVector): FPInterval {
+  protected unimplementedLength(
+    _x: number | FPInterval | readonly number[] | FPVector
+  ): FPInterval {
     unreachable(`'length' is not yet implemented for '${this.kind}'`);
   }
 
@@ -1022,7 +1032,11 @@ export abstract class FPTraits {
   }
 
   /** Stub for refract generator */
-  protected unimplementedRefract(_i: number[], _s: number[], _r: number): FPVector {
+  protected unimplementedRefract(
+    _i: readonly number[],
+    _s: readonly number[],
+    _r: number
+  ): FPVector {
     unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
@@ -1043,7 +1057,7 @@ export abstract class FPTraits {
    */
   public abstract readonly quantize: (n: number) => number;
   /** @returns all valid roundings of input */
-  public abstract readonly correctlyRounded: (n: number) => number[];
+  public abstract readonly correctlyRounded: (n: number) => readonly number[];
   /** @returns true if input is considered finite, otherwise false */
   public abstract readonly isFinite: (n: number) => boolean;
   /** @returns true if input is considered subnormal, otherwise false */
@@ -1085,7 +1099,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateScalarToIntervalCases(
-    params: number[],
+    params: readonly number[],
     filter: IntervalFilter,
     ...ops: ScalarToInterval[]
   ): Case[] {
@@ -1133,8 +1147,8 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateScalarPairToIntervalCases(
-    param0s: number[],
-    param1s: number[],
+    param0s: readonly number[],
+    param1s: readonly number[],
     filter: IntervalFilter,
     ...ops: ScalarPairToInterval[]
   ): Case[] {
@@ -1186,9 +1200,9 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateScalarTripleToIntervalCases(
-    param0s: number[],
-    param1s: number[],
-    param2s: number[],
+    param0s: readonly number[],
+    param1s: readonly number[],
+    param2s: readonly number[],
     filter: IntervalFilter,
     ...ops: ScalarTripleToInterval[]
   ): Case[] {
@@ -1209,7 +1223,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   private makeVectorToIntervalCase(
-    param: number[],
+    param: readonly number[],
     filter: IntervalFilter,
     ...ops: VectorToInterval[]
   ): Case | undefined {
@@ -1232,7 +1246,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateVectorToIntervalCases(
-    params: number[][],
+    params: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorToInterval[]
   ): Case[] {
@@ -1254,8 +1268,8 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   private makeVectorPairToIntervalCase(
-    param0: number[],
-    param1: number[],
+    param0: readonly number[],
+    param1: readonly number[],
     filter: IntervalFilter,
     ...ops: VectorPairToInterval[]
   ): Case | undefined {
@@ -1280,8 +1294,8 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateVectorPairToIntervalCases(
-    param0s: number[][],
-    param1s: number[][],
+    param0s: ROArrayArray<number>,
+    param1s: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorPairToInterval[]
   ): Case[] {
@@ -1302,7 +1316,7 @@ export abstract class FPTraits {
    *            intervals.
    */
   private makeVectorToVectorCase(
-    param: number[],
+    param: readonly number[],
     filter: IntervalFilter,
     ...ops: VectorToVector[]
   ): Case | undefined {
@@ -1326,7 +1340,7 @@ export abstract class FPTraits {
    *            intervals.
    */
   public generateVectorToVectorCases(
-    params: number[][],
+    params: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorToVector[]
   ): Case[] {
@@ -1349,7 +1363,7 @@ export abstract class FPTraits {
    */
   private makeScalarVectorToVectorCase(
     scalar: number,
-    vector: number[],
+    vector: readonly number[],
     filter: IntervalFilter,
     ...ops: ScalarVectorToVector[]
   ): Case | undefined {
@@ -1374,8 +1388,8 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating a vector of acceptance intervals
    */
   public generateScalarVectorToVectorCases(
-    scalars: number[],
-    vectors: number[][],
+    scalars: readonly number[],
+    vectors: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: ScalarVectorToVector[]
   ): Case[] {
@@ -1401,7 +1415,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating a vector of acceptance intervals
    */
   private makeVectorScalarToVectorCase(
-    vector: number[],
+    vector: readonly number[],
     scalar: number,
     filter: IntervalFilter,
     ...ops: VectorScalarToVector[]
@@ -1427,8 +1441,8 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating a vector of acceptance intervals
    */
   public generateVectorScalarToVectorCases(
-    vectors: number[][],
-    scalars: number[],
+    vectors: ROArrayArray<number>,
+    scalars: readonly number[],
     filter: IntervalFilter,
     ...ops: VectorScalarToVector[]
   ): Case[] {
@@ -1454,8 +1468,8 @@ export abstract class FPTraits {
    *            intervals.
    */
   private makeVectorPairToVectorCase(
-    param0: number[],
-    param1: number[],
+    param0: readonly number[],
+    param1: readonly number[],
     filter: IntervalFilter,
     ...ops: VectorPairToVector[]
   ): Case | undefined {
@@ -1480,8 +1494,8 @@ export abstract class FPTraits {
    *            intervals.
    */
   public generateVectorPairToVectorCases(
-    param0s: number[][],
-    param1s: number[][],
+    param0s: ROArrayArray<number>,
+    param1s: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorPairToVector[]
   ): Case[] {
@@ -1505,8 +1519,8 @@ export abstract class FPTraits {
    *                         one component result at a time.
    */
   private makeVectorPairScalarToVectorComponentWiseCase(
-    param0: number[],
-    param1: number[],
+    param0: readonly number[],
+    param1: readonly number[],
     param2: number,
     filter: IntervalFilter,
     ...componentWiseOps: ScalarTripleToInterval[]
@@ -1545,9 +1559,9 @@ export abstract class FPTraits {
    * @param componentWiseOpscallbacks that implement generating a component-wise acceptance interval
    */
   public generateVectorPairScalarToVectorComponentWiseCase(
-    param0s: number[][],
-    param1s: number[][],
-    param2s: number[],
+    param0s: ROArrayArray<number>,
+    param1s: ROArrayArray<number>,
+    param2s: readonly number[],
     filter: IntervalFilter,
     ...componentWiseOps: ScalarTripleToInterval[]
   ): Case[] {
@@ -1579,7 +1593,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   private makeMatrixToScalarCase(
-    param: number[][],
+    param: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixToScalar[]
   ): Case | undefined {
@@ -1603,7 +1617,7 @@ export abstract class FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateMatrixToScalarCases(
-    params: number[][][],
+    params: ROArrayArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixToScalar[]
   ): Case[] {
@@ -1624,7 +1638,7 @@ export abstract class FPTraits {
    *            intervals
    */
   private makeMatrixToMatrixCase(
-    param: number[][],
+    param: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixToMatrix[]
   ): Case | undefined {
@@ -1649,7 +1663,7 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateMatrixToMatrixCases(
-    params: number[][][],
+    params: ROArrayArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixToMatrix[]
   ): Case[] {
@@ -1671,8 +1685,8 @@ export abstract class FPTraits {
    *            intervals
    */
   private makeMatrixPairToMatrixCase(
-    param0: number[][],
-    param1: number[][],
+    param0: ROArrayArray<number>,
+    param1: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixPairToMatrix[]
   ): Case | undefined {
@@ -1698,8 +1712,8 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateMatrixPairToMatrixCases(
-    param0s: number[][][],
-    param1s: number[][][],
+    param0s: ROArrayArrayArray<number>,
+    param1s: ROArrayArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixPairToMatrix[]
   ): Case[] {
@@ -1721,7 +1735,7 @@ export abstract class FPTraits {
    *            intervals
    */
   private makeMatrixScalarToMatrixCase(
-    mat: number[][],
+    mat: ROArrayArray<number>,
     scalar: number,
     filter: IntervalFilter,
     ...ops: MatrixScalarToMatrix[]
@@ -1748,8 +1762,8 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateMatrixScalarToMatrixCases(
-    mats: number[][][],
-    scalars: number[],
+    mats: ROArrayArrayArray<number>,
+    scalars: readonly number[],
     filter: IntervalFilter,
     ...ops: MatrixScalarToMatrix[]
   ): Case[] {
@@ -1776,7 +1790,7 @@ export abstract class FPTraits {
    */
   private makeScalarMatrixToMatrixCase(
     scalar: number,
-    mat: number[][],
+    mat: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: ScalarMatrixToMatrix[]
   ): Case | undefined {
@@ -1802,8 +1816,8 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateScalarMatrixToMatrixCases(
-    scalars: number[],
-    mats: number[][][],
+    scalars: readonly number[],
+    mats: ROArrayArrayArray<number>,
     filter: IntervalFilter,
     ...ops: ScalarMatrixToMatrix[]
   ): Case[] {
@@ -1829,8 +1843,8 @@ export abstract class FPTraits {
    *            intervals
    */
   private makeMatrixVectorToVectorCase(
-    mat: number[][],
-    vec: number[],
+    mat: ROArrayArray<number>,
+    vec: readonly number[],
     filter: IntervalFilter,
     ...ops: MatrixVectorToVector[]
   ): Case | undefined {
@@ -1856,8 +1870,8 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateMatrixVectorToVectorCases(
-    mats: number[][][],
-    vecs: number[][],
+    mats: ROArrayArrayArray<number>,
+    vecs: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: MatrixVectorToVector[]
   ): Case[] {
@@ -1883,8 +1897,8 @@ export abstract class FPTraits {
    *            intervals
    */
   private makeVectorMatrixToVectorCase(
-    vec: number[],
-    mat: number[][],
+    vec: readonly number[],
+    mat: ROArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorMatrixToVector[]
   ): Case | undefined {
@@ -1910,8 +1924,8 @@ export abstract class FPTraits {
    *            intervals
    */
   public generateVectorMatrixToVectorCases(
-    vecs: number[][],
-    mats: number[][][],
+    vecs: ROArrayArray<number>,
+    mats: ROArrayArrayArray<number>,
     filter: IntervalFilter,
     ...ops: VectorMatrixToVector[]
   ): Case[] {
@@ -2035,14 +2049,14 @@ export abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a span over all the outputs of op.impl
    */
-  private roundAndFlushVectorToInterval(x: number[], op: VectorToIntervalOp): FPInterval {
+  private roundAndFlushVectorToInterval(x: readonly number[], op: VectorToIntervalOp): FPInterval {
     assert(
       x.every(e => !Number.isNaN(e)),
       `flush not defined for NaN`
     );
 
-    const x_rounded: number[][] = x.map(this.correctlyRounded);
-    const x_flushed: number[][] = x_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const x_rounded: ROArrayArray<number> = x.map(this.correctlyRounded);
+    const x_flushed: ROArrayArray<number> = x_rounded.map(this.addFlushedIfNeeded.bind(this));
     const x_inputs = cartesianProduct<number>(...x_flushed);
 
     const intervals = new Set<FPInterval>();
@@ -2066,8 +2080,8 @@ export abstract class FPTraits {
    * @returns a span over all the outputs of op.impl
    */
   private roundAndFlushVectorPairToInterval(
-    x: number[],
-    y: number[],
+    x: readonly number[],
+    y: readonly number[],
     op: VectorPairToIntervalOp
   ): FPInterval {
     assert(
@@ -2079,10 +2093,10 @@ export abstract class FPTraits {
       `flush not defined for NaN`
     );
 
-    const x_rounded: number[][] = x.map(this.correctlyRounded);
-    const y_rounded: number[][] = y.map(this.correctlyRounded);
-    const x_flushed: number[][] = x_rounded.map(this.addFlushedIfNeeded.bind(this));
-    const y_flushed: number[][] = y_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const x_rounded: ROArrayArray<number> = x.map(this.correctlyRounded);
+    const y_rounded: ROArrayArray<number> = y.map(this.correctlyRounded);
+    const x_flushed: ROArrayArray<number> = x_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const y_flushed: ROArrayArray<number> = y_rounded.map(this.addFlushedIfNeeded.bind(this));
     const x_inputs = cartesianProduct<number>(...x_flushed);
     const y_inputs = cartesianProduct<number>(...y_flushed);
 
@@ -2106,14 +2120,14 @@ export abstract class FPTraits {
    * @param op operation defining the function being run
    * @returns a vector of spans for each outputs of op.impl
    */
-  private roundAndFlushVectorToVector(x: number[], op: VectorToVectorOp): FPVector {
+  private roundAndFlushVectorToVector(x: readonly number[], op: VectorToVectorOp): FPVector {
     assert(
       x.every(e => !Number.isNaN(e)),
       `flush not defined for NaN`
     );
 
-    const x_rounded: number[][] = x.map(this.correctlyRounded);
-    const x_flushed: number[][] = x_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const x_rounded: ROArrayArray<number> = x.map(this.correctlyRounded);
+    const x_flushed: ROArrayArray<number> = x_rounded.map(this.addFlushedIfNeeded.bind(this));
     const x_inputs = cartesianProduct<number>(...x_flushed);
 
     const interval_vectors = new Set<FPVector>();
@@ -2137,8 +2151,8 @@ export abstract class FPTraits {
    * @returns a vector of spans for each output of op.impl
    */
   private roundAndFlushVectorPairToVector(
-    x: number[],
-    y: number[],
+    x: readonly number[],
+    y: readonly number[],
     op: VectorPairToVectorOp
   ): FPVector {
     assert(
@@ -2150,10 +2164,10 @@ export abstract class FPTraits {
       `flush not defined for NaN`
     );
 
-    const x_rounded: number[][] = x.map(this.correctlyRounded);
-    const y_rounded: number[][] = y.map(this.correctlyRounded);
-    const x_flushed: number[][] = x_rounded.map(this.addFlushedIfNeeded.bind(this));
-    const y_flushed: number[][] = y_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const x_rounded: ROArrayArray<number> = x.map(this.correctlyRounded);
+    const y_rounded: ROArrayArray<number> = y.map(this.correctlyRounded);
+    const x_flushed: ROArrayArray<number> = x_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const y_flushed: ROArrayArray<number> = y_rounded.map(this.addFlushedIfNeeded.bind(this));
     const x_inputs = cartesianProduct<number>(...x_flushed);
     const y_inputs = cartesianProduct<number>(...y_flushed);
 
@@ -2187,10 +2201,12 @@ export abstract class FPTraits {
     );
 
     const m_flat = flatten2DArray(m);
-    const m_rounded: number[][] = m_flat.map(this.correctlyRounded);
-    const m_flushed: number[][] = m_rounded.map(this.addFlushedIfNeeded.bind(this));
-    const m_options: number[][] = cartesianProduct<number>(...m_flushed);
-    const m_inputs: Array2D<number>[] = m_options.map(e => unflatten2DArray(e, num_cols, num_rows));
+    const m_rounded: ROArrayArray<number> = m_flat.map(this.correctlyRounded);
+    const m_flushed: ROArrayArray<number> = m_rounded.map(this.addFlushedIfNeeded.bind(this));
+    const m_options: ROArrayArray<number> = cartesianProduct<number>(...m_flushed);
+    const m_inputs: ROArrayArrayArray<number> = m_options.map(e =>
+      unflatten2DArray(e, num_cols, num_rows)
+    );
 
     const interval_matrices = new Set<FPMatrix>();
     m_inputs.forEach(inner_m => {
@@ -2470,8 +2486,8 @@ export abstract class FPTraits {
       return this.constants().unboundedMatrix[num_cols][num_rows];
     }
 
-    const m_flat: FPInterval[] = flatten2DArray(m);
-    const m_values: number[][] = cartesianProduct<number>(...m_flat.map(e => e.bounds()));
+    const m_flat: readonly FPInterval[] = flatten2DArray(m);
+    const m_values: ROArrayArray<number> = cartesianProduct<number>(...m_flat.map(e => e.bounds()));
 
     const outputs = new Set<FPMatrix>();
     m_values.forEach(inner_m => {
@@ -2483,10 +2499,10 @@ export abstract class FPTraits {
     const result_cols = result.length;
     const result_rows = result[0].length;
 
-    // FPMatrix has to be coerced to FPInterval[][] to use .every. This should
+    // FPMatrix has to be coerced to readonly FPInterval[][] to use .every. This should
     // always be safe, since FPMatrix are defined as fixed length array of
     // arrays.
-    return (result as FPInterval[][]).every(c => c.every(r => r.isFinite()))
+    return (result as ROArrayArray<FPInterval>).every(c => c.every(r => r.isFinite()))
       ? result
       : this.constants().unboundedMatrix[result_cols][result_rows];
   }
@@ -2991,7 +3007,7 @@ export abstract class FPTraits {
   public abstract readonly coshInterval: (n: number) => FPInterval;
 
   private readonly CrossIntervalOp: VectorPairToVectorOp = {
-    impl: (x: number[], y: number[]): FPVector => {
+    impl: (x: readonly number[], y: readonly number[]): FPVector => {
       assert(x.length === 3, `CrossIntervalOp received x with ${x.length} instead of 3`);
       assert(y.length === 3, `CrossIntervalOp received y with ${y.length} instead of 3`);
 
@@ -3016,14 +3032,14 @@ export abstract class FPTraits {
     },
   };
 
-  protected crossIntervalImpl(x: number[], y: number[]): FPVector {
+  protected crossIntervalImpl(x: readonly number[], y: readonly number[]): FPVector {
     assert(x.length === 3, `Cross is only defined for vec3`);
     assert(y.length === 3, `Cross is only defined for vec3`);
     return this.runVectorPairToVectorOp(this.toVector(x), this.toVector(y), this.CrossIntervalOp);
   }
 
   /** Calculate a vector of acceptance intervals for cross(x, y) */
-  public abstract readonly crossInterval: (x: number[], y: number[]) => FPVector;
+  public abstract readonly crossInterval: (x: readonly number[], y: readonly number[]) => FPVector;
 
   private readonly DegreesIntervalOp: ScalarToIntervalOp = {
     impl: (n: number): FPInterval => {
@@ -3050,10 +3066,10 @@ export abstract class FPTraits {
     assert(col >= 0 && col < dim, `col ${col} needs be in [0, # of columns '${dim}')`);
     assert(row >= 0 && row < dim, `row ${row} needs be in [0, # of rows '${dim}')`);
 
-    const result: Array2D<number> = [...Array(dim - 1)].map(_ => [...Array(dim - 1)]);
+    const result: number[][] = [...Array(dim - 1)].map(_ => [...Array(dim - 1)]);
 
-    const col_indices: number[] = [...Array(dim).keys()].filter(e => e !== col);
-    const row_indices: number[] = [...Array(dim).keys()].filter(e => e !== row);
+    const col_indices: readonly number[] = [...Array(dim).keys()].filter(e => e !== col);
+    const row_indices: readonly number[] = [...Array(dim).keys()].filter(e => e !== row);
 
     col_indices.forEach((c, i) => {
       row_indices.forEach((r, j) => {
@@ -3104,7 +3120,7 @@ export abstract class FPTraits {
 
     // Need to calculate permutations, since for fp addition is not associative,
     // so A + B + C is not guaranteed to equal B + C + A, etc.
-    const permutations: FPInterval[][] = calculatePermutations([A, B, C]);
+    const permutations: ROArrayArray<FPInterval> = calculatePermutations([A, B, C]);
     return this.spanIntervals(
       ...permutations.map(p =>
         p.reduce((prev: FPInterval, cur: FPInterval) => this.additionInterval(prev, cur))
@@ -3145,7 +3161,7 @@ export abstract class FPTraits {
 
     // Need to calculate permutations, since for fp addition is not associative
     // so A + B + C + D is not guaranteed to equal B + C + A + D, etc.
-    const permutations: FPInterval[][] = calculatePermutations([A, B, C, D]);
+    const permutations: ROArrayArray<FPInterval> = calculatePermutations([A, B, C, D]);
     return this.spanIntervals(
       ...permutations.map(p =>
         p.reduce((prev: FPInterval, cur: FPInterval) => this.additionInterval(prev, cur))
@@ -3200,7 +3216,7 @@ export abstract class FPTraits {
   };
 
   private readonly DistanceIntervalVectorOp: VectorPairToIntervalOp = {
-    impl: (x: number[], y: number[]): FPInterval => {
+    impl: (x: readonly number[], y: readonly number[]): FPInterval => {
       return this.lengthInterval(
         this.runScalarPairToIntervalOpVectorComponentWise(
           this.toVector(x),
@@ -3211,7 +3227,10 @@ export abstract class FPTraits {
     },
   };
 
-  protected distanceIntervalImpl(x: number | number[], y: number | number[]): FPInterval {
+  protected distanceIntervalImpl(
+    x: number | readonly number[],
+    y: number | readonly number[]
+  ): FPInterval {
     if (x instanceof Array && y instanceof Array) {
       assert(
         x.length === y.length,
@@ -3236,8 +3255,8 @@ export abstract class FPTraits {
 
   /** Calculate an acceptance interval of distance(x, y) */
   public abstract readonly distanceInterval: (
-    x: number | number[],
-    y: number | number[]
+    x: number | readonly number[],
+    y: number | readonly number[]
   ) => FPInterval;
 
   // This op is implemented differently for f32 and f16.
@@ -3286,7 +3305,7 @@ export abstract class FPTraits {
   ) => FPInterval;
 
   private readonly DotIntervalOp: VectorPairToIntervalOp = {
-    impl: (x: number[], y: number[]): FPInterval => {
+    impl: (x: readonly number[], y: readonly number[]): FPInterval => {
       // dot(x, y) = sum of x[i] * y[i]
       const multiplications = this.runScalarPairToIntervalOpVectorComponentWise(
         this.toVector(x),
@@ -3303,22 +3322,25 @@ export abstract class FPTraits {
       // permutations are calculated and their results spanned, since addition
       // of more than two floats is not transitive, i.e. a + b + c is not
       // guaranteed to equal b + a + c
-      const permutations: FPInterval[][] = calculatePermutations(multiplications);
+      const permutations: ROArrayArray<FPInterval> = calculatePermutations(multiplications);
       return this.spanIntervals(
         ...permutations.map(p => p.reduce((prev, cur) => this.additionInterval(prev, cur)))
       );
     },
   };
 
-  protected dotIntervalImpl(x: number[] | FPInterval[], y: number[] | FPInterval[]): FPInterval {
+  protected dotIntervalImpl(
+    x: readonly number[] | readonly FPInterval[],
+    y: readonly number[] | readonly FPInterval[]
+  ): FPInterval {
     assert(x.length === y.length, `dot not defined for vectors with different lengths`);
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
 
   /** Calculated the acceptance interval for dot(x, y) */
   public abstract readonly dotInterval: (
-    x: number[] | FPInterval[],
-    y: number[] | FPInterval[]
+    x: readonly number[] | readonly FPInterval[],
+    y: readonly number[] | readonly FPInterval[]
   ) => FPInterval;
 
   private readonly ExpIntervalOp: ScalarToIntervalOp = {
@@ -3362,9 +3384,9 @@ export abstract class FPTraits {
    * defining an Op and running that through the framework.
    */
   protected faceForwardIntervalsImpl(
-    x: number[],
-    y: number[],
-    z: number[]
+    x: readonly number[],
+    y: readonly number[],
+    z: readonly number[]
   ): (FPVector | undefined)[] {
     const x_vec = this.toVector(x);
     // Running vector through this.runScalarToIntervalOpComponentWise to make
@@ -3412,9 +3434,9 @@ export abstract class FPTraits {
 
   /** Calculate the acceptance intervals for faceForward(x, y, z) */
   public abstract readonly faceForwardIntervals: (
-    x: number[],
-    y: number[],
-    z: number[]
+    x: readonly number[],
+    y: readonly number[],
+    z: readonly number[]
   ) => (FPVector | undefined)[];
 
   private readonly FloorIntervalOp: ScalarToIntervalOp = {
@@ -3552,12 +3574,12 @@ export abstract class FPTraits {
   };
 
   private readonly LengthIntervalVectorOp: VectorToIntervalOp = {
-    impl: (n: number[]): FPInterval => {
+    impl: (n: readonly number[]): FPInterval => {
       return this.sqrtInterval(this.dotInterval(n, n));
     },
   };
 
-  protected lengthIntervalImpl(n: number | FPInterval | number[] | FPVector): FPInterval {
+  protected lengthIntervalImpl(n: number | FPInterval | readonly number[] | FPVector): FPInterval {
     if (n instanceof Array) {
       return this.runVectorToIntervalOp(this.toVector(n), this.LengthIntervalVectorOp);
     } else {
@@ -3567,7 +3589,7 @@ export abstract class FPTraits {
 
   /** Calculate an acceptance interval of length(x) */
   public abstract readonly lengthInterval: (
-    n: number | FPInterval | number[] | FPVector
+    n: number | FPInterval | readonly number[] | FPVector
   ) => FPInterval;
 
   private readonly LogIntervalOp: ScalarToIntervalOp = {
@@ -3751,7 +3773,7 @@ export abstract class FPTraits {
    * @returns the vector result of multiplying the given vector by the given
    *          scalar
    */
-  private multiplyVectorByScalar(v: number[], c: number | FPInterval): FPVector {
+  private multiplyVectorByScalar(v: readonly number[], c: number | FPInterval): FPVector {
     return this.toVector(v.map(x => this.multiplicationInterval(x, c)));
   }
 
@@ -3795,7 +3817,7 @@ export abstract class FPTraits {
 
     const x_transposed = this.transposeInterval(mat_x);
 
-    const result: Array2D<FPInterval> = [...Array(y_cols)].map(_ => [...Array(x_rows)]);
+    const result: FPInterval[][] = [...Array(y_cols)].map(_ => [...Array(x_rows)]);
     mat_y.forEach((y, i) => {
       x_transposed.forEach((x, j) => {
         result[i][j] = this.dotInterval(x, y);
@@ -3811,7 +3833,10 @@ export abstract class FPTraits {
     mat_y: Array2D<number>
   ) => FPMatrix;
 
-  protected multiplicationMatrixVectorIntervalImpl(x: Array2D<number>, y: number[]): FPVector {
+  protected multiplicationMatrixVectorIntervalImpl(
+    x: Array2D<number>,
+    y: readonly number[]
+  ): FPVector {
     const cols = x.length;
     const rows = x[0].length;
     assert(y.length === cols, `'mat${cols}x${rows} * vec${y.length}' is not defined`);
@@ -3822,10 +3847,13 @@ export abstract class FPTraits {
   /** Calculate an acceptance interval of x * y, when x is a matrix and y is a vector */
   public abstract readonly multiplicationMatrixVectorInterval: (
     x: Array2D<number>,
-    y: number[]
+    y: readonly number[]
   ) => FPVector;
 
-  protected multiplicationVectorMatrixIntervalImpl(x: number[], y: Array2D<number>): FPVector {
+  protected multiplicationVectorMatrixIntervalImpl(
+    x: readonly number[],
+    y: Array2D<number>
+  ): FPVector {
     const cols = y.length;
     const rows = y[0].length;
     assert(x.length === rows, `'vec${x.length} * mat${cols}x${rows}' is not defined`);
@@ -3835,7 +3863,7 @@ export abstract class FPTraits {
 
   /** Calculate an acceptance interval of x * y, when x is a vector and y is a matrix */
   public abstract readonly multiplicationVectorMatrixInterval: (
-    x: number[],
+    x: readonly number[],
     y: Array2D<number>
   ) => FPVector;
 
@@ -3853,17 +3881,17 @@ export abstract class FPTraits {
   public abstract readonly negationInterval: (n: number) => FPInterval;
 
   private readonly NormalizeIntervalOp: VectorToVectorOp = {
-    impl: (n: number[]): FPVector => {
+    impl: (n: readonly number[]): FPVector => {
       const length = this.lengthInterval(n);
       return this.toVector(n.map(e => this.divisionInterval(e, length)));
     },
   };
 
-  protected normalizeIntervalImpl(n: number[]): FPVector {
+  protected normalizeIntervalImpl(n: readonly number[]): FPVector {
     return this.runVectorToVectorOp(this.toVector(n), this.NormalizeIntervalOp);
   }
 
-  public abstract readonly normalizeInterval: (n: number[]) => FPVector;
+  public abstract readonly normalizeInterval: (n: readonly number[]) => FPVector;
 
   private readonly PowIntervalOp: ScalarPairToIntervalOp = {
     // pow(x, y) has no explicit domain restrictions, but inherits the x <= 0
@@ -3902,7 +3930,7 @@ export abstract class FPTraits {
   public abstract readonly radiansInterval: (n: number) => FPInterval;
 
   private readonly ReflectIntervalOp: VectorPairToVectorOp = {
-    impl: (x: number[], y: number[]): FPVector => {
+    impl: (x: readonly number[], y: readonly number[]): FPVector => {
       assert(
         x.length === y.length,
         `ReflectIntervalOp received x (${x}) and y (${y}) with different numbers of elements`
@@ -3922,7 +3950,7 @@ export abstract class FPTraits {
     },
   };
 
-  protected reflectIntervalImpl(x: number[], y: number[]): FPVector {
+  protected reflectIntervalImpl(x: readonly number[], y: readonly number[]): FPVector {
     assert(
       x.length === y.length,
       `reflect is only defined for vectors with the same number of elements`
@@ -3931,7 +3959,10 @@ export abstract class FPTraits {
   }
 
   /** Calculate an acceptance interval of reflect(x, y) */
-  public abstract readonly reflectInterval: (x: number[], y: number[]) => FPVector;
+  public abstract readonly reflectInterval: (
+    x: readonly number[],
+    y: readonly number[]
+  ) => FPVector;
 
   /**
    * refract is a singular function in the sense that it is the only builtin that
@@ -3942,7 +3973,7 @@ export abstract class FPTraits {
    * own operation type, etc, it instead has a bespoke implementation that is a
    * composition of other builtin functions that use the framework.
    */
-  protected refractIntervalImpl(i: number[], s: number[], r: number): FPVector {
+  protected refractIntervalImpl(i: readonly number[], s: readonly number[], r: number): FPVector {
     assert(
       i.length === s.length,
       `refract is only defined for vectors with the same number of elements`
@@ -3979,7 +4010,11 @@ export abstract class FPTraits {
   }
 
   /** Calculate acceptance interval vectors of reflect(i, s, r) */
-  public abstract readonly refractInterval: (i: number[], s: number[], r: number) => FPVector;
+  public abstract readonly refractInterval: (
+    i: readonly number[],
+    s: readonly number[],
+    r: number
+  ) => FPVector;
 
   private readonly RemainderIntervalOp: ScalarPairToIntervalOp = {
     impl: (x: number, y: number): FPInterval => {
@@ -4245,7 +4280,7 @@ export abstract class FPTraits {
     impl: (m: Array2D<number>): FPMatrix => {
       const num_cols = m.length;
       const num_rows = m[0].length;
-      const result: Array2D<FPInterval> = [...Array(num_rows)].map(_ => [...Array(num_cols)]);
+      const result: FPInterval[][] = [...Array(num_rows)].map(_ => [...Array(num_cols)]);
 
       for (let i = 0; i < num_cols; i++) {
         for (let j = 0; j < num_rows; j++) {
@@ -4595,7 +4630,7 @@ class F32Traits extends FPTraits {
    * @param ops callbacks that implement generating an acceptance interval
    */
   public generateU32ToIntervalCases(
-    params: number[],
+    params: readonly number[],
     filter: IntervalFilter,
     ...ops: ScalarToVector[]
   ): Case[] {
