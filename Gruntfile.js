@@ -38,6 +38,10 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_chunked2sec.json'],
       },
+      'generate-cache': {
+        cmd: 'node',
+        args: ['tools/gen_cache', 'out', 'src/webgpu'],
+      },
       unittest: {
         cmd: 'node',
         args: ['tools/run_node', 'unittests:*'],
