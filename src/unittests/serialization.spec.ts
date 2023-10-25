@@ -7,6 +7,7 @@ import {
   deserializeExpectation,
   serializeExpectation,
 } from '../webgpu/shader/execution/expression/case_cache.js';
+import BinaryStream from '../webgpu/util/binary_stream.js';
 import {
   anyOf,
   deserializeComparator,
@@ -206,11 +207,14 @@ g.test('value').fn(t => {
       f32
     ),
   ]) {
-    const serialized = serializeValue(value);
-    const deserialized = deserializeValue(serialized);
+    const s = new BinaryStream(new Uint8Array(1024));
+    serializeValue(s, value);
+    const d = new BinaryStream(s.buffer());
+    const deserialized = deserializeValue(d);
     t.expect(
       objectEquals(value, deserialized),
-      `value ${value} -> serialize -> deserialize -> ${deserialized}`
+      `${value.type} ${value} -> serialize -> deserialize -> ${deserialized}
+buffer: ${s.buffer()}`
     );
   }
 });
@@ -240,8 +244,10 @@ g.test('fpinterval_f32').fn(t => {
     FP.f32.toInterval([kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max]),
     FP.f32.toInterval([kValue.f32.negative.infinity, kValue.f32.positive.infinity]),
   ]) {
-    const serialized = serializeFPInterval(interval);
-    const deserialized = deserializeFPInterval(serialized);
+    const s = new BinaryStream(new Uint8Array(1024));
+    serializeFPInterval(s, interval);
+    const d = new BinaryStream(s.buffer());
+    const deserialized = deserializeFPInterval(d);
     t.expect(
       objectEquals(interval, deserialized),
       `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
@@ -274,8 +280,10 @@ g.test('fpinterval_f16').fn(t => {
     FP.f16.toInterval([kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max]),
     FP.f16.toInterval([kValue.f16.negative.infinity, kValue.f16.positive.infinity]),
   ]) {
-    const serialized = serializeFPInterval(interval);
-    const deserialized = deserializeFPInterval(serialized);
+    const s = new BinaryStream(new Uint8Array(1024));
+    serializeFPInterval(s, interval);
+    const d = new BinaryStream(s.buffer());
+    const deserialized = deserializeFPInterval(d);
     t.expect(
       objectEquals(interval, deserialized),
       `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
@@ -308,8 +316,10 @@ g.test('fpinterval_abstract').fn(t => {
     FP.abstract.toInterval([kValue.f64.negative.subnormal.min, kValue.f64.negative.subnormal.max]),
     FP.abstract.toInterval([kValue.f64.negative.infinity, kValue.f64.positive.infinity]),
   ]) {
-    const serialized = serializeFPInterval(interval);
-    const deserialized = deserializeFPInterval(serialized);
+    const s = new BinaryStream(new Uint8Array(1024));
+    serializeFPInterval(s, interval);
+    const d = new BinaryStream(s.buffer());
+    const deserialized = deserializeFPInterval(d);
     t.expect(
       objectEquals(interval, deserialized),
       `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
@@ -328,8 +338,10 @@ g.test('expression_expectation').fn(t => {
     // Intervals
     [FP.f32.toInterval([-8.0, 0.5]), FP.f32.toInterval([2.0, 4.0])],
   ]) {
-    const serialized = serializeExpectation(expectation);
-    const deserialized = deserializeExpectation(serialized);
+    const s = new BinaryStream(new Uint8Array(1024));
+    serializeExpectation(s, expectation);
+    const d = new BinaryStream(s.buffer());
+    const deserialized = deserializeExpectation(d);
     t.expect(
       objectEquals(expectation, deserialized),
       `expectation ${expectation} -> serialize -> deserialize -> ${deserialized}`
@@ -356,8 +368,10 @@ g.test('anyOf').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const serialized = serializeComparator(c.comparator);
-      const deserialized = deserializeComparator(serialized);
+      const s = new BinaryStream(new Uint8Array(1024));
+      serializeComparator(s, c.comparator);
+      const d = new BinaryStream(s.buffer());
+      const deserialized = deserializeComparator(d);
       for (const val of c.testCases) {
         const got = deserialized.compare(val);
         const expect = c.comparator.compare(val);
@@ -382,8 +396,10 @@ g.test('skipUndefined').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const serialized = serializeComparator(c.comparator);
-      const deserialized = deserializeComparator(serialized);
+      const s = new BinaryStream(new Uint8Array(1024));
+      serializeComparator(s, c.comparator);
+      const d = new BinaryStream(s.buffer());
+      const deserialized = deserializeComparator(d);
       for (const val of c.testCases) {
         const got = deserialized.compare(val);
         const expect = c.comparator.compare(val);
