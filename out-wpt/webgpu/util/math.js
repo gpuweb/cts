@@ -8,7 +8,6 @@ import {
 } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit, kValue } from './constants.js';
-import { i32, u32 } from './conversion.js';
 import {
   reinterpretF64AsU64,
   reinterpretU64AsF64,
@@ -2057,14 +2056,22 @@ export function quantizeToF16(num) {
   return quantizeToF16Data[0];
 }
 
+/** Statically allocate working data, so it doesn't need per-call creation */
+const quantizeToI32Data = new Int32Array(new ArrayBuffer(4));
+
 /** @returns the closest 32-bit signed integer value to the input */
 export function quantizeToI32(num) {
-  return i32(num).value;
+  quantizeToI32Data[0] = num;
+  return quantizeToI32Data[0];
 }
+
+/** Statically allocate working data, so it doesn't need per-call creation */
+const quantizeToU32Data = new Uint32Array(new ArrayBuffer(4));
 
 /** @returns the closest 32-bit signed integer value to the input */
 export function quantizeToU32(num) {
-  return u32(num).value;
+  quantizeToU32Data[0] = num;
+  return quantizeToU32Data[0];
 }
 
 /** @returns whether the number is an integer and a power of two */
