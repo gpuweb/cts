@@ -3830,7 +3830,7 @@ export abstract class FPTraits {
       });
     });
 
-    return result as ROArrayArray<FPInterval> as FPMatrix;
+    return (result as ROArrayArray<FPInterval>) as FPMatrix;
   }
 
   /** Calculate an acceptance interval of x * y, when x is a matrix and y is a matrix */
