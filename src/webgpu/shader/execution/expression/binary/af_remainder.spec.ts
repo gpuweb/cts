@@ -12,11 +12,11 @@ import { onlyConstInputSource, run } from '../expression.js';
 
 import { abstractBinary } from './binary.js';
 
-const remainderVectorScalarInterval = (v: number[], s: number): FPVector => {
+const remainderVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.remainderInterval(e, s)));
 };
 
-const remainderScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const remainderScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.remainderInterval(s, e)));
 };
 

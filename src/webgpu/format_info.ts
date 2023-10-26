@@ -1255,7 +1255,7 @@ export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 /**
  * Given an array of texture formats return the number of bytes per sample.
  */
-export function computeBytesPerSampleFromFormats(formats: GPUTextureFormat[]) {
+export function computeBytesPerSampleFromFormats(formats: readonly GPUTextureFormat[]) {
   let bytesPerSample = 0;
   for (const format of formats) {
     const info = kTextureFormatInfo[format];

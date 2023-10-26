@@ -7,6 +7,7 @@ Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
@@ -41,9 +42,9 @@ export const g = makeTestGroup(GPUTest);
  * */
 function makeCase(
   kind: FPKind,
-  x: number[],
-  y: number[],
-  z: number[],
+  x: readonly number[],
+  y: readonly number[],
+  z: readonly number[],
   check: IntervalFilter
 ): Case | undefined {
   const fp = FP[kind];
@@ -81,9 +82,9 @@ function makeCase(
  */
 function generateCases(
   kind: FPKind,
-  xs: number[][],
-  ys: number[][],
-  zs: number[][],
+  xs: ROArrayArray<number>,
+  ys: ROArrayArray<number>,
+  zs: ROArrayArray<number>,
   check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types

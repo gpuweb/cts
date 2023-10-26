@@ -15,7 +15,7 @@ import {
 
 type ShaderTypeInfo =
   | { type: 'container'; containerType: 'array'; elementType: ShaderTypeInfo; length: number }
-  | { type: 'container'; containerType: 'struct'; members: ShaderTypeInfo[] }
+  | { type: 'container'; containerType: 'struct'; members: readonly ShaderTypeInfo[] }
   | {
       type: 'container';
       containerType: keyof typeof kVectorContainerTypeInfo | keyof typeof kMatrixContainerTypeInfo;

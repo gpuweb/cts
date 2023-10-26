@@ -26,6 +26,7 @@ import {
   stringifyPublicParamsUniquely,
 } from '../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
+import { DeepReadonly } from '../util/types.js';
 import { assert, unreachable } from '../util/util.js';
 
 import { logToWebsocket } from './websocket_logger.js';
@@ -82,9 +83,11 @@ export function makeTestGroupForUnitTesting<F extends Fixture>(
 /** Parameter name for batch number (see also TestBuilder.batch). */
 const kBatchParamName = 'batch__';
 
-type TestFn<F extends Fixture, P extends {}> = (t: F & { params: P }) => Promise<void> | void;
+type TestFn<F extends Fixture, P extends {}> = (
+  t: F & { params: DeepReadonly<P> }
+) => Promise<void> | void;
 type BeforeAllSubcasesFn<S extends SubcaseBatchState, P extends {}> = (
-  s: S & { params: P }
+  s: S & { params: DeepReadonly<P> }
 ) => Promise<void> | void;
 
 export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {

@@ -346,7 +346,7 @@ interface TypedArrayMap {
 
 type TypedArrayParam<K extends keyof TypedArrayMap> = {
   type: K;
-  data: number[];
+  data: readonly number[];
 };
 
 /**
@@ -387,7 +387,7 @@ export function typedArrayParam<K extends keyof TypedArrayMap>(
 
 export function createTypedArray<K extends keyof TypedArrayMap>(
   type: K,
-  data: number[]
+  data: readonly number[]
 ): TypedArrayMap[K] {
   return new kTypedArrayBufferViews[type](data) as TypedArrayMap[K];
 }
