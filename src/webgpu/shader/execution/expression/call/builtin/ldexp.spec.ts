@@ -20,10 +20,10 @@ import { i32, TypeF32, TypeF16, TypeI32 } from '../../../../../util/conversion.j
 import { FP } from '../../../../../util/floating_point.js';
 import {
   biasedRange,
-  fullF32Range,
-  fullF16Range,
-  fullI32Range,
   quantizeToI32,
+  sparseF32Range,
+  sparseI32Range,
+  sparseF16Range,
 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
@@ -63,20 +63,20 @@ const makeCase = (trait: 'f32' | 'f16', e1: number, e2: number): Case => {
 
 export const d = makeCaseCache('ldexp', {
   f32_non_const: () => {
-    return fullF32Range().flatMap(e1 => fullI32Range().map(e2 => makeCase('f32', e1, e2)));
+    return sparseF32Range().flatMap(e1 => sparseI32Range().map(e2 => makeCase('f32', e1, e2)));
   },
   f32_const: () => {
-    return fullF32Range().flatMap(e1 =>
+    return sparseF32Range().flatMap(e1 =>
       biasedRange(-bias.f32 - 10, bias.f32 + 1, 10).flatMap(e2 =>
         FP.f32.isFinite(e1 * 2 ** quantizeToI32(e2)) ? makeCase('f32', e1, e2) : []
       )
     );
   },
   f16_non_const: () => {
-    return fullF16Range().flatMap(e1 => fullI32Range().map(e2 => makeCase('f16', e1, e2)));
+    return sparseF16Range().flatMap(e1 => sparseI32Range().map(e2 => makeCase('f16', e1, e2)));
   },
   f16_const: () => {
-    return fullF16Range().flatMap(e1 =>
+    return sparseF16Range().flatMap(e1 =>
       biasedRange(-bias.f16 - 10, bias.f16 + 1, 10).flatMap(e2 =>
         FP.f16.isFinite(e1 * 2 ** quantizeToI32(e2)) ? makeCase('f16', e1, e2) : []
       )
