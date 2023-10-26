@@ -166,21 +166,21 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    */
   serialize(data: Record<string, CaseList>): Uint8Array {
     const maxSize = 32 << 20; // 32MB - max size for a file
-    const s = new BinaryStream(new Uint8Array(maxSize));
+    const s = new BinaryStream(new Uint8Array(maxSize).buffer);
     s.writeU32(Object.keys(data).length);
     for (const name in data) {
       s.writeString(name);
       s.writeArray(data[name], serializeCase);
     }
-    return s.buffer();
+    return new Uint8Array(s.buffer());
   }
 
   /**
    * deserialize() implements the Cacheable.deserialize interface.
    * @returns the deserialize data.
    */
-  deserialize(buffer: Uint8Array): Record<string, CaseList> {
-    const s = new BinaryStream(buffer);
+  deserialize(array: Uint8Array): Record<string, CaseList> {
+    const s = new BinaryStream(array.buffer);
     const casesByName: Record<string, CaseList> = {};
     const numRecords = s.readU32();
     for (let i = 0; i < numRecords; i++) {

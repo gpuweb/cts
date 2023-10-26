@@ -89,7 +89,8 @@ export class FPInterval {
   constructor(kind, ...bounds) {
     this.kind = kind;
 
-    const [begin, end] = bounds.length === 2 ? bounds : [bounds[0], bounds[0]];
+    const begin = bounds[0];
+    const end = bounds.length === 2 ? bounds[1] : bounds[0];
     assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
     assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
 
@@ -188,11 +189,11 @@ export function deserializeFPInterval(s) {
       // Bounded
       switch (kind) {
         case 'abstract':
-          return traits.toInterval([s.readF64(), s.readF64()]);
+          return new FPInterval(traits.kind, s.readF64(), s.readF64());
         case 'f32':
-          return traits.toInterval([s.readF32(), s.readF32()]);
+          return new FPInterval(traits.kind, s.readF32(), s.readF32());
         case 'f16':
-          return traits.toInterval([s.readF16(), s.readF16()]);
+          return new FPInterval(traits.kind, s.readF16(), s.readF16());
       }
 
       unreachable(`Unable to deserialize FPInterval with kind ${kind}`);

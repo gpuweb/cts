@@ -207,7 +207,7 @@ g.test('value').fn(t => {
       f32
     ),
   ]) {
-    const s = new BinaryStream(new Uint8Array(1024));
+    const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeValue(s, value);
     const d = new BinaryStream(s.buffer());
     const deserialized = deserializeValue(d);
@@ -244,7 +244,7 @@ g.test('fpinterval_f32').fn(t => {
     FP.f32.toInterval([kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max]),
     FP.f32.toInterval([kValue.f32.negative.infinity, kValue.f32.positive.infinity]),
   ]) {
-    const s = new BinaryStream(new Uint8Array(1024));
+    const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeFPInterval(s, interval);
     const d = new BinaryStream(s.buffer());
     const deserialized = deserializeFPInterval(d);
@@ -280,7 +280,7 @@ g.test('fpinterval_f16').fn(t => {
     FP.f16.toInterval([kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max]),
     FP.f16.toInterval([kValue.f16.negative.infinity, kValue.f16.positive.infinity]),
   ]) {
-    const s = new BinaryStream(new Uint8Array(1024));
+    const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeFPInterval(s, interval);
     const d = new BinaryStream(s.buffer());
     const deserialized = deserializeFPInterval(d);
@@ -316,7 +316,7 @@ g.test('fpinterval_abstract').fn(t => {
     FP.abstract.toInterval([kValue.f64.negative.subnormal.min, kValue.f64.negative.subnormal.max]),
     FP.abstract.toInterval([kValue.f64.negative.infinity, kValue.f64.positive.infinity]),
   ]) {
-    const s = new BinaryStream(new Uint8Array(1024));
+    const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeFPInterval(s, interval);
     const d = new BinaryStream(s.buffer());
     const deserialized = deserializeFPInterval(d);
@@ -338,7 +338,7 @@ g.test('expression_expectation').fn(t => {
     // Intervals
     [FP.f32.toInterval([-8.0, 0.5]), FP.f32.toInterval([2.0, 4.0])],
   ]) {
-    const s = new BinaryStream(new Uint8Array(1024));
+    const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeExpectation(s, expectation);
     const d = new BinaryStream(s.buffer());
     const deserialized = deserializeExpectation(d);
@@ -368,7 +368,7 @@ g.test('anyOf').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const s = new BinaryStream(new Uint8Array(1024));
+      const s = new BinaryStream(new Uint8Array(1024).buffer);
       serializeComparator(s, c.comparator);
       const d = new BinaryStream(s.buffer());
       const deserialized = deserializeComparator(d);
@@ -396,7 +396,7 @@ g.test('skipUndefined').fn(t => {
         testCases: [f32(0), f32(10), f32(122), f32(123), f32(124), f32(200)],
       },
     ]) {
-      const s = new BinaryStream(new Uint8Array(1024));
+      const s = new BinaryStream(new Uint8Array(1024).buffer);
       serializeComparator(s, c.comparator);
       const d = new BinaryStream(s.buffer());
       const deserialized = deserializeComparator(d);

@@ -1,7 +1,7 @@
 /**
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { assert } from '../../common/util/util.js';
-import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+import { float16ToUint16, uint16ToFloat16 } from './conversion.js';
 import { align } from './math.js';
 
 /**
@@ -16,176 +16,114 @@ export default class BinaryStream {
    */
   constructor(buffer) {
     this.offset = 0;
-    this.u8 = buffer;
-    this.u16 = new Uint16Array(this.u8.buffer);
-    this.u32 = new Uint32Array(this.u8.buffer);
-    this.i8 = new Int8Array(this.u8.buffer);
-    this.i16 = new Int16Array(this.u8.buffer);
-    this.i32 = new Int32Array(this.u8.buffer);
-    this.f16 = new Float16Array(this.u8.buffer);
-    this.f32 = new Float32Array(this.u8.buffer);
-    this.f64 = new Float64Array(this.u8.buffer);
+    this.view = new DataView(buffer);
   }
 
   /** buffer() returns the stream's buffer sliced to the 8-byte rounded read or write offset */
   buffer() {
-    return this.u8.slice(0, align(this.offset, 8));
+    return new Uint8Array(this.view.buffer, align(this.offset, 8)).buffer;
   }
 
   /** writeBool() writes a boolean as 255 or 0 to the buffer at the next byte offset */
   writeBool(value) {
-    this.u8[this.offset++] = value ? 255 : 0;
+    this.view.setUint8(this.offset++, value ? 255 : 0);
   }
 
   /** readBool() reads a boolean from the buffer at the next byte offset */
   readBool() {
-    const val = this.u8[this.offset++];
+    const val = this.view.getUint8(this.offset++);
     assert(val === 0 || val === 255);
     return val !== 0;
   }
 
   /** writeU8() writes a uint8 to the buffer at the next byte offset */
   writeU8(value) {
-    this.u8[this.offset++] = value;
+    this.view.setUint8(this.offset++, value);
   }
 
   /** readU8() reads a uint8 from the buffer at the next byte offset */
   readU8() {
-    return this.u8[this.offset++];
-  }
-
-  /** u8View() returns a Uint8Array view of the uint8 at the next byte offset */
-  u8View() {
-    const at = this.offset++;
-    return new Uint8Array(this.u8.buffer, at, 1);
+    return this.view.getUint8(this.offset++);
   }
 
   /** writeU16() writes a uint16 to the buffer at the next 16-bit aligned offset */
   writeU16(value) {
-    this.u16[this.bumpWord(2)] = value;
+    this.view.setUint16(this.alignedOffset(2), value, /* littleEndian */ true);
   }
 
   /** readU16() reads a uint16 from the buffer at the next 16-bit aligned offset */
   readU16() {
-    return this.u16[this.bumpWord(2)];
-  }
-
-  /** u16View() returns a Uint16Array view of the uint16 at the next 16-bit aligned offset */
-  u16View() {
-    const at = this.bumpWord(2);
-    return new Uint16Array(this.u16.buffer, at * 2, 1);
+    return this.view.getUint16(this.alignedOffset(2), /* littleEndian */ true);
   }
 
   /** writeU32() writes a uint32 to the buffer at the next 32-bit aligned offset */
   writeU32(value) {
-    this.u32[this.bumpWord(4)] = value;
+    this.view.setUint32(this.alignedOffset(4), value, /* littleEndian */ true);
   }
 
   /** readU32() reads a uint32 from the buffer at the next 32-bit aligned offset */
   readU32() {
-    return this.u32[this.bumpWord(4)];
-  }
-
-  /** u32View() returns a Uint32Array view of the uint32 at the next 32-bit aligned offset */
-  u32View() {
-    const at = this.bumpWord(4);
-    return new Uint32Array(this.u32.buffer, at * 4, 1);
+    return this.view.getUint32(this.alignedOffset(4), /* littleEndian */ true);
   }
 
   /** writeI8() writes a int8 to the buffer at the next byte offset */
   writeI8(value) {
-    this.i8[this.offset++] = value;
+    this.view.setInt8(this.offset++, value);
   }
 
   /** readI8() reads a int8 from the buffer at the next byte offset */
   readI8() {
-    return this.i8[this.offset++];
-  }
-
-  /** i8View() returns a Uint8Array view of the uint8 at the next byte offset */
-  i8View() {
-    const at = this.offset++;
-    return new Int8Array(this.i8.buffer, at, 1);
+    return this.view.getInt8(this.offset++);
   }
 
   /** writeI16() writes a int16 to the buffer at the next 16-bit aligned offset */
   writeI16(value) {
-    this.i16[this.bumpWord(2)] = value;
+    this.view.setInt16(this.alignedOffset(2), value, /* littleEndian */ true);
   }
 
   /** readI16() reads a int16 from the buffer at the next 16-bit aligned offset */
   readI16() {
-    return this.i16[this.bumpWord(2)];
-  }
-
-  /** i16View() returns a Int16Array view of the uint16 at the next 16-bit aligned offset */
-  i16View() {
-    const at = this.bumpWord(2);
-    return new Int16Array(this.i16.buffer, at * 2, 1);
+    return this.view.getInt16(this.alignedOffset(2), /* littleEndian */ true);
   }
 
   /** writeI32() writes a int32 to the buffer at the next 32-bit aligned offset */
   writeI32(value) {
-    this.i32[this.bumpWord(4)] = value;
+    this.view.setInt32(this.alignedOffset(4), value, /* littleEndian */ true);
   }
 
   /** readI32() reads a int32 from the buffer at the next 32-bit aligned offset */
   readI32() {
-    return this.i32[this.bumpWord(4)];
-  }
-
-  /** i32View() returns a Int32Array view of the uint32 at the next 32-bit aligned offset */
-  i32View() {
-    const at = this.bumpWord(4);
-    return new Int32Array(this.i32.buffer, at * 4, 1);
+    return this.view.getInt32(this.alignedOffset(4), /* littleEndian */ true);
   }
 
   /** writeF16() writes a float16 to the buffer at the next 16-bit aligned offset */
   writeF16(value) {
-    this.f16[this.bumpWord(2)] = value;
+    this.writeU16(float16ToUint16(value));
   }
 
   /** readF16() reads a float16 from the buffer at the next 16-bit aligned offset */
   readF16() {
-    return this.f16[this.bumpWord(2)];
-  }
-
-  /** f16View() returns a Float16Array view of the uint16 at the next 16-bit aligned offset */
-  f16View() {
-    const at = this.bumpWord(2);
-    return new Float16Array(this.f16.buffer, at * 2, 1);
+    return uint16ToFloat16(this.readU16());
   }
 
   /** writeF32() writes a float32 to the buffer at the next 32-bit aligned offset */
   writeF32(value) {
-    this.f32[this.bumpWord(4)] = value;
+    this.view.setFloat32(this.alignedOffset(4), value, /* littleEndian */ true);
   }
 
   /** readF32() reads a float32 from the buffer at the next 32-bit aligned offset */
   readF32() {
-    return this.f32[this.bumpWord(4)];
-  }
-
-  /** f32View() returns a Float32Array view of the uint32 at the next 32-bit aligned offset */
-  f32View() {
-    const at = this.bumpWord(4);
-    return new Float32Array(this.f32.buffer, at * 4, 1);
+    return this.view.getFloat32(this.alignedOffset(4), /* littleEndian */ true);
   }
 
   /** writeF64() writes a float64 to the buffer at the next 64-bit aligned offset */
   writeF64(value) {
-    this.f64[this.bumpWord(8)] = value;
+    this.view.setFloat64(this.alignedOffset(8), value);
   }
 
   /** readF64() reads a float64 from the buffer at the next 64-bit aligned offset */
   readF64() {
-    return this.f64[this.bumpWord(8)];
-  }
-
-  /** f64View() returns a Float64Array view of the uint64 at the next 64-bit aligned offset */
-  f64View() {
-    const at = this.bumpWord(8);
-    return new Float64Array(this.f64.buffer, at * 8, 1);
+    return this.view.getFloat64(this.alignedOffset(8));
   }
 
   /**
@@ -262,12 +200,12 @@ export default class BinaryStream {
   }
 
   /**
-   * bumpWord() increments this.offset by `bytes`, after first aligning this.offset to `bytes`.
-   * @returns the old offset aligned to the next multiple of `bytes`, divided by `bytes`.
+   * alignedOffset() aligns this.offset to `bytes`, then increments this.offset by `bytes`.
+   * @returns the old offset aligned to the next multiple of `bytes`.
    */
-  bumpWord(bytes) {
-    const multiple = Math.floor((this.offset + bytes - 1) / bytes);
-    this.offset = (multiple + 1) * bytes;
-    return multiple;
+  alignedOffset(bytes) {
+    const aligned = align(this.offset, bytes);
+    this.offset = aligned + bytes;
+    return aligned;
   }
 }
