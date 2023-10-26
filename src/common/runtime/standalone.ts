@@ -84,7 +84,7 @@ dataCache.setStore({
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
-    return await response.text();
+    return new Uint8Array(await response.arrayBuffer());
   },
 });
 

@@ -135,8 +135,8 @@ Did you remember to build with code coverage instrumentation enabled?`
 if (dataPath !== undefined) {
   dataCache.setStore({
     load: (path: string) => {
-      return new Promise<string>((resolve, reject) => {
-        fs.readFile(`${dataPath}/${path}`, 'utf8', (err, data) => {
+      return new Promise<Uint8Array>((resolve, reject) => {
+        fs.readFile(`${dataPath}/${path}`, (err, data) => {
           if (err !== null) {
             reject(err.message);
           } else {

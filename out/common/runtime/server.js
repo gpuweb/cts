@@ -134,7 +134,7 @@ if (dataPath !== undefined) {
   dataCache.setStore({
     load: (path) => {
       return new Promise((resolve, reject) => {
-        fs.readFile(`${dataPath}/${path}`, 'utf8', (err, data) => {
+        fs.readFile(`${dataPath}/${path}`, (err, data) => {
           if (err !== null) {
             reject(err.message);
           } else {

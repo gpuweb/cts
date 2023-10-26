@@ -3,10 +3,10 @@
 **/import { getIsBuildingDataCache } from '../../common/framework/data_cache.js';import { Colors } from '../../common/util/colors.js';import { assert, unreachable } from '../../common/util/util.js';
 import {
 deserializeExpectation,
-
 serializeExpectation } from
 '../shader/execution/expression/case_cache.js';
 import { toComparator } from '../shader/execution/expression/expression.js';
+
 
 import { isFloatValue, Matrix, Scalar, Vector } from './conversion.js';
 import { FPInterval } from './floating_point.js';
@@ -39,6 +39,40 @@ import { FPInterval } from './floating_point.js';
 
 
 
+
+/** SerializedComparator is an enum of all the possible serialized comparator types. */var
+SerializedComparatorKind;
+
+
+
+
+
+/** serializeComparatorKind() serializes a ComparatorKind to a BinaryStream */(function (SerializedComparatorKind) {SerializedComparatorKind[SerializedComparatorKind["AnyOf"] = 0] = "AnyOf";SerializedComparatorKind[SerializedComparatorKind["SkipUndefined"] = 1] = "SkipUndefined";SerializedComparatorKind[SerializedComparatorKind["AlwaysPass"] = 2] = "AlwaysPass";})(SerializedComparatorKind || (SerializedComparatorKind = {}));
+function serializeComparatorKind(s, value) {
+  switch (value) {
+    case 'anyOf':
+      return s.writeU8(SerializedComparatorKind.AnyOf);
+    case 'skipUndefined':
+      return s.writeU8(SerializedComparatorKind.SkipUndefined);
+    case 'alwaysPass':
+      return s.writeU8(SerializedComparatorKind.AlwaysPass);}
+
+}
+
+/** deserializeComparatorKind() deserializes a ComparatorKind from a BinaryStream */
+function deserializeComparatorKind(s) {
+  const kind = s.readU8();
+  switch (kind) {
+    case SerializedComparatorKind.AnyOf:
+      return 'anyOf';
+    case SerializedComparatorKind.SkipUndefined:
+      return 'skipUndefined';
+    case SerializedComparatorKind.AlwaysPass:
+      return 'alwaysPass';
+    default:
+      unreachable(`invalid serialized ComparatorKind: ${kind}`);}
+
+}
 
 /**
  * compares 'got' Value  to 'expected' Value, returning the Comparison information.
@@ -383,54 +417,27 @@ export function alwaysPass(msg = 'always pass') {
   return c;
 }
 
-/** SerializedComparatorAnyOf is the serialized type of `anyOf` comparator. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Serializes a Comparator to a SerializedComparator.
- * @param c the Comparator
- * @returns a serialized comparator
- */
-export function serializeComparator(c) {
+/** serializeComparator() serializes a Comparator to a BinaryStream */
+export function serializeComparator(s, c) {
+  serializeComparatorKind(s, c.kind);
   switch (c.kind) {
-    case 'anyOf':{
-        const d = c.data;
-        return { kind: 'anyOf', data: d.map(serializeExpectation) };
-      }
-    case 'skipUndefined':{
-        if (c.data !== undefined) {
-          const d = c.data;
-          return { kind: 'skipUndefined', data: serializeExpectation(d) };
-        }
-        return { kind: 'skipUndefined', data: undefined };
-      }
+    case 'anyOf':
+      s.writeArray(c.data, serializeExpectation);
+      return;
+    case 'skipUndefined':
+      s.writeCond(c.data !== undefined, {
+        if_true: () => {
+          // defined data
+          serializeExpectation(s, c.data);
+        },
+        if_false: () => {
+
+          // undefined data
+        } });
+      return;
     case 'alwaysPass':{
-        const d = c.data;
-        return { kind: 'alwaysPass', reason: d };
+        s.writeString(c.data);
+        return;
       }
     case 'value':
     case 'packed':{
@@ -441,22 +448,25 @@ export function serializeComparator(c) {
   unreachable(`Unable serialize comparator '${c}'`);
 }
 
-/**
- * Deserializes a Comparator from a SerializedComparator.
- * @param s the SerializedComparator
- * @returns the deserialized comparator.
- */
+/** deserializeComparator() deserializes a Comparator from a BinaryStream */
 export function deserializeComparator(s) {
-  switch (s.kind) {
-    case 'anyOf':{
-        return anyOf(...s.data.map((e) => deserializeExpectation(e)));
-      }
-    case 'skipUndefined':{
-        return skipUndefined(s.data !== undefined ? deserializeExpectation(s.data) : undefined);
-      }
-    case 'alwaysPass':{
-        return alwaysPass(s.reason);
-      }}
+  const kind = deserializeComparatorKind(s);
+  switch (kind) {
+    case 'anyOf':
+      return anyOf(...s.readArray(deserializeExpectation));
+    case 'skipUndefined':
+      return s.readCond({
+        if_true: () => {
+          // defined data
+          return skipUndefined(deserializeExpectation(s));
+        },
+        if_false: () => {
+          // undefined data
+          return skipUndefined(undefined);
+        }
+      });
+    case 'alwaysPass':
+      return alwaysPass(s.readString());}
 
   unreachable(`Unable deserialize comparator '${s}'`);
 }

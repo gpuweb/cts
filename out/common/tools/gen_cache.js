@@ -88,7 +88,7 @@ const outRootDir = nonFlagsArgs[2];
 dataCache.setStore({
   load: (path) => {
     return new Promise((resolve, reject) => {
-      fs.readFile(`data/${path}`, 'utf8', (err, data) => {
+      fs.readFile(`data/${path}`, (err, data) => {
         if (err !== null) {
           reject(err.message);
         } else {
@@ -180,7 +180,7 @@ and
               const data = await cacheable.build();
               const serialized = cacheable.serialize(data);
               fs.mkdirSync(path.dirname(outPath), { recursive: true });
-              fs.writeFileSync(outPath, serialized);
+              fs.writeFileSync(outPath, serialized, 'binary');
               break;
             }
           case 'list':{
