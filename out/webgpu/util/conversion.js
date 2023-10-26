@@ -609,7 +609,7 @@ export class ScalarType {
     return this._size;
   }
 
-  /** Constructs a Scalar of this type with @p value */
+  /** Constructs a Scalar of this type with `value` */
   create(value) {
     switch (this.kind) {
       case 'abstract-float':
@@ -891,7 +891,7 @@ export class Scalar {
   /**
    * Copies the scalar value to the buffer at the provided byte offset.
    * @param buffer the destination buffer
-   * @param offset the offset in buffer, in units of @p buffer
+   * @param offset the offset in buffer, in units of `buffer`
    */
   copyTo(buffer, offset) {
     assert(this.type.kind !== 'f64', `Copying f64 values to/from buffers is not defined`);
@@ -1527,7 +1527,7 @@ export function isFloatValue(v) {
 }
 
 /**
- * @returns if @p ty is an abstract numeric type.
+ * @returns if `ty` is an abstract numeric type.
  * @note this does not consider composite types.
  * Use elementType() if you want to test the element type.
  */
@@ -1539,7 +1539,7 @@ export function isAbstractType(ty) {
 }
 
 /**
- * @returns if @p ty is a floating point type.
+ * @returns if `ty` is a floating point type.
  * @note this does not consider composite types.
  * Use elementType() if you want to test the element type.
  */

@@ -92,7 +92,7 @@ export const kConstantAndOverrideStages = ['constant', 'override'];
 
 
 /**
- * @returns true if evaluation stage @p stage supports expressions of type @p.
+ * @returns true if evaluation stage `stage` supports expressions of type @p.
  */
 export function stageSupportsType(stage, type) {
   if (stage === 'override' && isAbstractType(elementType(type))) {
@@ -103,7 +103,7 @@ export function stageSupportsType(stage, type) {
 }
 
 /**
- * Runs a validation test to check that evaluation of @p builtin either evaluates with or without
+ * Runs a validation test to check that evaluation of `builtin` either evaluates with or without
  * error at shader creation time or pipeline creation time.
  * @param t the ShaderValidationTest
  * @param builtin the name of the builtin
@@ -159,7 +159,7 @@ var<private> v = ${builtin}(${callArgs.join(', ')});`,
 
 }
 
-/** @returns a sweep of the representable values for element type of @p type */
+/** @returns a sweep of the representable values for element type of `type` */
 export function fullRangeForType(type, count) {
   if (count === undefined) {
     count = 25;

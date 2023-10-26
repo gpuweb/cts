@@ -23,7 +23,7 @@ class DataCacheNode {
     this.data = data;
   }
 
-  /** insertAfter() re-inserts this node in the doubly-linked list after @p prev */
+  /** insertAfter() re-inserts this node in the doubly-linked list after `prev` */
   public insertAfter(prev: DataCacheNode) {
     this.unlink();
     this.next = prev.next;
@@ -114,7 +114,7 @@ export class DataCache {
   }
 
   /**
-   * addToCache() creates a new node for @p path and @p data, inserting the new node at the front of
+   * addToCache() creates a new node for `path` and `data`, inserting the new node at the front of
    * the doubly-linked list. If the number of entries in the cache exceeds this.maxCount, then the
    * least recently used entry is evicted
    * @param path the file path for the data

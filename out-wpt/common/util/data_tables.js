@@ -11,7 +11,7 @@ export function numericKeysOf(obj) {
 }
 
 /**
- * @returns a new Record from @p objects, using the string returned by Object.toString() as the keys
+ * @returns a new Record from `objects`, using the string returned by Object.toString() as the keys
  * and the objects as the values.
  */
 export function objectsToRecord(objects) {

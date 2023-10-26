@@ -232,7 +232,7 @@ function toStorage(ty, expr) {
 
 /**
  * Searches for an entry with the given key, adding and returning the result of calling
- * @p create if the entry was not found.
+ * `create` if the entry was not found.
  * @param map the cache map
  * @param key the entry's key
  * @param create the function used to construct a value, if not found in the cache
@@ -441,9 +441,9 @@ function submitBatch(
 }
 
 /**
- * map is a helper for returning a new array with each element of @p v
- * transformed with @p fn.
- * If @p v is not an array, then @p fn is called with (v, 0).
+ * map is a helper for returning a new array with each element of `v`
+ * transformed with `fn`.
+ * If `v` is not an array, then `fn` is called with (v, 0).
  */
 function map(v, fn) {
   if (v instanceof Array) {
@@ -932,7 +932,7 @@ ${body}
 /**
  * Constructs and returns a GPUComputePipeline and GPUBindGroup for running a
  * batch of test cases. If a pre-created pipeline can be found in
- * @p pipelineCache, then this may be returned instead of creating a new
+ * `pipelineCache`, then this may be returned instead of creating a new
  * pipeline.
  * @param t the GPUTest
  * @param shaderBuilder the shader builder

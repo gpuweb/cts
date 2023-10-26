@@ -154,7 +154,7 @@ export const kResourceKindsB = ['texture_3d', 'texture_storage_1d', 'uniform'];
 
 /**
  * declareEntrypoint emits the WGSL to declare an entry point with the given name, stage and body.
- * The generated function will have an appropriate return type and return statement, so that @p body
+ * The generated function will have an appropriate return type and return statement, so that `body`
  * does not have to change between stage.
  * @param name the entry point function name
  * @param stage the entry point stage

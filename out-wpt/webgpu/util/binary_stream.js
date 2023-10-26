@@ -237,8 +237,8 @@ export default class BinaryStream {
   }
 
   /**
-   * writeCond() writes the boolean condition @p cond to the buffer, then either calls if_true if
-   * @p cond is true, otherwise if_false
+   * writeCond() writes the boolean condition `cond` to the buffer, then either calls if_true if
+   * `cond` is true, otherwise if_false
    */
   writeCond(cond, fns) {
     this.writeBool(cond);
@@ -262,8 +262,8 @@ export default class BinaryStream {
   }
 
   /**
-   * bumpWord() increments this.offset by @p bytes, after first aligning this.offset to @p bytes.
-   * @returns the old offset aligned to the next multiple of @p bytes, divided by @p bytes.
+   * bumpWord() increments this.offset by `bytes`, after first aligning this.offset to `bytes`.
+   * @returns the old offset aligned to the next multiple of `bytes`, divided by `bytes`.
    */
   bumpWord(bytes) {
     const multiple = Math.floor((this.offset + bytes - 1) / bytes);

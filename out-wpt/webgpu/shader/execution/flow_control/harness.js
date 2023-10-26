@@ -5,7 +5,7 @@
 /**
  * Builds, runs then checks the output of a flow control shader test.
  *
- * @p build_wgsl is a function that's called to build the WGSL shader.
+ * `build_wgsl` is a function that's called to build the WGSL shader.
  * This function takes a FlowControlTestBuilder as the single argument, and
  * returns either a string which is embedded into the WGSL entrypoint function,
  * or an object of the signature `{ entrypoint: string; extra: string }` which

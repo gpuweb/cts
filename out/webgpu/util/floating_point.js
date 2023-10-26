@@ -5426,7 +5426,7 @@ export const FP = {
   abstract: new FPAbstractTraits()
 };
 
-/** @returns the floating-point traits for @p type */
+/** @returns the floating-point traits for `type` */
 export function fpTraitsFor(type) {
   switch (type.kind) {
     case 'abstract-float':
@@ -5440,7 +5440,7 @@ export function fpTraitsFor(type) {
 
 }
 
-/** @returns true if the value @p value is representable with @p type */
+/** @returns true if the value `value` is representable with `type` */
 export function isRepresentable(value, type) {
   if (!Number.isFinite(value)) {
     return false;
