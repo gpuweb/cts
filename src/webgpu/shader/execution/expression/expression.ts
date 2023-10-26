@@ -1,4 +1,5 @@
 import { globalTestConfig } from '../../../../common/framework/test_config.js';
+import { ROArrayArray } from '../../../../common/util/types.js';
 import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { compare, Comparator, ComparatorImpl } from '../../../util/compare.js';
@@ -27,7 +28,12 @@ import {
   quantizeToU32,
 } from '../../../util/math.js';
 
-export type Expectation = Value | FPInterval | FPInterval[] | FPInterval[][] | Comparator;
+export type Expectation =
+  | Value
+  | FPInterval
+  | readonly FPInterval[]
+  | ROArrayArray<FPInterval>
+  | Comparator;
 
 /** @returns if this Expectation actually a Comparator */
 export function isComparator(e: Expectation): e is Comparator {
@@ -52,7 +58,7 @@ export function toComparator(input: Expectation): Comparator {
 /** Case is a single expression test case. */
 export type Case = {
   // The input value(s)
-  input: Value | Array<Value>;
+  input: Value | ReadonlyArray<Value>;
   // The expected result, or function to check the result
   expected: Expectation;
 };
@@ -466,7 +472,7 @@ function submitBatch(
  * transformed with @p fn.
  * If @p v is not an array, then @p fn is called with (v, 0).
  */
-function map<T, U>(v: T | T[], fn: (value: T, index?: number) => U): U[] {
+function map<T, U>(v: T | readonly T[], fn: (value: T, index?: number) => U): U[] {
   if (v instanceof Array) {
     return v.map(fn);
   }
@@ -588,7 +594,7 @@ function wgslHeader(parameterTypes: Array<Type>, resultType: Type) {
  * ExpressionBuilder returns the WGSL used to evaluate an expression with the
  * given input values.
  */
-export type ExpressionBuilder = (values: Array<string>) => string;
+export type ExpressionBuilder = (values: ReadonlyArray<string>) => string;
 
 /**
  * Returns a ShaderBuilder that builds a basic expression test shader.
@@ -1212,8 +1218,8 @@ export interface BinaryOp {
  * @param scalarize function to convert numbers to Scalars
  */
 function generateScalarBinaryToScalarCases(
-  param0s: number[],
-  param1s: number[],
+  param0s: readonly number[],
+  param1s: readonly number[],
   op: BinaryOp,
   quantize: QuantizeFunc,
   scalarize: ScalarBuilder
@@ -1235,7 +1241,11 @@ function generateScalarBinaryToScalarCases(
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToI32Cases(param0s: number[], param1s: number[], op: BinaryOp) {
+export function generateBinaryToI32Cases(
+  param0s: readonly number[],
+  param1s: readonly number[],
+  op: BinaryOp
+) {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI32, i32);
 }
 
@@ -1245,7 +1255,11 @@ export function generateBinaryToI32Cases(param0s: number[], param1s: number[], o
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToU32Cases(param0s: number[], param1s: number[], op: BinaryOp) {
+export function generateBinaryToU32Cases(
+  param0s: readonly number[],
+  param1s: readonly number[],
+  op: BinaryOp
+) {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToU32, u32);
 }
 
@@ -1259,7 +1273,7 @@ export function generateBinaryToU32Cases(param0s: number[], param1s: number[], o
  */
 function makeScalarVectorBinaryToVectorCase(
   scalar: number,
-  vector: number[],
+  vector: readonly number[],
   op: BinaryOp,
   quantize: QuantizeFunc,
   scalarize: ScalarBuilder
@@ -1272,7 +1286,7 @@ function makeScalarVectorBinaryToVectorCase(
   }
   return {
     input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector((result as number[]).map(scalarize)),
+    expected: new Vector((result as readonly number[]).map(scalarize)),
   };
 }
 
@@ -1285,8 +1299,8 @@ function makeScalarVectorBinaryToVectorCase(
  * @param scalarize function to convert numbers to Scalars
  */
 function generateScalarVectorBinaryToVectorCases(
-  scalars: number[],
-  vectors: number[][],
+  scalars: readonly number[],
+  vectors: ROArrayArray<number>,
   op: BinaryOp,
   quantize: QuantizeFunc,
   scalarize: ScalarBuilder
@@ -1312,7 +1326,7 @@ function generateScalarVectorBinaryToVectorCases(
  * @param scalarize function to convert numbers to Scalars
  */
 function makeVectorScalarBinaryToVectorCase(
-  vector: number[],
+  vector: readonly number[],
   scalar: number,
   op: BinaryOp,
   quantize: QuantizeFunc,
@@ -1326,7 +1340,7 @@ function makeVectorScalarBinaryToVectorCase(
   }
   return {
     input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector((result as number[]).map(scalarize)),
+    expected: new Vector((result as readonly number[]).map(scalarize)),
   };
 }
 
@@ -1339,8 +1353,8 @@ function makeVectorScalarBinaryToVectorCase(
  * @param scalarize function to convert numbers to Scalars
  */
 function generateVectorScalarBinaryToVectorCases(
-  vectors: number[][],
-  scalars: number[],
+  vectors: ROArrayArray<number>,
+  scalars: readonly number[],
   op: BinaryOp,
   quantize: QuantizeFunc,
   scalarize: ScalarBuilder
@@ -1364,8 +1378,8 @@ function generateVectorScalarBinaryToVectorCases(
  * @param op he op to apply to each pair of scalar and vector
  */
 export function generateU32VectorBinaryToVectorCases(
-  scalars: number[],
-  vectors: number[][],
+  scalars: readonly number[],
+  vectors: ROArrayArray<number>,
   op: BinaryOp
 ): Case[] {
   return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToU32, u32);
@@ -1378,8 +1392,8 @@ export function generateU32VectorBinaryToVectorCases(
  * @param op he op to apply to each pair of vector and scalar
  */
 export function generateVectorU32BinaryToVectorCases(
-  vectors: number[][],
-  scalars: number[],
+  vectors: ROArrayArray<number>,
+  scalars: readonly number[],
   op: BinaryOp
 ): Case[] {
   return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToU32, u32);
@@ -1392,8 +1406,8 @@ export function generateVectorU32BinaryToVectorCases(
  * @param op he op to apply to each pair of scalar and vector
  */
 export function generateI32VectorBinaryToVectorCases(
-  scalars: number[],
-  vectors: number[][],
+  scalars: readonly number[],
+  vectors: ROArrayArray<number>,
   op: BinaryOp
 ): Case[] {
   return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToI32, i32);
@@ -1406,8 +1420,8 @@ export function generateI32VectorBinaryToVectorCases(
  * @param op he op to apply to each pair of vector and scalar
  */
 export function generateVectorI32BinaryToVectorCases(
-  vectors: number[][],
-  scalars: number[],
+  vectors: ROArrayArray<number>,
+  scalars: readonly number[],
   op: BinaryOp
 ): Case[] {
   return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToI32, i32);

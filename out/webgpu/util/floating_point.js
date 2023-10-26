@@ -2,6 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, unreachable } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
+
 import { anyOf } from './compare.js';
 import { kValue } from './constants.js';
 import {
@@ -218,6 +219,13 @@ export function deserializeFPInterval(data) {
  * Representation of a vec2/3/4 of floating point intervals as an array of
  * FPIntervals.
  */
+
+
+
+
+
+
+
 
 
 
@@ -714,7 +722,7 @@ export class FPTraits {
     }
 
     const f = v.map((e) => this.toInterval(e));
-    // The return of the map above is a FPInterval[], which needs to be narrowed
+    // The return of the map above is a readonly FPInterval[], which needs to be narrowed
     // to FPVector, since FPVector is defined as fixed length tuples.
     if (this.isVector(f)) {
       return f;
@@ -751,10 +759,10 @@ export class FPTraits {
     if (!m.every((c) => c.every((e) => e instanceof FPInterval && e.kind === this.kind))) {
       return false;
     }
-    // At this point m guaranteed to be a FPInterval[][], but maybe typed as a
+    // At this point m guaranteed to be a ROArrayArray<FPInterval>, but maybe typed as a
     // FPVector[].
     // Coercing the type since FPVector[] is functionally equivalent to
-    // FPInterval[][] for .length and .every, but they are type compatible,
+    // ROArrayArray<FPInterval> for .length and .every, but they are type compatible,
     // since tuples are not equivalent to arrays, so TS considers c in .every to
     // be unresolvable below, even though our usage is safe.
     m = m;
@@ -784,7 +792,7 @@ export class FPTraits {
 
     const result = map2DArray(m, this.toInterval.bind(this));
 
-    // The return of the map above is a FPInterval[][], which needs to be
+    // The return of the map above is a ROArrayArray<FPInterval>, which needs to be
     // narrowed to FPMatrix, since FPMatrix is defined as fixed length tuples.
     if (this.isMatrix(result)) {
       return result;
@@ -911,7 +919,10 @@ export class FPTraits {
   }
 
   /** Stub for vector to vector generator */
-  unimplementedVectorToVector(name, _x) {
+  unimplementedVectorToVector(
+  name,
+  _x)
+  {
     unreachable(`'${name}' is not yet implemented for '${this.kind}'`);
   }
 
@@ -998,7 +1009,10 @@ export class FPTraits {
   }
 
   /** Stub for distance generator */
-  unimplementedDistance(_x, _y) {
+  unimplementedDistance(
+  _x,
+  _y)
+  {
     unreachable(`'distance' is not yet implemented for '${this.kind}'`);
   }
 
@@ -1012,7 +1026,9 @@ export class FPTraits {
   }
 
   /** Stub for length generator */
-  unimplementedLength(_x) {
+  unimplementedLength(
+  _x)
+  {
     unreachable(`'length' is not yet implemented for '${this.kind}'`);
   }
 
@@ -1022,7 +1038,11 @@ export class FPTraits {
   }
 
   /** Stub for refract generator */
-  unimplementedRefract(_i, _s, _r) {
+  unimplementedRefract(
+  _i,
+  _s,
+  _r)
+  {
     unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
@@ -2190,7 +2210,9 @@ export class FPTraits {
     const m_rounded = m_flat.map(this.correctlyRounded);
     const m_flushed = m_rounded.map(this.addFlushedIfNeeded.bind(this));
     const m_options = cartesianProduct(...m_flushed);
-    const m_inputs = m_options.map((e) => unflatten2DArray(e, num_cols, num_rows));
+    const m_inputs = m_options.map((e) =>
+    unflatten2DArray(e, num_cols, num_rows));
+
 
     const interval_matrices = new Set();
     m_inputs.forEach((inner_m) => {
@@ -2483,7 +2505,7 @@ export class FPTraits {
     const result_cols = result.length;
     const result_rows = result[0].length;
 
-    // FPMatrix has to be coerced to FPInterval[][] to use .every. This should
+    // FPMatrix has to be coerced to ROArrayArray<FPInterval> to use .every. This should
     // always be safe, since FPMatrix are defined as fixed length array of
     // arrays.
     return result.every((c) => c.every((r) => r.isFinite())) ?
@@ -3211,7 +3233,10 @@ export class FPTraits {
     }
   };
 
-  distanceIntervalImpl(x, y) {
+  distanceIntervalImpl(
+  x,
+  y)
+  {
     if (x instanceof Array && y instanceof Array) {
       assert(
       x.length === y.length,
@@ -3310,7 +3335,10 @@ export class FPTraits {
     }
   };
 
-  dotIntervalImpl(x, y) {
+  dotIntervalImpl(
+  x,
+  y)
+  {
     assert(x.length === y.length, `dot not defined for vectors with different lengths`);
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
@@ -3811,7 +3839,10 @@ export class FPTraits {
 
 
 
-  multiplicationMatrixVectorIntervalImpl(x, y) {
+  multiplicationMatrixVectorIntervalImpl(
+  x,
+  y)
+  {
     const cols = x.length;
     const rows = x[0].length;
     assert(y.length === cols, `'mat${cols}x${rows} * vec${y.length}' is not defined`);
@@ -3825,7 +3856,10 @@ export class FPTraits {
 
 
 
-  multiplicationVectorMatrixIntervalImpl(x, y) {
+  multiplicationVectorMatrixIntervalImpl(
+  x,
+  y)
+  {
     const cols = y.length;
     const rows = y[0].length;
     assert(x.length === rows, `'vec${x.length} * mat${cols}x${rows}' is not defined`);
@@ -3933,6 +3967,9 @@ export class FPTraits {
   /** Calculate an acceptance interval of reflect(x, y) */
 
 
+
+
+
   /**
    * refract is a singular function in the sense that it is the only builtin that
    * takes in (FPVector, FPVector, F32/F16) and returns FPVector and is basically
@@ -3979,6 +4016,10 @@ export class FPTraits {
   }
 
   /** Calculate acceptance interval vectors of reflect(i, s, r) */
+
+
+
+
 
 
   RemainderIntervalOp = {

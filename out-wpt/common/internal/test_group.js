@@ -17,6 +17,7 @@ import {
   stringifyPublicParamsUniquely,
 } from '../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
+
 import { assert, unreachable } from '../util/util.js';
 
 import { logToWebsocket } from './websocket_logger.js';

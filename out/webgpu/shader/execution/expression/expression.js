@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { globalTestConfig } from '../../../../common/framework/test_config.js';import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
+
 import { compare } from '../../../util/compare.js';
 import { kValue } from '../../../util/constants.js';
 import {
@@ -26,6 +27,11 @@ cartesianProduct,
 quantizeToI32,
 quantizeToU32 } from
 '../../../util/math.js';
+
+
+
+
+
 
 
 
@@ -1235,7 +1241,11 @@ scalarize)
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToI32Cases(param0s, param1s, op) {
+export function generateBinaryToI32Cases(
+param0s,
+param1s,
+op)
+{
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI32, i32);
 }
 
@@ -1245,7 +1255,11 @@ export function generateBinaryToI32Cases(param0s, param1s, op) {
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
  */
-export function generateBinaryToU32Cases(param0s, param1s, op) {
+export function generateBinaryToU32Cases(
+param0s,
+param1s,
+op)
+{
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToU32, u32);
 }
 

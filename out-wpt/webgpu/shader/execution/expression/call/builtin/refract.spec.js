@@ -12,6 +12,7 @@ If k < 0.0, returns the refraction vector 0.0, otherwise return the refraction
 vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';

@@ -2582,8 +2582,7 @@ fn((t) => {
     return ulp_error * trait.oneULP(n);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.atanInterval(t.params.input);
   t.expect(
@@ -2760,8 +2759,7 @@ fn((t) => {
     return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.cosInterval(t.params.input);
   t.expect(
@@ -2941,8 +2939,7 @@ fn((t) => {
     return ulp_error * trait.oneULP(x);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
   const got = trait.expInterval(t.params.input);
 
   t.expect(
@@ -3001,8 +2998,7 @@ fn((t) => {
     return ulp_error * trait.oneULP(x);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.exp2Interval(t.params.input);
   t.expect(
@@ -3197,8 +3193,7 @@ fn((t) => {
     return 2 * trait.oneULP(n);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.inverseSqrtInterval(t.params.input);
   t.expect(
@@ -3322,8 +3317,7 @@ fn((t) => {
     return 3 * trait.oneULP(n);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.logInterval(t.params.input);
   t.expect(
@@ -3373,8 +3367,7 @@ fn((t) => {
     return 3 * trait.oneULP(n);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.log2Interval(t.params.input);
   t.expect(
@@ -3720,8 +3713,7 @@ fn((t) => {
     return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.sinInterval(t.params.input);
   t.expect(
@@ -3855,8 +3847,7 @@ fn((t) => {
     return 2.5 * trait.oneULP(n);
   };
 
-  t.params.expected = applyError(t.params.expected, error);
-  const expected = trait.toInterval(t.params.expected);
+  const expected = trait.toInterval(applyError(t.params.expected, error));
 
   const got = trait.sqrtInterval(t.params.input);
   t.expect(
@@ -4429,10 +4420,9 @@ fn((t) => {
   };
 
   const [x, y] = t.params.input;
-  t.params.expected = applyError(t.params.expected, error);
 
   // Do not swizzle here, so the correct implementation under test is called.
-  const expected = FP[t.params.trait].toInterval(t.params.expected);
+  const expected = FP[t.params.trait].toInterval(applyError(t.params.expected, error));
   const got = FP[t.params.trait].divisionInterval(x, y);
   t.expect(
   objectEquals(expected, got),

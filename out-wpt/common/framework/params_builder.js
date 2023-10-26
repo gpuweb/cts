@@ -3,6 +3,7 @@
  **/ import { mergeParams, mergeParamsChecked } from '../internal/params_utils.js';
 import { comparePublicParamsPaths, Ordering } from '../internal/query/compare.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
+
 import { assert, mapLazy, objectEquals } from '../util/util.js';
 
 /**

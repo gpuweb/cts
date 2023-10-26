@@ -86,7 +86,7 @@ function makeScalarCaseWhole(kind: FPKind, n: number): Case {
 }
 
 /** @returns a fract Case for a given vector input */
-function makeVectorCaseFract(kind: FPKind, v: number[]): Case {
+function makeVectorCaseFract(kind: FPKind, v: readonly number[]): Case {
   const fp = FP[kind];
   v = v.map(fp.quantize);
   const fs = v.map(e => {
@@ -97,7 +97,7 @@ function makeVectorCaseFract(kind: FPKind, v: number[]): Case {
 }
 
 /** @returns a whole Case for a given vector input */
-function makeVectorCaseWhole(kind: FPKind, v: number[]): Case {
+function makeVectorCaseWhole(kind: FPKind, v: readonly number[]): Case {
   const fp = FP[kind];
   v = v.map(fp.quantize);
   const ws = v.map(e => {

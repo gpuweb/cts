@@ -293,7 +293,7 @@ export class FPTraits {
     }
 
     const f = v.map(e => this.toInterval(e));
-    // The return of the map above is a FPInterval[], which needs to be narrowed
+    // The return of the map above is a readonly FPInterval[], which needs to be narrowed
     // to FPVector, since FPVector is defined as fixed length tuples.
     if (this.isVector(f)) {
       return f;
@@ -330,10 +330,10 @@ export class FPTraits {
     if (!m.every(c => c.every(e => e instanceof FPInterval && e.kind === this.kind))) {
       return false;
     }
-    // At this point m guaranteed to be a FPInterval[][], but maybe typed as a
+    // At this point m guaranteed to be a ROArrayArray<FPInterval>, but maybe typed as a
     // FPVector[].
     // Coercing the type since FPVector[] is functionally equivalent to
-    // FPInterval[][] for .length and .every, but they are type compatible,
+    // ROArrayArray<FPInterval> for .length and .every, but they are type compatible,
     // since tuples are not equivalent to arrays, so TS considers c in .every to
     // be unresolvable below, even though our usage is safe.
     m = m;
@@ -363,7 +363,7 @@ export class FPTraits {
 
     const result = map2DArray(m, this.toInterval.bind(this));
 
-    // The return of the map above is a FPInterval[][], which needs to be
+    // The return of the map above is a ROArrayArray<FPInterval>, which needs to be
     // narrowed to FPMatrix, since FPMatrix is defined as fixed length tuples.
     if (this.isMatrix(result)) {
       return result;
@@ -1813,7 +1813,7 @@ export class FPTraits {
     const result_cols = result.length;
     const result_rows = result[0].length;
 
-    // FPMatrix has to be coerced to FPInterval[][] to use .every. This should
+    // FPMatrix has to be coerced to ROArrayArray<FPInterval> to use .every. This should
     // always be safe, since FPMatrix are defined as fixed length array of
     // arrays.
     return result.every(c => c.every(r => r.isFinite()))

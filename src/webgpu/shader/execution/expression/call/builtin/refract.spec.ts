@@ -11,6 +11,7 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
@@ -41,8 +42,8 @@ export const g = makeTestGroup(GPUTest);
  * */
 function makeCase(
   kind: FPKind,
-  i: number[],
-  s: number[],
+  i: readonly number[],
+  s: readonly number[],
   r: number,
   check: IntervalFilter
 ): Case | undefined {
@@ -72,9 +73,9 @@ function makeCase(
  */
 function generateCases(
   kind: FPKind,
-  param_is: number[][],
-  param_ss: number[][],
-  param_rs: number[],
+  param_is: ROArrayArray<number>,
+  param_ss: ROArrayArray<number>,
+  param_rs: readonly number[],
   check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types

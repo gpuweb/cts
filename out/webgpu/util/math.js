@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../common/util/util.js';import { Float16Array,
+**/import { assert } from '../../common/util/util.js';import {
+Float16Array,
 getFloat16,
 setFloat16 } from
 '../../external/petamoriken/float16/float16.js';
@@ -2074,7 +2075,10 @@ export function lcm(a, b) {
  * @param intermediate arrays of values representing the partial result of
  *                     cartesianProduct
  */
-function cartesianProductImpl(elements, intermediate) {
+function cartesianProductImpl(
+elements,
+intermediate)
+{
   const result = [];
   elements.forEach((e) => {
     if (intermediate.length > 0) {

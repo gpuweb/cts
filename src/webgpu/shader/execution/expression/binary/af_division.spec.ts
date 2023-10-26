@@ -12,11 +12,11 @@ import { onlyConstInputSource, run } from '../expression.js';
 
 import { abstractBinary } from './binary.js';
 
-const divisionVectorScalarInterval = (v: number[], s: number): FPVector => {
+const divisionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.divisionInterval(e, s)));
 };
 
-const divisionScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const divisionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.abstract.toVector(v.map(e => FP.abstract.divisionInterval(s, e)));
 };
 

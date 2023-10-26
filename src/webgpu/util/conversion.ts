@@ -1,4 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
+import { ROArrayArray } from '../../common/util/types.js';
 import { assert, objectEquals, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
@@ -353,7 +354,7 @@ export function unpackRGB9E5UFloat(encoded: number): { R: number; G: number; B: 
 export function pack2x16float(x: number, y: number): (number | undefined)[] {
   // Generates all possible valid u16 bit fields for a given f32 to f16 conversion.
   // Assumes FTZ for both the f32 and f16 value is allowed.
-  const generateU16s = (n: number): number[] => {
+  const generateU16s = (n: number): readonly number[] => {
     let contains_subnormals = isSubnormalNumberF32(n);
     const n_f16s = correctlyRoundedF16(n);
     contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
@@ -668,7 +669,7 @@ export class VectorType {
   }
 
   /** Constructs a Vector of this type with the given values */
-  public create(value: number | number[]): Vector {
+  public create(value: number | readonly number[]): Vector {
     if (value instanceof Array) {
       assert(value.length === this.width);
     } else {
@@ -1184,7 +1185,7 @@ export function vec4(x: Scalar, y: Scalar, z: Scalar, w: Scalar) {
  * @param v array of numbers to be converted, must contain 2, 3 or 4 elements
  * @param op function to convert from number to Scalar, e.g. 'f32`
  */
-export function toVector(v: number[], op: (n: number) => Scalar): Vector {
+export function toVector(v: readonly number[], op: (n: number) => Scalar): Vector {
   switch (v.length) {
     case 2:
       return vec2(op(v[0]), op(v[1]));
@@ -1266,7 +1267,7 @@ export class Matrix {
  *          be of the same length. All Arrays must have 2, 3, or 4 elements.
  * @param op function to convert from number to Scalar, e.g. 'f32`
  */
-export function toMatrix(m: number[][], op: (n: number) => Scalar): Matrix {
+export function toMatrix(m: ROArrayArray<number>, op: (n: number) => Scalar): Matrix {
   const cols = m.length;
   const rows = m[0].length;
   const elements: Scalar[][] = [...Array<Scalar[]>(cols)].map(_ => [...Array<Scalar>(rows)]);
@@ -1291,13 +1292,13 @@ export type SerializedValueScalar = {
 export type SerializedValueVector = {
   kind: 'vector';
   type: ScalarKind;
-  value: boolean[] | number[];
+  value: boolean[] | readonly number[];
 };
 
 export type SerializedValueMatrix = {
   kind: 'matrix';
   type: ScalarKind;
-  value: number[][];
+  value: ROArrayArray<number>;
 };
 
 export type SerializedValue = SerializedValueScalar | SerializedValueVector | SerializedValueMatrix;
@@ -1326,7 +1327,7 @@ export function serializeValue(v: Value): SerializedValue {
     return {
       kind: 'vector',
       type: kind,
-      value: v.elements.map(e => value(kind, e)) as boolean[] | number[],
+      value: v.elements.map(e => value(kind, e)) as boolean[] | readonly number[],
     };
   }
   if (v instanceof Matrix) {
@@ -1334,7 +1335,7 @@ export function serializeValue(v: Value): SerializedValue {
     return {
       kind: 'matrix',
       type: kind,
-      value: v.elements.map(c => c.map(r => value(kind, r))) as number[][],
+      value: v.elements.map(c => c.map(r => value(kind, r))) as ROArrayArray<number>,
     };
   }
 

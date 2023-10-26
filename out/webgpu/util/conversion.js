@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Colors } from '../../common/util/colors.js';import { assert, objectEquals, unreachable } from '../../common/util/util.js';import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+**/import { Colors } from '../../common/util/colors.js';import { assert, objectEquals, unreachable } from '../../common/util/util.js';
+import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
 import {

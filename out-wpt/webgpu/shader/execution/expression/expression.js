@@ -2,6 +2,7 @@
  * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
  **/ import { globalTestConfig } from '../../../../common/framework/test_config.js';
 import { assert, objectEquals, unreachable } from '../../../../common/util/util.js';
+
 import { compare } from '../../../util/compare.js';
 import { kValue } from '../../../util/constants.js';
 import {

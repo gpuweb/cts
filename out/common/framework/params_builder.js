@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { mergeParams, mergeParamsChecked } from '../internal/params_utils.js';import { comparePublicParamsPaths, Ordering } from '../internal/query/compare.js';import { stringifyPublicParams } from '../internal/query/stringify_params.js';
+
 import { assert, mapLazy, objectEquals } from '../util/util.js';
 
 
@@ -302,7 +303,10 @@ ParamsBuilderBase
 
       const subcases = Array.from(this.subcases(caseP));
       if (subcases.length) {
-        yield [caseP, subcases];
+        yield [
+        caseP,
+        subcases];
+
       }
     }
   }

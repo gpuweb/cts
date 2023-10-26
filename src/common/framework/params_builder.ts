@@ -1,6 +1,7 @@
 import { Merged, mergeParams, mergeParamsChecked } from '../internal/params_utils.js';
 import { comparePublicParamsPaths, Ordering } from '../internal/query/compare.js';
 import { stringifyPublicParams } from '../internal/query/stringify_params.js';
+import { DeepReadonly } from '../util/types.js';
 import { assert, mapLazy, objectEquals } from '../util/util.js';
 
 import { TestParams } from './fixture.js';
@@ -98,7 +99,7 @@ export type ParamTypeOf<
  * - `[case params, undefined]` if not.
  */
 export type CaseSubcaseIterable<CaseP, SubcaseP> = Iterable<
-  readonly [CaseP, Iterable<SubcaseP> | undefined]
+  readonly [DeepReadonly<CaseP>, Iterable<DeepReadonly<SubcaseP>> | undefined]
 >;
 
 /**
@@ -143,7 +144,7 @@ export function builderIterateCasesWithSubcases(
  */
 export class CaseParamsBuilder<CaseP extends {}>
   extends ParamsBuilderBase<CaseP, {}>
-  implements Iterable<CaseP>, ParamsBuilder {
+  implements Iterable<DeepReadonly<CaseP>>, ParamsBuilder {
   *iterateCasesWithSubcases(caseFilter: TestParams | null): CaseSubcaseIterable<CaseP, {}> {
     for (const caseP of this.cases(caseFilter)) {
       if (caseFilter) {
@@ -155,12 +156,12 @@ export class CaseParamsBuilder<CaseP extends {}>
         }
       }
 
-      yield [caseP, undefined];
+      yield [caseP as DeepReadonly<typeof caseP>, undefined];
     }
   }
 
-  [Symbol.iterator](): Iterator<CaseP> {
-    return this.cases(null);
+  [Symbol.iterator](): Iterator<DeepReadonly<CaseP>> {
+    return this.cases(null) as Iterator<DeepReadonly<CaseP>>;
   }
 
   /** @inheritDoc */
@@ -302,7 +303,10 @@ export class SubcaseParamsBuilder<CaseP extends {}, SubcaseP extends {}>
 
       const subcases = Array.from(this.subcases(caseP));
       if (subcases.length) {
-        yield [caseP, subcases];
+        yield [
+          caseP as DeepReadonly<typeof caseP>,
+          subcases as DeepReadonly<typeof subcases[number]>[],
+        ];
       }
     }
   }
