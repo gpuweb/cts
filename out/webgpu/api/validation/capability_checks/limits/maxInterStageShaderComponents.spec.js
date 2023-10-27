@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert, range } from '../../../../../common/util/util.js';import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+**/import { range } from '../../../../../common/util/util.js';import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 function getTypeForNumComponents(numComponents) {
   return numComponents > 1 ? `vec${numComponents}f` : 'f32';
@@ -21,7 +21,6 @@ sampleMaskOut)
 
   const maxInterStageVariables = device.limits.maxInterStageShaderVariables;
   const numComponents = Math.min(maxVertexShaderOutputComponents, maxFragmentShaderInputComponents);
-  assert(Math.ceil(numComponents / 4) <= maxInterStageVariables);
 
   const num4ComponentVaryings = Math.floor(numComponents / 4);
   const lastVaryingNumComponents = numComponents % 4;
@@ -127,6 +126,10 @@ fn(async (t) => {
     sampleMaskIn,
     sampleMaskOut
   } = t.params;
+  // Request the largest value of maxInterStageShaderVariables to allow the test using as many
+  // inter-stage shader components as possible without being limited by
+  // maxInterStageShaderVariables.
+  const extraLimits = { maxInterStageShaderVariables: 'adapterLimit' };
   await t.testDeviceWithRequestedMaximumLimits(
   limitTest,
   testValueName,
@@ -142,7 +145,8 @@ fn(async (t) => {
 
 
     await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
-  });
+  },
+  extraLimits);
 
 });
 //# sourceMappingURL=maxInterStageShaderComponents.spec.js.map
