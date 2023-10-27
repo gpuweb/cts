@@ -1,6 +1,6 @@
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { JSONWithUndefined } from '../internal/params_utils.js';
-import { assert, unreachable } from '../util/util.js';
+import { assert, ExceptionCheckOptions, unreachable } from '../util/util.js';
 
 export class SkipTestCase extends Error {}
 export class UnexpectedPassError extends Error {}
@@ -237,16 +237,26 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   }
 
   /** Expect that the provided promise rejects, with the provided exception name. */
-  shouldReject(expectedName: string, p: Promise<unknown>, msg?: string): void {
+  shouldReject(
+    expectedName: string,
+    p: Promise<unknown>,
+    { checkForStackProperty = false, message }: ExceptionCheckOptions = {}
+  ): void {
     this.eventualAsyncExpectation(async niceStack => {
-      const m = msg ? ': ' + msg : '';
+      const m = message ? ': ' + message : '';
       try {
         await p;
         niceStack.message = 'DID NOT REJECT' + m;
         this.rec.expectationFailed(niceStack);
       } catch (ex) {
-        niceStack.message = 'rejected as expected' + m;
+        niceStack.message = 'rejected as expected, but wrong name' + m;
         this.expectErrorValue(expectedName, ex, niceStack);
+        if (checkForStackProperty) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            niceStack.message = 'rejected as expected, but missing stack' + m;
+            this.rec.expectationFailed(niceStack);
+          }
+        }
       }
     });
   }
@@ -257,8 +267,12 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
    *
    * MAINTENANCE_TODO: Change to `string | false` so the exception name is always checked.
    */
-  shouldThrow(expectedError: string | boolean, fn: () => void, msg?: string): void {
-    const m = msg ? ': ' + msg : '';
+  shouldThrow(
+    expectedError: string | boolean,
+    fn: () => void,
+    { checkForStackProperty = false, message }: ExceptionCheckOptions = {}
+  ) {
+    const m = message ? ': ' + message : '';
     try {
       fn();
       if (expectedError === false) {
@@ -271,6 +285,11 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.rec.expectationFailed(new Error('threw unexpectedly' + m));
       } else {
         this.expectErrorValue(expectedError, ex, new Error(m));
+        if (checkForStackProperty) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            this.rec.expectationFailed(new Error('missing stack' + m));
+          }
+        }
       }
     }
   }

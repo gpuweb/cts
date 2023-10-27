@@ -134,10 +134,10 @@ mapAsync on it should reject and produce a validation error. `
     if (unmapBeforeResolve) {
       // Should reject with abort error because buffer will be unmapped
       // before validation check finishes.
-      t.shouldReject('AbortError', promise!);
+      t.shouldReject('AbortError', promise!, { checkForStackProperty: true });
     } else {
       // Should also reject in addition to the validation error.
-      t.shouldReject('OperationError', promise!);
+      t.shouldReject('OperationError', promise!, { checkForStackProperty: true });
 
       // Wait for validation error before unmap to ensure validation check
       // ends before unmap.
@@ -151,9 +151,13 @@ mapAsync on it should reject and produce a validation error. `
 
     // Should throw an OperationError because the buffer is not mapped.
     // Note: not a RangeError because the state of the buffer is checked first.
-    t.shouldThrow('OperationError', () => {
-      errorBuffer.getMappedRange();
-    });
+    t.shouldThrow(
+      'OperationError',
+      () => {
+        errorBuffer.getMappedRange();
+      },
+      { checkForStackProperty: true }
+    );
 
     // Should't be a validation error even if the buffer failed to be mapped.
     errorBuffer.unmap();

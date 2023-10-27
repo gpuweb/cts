@@ -206,7 +206,7 @@ g.test('invalid_test_name').fn(t => {
       () => {
         g.test(name).fn(() => {});
       },
-      name
+      { message: name }
     );
   }
 });
@@ -353,7 +353,8 @@ g.test('shouldReject').fn(async t0 => {
     'TypeError',
     (async () => {
       throw new TypeError();
-    })()
+    })(),
+    { checkForStackProperty: true }
   );
 
   const g = makeTestGroupForUnitTesting(UnitTest);
@@ -363,7 +364,8 @@ g.test('shouldReject').fn(async t0 => {
       'Error',
       (async () => {
         throw new TypeError();
-      })()
+      })(),
+      { checkForStackProperty: true }
     );
   });
 

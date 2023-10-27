@@ -36,13 +36,17 @@ g.test('texture_descriptor')
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createTexture({
-        format,
-        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
-        usage: GPUTextureUsage.TEXTURE_BINDING,
-      });
-    });
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createTexture({
+          format,
+          size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+          usage: GPUTextureUsage.TEXTURE_BINDING,
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('texture_descriptor_view_formats')
@@ -67,14 +71,18 @@ g.test('texture_descriptor_view_formats')
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createTexture({
-        format,
-        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
-        usage: GPUTextureUsage.TEXTURE_BINDING,
-        viewFormats: [format],
-      });
-    });
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createTexture({
+          format,
+          size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+          usage: GPUTextureUsage.TEXTURE_BINDING,
+          viewFormats: [format],
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('texture_view_descriptor')
@@ -120,9 +128,13 @@ g.test('texture_view_descriptor')
       mipLevelCount: 1,
       baseArrayLayer: 0,
     };
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      testTexture.createView(testViewDesc);
-    });
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        testTexture.createView(testViewDesc);
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('canvas_configuration')
@@ -165,9 +177,13 @@ g.test('canvas_configuration')
         ctx.configure(canvasConf);
       });
     } else {
-      t.shouldThrow('TypeError', () => {
-        ctx.configure(canvasConf);
-      });
+      t.shouldThrow(
+        'TypeError',
+        () => {
+          ctx.configure(canvasConf);
+        },
+        { checkForStackProperty: true }
+      );
     }
   });
 
@@ -215,9 +231,13 @@ g.test('canvas_configuration_view_formats')
         ctx.configure(canvasConf);
       });
     } else {
-      t.shouldThrow('TypeError', () => {
-        ctx.configure(canvasConf);
-      });
+      t.shouldThrow(
+        'TypeError',
+        () => {
+          ctx.configure(canvasConf);
+        },
+        { checkForStackProperty: true }
+      );
     }
   });
 
@@ -247,19 +267,23 @@ g.test('storage_texture_binding_layout')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.COMPUTE,
-            storageTexture: {
-              format,
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              storageTexture: {
+                format,
+              },
             },
-          },
-        ],
-      });
-    });
+          ],
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('color_target_state')
@@ -269,6 +293,7 @@ g.test('color_target_state')
   fail if the required optional feature is not enabled.
 
   Note: This test has no cases if there are no optional texture formats supporting color rendering.
+  TODO: also test createRenderPipelineAsync
   `
   )
   .params(u =>
@@ -288,32 +313,36 @@ g.test('color_target_state')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderPipeline({
-        layout: 'auto',
-        vertex: {
-          module: t.device.createShaderModule({
-            code: `
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createRenderPipeline({
+          layout: 'auto',
+          vertex: {
+            module: t.device.createShaderModule({
+              code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
-          }),
-          entryPoint: 'main',
-        },
-        fragment: {
-          module: t.device.createShaderModule({
-            code: `
+            }),
+            entryPoint: 'main',
+          },
+          fragment: {
+            module: t.device.createShaderModule({
+              code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
-          }),
-          entryPoint: 'main',
-          targets: [{ format }],
-        },
-      });
-    });
+            }),
+            entryPoint: 'main',
+            targets: [{ format }],
+          },
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('depth_stencil_state')
@@ -321,6 +350,7 @@ g.test('depth_stencil_state')
     `
   Test creating a render pipeline with an optional texture format set in GPUColorTargetState will
   fail if the required optional feature is not enabled.
+  TODO: also test createRenderPipelineAsync
   `
   )
   .params(u =>
@@ -340,37 +370,41 @@ g.test('depth_stencil_state')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderPipeline({
-        layout: 'auto',
-        vertex: {
-          module: t.device.createShaderModule({
-            code: `
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createRenderPipeline({
+          layout: 'auto',
+          vertex: {
+            module: t.device.createShaderModule({
+              code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
-          }),
-          entryPoint: 'main',
-        },
-        depthStencil: {
-          format,
-          depthCompare: 'always',
-          depthWriteEnabled: false,
-        },
-        fragment: {
-          module: t.device.createShaderModule({
-            code: `
+            }),
+            entryPoint: 'main',
+          },
+          depthStencil: {
+            format,
+            depthCompare: 'always',
+            depthWriteEnabled: false,
+          },
+          fragment: {
+            module: t.device.createShaderModule({
+              code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
-          }),
-          entryPoint: 'main',
-          targets: [{ format: 'rgba8unorm' }],
-        },
-      });
-    });
+            }),
+            entryPoint: 'main',
+            targets: [{ format: 'rgba8unorm' }],
+          },
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('render_bundle_encoder_descriptor_color_format')
@@ -399,11 +433,15 @@ g.test('render_bundle_encoder_descriptor_color_format')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderBundleEncoder({
-        colorFormats: [format],
-      });
-    });
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createRenderBundleEncoder({
+          colorFormats: [format],
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });
 
 g.test('render_bundle_encoder_descriptor_depth_stencil_format')
@@ -430,10 +468,14 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-      t.device.createRenderBundleEncoder({
-        colorFormats: ['rgba8unorm'],
-        depthStencilFormat: format,
-      });
-    });
+    t.shouldThrow(
+      enable_required_feature ? false : 'TypeError',
+      () => {
+        t.device.createRenderBundleEncoder({
+          colorFormats: ['rgba8unorm'],
+          depthStencilFormat: format,
+        });
+      },
+      { checkForStackProperty: true }
+    );
   });

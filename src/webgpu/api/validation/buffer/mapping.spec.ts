@@ -45,6 +45,7 @@ class F extends ValidationTest {
         assert(expectation.rejectName === null, 'mapAsync unexpectedly passed');
       } catch (ex) {
         assert(ex instanceof Error, 'mapAsync rejected with non-error');
+        assert(typeof ex.stack === 'string', 'mapAsync rejected without a stack');
         assert(expectation.rejectName === ex.name, `mapAsync rejected unexpectedly with: ${ex}`);
         assert(
           expectation.earlyRejection === rejectedEarly,
@@ -62,9 +63,13 @@ class F extends ValidationTest {
         this.expect(data.byteLength === size);
       }
     } else {
-      this.shouldThrow('OperationError', () => {
-        buffer.getMappedRange(offset, size);
-      });
+      this.shouldThrow(
+        'OperationError',
+        () => {
+          buffer.getMappedRange(offset, size);
+        },
+        { checkForStackProperty: true }
+      );
     }
   }
 

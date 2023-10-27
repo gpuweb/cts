@@ -80,16 +80,22 @@ g.test('ranges')
           : new arrayType(15);
 
         // Writing the full buffer that isn't 4-byte aligned.
-        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, array15));
+        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, array15), {
+          checkForStackProperty: true,
+        });
 
         // Writing from an offset that causes source to be 4-byte aligned.
         queue.writeBuffer(buffer, 0, array15, 3);
 
         // Writing from an offset that causes the source to not be 4-byte aligned.
-        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arrayMd, 3));
+        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arrayMd, 3), {
+          checkForStackProperty: true,
+        });
 
         // Writing with a size that is not 4-byte aligned.
-        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 0, 7));
+        t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 0, 7), {
+          checkForStackProperty: true,
+        });
       }
 
       // Writing the full buffer without offsets.
@@ -116,8 +122,12 @@ g.test('ranges')
       queue.writeBuffer(buffer, 0, arraySm, 4, 4);
 
       // Writing with a size that extends past the source buffer length.
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 0, 16));
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 4, 8));
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 0, 16), {
+        checkForStackProperty: true,
+      });
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 4, 8), {
+        checkForStackProperty: true,
+      });
 
       // Writing with a size that is 4-byte aligned but an offset that is not.
       queue.writeBuffer(buffer, 0, arraySm, 3, 4);
@@ -132,14 +142,20 @@ g.test('ranges')
       queue.writeBuffer(buffer, 0, arraySm, 8, 0);
 
       // Writing with a data offset that is out of range of data size.
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, 0));
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, 0), {
+        checkForStackProperty: true,
+      });
 
       // Writing with a data offset that is out of range of data size with implicit copy size.
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, undefined));
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, 9, undefined), {
+        checkForStackProperty: true,
+      });
 
       // A data offset of undefined should be treated as 0.
       queue.writeBuffer(buffer, 0, arraySm, undefined, 8);
-      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, undefined, 12));
+      t.shouldThrow('OperationError', () => queue.writeBuffer(buffer, 0, arraySm, undefined, 12), {
+        checkForStackProperty: true,
+      });
     }
 
     runTest(Uint8Array, true);

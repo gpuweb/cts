@@ -368,7 +368,7 @@ g.test('u32array_start_and_length')
     if (_success) {
       doSetBindGroup();
     } else {
-      t.shouldThrow('RangeError', doSetBindGroup);
+      t.shouldThrow('RangeError', doSetBindGroup, { checkForStackProperty: true });
     }
 
     // RangeError in setBindGroup does not cause the encoder to become invalid.

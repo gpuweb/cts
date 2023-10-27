@@ -118,12 +118,15 @@ g.test('stale')
         // Cause a type error by requesting with an unknown feature.
         if (awaitInitialError) {
           await assertReject(
-            adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
+            'TypeError',
+            adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] }),
+            { checkForStackProperty: true }
           );
         } else {
           t.shouldReject(
             'TypeError',
-            adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
+            adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] }),
+            { checkForStackProperty: true }
           );
         }
         break;
@@ -131,12 +134,15 @@ g.test('stale')
         // Cause an operation error by requesting with an alignment limit that is not a power of 2.
         if (awaitInitialError) {
           await assertReject(
-            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
+            'OperationError',
+            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } }),
+            { checkForStackProperty: true }
           );
         } else {
           t.shouldReject(
             'OperationError',
-            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
+            adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } }),
+            { checkForStackProperty: true }
           );
         }
         break;
@@ -184,7 +190,8 @@ g.test('features,unknown')
 
     t.shouldReject(
       'TypeError',
-      adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] })
+      adapter.requestDevice({ requiredFeatures: ['unknown-feature' as GPUFeatureName] }),
+      { checkForStackProperty: true }
     );
   });
 
@@ -208,7 +215,7 @@ g.test('features,known')
       const device = await promise;
       t.expect(device.features.has(feature), 'Device should include the required feature');
     } else {
-      t.shouldReject('TypeError', promise);
+      t.shouldReject('TypeError', promise, { checkForStackProperty: true });
     }
   });
 
@@ -225,7 +232,9 @@ g.test('limits,unknown')
 
     const requiredLimits: Record<string, number> = { unknownLimitName: 9000 };
 
-    t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+    t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+      checkForStackProperty: true,
+    });
   });
 
 g.test('limits,supported')
@@ -306,7 +315,9 @@ g.test('limit,better_than_supported')
       [limit]: clamp(value, { min: 0, max: limitInfo[limit].maximumValue }),
     };
 
-    t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+    t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+      checkForStackProperty: true,
+    });
   });
 
 g.test('limit,worse_than_default')
@@ -369,6 +380,8 @@ g.test('limit,worse_than_default')
       );
       device.destroy();
     } else {
-      t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+      t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+        checkForStackProperty: true,
+      });
     }
   });

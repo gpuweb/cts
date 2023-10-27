@@ -378,10 +378,9 @@ class DeviceHolder implements DeviceProvider {
       await this.device.queue.onSubmittedWorkDone();
     }
 
-    await assertReject(
-      this.device.popErrorScope(),
-      'There was an extra error scope on the stack after a test'
-    );
+    await assertReject('OperationError', this.device.popErrorScope(), {
+      message: 'There was an extra error scope on the stack after a test',
+    });
 
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);

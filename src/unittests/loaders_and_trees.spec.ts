@@ -703,7 +703,7 @@ async function testIterateCollapsed(
     subqueriesToExpand: expectations,
   });
   if (expectedResult === 'throws') {
-    t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
+    t.shouldReject('Error', treePromise);
     return;
   }
   const tree = await treePromise;

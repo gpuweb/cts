@@ -330,7 +330,9 @@ export class LimitTestsImpl extends GPUTestBase {
     requiredFeatures?: GPUFeatureName[]
   ) {
     if (shouldReject) {
-      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+        checkForStackProperty: false,
+      });
       return undefined;
     } else {
       return await adapter.requestDevice({ requiredLimits, requiredFeatures });
@@ -565,7 +567,7 @@ export class LimitTestsImpl extends GPUTestBase {
     msg?: string
   ): Promise<void> {
     if (shouldReject) {
-      this.shouldReject(expectedName, p, msg);
+      this.shouldReject(expectedName, p, { checkForStackProperty: true, message: msg });
     } else {
       this.shouldResolve(p, msg);
     }
