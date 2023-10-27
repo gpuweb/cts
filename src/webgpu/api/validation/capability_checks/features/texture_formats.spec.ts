@@ -293,11 +293,11 @@ g.test('color_target_state')
   fail if the required optional feature is not enabled.
 
   Note: This test has no cases if there are no optional texture formats supporting color rendering.
-  TODO: also test createRenderPipelineAsync
   `
   )
   .params(u =>
     u
+      .combine('isAsync', [false, true])
       .combine('format', kOptionalTextureFormats)
       .filter(t => !!kTextureFormatInfo[t.format].colorRender)
       .combine('enable_required_feature', [true, false])
@@ -311,37 +311,36 @@ g.test('color_target_state')
     }
   })
   .fn(t => {
-    const { format, enable_required_feature } = t.params;
+    const { isAsync, format, enable_required_feature } = t.params;
 
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createRenderPipeline({
-          layout: 'auto',
-          vertex: {
-            module: t.device.createShaderModule({
-              code: `
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      enable_required_feature,
+      {
+        layout: 'auto',
+        vertex: {
+          module: t.device.createShaderModule({
+            code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
-            }),
-            entryPoint: 'main',
-          },
-          fragment: {
-            module: t.device.createShaderModule({
-              code: `
+          }),
+          entryPoint: 'main',
+        },
+        fragment: {
+          module: t.device.createShaderModule({
+            code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
-            }),
-            entryPoint: 'main',
-            targets: [{ format }],
-          },
-        });
+          }),
+          entryPoint: 'main',
+          targets: [{ format }],
+        },
       },
-      { checkForStackProperty: true }
+      'TypeError'
     );
   });
 
@@ -350,11 +349,11 @@ g.test('depth_stencil_state')
     `
   Test creating a render pipeline with an optional texture format set in GPUColorTargetState will
   fail if the required optional feature is not enabled.
-  TODO: also test createRenderPipelineAsync
   `
   )
   .params(u =>
     u
+      .combine('isAsync', [false, true])
       .combine('format', kOptionalTextureFormats)
       .filter(t => !!(kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil))
       .combine('enable_required_feature', [true, false])
@@ -368,42 +367,41 @@ g.test('depth_stencil_state')
     }
   })
   .fn(t => {
-    const { format, enable_required_feature } = t.params;
+    const { isAsync, format, enable_required_feature } = t.params;
 
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createRenderPipeline({
-          layout: 'auto',
-          vertex: {
-            module: t.device.createShaderModule({
-              code: `
+    t.doCreateRenderPipelineTest(
+      isAsync,
+      enable_required_feature,
+      {
+        layout: 'auto',
+        vertex: {
+          module: t.device.createShaderModule({
+            code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`,
-            }),
-            entryPoint: 'main',
-          },
-          depthStencil: {
-            format,
-            depthCompare: 'always',
-            depthWriteEnabled: false,
-          },
-          fragment: {
-            module: t.device.createShaderModule({
-              code: `
+          }),
+          entryPoint: 'main',
+        },
+        depthStencil: {
+          format,
+          depthCompare: 'always',
+          depthWriteEnabled: false,
+        },
+        fragment: {
+          module: t.device.createShaderModule({
+            code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`,
-            }),
-            entryPoint: 'main',
-            targets: [{ format: 'rgba8unorm' }],
-          },
-        });
+          }),
+          entryPoint: 'main',
+          targets: [{ format: 'rgba8unorm' }],
+        },
       },
-      { checkForStackProperty: true }
+      'TypeError'
     );
   });
 
