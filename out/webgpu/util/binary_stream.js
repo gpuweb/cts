@@ -117,12 +117,12 @@ export default class BinaryStream {
 
   /** writeF64() writes a float64 to the buffer at the next 64-bit aligned offset */
   writeF64(value) {
-    this.view.setFloat64(this.alignedOffset(8), value);
+    this.view.setFloat64(this.alignedOffset(8), value, /* littleEndian */true);
   }
 
   /** readF64() reads a float64 from the buffer at the next 64-bit aligned offset */
   readF64() {
-    return this.view.getFloat64(this.alignedOffset(8));
+    return this.view.getFloat64(this.alignedOffset(8), /* littleEndian */true);
   }
 
   /**
