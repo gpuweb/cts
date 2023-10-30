@@ -18,9 +18,9 @@ export default class BinaryStream {
     this.view = new DataView(buffer);
   }
 
-  /** buffer() returns the stream's buffer sliced to the 8-byte rounded read or write offset */
+  /** buffer() returns the stream's whole buffer */
   buffer(): ArrayBufferLike {
-    return new Uint8Array(this.view.buffer, align(this.offset, 8)).buffer;
+    return this.view.buffer;
   }
 
   /** writeBool() writes a boolean as 255 or 0 to the buffer at the next byte offset */
