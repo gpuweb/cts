@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8540 variants generated from 1989 tests in 446 files -->
+<!-- Prefix: "?q="; 8549 variants generated from 1998 tests in 446 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -43,9 +43,9 @@
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:features,unknown:*'><!-- estimated: 13.600 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:features,known:*'><!-- estimated: 106.007 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limits,unknown:*'><!-- estimated: 0.601 ms -->
-<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limits,supported:*'><!-- estimated: 283.898 ms -->
-<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limit,better_than_supported:*'><!-- estimated: 231.296 ms -->
-<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limit,worse_than_default:*'><!-- estimated: 429.504 ms -->
+<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limits,supported:*'><!-- estimated: 293.056 ms -->
+<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limit,better_than_supported:*'><!-- estimated: 238.524 ms -->
+<meta name=variant content='?q=webgpu:api,operation,adapter,requestDevice:limit,worse_than_default:*'><!-- estimated: 442.926 ms -->
 <meta name=variant content='?q=webgpu:api,operation,buffers,map:mapAsync,write:*'><!-- estimated: 674.424 ms -->
 <meta name=variant content='?q=webgpu:api,operation,buffers,map:mapAsync,write,unchanged_ranges_preserved:*'><!-- estimated: 208.800 ms -->
 <meta name=variant content='?q=webgpu:api,operation,buffers,map:mapAsync,read:*'><!-- estimated: 1538.316 ms -->
@@ -1890,9 +1890,11 @@
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:canvas_configuration_view_formats:*'><!-- estimated: 994.840 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:depth_stencil_state:*'><!-- estimated: 31.402 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:render_bundle_encoder_descriptor_depth_stencil_format:*'><!-- estimated: 1.600 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,features,texture_formats:check_capability_guarantees:*'><!-- estimated: 55.901 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindGroups:createPipelineLayout,at_over:*'><!-- estimated: 93.100 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindGroups:createPipeline,at_over:*'><!-- estimated: 659.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindGroups:setBindGroup,at_over:*'><!-- estimated: 299.520 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindGroups:validate,maxBindGroupsPlusVertexBuffers:*'><!-- estimated: 11.200 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:createBindGroupLayout,at_over:*'><!-- estimated: 124.410 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:createPipeline,at_over:*'><!-- estimated: 670.740 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:validate:*'><!-- estimated: 12.401 ms -->
@@ -1911,14 +1913,18 @@
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxColorAttachments:validate,kMaxColorAttachmentsToTest:*'><!-- estimated: 1.101 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeInvocationsPerWorkgroup:createComputePipeline,at_over:*'><!-- estimated: 274.700 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeX:createComputePipeline,at_over:*'><!-- estimated: 289.300 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeX:validate,maxComputeInvocationsPerWorkgroup:*'><!-- estimated: 2.701 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeY:createComputePipeline,at_over:*'><!-- estimated: 282.620 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeY:validate,maxComputeInvocationsPerWorkgroup:*'><!-- estimated: 2.700 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeZ:createComputePipeline,at_over:*'><!-- estimated: 298.400 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupSizeZ:validate,maxComputeInvocationsPerWorkgroup:*'><!-- estimated: 2.601 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupStorageSize:createComputePipeline,at_over:limitTest="atDefault";*'><!-- estimated: 1777.332 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupStorageSize:createComputePipeline,at_over:limitTest="underDefault";*'><!-- estimated: 1777.332 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupStorageSize:createComputePipeline,at_over:limitTest="betweenDefaultAndMaximum";*'><!-- estimated: 1777.332 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupStorageSize:createComputePipeline,at_over:limitTest="atMaximum";*'><!-- estimated: 1777.332 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupStorageSize:createComputePipeline,at_over:limitTest="overMaximum";*'><!-- estimated: 1777.332 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupsPerDimension:dispatchWorkgroups,at_over:*'><!-- estimated: 798.600 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxComputeWorkgroupsPerDimension:validate:*'><!-- estimated: 138.900 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxDynamicStorageBuffersPerPipelineLayout:createBindGroupLayout,at_over:*'><!-- estimated: 470.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxDynamicUniformBuffersPerPipelineLayout:createBindGroupLayout,at_over:*'><!-- estimated: 718.760 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxInterStageShaderComponents:createRenderPipeline,at_over:limitTest="atDefault";*'><!-- estimated: 1653.248 ms -->
@@ -1978,6 +1984,7 @@
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxSamplersPerShaderStage:createPipeline,at_over:limitTest="atMaximum";*'><!-- estimated: 1435.080 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxSamplersPerShaderStage:createPipeline,at_over:limitTest="overMaximum";*'><!-- estimated: 1435.080 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxStorageBufferBindingSize:createBindGroup,at_over:*'><!-- estimated: 1036.200 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxStorageBufferBindingSize:validate:*'><!-- estimated: 132.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxStorageBufferBindingSize:validate,maxBufferSize:*'><!-- estimated: 0.900 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxStorageBuffersPerShaderStage:createBindGroupLayout,at_over:*'><!-- estimated: 1917.300 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxStorageBuffersPerShaderStage:createPipelineLayout,at_over:limitTest="atDefault";*'><!-- estimated: 420.588 ms -->
@@ -2010,8 +2017,10 @@
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxUniformBuffersPerShaderStage:createPipeline,at_over:limitTest="overMaximum";*'><!-- estimated: 1092.600 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexAttributes:createRenderPipeline,at_over:*'><!-- estimated: 181.800 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBufferArrayStride:createRenderPipeline,at_over:*'><!-- estimated: 201.200 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBufferArrayStride:validate:*'><!-- estimated: 139.500 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:createRenderPipeline,at_over:*'><!-- estimated: 356.120 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:setVertexBuffer,at_over:*'><!-- estimated: 153.900 ms -->
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:validate,maxBindGroupsPlusVertexBuffers:*'><!-- estimated: 153.900 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:createBindGroup,at_over:*'><!-- estimated: 96.500 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:setBindGroup,at_over:*'><!-- estimated: 89.310 ms -->
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:validate,powerOf2:*'><!-- estimated: 2.400 ms -->

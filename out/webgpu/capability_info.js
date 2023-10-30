@@ -667,6 +667,7 @@ kLimitInfoData] =
   'maxTextureArrayLayers': [, 256, 256],
 
   'maxBindGroups': [, 4, 4],
+  'maxBindGroupsPlusVertexBuffers': [, 24, 24],
   'maxBindingsPerBindGroup': [, 1000, 1000],
   'maxDynamicUniformBuffersPerPipelineLayout': [, 8, 8],
   'maxDynamicStorageBuffersPerPipelineLayout': [, 4, 4],

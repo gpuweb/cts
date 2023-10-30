@@ -90,4 +90,12 @@ fn(async (t) => {
   });
 
 });
+
+g.test('validate,maxBindGroupsPlusVertexBuffers').
+desc(`Test that ${limit} <= maxBindGroupsPlusVertexBuffers`).
+fn((t) => {
+  const { adapter, defaultLimit, adapterLimit } = t;
+  t.expect(defaultLimit <= t.getDefaultLimit('maxBindGroupsPlusVertexBuffers'));
+  t.expect(adapterLimit <= adapter.limits.maxBindGroupsPlusVertexBuffers);
+});
 //# sourceMappingURL=maxVertexBuffers.spec.js.map

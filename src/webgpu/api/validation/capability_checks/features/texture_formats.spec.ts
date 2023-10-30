@@ -3,6 +3,7 @@ Tests for capability checking for features enabling optional texture formats.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { getGPU } from '../../../../../common/util/navigator_gpu.js';
 import { assert } from '../../../../../common/util/util.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../../../format_info.js';
 import { kAllCanvasTypes, createCanvas } from '../../../../util/create_elements.js';
@@ -436,4 +437,19 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
         depthStencilFormat: format,
       });
     });
+  });
+
+g.test('check_capability_guarantees')
+  .desc(
+    `check "texture-compression-bc" is supported or both "texture-compression-etc2" and "texture-compression-astc" are supported.`
+  )
+  .fn(async t => {
+    const adapter = await getGPU(t.rec).requestAdapter();
+    assert(adapter !== null);
+
+    const features = adapter.features;
+    t.expect(
+      features.has('texture-compression-bc') ||
+        (features.has('texture-compression-etc2') && features.has('texture-compression-astc'))
+    );
   });
