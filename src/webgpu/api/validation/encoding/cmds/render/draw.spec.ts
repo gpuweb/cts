@@ -404,10 +404,15 @@ success/error as expected. Such set of buffer parameters should include cases li
     u
       // type of draw call
       .combine('type', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
-      // the state of vertex step mode vertex buffer bound size
-      .combine('VBSize', ['zero', 'exile', 'enough'] as const)
-      // the state of instance step mode vertex buffer bound size
-      .combine('IBSize', ['zero', 'exile', 'enough'] as const)
+      // VBSize: the state of vertex step mode vertex buffer bound size
+      // IBSize: the state of instance step mode vertex buffer bound size
+      .combineWithParams([
+        { VBSize: 'exact', IBSize: 'exact' },
+        { VBSize: 'zero', IBSize: 'exact' },
+        { VBSize: 'oneTooSmall', IBSize: 'exact' },
+        { VBSize: 'exact', IBSize: 'zero' },
+        { VBSize: 'exact', IBSize: 'oneTooSmall' },
+      ] as const)
       // the state of array stride
       .combine('AStride', ['zero', 'exact', 'oversize'] as const)
       .beginSubcases()
@@ -473,7 +478,7 @@ success/error as expected. Such set of buffer parameters should include cases li
     }
 
     const calcSetBufferSize = (
-      boundBufferSizeState: 'zero' | 'exile' | 'enough',
+      boundBufferSizeState: 'zero' | 'oneTooSmall' | 'exact',
       strideCount: number
     ): number => {
       let requiredBufferSize: number;
@@ -489,11 +494,11 @@ success/error as expected. Such set of buffer parameters should include cases li
           setBufferSize = 0;
           break;
         }
-        case 'exile': {
+        case 'oneTooSmall': {
           setBufferSize = requiredBufferSize - 1;
           break;
         }
-        case 'enough': {
+        case 'exact': {
           setBufferSize = requiredBufferSize;
           break;
         }
@@ -580,11 +585,11 @@ success/error as expected. Such set of buffer parameters should include cases li
         }
 
         const isVertexBufferOOB =
-          boundVertexBufferSizeState !== 'enough' &&
+          boundVertexBufferSizeState !== 'exact' &&
           drawType === 'draw' && // drawIndirect, drawIndexed, and drawIndexedIndirect do not validate vertex step mode buffer
           !zeroVertexStrideCount; // vertex step mode buffer never OOB if stride count = 0
         const isInstanceBufferOOB =
-          boundInstanceBufferSizeState !== 'enough' &&
+          boundInstanceBufferSizeState !== 'exact' &&
           (drawType === 'draw' || drawType === 'drawIndexed') && // drawIndirect and drawIndexedIndirect do not validate instance step mode buffer
           !zeroInstanceStrideCount; // vertex step mode buffer never OOB if stride count = 0
         const isFinishSuccess = !isVertexBufferOOB && !isInstanceBufferOOB;
