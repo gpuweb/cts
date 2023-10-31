@@ -197,6 +197,13 @@ interface CheckElementsFailOpts {
   predicatePrinter?: CheckElementsSupplementalTableRows;
 }
 
+/**
+ * Implements the failure case of some checkElementsX helpers above. This allows those functions to
+ * implement their checks directly without too many function indirections in between.
+ *
+ * Note: Separating this into its own function significantly speeds up the non-error case in
+ * Chromium (though this may be V8-specific behavior).
+ */
 function failCheckElements({
   actual,
   failedElements,
