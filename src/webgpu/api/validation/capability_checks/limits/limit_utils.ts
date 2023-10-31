@@ -564,12 +564,12 @@ export class LimitTestsImpl extends GPUTestBase {
     expectedName: string,
     p: Promise<unknown>,
     shouldReject: boolean,
-    msg?: string
+    message?: string
   ): Promise<void> {
     if (shouldReject) {
-      this.shouldReject(expectedName, p, { message: msg });
+      this.shouldReject(expectedName, p, { message });
     } else {
-      this.shouldResolve(p, msg);
+      this.shouldResolve(p, message);
     }
 
     // We need to explicitly wait for the promise because the device may be
