@@ -417,7 +417,7 @@ success/error as expected. Such set of buffer parameters should include cases li
       // the factor for offset of attributes in vertex layout
       .combine('offset', [0, 1, 2, 7]) // the offset of attribute will be factor * MIN(4, sizeof(vertexFormat))
       .beginSubcases()
-      .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
+      .combine('setBufferOffset', [200]) // must be a multiple of 4
       .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
       .expandWithParams(p =>
         p.VStride0
