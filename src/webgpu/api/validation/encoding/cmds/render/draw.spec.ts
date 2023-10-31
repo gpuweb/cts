@@ -419,12 +419,28 @@ success/error as expected. Such set of buffer parameters should include cases li
       .beginSubcases()
       .combine('setBufferOffset', [0, 200]) // must be a multiple of 4
       .combine('attributeFormat', ['snorm8x2', 'float32', 'float16x4'] as GPUVertexFormat[])
-      .combine('vertexCount', [0, 1, 10000])
-      .combine('firstVertex', [0, 10000])
-      .filter(p => p.VStride0 === (p.firstVertex + p.vertexCount === 0))
-      .combine('instanceCount', [0, 1, 10000])
-      .combine('firstInstance', [0, 10000])
-      .filter(p => p.IStride0 === (p.firstInstance + p.instanceCount === 0))
+      .expandWithParams(p =>
+        p.VStride0
+          ? [{ firstVertex: 0, vertexCount: 0 }]
+          : [
+              { firstVertex: 0, vertexCount: 1 },
+              { firstVertex: 0, vertexCount: 10000 },
+              { firstVertex: 10000, vertexCount: 0 },
+              { firstVertex: 10000, vertexCount: 1 },
+              { firstVertex: 10000, vertexCount: 10000 },
+            ]
+      )
+      .expandWithParams(p =>
+        p.IStride0
+          ? [{ firstInstance: 0, instanceCount: 0 }]
+          : [
+              { firstInstance: 0, instanceCount: 1 },
+              { firstInstance: 0, instanceCount: 10000 },
+              { firstInstance: 10000, instanceCount: 0 },
+              { firstInstance: 10000, instanceCount: 1 },
+              { firstInstance: 10000, instanceCount: 10000 },
+            ]
+      )
       .unless(p => p.vertexCount === 10000 && p.instanceCount === 10000)
   )
   .fn(t => {
