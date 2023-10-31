@@ -252,7 +252,8 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.expectErrorValue(expectedName, ex, niceStack);
         if (!allowMissingStack) {
           if (!(ex instanceof Error && typeof ex.stack === 'string')) {
-            niceStack.message = 'rejected as expected, but missing stack' + m;
+            const exMessage = ex instanceof Error ? ex.message : '?';
+            niceStack.message = `rejected as expected, but missing stack (${exMessage})${m}`;
             this.rec.expectationFailed(niceStack);
           }
         }
