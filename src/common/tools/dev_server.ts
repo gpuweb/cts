@@ -179,10 +179,10 @@ app.get('/out/**/*.js', async (req, res, next) => {
 app.use('/out', serveIndex(path.resolve(srcDir, '../src')));
 app.use('/out', express.static(path.resolve(srcDir, '../src')));
 
-(async () => {
+void (async () => {
   let host = '127.0.0.1';
   if (process.argv.length >= 3) {
-    if (process.argv.length != 3) usage(1);
+    if (process.argv.length !== 3) usage(1);
     if (process.argv[2] === '0.0.0.0') {
       host = '0.0.0.0';
     } else {
