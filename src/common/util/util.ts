@@ -65,7 +65,7 @@ export async function assertReject(
     // Asserted as expected
     if (checkForStackProperty) {
       const m = message ? ` (${message})` : '';
-      assert(ex instanceof Error && typeof ex.stack === 'string', 'missing stack property' + m);
+      assert(ex instanceof Error && typeof ex.stack === 'string', 'threw as expected, but missing stack' + m);
     }
   }
 }

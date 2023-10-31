@@ -249,7 +249,6 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         niceStack.message = 'DID NOT REJECT' + m;
         this.rec.expectationFailed(niceStack);
       } catch (ex) {
-        niceStack.message = 'rejected as expected, but wrong name' + m;
         this.expectErrorValue(expectedName, ex, niceStack);
         if (checkForStackProperty) {
           if (!(ex instanceof Error && typeof ex.stack === 'string')) {
@@ -287,7 +286,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.expectErrorValue(expectedError, ex, new Error(m));
         if (checkForStackProperty) {
           if (!(ex instanceof Error && typeof ex.stack === 'string')) {
-            this.rec.expectationFailed(new Error('missing stack' + m));
+            this.rec.expectationFailed(new Error('threw as expected, but missing stack' + m));
           }
         }
       }
