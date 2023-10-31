@@ -378,10 +378,10 @@ class DeviceHolder {
       await this.device.queue.onSubmittedWorkDone();
     }
 
-    await assertReject(
-    this.device.popErrorScope(),
-    'There was an extra error scope on the stack after a test');
-
+    await assertReject('OperationError', this.device.popErrorScope(), {
+      allowMissingStack: true,
+      message: 'There was an extra error scope on the stack after a test'
+    });
 
     if (gpuOutOfMemoryError !== null) {
       assert(gpuOutOfMemoryError instanceof GPUOutOfMemoryError);

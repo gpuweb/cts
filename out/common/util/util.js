@@ -47,17 +47,31 @@ export function assertOK(value) {
   return value;
 }
 
+/** Options for assertReject, shouldReject, and friends. */
+
+
 /**
  * Resolves if the provided promise rejects; rejects if it does not.
  */
-export async function assertReject(p, msg) {
+export async function assertReject(
+expectedName,
+p,
+{ allowMissingStack = false, message } = {})
+{
   try {
     await p;
-    unreachable(msg);
+    unreachable(message);
   } catch (ex) {
+    // Asserted as expected
+    if (!allowMissingStack) {
+      const m = message ? ` (${message})` : '';
+      assert(
+      ex instanceof Error && typeof ex.stack === 'string',
+      'threw as expected, but missing stack' + m);
 
-    // Assertion OK
-  }}
+    }
+  }
+}
 
 /**
  * Assert this code is unreachable. Unconditionally throws an `Error`.

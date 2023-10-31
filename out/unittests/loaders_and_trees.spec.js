@@ -703,7 +703,10 @@ includeEmptySubtrees = false)
     subqueriesToExpand: expectations
   });
   if (expectedResult === 'throws') {
-    t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
+    t.shouldReject('Error', treePromise, {
+      // Some errors here use StacklessError to print nicer command line outputs.
+      allowMissingStack: true
+    });
     return;
   }
   const tree = await treePromise;

@@ -330,7 +330,9 @@ export class LimitTestsImpl extends GPUTestBase {
   requiredFeatures)
   {
     if (shouldReject) {
-      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+        allowMissingStack: true
+      });
       return undefined;
     } else {
       return await adapter.requestDevice({ requiredLimits, requiredFeatures });
@@ -562,12 +564,12 @@ export class LimitTestsImpl extends GPUTestBase {
   expectedName,
   p,
   shouldReject,
-  msg)
+  message)
   {
     if (shouldReject) {
-      this.shouldReject(expectedName, p, msg);
+      this.shouldReject(expectedName, p, { message });
     } else {
-      this.shouldResolve(p, msg);
+      this.shouldResolve(p, message);
     }
 
     // We need to explicitly wait for the promise because the device may be

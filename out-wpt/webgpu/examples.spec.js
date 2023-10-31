@@ -48,7 +48,7 @@ g.test('basic').fn(t => {
       throw new TypeError();
     },
     // Log message.
-    'function should throw Error'
+    { message: 'function should throw Error' }
   );
 });
 
@@ -60,17 +60,17 @@ g.test('basic,async').fn(t => {
     // Promise expected to reject.
     Promise.reject(new TypeError()),
     // Log message.
-    'Promise.reject should reject'
+    { message: 'Promise.reject should reject' }
   );
 
-  // Promise can also be an IIFE.
+  // Promise can also be an IIFE (immediately-invoked function expression).
   t.shouldReject(
     'TypeError',
 
     (async () => {
       throw new TypeError();
     })(),
-    'Promise.reject should reject'
+    { message: 'Promise.reject should reject' }
   );
 });
 

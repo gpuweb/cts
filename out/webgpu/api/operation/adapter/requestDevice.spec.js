@@ -118,6 +118,7 @@ fn(async (t) => {
       // Cause a type error by requesting with an unknown feature.
       if (awaitInitialError) {
         await assertReject(
+        'TypeError',
         adapter.requestDevice({ requiredFeatures: ['unknown-feature'] }));
 
       } else {
@@ -131,6 +132,7 @@ fn(async (t) => {
       // Cause an operation error by requesting with an alignment limit that is not a power of 2.
       if (awaitInitialError) {
         await assertReject(
+        'OperationError',
         adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } }));
 
       } else {

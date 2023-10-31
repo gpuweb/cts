@@ -113,7 +113,10 @@ g.test('stale')
       case 'TypeError':
         // Cause a type error by requesting with an unknown feature.
         if (awaitInitialError) {
-          await assertReject(adapter.requestDevice({ requiredFeatures: ['unknown-feature'] }));
+          await assertReject(
+            'TypeError',
+            adapter.requestDevice({ requiredFeatures: ['unknown-feature'] })
+          );
         } else {
           t.shouldReject(
             'TypeError',
@@ -125,6 +128,7 @@ g.test('stale')
         // Cause an operation error by requesting with an alignment limit that is not a power of 2.
         if (awaitInitialError) {
           await assertReject(
+            'OperationError',
             adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
           );
         } else {

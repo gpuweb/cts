@@ -287,7 +287,9 @@ export class LimitTestsImpl extends GPUTestBase {
 
   async requestDeviceWithLimits(adapter, requiredLimits, shouldReject, requiredFeatures) {
     if (shouldReject) {
-      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));
+      this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
+        allowMissingStack: true,
+      });
       return undefined;
     } else {
       return await adapter.requestDevice({ requiredLimits, requiredFeatures });
@@ -486,11 +488,11 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 
   /** Expect that the provided promise rejects, with the provided exception name. */
-  async shouldRejectConditionally(expectedName, p, shouldReject, msg) {
+  async shouldRejectConditionally(expectedName, p, shouldReject, message) {
     if (shouldReject) {
-      this.shouldReject(expectedName, p, msg);
+      this.shouldReject(expectedName, p, { message });
     } else {
-      this.shouldResolve(p, msg);
+      this.shouldResolve(p, message);
     }
 
     // We need to explicitly wait for the promise because the device may be

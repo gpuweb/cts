@@ -274,6 +274,7 @@ desc(
 
 params((u) =>
 u.
+combine('isAsync', [false, true]).
 combine('format', kOptionalTextureFormats).
 filter((t) => !!kTextureFormatInfo[t.format].colorRender).
 combine('enable_required_feature', [true, false])).
@@ -287,34 +288,37 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  const { format, enable_required_feature } = t.params;
+  const { isAsync, format, enable_required_feature } = t.params;
 
-  t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-    t.device.createRenderPipeline({
-      layout: 'auto',
-      vertex: {
-        module: t.device.createShaderModule({
-          code: `
+  t.doCreateRenderPipelineTest(
+  isAsync,
+  enable_required_feature,
+  {
+    layout: 'auto',
+    vertex: {
+      module: t.device.createShaderModule({
+        code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main'
-      },
-      fragment: {
-        module: t.device.createShaderModule({
-          code: `
+      }),
+      entryPoint: 'main'
+    },
+    fragment: {
+      module: t.device.createShaderModule({
+        code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main',
-        targets: [{ format }]
-      }
-    });
-  });
+      }),
+      entryPoint: 'main',
+      targets: [{ format }]
+    }
+  },
+  'TypeError');
+
 });
 
 g.test('depth_stencil_state').
@@ -326,6 +330,7 @@ desc(
 
 params((u) =>
 u.
+combine('isAsync', [false, true]).
 combine('format', kOptionalTextureFormats).
 filter((t) => !!(kTextureFormatInfo[t.format].depth || kTextureFormatInfo[t.format].stencil)).
 combine('enable_required_feature', [true, false])).
@@ -339,39 +344,42 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  const { format, enable_required_feature } = t.params;
+  const { isAsync, format, enable_required_feature } = t.params;
 
-  t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
-    t.device.createRenderPipeline({
-      layout: 'auto',
-      vertex: {
-        module: t.device.createShaderModule({
-          code: `
+  t.doCreateRenderPipelineTest(
+  isAsync,
+  enable_required_feature,
+  {
+    layout: 'auto',
+    vertex: {
+      module: t.device.createShaderModule({
+        code: `
               @vertex
               fn main()-> @builtin(position) vec4<f32> {
                 return vec4<f32>(0.0, 0.0, 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main'
-      },
-      depthStencil: {
-        format,
-        depthCompare: 'always',
-        depthWriteEnabled: false
-      },
-      fragment: {
-        module: t.device.createShaderModule({
-          code: `
+      }),
+      entryPoint: 'main'
+    },
+    depthStencil: {
+      format,
+      depthCompare: 'always',
+      depthWriteEnabled: false
+    },
+    fragment: {
+      module: t.device.createShaderModule({
+        code: `
               @fragment
               fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm' }]
-      }
-    });
-  });
+      }),
+      entryPoint: 'main',
+      targets: [{ format: 'rgba8unorm' }]
+    }
+  },
+  'TypeError');
+
 });
 
 g.test('render_bundle_encoder_descriptor_color_format').

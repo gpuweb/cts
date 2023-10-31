@@ -237,16 +237,26 @@ export class Fixture {
   }
 
   /** Expect that the provided promise rejects, with the provided exception name. */
-  shouldReject(expectedName, p, msg) {
+  shouldReject(
+  expectedName,
+  p,
+  { allowMissingStack = false, message } = {})
+  {
     this.eventualAsyncExpectation(async (niceStack) => {
-      const m = msg ? ': ' + msg : '';
+      const m = message ? ': ' + message : '';
       try {
         await p;
         niceStack.message = 'DID NOT REJECT' + m;
         this.rec.expectationFailed(niceStack);
       } catch (ex) {
-        niceStack.message = 'rejected as expected' + m;
         this.expectErrorValue(expectedName, ex, niceStack);
+        if (!allowMissingStack) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            const exMessage = ex instanceof Error ? ex.message : '?';
+            niceStack.message = `rejected as expected, but missing stack (${exMessage})${m}`;
+            this.rec.expectationFailed(niceStack);
+          }
+        }
       }
     });
   }
@@ -257,8 +267,12 @@ export class Fixture {
    *
    * MAINTENANCE_TODO: Change to `string | false` so the exception name is always checked.
    */
-  shouldThrow(expectedError, fn, msg) {
-    const m = msg ? ': ' + msg : '';
+  shouldThrow(
+  expectedError,
+  fn,
+  { allowMissingStack = false, message } = {})
+  {
+    const m = message ? ': ' + message : '';
     try {
       fn();
       if (expectedError === false) {
@@ -271,6 +285,11 @@ export class Fixture {
         this.rec.expectationFailed(new Error('threw unexpectedly' + m));
       } else {
         this.expectErrorValue(expectedError, ex, new Error(m));
+        if (!allowMissingStack) {
+          if (!(ex instanceof Error && typeof ex.stack === 'string')) {
+            this.rec.expectationFailed(new Error('threw as expected, but missing stack' + m));
+          }
+        }
       }
     }
   }
