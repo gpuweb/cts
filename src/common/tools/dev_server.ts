@@ -123,7 +123,7 @@ app.use('/out-wpt', express.static(path.resolve(srcDir, '../out-wpt')));
 app.use('/docs/tsdoc', express.static(path.resolve(srcDir, '../docs/tsdoc')));
 
 // Serve a suite's listing.js file by crawling the filesystem for all tests.
-app.get('/out/:suite/listing.js', async (req, res, next) => {
+app.get('/out/:suite([a-zA-Z0-9_-]+)/listing.js', async (req, res, next) => {
   const suite = req.params['suite'];
 
   if (listingCache.has(suite)) {
