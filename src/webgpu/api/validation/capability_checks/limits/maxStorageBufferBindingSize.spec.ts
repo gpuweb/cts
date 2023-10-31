@@ -144,6 +144,14 @@ g.test('createBindGroup,at_over')
     );
   });
 
+g.test('validate')
+  .desc(`Test that ${limit} is a multiple of 4 bytes`)
+  .fn(t => {
+    const { defaultLimit, adapterLimit } = t;
+    t.expect(defaultLimit % 4 === 0);
+    t.expect(adapterLimit % 4 === 0);
+  });
+
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
   .fn(t => {
