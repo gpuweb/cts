@@ -135,14 +135,10 @@ export function checkElementsPassPredicate(
   predicate: CheckElementsPredicate,
   { predicatePrinter }: { predicatePrinter?: CheckElementsSupplementalTableRows }
 ): ErrorWithExtra | undefined {
-  const size = actual.length;
-  const ctor = actual.constructor as TypedArrayBufferViewConstructor;
-  const printAsFloat = ctor === Float16Array || ctor === Float32Array || ctor === Float64Array;
-
   let failedElementsFirstMaybe: number | undefined = undefined;
   /** Sparse array with `true` for elements that failed. */
   const failedElements: (true | undefined)[] = [];
-  for (let i = 0; i < size; ++i) {
+  for (let i = 0; i < actual.length; ++i) {
     if (!predicate(i, actual[i])) {
       failedElementsFirstMaybe ??= i;
       failedElements[i] = true;
@@ -152,7 +148,28 @@ export function checkElementsPassPredicate(
   if (failedElementsFirstMaybe === undefined) {
     return undefined;
   }
+
   const failedElementsFirst = failedElementsFirstMaybe;
+  return failCheckElements({ actual, failedElements, failedElementsFirst, predicatePrinter });
+}
+
+interface CheckElementsFailOpts {
+  actual: TypedArrayBufferView;
+  failedElements: (true | undefined)[];
+  failedElementsFirst: number;
+  predicatePrinter?: CheckElementsSupplementalTableRows;
+}
+
+function failCheckElements({
+  actual,
+  failedElements,
+  failedElementsFirst,
+  predicatePrinter,
+}: CheckElementsFailOpts): ErrorWithExtra {
+  const size = actual.length;
+  const ctor = actual.constructor as TypedArrayBufferViewConstructor;
+  const printAsFloat = ctor === Float16Array || ctor === Float32Array || ctor === Float64Array;
+
   const failedElementsLast = failedElements.length - 1;
 
   // Include one extra non-failed element at the beginning and end (if they exist), for context.
