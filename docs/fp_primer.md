@@ -700,14 +700,14 @@ f32 values.
 
 AbstractFloat internally is defined as a f64, and this applies for exact and
 correctly rounded accuracies. Thus, correctly rounded refers to the nearest f64
-values. Where AbstractFloat is different is for ULP and absolute errors. Reading
+values. However, AbstractFloat differs for ULP and absolute errors. Reading
 the spec strictly, these all have unbounded accuracies, but is recommended that
 their accuracies be at least as good as the f32 equivalent.
 
 The difference between f32 and f64 ULP at a specific value X are significant, so
 at least as good as f32 requirement is always less strict than if it was
 calculated in terms of f64. Similarly, for absolute accuracies the interval
-`[x - episilon, x + episilon]` is always equal or greater if calculated as f32s
+`[x - epsilon, x + epsilon]` is always equal or wider if calculated as f32s
 vs f64s.
 
 If an inherited accuracy is only defined in terms of correctly rounded
@@ -715,8 +715,8 @@ accuracies, then the interval is calculated in terms of f64s. If any of the
 defining accuracies are ULP or absolute errors, then the result falls into the
 unbounded accuracy, but recommended to be at least as good as f32 bucket.
 
-What this means from a CTS implementation is that for these at least as good as
-f32 error intervals, if the infinitely accurate result is finite for f32, then
+What this means from a CTS implementation is that for these "at least as good as
+f32" error intervals, if the infinitely accurate result is finite for f32, then
 the error interval for f64 is just the f32 interval. If the result is not finite
 for f32, then the accuracy interval is just the unbounded interval.
 
