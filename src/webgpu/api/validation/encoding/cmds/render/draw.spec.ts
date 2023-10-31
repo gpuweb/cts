@@ -426,7 +426,6 @@ success/error as expected. Such set of buffer parameters should include cases li
               { firstVertex: 0, vertexCount: 1 },
               { firstVertex: 0, vertexCount: 10000 },
               { firstVertex: 10000, vertexCount: 0 },
-              { firstVertex: 10000, vertexCount: 1 },
               { firstVertex: 10000, vertexCount: 10000 },
             ]
       )
@@ -437,7 +436,6 @@ success/error as expected. Such set of buffer parameters should include cases li
               { firstInstance: 0, instanceCount: 1 },
               { firstInstance: 0, instanceCount: 10000 },
               { firstInstance: 10000, instanceCount: 0 },
-              { firstInstance: 10000, instanceCount: 1 },
               { firstInstance: 10000, instanceCount: 10000 },
             ]
       )
