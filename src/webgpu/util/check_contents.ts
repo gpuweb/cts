@@ -44,7 +44,9 @@ export function checkElementsEqual(
 ): ErrorWithExtra | undefined {
   assert(actual.constructor === expected.constructor, 'TypedArray type mismatch');
   assert(actual.length === expected.length, 'size mismatch');
-  return checkElementsEqualGenerated(actual, i => expected[i]);
+  return checkElementsPassPredicate(actual, (index, value) => value === expected[index], {
+    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: index => expected[index] }],
+  });
 }
 
 /**
