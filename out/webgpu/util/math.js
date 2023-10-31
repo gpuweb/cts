@@ -2013,13 +2013,9 @@ export function signExtend(n, bits) {
 
 
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToF32Data = new Float32Array(new ArrayBuffer(4));
-
 /** @returns the closest 32-bit floating point value to the input */
 export function quantizeToF32(num) {
-  quantizeToF32Data[0] = num;
-  return quantizeToF32Data[0];
+  return Math.fround(num);
 }
 
 /** @returns the closest 16-bit floating point value to the input */
