@@ -405,9 +405,7 @@ export class ValidationTest extends GPUTest {
       if (_success) {
         this.shouldResolve(this.device.createRenderPipelineAsync(descriptor));
       } else {
-        this.shouldReject(errorTypeName, this.device.createRenderPipelineAsync(descriptor), {
-          checkForStackProperty: true,
-        });
+        this.shouldReject(errorTypeName, this.device.createRenderPipelineAsync(descriptor));
       }
     } else {
       if (errorTypeName === 'GPUPipelineError') {
@@ -415,13 +413,9 @@ export class ValidationTest extends GPUTest {
           this.device.createRenderPipeline(descriptor);
         }, !_success);
       } else {
-        this.shouldThrow(
-          _success ? false : errorTypeName,
-          () => {
-            this.device.createRenderPipeline(descriptor);
-          },
-          { checkForStackProperty: true }
-        );
+        this.shouldThrow(_success ? false : errorTypeName, () => {
+          this.device.createRenderPipeline(descriptor);
+        });
       }
     }
   }
@@ -437,9 +431,7 @@ export class ValidationTest extends GPUTest {
       if (_success) {
         this.shouldResolve(this.device.createComputePipelineAsync(descriptor));
       } else {
-        this.shouldReject(errorTypeName, this.device.createComputePipelineAsync(descriptor), {
-          checkForStackProperty: true,
-        });
+        this.shouldReject(errorTypeName, this.device.createComputePipelineAsync(descriptor));
       }
     } else {
       if (errorTypeName === 'GPUPipelineError') {
@@ -447,13 +439,9 @@ export class ValidationTest extends GPUTest {
           this.device.createComputePipeline(descriptor);
         }, !_success);
       } else {
-        this.shouldThrow(
-          _success ? false : errorTypeName,
-          () => {
-            this.device.createComputePipeline(descriptor);
-          },
-          { checkForStackProperty: true }
-        );
+        this.shouldThrow(_success ? false : errorTypeName, () => {
+          this.device.createComputePipeline(descriptor);
+        });
       }
     }
   }

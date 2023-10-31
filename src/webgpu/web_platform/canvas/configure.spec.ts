@@ -71,24 +71,16 @@ g.test('device')
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Calling configure without a device should throw a TypeError.
-    t.shouldThrow(
-      'TypeError',
-      () => {
-        ctx.configure({
-          format: 'rgba8unorm',
-        } as GPUCanvasConfiguration);
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow('TypeError', () => {
+      ctx.configure({
+        format: 'rgba8unorm',
+      } as GPUCanvasConfiguration);
+    });
 
     // Device is not configured, so getCurrentTexture will throw an InvalidStateError.
-    t.shouldThrow(
-      'InvalidStateError',
-      () => {
-        ctx.getCurrentTexture();
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow('InvalidStateError', () => {
+      ctx.getCurrentTexture();
+    });
 
     // Calling configure with a device should succeed.
     ctx.configure({
@@ -101,13 +93,9 @@ g.test('device')
 
     // Unconfiguring should cause the device to be cleared.
     ctx.unconfigure();
-    t.shouldThrow(
-      'InvalidStateError',
-      () => {
-        ctx.getCurrentTexture();
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow('InvalidStateError', () => {
+      ctx.getCurrentTexture();
+    });
 
     // Should be able to successfully configure again after unconfiguring.
     ctx.configure({

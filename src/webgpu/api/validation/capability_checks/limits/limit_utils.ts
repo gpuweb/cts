@@ -331,7 +331,7 @@ export class LimitTestsImpl extends GPUTestBase {
   ) {
     if (shouldReject) {
       this.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }), {
-        checkForStackProperty: false,
+        allowMissingStack: true,
       });
       return undefined;
     } else {
@@ -567,7 +567,7 @@ export class LimitTestsImpl extends GPUTestBase {
     msg?: string
   ): Promise<void> {
     if (shouldReject) {
-      this.shouldReject(expectedName, p, { checkForStackProperty: true, message: msg });
+      this.shouldReject(expectedName, p, { message: msg });
     } else {
       this.shouldResolve(p, msg);
     }

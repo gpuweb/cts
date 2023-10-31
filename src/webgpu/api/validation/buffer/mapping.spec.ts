@@ -63,13 +63,9 @@ class F extends ValidationTest {
         this.expect(data.byteLength === size);
       }
     } else {
-      this.shouldThrow(
-        'OperationError',
-        () => {
-          buffer.getMappedRange(offset, size);
-        },
-        { checkForStackProperty: true }
-      );
+      this.shouldThrow('OperationError', () => {
+        buffer.getMappedRange(offset, size);
+      });
     }
   }
 

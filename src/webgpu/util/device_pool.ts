@@ -379,6 +379,7 @@ class DeviceHolder implements DeviceProvider {
     }
 
     await assertReject('OperationError', this.device.popErrorScope(), {
+      allowMissingStack: true,
       message: 'There was an extra error scope on the stack after a test',
     });
 

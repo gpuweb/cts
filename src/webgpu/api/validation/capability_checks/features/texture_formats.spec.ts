@@ -36,17 +36,13 @@ g.test('texture_descriptor')
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createTexture({
-          format,
-          size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createTexture({
+        format,
+        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      });
+    });
   });
 
 g.test('texture_descriptor_view_formats')
@@ -71,18 +67,14 @@ g.test('texture_descriptor_view_formats')
     const { format, enable_required_feature } = t.params;
 
     const formatInfo = kTextureFormatInfo[format];
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createTexture({
-          format,
-          size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-          viewFormats: [format],
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createTexture({
+        format,
+        size: [formatInfo.blockWidth, formatInfo.blockHeight, 1] as const,
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+        viewFormats: [format],
+      });
+    });
   });
 
 g.test('texture_view_descriptor')
@@ -128,13 +120,9 @@ g.test('texture_view_descriptor')
       mipLevelCount: 1,
       baseArrayLayer: 0,
     };
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        testTexture.createView(testViewDesc);
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      testTexture.createView(testViewDesc);
+    });
   });
 
 g.test('canvas_configuration')
@@ -177,13 +165,9 @@ g.test('canvas_configuration')
         ctx.configure(canvasConf);
       });
     } else {
-      t.shouldThrow(
-        'TypeError',
-        () => {
-          ctx.configure(canvasConf);
-        },
-        { checkForStackProperty: true }
-      );
+      t.shouldThrow('TypeError', () => {
+        ctx.configure(canvasConf);
+      });
     }
   });
 
@@ -231,13 +215,9 @@ g.test('canvas_configuration_view_formats')
         ctx.configure(canvasConf);
       });
     } else {
-      t.shouldThrow(
-        'TypeError',
-        () => {
-          ctx.configure(canvasConf);
-        },
-        { checkForStackProperty: true }
-      );
+      t.shouldThrow('TypeError', () => {
+        ctx.configure(canvasConf);
+      });
     }
   });
 
@@ -267,23 +247,19 @@ g.test('storage_texture_binding_layout')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createBindGroupLayout({
-          entries: [
-            {
-              binding: 0,
-              visibility: GPUShaderStage.COMPUTE,
-              storageTexture: {
-                format,
-              },
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createBindGroupLayout({
+        entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE,
+            storageTexture: {
+              format,
             },
-          ],
-        });
-      },
-      { checkForStackProperty: true }
-    );
+          },
+        ],
+      });
+    });
   });
 
 g.test('color_target_state')
@@ -431,15 +407,11 @@ g.test('render_bundle_encoder_descriptor_color_format')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createRenderBundleEncoder({
-          colorFormats: [format],
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createRenderBundleEncoder({
+        colorFormats: [format],
+      });
+    });
   });
 
 g.test('render_bundle_encoder_descriptor_depth_stencil_format')
@@ -466,14 +438,10 @@ g.test('render_bundle_encoder_descriptor_depth_stencil_format')
   .fn(t => {
     const { format, enable_required_feature } = t.params;
 
-    t.shouldThrow(
-      enable_required_feature ? false : 'TypeError',
-      () => {
-        t.device.createRenderBundleEncoder({
-          colorFormats: ['rgba8unorm'],
-          depthStencilFormat: format,
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(enable_required_feature ? false : 'TypeError', () => {
+      t.device.createRenderBundleEncoder({
+        colorFormats: ['rgba8unorm'],
+        depthStencilFormat: format,
+      });
+    });
   });

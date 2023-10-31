@@ -187,17 +187,13 @@ class CopyExternalImageToTextureTest extends ValidationTest {
     // copyExternalImageToTexture will generate two types of errors. One is synchronous exceptions;
     // the other is asynchronous validation error scope errors.
     if (exceptionName) {
-      this.shouldThrow(
-        exceptionName,
-        () => {
-          this.device.queue.copyExternalImageToTexture(
-            imageBitmapCopyView,
-            textureCopyView,
-            copySize
-          );
-        },
-        { checkForStackProperty: true }
-      );
+      this.shouldThrow(exceptionName, () => {
+        this.device.queue.copyExternalImageToTexture(
+          imageBitmapCopyView,
+          textureCopyView,
+          copySize
+        );
+      });
     } else {
       this.expectValidationError(() => {
         this.device.queue.copyExternalImageToTexture(

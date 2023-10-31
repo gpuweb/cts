@@ -56,9 +56,7 @@ g.test('postMessage')
     });
 
     if (transfer) {
-      t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]), {
-        checkForStackProperty: true,
-      });
+      t.shouldThrow('TypeError', () => mc.port1.postMessage(ab1, [ab1]));
       // Wait to make sure the postMessage isn't received.
       await new Promise(resolve => timeout(resolve, 100));
     } else {
@@ -87,7 +85,5 @@ g.test('postMessage')
     t.expect(ab1.byteLength === 0, 'after unmap, ab1 should be detached');
 
     // Transferring an already-detached ArrayBuffer is a DataCloneError.
-    t.shouldThrow('DataCloneError', () => mc.port1.postMessage(ab1, [ab1]), {
-      checkForStackProperty: true,
-    });
+    t.shouldThrow('DataCloneError', () => mc.port1.postMessage(ab1, [ab1]));
   });

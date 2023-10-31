@@ -47,7 +47,7 @@ g.test('basic').fn(t => {
       throw new TypeError();
     },
     // Log message.
-    { checkForStackProperty: true, message: 'function should throw Error' }
+    { message: 'function should throw Error' }
   );
 });
 
@@ -59,17 +59,23 @@ g.test('basic,async').fn(t => {
     // Promise expected to reject.
     Promise.reject(new TypeError()),
     // Log message.
-    { checkForStackProperty: true, message: 'Promise.reject should reject' }
+    { message: 'Promise.reject should reject' }
   );
 
-  // Promise can also be an IIFE.
+  // We can skip the check for a stack if it's not important to the test.
+  t.shouldReject('TypeError', Promise.reject(new TypeError()), {
+    allowMissingStack: true,
+    message: 'Promise.reject should reject',
+  });
+
+  // Promise can also be an IIFE (immediately-invoked function expression).
   t.shouldReject(
     'TypeError',
     // eslint-disable-next-line @typescript-eslint/require-await
     (async () => {
       throw new TypeError();
     })(),
-    { checkForStackProperty: true, message: 'Promise.reject should reject' }
+    { message: 'Promise.reject should reject' }
   );
 });
 
@@ -239,17 +245,13 @@ Tests that a BC format passes validation iff the feature is enabled.`
   .fn(t => {
     const { textureCompressionBC } = t.params;
     const shouldError = !textureCompressionBC;
-    t.shouldThrow(
-      shouldError ? 'TypeError' : false,
-      () => {
-        t.device.createTexture({
-          format: 'bc1-rgba-unorm',
-          size: [4, 4, 1],
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(shouldError ? 'TypeError' : false, () => {
+      t.device.createTexture({
+        format: 'bc1-rgba-unorm',
+        size: [4, 4, 1],
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      });
+    });
   });
 
 g.test('gpu,with_texture_compression,etc2')
@@ -269,15 +271,11 @@ Tests that an ETC2 format passes validation iff the feature is enabled.`
     const { textureCompressionETC2 } = t.params;
 
     const shouldError = !textureCompressionETC2;
-    t.shouldThrow(
-      shouldError ? 'TypeError' : false,
-      () => {
-        t.device.createTexture({
-          format: 'etc2-rgb8unorm',
-          size: [4, 4, 1],
-          usage: GPUTextureUsage.TEXTURE_BINDING,
-        });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(shouldError ? 'TypeError' : false, () => {
+      t.device.createTexture({
+        format: 'etc2-rgb8unorm',
+        size: [4, 4, 1],
+        usage: GPUTextureUsage.TEXTURE_BINDING,
+      });
+    });
   });

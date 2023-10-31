@@ -240,7 +240,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   shouldReject(
     expectedName: string,
     p: Promise<unknown>,
-    { checkForStackProperty = false, message }: ExceptionCheckOptions = {}
+    { allowMissingStack = false, message }: ExceptionCheckOptions = {}
   ): void {
     this.eventualAsyncExpectation(async niceStack => {
       const m = message ? ': ' + message : '';
@@ -250,7 +250,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.rec.expectationFailed(niceStack);
       } catch (ex) {
         this.expectErrorValue(expectedName, ex, niceStack);
-        if (checkForStackProperty) {
+        if (!allowMissingStack) {
           if (!(ex instanceof Error && typeof ex.stack === 'string')) {
             niceStack.message = 'rejected as expected, but missing stack' + m;
             this.rec.expectationFailed(niceStack);
@@ -269,7 +269,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
   shouldThrow(
     expectedError: string | boolean,
     fn: () => void,
-    { checkForStackProperty = false, message }: ExceptionCheckOptions = {}
+    { allowMissingStack = false, message }: ExceptionCheckOptions = {}
   ) {
     const m = message ? ': ' + message : '';
     try {
@@ -284,7 +284,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         this.rec.expectationFailed(new Error('threw unexpectedly' + m));
       } else {
         this.expectErrorValue(expectedError, ex, new Error(m));
-        if (checkForStackProperty) {
+        if (!allowMissingStack) {
           if (!(ex instanceof Error && typeof ex.stack === 'string')) {
             this.rec.expectationFailed(new Error('threw as expected, but missing stack' + m));
           }

@@ -38,13 +38,9 @@ g.test('createQuerySet')
     const count = 1;
     const shouldException = type === 'timestamp' && !featureContainsTimestampQuery;
 
-    t.shouldThrow(
-      shouldException ? 'TypeError' : false,
-      () => {
-        t.device.createQuerySet({ type, count });
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(shouldException ? 'TypeError' : false, () => {
+      t.device.createQuerySet({ type, count });
+    });
   });
 
 g.test('writeTimestamp')
@@ -74,11 +70,7 @@ g.test('writeTimestamp')
     });
     const encoder = t.createEncoder('non-pass');
 
-    t.shouldThrow(
-      featureContainsTimestampQuery ? false : 'TypeError',
-      () => {
-        encoder.encoder.writeTimestamp(querySet, 0);
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow(featureContainsTimestampQuery ? false : 'TypeError', () => {
+      encoder.encoder.writeTimestamp(querySet, 0);
+    });
   });

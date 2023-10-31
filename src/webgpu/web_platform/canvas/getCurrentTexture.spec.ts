@@ -59,13 +59,9 @@ g.test('configured')
     assert(ctx instanceof GPUCanvasContext, 'Failed to get WebGPU context from canvas');
 
     // Calling getCurrentTexture prior to configuration should throw an InvalidStateError exception.
-    t.shouldThrow(
-      'InvalidStateError',
-      () => {
-        ctx.getCurrentTexture();
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow('InvalidStateError', () => {
+      ctx.getCurrentTexture();
+    });
 
     // Once the context has been configured getCurrentTexture can be called.
     ctx.configure({
@@ -98,13 +94,9 @@ g.test('configured')
     // Calling getCurrentTexture after calling unconfigure should throw an InvalidStateError exception.
     ctx.unconfigure();
 
-    t.shouldThrow(
-      'InvalidStateError',
-      () => {
-        ctx.getCurrentTexture();
-      },
-      { checkForStackProperty: true }
-    );
+    t.shouldThrow('InvalidStateError', () => {
+      ctx.getCurrentTexture();
+    });
   });
 
 g.test('single_frames')
