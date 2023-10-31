@@ -62,12 +62,6 @@ g.test('basic,async').fn(t => {
     { message: 'Promise.reject should reject' }
   );
 
-  // We can skip the check for a stack if it's not important to the test.
-  t.shouldReject('TypeError', Promise.reject(new TypeError()), {
-    allowMissingStack: true,
-    message: 'Promise.reject should reject',
-  });
-
   // Promise can also be an IIFE (immediately-invoked function expression).
   t.shouldReject(
     'TypeError',
