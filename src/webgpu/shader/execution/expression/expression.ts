@@ -365,7 +365,7 @@ export async function run(
     );
     checkBatch();
     void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
-  }
+  };
 
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
@@ -379,7 +379,7 @@ export async function run(
     }
     batchesInFlight += 1;
 
-    processBatch(batchCases);
+    void processBatch(batchCases);
   }
 }
 
