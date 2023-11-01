@@ -367,6 +367,8 @@ export async function run(
     void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   };
 
+  const pendingBatches = [];
+
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
 
@@ -379,8 +381,10 @@ export async function run(
     }
     batchesInFlight += 1;
 
-    void processBatch(batchCases);
+    pendingBatches.push(processBatch(batchCases));
   }
+
+  await Promise.all(pendingBatches);
 }
 
 /**
