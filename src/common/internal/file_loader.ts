@@ -29,6 +29,9 @@ interface TestFileLoaderEventMap {
   finish: MessageEvent<void>;
 }
 
+// Override the types for addEventListener/removeEventListener so the callbacks can be used as
+// strongly-typed.
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging */
 export interface TestFileLoader extends EventTarget {
   addEventListener<K extends keyof TestFileLoaderEventMap>(
     type: K,
@@ -53,6 +56,7 @@ export interface TestFileLoader extends EventTarget {
 }
 
 // Base class for DefaultTestFileLoader and FakeTestFileLoader.
+/* eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging */
 export abstract class TestFileLoader extends EventTarget {
   abstract listing(suite: string): Promise<TestSuiteListing>;
   protected abstract import(path: string): Promise<SpecFile>;
