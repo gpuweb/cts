@@ -60,15 +60,14 @@ const commandBufferContexts = combineContexts(
  */
 export const kBoundaryInfo: {
   readonly [k in OperationBoundary]: BoundaryInfo;
-} =
-  /* prettier-ignore */ {
+} = {
   'queue-op': {
     contexts: queueContexts,
   },
   'command-buffer': {
     contexts: commandBufferContexts,
   },
-  'pass': {
+  pass: {
     contexts: [
       ['compute-pass-encoder', 'compute-pass-encoder'],
       ['compute-pass-encoder', 'render-pass-encoder'],
@@ -80,9 +79,7 @@ export const kBoundaryInfo: {
     ],
   },
   'execute-bundles': {
-    contexts: [
-      ['render-bundle-encoder', 'render-bundle-encoder'],
-    ]
+    contexts: [['render-bundle-encoder', 'render-bundle-encoder']],
   },
   'render-bundle': {
     contexts: [
@@ -91,12 +88,10 @@ export const kBoundaryInfo: {
       ['render-bundle-encoder', 'render-bundle-encoder'],
     ],
   },
-  'dispatch': {
-    contexts: [
-      ['compute-pass-encoder', 'compute-pass-encoder'],
-    ],
+  dispatch: {
+    contexts: [['compute-pass-encoder', 'compute-pass-encoder']],
   },
-  'draw': {
+  draw: {
     contexts: [
       ['render-pass-encoder', 'render-pass-encoder'],
       ['render-bundle-encoder', 'render-pass-encoder'],
