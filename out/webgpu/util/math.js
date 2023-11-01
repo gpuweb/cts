@@ -2023,22 +2023,32 @@ export function quantizeToF16(num) {
   return hfround(num);
 }
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToI32Data = new Int32Array(new ArrayBuffer(4));
-
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit signed integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToI32(num) {
-  quantizeToI32Data[0] = num;
-  return quantizeToI32Data[0];
+  if (num >= kValue.i32.positive.max) {
+    return kValue.i32.positive.max;
+  }
+  if (num <= kValue.i32.negative.min) {
+    return kValue.i32.negative.min;
+  }
+  return Math.trunc(num);
 }
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToU32Data = new Uint32Array(new ArrayBuffer(4));
-
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit unsigned integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToU32(num) {
-  quantizeToU32Data[0] = num;
-  return quantizeToU32Data[0];
+  if (num >= kValue.u32.max) {
+    return kValue.u32.max;
+  }
+  if (num <= 0) {
+    return 0;
+  }
+  return Math.trunc(num);
 }
 
 /** @returns whether the number is an integer and a power of two */
