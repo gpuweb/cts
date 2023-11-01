@@ -120,7 +120,8 @@ module.exports = function (grunt) {
       },
       'autoformat-out-wpt': {
         cmd: 'node',
-        args: ['node_modules/prettier/bin-prettier', '--loglevel=warn', '--write', 'out-wpt/**/*.js'],
+        // MAINTENANCE_TODO(gpuweb/cts#3128): This autoformat step is broken after a dependencies upgrade.
+        args: ['node_modules/prettier/bin/prettier.cjs', '--log-level=warn', '--write', 'out-wpt/**/*.js'],
       },
       tsdoc: {
         cmd: 'node',
