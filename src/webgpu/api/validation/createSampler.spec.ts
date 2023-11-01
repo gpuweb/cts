@@ -16,12 +16,17 @@ g.test('lodMinAndMaxClamp')
       .combine('lodMaxClamp', [-4e-30, -1, 0, 0.5, 1, 10, 4e30])
   )
   .fn(t => {
-    t.expectValidationError(() => {
-      t.device.createSampler({
-        lodMinClamp: t.params.lodMinClamp,
-        lodMaxClamp: t.params.lodMaxClamp,
-      });
-    }, t.params.lodMinClamp > t.params.lodMaxClamp || t.params.lodMinClamp < 0 || t.params.lodMaxClamp < 0);
+    t.expectValidationError(
+      () => {
+        t.device.createSampler({
+          lodMinClamp: t.params.lodMinClamp,
+          lodMaxClamp: t.params.lodMaxClamp,
+        });
+      },
+      t.params.lodMinClamp > t.params.lodMaxClamp ||
+        t.params.lodMinClamp < 0 ||
+        t.params.lodMaxClamp < 0
+    );
   });
 
 g.test('maxAnisotropy')
@@ -48,12 +53,17 @@ g.test('maxAnisotropy')
       magFilter?: GPUFilterMode;
       mipmapFilter?: GPUFilterMode;
     };
-    t.expectValidationError(() => {
-      t.device.createSampler({
-        minFilter,
-        magFilter,
-        mipmapFilter,
-        maxAnisotropy,
-      });
-    }, maxAnisotropy < 1 || (maxAnisotropy > 1 && !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear')));
+    t.expectValidationError(
+      () => {
+        t.device.createSampler({
+          minFilter,
+          magFilter,
+          mipmapFilter,
+          maxAnisotropy,
+        });
+      },
+      maxAnisotropy < 1 ||
+        (maxAnisotropy > 1 &&
+          !(minFilter === 'linear' && magFilter === 'linear' && mipmapFilter === 'linear'))
+    );
   });

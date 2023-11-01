@@ -309,13 +309,8 @@ drawIndexedIndirect as it is GPU-validated.
       .combine('indexFormat', ['uint16', 'uint32'] as GPUIndexFormat[])
   )
   .fn(t => {
-    const {
-      indexFormat,
-      bindingSizeInElements,
-      bufferSizeInElements,
-      drawIndexCount,
-      drawType,
-    } = t.params;
+    const { indexFormat, bindingSizeInElements, bufferSizeInElements, drawIndexCount, drawType } =
+      t.params;
 
     const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
     const bindingSize = bindingSizeInElements * indexElementSize;
@@ -559,12 +554,8 @@ success/error as expected. Such set of buffer parameters should include cases li
 
           callDraw(t, renderEncoder, drawType, drawParam);
         } else {
-          const {
-            indexFormat,
-            indexCount,
-            firstIndex,
-            indexBufferSize,
-          } = kDefaultParameterForIndexedDraw;
+          const { indexFormat, indexCount, firstIndex, indexBufferSize } =
+            kDefaultParameterForIndexedDraw;
 
           const desc: GPUBufferDescriptor = {
             size: indexBufferSize,

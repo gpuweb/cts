@@ -150,7 +150,7 @@ export class Fixture<S extends SubcaseBatchState = SubcaseBatchState> {
         o instanceof WebGLRenderingContext ||
         o instanceof WebGL2RenderingContext
       ) {
-        this.objectsToCleanUp.push((o as unknown) as DestroyableObject);
+        this.objectsToCleanUp.push(o as unknown as DestroyableObject);
       }
     }
     return o;

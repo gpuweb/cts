@@ -8,7 +8,7 @@ import { kRenderEncodeTypes } from '../../../../../util/command_buffer_maker.js'
 import { CompatibilityTest } from '../../../../compatibility_test.js';
 
 const kTextureTypes = ['regular', 'storage'];
-type TextureType = typeof kTextureTypes[number];
+type TextureType = (typeof kTextureTypes)[number];
 
 function getTextureTypeWGSL(textureType: TextureType) {
   return textureType === 'storage' ? 'texture_storage_2d<rgba8unorm, write>' : 'texture_2d<f32>';

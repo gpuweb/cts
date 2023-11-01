@@ -20,8 +20,8 @@ export const kAllReadOps = [
   'b2t-copy',
 ] as const;
 
-export type ReadOp = typeof kAllReadOps[number];
-export type WriteOp = typeof kAllWriteOps[number];
+export type ReadOp = (typeof kAllReadOps)[number];
+export type WriteOp = (typeof kAllWriteOps)[number];
 
 export type Op = ReadOp | WriteOp;
 
@@ -31,7 +31,8 @@ interface OpInfo {
 
 const kOpInfo: {
   readonly [k in Op]: OpInfo;
-} = /* prettier-ignore */ {
+} =
+  /* prettier-ignore */ {
   'write-buffer': {
     contexts: [ 'queue' ],
   },

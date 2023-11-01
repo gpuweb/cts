@@ -25,9 +25,9 @@ class ParamsTest extends UnitTest {
     exp: CaseSubcaseIterable<{}, {}>,
     caseFilter: TestParams | null = null
   ): void {
-    const a = Array.from(
-      builderIterateCasesWithSubcases(act, caseFilter)
-    ).map(([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]);
+    const a = Array.from(builderIterateCasesWithSubcases(act, caseFilter)).map(
+      ([caseP, subcases]) => [caseP, subcases ? Array.from(subcases) : undefined]
+    );
     const e = Array.from(exp);
     this.expect(
       objectEquals(a, e),

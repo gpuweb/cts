@@ -12,16 +12,16 @@ export const kCreatePipelineTypes = [
   'createRenderPipelineWithFragmentStage',
   'createComputePipeline',
 ] as const;
-export type CreatePipelineType = typeof kCreatePipelineTypes[number];
+export type CreatePipelineType = (typeof kCreatePipelineTypes)[number];
 
 export const kRenderEncoderTypes = ['render', 'renderBundle'] as const;
-export type RenderEncoderType = typeof kRenderEncoderTypes[number];
+export type RenderEncoderType = (typeof kRenderEncoderTypes)[number];
 
 export const kEncoderTypes = ['compute', 'render', 'renderBundle'] as const;
-export type EncoderType = typeof kEncoderTypes[number];
+export type EncoderType = (typeof kEncoderTypes)[number];
 
 export const kBindGroupTests = ['sameGroup', 'differentGroups'] as const;
-export type BindGroupTest = typeof kBindGroupTests[number];
+export type BindGroupTest = (typeof kBindGroupTests)[number];
 
 export const kBindingCombinations = [
   'vertex',
@@ -30,7 +30,7 @@ export const kBindingCombinations = [
   'vertexAndFragmentWithPossibleFragmentStageOverflow',
   'compute',
 ] as const;
-export type BindingCombination = typeof kBindingCombinations[number];
+export type BindingCombination = (typeof kBindingCombinations)[number];
 
 export function getPipelineTypeForBindingCombination(bindingCombination: BindingCombination) {
   switch (bindingCombination) {
@@ -201,11 +201,11 @@ export function getPerStageWGSLForBindingCombinationStorageTextures(
 }
 
 export const kLimitModes = ['defaultLimit', 'adapterLimit'] as const;
-export type LimitMode = typeof kLimitModes[number];
+export type LimitMode = (typeof kLimitModes)[number];
 export type LimitsRequest = Record<string, LimitMode>;
 
 export const kMaximumTestValues = ['atLimit', 'overLimit'] as const;
-export type MaximumTestValue = typeof kMaximumTestValues[number];
+export type MaximumTestValue = (typeof kMaximumTestValues)[number];
 
 export function getMaximumTestValue(limit: number, testValue: MaximumTestValue) {
   switch (testValue) {
@@ -217,7 +217,7 @@ export function getMaximumTestValue(limit: number, testValue: MaximumTestValue) 
 }
 
 export const kMinimumTestValues = ['atLimit', 'underLimit'] as const;
-export type MinimumTestValue = typeof kMinimumTestValues[number];
+export type MinimumTestValue = (typeof kMinimumTestValues)[number];
 
 export const kMaximumLimitValueTests = [
   'atDefault',
@@ -226,7 +226,7 @@ export const kMaximumLimitValueTests = [
   'atMaximum',
   'overMaximum',
 ] as const;
-export type MaximumLimitValueTest = typeof kMaximumLimitValueTests[number];
+export type MaximumLimitValueTest = (typeof kMaximumLimitValueTests)[number];
 
 export function getLimitValue(
   defaultLimit: number,
@@ -255,7 +255,7 @@ export const kMinimumLimitValueTests = [
   'atMinimum',
   'underMinimum',
 ] as const;
-export type MinimumLimitValueTest = typeof kMinimumLimitValueTests[number];
+export type MinimumLimitValueTest = (typeof kMinimumLimitValueTests)[number];
 
 export function getDefaultLimitForAdapter(adapter: GPUAdapter, limit: GPUSupportedLimit): number {
   const limitInfo = getDefaultLimitsForAdapter(adapter);

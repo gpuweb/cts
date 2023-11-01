@@ -41,8 +41,8 @@ function getPipelineDescriptor(
     // maxInterStageShaderComponents     : ${device.limits.maxInterStageShaderComponents}
     // num components in vertex shader   : ${numComponents}${pointList ? ' + point-list' : ''}
     // num components in fragment shader : ${numComponents}${frontFacing ? ' + front-facing' : ''}${
-    sampleIndex ? ' + sample_index' : ''
-  }${sampleMaskIn ? ' + sample_mask' : ''}
+      sampleIndex ? ' + sample_index' : ''
+    }${sampleMaskIn ? ' + sample_mask' : ''}
     // maxVertexShaderOutputComponents   : ${maxVertexShaderOutputComponents}
     // maxFragmentShaderInputComponents  : ${maxFragmentShaderInputComponents}
     // maxInterStageVariables:           : ${maxInterStageVariables}
