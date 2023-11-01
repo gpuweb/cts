@@ -20,7 +20,7 @@ import { assert, objectEquals } from '../common/util/util.js';
 import { UnitTest } from './unit_test.js';
 
 class ParamsTest extends UnitTest {
-  expectParams<CaseP, SubcaseP>(
+  expectParams<CaseP extends {}, SubcaseP extends {}>(
     act: ParamsBuilderBase<CaseP, SubcaseP>,
     exp: CaseSubcaseIterable<{}, {}>,
     caseFilter: TestParams | null = null

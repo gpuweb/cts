@@ -279,7 +279,7 @@ g.test('offscreenCanvas,snapshot')
     let snapshot: HTMLImageElement | ImageBitmap;
     switch (t.params.snapshotType) {
       case 'convertToBlob': {
-        if (typeof offscreenCanvas.convertToBlob === undefined) {
+        if (typeof offscreenCanvas.convertToBlob === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.convertToBlob");
           return;
         }
@@ -292,7 +292,7 @@ g.test('offscreenCanvas,snapshot')
         break;
       }
       case 'transferToImageBitmap': {
-        if (typeof offscreenCanvas.transferToImageBitmap === undefined) {
+        if (typeof offscreenCanvas.transferToImageBitmap === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.transferToImageBitmap");
           return;
         }

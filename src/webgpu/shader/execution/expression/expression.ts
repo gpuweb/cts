@@ -375,7 +375,7 @@ export async function run(
       pipelineCache
     );
     checkBatch();
-    t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
+    void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   }
 }
 

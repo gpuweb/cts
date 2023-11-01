@@ -157,7 +157,7 @@ export function startPlayingAndWaitForVideo(
         true
       );
 
-      if ('requestVideoFrameCallback' in video) {
+      if (video.requestVideoFrameCallback) {
         video.requestVideoFrameCallback(() => {
           callbackAndResolve();
         });

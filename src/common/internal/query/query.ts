@@ -69,7 +69,7 @@ export class TestQueryMultiFile {
  */
 export class TestQueryMultiTest extends TestQueryMultiFile {
   readonly level: TestQueryLevel = 2;
-  readonly isMultiFile: false = false;
+  readonly isMultiFile = false as const;
   readonly isMultiTest: boolean = true;
   readonly testPathParts: readonly string[];
 
@@ -100,7 +100,7 @@ export class TestQueryMultiTest extends TestQueryMultiFile {
  */
 export class TestQueryMultiCase extends TestQueryMultiTest {
   readonly level: TestQueryLevel = 3;
-  readonly isMultiTest: false = false;
+  readonly isMultiTest = false as const;
   readonly isMultiCase: boolean = true;
   readonly params: TestParams;
 
@@ -131,7 +131,7 @@ export class TestQueryMultiCase extends TestQueryMultiTest {
  */
 export class TestQuerySingleCase extends TestQueryMultiCase {
   readonly level: TestQueryLevel = 4;
-  readonly isMultiCase: false = false;
+  readonly isMultiCase = false as const;
 
   get depthInLevel() {
     return 0;
