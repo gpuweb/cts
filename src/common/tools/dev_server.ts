@@ -105,7 +105,7 @@ watcher.on('change', dirtyCompileCache);
 const app = express();
 
 // Send Chrome Origin Trial tokens
-app.use((req, res, next) => {
+app.use((_req, res, next) => {
   res.header('Origin-Trial', [
     // Token for http://localhost:8080
     'AvyDIV+RJoYs8fn3W6kIrBhWw0te0klraoz04mw/nPb8VTus3w5HCdy+vXqsSzomIH745CT6B5j1naHgWqt/tw8AAABJeyJvcmlnaW4iOiJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJmZWF0dXJlIjoiV2ViR1BVIiwiZXhwaXJ5IjoxNjYzNzE4Mzk5fQ==',

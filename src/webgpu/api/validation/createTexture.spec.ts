@@ -326,7 +326,7 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
           arrayLayerCount === 2 && dimension !== '2d' && dimension !== undefined
       )
       .combine('mipLevelCount', [1, 2])
-      .expand('usage', p => {
+      .expand('usage', () => {
         const usageSet = new Set<number>();
         for (const usage0 of kTextureUsages) {
           for (const usage1 of kTextureUsages) {

@@ -458,7 +458,7 @@ g.test('compute,zero_init')
       });
 
       const inputBuffer = t.makeBufferWithContents(
-        new Uint32Array([...iterRange(wg_memory_limits / 4, x => 0xdeadbeef)]),
+        new Uint32Array([...iterRange(wg_memory_limits / 4, _i => 0xdeadbeef)]),
         GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
       );
       t.trackForCleanup(inputBuffer);

@@ -195,7 +195,7 @@ const kBindCaseNames = keysOf(kBindCases);
 const kDrawUseCases: {
   [key: string]: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => void;
 } = {
-  draw: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
+  draw: (_t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
     encoder.draw(3);
   },
   drawIndexed: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
@@ -225,7 +225,7 @@ const kDrawCaseNames = keysOf(kDrawUseCases);
 const kDispatchUseCases: {
   [key: string]: (t: CompatibilityTest, encoder: GPUComputePassEncoder) => void;
 } = {
-  dispatchWorkgroups(t: CompatibilityTest, encoder: GPUComputePassEncoder) {
+  dispatchWorkgroups(_t: CompatibilityTest, encoder: GPUComputePassEncoder) {
     encoder.dispatchWorkgroups(1);
   },
   dispatchWorkgroupsIndirect(t: CompatibilityTest, encoder: GPUComputePassEncoder) {

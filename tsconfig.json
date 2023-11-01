@@ -15,6 +15,7 @@
     /* These should be caught by eslint instead */
     "noFallthroughCasesInSwitch": false,
     "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "allowUnreachableCode": true,
     /* Compiler warnings we intentionally don't use */
     // - Would be nice, but we need to upgrade eslint first for new syntax
