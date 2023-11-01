@@ -15,7 +15,7 @@ export const g = makeTestGroup(TestGroupTest);
 
 g.test('UnitTest_fixture').fn(async t0 => {
   let seen = 0;
-  function count(t: Fixture): void {
+  function count(_t: Fixture): void {
     seen++;
   }
 
@@ -65,10 +65,10 @@ g.test('stack').fn(async t0 => {
   g.test('fail').fn(t => {
     t.fail();
   });
-  g.test('throw').fn(t => {
+  g.test('throw').fn(_t => {
     throw new Error('hello');
   });
-  g.test('throw_nested').fn(t => {
+  g.test('throw_nested').fn(_t => {
     doNestedThrow2();
   });
 
@@ -302,7 +302,7 @@ g.test('exceptions')
     } else {
       b2 = b1.params(u => u);
     }
-    b2.fn(t => {
+    b2.fn(_t => {
       if (useDOMException) {
         throw new DOMException('Message!', 'Name!');
       } else {
@@ -319,7 +319,7 @@ g.test('exceptions')
 g.test('throws').fn(async t0 => {
   const g = makeTestGroupForUnitTesting(UnitTest);
 
-  g.test('a').fn(t => {
+  g.test('a').fn(_t => {
     throw new Error();
   });
 

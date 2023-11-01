@@ -250,7 +250,7 @@ class TestBuilder<S extends SubcaseBatchState, F extends Fixture> {
     return this;
   }
 
-  specURL(url: string): this {
+  specURL(_url: string): this {
     return this;
   }
 

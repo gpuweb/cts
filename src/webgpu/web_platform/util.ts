@@ -229,13 +229,13 @@ export async function getVideoFrameFromVideoElement(
   }
 
   return raceWithRejectOnTimeout(
-    new Promise<VideoFrame>((resolve, reject) => {
+    new Promise<VideoFrame>(resolve => {
       const videoTrack: MediaStreamVideoTrack = video.captureStream().getVideoTracks()[0];
       const trackProcessor: MediaStreamTrackProcessor<VideoFrame> = new MediaStreamTrackProcessor({
         track: videoTrack,
       });
       const transformer: TransformStream = new TransformStream({
-        transform(videoFrame, controller) {
+        transform(videoFrame, _controller) {
           videoTrack.stop();
           resolve(videoFrame);
         },

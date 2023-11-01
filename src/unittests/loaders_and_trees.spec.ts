@@ -124,7 +124,7 @@ class LoadingTest extends UnitTest {
     if (!this.isListenersAdded) {
       this.isListenersAdded = true;
       this.loader.addEventListener('import', ev => this.events.push(ev.data.url));
-      this.loader.addEventListener('finish', ev => this.events.push(null));
+      this.loader.addEventListener('finish', _ev => this.events.push(null));
     }
   }
 

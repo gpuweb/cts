@@ -22,7 +22,7 @@ import { GPUTest } from './gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 // Note: spaces aren't allowed in test names; use underscores.
-g.test('test_name').fn(t => {});
+g.test('test_name').fn(_t => {});
 
 g.test('not_implemented_yet,without_plan').unimplemented();
 g.test('not_implemented_yet,with_plan')

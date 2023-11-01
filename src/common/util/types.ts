@@ -11,7 +11,7 @@ export type TypeEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <T>() => T 
   : false;
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-export function assertTypeTrue<T extends true>() {}
+export function assertTypeTrue<_ extends true>() {}
 
 /** `ReadonlyArray` of `ReadonlyArray`s. */
 export type ROArrayArray<T> = ReadonlyArray<ReadonlyArray<T>>;
