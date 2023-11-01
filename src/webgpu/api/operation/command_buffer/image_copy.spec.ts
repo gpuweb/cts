@@ -2051,15 +2051,8 @@ copyTextureToBuffer() with depth aspect.
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const {
-      format,
-      copyMethod,
-      aspect,
-      offsetInBlocks,
-      dataPaddingInBytes,
-      copyDepth,
-      mipLevel,
-    } = t.params;
+    const { format, copyMethod, aspect, offsetInBlocks, dataPaddingInBytes, copyDepth, mipLevel } =
+      t.params;
     const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
     const initialDataOffset = offsetInBlocks * bytesPerBlock;
     const copySize = [3, 3, copyDepth] as const;

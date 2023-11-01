@@ -57,7 +57,7 @@ export interface TestGroupBuilder<F extends Fixture> {
   test(name: string): TestBuilderWithName<F>;
 }
 export function makeTestGroup<F extends Fixture>(fixture: FixtureClass<F>): TestGroupBuilder<F> {
-  return new TestGroup((fixture as unknown) as FixtureClass);
+  return new TestGroup(fixture as unknown as FixtureClass);
 }
 
 // Interfaces for running tests
@@ -127,7 +127,7 @@ export class TestGroup<F extends Fixture> implements TestGroupBuilder<F> {
 
     const test = new TestBuilder(parts, this.fixture, testCreationStack);
     this.tests.push(test);
-    return (test as unknown) as TestBuilderWithName<F>;
+    return test as unknown as TestBuilderWithName<F>;
   }
 
   validate(): void {

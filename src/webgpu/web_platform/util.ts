@@ -13,7 +13,8 @@ declare global {
   }
 }
 
-export const kVideoInfo = /* prettier-ignore */ makeTable(
+export const kVideoInfo =
+  /* prettier-ignore */ makeTable(
   ['mimeType'] as const,
   [undefined] as const, {
 // All video names

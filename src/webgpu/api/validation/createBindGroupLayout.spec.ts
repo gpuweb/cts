@@ -258,9 +258,12 @@ g.test('max_dynamic_buffers')
       entries,
     };
 
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout(descriptor);
-    }, extraDynamicBuffers > 0 || entries.length > perStageLimit);
+    t.expectValidationError(
+      () => {
+        t.device.createBindGroupLayout(descriptor);
+      },
+      extraDynamicBuffers > 0 || entries.length > perStageLimit
+    );
   });
 
 /**
@@ -444,15 +447,18 @@ g.test('storage_texture,formats')
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
 
-    t.expectValidationError(() => {
-      t.device.createBindGroupLayout({
-        entries: [
-          {
-            binding: 0,
-            visibility: GPUShaderStage.COMPUTE,
-            storageTexture: { format },
-          },
-        ],
-      });
-    }, !info.color?.storage);
+    t.expectValidationError(
+      () => {
+        t.device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 0,
+              visibility: GPUShaderStage.COMPUTE,
+              storageTexture: { format },
+            },
+          ],
+        });
+      },
+      !info.color?.storage
+    );
   });

@@ -520,26 +520,10 @@ textureLoad each sample index from the texture and write to a storage buffer to 
       })
       .beginSubcases()
       .combine('sampleMask', [
-        0,
-        0b0001,
-        0b0010,
-        0b0111,
-        0b1011,
-        0b1101,
-        0b1110,
-        0b1111,
-        0b11110,
+        0, 0b0001, 0b0010, 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b11110,
       ] as const)
       .combine('fragmentShaderOutputMask', [
-        0,
-        0b0001,
-        0b0010,
-        0b0111,
-        0b1011,
-        0b1101,
-        0b1110,
-        0b1111,
-        0b11110,
+        0, 0b0001, 0b0010, 0b0111, 0b1011, 0b1101, 0b1110, 0b1111, 0b11110,
       ] as const)
   )
   .fn(t => {

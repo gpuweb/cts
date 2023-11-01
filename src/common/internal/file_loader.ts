@@ -59,13 +59,9 @@ export abstract class TestFileLoader extends EventTarget {
 
   async importSpecFile(suite: string, path: string[]): Promise<SpecFile> {
     const url = `${suite}/${path.join('/')}.spec.js`;
-    this.dispatchEvent(
-      new MessageEvent<ImportInfo>('import', { data: { url } })
-    );
+    this.dispatchEvent(new MessageEvent<ImportInfo>('import', { data: { url } }));
     const ret = await this.import(url);
-    this.dispatchEvent(
-      new MessageEvent<ImportInfo>('imported', { data: { url } })
-    );
+    this.dispatchEvent(new MessageEvent<ImportInfo>('imported', { data: { url } }));
     return ret;
   }
 

@@ -9,10 +9,10 @@ export const kAllWriteOps = [
   'attachment-store',
   'attachment-resolve',
 ] as const;
-export type WriteOp = typeof kAllWriteOps[number];
+export type WriteOp = (typeof kAllWriteOps)[number];
 
 export const kAllReadOps = ['t2b-copy', 't2t-copy', 'sample'] as const;
-export type ReadOp = typeof kAllReadOps[number];
+export type ReadOp = (typeof kAllReadOps)[number];
 
 export type Op = ReadOp | WriteOp;
 
@@ -28,7 +28,8 @@ interface OpInfo {
  */
 export const kOpInfo: {
   readonly [k in Op]: OpInfo;
-} = /* prettier-ignore */ {
+} =
+  /* prettier-ignore */ {
   'write-texture': {
     contexts: [ 'queue' ],
     readUsage: 0,

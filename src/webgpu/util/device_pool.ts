@@ -230,7 +230,7 @@ function canonicalizeDescriptor(
    * specified _and_ non-default. */
   const limitsCanonicalized: Record<string, number> = {};
   // MAINTENANCE_TODO: Remove cast when @webgpu/types includes compatibilityMode
-  const adapterOptions = (getDefaultRequestAdapterOptions() as unknown) as {
+  const adapterOptions = getDefaultRequestAdapterOptions() as unknown as {
     compatibilityMode?: boolean;
   };
   const featureLevel = adapterOptions?.compatibilityMode ? 'compatibility' : 'core';
