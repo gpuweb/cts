@@ -265,7 +265,7 @@ class F extends TextureTestMixin(GPUTest) {
   private sampleTexture: GPUTexture | undefined;
   private sampler: GPUSampler | undefined;
 
-  async init() {
+  override async init() {
     await super.init();
     if (this.isCompatibility) {
       this.skip('WGSL sample_mask is not supported in compatibility mode');

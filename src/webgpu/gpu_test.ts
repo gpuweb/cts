@@ -91,12 +91,12 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** Provider for mismatched device. */
   private mismatchedProvider: Promise<DeviceProvider> | undefined;
 
-  async postInit(): Promise<void> {
+  override async postInit(): Promise<void> {
     // Skip all subcases if there's no device.
     await this.acquireProvider();
   }
 
-  async finalize(): Promise<void> {
+  override async finalize(): Promise<void> {
     await super.finalize();
 
     // Ensure devicePool.release is called for both providers even if one rejects.
@@ -254,7 +254,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * as well as helpers that use that device.
  */
 export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
-  public static MakeSharedState(
+  public static override MakeSharedState(
     recorder: TestCaseRecorder,
     params: TestParams
   ): GPUTestSubcaseBatchState {
@@ -1074,7 +1074,7 @@ export class GPUTest extends GPUTestBase {
   private provider: DeviceProvider | undefined;
   private mismatchedProvider: DeviceProvider | undefined;
 
-  async init() {
+  override async init() {
     await super.init();
 
     this.provider = await this.sharedState.acquireProvider();
@@ -1084,7 +1084,7 @@ export class GPUTest extends GPUTestBase {
   /**
    * GPUDevice for the test to use.
    */
-  get device(): GPUDevice {
+  override get device(): GPUDevice {
     assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     return this.provider.device;
   }

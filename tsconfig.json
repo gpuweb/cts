@@ -11,6 +11,7 @@
     "strict": true,
     /* tsc lint options */
     "allowUnusedLabels": false,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     /* These should be caught by eslint instead */
     "noFallthroughCasesInSwitch": false,
@@ -18,8 +19,6 @@
     "noUnusedParameters": false,
     "allowUnreachableCode": true,
     /* Compiler warnings we intentionally don't use */
-    // - Would be nice, but we need to upgrade eslint first for new syntax
-    "noImplicitOverride": false,
     // - Would be nice, but produces lots of errors that probably aren't worth fixing
     "noUncheckedIndexedAccess": false,
     // - We could make our code pass this, but it doesn't seem to provide much value to us
