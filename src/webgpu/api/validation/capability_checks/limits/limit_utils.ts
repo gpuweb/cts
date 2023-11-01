@@ -302,7 +302,7 @@ export class LimitTestsImpl extends GPUTestBase {
   defaultLimit = 0;
   adapterLimit = 0;
 
-  async init() {
+  override async init() {
     await super.init();
     const gpu = getGPU(this.rec);
     this._adapter = await gpu.requestAdapter();
@@ -318,7 +318,7 @@ export class LimitTestsImpl extends GPUTestBase {
     return this._adapter!;
   }
 
-  get device(): GPUDevice {
+  override get device(): GPUDevice {
     assert(this._device !== undefined, 'device is only valid in _testThenDestroyDevice callback');
     return this._device;
   }
@@ -584,7 +584,11 @@ export class LimitTestsImpl extends GPUTestBase {
   /**
    * Calls a function that expects a validation error if shouldError is true
    */
-  async expectValidationError<R>(fn: () => R, shouldError: boolean = true, msg = ''): Promise<R> {
+  override async expectValidationError<R>(
+    fn: () => R,
+    shouldError: boolean = true,
+    msg = ''
+  ): Promise<R> {
     return this.expectGPUErrorAsync('validation', fn, shouldError, msg);
   }
 
@@ -1067,7 +1071,7 @@ export class LimitTestsImpl extends GPUTestBase {
  */
 function makeLimitTestFixture(limit: GPUSupportedLimit): typeof LimitTestsImpl {
   class LimitTests extends LimitTestsImpl {
-    limit = limit;
+    override limit = limit;
   }
 
   return LimitTests;

@@ -53,7 +53,7 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
   }
 
   private pipeline: GPURenderPipeline | undefined;
-  async init(): Promise<void> {
+  override async init(): Promise<void> {
     await super.init();
 
     this.pipeline = this.device.createRenderPipeline({
