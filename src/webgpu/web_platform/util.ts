@@ -15,19 +15,19 @@ declare global {
 
 export const kVideoInfo =
   /* prettier-ignore */ makeTable(
-  ['mimeType'] as const,
-  [undefined] as const, {
-// All video names
-'four-colors-vp8-bt601.webm'  : ['video/webm; codecs=vp8'],
-'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
-'four-colors-h264-bt601.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-'four-colors-vp9-bt601.webm'  : ['video/webm; codecs=vp9'],
-'four-colors-vp9-bt709.webm'  : ['video/webm; codecs=vp9'],
-'four-colors-vp9-bt2020.webm' : ['video/webm; codecs=vp9'],
-'four-colors-h264-bt601-rotate-90.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-'four-colors-h264-bt601-rotate-180.mp4'  : ['video/mp4; codecs=avc1.4d400c'],
-'four-colors-h264-bt601-rotate-270.mp4'  : ['video/mp4; codecs=avc1.4d400c']
-} as const);
+                                             ['mimeType'                     ] as const,
+                                             [undefined                      ] as const, {
+    // All video names
+    'four-colors-vp8-bt601.webm':            ['video/webm; codecs=vp8'       ],
+    'four-colors-theora-bt601.ogv':          ['video/ogg; codecs=theora'     ],
+    'four-colors-h264-bt601.mp4':            ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-vp9-bt601.webm':            ['video/webm; codecs=vp9'       ],
+    'four-colors-vp9-bt709.webm':            ['video/webm; codecs=vp9'       ],
+    'four-colors-vp9-bt2020.webm':           ['video/webm; codecs=vp9'       ],
+    'four-colors-h264-bt601-rotate-90.mp4':  ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-h264-bt601-rotate-180.mp4': ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-h264-bt601-rotate-270.mp4': ['video/mp4; codecs=avc1.4d400c'],
+  } as const);
 export type VideoName = keyof typeof kVideoInfo;
 
 // Expectation values about converting video contents to sRGB color space.

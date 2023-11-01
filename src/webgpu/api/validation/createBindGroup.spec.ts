@@ -473,9 +473,7 @@ g.test('minBindingSize')
           entries: [
             {
               binding: 0,
-              resource: {
-                buffer: storageBuffer,
-              },
+              resource: { buffer: storageBuffer },
             },
           ],
         });

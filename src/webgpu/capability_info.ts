@@ -31,9 +31,8 @@ export const kQueryTypeInfo: {
   readonly [k in GPUQueryType]: QueryTypeInfo;
 } =
   /* prettier-ignore */ {
-  // Occlusion query does not require any features.
-  'occlusion':           { feature:  undefined },
-  'timestamp':           { feature: 'timestamp-query' },
+  'occlusion': { feature:  undefined },
+  'timestamp': { feature: 'timestamp-query' },
 };
 /** List of all GPUQueryType values. */
 export const kQueryTypes = keysOf(kQueryTypeInfo);
@@ -100,7 +99,7 @@ export const kCanvasTextureFormats = ['bgra8unorm', 'rgba8unorm', 'rgba16float']
 export const kCanvasAlphaModesInfo: {
   readonly [k in GPUCanvasAlphaMode]: {};
 } = /* prettier-ignore */ {
-  'opaque': {},
+  'opaque':        {},
   'premultiplied': {},
 };
 export const kCanvasAlphaModes = keysOf(kCanvasAlphaModesInfo);
@@ -109,7 +108,7 @@ export const kCanvasAlphaModes = keysOf(kCanvasAlphaModesInfo);
 export const kCanvasColorSpacesInfo: {
   readonly [k in PredefinedColorSpace]: {};
 } = /* prettier-ignore */ {
-  'srgb': {},
+  'srgb':       {},
   'display-p3': {},
 };
 export const kCanvasColorSpaces = keysOf(kCanvasColorSpacesInfo);
@@ -131,8 +130,8 @@ export const kTextureDimensions = keysOf(kTextureDimensionInfo);
 export const kTextureAspectInfo: {
   readonly [k in GPUTextureAspect]: {};
 } = /* prettier-ignore */ {
-  'all': {},
-  'depth-only': {},
+  'all':          {},
+  'depth-only':   {},
   'stencil-only': {},
 };
 /** List of all GPUTextureAspect values. */
@@ -145,14 +144,14 @@ export const kCompareFunctionInfo: {
   readonly [k in GPUCompareFunction]: {};
 } =
   /* prettier-ignore */ {
-  'never': {},
-  'less': {},
-  'equal': {},
-  'less-equal': {},
-  'greater': {},
-  'not-equal': {},
+  'never':         {},
+  'less':          {},
+  'equal':         {},
+  'less-equal':    {},
+  'greater':       {},
+  'not-equal':     {},
   'greater-equal': {},
-  'always': {},
+  'always':        {},
 };
 /** List of all GPUCompareFunction values. */
 export const kCompareFunctions = keysOf(kCompareFunctionInfo);
@@ -162,14 +161,14 @@ export const kStencilOperationInfo: {
   readonly [k in GPUStencilOperation]: {};
 } =
   /* prettier-ignore */ {
-  'keep': {},
-  'zero': {},
-  'replace': {},
-  'invert': {},
+  'keep':            {},
+  'zero':            {},
+  'replace':         {},
+  'invert':          {},
   'increment-clamp': {},
   'decrement-clamp': {},
-  'increment-wrap': {},
-  'decrement-wrap': {},
+  'increment-wrap':  {},
+  'decrement-wrap':  {},
 };
 /** List of all GPUStencilOperation values. */
 export const kStencilOperations = keysOf(kStencilOperationInfo);
@@ -777,17 +776,17 @@ export const kFeatureNameInfo: {
   readonly [k in GPUFeatureName]: {};
 } =
   /* prettier-ignore */ {
-  'bgra8unorm-storage': {},
-  'depth-clip-control': {},
-  'depth32float-stencil8': {},
-  'texture-compression-bc': {},
+  'bgra8unorm-storage':       {},
+  'depth-clip-control':       {},
+  'depth32float-stencil8':    {},
+  'texture-compression-bc':   {},
   'texture-compression-etc2': {},
   'texture-compression-astc': {},
-  'timestamp-query': {},
-  'indirect-first-instance': {},
-  'shader-f16': {},
+  'timestamp-query':          {},
+  'indirect-first-instance':  {},
+  'shader-f16':               {},
   'rg11b10ufloat-renderable': {},
-  'float32-filterable': {},
+  'float32-filterable':       {},
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);

@@ -538,17 +538,17 @@ g.test('texture_size,2d_texture,uncompressed_format')
         'sizeVariant',
         /* prettier-ignore */ [
           // Test the bound of width
-          [{ mult: 1, add: -1, }, { mult: 0, add: 1 }, { mult: 0, add: 1 }],
-          [{ mult: 1, add:  0, }, { mult: 0, add: 1 }, { mult: 0, add: 1 }],
-          [{ mult: 1, add:  1, }, { mult: 0, add: 1 }, { mult: 0, add: 1 }],
+          [{ mult: 1, add: -1 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
+          [{ mult: 1, add:  0 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
+          [{ mult: 1, add:  1 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
           // Test the bound of height
-          [{ mult: 0, add:  1, }, { mult: 1, add: -1 }, { mult: 0, add: 1 }],
-          [{ mult: 0, add:  1, }, { mult: 1, add:  0 }, { mult: 0, add: 1 }],
-          [{ mult: 0, add:  1, }, { mult: 1, add:  1 }, { mult: 0, add: 1 }],
+          [{ mult: 0, add:  1 }, { mult: 1, add: -1 }, { mult: 0, add:  1 }],
+          [{ mult: 0, add:  1 }, { mult: 1, add:  0 }, { mult: 0, add:  1 }],
+          [{ mult: 0, add:  1 }, { mult: 1, add:  1 }, { mult: 0, add:  1 }],
           // Test the bound of array layers
-          [{ mult: 0, add:  1, }, { mult: 0, add: 1 }, { mult: 1, add: -1 }],
-          [{ mult: 0, add:  1, }, { mult: 0, add: 1 }, { mult: 1, add:  0 }],
-          [{ mult: 0, add:  1, }, { mult: 0, add: 1 }, { mult: 1, add:  1 }],
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add: -1 }],
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add:  0 }],
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add:  1 }],
         ]
       )
   )
@@ -782,19 +782,19 @@ g.test('texture_size,3d_texture,uncompressed_format')
       .combine(
         'sizeVariant',
         /* prettier-ignore */ [
-        // Test the bound of width
-        [{mult: 1, add: -1}, {mult: 0, add: 1}, {mult: 0, add: 1}],
-        [{mult: 1, add:  0}, {mult: 0, add: 1}, {mult: 0, add: 1}],
-        [{mult: 1, add: +1}, {mult: 0, add: 1}, {mult: 0, add: 1}],
-        // Test the bound of height
-        [{mult: 0, add: 1}, {mult: 1, add: -1}, {mult: 0, add: 1}],
-        [{mult: 0, add: 1}, {mult: 1, add:  0}, {mult: 0, add: 1}],
-        [{mult: 0, add: 1}, {mult: 1, add: +1}, {mult: 0, add: 1}],
-        // Test the bound of depth
-        [{mult: 0, add: 1}, {mult: 0, add: 1}, {mult: 1, add: -1}],
-        [{mult: 0, add: 1}, {mult: 0, add: 1}, {mult: 1, add:  0}],
-        [{mult: 0, add: 1}, {mult: 0, add: 1}, {mult: 1, add: +1}],
-      ]
+          // Test the bound of width
+          [{ mult: 1, add: -1 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
+          [{ mult: 1, add:  0 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
+          [{ mult: 1, add: +1 }, { mult: 0, add:  1 }, { mult: 0, add:  1 }],
+          // Test the bound of height
+          [{ mult: 0, add:  1 }, { mult: 1, add: -1 }, { mult: 0, add:  1 }],
+          [{ mult: 0, add:  1 }, { mult: 1, add:  0 }, { mult: 0, add:  1 }],
+          [{ mult: 0, add:  1 }, { mult: 1, add: +1 }, { mult: 0, add:  1 }],
+          // Test the bound of depth
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add: -1 }],
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add:  0 }],
+          [{ mult: 0, add:  1 }, { mult: 0, add:  1 }, { mult: 1, add: +1 }],
+        ]
       )
   )
   .beforeAllSubcases(t => {
