@@ -11,13 +11,13 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('if_true').
 desc(
-"Test that flow control executes the 'true' block of an if statement and not the 'false' block").
-
+  "Test that flow control executes the 'true' block of an if statement and not the 'false' block"
+).
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   if (${f.value(true)}) {
     ${f.expect_order(1)}
@@ -25,19 +25,19 @@ fn((t) => {
     ${f.expect_not_reached()}
   }
   ${f.expect_order(2)}
-`);
-
+`
+  );
 });
 
 g.test('if_false').
 desc(
-"Test that flow control executes the 'false' block of an if statement and not the 'true' block").
-
+  "Test that flow control executes the 'false' block of an if statement and not the 'true' block"
+).
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   if (${f.value(false)}) {
     ${f.expect_not_reached()}
@@ -45,8 +45,8 @@ fn((t) => {
     ${f.expect_order(1)}
   }
   ${f.expect_order(2)}
-`);
-
+`
+  );
 });
 
 g.test('else_if').
@@ -54,8 +54,8 @@ desc("Test that flow control executes the correct 'else if' block of an if state
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   if (${f.value(false)}) {
     ${f.expect_not_reached()}
@@ -67,8 +67,8 @@ fn((t) => {
     ${f.expect_not_reached()}
   }
   ${f.expect_order(2)}
-`);
-
+`
+  );
 });
 
 g.test('nested_if_else').
@@ -76,8 +76,8 @@ desc('Test flow control for nested if-else statements').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
 ${f.expect_order(0)}
 if (${f.value(true)}) {
   ${f.expect_order(1)}
@@ -97,7 +97,7 @@ if (${f.value(true)}) {
   ${f.expect_not_reached()}
 }
 ${f.expect_order(6)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=if.spec.js.map

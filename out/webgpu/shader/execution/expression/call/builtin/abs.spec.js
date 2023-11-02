@@ -19,13 +19,13 @@ Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kBit } from '../../../../../util/constants.js';
 import {
-i32Bits,
-TypeF32,
-TypeF16,
-TypeI32,
-TypeU32,
-u32Bits,
-TypeAbstractFloat } from
+  i32Bits,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeU32,
+  u32Bits,
+  TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
@@ -45,10 +45,10 @@ export const d = makeCaseCache('abs', {
   },
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
-    fullF64Range(),
-    'unfiltered',
-    FP.abstract.absInterval);
-
+      fullF64Range(),
+      'unfiltered',
+      FP.abstract.absInterval
+    );
   }
 });
 
@@ -56,16 +56,16 @@ g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`abstract int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`unsigned int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   await run(t, builtin('abs'), [TypeU32], TypeU32, t.params, [
   // Min and Max u32
@@ -103,16 +103,16 @@ fn(async (t) => {
   { input: u32Bits(kBit.powTwo.to28), expected: u32Bits(kBit.powTwo.to28) },
   { input: u32Bits(kBit.powTwo.to29), expected: u32Bits(kBit.powTwo.to29) },
   { input: u32Bits(kBit.powTwo.to30), expected: u32Bits(kBit.powTwo.to30) },
-  { input: u32Bits(kBit.powTwo.to31), expected: u32Bits(kBit.powTwo.to31) }]);
-
+  { input: u32Bits(kBit.powTwo.to31), expected: u32Bits(kBit.powTwo.to31) }]
+  );
 });
 
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`signed int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   await run(t, builtin('abs'), [TypeI32], TypeI32, t.params, [
   // Min and max i32
@@ -153,8 +153,8 @@ fn(async (t) => {
   { input: i32Bits(kBit.negPowTwo.to28), expected: i32Bits(kBit.powTwo.to28) },
   { input: i32Bits(kBit.negPowTwo.to29), expected: i32Bits(kBit.powTwo.to29) },
   { input: i32Bits(kBit.negPowTwo.to30), expected: i32Bits(kBit.powTwo.to30) },
-  { input: i32Bits(kBit.negPowTwo.to31), expected: i32Bits(kBit.powTwo.to31) }]);
-
+  { input: i32Bits(kBit.negPowTwo.to31), expected: i32Bits(kBit.powTwo.to31) }]
+  );
 });
 
 g.test('abstract_float').
@@ -163,8 +163,8 @@ desc(`abstract float tests`).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('abstract');
   await run(t, abstractBuiltin('abs'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
@@ -174,8 +174,8 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`float 32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, builtin('abs'), [TypeF32], TypeF32, t.params, cases);
@@ -185,8 +185,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

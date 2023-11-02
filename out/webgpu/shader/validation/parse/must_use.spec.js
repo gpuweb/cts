@@ -197,8 +197,8 @@ const kMustUseBuiltinCalls = {
 g.test('builtin_must_use').
 desc(`Validate must_use built-in functions`).
 params((u) =>
-u.combine('call', keysOf(kMustUseBuiltinCalls)).combine('use', [true, false])).
-
+u.combine('call', keysOf(kMustUseBuiltinCalls)).combine('use', [true, false])
+).
 fn((t) => {
   let call = kMustUseBuiltinCalls[t.params.call];
   if (t.params.use) {
@@ -251,8 +251,8 @@ const kNoMustUseBuiltinCalls = {
 g.test('builtin_no_must_use').
 desc(`Validate built-in functions without must_use`).
 params((u) =>
-u.combine('call', keysOf(kNoMustUseBuiltinCalls)).combine('use', [true, false])).
-
+u.combine('call', keysOf(kNoMustUseBuiltinCalls)).combine('use', [true, false])
+).
 fn((t) => {
   let call = kNoMustUseBuiltinCalls[t.params.call];
   if (t.params.use) {

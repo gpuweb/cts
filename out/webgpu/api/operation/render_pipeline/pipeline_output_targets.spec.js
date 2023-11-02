@@ -5,9 +5,9 @@
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
 import {
-computeBytesPerSampleFromFormats,
-kRenderableColorTextureFormats,
-kTextureFormatInfo } from
+  computeBytesPerSampleFromFormats,
+  kRenderableColorTextureFormats,
+  kTextureFormatInfo } from
 '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getFragmentShaderCodeWithOutput, getPlainTypeInfo } from '../../../util/shader.js';
@@ -53,8 +53,8 @@ u.
 combine('format', kRenderableColorTextureFormats).
 beginSubcases().
 combine('attachmentCount', [2, 3, 4]).
-expand('emptyAttachmentId', (p) => range(p.attachmentCount, (i) => i))).
-
+expand('emptyAttachmentId', (p) => range(p.attachmentCount, (i) => i))
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
@@ -68,10 +68,10 @@ fn((t) => {
   // We only need to test formats that have a valid color attachment bytes per sample.
   const pixelByteCost = kTextureFormatInfo[format].colorRender?.byteCost;
   t.skipIf(
-  pixelByteCost === undefined ||
-  computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
-  t.device.limits.maxColorAttachmentBytesPerSample);
-
+    pixelByteCost === undefined ||
+    computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
+    t.device.limits.maxColorAttachmentBytesPerSample
+  );
 
   const writeValues =
   info.color.type === 'sint' || info.color.type === 'uint' ?
@@ -83,8 +83,8 @@ fn((t) => {
     format,
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
     usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-  }));
-
+  })
+  );
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
     vertex: {
@@ -96,21 +96,21 @@ fn((t) => {
     fragment: {
       module: t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput(
-        range(attachmentCount, (i) =>
-        i === emptyAttachmentId ?
-        null :
-        {
-          values: [
-          writeValues[i].R,
-          writeValues[i].G,
-          writeValues[i].B,
-          writeValues[i].A],
+          range(attachmentCount, (i) =>
+          i === emptyAttachmentId ?
+          null :
+          {
+            values: [
+            writeValues[i].R,
+            writeValues[i].G,
+            writeValues[i].B,
+            writeValues[i].A],
 
-          plainType: getPlainTypeInfo(info.color.type),
-          componentCount
-        }))
-
-
+            plainType: getPlainTypeInfo(info.color.type),
+            componentCount
+          }
+          )
+        )
       }),
       entryPoint: 'main',
       targets: range(attachmentCount, (i) => i === emptyAttachmentId ? null : { format })
@@ -128,8 +128,8 @@ fn((t) => {
       storeOp: 'store',
       clearValue: { r: 0.5, g: 0.5, b: 0.5, a: 0.5 },
       loadOp: 'clear'
-    })
-
+    }
+    )
   });
   pass.setPipeline(pipeline);
   pass.draw(3);
@@ -141,22 +141,22 @@ fn((t) => {
       continue;
     }
     t.expectSinglePixelComparisonsAreOkInTexture({ texture: renderTargets[i] }, [
-    { coord: { x: 0, y: 0 }, exp: writeValues[i] }]);
-
+    { coord: { x: 0, y: 0 }, exp: writeValues[i] }]
+    );
   }
 });
 
 g.test('color,component_count').
 desc(
-`Test that extra components of the output (e.g. f32, vec2<f32>, vec3<f32>, vec4<f32>) are discarded.`).
-
+  `Test that extra components of the output (e.g. f32, vec2<f32>, vec3<f32>, vec4<f32>) are discarded.`
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
 beginSubcases().
 combine('componentCount', [1, 2, 3, 4]).
-filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)).
-
+filter((x) => x.componentCount >= kTexelRepresentationInfo[x.format].componentOrder.length)
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
@@ -191,8 +191,8 @@ fn((t) => {
           values,
           plainType: getPlainTypeInfo(info.color.type),
           componentCount
-        }])
-
+        }]
+        )
       }),
       entryPoint: 'main',
       targets: [{ format }]
@@ -224,13 +224,13 @@ fn((t) => {
 
 g.test('color,component_count,blend').
 desc(
-`Test that blending behaves correctly when:
+  `Test that blending behaves correctly when:
 - fragment output has no alpha, but the src alpha is not used for the blend operation indicated by blend factors
 - attachment format has no alpha, and the dst alpha should be assumed as 1
 
 The attachment has a load value of [1, 0, 0, 1]
-`).
-
+`
+).
 params((u) =>
 u.
 combine('format', ['r8unorm', 'rg8unorm', 'rgba8unorm', 'bgra8unorm']).
@@ -360,10 +360,10 @@ beginSubcases()
   colorDstFactor: 'dst-alpha',
   alphaSrcFactor: 'zero',
   alphaDstFactor: 'dst-alpha'
-}]).
-
-filter((x) => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)).
-
+}]
+).
+filter((x) => x.output.length >= kTexelRepresentationInfo[x.format].componentOrder.length)
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.selectDeviceOrSkipTestCase(info.feature);
@@ -402,8 +402,8 @@ fn((t) => {
           values: output,
           plainType: getPlainTypeInfo(info.color.type),
           componentCount
-        }])
-
+        }]
+        )
       }),
       entryPoint: 'main',
       targets: [

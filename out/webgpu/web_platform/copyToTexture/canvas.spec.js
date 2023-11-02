@@ -6,8 +6,8 @@ copyToTexture with HTMLCanvasElement and OffscreenCanvas sources.
 import { skipTestCase } from '../../../common/util/util.js';
 import { kCanvasAlphaModes } from '../../capability_info.js';
 import {
-kTextureFormatInfo,
-kValidTextureFormatsForCopyE2T } from
+  kTextureFormatInfo,
+  kValidTextureFormatsForCopyE2T } from
 
 '../../format_info.js';
 import { CopyToTextureUtils } from '../../util/copy_to_texture.js';
@@ -321,18 +321,18 @@ class F extends CopyToTextureUtils {
     const initialData = this.getDataToInitSourceWebGPUCanvas(width, height, alphaMode);
     const canvasTexture = gpuContext.getCurrentTexture();
     device.queue.writeTexture(
-    { texture: canvasTexture },
-    initialData,
-    {
-      bytesPerRow: width * 4,
-      rowsPerImage: height
-    },
-    {
-      width,
-      height,
-      depthOrArrayLayers: 1
-    });
-
+      { texture: canvasTexture },
+      initialData,
+      {
+        bytesPerRow: width * 4,
+        rowsPerImage: height
+      },
+      {
+        width,
+        height,
+        depthOrArrayLayers: 1
+      }
+    );
 
     return {
       canvas,
@@ -437,19 +437,19 @@ class F extends CopyToTextureUtils {
     });
 
     this.doTestAndCheckResult(
-    { source, origin: { x: 0, y: 0 }, flipY: p.srcDoFlipYDuringCopy },
-    {
-      texture: dst,
-      origin: { x: 0, y: 0 },
-      colorSpace: 'srgb',
-      premultipliedAlpha: p.dstPremultiplied
-    },
-    expectedDestinationImage,
-    { width: p.width, height: p.height, depthOrArrayLayers: 1 },
-    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-    // allow diffs of 1ULP since that's the generally-appropriate threshold.
-    { maxDiffULPsForNormFormat: 1, maxDiffULPsForFloatFormat: 1 });
-
+      { source, origin: { x: 0, y: 0 }, flipY: p.srcDoFlipYDuringCopy },
+      {
+        texture: dst,
+        origin: { x: 0, y: 0 },
+        colorSpace: 'srgb',
+        premultipliedAlpha: p.dstPremultiplied
+      },
+      expectedDestinationImage,
+      { width: p.width, height: p.height, depthOrArrayLayers: 1 },
+      // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+      // allow diffs of 1ULP since that's the generally-appropriate threshold.
+      { maxDiffULPsForNormFormat: 1, maxDiffULPsForFloatFormat: 1 }
+    );
   }
 }
 
@@ -457,7 +457,7 @@ export const g = makeTestGroup(F);
 
 g.test('copy_contents_from_2d_context_canvas').
 desc(
-`
+  `
   Test HTMLCanvasElement and OffscreenCanvas with 2d context
   can be copied to WebGPU texture correctly.
 
@@ -483,8 +483,8 @@ desc(
   - TODO(#913): color space tests need to be added
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
@@ -493,8 +493,8 @@ combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15]).
-combine('height', [1, 2, 4, 15])).
-
+combine('height', [1, 2, 4, 15])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
 }).
@@ -516,7 +516,7 @@ fn((t) => {
 
 g.test('copy_contents_from_gl_context_canvas').
 desc(
-`
+  `
   Test HTMLCanvasElement and OffscreenCanvas with webgl/webgl2 context
   can be copied to WebGPU texture correctly.
 
@@ -545,8 +545,8 @@ desc(
   - TODO: color space tests need to be added
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
@@ -557,8 +557,8 @@ combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15]).
-combine('height', [1, 2, 4, 15])).
-
+combine('height', [1, 2, 4, 15])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
 }).
@@ -581,7 +581,7 @@ fn((t) => {
 
 g.test('copy_contents_from_gpu_context_canvas').
 desc(
-`
+  `
   Test HTMLCanvasElement and OffscreenCanvas with webgpu context
   can be copied to WebGPU texture correctly.
 
@@ -613,8 +613,8 @@ desc(
   - TODO: color space tests need to be added
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
@@ -626,21 +626,15 @@ combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15]).
-combine('height', [1, 2, 4, 15])).
-
+combine('height', [1, 2, 4, 15])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
 fn((t) => {
-  const {
-    width,
-    height,
-    canvasType,
-    srcAndDstInSameGPUDevice,
-    srcAlphaMode,
-    dstAlphaMode
-  } = t.params;
+  const { width, height, canvasType, srcAndDstInSameGPUDevice, srcAlphaMode, dstAlphaMode } =
+  t.params;
 
   const device = srcAndDstInSameGPUDevice ? t.device : t.mismatchedDevice;
   const { canvas: source, expectedSourceData } = t.initSourceWebGPUCanvas({
@@ -660,7 +654,7 @@ fn((t) => {
 
 g.test('copy_contents_from_bitmaprenderer_context_canvas').
 desc(
-`
+  `
   Test HTMLCanvasElement and OffscreenCanvas with ImageBitmapRenderingContext
   can be copied to WebGPU texture correctly.
 
@@ -688,8 +682,8 @@ desc(
   - TODO(#913): color space tests need to be added
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
@@ -698,8 +692,8 @@ combine('dstAlphaMode', kCanvasAlphaModes).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15]).
-combine('height', [1, 2, 4, 15])).
-
+combine('height', [1, 2, 4, 15])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
 }).
@@ -732,7 +726,7 @@ fn(async (t) => {
 
 g.test('color_space_conversion').
 desc(
-`
+  `
     Test HTMLCanvasElement with 2d context can created with 'colorSpace' attribute.
     Using CopyExternalImageToTexture to copy from such type of canvas needs
     to do color space converting correctly.
@@ -763,8 +757,8 @@ desc(
 
     TODO: Enhance test data with colors that aren't always opaque and fully saturated.
     TODO: Consider refactoring src data setup with TexelView.writeTextureData.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('srcColorSpace', ['srgb', 'display-p3']).
@@ -774,8 +768,8 @@ combine('dstPremultiplied', [true, false]).
 combine('srcDoFlipYDuringCopy', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
-combine('height', [1, 2, 4, 15, 255, 256])).
-
+combine('height', [1, 2, 4, 15, 255, 256])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
 }).
@@ -833,16 +827,16 @@ fn((t) => {
   }
 
   t.doTestAndCheckResult(
-  { source: canvas, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
-  {
-    texture: dst,
-    origin: { x: 0, y: 0 },
-    colorSpace: dstColorSpace,
-    premultipliedAlpha: dstPremultiplied
-  },
-  expectedDestinationImage,
-  { width, height, depthOrArrayLayers: 1 },
-  texelCompareOptions);
-
+    { source: canvas, origin: { x: 0, y: 0 }, flipY: srcDoFlipYDuringCopy },
+    {
+      texture: dst,
+      origin: { x: 0, y: 0 },
+      colorSpace: dstColorSpace,
+      premultipliedAlpha: dstPremultiplied
+    },
+    expectedDestinationImage,
+    { width, height, depthOrArrayLayers: 1 },
+    texelCompareOptions
+  );
 });
 //# sourceMappingURL=canvas.spec.js.map

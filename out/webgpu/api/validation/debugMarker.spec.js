@@ -31,15 +31,15 @@ export const g = makeTestGroup(F);
 
 g.test('push_pop_call_count_unbalance,command_encoder').
 desc(
-`
+  `
   Test that a validation error is generated if {push,pop} debug group call count is not paired.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('pushCount', [1, 2, 3]).
-combine('popCount', [1, 2, 3])).
-
+combine('popCount', [1, 2, 3])
+).
 fn((t) => {
   const { pushCount, popCount } = t.params;
 
@@ -62,18 +62,18 @@ fn((t) => {
 
 g.test('push_pop_call_count_unbalance,render_compute_pass').
 desc(
-`
+  `
   Test that a validation error is generated if {push,pop} debug group call count is not paired in
   ComputePassEncoder and RenderPassEncoder.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('passType', ['compute', 'render']).
 beginSubcases().
 combine('pushCount', [1, 2, 3]).
-combine('popCount', [1, 2, 3])).
-
+combine('popCount', [1, 2, 3])
+).
 fn((t) => {
   const { passType, pushCount, popCount } = t.params;
 

@@ -26,9 +26,9 @@ export function subnormalF32Examples() {
     }
   }
   assert(
-  result_as_bits.length === 2 * (1 + 23),
-  'subnormal number sample count is ' + result_as_bits.length.toString());
-
+    result_as_bits.length === 2 * (1 + 23),
+    'subnormal number sample count is ' + result_as_bits.length.toString()
+  );
   return result_as_bits.map((u) => uint32ToFloat32(u));
 }
 
@@ -58,9 +58,9 @@ export function normalF32Examples() {
     }
   }
   assert(
-  result.length === 2 + 2 * 254 * 25,
-  'normal number sample count is ' + result.length.toString());
-
+    result.length === 2 + 2 * 254 * 25,
+    'normal number sample count is ' + result.length.toString()
+  );
   return result;
 }
 

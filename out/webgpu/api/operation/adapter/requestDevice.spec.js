@@ -10,10 +10,10 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import { assert, assertReject, raceWithRejectOnTimeout } from '../../../../common/util/util.js';
 import {
-getDefaultLimitsForAdapter,
-kFeatureNames,
-kLimits,
-kLimitClasses } from
+  getDefaultLimitsForAdapter,
+  kFeatureNames,
+  kLimits,
+  kLimitClasses } from
 '../../../capability_info.js';
 import { clamp, isPowerOfTwo } from '../../../util/math.js';
 
@@ -21,19 +21,19 @@ export const g = makeTestGroup(Fixture);
 
 g.test('default').
 desc(
-`
+  `
     Test requesting the device with a variation of default parameters.
     - No features listed in default device
-    - Default limits`).
-
+    - Default limits`
+).
 paramsSubcasesOnly((u) =>
 u.combine('args', [
 [],
 [undefined],
 [{}],
-[{ requiredFeatures: [], requiredLimits: {} }]])).
-
-
+[{ requiredFeatures: [], requiredLimits: {} }]]
+)
+).
 fn(async (t) => {
   const { args } = t.params;
   const gpu = getGPU(t.rec);
@@ -48,9 +48,9 @@ fn(async (t) => {
   const limitInfo = getDefaultLimitsForAdapter(adapter);
   for (const limit of kLimits) {
     t.expect(
-    device.limits[limit] === limitInfo[limit].default,
-    `Expected ${limit} == default: ${device.limits[limit]} != ${limitInfo[limit].default}`);
-
+      device.limits[limit] === limitInfo[limit].default,
+      `Expected ${limit} == default: ${device.limits[limit]} != ${limitInfo[limit].default}`
+    );
   }
 
   device.destroy();
@@ -58,14 +58,14 @@ fn(async (t) => {
 
 g.test('invalid').
 desc(
-`
+  `
     Test that requesting device on an invalid adapter resolves with lost device.
     - Induce invalid adapter via a device lost from a device.destroy()
     - Check the device is lost with reason 'destroyed'
     - Try creating another device on the now-stale adapter
     - Check that returns a device lost with 'unknown'
-    `).
-
+    `
+).
 fn(async (t) => {
   const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
@@ -90,20 +90,20 @@ fn(async (t) => {
 
 g.test('stale').
 desc(
-`
+  `
     Test that adapter.requestDevice() can successfully return a device once, and once only.
     - Tests that we can successfully resolve after serial and concurrent rejections.
-    - Tests that consecutive valid attempts only succeeds the first time, returning lost device otherwise.`).
-
+    - Tests that consecutive valid attempts only succeeds the first time, returning lost device otherwise.`
+).
 paramsSubcasesOnly((u) =>
 u.
 combine('initialError', [undefined, 'TypeError', 'OperationError']).
 combine('awaitInitialError', [true, false]).
 combine('awaitSuccess', [true, false]).
 unless(
-({ initialError, awaitInitialError }) => initialError === undefined && awaitInitialError)).
-
-
+  ({ initialError, awaitInitialError }) => initialError === undefined && awaitInitialError
+)
+).
 fn(async (t) => {
   const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
@@ -118,31 +118,31 @@ fn(async (t) => {
       // Cause a type error by requesting with an unknown feature.
       if (awaitInitialError) {
         await assertReject(
-        'TypeError',
-        adapter.requestDevice({ requiredFeatures: ['unknown-feature'] }));
-
+          'TypeError',
+          adapter.requestDevice({ requiredFeatures: ['unknown-feature'] })
+        );
       } else {
         t.shouldReject(
-        'TypeError',
-        adapter.requestDevice({ requiredFeatures: ['unknown-feature'] }));
-
+          'TypeError',
+          adapter.requestDevice({ requiredFeatures: ['unknown-feature'] })
+        );
       }
       break;
     case 'OperationError':
       // Cause an operation error by requesting with an alignment limit that is not a power of 2.
       if (awaitInitialError) {
         await assertReject(
-        'OperationError',
-        adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } }));
-
+          'OperationError',
+          adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
+        );
       } else {
         t.shouldReject(
-        'OperationError',
-        adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } }));
-
+          'OperationError',
+          adapter.requestDevice({ requiredLimits: { minUniformBufferOffsetAlignment: 255 } })
+        );
       }
-      break;}
-
+      break;
+  }
 
   let device = undefined;
   const promise = adapter.requestDevice();
@@ -151,20 +151,20 @@ fn(async (t) => {
     assert(device !== null);
   } else {
     t.shouldResolve(
-    (async () => {
-      const device = await promise;
-      device.destroy();
-    })());
-
+      (async () => {
+        const device = await promise;
+        device.destroy();
+      })()
+    );
   }
 
   const kTimeoutMS = 1000;
   const lostDevice = await adapter.requestDevice();
   const lost = await raceWithRejectOnTimeout(
-  lostDevice.lost,
-  kTimeoutMS,
-  'adapter was not stale');
-
+    lostDevice.lost,
+    kTimeoutMS,
+    'adapter was not stale'
+  );
   t.expect(lost.reason === 'unknown');
 
   // Make sure to destroy the valid device after trying to get a second one. Otherwise, the second
@@ -176,27 +176,27 @@ fn(async (t) => {
 
 g.test('features,unknown').
 desc(
-`
-    Test requesting device with an unknown feature.`).
-
+  `
+    Test requesting device with an unknown feature.`
+).
 fn(async (t) => {
   const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
   assert(adapter !== null);
 
   t.shouldReject(
-  'TypeError',
-  adapter.requestDevice({ requiredFeatures: ['unknown-feature'] }));
-
+    'TypeError',
+    adapter.requestDevice({ requiredFeatures: ['unknown-feature'] })
+  );
 });
 
 g.test('features,known').
 desc(
-`
+  `
     Test requesting device with all features.
     - Succeeds with device supporting feature if adapter supports the feature.
-    - Rejects if the adapter does not support the feature.`).
-
+    - Rejects if the adapter does not support the feature.`
+).
 params((u) => u.combine('feature', kFeatureNames)).
 fn(async (t) => {
   const { feature } = t.params;
@@ -216,10 +216,10 @@ fn(async (t) => {
 
 g.test('limits,unknown').
 desc(
-`
+  `
     Test that specifying limits that aren't part of the supported limit set causes
-    requestDevice to reject.`).
-
+    requestDevice to reject.`
+).
 fn(async (t) => {
   const gpu = getGPU(t.rec);
   const adapter = await gpu.requestAdapter();
@@ -232,14 +232,14 @@ fn(async (t) => {
 
 g.test('limits,supported').
 desc(
-`
+  `
     Test that each supported limit can be specified with valid values.
     - Tests each limit with the default values given by the spec
-    - Tests each limit with the supported values given by the adapter`).
-
+    - Tests each limit with the supported values given by the adapter`
+).
 params((u) =>
-u.combine('limit', kLimits).beginSubcases().combine('limitValue', ['default', 'adapter'])).
-
+u.combine('limit', kLimits).beginSubcases().combine('limitValue', ['default', 'adapter'])
+).
 fn(async (t) => {
   const { limit, limitValue } = t.params;
 
@@ -255,26 +255,26 @@ fn(async (t) => {
       break;
     case 'adapter':
       value = adapter.limits[limit];
-      break;}
-
+      break;
+  }
 
   const device = await adapter.requestDevice({ requiredLimits: { [limit]: value } });
   assert(device !== null);
   t.expect(
-  device.limits[limit] === value,
-  'Devices reported limit should match the required limit');
-
+    device.limits[limit] === value,
+    'Devices reported limit should match the required limit'
+  );
   device.destroy();
 });
 
 g.test('limit,better_than_supported').
 desc(
-`
+  `
     Test that specifying a better limit than what the adapter supports causes requestDevice to
     reject.
     - Tests each limit
-    - Tests requesting better limits by various amounts`).
-
+    - Tests requesting better limits by various amounts`
+).
 params((u) =>
 u.
 combine('limit', kLimits).
@@ -290,11 +290,11 @@ expandWithParams((p) => {
       return [
       { mul: 1, add: -1 },
       { mul: 1 / 2, add: 0 },
-      { mul: 1 / 1024, add: 0 }];}
+      { mul: 1 / 1024, add: 0 }];
 
-
-})).
-
+  }
+})
+).
 fn(async (t) => {
   const { limit, mul, add } = t.params;
 
@@ -313,12 +313,12 @@ fn(async (t) => {
 
 g.test('limit,worse_than_default').
 desc(
-`
+  `
     Test that specifying a worse limit than the default values required by the spec cause the value
     to clamp.
     - Tests each limit
-    - Tests requesting worse limits by various amounts`).
-
+    - Tests requesting worse limits by various amounts`
+).
 params((u) =>
 u.
 combine('limit', kLimits).
@@ -334,11 +334,11 @@ expandWithParams((p) => {
       return [
       { mul: 1, add: 1 },
       { mul: 2, add: 0 },
-      { mul: 1024, add: 0 }];}
+      { mul: 1024, add: 0 }];
 
-
-})).
-
+  }
+})
+).
 fn(async (t) => {
   const { limit, mul, add } = t.params;
 
@@ -359,16 +359,16 @@ fn(async (t) => {
       break;
     case 'maximum':
       success = true;
-      break;}
-
+      break;
+  }
 
   if (success) {
     const device = await adapter.requestDevice({ requiredLimits });
     assert(device !== null);
     t.expect(
-    device.limits[limit] === limitInfo[limit].default,
-    'Devices reported limit should match the default limit');
-
+      device.limits[limit] === limitInfo[limit].default,
+      'Devices reported limit should match the default limit'
+    );
     device.destroy();
   } else {
     t.shouldReject('OperationError', adapter.requestDevice({ requiredLimits }));

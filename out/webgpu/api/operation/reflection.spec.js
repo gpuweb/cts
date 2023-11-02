@@ -25,9 +25,9 @@ u.combine('descriptor', [
   size: 32,
   usage: GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE,
   invalid: true
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { descriptor } = t.params;
 
@@ -83,9 +83,9 @@ u.combine('descriptor', [
   usage: GPUConst.TextureUsage.TEXTURE_BINDING,
   sampleCount: 4,
   invalid: true
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { descriptor } = t.params;
 
@@ -122,9 +122,9 @@ paramsSubcasesOnly((u) =>
 u.combine('descriptor', [
 { type: 'occlusion', count: 4 },
 { type: 'occlusion', count: 16 },
-{ type: 'occlusion', count: 8193, invalid: true }])).
-
-
+{ type: 'occlusion', count: 8193, invalid: true }]
+)
+).
 fn((t) => {
   const { descriptor } = t.params;
 

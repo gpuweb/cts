@@ -50,9 +50,9 @@ bs)
 
 const queueContexts = combineContexts(kOperationContexts, kOperationContexts);
 const commandBufferContexts = combineContexts(
-kOperationContexts.filter((c) => c !== 'queue'),
-kOperationContexts.filter((c) => c !== 'queue'));
-
+  kOperationContexts.filter((c) => c !== 'queue'),
+  kOperationContexts.filter((c) => c !== 'queue')
+);
 
 /**
  * Mapping of OperationBoundary => to a set of OperationContext pairs.
@@ -67,7 +67,7 @@ export const kBoundaryInfo =
   'command-buffer': {
     contexts: commandBufferContexts
   },
-  'pass': {
+  pass: {
     contexts: [
     ['compute-pass-encoder', 'compute-pass-encoder'],
     ['compute-pass-encoder', 'render-pass-encoder'],
@@ -79,9 +79,7 @@ export const kBoundaryInfo =
 
   },
   'execute-bundles': {
-    contexts: [
-    ['render-bundle-encoder', 'render-bundle-encoder']]
-
+    contexts: [['render-bundle-encoder', 'render-bundle-encoder']]
   },
   'render-bundle': {
     contexts: [
@@ -90,12 +88,10 @@ export const kBoundaryInfo =
     ['render-bundle-encoder', 'render-bundle-encoder']]
 
   },
-  'dispatch': {
-    contexts: [
-    ['compute-pass-encoder', 'compute-pass-encoder']]
-
+  dispatch: {
+    contexts: [['compute-pass-encoder', 'compute-pass-encoder']]
   },
-  'draw': {
+  draw: {
     contexts: [
     ['render-pass-encoder', 'render-pass-encoder'],
     ['render-bundle-encoder', 'render-pass-encoder'],
@@ -166,19 +162,19 @@ export class OperationContextHelper {
           this.renderBundleEncoder = undefined;
           this.currentContext = 'render-pass-encoder';
           return renderBundle;
-        }}
-
+        }
+    }
     return null;
   }
 
   makeDummyAttachment() {
     const texture = this.t.trackForCleanup(
-    this.device.createTexture({
-      format: this.kTextureFormat,
-      size: this.kTextureSize,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT
-    }));
-
+      this.device.createTexture({
+        format: this.kTextureFormat,
+        size: this.kTextureSize,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
+      })
+    );
     return {
       view: texture.createView(),
       loadOp: 'load',
@@ -191,9 +187,9 @@ export class OperationContextHelper {
     const ancestorContext =
     kOperationContexts[
     Math.min(
-    kOperationContexts.indexOf(context),
-    kOperationContexts.indexOf(this.currentContext))];
-
+      kOperationContexts.indexOf(context),
+      kOperationContexts.indexOf(this.currentContext)
+    )];
 
 
     // Pop the context until we're at the common ancestor.
@@ -237,8 +233,8 @@ export class OperationContextHelper {
           case 'compute-pass-encoder':
           case 'render-bundle-encoder':
           case 'render-pass-encoder':
-            unreachable();}
-
+            unreachable();
+        }
         break;
       case 'render-pass-encoder':
         switch (this.currentContext) {
@@ -254,8 +250,8 @@ export class OperationContextHelper {
           case 'render-pass-encoder':
           case 'render-bundle-encoder':
           case 'compute-pass-encoder':
-            unreachable();}
-
+            unreachable();
+        }
         break;
       case 'render-bundle-encoder':
         switch (this.currentContext) {
@@ -275,10 +271,10 @@ export class OperationContextHelper {
             break;
           case 'render-bundle-encoder':
           case 'compute-pass-encoder':
-            unreachable();}
-
-        break;}
-
+            unreachable();
+        }
+        break;
+    }
     this.currentContext = context;
   }
 
@@ -314,9 +310,9 @@ export class OperationContextHelper {
       case 'draw':
         // Nothing to do to separate draws.
         assert(
-        this.currentContext === 'render-pass-encoder' ||
-        this.currentContext === 'render-bundle-encoder');
-
+          this.currentContext === 'render-pass-encoder' ||
+          this.currentContext === 'render-bundle-encoder'
+        );
         break;
       case 'pass':
         this.ensureContext('command-encoder');
@@ -328,8 +324,8 @@ export class OperationContextHelper {
         this.ensureContext('render-pass-encoder');
         // Execute any GPURenderBundles so the next one is in a separate executeBundles.
         this.flushRenderBundles();
-        break;}
-
+        break;
+    }
   }
 }
 //# sourceMappingURL=operation_context_helper.js.map

@@ -90,7 +90,7 @@ export const g = makeTestGroup(F);
 
 g.test('out_of_bounds').
 desc(
-`Test drawing with out of bound index access to make sure encoder validation catch the
+  `Test drawing with out of bound index access to make sure encoder validation catch the
     following indexCount and firstIndex OOB conditions
     - either is within bound but indexCount + firstIndex is out of bound
     - only firstIndex is out of bound
@@ -100,27 +100,27 @@ desc(
     - max uint32 value for both to make sure the sum doesn't overflow
     - max uint32 indexCount and small firstIndex
     - max uint32 firstIndex and small indexCount
-    Together with normal and large instanceCount`).
-
+    Together with normal and large instanceCount`
+).
 params(
-(u) =>
-u.
-combineWithParams([
-{ indexCount: 6, firstIndex: 0 }, // draw all 6 out of 6 index
-{ indexCount: 5, firstIndex: 1 }, // draw the last 5 out of 6 index
-{ indexCount: 1, firstIndex: 5 }, // draw the last 1 out of 6 index
-{ indexCount: 0, firstIndex: 6 }, // firstIndex point to the one after last, but (indexCount + firstIndex) * stride <= bufferSize, valid
-{ indexCount: 0, firstIndex: 7 }, // (indexCount + firstIndex) * stride > bufferSize, invalid
-{ indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
-{ indexCount: 6, firstIndex: 1 }, // indexCount + firstIndex out of bound
-{ indexCount: 1, firstIndex: 6 }, // indexCount valid, but (indexCount + firstIndex) out of bound
-{ indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
-{ indexCount: 10000, firstIndex: 0 }, // indexCount much larger than the bound
-{ indexCount: 0xffffffff, firstIndex: 0xffffffff }, // max uint32 value
-{ indexCount: 0xffffffff, firstIndex: 2 }, // max uint32 indexCount and small firstIndex
-{ indexCount: 2, firstIndex: 0xffffffff } // small indexCount and max uint32 firstIndex
-]).
-combine('instanceCount', [1, 10000]) // normal and large instanceCount
+  (u) =>
+  u.
+  combineWithParams([
+  { indexCount: 6, firstIndex: 0 }, // draw all 6 out of 6 index
+  { indexCount: 5, firstIndex: 1 }, // draw the last 5 out of 6 index
+  { indexCount: 1, firstIndex: 5 }, // draw the last 1 out of 6 index
+  { indexCount: 0, firstIndex: 6 }, // firstIndex point to the one after last, but (indexCount + firstIndex) * stride <= bufferSize, valid
+  { indexCount: 0, firstIndex: 7 }, // (indexCount + firstIndex) * stride > bufferSize, invalid
+  { indexCount: 7, firstIndex: 0 }, // only indexCount out of bound
+  { indexCount: 6, firstIndex: 1 }, // indexCount + firstIndex out of bound
+  { indexCount: 1, firstIndex: 6 }, // indexCount valid, but (indexCount + firstIndex) out of bound
+  { indexCount: 6, firstIndex: 10000 }, // firstIndex much larger than the bound
+  { indexCount: 10000, firstIndex: 0 }, // indexCount much larger than the bound
+  { indexCount: 0xffffffff, firstIndex: 0xffffffff }, // max uint32 value
+  { indexCount: 0xffffffff, firstIndex: 2 }, // max uint32 indexCount and small firstIndex
+  { indexCount: 2, firstIndex: 0xffffffff } // small indexCount and max uint32 firstIndex
+  ]).
+  combine('instanceCount', [1, 10000]) // normal and large instanceCount
 ).
 fn((t) => {
   const { indexCount, firstIndex, instanceCount } = t.params;
@@ -133,24 +133,24 @@ fn((t) => {
 
 g.test('out_of_bounds_zero_sized_index_buffer').
 desc(
-`Test drawing with an empty index buffer to make sure the encoder validation catch the
+  `Test drawing with an empty index buffer to make sure the encoder validation catch the
     following indexCount and firstIndex conditions
     - indexCount + firstIndex is out of bound
     - indexCount is 0 but firstIndex is out of bound
     - only indexCount is out of bound
     - both are 0s (not out of bound) but index buffer size is 0
-    Together with normal and large instanceCount`).
-
+    Together with normal and large instanceCount`
+).
 params(
-(u) =>
-u.
-combineWithParams([
-{ indexCount: 3, firstIndex: 1 }, // indexCount + firstIndex out of bound
-{ indexCount: 0, firstIndex: 1 }, // indexCount is 0 but firstIndex out of bound
-{ indexCount: 3, firstIndex: 0 }, // only indexCount out of bound
-{ indexCount: 0, firstIndex: 0 } // just zeros, valid
-]).
-combine('instanceCount', [1, 10000]) // normal and large instanceCount
+  (u) =>
+  u.
+  combineWithParams([
+  { indexCount: 3, firstIndex: 1 }, // indexCount + firstIndex out of bound
+  { indexCount: 0, firstIndex: 1 }, // indexCount is 0 but firstIndex out of bound
+  { indexCount: 3, firstIndex: 0 }, // only indexCount out of bound
+  { indexCount: 0, firstIndex: 0 } // just zeros, valid
+  ]).
+  combine('instanceCount', [1, 10000]) // normal and large instanceCount
 ).
 fn((t) => {
   const { indexCount, firstIndex, instanceCount } = t.params;

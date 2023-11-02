@@ -100,8 +100,8 @@ function generateCondition(condition) {
       }
     default:{
         unreachable(`Unhandled condition`);
-      }}
-
+      }
+  }
 }
 
 function generateOp(op) {
@@ -135,8 +135,8 @@ function generateOp(op) {
       }
     default:{
         unreachable(`Unhandled op`);
-      }}
-
+      }
+  }
 }
 
 function generateConditionalStatement(statement, condition, op) {
@@ -171,8 +171,8 @@ function generateConditionalStatement(statement, condition, op) {
       }
     default:{
         unreachable(`Unhandled statement`);
-      }}
-
+      }
+  }
 
   return code;
 }
@@ -184,8 +184,8 @@ u.
 combineWithParams(kCollectiveOps).
 combineWithParams(kConditions).
 combine('statement', ['if', 'for', 'while', 'switch']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   let code = `
  @group(0) @binding(0) var s : sampler;
@@ -272,8 +272,8 @@ fn((t) => {
       }
     default:{
         unreachable(`Unhandled type`);
-      }}
-
+      }
+  }
   const code = `
 @group(0) @binding(0) var s : sampler;
 @group(0) @binding(1) var tex : texture_2d<f32>;
@@ -342,8 +342,8 @@ fn((t) => {
       }
     default:{
         unreachable(`Unhandled type`);
-      }}
-
+      }
+  }
   const code = `
 @compute @workgroup_size(16,1,1)
 fn main(@builtin(${t.params.builtin}) p : ${t.params.type}) {
@@ -2019,8 +2019,8 @@ params((u) =>
 u.
 combine('e1', keysOf(kExpressionCases)).
 combine('e2', keysOf(kExpressionCases)).
-combine('op', keysOf(kBinOps))).
-
+combine('op', keysOf(kBinOps))
+).
 fn((t) => {
   const e1 = kExpressionCases[t.params.e1];
   const e2 = kExpressionCases[t.params.e2];
@@ -2065,8 +2065,8 @@ desc(`Test uniformity of uniary expressions`).
 params((u) =>
 u.
 combine('e', keysOf(kExpressionCases)).
-combine('op', ['!b_tmp', '~i_tmp > 0', '-i32(i_tmp) > 0'])).
-
+combine('op', ['!b_tmp', '~i_tmp > 0', '-i32(i_tmp) > 0'])
+).
 fn((t) => {
   const e = kExpressionCases[t.params.e];
   const code = `

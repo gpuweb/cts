@@ -20,14 +20,14 @@ flatMap((cols) =>
 [2, 3, 4].map((rows) => ({
   [`mat${cols}x${rows}`]: () => {
     return FP.abstract.generateMatrixPairToMatrixCases(
-    sparseMatrixF64Range(cols, rows),
-    sparseMatrixF64Range(cols, rows),
-    'finite',
-    FP.abstract.additionMatrixMatrixInterval);
-
+      sparseMatrixF64Range(cols, rows),
+      sparseMatrixF64Range(cols, rows),
+      'finite',
+      FP.abstract.additionMatrixMatrixInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('binary/af_matrix_addition', mat_cases);
@@ -35,28 +35,28 @@ export const d = makeCaseCache('binary/af_matrix_addition', mat_cases);
 g.test('matrix').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x + y, where x and y are matrices
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(`mat${cols}x${rows}`);
   await run(
-  t,
-  abstractBinary('+'),
-  [TypeMat(cols, rows, TypeAbstractFloat), TypeMat(cols, rows, TypeAbstractFloat)],
-  TypeMat(cols, rows, TypeAbstractFloat),
-  t.params,
-  cases);
-
+    t,
+    abstractBinary('+'),
+    [TypeMat(cols, rows, TypeAbstractFloat), TypeMat(cols, rows, TypeAbstractFloat)],
+    TypeMat(cols, rows, TypeAbstractFloat),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=af_matrix_addition.spec.js.map

@@ -14,8 +14,8 @@ export const onlyWorkgroupSizes = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 export const kMapId = {
   passthrough: {
-    f: (id, max) => id,
-    wgsl: (max, scalarType = 'u32') =>
+    f: (id, _max) => id,
+    wgsl: (_max, scalarType = 'u32') =>
     `fn map_id(id: ${scalarType}) -> ${scalarType} { return id; }`
   },
   remap: {
@@ -33,8 +33,8 @@ export function typedArrayCtor(scalarType) {
       return Int32Array;
     default:
       assert(false, 'Atomic variables can only by u32 or i32');
-      return Uint8Array;}
-
+      return Uint8Array;
+  }
 }
 
 export function runStorageVariableTest({

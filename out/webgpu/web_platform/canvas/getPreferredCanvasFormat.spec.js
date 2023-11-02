@@ -9,10 +9,10 @@ export const g = makeTestGroup(Fixture);
 
 g.test('value').
 desc(
-`
+  `
     Ensure getPreferredCanvasFormat returns one of the valid values.
-    `).
-
+    `
+).
 fn((t) => {
   const preferredFormat = navigator.gpu.getPreferredCanvasFormat();
   t.expect(preferredFormat === 'bgra8unorm' || preferredFormat === 'rgba8unorm');

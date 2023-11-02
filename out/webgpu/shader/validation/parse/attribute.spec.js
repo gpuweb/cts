@@ -36,8 +36,8 @@ const kAllowedUsages = {
 g.test('expressions').
 desc(`Tests attributes which allow expressions`).
 params((u) =>
-u.combine('value', keysOf(kPossibleValues)).combine('attribute', keysOf(kAllowedUsages))).
-
+u.combine('value', keysOf(kPossibleValues)).combine('attribute', keysOf(kAllowedUsages))
+).
 fn((t) => {
   const attributes = {
     align: '',

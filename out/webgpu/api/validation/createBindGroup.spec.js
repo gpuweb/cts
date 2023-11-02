@@ -7,19 +7,19 @@
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant, unreachable } from '../../../common/util/util.js';
 import {
-allBindingEntries,
-bindingTypeInfo,
-bufferBindingEntries,
-bufferBindingTypeInfo,
-kBindableResources,
-kBufferBindingTypes,
-kBufferUsages,
-kCompareFunctions,
-kSamplerBindingTypes,
-kTextureUsages,
-kTextureViewDimensions,
-sampledAndStorageBindingEntries,
-texBindingTypeInfo } from
+  allBindingEntries,
+  bindingTypeInfo,
+  bufferBindingEntries,
+  bufferBindingTypeInfo,
+  kBindableResources,
+  kBufferBindingTypes,
+  kBufferUsages,
+  kCompareFunctions,
+  kSamplerBindingTypes,
+  kTextureUsages,
+  kTextureViewDimensions,
+  sampledAndStorageBindingEntries,
+  texBindingTypeInfo } from
 '../../capability_info.js';
 import { GPUConst } from '../../constants.js';
 import { kAllTextureFormats, kTextureFormatInfo } from '../../format_info.js';
@@ -41,8 +41,8 @@ desc('Test that the number of entries must match the number of entries in the Bi
 paramsSubcasesOnly((u) =>
 u //
 .combine('layoutEntryCount', [1, 2, 3]).
-combine('bindGroupEntryCount', [1, 2, 3])).
-
+combine('bindGroupEntryCount', [1, 2, 3])
+).
 fn((t) => {
   const { layoutEntryCount, bindGroupEntryCount } = t.params;
 
@@ -75,13 +75,13 @@ fn((t) => {
 
 g.test('binding_must_be_present_in_layout').
 desc(
-'Test that the binding slot for each entry matches a binding slot defined in the BindGroupLayout.').
-
+  'Test that the binding slot for each entry matches a binding slot defined in the BindGroupLayout.'
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('layoutBinding', [0, 1, 2]).
-combine('binding', [0, 1, 2])).
-
+combine('binding', [0, 1, 2])
+).
 fn((t) => {
   const { layoutBinding, binding } = t.params;
 
@@ -104,13 +104,13 @@ fn((t) => {
 
 g.test('binding_must_contain_resource_defined_in_layout').
 desc(
-'Test that only compatible resource types specified in the BindGroupLayout are allowed for each entry.').
-
+  'Test that only compatible resource types specified in the BindGroupLayout are allowed for each entry.'
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('resourceType', kBindableResources).
-combine('entry', allBindingEntries(false))).
-
+combine('entry', allBindingEntries(false))
+).
 fn((t) => {
   const { resourceType, entry } = t.params;
   const info = bindingTypeInfo(entry);
@@ -133,8 +133,8 @@ fn((t) => {
       break;
     default:
       resourceBindingIsCompatible = info.resource === resourceType;
-      break;}
-
+      break;
+  }
   t.expectValidationError(() => {
     t.device.createBindGroup({ layout, entries: [{ binding: 0, resource }] });
   }, !resourceBindingIsCompatible);
@@ -150,8 +150,8 @@ unless(({ entry, usage }) => {
   const info = texBindingTypeInfo(entry);
   // Can't create the texture for this (usage=STORAGE_BINDING and sampleCount=4), so skip.
   return usage === GPUConst.TextureUsage.STORAGE_BINDING && info.resource === 'sampledTexMS';
-})).
-
+})
+).
 fn((t) => {
   const { entry, usage } = t.params;
   const info = texBindingTypeInfo(entry);
@@ -183,11 +183,11 @@ fn((t) => {
 
 g.test('texture_must_have_correct_component_type').
 desc(
-`
+  `
     Tests that texture bindings must have a format that matches the sample type specified in the BindGroupLayout.
     - Tests a compatible format for every sample type
-    - Tests an incompatible format for every sample type`).
-
+    - Tests an incompatible format for every sample type`
+).
 params((u) => u.combine('sampleType', ['float', 'sint', 'uint'])).
 fn((t) => {
   const { sampleType } = t.params;
@@ -258,27 +258,27 @@ fn((t) => {
 
 g.test('texture_must_have_correct_dimension').
 desc(
-`
+  `
     Test that bound texture views match the dimensions supplied in the BindGroupLayout
       - Test for every GPUTextureViewDimension
       - Test for both TEXTURE_BINDING and STORAGE_BINDING.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('usage', [
 GPUConst.TextureUsage.TEXTURE_BINDING,
-GPUConst.TextureUsage.STORAGE_BINDING]).
-
+GPUConst.TextureUsage.STORAGE_BINDING]
+).
 combine('viewDimension', kTextureViewDimensions).
 unless(
-(p) =>
-p.usage === GPUConst.TextureUsage.STORAGE_BINDING && (
-p.viewDimension === 'cube' || p.viewDimension === 'cube-array')).
-
+  (p) =>
+  p.usage === GPUConst.TextureUsage.STORAGE_BINDING && (
+  p.viewDimension === 'cube' || p.viewDimension === 'cube-array')
+).
 beginSubcases().
-combine('dimension', kTextureViewDimensions)).
-
+combine('dimension', kTextureViewDimensions)
+).
 fn((t) => {
   const { usage, viewDimension, dimension } = t.params;
 
@@ -327,17 +327,17 @@ fn((t) => {
 
 g.test('multisampled_validation').
 desc(
-`
+  `
     Test that the sample count of the texture is greater than 1 if the BindGroup entry's
     multisampled is true. Otherwise, the texture's sampleCount should be 1.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('multisampled', [true, false]).
 beginSubcases().
-combine('sampleCount', [1, 4])).
-
+combine('sampleCount', [1, 4])
+).
 fn((t) => {
   const { multisampled, sampleCount } = t.params;
   const bindGroupLayout = t.device.createBindGroupLayout({
@@ -370,10 +370,10 @@ fn((t) => {
 
 g.test('buffer_offset_and_size_for_bind_groups_match').
 desc(
-`
+  `
     Test that a buffer binding's [offset, offset + size) must be contained in the BindGroup entry's buffer.
-    - Test for various offsets and sizes`).
-
+    - Test for various offsets and sizes`
+).
 paramsSubcasesOnly([
 { offset: 0, size: 512, _success: true }, // offset 0 is valid
 { offset: 256, size: 256, _success: true }, // offset 256 (aligned) is valid
@@ -442,9 +442,9 @@ u //
 expand('size', ({ minBindingSize }) =>
 minBindingSize !== undefined ?
 [minBindingSize - 4, minBindingSize, minBindingSize + 4] :
-[4, 256])).
-
-
+[4, 256]
+)
+).
 fn((t) => {
   const { size, minBindingSize } = t.params;
 
@@ -466,26 +466,27 @@ fn((t) => {
     usage: GPUBufferUsage.STORAGE
   });
 
-  t.expectValidationError(() => {
-    t.device.createBindGroup({
-      layout: bindGroupLayout,
-      entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer: storageBuffer
-        }
-      }]
+  t.expectValidationError(
+    () => {
+      t.device.createBindGroup({
+        layout: bindGroupLayout,
+        entries: [
+        {
+          binding: 0,
+          resource: { buffer: storageBuffer }
+        }]
 
-    });
-  }, minBindingSize !== undefined && size < minBindingSize);
+      });
+    },
+    minBindingSize !== undefined && size < minBindingSize
+  );
 });
 
 g.test('buffer,resource_state').
 desc('Test bind group creation with various buffer resource states').
 paramsSubcasesOnly((u) =>
-u.combine('state', kResourceStates).combine('entry', bufferBindingEntries(true))).
-
+u.combine('state', kResourceStates).combine('entry', bufferBindingEntries(true))
+).
 fn((t) => {
   const { state, entry } = t.params;
 
@@ -527,8 +528,8 @@ desc('Test bind group creation with various texture resource states').
 paramsSubcasesOnly((u) =>
 u.
 combine('state', kResourceStates).
-combine('entry', sampledAndStorageBindingEntries(true, 'rgba8unorm'))).
-
+combine('entry', sampledAndStorageBindingEntries(true, 'rgba8unorm'))
+).
 fn((t) => {
   const { state, entry } = t.params;
   const info = texBindingTypeInfo(entry);
@@ -574,8 +575,8 @@ fn((t) => {
 
 g.test('bind_group_layout,device_mismatch').
 desc(
-'Tests createBindGroup cannot be called with a bind group layout created from another device').
-
+  'Tests createBindGroup cannot be called with a bind group layout created from another device'
+).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -610,30 +611,30 @@ fn((t) => {
 
 g.test('binding_resources,device_mismatch').
 desc(
-`
+  `
     Tests createBindGroup cannot be called with various resources created from another device
     Test with two resources to make sure all resources can be validated:
     - resource0 and resource1 from same device
     - resource0 and resource1 from different device
 
     TODO: test GPUExternalTexture as a resource
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('entry', [
 { buffer: { type: 'storage' } },
 { sampler: { type: 'filtering' } },
 { texture: { multisampled: false } },
-{ storageTexture: { access: 'write-only', format: 'rgba8unorm' } }]).
-
+{ storageTexture: { access: 'write-only', format: 'rgba8unorm' } }]
+).
 beginSubcases().
 combineWithParams([
 { resource0Mismatched: false, resource1Mismatched: false }, //control case
 { resource0Mismatched: true, resource1Mismatched: false },
-{ resource0Mismatched: false, resource1Mismatched: true }])).
-
-
+{ resource0Mismatched: false, resource1Mismatched: true }]
+)
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -683,18 +684,18 @@ fn((t) => {
 
 g.test('storage_texture,usage').
 desc(
-`
+  `
     Test that the texture usage contains STORAGE_BINDING if the BindGroup entry defines
     storageTexture.
-  `).
-
+  `
+).
 params((u) =>
 u //
 // If usage0 and usage1 are the same, the usage being test is a single usage. Otherwise, it's
 // a combined usage.
 .combine('usage0', kTextureUsages).
-combine('usage1', kTextureUsages)).
-
+combine('usage1', kTextureUsages)
+).
 fn((t) => {
   const { usage0, usage1 } = t.params;
 
@@ -729,17 +730,17 @@ fn((t) => {
 
 g.test('storage_texture,mip_level_count').
 desc(
-`
+  `
     Test that the mip level count of the resource of the BindGroup entry as a descriptor is 1 if the
     BindGroup entry defines storageTexture. If the mip level count is not 1, a validation error
     should be generated.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('baseMipLevel', [1, 2]).
-combine('mipLevelCount', [1, 2])).
-
+combine('mipLevelCount', [1, 2])
+).
 fn((t) => {
   const { baseMipLevel, mipLevelCount } = t.params;
 
@@ -773,16 +774,16 @@ fn((t) => {
 
 g.test('storage_texture,format').
 desc(
-`
+  `
     Test that the format of the storage texture is equal to resource's descriptor format if the
     BindGroup entry defines storageTexture.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('storageTextureFormat', kStorageTextureFormats).
-combine('resourceFormat', kStorageTextureFormats)).
-
+combine('resourceFormat', kStorageTextureFormats)
+).
 fn((t) => {
   const { storageTextureFormat, resourceFormat } = t.params;
 
@@ -814,12 +815,12 @@ fn((t) => {
 
 g.test('buffer,usage').
 desc(
-`
+  `
     Test that the buffer usage contains 'UNIFORM' if the BindGroup entry defines buffer and it's
     type is 'uniform', and the buffer usage contains 'STORAGE' if the BindGroup entry's buffer type
     is 'storage'|read-only-storage'.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('type', kBufferBindingTypes)
@@ -829,11 +830,11 @@ u //
 combine('usage0', kBufferUsages).
 combine('usage1', kBufferUsages).
 unless(
-({ usage0, usage1 }) =>
-((usage0 | usage1) & (GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
-0)).
-
-
+  ({ usage0, usage1 }) =>
+  ((usage0 | usage1) & (GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
+  0
+)
+).
 fn((t) => {
   const { type, usage0, usage1 } = t.params;
 
@@ -871,12 +872,12 @@ fn((t) => {
 
 g.test('buffer,resource_offset').
 desc(
-`
+  `
     Test that the resource.offset of the BindGroup entry is a multiple of limits.
     'minUniformBufferOffsetAlignment|minStorageBufferOffsetAlignment' if the BindGroup entry defines
     buffer and the buffer type is 'uniform|storage|read-only-storage'.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('type', kBufferBindingTypes).
@@ -885,9 +886,9 @@ combine('offsetAddMult', [
 { add: 0, mult: 0 },
 { add: 0, mult: 0.5 },
 { add: 0, mult: 1.5 },
-{ add: 2, mult: 0 }])).
-
-
+{ add: 2, mult: 0 }]
+)
+).
 fn((t) => {
   const { type, offsetAddMult } = t.params;
   const minAlignment =
@@ -924,12 +925,12 @@ fn((t) => {
 
 g.test('buffer,resource_binding_size').
 desc(
-`
+  `
     Test that the buffer binding size of the BindGroup entry is equal to or less than limits.
     'maxUniformBufferBindingSize|maxStorageBufferBindingSize' if the BindGroup entry defines
     buffer and the buffer type is 'uniform|storage|read-only-storage'.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('type', kBufferBindingTypes).
@@ -939,9 +940,9 @@ beginSubcases()
 .combine('bindingSize', [
 { base: 1, limit: 0 },
 { base: 0, limit: 1 },
-{ base: 1, limit: 1 }])).
-
-
+{ base: 1, limit: 1 }]
+)
+).
 fn((t) => {
   const {
     type,
@@ -983,19 +984,19 @@ fn((t) => {
 
 g.test('buffer,effective_buffer_binding_size').
 desc(
-`
+  `
   Test that the effective buffer binding size of the BindGroup entry must be a multiple of 4 if the
   buffer type is 'storage|read-only-storage', while there is no such restriction on uniform buffers.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', kBufferBindingTypes).
 beginSubcases().
 combine('offsetMult', [0, 1]).
 combine('bufferSizeAddition', [8, 10]).
-combine('bindingSize', [undefined, 2, 4, 6])).
-
+combine('bindingSize', [undefined, 2, 4, 6])
+).
 fn((t) => {
   const { type, offsetMult, bufferSizeAddition, bindingSize } = t.params;
   const minAlignment =
@@ -1070,18 +1071,18 @@ fn((t) => {
 
 g.test('sampler,compare_function_with_binding_type').
 desc(
-`
+  `
   Test that the sampler of the BindGroup has a 'compareFunction' value if the sampler type of the
   BindGroupLayout is 'comparison'. Other sampler types should not have 'compare' field in
   the descriptor of the sampler.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('bgType', kSamplerBindingTypes).
 beginSubcases().
-combine('compareFunction', [undefined, ...kCompareFunctions])).
-
+combine('compareFunction', [undefined, ...kCompareFunctions])
+).
 fn((t) => {
   const { bgType, compareFunction } = t.params;
 

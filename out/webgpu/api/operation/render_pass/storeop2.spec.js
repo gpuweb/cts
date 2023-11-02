@@ -9,15 +9,15 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('storeOp_controls_whether_1x1_drawn_quad_is_stored').
 desc(
-`
+  `
 TODO: is this duplicated with api,operation,render_pass,storeOp?
 TODO: needs review and rename
-`).
-
+`
+).
 paramsSimple([
 { storeOp: 'store', _expected: 1 }, //
-{ storeOp: 'discard', _expected: 0 }]).
-
+{ storeOp: 'discard', _expected: 0 }]
+).
 fn((t) => {
   const renderTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },

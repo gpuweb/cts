@@ -64,8 +64,8 @@ desc('Tests validation of binary left shift of concrete values').
 params((u) =>
 u.
 combine('case', kLeftShiftCases) //
-.combine('vectorize', [undefined, 2, 3, 4])).
-
+.combine('vectorize', [undefined, 2, 3, 4])
+).
 fn((t) => {
   const lhs = t.params.case.lhs;
   const rhs = t.params.case.rhs;
@@ -85,8 +85,8 @@ desc('Tests validation of binary left shift of vectors with mismatched sizes').
 params((u) =>
 u.
 combine('vectorize_lhs', [2, 3, 4]) //
-.combine('vectorize_rhs', [2, 3, 4])).
-
+.combine('vectorize_rhs', [2, 3, 4])
+).
 fn((t) => {
   const lhs = `1`;
   const rhs = `1`;
@@ -127,8 +127,8 @@ desc('Tests validation of binary right shift of concrete values').
 params((u) =>
 u.
 combine('case', kRightShiftCases) //
-.combine('vectorize', [undefined, 2, 3, 4])).
-
+.combine('vectorize', [undefined, 2, 3, 4])
+).
 fn((t) => {
   const lhs = t.params.case.lhs;
   const rhs = t.params.case.rhs;
@@ -148,8 +148,8 @@ desc('Tests validation of binary right shift of vectors with mismatched sizes').
 params((u) =>
 u.
 combine('vectorize_lhs', [2, 3, 4]) //
-.combine('vectorize_rhs', [2, 3, 4])).
-
+.combine('vectorize_rhs', [2, 3, 4])
+).
 fn((t) => {
   const lhs = `1`;
   const rhs = `1`;

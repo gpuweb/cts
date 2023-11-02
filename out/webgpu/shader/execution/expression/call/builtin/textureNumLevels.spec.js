@@ -12,7 +12,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('sampled').
 specURL('https://www.w3.org/TR/WGSL/#texturenumlevels').
 desc(
-`
+  `
 T, a sampled type.
 
 fn textureNumLevels(t: texture_1d<T>) -> u32
@@ -24,8 +24,8 @@ fn textureNumLevels(t: texture_cube_array<T>) -> u32
 
 Parameters
  * t The sampled array texture.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('texture_type', [
@@ -34,17 +34,17 @@ combine('texture_type', [
 'texture_2d_array',
 'texture_3d',
 'texture_cube',
-'texture_cube_array`']).
-
+'texture_cube_array`']
+).
 beginSubcases().
-combine('sampled_type', ['f32-only', 'i32', 'u32'])).
-
+combine('sampled_type', ['f32-only', 'i32', 'u32'])
+).
 unimplemented();
 
 g.test('depth').
 specURL('https://www.w3.org/TR/WGSL/#texturenumlevels').
 desc(
-`
+  `
 fn textureNumLevels(t: texture_depth_2d) -> u32
 fn textureNumLevels(t: texture_depth_2d_array) -> u32
 fn textureNumLevels(t: texture_depth_cube) -> u32
@@ -52,15 +52,15 @@ fn textureNumLevels(t: texture_depth_cube_array) -> u32
 
 Parameters
  * t The depth array texture.
-`).
-
+`
+).
 params((u) =>
 u.combine('texture_type', [
 'texture_depth_2d',
 'texture_depth_2d_array',
 'texture_depth_cube',
-'texture_depth_cube_array'])).
-
-
+'texture_depth_cube_array']
+)
+).
 unimplemented();
 //# sourceMappingURL=textureNumLevels.spec.js.map

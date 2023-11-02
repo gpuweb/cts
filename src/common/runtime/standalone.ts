@@ -537,7 +537,7 @@ function prepareParams(params: Record<string, ParamValue>): string {
 
 // This is just a cast in one place.
 export function optionsToRecord(options: CTSOptions) {
-  return (options as unknown) as Record<string, boolean | string>;
+  return options as unknown as Record<string, boolean | string>;
 }
 
 /**

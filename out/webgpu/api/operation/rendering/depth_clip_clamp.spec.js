@@ -7,8 +7,8 @@ depth ranges as well.
 import { kDepthStencilFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import {
-checkElementsBetween,
-checkElementsPassPredicate } from
+  checkElementsBetween,
+  checkElementsPassPredicate } from
 
 '../../../util/check_contents.js';
 
@@ -16,7 +16,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('depth_clamp_and_clip').
 desc(
-`
+  `
 Depth written to the depth attachment should always be in the range of the viewport depth,
 even if it was written by the fragment shader (using frag_depth). If depth clipping is enabled,
 primitives should be clipped to the viewport depth before rasterization; if not, these fragments
@@ -31,23 +31,23 @@ be all (near) 0.
 
 Then, run another pass (which outputs every point at z=0.5 to avoid clipping) to verify the depth
 buffer contents by outputting the expected depth with depthCompare:'not-equal': any fragments that
-have unexpected values then get drawn to the color buffer, which is later checked to be empty.`).
-
+have unexpected values then get drawn to the color buffer, which is later checked to be empty.`
+).
 params((u) =>
 u //
 .combine('format', kDepthStencilFormats).
 filter((p) => !!kTextureFormatInfo[p.format].depth).
 combine('unclippedDepth', [undefined, false, true]).
 combine('writeDepth', [false, true]).
-combine('multisampled', [false, true])).
-
+combine('multisampled', [false, true])
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
 
   t.selectDeviceOrSkipTestCase([
   t.params.unclippedDepth ? 'depth-clip-control' : undefined,
-  info.feature]);
-
+  info.feature]
+  );
 }).
 fn(async (t) => {
   const { format, unclippedDepth, writeDepth, multisampled } = t.params;
@@ -307,37 +307,37 @@ fn(async (t) => {
   t.device.queue.submit([enc.finish()]);
 
   t.expectGPUBufferValuesPassCheck(
-  fragInputZFailedBuffer,
-  (a) => checkElementsBetween(a, [() => -1e-5, () => 1e-5]),
-  { type: Float32Array, typedLength: kNumTestPoints });
-
+    fragInputZFailedBuffer,
+    (a) => checkElementsBetween(a, [() => -1e-5, () => 1e-5]),
+    { type: Float32Array, typedLength: kNumTestPoints }
+  );
 
   const kCheckPassedValue = 0;
   const predicatePrinter = [
-  { leftHeader: 'expected ==', getValueForCell: (index) => kCheckPassedValue }];
+  { leftHeader: 'expected ==', getValueForCell: (_index) => kCheckPassedValue }];
 
   if (dsActual && dsExpected && format === 'depth32float') {
     await Promise.all([dsActual.mapAsync(GPUMapMode.READ), dsExpected.mapAsync(GPUMapMode.READ)]);
     const act = new Float32Array(dsActual.getMappedRange());
     const exp = new Float32Array(dsExpected.getMappedRange());
     predicatePrinter.push(
-    { leftHeader: 'act ==', getValueForCell: (index) => act[index].toFixed(2) },
-    { leftHeader: 'exp ==', getValueForCell: (index) => exp[index].toFixed(2) });
-
+      { leftHeader: 'act ==', getValueForCell: (index) => act[index].toFixed(2) },
+      { leftHeader: 'exp ==', getValueForCell: (index) => exp[index].toFixed(2) }
+    );
   }
   t.expectGPUBufferValuesPassCheck(
-  checkBuffer,
-  (a) =>
-  checkElementsPassPredicate(a, (index, value) => value === kCheckPassedValue, {
-    predicatePrinter
-  }),
-  { type: Uint8Array, typedLength: kNumTestPoints, method: 'map' });
-
+    checkBuffer,
+    (a) =>
+    checkElementsPassPredicate(a, (_index, value) => value === kCheckPassedValue, {
+      predicatePrinter
+    }),
+    { type: Uint8Array, typedLength: kNumTestPoints, method: 'map' }
+  );
 });
 
 g.test('depth_test_input_clamped').
 desc(
-`
+  `
 Input to the depth test should always be in the range of viewport depth, even if it was written by
 the fragment shader (using frag_depth).
 
@@ -347,22 +347,22 @@ the default viewport). These expected values are clamped by the shader to [0.25,
 Then, run another pass with the viewport depth set to [0.25,0.75], and output various (unclamped)
 frag_depth values from its fragment shader with depthCompare:'not-equal'. These should get clamped;
 any fragments that have unexpected values then get drawn to the color buffer, which is later checked
-to be empty.`).
-
+to be empty.`
+).
 params((u) =>
 u //
 .combine('format', kDepthStencilFormats).
 filter((p) => !!kTextureFormatInfo[p.format].depth).
 combine('unclippedDepth', [false, true]).
-combine('multisampled', [false, true])).
-
+combine('multisampled', [false, true])
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
 
   t.selectDeviceOrSkipTestCase([
   t.params.unclippedDepth ? 'depth-clip-control' : undefined,
-  info.feature]);
-
+  info.feature]
+  );
 }).
 fn((t) => {
   const { format, unclippedDepth, multisampled } = t.params;

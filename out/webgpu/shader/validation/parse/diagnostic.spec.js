@@ -78,8 +78,8 @@ params((u) =>
 u.
 combine('severity', kSpecDiagnosticSeverities).
 combine('rule', kSpecDiagnosticRules).
-combine('type', kDiagnosticTypes)).
-
+combine('type', kDiagnosticTypes)
+).
 fn((t) => {
   const diag = generateDiagnostic(t.params.type, t.params.severity, t.params.rule);
   let code = ``;
@@ -171,8 +171,8 @@ combine('s1', kSpecDiagnosticSeverities).
 combine('s2', kSpecDiagnosticSeverities).
 filter((u) => {
   return u.loc !== 'module';
-})).
-
+})
+).
 fn((t) => {
   const d1 = generateDiagnostic('attribute', t.params.s1, 'derivative_uniformity');
   const d2 = generateDiagnostic('attribute', t.params.s2, 'derivative_uniformity');
@@ -191,8 +191,8 @@ combine('s1', kSpecDiagnosticSeverities).
 combine('s2', kSpecDiagnosticSeverities).
 filter((u) => {
   return u.s1 !== u.s2;
-})).
-
+})
+).
 fn((t) => {
   const d1 = generateDiagnostic('attribute', t.params.s1, 'derivative_uniformity');
   const d2 = generateDiagnostic('attribute', t.params.s2, 'derivative_uniformity');

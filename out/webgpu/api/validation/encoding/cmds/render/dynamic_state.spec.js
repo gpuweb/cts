@@ -132,11 +132,11 @@ export const g = makeTestGroup(F);
 
 g.test('setViewport,x_y_width_height_nonnegative').
 desc(
-`Test that the parameters of setViewport to define the box must be non-negative.
+  `Test that the parameters of setViewport to define the box must be non-negative.
 
 TODO Test -0 (it should be valid) but can't be tested because the harness complains about duplicate parameters.
-TODO Test the first value smaller than -0`).
-
+TODO Test the first value smaller than -0`
+).
 paramsSubcasesOnly([
 // Control case: everything to 0 is ok, covers the empty viewport case.
 { x: 0, y: 0, w: 0, h: 0 },
@@ -145,8 +145,8 @@ paramsSubcasesOnly([
 { x: -1, y: 0, w: 0, h: 0 },
 { x: 0, y: -1, w: 0, h: 0 },
 { x: 0, y: 0, w: -1, h: 0 },
-{ x: 0, y: 0, w: 0, h: -1 }]).
-
+{ x: 0, y: 0, w: 0, h: -1 }]
+).
 fn((t) => {
   const { x, y, w, h } = t.params;
   const success = x >= 0 && y >= 0 && w >= 0 && h >= 0;
@@ -155,16 +155,16 @@ fn((t) => {
 
 g.test('setViewport,xy_rect_contained_in_attachment').
 desc(
-'Test that the rectangle defined by x, y, width, height must be contained in the attachments').
-
+  'Test that the rectangle defined by x, y, width, height must be contained in the attachments'
+).
 paramsSubcasesOnly((u) =>
 u.
 combineWithParams([
 { attachmentWidth: 3, attachmentHeight: 5 },
 { attachmentWidth: 5, attachmentHeight: 3 },
 { attachmentWidth: 1024, attachmentHeight: 1 },
-{ attachmentWidth: 1, attachmentHeight: 1024 }]).
-
+{ attachmentWidth: 1, attachmentHeight: 1024 }]
+).
 combineWithParams([
 // Control case: a full viewport is valid.
 { dx: 0, dy: 0, dw: 0, dh: 0 },
@@ -179,9 +179,9 @@ combineWithParams([
 { dx: 1, dy: 0, dw: 0, dh: 0 },
 { dx: 0, dy: 1, dw: 0, dh: 0 },
 { dx: 0, dy: 0, dw: 1, dh: 0 },
-{ dx: 0, dy: 0, dw: 0, dh: 1 }])).
-
-
+{ dx: 0, dy: 0, dw: 0, dh: 1 }]
+)
+).
 fn((t) => {
   const { attachmentWidth, attachmentHeight, dx, dy, dw, dh } = t.params;
   const x = dx;
@@ -191,10 +191,10 @@ fn((t) => {
 
   const success = x + w <= attachmentWidth && y + h <= attachmentHeight;
   t.testViewportCall(
-  success,
-  { x, y, w, h, minDepth: 0, maxDepth: 1 },
-  { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 });
-
+    success,
+    { x, y, w, h, minDepth: 0, maxDepth: 1 },
+    { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 }
+  );
 });
 
 g.test('setViewport,depth_rangeAndOrder').
@@ -211,8 +211,8 @@ paramsSubcasesOnly([
 // Invalid cases
 { minDepth: -0.1, maxDepth: 1 },
 { minDepth: 0, maxDepth: 1.1 },
-{ minDepth: 0.5, maxDepth: 0.49999 }]).
-
+{ minDepth: 0.5, maxDepth: 0.49999 }]
+).
 fn((t) => {
   const { minDepth, maxDepth } = t.params;
   const success =
@@ -222,11 +222,11 @@ fn((t) => {
 
 g.test('setScissorRect,x_y_width_height_nonnegative').
 desc(
-`Test that the parameters of setScissorRect to define the box must be non-negative or a TypeError is thrown.
+  `Test that the parameters of setScissorRect to define the box must be non-negative or a TypeError is thrown.
 
 TODO Test -0 (it should be valid) but can't be tested because the harness complains about duplicate parameters.
-TODO Test the first value smaller than -0`).
-
+TODO Test the first value smaller than -0`
+).
 paramsSubcasesOnly([
 // Control case: everything to 0 is ok, covers the empty scissor case.
 { x: 0, y: 0, w: 0, h: 0 },
@@ -235,8 +235,8 @@ paramsSubcasesOnly([
 { x: -1, y: 0, w: 0, h: 0 },
 { x: 0, y: -1, w: 0, h: 0 },
 { x: 0, y: 0, w: -1, h: 0 },
-{ x: 0, y: 0, w: 0, h: -1 }]).
-
+{ x: 0, y: 0, w: 0, h: -1 }]
+).
 fn((t) => {
   const { x, y, w, h } = t.params;
   const success = x >= 0 && y >= 0 && w >= 0 && h >= 0;
@@ -245,16 +245,16 @@ fn((t) => {
 
 g.test('setScissorRect,xy_rect_contained_in_attachment').
 desc(
-'Test that the rectangle defined by x, y, width, height must be contained in the attachments').
-
+  'Test that the rectangle defined by x, y, width, height must be contained in the attachments'
+).
 paramsSubcasesOnly((u) =>
 u.
 combineWithParams([
 { attachmentWidth: 3, attachmentHeight: 5 },
 { attachmentWidth: 5, attachmentHeight: 3 },
 { attachmentWidth: 1024, attachmentHeight: 1 },
-{ attachmentWidth: 1, attachmentHeight: 1024 }]).
-
+{ attachmentWidth: 1, attachmentHeight: 1024 }]
+).
 combineWithParams([
 // Control case: a full scissor is valid.
 { dx: 0, dy: 0, dw: 0, dh: 0 },
@@ -269,9 +269,9 @@ combineWithParams([
 { dx: 1, dy: 0, dw: 0, dh: 0 },
 { dx: 0, dy: 1, dw: 0, dh: 0 },
 { dx: 0, dy: 0, dw: 1, dh: 0 },
-{ dx: 0, dy: 0, dw: 0, dh: 1 }])).
-
-
+{ dx: 0, dy: 0, dw: 0, dh: 1 }]
+)
+).
 fn((t) => {
   const { attachmentWidth, attachmentHeight, dx, dy, dw, dh } = t.params;
   const x = dx;
@@ -281,10 +281,10 @@ fn((t) => {
 
   const success = x + w <= attachmentWidth && y + h <= attachmentHeight;
   t.testScissorCall(
-  success,
-  { x, y, w, h },
-  { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 });
-
+    success,
+    { x, y, w, h },
+    { width: attachmentWidth, height: attachmentHeight, depthOrArrayLayers: 1 }
+  );
 });
 
 g.test('setBlendConstant').
@@ -292,8 +292,8 @@ desc('Test that almost any color value is valid for setBlendConstant').
 paramsSubcasesOnly([
 { r: 1.0, g: 1.0, b: 1.0, a: 1.0 },
 { r: -1.0, g: -1.0, b: -1.0, a: -1.0 },
-{ r: Number.MAX_SAFE_INTEGER, g: Number.MIN_SAFE_INTEGER, b: -0, a: 100000 }]).
-
+{ r: Number.MAX_SAFE_INTEGER, g: Number.MIN_SAFE_INTEGER, b: -0, a: 100000 }]
+).
 fn((t) => {
   const { r, g, b, a } = t.params;
   const encoders = t.createDummyRenderPassEncoder();
@@ -308,8 +308,8 @@ paramsSubcasesOnly([
 { value: 1 }, //
 { value: 0 },
 { value: 1000 },
-{ value: 0xffffffff }]).
-
+{ value: 0xffffffff }]
+).
 fn((t) => {
   const { value } = t.params;
   const encoders = t.createDummyRenderPassEncoder();

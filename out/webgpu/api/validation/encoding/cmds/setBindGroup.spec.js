@@ -13,12 +13,12 @@ TODO: merge these notes and implement.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { makeValueTestVariant, range, unreachable } from '../../../../../common/util/util.js';
 import {
-kBufferBindingTypes,
-kMinDynamicBufferOffsetAlignment } from
+  kBufferBindingTypes,
+  kMinDynamicBufferOffsetAlignment } from
 '../../../../capability_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
-kProgrammableEncoderTypes } from
+  kProgrammableEncoderTypes } from
 
 '../../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
@@ -32,8 +32,8 @@ class F extends ValidationTest {
       case 'render bundle':
         return GPUShaderStage.FRAGMENT;
       default:
-        unreachable('Unknown encoder type');}
-
+        unreachable('Unknown encoder type');
+    }
   }
 
   createBindingResourceWithState(
@@ -57,8 +57,8 @@ class F extends ValidationTest {
           })
         };
       default:
-        unreachable('unknown resource type');}
-
+        unreachable('unknown resource type');
+    }
   }
 
   /**
@@ -88,9 +88,9 @@ class F extends ValidationTest {
       entries: indices.map((binding) => ({
         binding,
         resource: this.createBindingResourceWithState(
-        resourceType,
-        state === 'destroyed' ? state : 'valid')
-
+          resourceType,
+          state === 'destroyed' ? state : 'valid'
+        )
       }))
     });
 
@@ -109,8 +109,8 @@ params((u) =>
 u.
 combine('encoderType', kProgrammableEncoderTypes).
 combine('state', kResourceStates).
-combine('resourceType', ['buffer', 'texture'])).
-
+combine('resourceType', ['buffer', 'texture'])
+).
 fn((t) => {
   const { encoderType, state, resourceType } = t.params;
   const maxBindGroups = t.device.limits.maxBindGroups;
@@ -131,18 +131,18 @@ fn((t) => {
 
 g.test('bind_group,device_mismatch').
 desc(
-`
+  `
     Tests setBindGroup cannot be called with a bind group created from another device
     - x= setBindGroup {sequence overload, Uint32Array overload}
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('encoderType', kProgrammableEncoderTypes).
 beginSubcases().
 combine('useU32Array', [true, false]).
-combine('mismatched', [true, false])).
-
+combine('mismatched', [true, false])
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -219,10 +219,10 @@ combineWithParams([
 // Dynamic storage buffer out of bounds because of binding size
 { dynamicOffsets: [0, 512], _success: false },
 { dynamicOffsets: [0, 1024], _success: false },
-{ dynamicOffsets: [0, 0xffffffff], _success: false }]).
-
-combine('useU32array', [false, true])).
-
+{ dynamicOffsets: [0, 0xffffffff], _success: false }]
+).
+combine('useU32array', [false, true])
+).
 fn((t) => {
   const kBindingSize = 12;
 
@@ -322,8 +322,8 @@ paramsSubcasesOnly([
   dynamicOffsetsDataStart: 0,
   dynamicOffsetsDataLength: 2,
   _success: true
-}]).
-
+}]
+).
 fn((t) => {
   const { offsets, dynamicOffsetsDataStart, dynamicOffsetsDataLength, _success } = t.params;
   const kBindingSize = 8;
@@ -357,12 +357,12 @@ fn((t) => {
 
   const doSetBindGroup = () => {
     encoder.setBindGroup(
-    0,
-    bindGroup,
-    new Uint32Array(offsets),
-    dynamicOffsetsDataStart,
-    dynamicOffsetsDataLength);
-
+      0,
+      bindGroup,
+      new Uint32Array(offsets),
+      dynamicOffsetsDataStart,
+      dynamicOffsetsDataLength
+    );
   };
 
   if (_success) {
@@ -377,12 +377,12 @@ fn((t) => {
 
 g.test('buffer_dynamic_offsets').
 desc(
-`
+  `
     Test that the dynamic offsets of the BufferLayout is a multiple of
     'minUniformBufferOffsetAlignment|minStorageBufferOffsetAlignment' if the BindGroup entry defines
     buffer and the buffer type is 'uniform|storage|read-only-storage'.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('type', kBufferBindingTypes).
@@ -393,9 +393,9 @@ combine('dynamicOffsetVariant', [
 { mult: 0.5, add: 0 },
 { mult: 1.5, add: 0 },
 { mult: 2, add: 0 },
-{ mult: 1, add: 2 }])).
-
-
+{ mult: 1, add: 2 }]
+)
+).
 fn((t) => {
   const { type, dynamicOffsetVariant, encoderType } = t.params;
   const kBindingSize = 12;

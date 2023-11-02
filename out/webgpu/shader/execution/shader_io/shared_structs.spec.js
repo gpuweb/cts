@@ -8,14 +8,14 @@ export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 g.test('shared_with_buffer').
 desc(
-`Test sharing an entry point IO struct with a buffer.
+  `Test sharing an entry point IO struct with a buffer.
 
      This test defines a structure that contains both builtin attributes and layout attributes,
      and uses that structure as both an entry point input and the store type of a storage buffer.
      The builtin attributes should be ignored when used for the storage buffer, and the layout
      attributes should be ignored when used as an entry point IO parameter.
-    `).
-
+    `
+).
 fn((t) => {
   // Set the dispatch parameters such that we get some interesting (non-zero) built-in variables.
   const wgsize = new Uint32Array([8, 4, 2]);
@@ -80,24 +80,24 @@ fn((t) => {
   const checkOutput = (outputs) => {
     if (checkElementsEqual(outputs.slice(0, 3), targetGroup)) {
       return new Error(
-      `group_id comparison failed\n` +
-      `    expected: ${targetGroup}\n` +
-      `    got:      ${outputs.slice(0, 3)}`);
-
+        `group_id comparison failed\n` +
+        `    expected: ${targetGroup}\n` +
+        `    got:      ${outputs.slice(0, 3)}`
+      );
     }
     if (outputs[8] !== targetLocalIndex) {
       return new Error(
-      `local_index comparison failed\n` +
-      `    expected: ${targetLocalIndex}\n` +
-      `    got:      ${outputs[8]}`);
-
+        `local_index comparison failed\n` +
+        `    expected: ${targetLocalIndex}\n` +
+        `    got:      ${outputs[8]}`
+      );
     }
     if (checkElementsEqual(outputs.slice(16, 19), numGroups)) {
       return new Error(
-      `numGroups comparison failed\n` +
-      `    expected: ${numGroups}\n` +
-      `    got:      ${outputs.slice(16, 19)}`);
-
+        `numGroups comparison failed\n` +
+        `    expected: ${numGroups}\n` +
+        `    got:      ${outputs.slice(16, 19)}`
+      );
     }
     return undefined;
   };
@@ -109,12 +109,12 @@ fn((t) => {
 
 g.test('shared_between_stages').
 desc(
-`Test sharing an entry point IO struct between different pipeline stages.
+  `Test sharing an entry point IO struct between different pipeline stages.
 
      This test defines an entry point IO structure, and uses it as both the output of a vertex
      shader and the input to a fragment shader.
-    `).
-
+    `
+).
 fn((t) => {
   const size = [31, 31];
   const wgsl = `
@@ -205,18 +205,18 @@ fn((t) => {
   { coord: { x: 2, y: 2 }, exp: blackPixel },
   { coord: { x: 2, y: 28 }, exp: blackPixel },
   { coord: { x: 28, y: 2 }, exp: blackPixel },
-  { coord: { x: 28, y: 28 }, exp: blackPixel }]);
-
+  { coord: { x: 28, y: 28 }, exp: blackPixel }]
+  );
 });
 
 g.test('shared_with_non_entry_point_function').
 desc(
-`Test sharing an entry point IO struct with a non entry point function.
+  `Test sharing an entry point IO struct with a non entry point function.
 
      This test defines structures that contain builtin and location attributes, and uses those
      structures as parameter and return types for entry point functions and regular functions.
-    `).
-
+    `
+).
 fn((t) => {
   // The test shader defines structures that contain members decorated with built-in variable
   // attributes and user-defined IO. These structures are passed to and returned from regular
@@ -289,9 +289,9 @@ fn((t) => {
   // Draw a triangle.
   // The vertex buffer contains the vertex colors (all red).
   const vertexBuffer = t.makeBufferWithContents(
-  new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]),
-  GPUBufferUsage.VERTEX);
-
+    new Float32Array([1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0]),
+    GPUBufferUsage.VERTEX
+  );
   const renderTarget = t.device.createTexture({
     size: [31, 31],
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC,
@@ -327,7 +327,7 @@ fn((t) => {
   { coord: { x: 2, y: 2 }, exp: blackPixel },
   { coord: { x: 2, y: 28 }, exp: blackPixel },
   { coord: { x: 28, y: 2 }, exp: blackPixel },
-  { coord: { x: 28, y: 28 }, exp: blackPixel }]);
-
+  { coord: { x: 28, y: 28 }, exp: blackPixel }]
+  );
 });
 //# sourceMappingURL=shared_structs.spec.js.map

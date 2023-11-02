@@ -21,9 +21,9 @@ fn((t) => {
 
 g.test('vertex_state_only').
 desc(
-`Tests creating vertex-state-only render pipeline. A vertex-only render pipeline has no fragment
-state (and thus has no color state), and can be created with or without depth stencil state.`).
-
+  `Tests creating vertex-state-only render pipeline. A vertex-only render pipeline has no fragment
+state (and thus has no color state), and can be created with or without depth stencil state.`
+).
 params((u) =>
 u.
 combine('isAsync', [false, true]).
@@ -32,10 +32,10 @@ combine('depthStencilFormat', [
 'depth24plus',
 'depth24plus-stencil8',
 'depth32float',
-'']).
-
-combine('hasColor', [false, true])).
-
+'']
+).
+combine('hasColor', [false, true])
+).
 fn((t) => {
   const { isAsync, depthStencilFormat, hasColor } = t.params;
 
@@ -63,8 +63,8 @@ fn((t) => {
 
 g.test('pipeline_layout,device_mismatch').
 desc(
-'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device').
-
+  'Tests createRenderPipeline(Async) cannot be called with a pipeline layout created from another device'
+).
 paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);

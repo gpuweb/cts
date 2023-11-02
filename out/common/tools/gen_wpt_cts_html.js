@@ -3,9 +3,9 @@
 **/import { promises as fs } from 'fs';import * as path from 'path';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import {
-TestQueryMultiCase,
-TestQueryMultiFile,
-TestQueryMultiTest } from
+  TestQueryMultiCase,
+  TestQueryMultiFile,
+  TestQueryMultiTest } from
 '../internal/query/query.js';
 import { assert } from '../util/util.js';
 
@@ -144,8 +144,8 @@ let config;
       }
     default:
       console.error('incorrect number of arguments!');
-      printUsageAndExit(1);}
-
+      printUsageAndExit(1);
+  }
 
   const useChunking = Number.isFinite(config.maxChunkTimeMS);
 
@@ -156,8 +156,8 @@ let config;
   let expectationLines = new Set();
   if (config.expectations) {
     expectationLines = new Set(
-    (await fs.readFile(config.expectations.file, 'utf8')).split(/\r?\n/).filter((l) => l.length));
-
+      (await fs.readFile(config.expectations.file, 'utf8')).split(/\r?\n/).filter((l) => l.length)
+    );
   }
 
   const expectations = new Map();
@@ -204,14 +204,14 @@ let config;
       // path must be <= 259. Leave room for e.g.:
       // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
       assert(
-      queryString.length < 185,
-      `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
+        queryString.length < 185,
+        `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
 - Reduce the length of the parts of the test query
 - Reduce the parameterization of the test
 - Make the test function faster and regenerate the listing_meta entry
 - Reduce the specificity of test expectations (if you're using them)
-${queryString}`);
-
+${queryString}`
+      );
 
       lines.push({
         urlQueryString: prefix + query.toString(), // "?worker=0&q=..."
@@ -221,8 +221,8 @@ ${queryString}`);
       variantCount++;
       filesSeen.add(new TestQueryMultiTest(query.suite, query.filePathParts, []).toString());
       testsSeen.add(
-      new TestQueryMultiCase(query.suite, query.filePathParts, query.testPathParts, {}).toString());
-
+        new TestQueryMultiCase(query.suite, query.filePathParts, query.testPathParts, {}).toString()
+      );
     }
     prefixComment.comment += `; ${variantCount} variants generated from ${testsSeen.size} tests in ${filesSeen.size} files`;
   }

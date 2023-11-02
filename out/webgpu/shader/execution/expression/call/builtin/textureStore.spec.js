@@ -24,7 +24,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('store_1d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturestore').
 desc(
-`
+  `
 C is i32 or u32
 
 fn textureStore(t: texture_storage_1d<F,write>, coords: C, value: vec4<T>)
@@ -34,21 +34,21 @@ Parameters:
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * value The new texel value
-`).
-
+`
+).
 params((u) =>
 u.
 combineWithParams(TexelFormats).
 beginSubcases().
 combine('coords', generateCoordBoundaries(1)).
-combine('C', ['i32', 'u32'])).
-
+combine('C', ['i32', 'u32'])
+).
 unimplemented();
 
 g.test('store_2d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturestore').
 desc(
-`
+  `
 C is i32 or u32
 
 fn textureStore(t: texture_storage_2d<F,write>, coords: vec2<C>, value: vec4<T>)
@@ -58,21 +58,21 @@ Parameters:
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * value The new texel value
-`).
-
+`
+).
 params((u) =>
 u.
 combineWithParams(TexelFormats).
 beginSubcases().
 combine('coords', generateCoordBoundaries(2)).
-combine('C', ['i32', 'u32'])).
-
+combine('C', ['i32', 'u32'])
+).
 unimplemented();
 
 g.test('store_array_2d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturestore').
 desc(
-`
+  `
 C is i32 or u32
 
 fn textureStore(t: texture_storage_2d_array<F,write>, coords: vec2<C>, array_index: C, value: vec4<T>)
@@ -83,24 +83,24 @@ Parameters:
  * array_index The 0-based texture array index
  * coords The texture coordinates used for sampling.
  * value The new texel value
-`).
-
+`
+).
 params(
-(u) =>
-u.
-combineWithParams(TexelFormats).
-beginSubcases().
-combine('coords', generateCoordBoundaries(2)).
-combine('C', ['i32', 'u32']).
-combine('C_value', [-1, 0, 1, 2, 3, 4])
-/* array_index not param'd as out-of-bounds is implementation specific */).
-
+  (u) =>
+  u.
+  combineWithParams(TexelFormats).
+  beginSubcases().
+  combine('coords', generateCoordBoundaries(2)).
+  combine('C', ['i32', 'u32']).
+  combine('C_value', [-1, 0, 1, 2, 3, 4])
+  /* array_index not param'd as out-of-bounds is implementation specific */
+).
 unimplemented();
 
 g.test('store_3d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturestore').
 desc(
-`
+  `
 C is i32 or u32
 
 fn textureStore(t: texture_storage_3d<F,write>, coords: vec3<C>, value: vec4<T>)
@@ -110,14 +110,14 @@ Parameters:
  * s  The sampler type.
  * coords The texture coordinates used for sampling.
  * value The new texel value
-`).
-
+`
+).
 params((u) =>
 u.
 combineWithParams(TexelFormats).
 beginSubcases().
 combine('coords', generateCoordBoundaries(3)).
-combine('C', ['i32', 'u32'])).
-
+combine('C', ['i32', 'u32'])
+).
 unimplemented();
 //# sourceMappingURL=textureStore.spec.js.map

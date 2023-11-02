@@ -8,8 +8,8 @@ export const g = makeTestGroup(ShaderValidationTest);
 g.test('placement').
 desc('Test that discard usage is validated').
 params((u) =>
-u.combine('place', ['compute', 'vertex', 'fragment', 'module', 'subfrag', 'subvert', 'subcomp'])).
-
+u.combine('place', ['compute', 'vertex', 'fragment', 'module', 'subfrag', 'subvert', 'subcomp'])
+).
 fn((t) => {
   const pos = {
     module: '',

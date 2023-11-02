@@ -29,13 +29,13 @@ const kDeterminantValues = [-38, -10, -5, -1, 0, 1, 5, 10, 38];
 const kDeterminantMatrixValues = {
   2: kDeterminantValues.map((f, idx) => [
   [idx % 4 === 0 ? f : idx, idx % 4 === 1 ? f : -idx],
-  [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx]]),
-
+  [idx % 4 === 2 ? f : -idx, idx % 4 === 3 ? f : idx]]
+  ),
   3: kDeterminantValues.map((f, idx) => [
   [idx % 9 === 0 ? f : idx, idx % 9 === 1 ? f : -idx, idx % 9 === 2 ? f : idx],
   [idx % 9 === 3 ? f : -idx, idx % 9 === 4 ? f : idx, idx % 9 === 5 ? f : -idx],
-  [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx]]),
-
+  [idx % 9 === 6 ? f : idx, idx % 9 === 7 ? f : -idx, idx % 9 === 8 ? f : idx]]
+  ),
   4: kDeterminantValues.map((f, idx) => [
   [
   idx % 16 === 0 ? f : idx,
@@ -59,9 +59,9 @@ const kDeterminantMatrixValues = {
   idx % 16 === 12 ? f : -idx,
   idx % 16 === 13 ? f : idx,
   idx % 16 === 14 ? f : -idx,
-  idx % 16 === 15 ? f : idx]])
+  idx % 16 === 15 ? f : idx]]
 
-
+  )
 };
 
 // Cases: f32_matDxD_[non_]const
@@ -70,13 +70,13 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`f32_mat${dim}x${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateMatrixToScalarCases(
-    kDeterminantMatrixValues[dim],
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.determinantInterval);
-
+      kDeterminantMatrixValues[dim],
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.determinantInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: f16_matDxD_[non_]const
@@ -85,13 +85,13 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`f16_mat${dim}x${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateMatrixToScalarCases(
-    kDeterminantMatrixValues[dim],
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f16.determinantInterval);
-
+      kDeterminantMatrixValues[dim],
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f16.determinantInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('determinant', {
@@ -112,10 +112,10 @@ params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4]
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `f32_mat${dim}x${dim}_const` :
-  `f32_mat${dim}x${dim}_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `f32_mat${dim}x${dim}_const` :
+    `f32_mat${dim}x${dim}_non_const`
+  );
   await run(t, builtin('determinant'), [TypeMat(dim, dim, TypeF32)], TypeF32, t.params, cases);
 });
 
@@ -129,10 +129,10 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `f16_mat${dim}x${dim}_const` :
-  `f16_mat${dim}x${dim}_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `f16_mat${dim}x${dim}_const` :
+    `f16_mat${dim}x${dim}_non_const`
+  );
   await run(t, builtin('determinant'), [TypeMat(dim, dim, TypeF16)], TypeF16, t.params, cases);
 });
 //# sourceMappingURL=determinant.spec.js.map

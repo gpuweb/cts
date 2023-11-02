@@ -31,14 +31,14 @@ params(kMaximumLimitBaseParams.combine('async', [false, true])).
 fn(async (t) => {
   const { limitTest, testValueName, async } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const lastIndex = testValue - 1;
-    const pipelineDescriptor = getPipelineDescriptor(device, lastIndex);
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const lastIndex = testValue - 1;
+      const pipelineDescriptor = getPipelineDescriptor(device, lastIndex);
 
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
-  });
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
+    }
+  );
 });
 //# sourceMappingURL=maxVertexAttributes.spec.js.map

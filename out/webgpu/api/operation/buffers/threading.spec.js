@@ -19,9 +19,9 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('serialize').
 desc(
-`Copy a GPUBuffer to another thread while it is in various states on
-{the sending thread, yet another thread}.`).
-
+  `Copy a GPUBuffer to another thread while it is in various states on
+{the sending thread, yet another thread}.`
+).
 unimplemented();
 
 g.test('destroyed').

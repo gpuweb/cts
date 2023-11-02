@@ -261,8 +261,8 @@ function getDefaultTestLocations({
       ...getTriangleListTestLocations(kValidPixelColor),
       ...getTriangleStripTestLocations(primitiveRestart ? kInvalidPixelColor : kValidPixelColor)];
 
-      break;}
-
+      break;
+  }
   return testLocations;
 }
 
@@ -327,47 +327,47 @@ class PrimitiveTopologyTest extends TextureTestMixin(GPUTest) {
     // Otherwise, >1 pixels could be generated.
     // Output color is solid green.
     renderPass.setPipeline(
-    this.device.createRenderPipeline({
-      layout: 'auto',
-      vertex: {
-        module: this.device.createShaderModule({
-          code: `
+      this.device.createRenderPipeline({
+        layout: 'auto',
+        vertex: {
+          module: this.device.createShaderModule({
+            code: `
               @vertex fn main(
                 @location(0) pos : vec4<f32>
                 ) -> @builtin(position) vec4<f32> {
                 return pos;
               }`
-        }),
-        entryPoint: 'main',
-        buffers: [
-        {
-          arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
-          attributes: [
+          }),
+          entryPoint: 'main',
+          buffers: [
           {
-            format: 'float32x4',
-            offset: 0,
-            shaderLocation: 0
+            arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
+            attributes: [
+            {
+              format: 'float32x4',
+              offset: 0,
+              shaderLocation: 0
+            }]
+
           }]
 
-        }]
-
-      },
-      fragment: {
-        module: this.device.createShaderModule({
-          code: `
+        },
+        fragment: {
+          module: this.device.createShaderModule({
+            code: `
               @fragment fn main() -> @location(0) vec4<f32> {
                 return vec4<f32>(0.0, 1.0, 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main',
-        targets: [{ format: kColorFormat }]
-      },
-      primitive: {
-        topology,
-        stripIndexFormat
-      }
-    }));
-
+          }),
+          entryPoint: 'main',
+          targets: [{ format: kColorFormat }]
+        },
+        primitive: {
+          topology,
+          stripIndexFormat
+        }
+      })
+    );
 
     // Create vertices for the primitive in a vertex buffer and bind it.
     const vertexCoords = generateVertexBuffer(VertexLocations);
@@ -377,31 +377,31 @@ class PrimitiveTopologyTest extends TextureTestMixin(GPUTest) {
     // Restart the strip between [v3, <restart>, v4].
     if (primitiveRestart) {
       const indexBuffer = this.makeBufferWithContents(
-      new Uint32Array([0, 1, 2, -1, 3, 4, 5]),
-      GPUBufferUsage.INDEX);
-
+        new Uint32Array([0, 1, 2, -1, 3, 4, 5]),
+        GPUBufferUsage.INDEX
+      );
       renderPass.setIndexBuffer(indexBuffer, 'uint32');
 
       if (indirect) {
         renderPass.drawIndexedIndirect(
-        this.makeBufferWithContents(
-        new Uint32Array([drawCount + 1, 1, 0, 0, 0]),
-        GPUBufferUsage.INDIRECT),
-
-        0);
-
+          this.makeBufferWithContents(
+            new Uint32Array([drawCount + 1, 1, 0, 0, 0]),
+            GPUBufferUsage.INDIRECT
+          ),
+          0
+        );
       } else {
         renderPass.drawIndexed(drawCount + 1); // extra index for restart
       }
     } else {
       if (indirect) {
         renderPass.drawIndirect(
-        this.makeBufferWithContents(
-        new Uint32Array([drawCount, 1, 0, 0]),
-        GPUBufferUsage.INDIRECT),
-
-        0);
-
+          this.makeBufferWithContents(
+            new Uint32Array([drawCount, 1, 0, 0]),
+            GPUBufferUsage.INDIRECT
+          ),
+          0
+        );
       } else {
         renderPass.draw(drawCount);
       }
@@ -426,7 +426,7 @@ const topologies = [
 
 g.test('basic').
 desc(
-`Compute test locations for valid and invalid pixels for each topology.
+  `Compute test locations for valid and invalid pixels for each topology.
   If the primitive covers the pixel, the color value will be |kValidPixelColor|.
   Otherwise, a non-covered pixel will be |kInvalidPixelColor|.
 
@@ -434,17 +434,17 @@ desc(
     - topology= {...all topologies}
     - indirect= {true, false}
     - primitiveRestart= { true, false } - always false for non-strip topologies
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('topology', topologies).
 combine('indirect', [false, true]).
 combine('primitiveRestart', [false, true]).
 unless(
-(p) => p.primitiveRestart && p.topology !== 'line-strip' && p.topology !== 'triangle-strip')).
-
-
+  (p) => p.primitiveRestart && p.topology !== 'line-strip' && p.topology !== 'triangle-strip'
+)
+).
 fn((t) => {
   t.run({
     ...t.params,
@@ -454,15 +454,15 @@ fn((t) => {
 
 g.test('unaligned_vertex_count').
 desc(
-`Test that drawing with a number of vertices that's not a multiple of the vertices a given primitive list topology is not an error. The last primitive is not drawn.
+  `Test that drawing with a number of vertices that's not a multiple of the vertices a given primitive list topology is not an error. The last primitive is not drawn.
 
     Params:
     - topology= {line-list, triangle-list}
     - indirect= {true, false}
     - drawCount - number of vertices to draw. A value smaller than the test's default of ${kDefaultDrawCount}.
                    One smaller for line-list. One or two smaller for triangle-list.
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('topology', ['line-list', 'triangle-list']).
@@ -475,10 +475,10 @@ expand('drawCount', function* (p) {
     case 'triangle-list':
       yield kDefaultDrawCount - 1;
       yield kDefaultDrawCount - 2;
-      break;}
-
-})).
-
+      break;
+  }
+})
+).
 fn((t) => {
   const testLocations = getDefaultTestLocations({ ...t.params, invalidateLastInList: true });
   t.run({

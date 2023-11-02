@@ -7,7 +7,7 @@ Primitive topology tested in api/operation/render_pipeline/primitive_topology.sp
 Index format tested in api/operation/command_buffer/render/state_tracking.spec.ts.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-assert } from
+  assert } from
 
 
 '../../../../common/util/util.js';
@@ -54,6 +54,7 @@ class DrawTest extends TextureTestMixin(GPUTest) {
     // |   \
     // |______\
     // Unit triangle shaped like this. 0-1 Y-down.
+
     const triangleVertices = [
     0.0, 0.0,
     0.0, 1.0,
@@ -173,44 +174,44 @@ struct Output {
       assert(defaulted.indexBufferOffset !== undefined);
 
       renderPass.setIndexBuffer(
-      this.makeBufferWithContents(
-      new Uint32Array([
-      // Offset the index buffer contents by empty data.
-      ...new Array(defaulted.indexBufferOffset / Uint32Array.BYTES_PER_ELEMENT),
+        this.makeBufferWithContents(
+          new Uint32Array([
+          // Offset the index buffer contents by empty data.
+          ...new Array(defaulted.indexBufferOffset / Uint32Array.BYTES_PER_ELEMENT),
 
-      0, 1, 2, //
-      3, 4, 5, //
-      6, 7, 8 //
-      ]),
-      GPUBufferUsage.INDEX),
-
-      'uint32',
-      defaulted.indexBufferOffset);
-
+          0, 1, 2, //
+          3, 4, 5, //
+          6, 7, 8 //
+          ]),
+          GPUBufferUsage.INDEX
+        ),
+        'uint32',
+        defaulted.indexBufferOffset
+      );
 
       renderPass.setVertexBuffer(
-      0,
-      this.makeBufferWithContents(
-      new Float32Array([
-      // Offset the vertex buffer contents by empty data.
-      ...new Array(defaulted.vertexBufferOffset / Float32Array.BYTES_PER_ELEMENT),
+        0,
+        this.makeBufferWithContents(
+          new Float32Array([
+          // Offset the vertex buffer contents by empty data.
+          ...new Array(defaulted.vertexBufferOffset / Float32Array.BYTES_PER_ELEMENT),
 
-      // selected with base_vertex=0
-      // count=6
-      ...triangleVertices, //   |   count=6;first=3
-      ...triangleVertices, //   |       |
-      ...triangleVertices, //           |
+          // selected with base_vertex=0
+          // count=6
+          ...triangleVertices, //   |   count=6;first=3
+          ...triangleVertices, //   |       |
+          ...triangleVertices, //           |
 
-      // selected with base_vertex=9
-      // count=6
-      ...triangleVertices, //   |   count=6;first=3
-      ...triangleVertices, //   |       |
-      ...triangleVertices //           |
-      ]),
-      GPUBufferUsage.VERTEX),
-
-      defaulted.vertexBufferOffset);
-
+          // selected with base_vertex=9
+          // count=6
+          ...triangleVertices, //   |   count=6;first=3
+          ...triangleVertices, //   |       |
+          ...triangleVertices //           |
+          ]),
+          GPUBufferUsage.VERTEX
+        ),
+        defaulted.vertexBufferOffset
+      );
 
       if (defaulted.indirect) {
         const args = [
@@ -221,9 +222,9 @@ struct Output {
         defaulted.firstInstance];
 
         renderPass.drawIndexedIndirect(
-        this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
-        0);
-
+          this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
+          0
+        );
       } else {
         const args = [
         opts.count,
@@ -237,21 +238,21 @@ struct Output {
     } else {
       // NON-INDEXED DRAW
       renderPass.setVertexBuffer(
-      0,
-      this.makeBufferWithContents(
-      new Float32Array([
-      // Offset the vertex buffer contents by empty data.
-      ...new Array(defaulted.vertexBufferOffset / Float32Array.BYTES_PER_ELEMENT),
+        0,
+        this.makeBufferWithContents(
+          new Float32Array([
+          // Offset the vertex buffer contents by empty data.
+          ...new Array(defaulted.vertexBufferOffset / Float32Array.BYTES_PER_ELEMENT),
 
-      // count=6
-      ...triangleVertices, //   |   count=6;first=3
-      ...triangleVertices, //   |       |
-      ...triangleVertices //           |
-      ]),
-      GPUBufferUsage.VERTEX),
-
-      defaulted.vertexBufferOffset);
-
+          // count=6
+          ...triangleVertices, //   |   count=6;first=3
+          ...triangleVertices, //   |       |
+          ...triangleVertices //           |
+          ]),
+          GPUBufferUsage.VERTEX
+        ),
+        defaulted.vertexBufferOffset
+      );
 
       if (defaulted.indirect) {
         const args = [
@@ -261,9 +262,9 @@ struct Output {
         defaulted.firstInstance];
 
         renderPass.drawIndirect(
-        this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
-        0);
-
+          this.makeBufferWithContents(new Uint32Array(args), GPUBufferUsage.INDIRECT),
+          0
+        );
       } else {
         const args = [opts.count, opts.instanceCount, opts.firstIndex, opts.firstInstance];
         renderPass.draw.apply(renderPass, [...args]);
@@ -313,7 +314,7 @@ export const g = makeTestGroup(DrawTest);
 
 g.test('arguments').
 desc(
-`Test that draw arguments are passed correctly by drawing triangles in a grid.
+  `Test that draw arguments are passed correctly by drawing triangles in a grid.
 Horizontally across the texture are triangles with increasing "primitive id".
 Vertically down the screen are triangles with increasing instance id.
 Increasing the |first| param should skip some of the beginning triangles on the horizontal axis.
@@ -332,8 +333,8 @@ Params:
   - vertex_buffer_offset= {0, 32}
   - index_buffer_offset= {0, 16} - only for indexed draws
   - base_vertex= {0, 9} - only for indexed draws
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('first', [0, 3]).
@@ -344,8 +345,8 @@ combine('indexed', [false, true]).
 combine('indirect', [false, true]).
 combine('vertex_buffer_offset', [0, 32]).
 expand('index_buffer_offset', (p) => p.indexed ? [0, 16] : [undefined]).
-expand('base_vertex', (p) => p.indexed ? [0, 9] : [undefined])).
-
+expand('base_vertex', (p) => p.indexed ? [0, 9] : [undefined])
+).
 beforeAllSubcases((t) => {
   if (t.params.first_instance > 0 && t.params.indirect) {
     t.selectDeviceOrSkipTestCase('indirect-first-instance');
@@ -367,13 +368,13 @@ fn((t) => {
 
 g.test('default_arguments').
 desc(
-`
+  `
   Test that defaults arguments are passed correctly by drawing triangles in a grid when they are not
   defined. This test is written based on the 'arguments' with 'undefined' value in the parameters.
     - mode= {draw, drawIndexed}
     - arg= {instance_count, first_index, first_instance, base_vertex}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('mode', ['draw', 'drawIndexed']).
@@ -382,9 +383,9 @@ combine('instance_count', [undefined, 4]).
 combine('first_index', [undefined, 3]).
 combine('first_instance', [undefined, 2]).
 expand('base_vertex', (p) =>
-p.mode === 'drawIndexed' ? [undefined, 9] : [undefined])).
-
-
+p.mode === 'drawIndexed' ? [undefined, 9] : [undefined]
+)
+).
 fn((t) => {
   const kVertexCount = 3;
   const kVertexBufferOffset = 32;
@@ -405,7 +406,7 @@ fn((t) => {
 
 g.test('vertex_attributes,basic').
 desc(
-`Test basic fetching of vertex attributes.
+  `Test basic fetching of vertex attributes.
   Each vertex attribute is a single value and written out into a storage buffer.
   Tests that vertices with offsets/strides for instanced/non-instanced attributes are
   fetched correctly. Not all vertex formats are tested.
@@ -415,8 +416,8 @@ desc(
   - vertex_buffer_count={1, 4, 8} - where # attributes is > 0
   - vertex_format={uint32, float32}
   - step_mode= {undefined, vertex, instance, mixed} - where mixed only applies for vertex_buffer_count > 1
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('vertex_attribute_count', [1, 4, 8, 16]).
@@ -424,8 +425,8 @@ combine('vertex_buffer_count', [1, 4, 8]).
 combine('vertex_format', ['uint32', 'float32']).
 combine('step_mode', [undefined, 'vertex', 'instance', 'mixed']).
 unless((p) => p.vertex_attribute_count < p.vertex_buffer_count).
-unless((p) => p.step_mode === 'mixed' && p.vertex_buffer_count <= 1)).
-
+unless((p) => p.step_mode === 'mixed' && p.vertex_buffer_count <= 1)
+).
 fn((t) => {
   const vertexCount = 4;
   const instanceCount = 4;
@@ -446,8 +447,8 @@ fn((t) => {
       break;
     case 'float32':
       ExpectedDataConstructor = Float32Array;
-      break;}
-
+      break;
+  }
 
   // Populate |bufferLayouts|, |vertexBufferData|, and |vertexBuffers|.
   // We will use this to both create the render pipeline, and produce the
@@ -474,14 +475,14 @@ fn((t) => {
         break;
       case 'instance':
         vertexOrInstanceCount = instanceCount;
-        break;}
-
+        break;
+    }
 
     const attributes = [];
     const numAttributesForBuffer = Math.min(
-    maxAttributesPerVertexBuffer,
-    maxAttributes - b * maxAttributesPerVertexBuffer);
-
+      maxAttributesPerVertexBuffer,
+      maxAttributes - b * maxAttributesPerVertexBuffer
+    );
 
     for (let a = 0; a < numAttributesForBuffer; ++a) {
       const attribute = {
@@ -518,8 +519,8 @@ fn((t) => {
 
   // Create the expected data buffer.
   const expectedData = new ExpectedDataConstructor(
-  vertexCount * instanceCount * vertexInputShaderLocations.length);
-
+    vertexCount * instanceCount * vertexInputShaderLocations.length
+  );
 
   // Populate the expected data. This is a CPU-side version of what we expect the shader
   // to do.
@@ -539,14 +540,14 @@ fn((t) => {
               break;
             case 'instance':
               vertexOrInstanceIndex = instanceIndex;
-              break;}
-
+              break;
+          }
 
           const view = new ExpectedDataConstructor(
-          vertexBufferData[b].buffer,
-          bufferLayout.arrayStride * vertexOrInstanceIndex + attribute.offset,
-          1);
-
+            vertexBufferData[b].buffer,
+            bufferLayout.arrayStride * vertexOrInstanceIndex + attribute.offset,
+            1
+          );
           expectedData[outputIndex] = view[0];
         }
       });
@@ -560,8 +561,8 @@ fn((t) => {
       break;
     case 'float32':
       wgslFormat = 'f32';
-      break;}
-
+      break;
+  }
 
   // Maximum inter-stage shader location is 14, and we need to consume one for primitiveId, 12 for
   // location 0 to 11,  and combine the remaining vertex inputs into one location (one
@@ -735,7 +736,7 @@ ${accumulateVariableAssignmentsInFragmentShader}
 
 g.test('vertex_attributes,formats').
 desc(
-`Test all vertex formats are fetched correctly.
+  `Test all vertex formats are fetched correctly.
 
     Runs a basic vertex shader which loads vertex data from two attributes which
     may have different formats. Write data out to a storage buffer and check that
@@ -744,13 +745,13 @@ desc(
     Params:
       - vertex_format_1={...all_vertex_formats}
       - vertex_format_2={...all_vertex_formats}
-  `).
-
+  `
+).
 unimplemented();
 
 g.test(`largeish_buffer`).
 desc(
-`
+  `
     Test a very large range of buffer is bound.
     For a render pipeline that use a vertex step mode and a instance step mode vertex buffer, test
     that :
@@ -762,7 +763,7 @@ desc(
         - The bound range of index buffer is significantly larger than necessary
     - For drawIndirect and drawIndexedIndirect:
         - The indirect buffer is significantly larger than necessary
-`).
-
+`
+).
 unimplemented();
 //# sourceMappingURL=draw.spec.js.map

@@ -1,6 +1,9 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { Colors } from '../../../../common/util/colors.js';
+/**
+ * Options for runFlowControlTest()
+ */
 
 
 
@@ -13,15 +16,12 @@
 
 
 
-
-
-
-
-
-
-
-
-
+/**
+ * The builder interface for the runFlowControlTest() callback.
+ * This interface is indented to be used to inject WGSL logic into the test
+ * shader.
+ * @see runFlowControlTest
+ */
 
 
 
@@ -201,113 +201,113 @@ ${main_wgsl.extra}
   t.queue.submit([encoder.finish()]);
 
   t.eventualExpectOK(
-  t.
-  readGPUBufferRangeTyped(outputBuffer, {
-    type: Uint32Array,
-    typedLength: outputBuffer.size / 4
-  }).
-  then((outputs) => {
-    // outputs[0]    is the number of outputted values
-    // outputs[1..N] holds the outputted values
-    const outputCount = outputs.data[0];
-    if (outputCount > maxOutputValues) {
-      return new Error(
-      `output data count (${outputCount}) exceeds limit of ${maxOutputValues}`);
+    t.
+    readGPUBufferRangeTyped(outputBuffer, {
+      type: Uint32Array,
+      typedLength: outputBuffer.size / 4
+    }).
+    then((outputs) => {
+      // outputs[0]    is the number of outputted values
+      // outputs[1..N] holds the outputted values
+      const outputCount = outputs.data[0];
+      if (outputCount > maxOutputValues) {
+        return new Error(
+          `output data count (${outputCount}) exceeds limit of ${maxOutputValues}`
+        );
+      }
 
-    }
+      // returns an Error with the given message and WGSL source
+      const fail = (err) => Error(`${err}\nWGSL:\n${Colors.dim(Colors.blue(wgsl))}`);
 
-    // returns an Error with the given message and WGSL source
-    const fail = (err) => Error(`${err}\nWGSL:\n${Colors.dim(Colors.blue(wgsl))}`);
+      // returns a string that shows the outputted values to help understand the whole trace.
+      const print_output_value = () => {
+        const subarray = outputs.data.subarray(1, outputCount + 1);
+        return `Output values (length: ${outputCount}): ${subarray.join(', ')}`;
+      };
 
-    // returns a string that shows the outputted values to help understand the whole trace.
-    const print_output_value = () => {
-      const subarray = outputs.data.subarray(1, outputCount + 1);
-      return `Output values (length: ${outputCount}): ${subarray.join(', ')}`;
-    };
-
-    // returns a colorized string of the expect_order() call, highlighting
-    // the event number that caused an error.
-    const expect_order_err = (expectation, err_idx) => {
-      let out = 'expect_order(';
-      for (let i = 0; i < expectation.values.length; i++) {
-        if (i > 0) {
-          out += ', ';
+      // returns a colorized string of the expect_order() call, highlighting
+      // the event number that caused an error.
+      const expect_order_err = (expectation, err_idx) => {
+        let out = 'expect_order(';
+        for (let i = 0; i < expectation.values.length; i++) {
+          if (i > 0) {
+            out += ', ';
+          }
+          if (i < err_idx) {
+            out += Colors.green(`${expectation.values[i]}`);
+          } else if (i > err_idx) {
+            out += Colors.dim(`${expectation.values[i]}`);
+          } else {
+            out += Colors.red(`${expectation.values[i]}`);
+          }
         }
-        if (i < err_idx) {
-          out += Colors.green(`${expectation.values[i]}`);
-        } else if (i > err_idx) {
-          out += Colors.dim(`${expectation.values[i]}`);
-        } else {
-          out += Colors.red(`${expectation.values[i]}`);
-        }
-      }
-      out += ')';
-      return out;
-    };
+        out += ')';
+        return out;
+      };
 
-    // Each of the outputted values represents an event
-    // Check that each event is as expected
-    for (let event = 0; event < outputCount; event++) {
-      const eventValue = outputs.data[1 + event]; // outputs.data[0] is count
-      // Expectation id starts from 1, and 0 is invalid value.
-      if (eventValue === 0) {
-        return fail(
-        `outputs.data[${event}] is initial value 0, doesn't refer to any valid expectations)\n${print_output_value()}`);
-
-      }
-      const expectationIndex = eventValue - 1;
-      if (expectationIndex >= expectations.length) {
-        return fail(
-        `outputs.data[${event}] value (${expectationIndex}) exceeds number of expectations (${
-        expectations.length
-        })\n${print_output_value()}`);
-
-      }
-      const expectation = expectations[expectationIndex];
-      switch (expectation.kind) {
-        case 'not-reached':
+      // Each of the outputted values represents an event
+      // Check that each event is as expected
+      for (let event = 0; event < outputCount; event++) {
+        const eventValue = outputs.data[1 + event]; // outputs.data[0] is count
+        // Expectation id starts from 1, and 0 is invalid value.
+        if (eventValue === 0) {
           return fail(
-          `expect_not_reached() reached at event ${event}\n${print_output_value()}\n${
-          expectation.stack
-          }`);
-
-        case 'events':
-          if (expectation.counter >= expectation.values.length) {
+            `outputs.data[${event}] is initial value 0, doesn't refer to any valid expectations)\n${print_output_value()}`
+          );
+        }
+        const expectationIndex = eventValue - 1;
+        if (expectationIndex >= expectations.length) {
+          return fail(
+            `outputs.data[${event}] value (${expectationIndex}) exceeds number of expectations (${
+            expectations.length
+            })\n${print_output_value()}`
+          );
+        }
+        const expectation = expectations[expectationIndex];
+        switch (expectation.kind) {
+          case 'not-reached':
             return fail(
-            `${expect_order_err(
-            expectation,
-            expectation.counter)
-            }) unexpectedly reached at event ${Colors.red(
-            `${event}`)
-            }\n${print_output_value()}\n${expectation.stack}`);
+              `expect_not_reached() reached at event ${event}\n${print_output_value()}\n${
+              expectation.stack
+              }`
+            );
+          case 'events':
+            if (expectation.counter >= expectation.values.length) {
+              return fail(
+                `${expect_order_err(
+                  expectation,
+                  expectation.counter
+                )}) unexpectedly reached at event ${Colors.red(
+                  `${event}`
+                )}\n${print_output_value()}\n${expectation.stack}`
+              );
+            }
+            if (event !== expectation.values[expectation.counter]) {
+              return fail(
+                `${expect_order_err(expectation, expectation.counter)} expected event ${
+                expectation.values[expectation.counter]
+                }, got ${event}\n${print_output_value()}\n${expectation.stack}`
+              );
+            }
 
-          }
-          if (event !== expectation.values[expectation.counter]) {
-            return fail(
-            `${expect_order_err(expectation, expectation.counter)} expected event ${
-            expectation.values[expectation.counter]
-            }, got ${event}\n${print_output_value()}\n${expectation.stack}`);
-
-          }
-
-          expectation.counter++;
-          break;}
-
-    }
-
-    // Finally check that all expect_order() calls were reached
-    for (const expectation of expectations) {
-      if (expectation.kind === 'events' && expectation.counter !== expectation.values.length) {
-        return fail(
-        `${expect_order_err(expectation, expectation.counter)} event ${
-        expectation.values[expectation.counter]
-        } was not reached\n${expectation.stack}\n${print_output_value()}`);
-
+            expectation.counter++;
+            break;
+        }
       }
-    }
-    outputs.cleanup();
-    return undefined;
-  }));
 
+      // Finally check that all expect_order() calls were reached
+      for (const expectation of expectations) {
+        if (expectation.kind === 'events' && expectation.counter !== expectation.values.length) {
+          return fail(
+            `${expect_order_err(expectation, expectation.counter)} event ${
+            expectation.values[expectation.counter]
+            } was not reached\n${expectation.stack}\n${print_output_value()}`
+          );
+        }
+      }
+      outputs.cleanup();
+      return undefined;
+    })
+  );
 }
 //# sourceMappingURL=harness.js.map

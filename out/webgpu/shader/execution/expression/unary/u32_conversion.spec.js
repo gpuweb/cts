@@ -6,24 +6,24 @@ Execution Tests for the u32 conversion operations
 import { GPUTest } from '../../../../gpu_test.js';
 import { kValue } from '../../../../util/constants.js';
 import {
-bool,
-f32,
-f16,
-i32,
-TypeBool,
-TypeF32,
-TypeF16,
-TypeI32,
-TypeU32,
-u32 } from
+  bool,
+  f32,
+  f16,
+  i32,
+  TypeBool,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeU32,
+  u32 } from
 '../../../../util/conversion.js';
 import {
-fullF32Range,
-fullF16Range,
-fullI32Range,
-fullU32Range,
-quantizeToF32,
-quantizeToF16 } from
+  fullF32Range,
+  fullF16Range,
+  fullI32Range,
+  fullU32Range,
+  quantizeToF32,
+  quantizeToF16 } from
 '../../../../util/math.js';
 import { reinterpretI32AsU32 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
@@ -106,15 +106,15 @@ function vectorizeToExpression(vectorize) {
 g.test('bool').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 u32(e), where e is a bool
 
 The result is 1u if e is true and 0u otherwise
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('bool');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeBool], TypeU32, t.params, cases);
@@ -123,15 +123,15 @@ fn(async (t) => {
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#bool-builtin').
 desc(
-`
+  `
 u32(e), where e is a u32
 
 Identity operation
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('u32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeU32], TypeU32, t.params, cases);
@@ -140,15 +140,15 @@ fn(async (t) => {
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 u32(e), where e is a i32
 
 Reinterpretation of bits
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('i32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeI32], TypeU32, t.params, cases);
@@ -157,15 +157,15 @@ fn(async (t) => {
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 u32(e), where e is a f32
 
 e is converted to u32, rounding towards zero
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeF32], TypeU32, t.params, cases);
@@ -174,15 +174,15 @@ fn(async (t) => {
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 u32(e), where e is a f16
 
 e is converted to u32, rounding towards zero
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
@@ -194,14 +194,14 @@ fn(async (t) => {
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 u32(e), where e is an AbstractInt
 
 Identity operation if the e can be represented in u32, otherwise it produces a shader-creation error
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 //# sourceMappingURL=u32_conversion.spec.js.map

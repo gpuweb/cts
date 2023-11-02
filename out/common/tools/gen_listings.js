@@ -45,13 +45,13 @@ for (const suiteDir of argv.slice(3)) {
     const outFile = path.normalize(path.join(outDir, `${suite}/listing.js`));
     fs.mkdirSync(path.join(outDir, suite), { recursive: true });
     fs.writeFileSync(
-    outFile,
-    `\
+      outFile,
+      `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
 export const listing = ${JSON.stringify(listing, undefined, 2)};
-`);
-
+`
+    );
 
     // If there was a sourcemap for the file we just replaced, delete it.
     try {

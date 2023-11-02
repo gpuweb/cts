@@ -18,12 +18,12 @@ export class ShaderValidationTest extends GPUTest {
   expectCompileResult(expectedResult, code) {
     let shaderModule;
     this.expectGPUError(
-    'validation',
-    () => {
-      shaderModule = this.device.createShaderModule({ code });
-    },
-    expectedResult !== true);
-
+      'validation',
+      () => {
+        shaderModule = this.device.createShaderModule({ code });
+      },
+      expectedResult !== true
+    );
 
     const error = new ErrorWithExtra('', () => ({ shaderModule }));
     this.eventualAsyncExpectation(async () => {
@@ -67,12 +67,12 @@ export class ShaderValidationTest extends GPUTest {
   expectCompileWarning(expectWarning, code) {
     let shaderModule;
     this.expectGPUError(
-    'validation',
-    () => {
-      shaderModule = this.device.createShaderModule({ code });
-    },
-    false);
-
+      'validation',
+      () => {
+        shaderModule = this.device.createShaderModule({ code });
+      },
+      false
+    );
 
     const error = new ErrorWithExtra('', () => ({ shaderModule }));
     this.eventualAsyncExpectation(async () => {
@@ -136,23 +136,23 @@ fn main() {
 
     let shaderModule;
     this.expectGPUError(
-    'validation',
-    () => {
-      shaderModule = this.device.createShaderModule({ code });
-    },
-    false);
-
+      'validation',
+      () => {
+        shaderModule = this.device.createShaderModule({ code });
+      },
+      false
+    );
 
     this.expectGPUError(
-    'validation',
-    () => {
-      this.device.createComputePipeline({
-        layout: 'auto',
-        compute: { module: shaderModule, entryPoint: 'main', constants: args.constants }
-      });
-    },
-    !args.expectedResult);
-
+      'validation',
+      () => {
+        this.device.createComputePipeline({
+          layout: 'auto',
+          compute: { module: shaderModule, entryPoint: 'main', constants: args.constants }
+        });
+      },
+      !args.expectedResult
+    );
   }
 
   /**

@@ -12,18 +12,18 @@ const kFloat32Formats = ['r32float', 'rg32float', 'rgba32float'];
 
 g.test('create_bind_group').
 desc(
-`
+  `
 Test that it is valid to bind a float32 texture format to a 'float' sampled texture iff
 float32-filterable is enabled.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('enabled', [true, false]).
 beginSubcases().
 combine('format', kFloat32Formats).
-combine('sampleType', kTextureSampleTypes)).
-
+combine('sampleType', kTextureSampleTypes)
+).
 beforeAllSubcases((t) => {
   if (t.params.enabled) {
     t.selectDeviceOrSkipTestCase('float32-filterable');

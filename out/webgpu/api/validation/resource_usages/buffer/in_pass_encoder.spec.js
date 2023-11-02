@@ -134,19 +134,19 @@ function IsBufferUsageInBindGroup(bufferUsage) {
     case 'indexedIndirect':
       return false;
     default:
-      unreachable();}
-
+      unreachable();
+  }
 }
 
 export const g = makeTestGroup(BufferResourceUsageTest);
 
 g.test('subresources,buffer_usage_in_one_compute_pass_with_no_dispatch').
 desc(
-`
+  `
 Test that it is always allowed to set multiple bind groups with same buffer in a compute pass
 encoder without any dispatch calls as state-setting compute pass commands, like setBindGroup(index,
-bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`).
-
+bindGroup, dynamicOffsets), do not contribute directly to a usage scope.`
+).
 params((u) =>
 u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage']).
@@ -154,8 +154,8 @@ combine('usage1', ['uniform', 'storage', 'read-only-storage']).
 beginSubcases().
 combine('visibility0', ['compute', 'fragment']).
 combine('visibility1', ['compute', 'fragment']).
-combine('hasOverlap', [true, false])).
-
+combine('hasOverlap', [true, false])
+).
 fn((t) => {
   const { usage0, usage1, visibility0, visibility1, hasOverlap } = t.params;
 
@@ -184,7 +184,7 @@ fn((t) => {
 
 g.test('subresources,buffer_usage_in_one_compute_pass_with_one_dispatch').
 desc(
-`
+  `
 Test that when one buffer is used in one compute pass encoder, its list of internal usages within
 one usage scope can only be a compatible usage list. According to WebGPU SPEC, within one dispatch,
 for each bind group slot that is used by the current GPUComputePipeline's layout, every subresource
@@ -192,8 +192,8 @@ referenced by that bind group is "used" in the usage scope.
 
 For both usage === storage, there is writable buffer binding aliasing so we skip this case and will
 have tests covered (https://github.com/gpuweb/cts/issues/2232)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('usage0AccessibleInDispatch', [true, false]).
@@ -242,8 +242,8 @@ filter((t) => {
   }
   return true;
 }).
-combine('hasOverlap', [true, false])).
-
+combine('hasOverlap', [true, false])
+).
 fn((t) => {
   const {
     usage0AccessibleInDispatch,
@@ -301,8 +301,8 @@ fn((t) => {
         computePassEncoder.setPipeline(computePipeline);
         computePassEncoder.dispatchWorkgroupsIndirect(buffer, offset0);
         break;
-      }}
-
+      }
+  }
 
   const offset1 = hasOverlap ? offset0 : kBoundBufferSize;
   switch (usage1) {
@@ -356,8 +356,8 @@ fn((t) => {
         computePassEncoder.setPipeline(computePipeline);
         computePassEncoder.dispatchWorkgroupsIndirect(buffer, offset1);
         break;
-      }}
-
+      }
+  }
   computePassEncoder.end();
 
   const usageHasConflict =
@@ -376,20 +376,20 @@ fn((t) => {
 
 g.test('subresources,buffer_usage_in_compute_pass_with_two_dispatches').
 desc(
-`
+  `
 Test that it is always allowed to use one buffer in different dispatch calls as in WebGPU SPEC,
 within one dispatch, for each bind group slot that is used by the current GPUComputePipeline's
 layout, every subresource referenced by that bind group is "used" in the usage scope, and different
-dispatch calls refer to different usage scopes.`).
-
+dispatch calls refer to different usage scopes.`
+).
 params((u) =>
 u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage', 'indirect']).
 combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect']).
 beginSubcases().
 combine('inSamePass', [true, false]).
-combine('hasOverlap', [true, false])).
-
+combine('hasOverlap', [true, false])
+).
 fn((t) => {
   const { usage0, usage1, inSamePass, hasOverlap } = t.params;
 
@@ -423,8 +423,8 @@ fn((t) => {
         }
       default:
         unreachable();
-        break;}
-
+        break;
+    }
   };
 
   const buffer = t.createBufferWithState('valid', {
@@ -456,12 +456,12 @@ fn((t) => {
 
 g.test('subresources,buffer_usage_in_one_render_pass_with_no_draw').
 desc(
-`
+  `
 Test that when one buffer is used in one render pass encoder, its list of internal usages within one
 usage scope (all the commands in the whole render pass) can only be a compatible usage list even if
 there is no draw call in the render pass.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage', 'vertex', 'index']).
@@ -471,8 +471,8 @@ combine('hasOverlap', [true, false]).
 combine('visibility0', ['compute', 'fragment']).
 unless((t) => t.visibility0 === 'compute' && !IsBufferUsageInBindGroup(t.usage0)).
 combine('visibility1', ['compute', 'fragment']).
-unless((t) => t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1))).
-
+unless((t) => t.visibility1 === 'compute' && !IsBufferUsageInBindGroup(t.usage1))
+).
 fn((t) => {
   const { usage0, usage1, hasOverlap, visibility0, visibility1 } = t.params;
 
@@ -502,8 +502,8 @@ fn((t) => {
       case 'indirect':
       case 'indexedIndirect':
         unreachable();
-        break;}
-
+        break;
+    }
   };
 
   const buffer = t.createBufferWithState('valid', {
@@ -531,7 +531,7 @@ fn((t) => {
 
 g.test('subresources,buffer_usage_in_one_render_pass_with_one_draw').
 desc(
-`
+  `
 Test that when one buffer is used in one render pass encoder where there is one draw call, its list
 of internal usages within one usage scope (all the commands in the whole render pass) can only be a
 compatible usage list. The usage scope rules are not related to the buffer offset or the bind group
@@ -539,8 +539,8 @@ layout visibilities.
 
 For both usage === storage, there is writable buffer binding aliasing so we skip this case and will
 have tests covered (https://github.com/gpuweb/cts/issues/2232)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('usage0', kAllBufferUsages).
@@ -609,8 +609,8 @@ filter((t) => {
   }
   return true;
 }).
-combine('hasOverlap', [true, false])).
-
+combine('hasOverlap', [true, false])
+).
 fn((t) => {
   const {
     // Buffer with usage0 will be "used" in the draw call if this value is true.
@@ -671,8 +671,8 @@ fn((t) => {
       case 'indexedIndirect':{
           // We will handle the indirect draw calls later.
           break;
-        }}
-
+        }
+    }
   };
 
   const MakeDrawCallWithOneUsage = (
@@ -701,8 +701,8 @@ fn((t) => {
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, offset);
           break;
-        }}
-
+        }
+    }
   };
 
   const encoder = t.device.createCommandEncoder();
@@ -715,14 +715,14 @@ fn((t) => {
   const usedBindGroupLayouts = [];
 
   UseBufferOnRenderPassEncoder(
-  usage0AccessibleInDraw,
-  bufferIndex0,
-  offset0,
-  usage0,
-  visibility0,
-  renderPassEncoder,
-  usedBindGroupLayouts);
-
+    usage0AccessibleInDraw,
+    bufferIndex0,
+    offset0,
+    usage0,
+    visibility0,
+    renderPassEncoder,
+    usedBindGroupLayouts
+  );
 
   let vertexBufferCount = 0;
 
@@ -762,14 +762,14 @@ fn((t) => {
   }
 
   UseBufferOnRenderPassEncoder(
-  usage1AccessibleInDraw,
-  bufferIndex1,
-  offset1,
-  usage1,
-  visibility1,
-  renderPassEncoder,
-  usedBindGroupLayouts);
-
+    usage1AccessibleInDraw,
+    bufferIndex1,
+    offset1,
+    usage1,
+    visibility1,
+    renderPassEncoder,
+    usedBindGroupLayouts
+  );
 
   // Set pipeline and do draw call if drawBeforeUsage1 === false
   if (!drawBeforeUsage1) {
@@ -824,20 +824,20 @@ fn((t) => {
 
 g.test('subresources,buffer_usage_in_one_render_pass_with_two_draws').
 desc(
-`
+  `
 Test that when one buffer is used in different draw calls in one render pass, its list of internal
 usages within one usage scope (all the commands in the whole render pass) can only be a compatible
 usage list, and the usage scope rules are not related to the buffer offset, while the draw calls in
-different render pass encoders belong to different usage scopes.`).
-
+different render pass encoders belong to different usage scopes.`
+).
 params((u) =>
 u.
 combine('usage0', kAllBufferUsages).
 combine('usage1', kAllBufferUsages).
 beginSubcases().
 combine('inSamePass', [true, false]).
-combine('hasOverlap', [true, false])).
-
+combine('hasOverlap', [true, false])
+).
 fn((t) => {
   const { usage0, usage1, inSamePass, hasOverlap } = t.params;
   const buffer = t.createBufferWithState('valid', {
@@ -900,8 +900,8 @@ fn((t) => {
           renderPassEncoder.setIndexBuffer(indexBuffer, 'uint16');
           renderPassEncoder.drawIndexedIndirect(buffer, offset);
           break;
-        }}
-
+        }
+    }
   };
 
   const encoder = t.device.createCommandEncoder();

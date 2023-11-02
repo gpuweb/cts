@@ -12,18 +12,18 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('command_buffer,device_mismatch').
 desc(
-`
+  `
     Tests submit cannot be called with command buffers created from another device
     Test with two command buffers to make sure all command buffers can be validated:
     - cb0 and cb1 from same device
     - cb0 and cb1 from different device
-    `).
-
+    `
+).
 paramsSubcasesOnly([
 { cb0Mismatched: false, cb1Mismatched: false }, // control case
 { cb0Mismatched: true, cb1Mismatched: false },
-{ cb0Mismatched: false, cb1Mismatched: true }]).
-
+{ cb0Mismatched: false, cb1Mismatched: true }]
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).

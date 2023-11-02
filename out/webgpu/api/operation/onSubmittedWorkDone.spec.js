@@ -46,11 +46,11 @@ fn(async (t) => {
   let lastResolved = -1;
   for (const i of range(200, (i) => i)) {
     promises.push(
-    t.queue.onSubmittedWorkDone().then(() => {
-      t.expect(i === lastResolved + 1);
-      lastResolved++;
-    }));
-
+      t.queue.onSubmittedWorkDone().then(() => {
+        t.expect(i === lastResolved + 1);
+        lastResolved++;
+      })
+    );
   }
   await Promise.all(promises);
 });

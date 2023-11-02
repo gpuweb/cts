@@ -33,13 +33,13 @@ export const d = makeCaseCache('binary/i32_comparison', {
 g.test('equals').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x == y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('equals');
   await run(t, binary('=='), [TypeI32, TypeI32], TypeBool, t.params, cases);
@@ -48,13 +48,13 @@ fn(async (t) => {
 g.test('not_equals').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x != y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('not_equals');
   await run(t, binary('!='), [TypeI32, TypeI32], TypeBool, t.params, cases);
@@ -63,13 +63,13 @@ fn(async (t) => {
 g.test('less_than').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x < y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('less_than');
   await run(t, binary('<'), [TypeI32, TypeI32], TypeBool, t.params, cases);
@@ -78,13 +78,13 @@ fn(async (t) => {
 g.test('less_equals').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x <= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('less_equal');
   await run(t, binary('<='), [TypeI32, TypeI32], TypeBool, t.params, cases);
@@ -93,13 +93,13 @@ fn(async (t) => {
 g.test('greater_than').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x > y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('greater_than');
   await run(t, binary('>'), [TypeI32, TypeI32], TypeBool, t.params, cases);
@@ -108,13 +108,13 @@ fn(async (t) => {
 g.test('greater_equals').
 specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
 desc(
-`
+  `
 Expression: x >= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('greater_equal');
   await run(t, binary('>='), [TypeI32, TypeI32], TypeBool, t.params, cases);

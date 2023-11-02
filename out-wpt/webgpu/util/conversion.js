@@ -1,8 +1,8 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { Colors } from '../../common/util/colors.js';
-import { assert, objectEquals, unreachable } from '../../common/util/util.js';
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import { Colors } from '../../common/util/colors.js';import { assert, objectEquals, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
+
 
 import { kBit } from './constants.js';
 import {
@@ -12,8 +12,8 @@ import {
   isFiniteF16,
   isSubnormalNumberF16,
   isSubnormalNumberF32,
-  isSubnormalNumberF64,
-} from './math.js';
+  isSubnormalNumberF64 } from
+'./math.js';
 
 /**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
@@ -61,11 +61,11 @@ export function normalizedIntegerAsFloat(integer, bits, signed) {
  */
 export function numbersApproximatelyEqual(a, b, maxDiff = 0) {
   return (
-    (Number.isNaN(a) && Number.isNaN(b)) ||
-    (a === Number.POSITIVE_INFINITY && b === Number.POSITIVE_INFINITY) ||
-    (a === Number.NEGATIVE_INFINITY && b === Number.NEGATIVE_INFINITY) ||
-    Math.abs(a - b) <= maxDiff
-  );
+    Number.isNaN(a) && Number.isNaN(b) ||
+    a === Number.POSITIVE_INFINITY && b === Number.POSITIVE_INFINITY ||
+    a === Number.NEGATIVE_INFINITY && b === Number.NEGATIVE_INFINITY ||
+    Math.abs(a - b) <= maxDiff);
+
 }
 
 /**
@@ -96,13 +96,19 @@ const workingDataView = new DataView(workingData);
  *
  * MAINTENANCE_TODO: Replace usages of this with numberToFloatBits.
  */
-export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias) {
+export function float32ToFloatBits(
+n,
+signBits,
+exponentBits,
+mantissaBits,
+bias)
+{
   assert(exponentBits <= 8);
   assert(mantissaBits <= 23);
 
   if (Number.isNaN(n)) {
     // NaN = all exponent bits true, 1 or more mantissia bits true
-    return (((1 << exponentBits) - 1) << mantissaBits) | ((1 << mantissaBits) - 1);
+    return (1 << exponentBits) - 1 << mantissaBits | (1 << mantissaBits) - 1;
   }
 
   workingDataView.setFloat32(0, n, true);
@@ -110,12 +116,12 @@ export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias
   // bits (32): seeeeeeeefffffffffffffffffffffff
 
   // 0 or 1
-  const sign = (bits >> 31) & signBits;
+  const sign = bits >> 31 & signBits;
 
   if (n === 0) {
     if (sign === 1) {
       // Handle negative zero.
-      return 1 << (exponentBits + mantissaBits);
+      return 1 << exponentBits + mantissaBits;
     }
     return 0;
   }
@@ -128,14 +134,14 @@ export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias
     // Infinity = all exponent bits true, no mantissa bits true
     // plus the sign bit.
     return (
-      (((1 << exponentBits) - 1) << mantissaBits) | (n < 0 ? 2 ** (exponentBits + mantissaBits) : 0)
-    );
+      (1 << exponentBits) - 1 << mantissaBits | (n < 0 ? 2 ** (exponentBits + mantissaBits) : 0));
+
   }
 
   const mantissaBitsToDiscard = 23 - mantissaBits;
 
   // >> to remove mantissa, & to remove sign, - 127 to remove bias.
-  const exp = ((bits >> 23) & 0xff) - 127;
+  const exp = (bits >> 23 & 0xff) - 127;
 
   // Convert to the new biased exponent.
   const newBiasedExp = bias + exp;
@@ -143,11 +149,11 @@ export function float32ToFloatBits(n, signBits, exponentBits, mantissaBits, bias
 
   if (newBiasedExp <= 0) {
     // Result is subnormal or zero. Round to (signed) zero.
-    return sign << (exponentBits + mantissaBits);
+    return sign << exponentBits + mantissaBits;
   } else {
     // Mask only the mantissa, and discard the lower bits.
     const newMantissa = (bits & 0x7fffff) >> mantissaBitsToDiscard;
-    return (sign << (exponentBits + mantissaBits)) | (newBiasedExp << mantissaBits) | newMantissa;
+    return sign << exponentBits + mantissaBits | newBiasedExp << mantissaBits | newMantissa;
   }
 }
 
@@ -168,6 +174,8 @@ export function float32ToFloat16Bits(n) {
 export function float16BitsToFloat32(float16Bits) {
   return floatBitsToNumber(float16Bits, kFloat16Format);
 }
+
+
 
 /** FloatFormat defining IEEE754 32-bit float. */
 export const kFloat32Format = { signed: 1, exponentBits: 8, mantissaBits: 23, bias: 127 };
@@ -202,21 +210,21 @@ export function floatBitsToNumber(bits, fmt) {
   const kNonSignBits = fmt.exponentBits + fmt.mantissaBits;
   const kNonSignBitsMask = (1 << kNonSignBits) - 1;
   const exponentAndMantissaBits = bits & kNonSignBitsMask;
-  const exponentMask = ((1 << fmt.exponentBits) - 1) << fmt.mantissaBits;
+  const exponentMask = (1 << fmt.exponentBits) - 1 << fmt.mantissaBits;
   const infinityOrNaN = (bits & exponentMask) === exponentMask;
   if (infinityOrNaN) {
     const mantissaMask = (1 << fmt.mantissaBits) - 1;
     const signBit = 2 ** kNonSignBits;
     const isNegative = (bits & signBit) !== 0;
-    return bits & mantissaMask
-      ? Number.NaN
-      : isNegative
-      ? Number.NEGATIVE_INFINITY
-      : Number.POSITIVE_INFINITY;
+    return bits & mantissaMask ?
+    Number.NaN :
+    isNegative ?
+    Number.NEGATIVE_INFINITY :
+    Number.POSITIVE_INFINITY;
   }
   let f32BitsWithWrongBias =
-    exponentAndMantissaBits << (kFloat32Format.mantissaBits - fmt.mantissaBits);
-  f32BitsWithWrongBias |= (bits << (31 - kNonSignBits)) & 0x8000_0000;
+  exponentAndMantissaBits << kFloat32Format.mantissaBits - fmt.mantissaBits;
+  f32BitsWithWrongBias |= bits << 31 - kNonSignBits & 0x8000_0000;
   const numberWithWrongBias = float32BitsToNumber(f32BitsWithWrongBias);
   return numberWithWrongBias * 2 ** (kFloat32Format.bias - fmt.bias);
 }
@@ -258,8 +266,8 @@ export function numberToFloatBits(number, fmt) {
  * Positive and negative 0 are both considered to be 0 ULPs from 0.
  */
 export function floatBitsToNormalULPFromZero(bits, fmt) {
-  const mask_sign = fmt.signed << (fmt.exponentBits + fmt.mantissaBits);
-  const mask_expt = ((1 << fmt.exponentBits) - 1) << fmt.mantissaBits;
+  const mask_sign = fmt.signed << fmt.exponentBits + fmt.mantissaBits;
+  const mask_expt = (1 << fmt.exponentBits) - 1 << fmt.mantissaBits;
   const mask_mant = (1 << fmt.mantissaBits) - 1;
   const mask_rest = mask_expt | mask_mant;
 
@@ -291,7 +299,7 @@ export function packRGB9E5UFloat(r, g, b) {
   const N = 9; // number of mantissa bits
   const Emax = 31; // max exponent
   const B = 15; // exponent bias
-  const sharedexp_max = (((1 << N) - 1) / (1 << N)) * 2 ** (Emax - B);
+  const sharedexp_max = ((1 << N) - 1) / (1 << N) * 2 ** (Emax - B);
   const red_c = clamp(r, { min: 0, max: sharedexp_max });
   const green_c = clamp(g, { min: 0, max: sharedexp_max });
   const blue_c = clamp(b, { min: 0, max: sharedexp_max });
@@ -307,7 +315,7 @@ export function packRGB9E5UFloat(r, g, b) {
   assert(green_s >= 0 && green_s <= 0b111111111);
   assert(blue_s >= 0 && blue_s <= 0b111111111);
   assert(exp_shared >= 0 && exp_shared <= 0b11111);
-  return ((exp_shared << 27) | (blue_s << 18) | (green_s << 9) | red_s) >>> 0;
+  return (exp_shared << 27 | blue_s << 18 | green_s << 9 | red_s) >>> 0;
 }
 
 /**
@@ -317,15 +325,15 @@ export function packRGB9E5UFloat(r, g, b) {
 export function unpackRGB9E5UFloat(encoded) {
   const N = 9; // number of mantissa bits
   const B = 15; // exponent bias
-  const red_s = (encoded >>> 0) & 0b111111111;
-  const green_s = (encoded >>> 9) & 0b111111111;
-  const blue_s = (encoded >>> 18) & 0b111111111;
-  const exp_shared = (encoded >>> 27) & 0b11111;
+  const red_s = encoded >>> 0 & 0b111111111;
+  const green_s = encoded >>> 9 & 0b111111111;
+  const blue_s = encoded >>> 18 & 0b111111111;
+  const exp_shared = encoded >>> 27 & 0b11111;
   const exp = Math.pow(2, exp_shared - B - N);
   return {
     R: exp * red_s,
     G: exp * green_s,
-    B: exp * blue_s,
+    B: exp * blue_s
   };
 }
 
@@ -347,18 +355,18 @@ export function unpackRGB9E5UFloat(encoded) {
 export function pack2x16float(x, y) {
   // Generates all possible valid u16 bit fields for a given f32 to f16 conversion.
   // Assumes FTZ for both the f32 and f16 value is allowed.
-  const generateU16s = n => {
+  const generateU16s = (n) => {
     let contains_subnormals = isSubnormalNumberF32(n);
     const n_f16s = correctlyRoundedF16(n);
     contains_subnormals ||= n_f16s.some(isSubnormalNumberF16);
 
-    const n_u16s = n_f16s.map(f16 => {
+    const n_u16s = n_f16s.map((f16) => {
       workingDataF16[0] = f16;
       return workingDataU16[0];
     });
 
-    const contains_poszero = n_u16s.some(u => u === kBit.f16.positive.zero);
-    const contains_negzero = n_u16s.some(u => u === kBit.f16.negative.zero);
+    const contains_poszero = n_u16s.some((u) => u === kBit.f16.positive.zero);
+    const contains_negzero = n_u16s.some((u) => u === kBit.f16.negative.zero);
     if (!contains_negzero && (contains_poszero || contains_subnormals)) {
       n_u16s.push(kBit.f16.negative.zero);
     }
@@ -403,7 +411,7 @@ export function pack2x16snorm(x, y) {
   // Converts f32 to i16 via the pack2x16snorm formula.
   // FTZ is not explicitly handled, because all subnormals will produce a value
   // between 0 and 1, but significantly away from the edges, so floor goes to 0.
-  const generateI16 = n => {
+  const generateI16 = (n) => {
     return Math.floor(0.5 + 32767 * Math.min(1, Math.max(-1, n)));
   };
 
@@ -429,7 +437,7 @@ export function pack2x16unorm(x, y) {
   // Converts f32 to u16 via the pack2x16unorm formula.
   // FTZ is not explicitly handled, because all subnormals will produce a value
   // between 0.5 and much less than 1, so floor goes to 0.
-  const generateU16 = n => {
+  const generateU16 = (n) => {
     return Math.floor(0.5 + 65535 * Math.min(1, Math.max(0, n)));
   };
 
@@ -454,7 +462,7 @@ export function pack4x8snorm(...vals) {
   // Converts f32 to u8 via the pack4x8snorm formula.
   // FTZ is not explicitly handled, because all subnormals will produce a value
   // between 0 and 1, so floor goes to 0.
-  const generateI8 = n => {
+  const generateI8 = (n) => {
     return Math.floor(0.5 + 127 * Math.min(1, Math.max(-1, n)));
   };
 
@@ -480,7 +488,7 @@ export function pack4x8unorm(...vals) {
   // Converts f32 to u8 via the pack4x8unorm formula.
   // FTZ is not explicitly handled, because all subnormals will produce a value
   // between 0.5 and much less than 1, so floor goes to 0.
-  const generateU8 = n => {
+  const generateU8 = (n) => {
     return Math.floor(0.5 + 255 * Math.min(1, Math.max(0, n)));
   };
 
@@ -513,7 +521,7 @@ export function assertInIntegerRange(n, bits, signed) {
  * Converts a linear value into a "gamma"-encoded value using the sRGB-clamped transfer function.
  */
 export function gammaCompress(n) {
-  n = n <= 0.0031308 ? (323 * n) / 25 : (211 * Math.pow(n, 5 / 12) - 11) / 200;
+  n = n <= 0.0031308 ? 323 * n / 25 : (211 * Math.pow(n, 5 / 12) - 11) / 200;
   return clamp(n, { min: 0, max: 1 });
 }
 
@@ -521,7 +529,7 @@ export function gammaCompress(n) {
  * Converts a "gamma"-encoded value into a linear value using the sRGB-clamped transfer function.
  */
 export function gammaDecompress(n) {
-  n = n <= 0.04045 ? (n * 25) / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
+  n = n <= 0.04045 ? n * 25 / 323 : Math.pow((200 * n + 11) / 211, 12 / 5);
   return clamp(n, { min: 0, max: 1 });
 }
 
@@ -568,6 +576,18 @@ export function float16ToInt16(f16) {
 }
 
 /** A type of number representable by Scalar. */
+
+
+
+
+
+
+
+
+
+
+
+
 
 /** ScalarType describes the type of WGSL Scalar. */
 export class ScalarType {
@@ -656,7 +676,7 @@ export class VectorType {
     } else {
       value = Array(this.width).fill(value);
     }
-    return new Vector(value.map(v => this.elementType.create(v)));
+    return new Vector(value.map((v) => this.elementType.create(v)));
   }
 }
 
@@ -685,11 +705,10 @@ export class MatrixType {
     this.rows = rows;
     assert(
       elementType.kind === 'f32' ||
-        elementType.kind === 'f16' ||
-        elementType.kind === 'abstract-float',
+      elementType.kind === 'f16' ||
+      elementType.kind === 'abstract-float',
       "MatrixType can only have elementType of 'f32' or 'f16' or 'abstract-float'"
     );
-
     this.elementType = elementType;
   }
 
@@ -698,7 +717,7 @@ export class MatrixType {
    * given byte offset
    */
   read(buf, offset) {
-    const elements = [...Array(this.cols)].map(_ => [...Array(this.rows)]);
+    const elements = [...Array(this.cols)].map((_) => [...Array(this.rows)]);
     for (let c = 0; c < this.cols; c++) {
       for (let r = 0; r < this.rows; r++) {
         elements[c][r] = this.elementType.read(buf, offset);
@@ -734,6 +753,7 @@ export function TypeMat(cols, rows, elementType) {
 
 /** Type is a ScalarType, VectorType, or MatrixType. */
 
+
 /** Copy bytes from `buf` at `offset` into the working data, then read it out using `workingDataOut` */
 function valueFromBytes(workingDataOut, buf, offset) {
   for (let i = 0; i < workingDataOut.BYTES_PER_ELEMENT; ++i) {
@@ -743,47 +763,39 @@ function valueFromBytes(workingDataOut, buf, offset) {
 }
 
 export const TypeI32 = new ScalarType('i32', 4, (buf, offset) =>
-  i32(valueFromBytes(workingDataI32, buf, offset))
+i32(valueFromBytes(workingDataI32, buf, offset))
 );
-
 export const TypeU32 = new ScalarType('u32', 4, (buf, offset) =>
-  u32(valueFromBytes(workingDataU32, buf, offset))
+u32(valueFromBytes(workingDataU32, buf, offset))
 );
-
-export const TypeAbstractFloat = new ScalarType('abstract-float', 8, (buf, offset) =>
-  abstractFloat(valueFromBytes(workingDataF64, buf, offset))
+export const TypeAbstractFloat = new ScalarType(
+  'abstract-float',
+  8,
+  (buf, offset) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
 );
-
 export const TypeF64 = new ScalarType('f64', 8, (buf, offset) =>
-  f64(valueFromBytes(workingDataF64, buf, offset))
+f64(valueFromBytes(workingDataF64, buf, offset))
 );
-
 export const TypeF32 = new ScalarType('f32', 4, (buf, offset) =>
-  f32(valueFromBytes(workingDataF32, buf, offset))
+f32(valueFromBytes(workingDataF32, buf, offset))
 );
-
 export const TypeI16 = new ScalarType('i16', 2, (buf, offset) =>
-  i16(valueFromBytes(workingDataI16, buf, offset))
+i16(valueFromBytes(workingDataI16, buf, offset))
 );
-
 export const TypeU16 = new ScalarType('u16', 2, (buf, offset) =>
-  u16(valueFromBytes(workingDataU16, buf, offset))
+u16(valueFromBytes(workingDataU16, buf, offset))
 );
-
 export const TypeF16 = new ScalarType('f16', 2, (buf, offset) =>
-  f16Bits(valueFromBytes(workingDataU16, buf, offset))
+f16Bits(valueFromBytes(workingDataU16, buf, offset))
 );
-
 export const TypeI8 = new ScalarType('i8', 1, (buf, offset) =>
-  i8(valueFromBytes(workingDataI8, buf, offset))
+i8(valueFromBytes(workingDataI8, buf, offset))
 );
-
 export const TypeU8 = new ScalarType('u8', 1, (buf, offset) =>
-  u8(valueFromBytes(workingDataU8, buf, offset))
+u8(valueFromBytes(workingDataU8, buf, offset))
 );
-
 export const TypeBool = new ScalarType('bool', 4, (buf, offset) =>
-  bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
+bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 );
 
 /** @returns the ScalarType from the ScalarKind */
@@ -858,6 +870,7 @@ export function scalarTypeOf(ty) {
 
 /** ScalarValue is the JS type that can be held by a Scalar */
 
+
 /** Class that encapsulates a single scalar value of various types. */
 export class Scalar {
   // The scalar value
@@ -865,6 +878,8 @@ export class Scalar {
 
   // The scalar value, packed in one or two 32-bit unsigned integers.
   // Whether or not the bits1 is used depends on `this.type.size`.
+
+
 
   constructor(type, value, bits1, bits0) {
     this.value = value;
@@ -891,7 +906,7 @@ export class Scalar {
    * @returns the WGSL representation of this scalar value
    */
   wgsl() {
-    const withPoint = x => {
+    const withPoint = (x) => {
       const str = `${x}`;
       return str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
     };
@@ -926,50 +941,58 @@ export class Scalar {
       case Infinity:
       case -Infinity:
         return Colors.bold(this.value.toString());
-      default: {
-        workingDataU32[1] = this.bits1;
-        workingDataU32[0] = this.bits0;
-        let hex = '';
-        for (let i = 0; i < this.type.size; ++i) {
-          hex = workingDataU8[i].toString(16).padStart(2, '0') + hex;
-        }
-        const n = this.value;
-        if (n !== null && isFloatValue(this)) {
-          let str = this.value.toString();
-          str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
-          switch (this.type.kind) {
-            case 'abstract-float':
-              return isSubnormalNumberF64(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f64':
-              return isSubnormalNumberF64(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f32':
-              return isSubnormalNumberF32(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            case 'f16':
-              return isSubnormalNumberF16(n.valueOf())
-                ? `${Colors.bold(str)} (0x${hex} subnormal)`
-                : `${Colors.bold(str)} (0x${hex})`;
-            default:
-              unreachable(
-                `Printing of floating point kind ${this.type.kind} is not implemented...`
-              );
+      default:{
+          workingDataU32[1] = this.bits1;
+          workingDataU32[0] = this.bits0;
+          let hex = '';
+          for (let i = 0; i < this.type.size; ++i) {
+            hex = workingDataU8[i].toString(16).padStart(2, '0') + hex;
           }
+          const n = this.value;
+          if (n !== null && isFloatValue(this)) {
+            let str = this.value.toString();
+            str = str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
+            switch (this.type.kind) {
+              case 'abstract-float':
+                return isSubnormalNumberF64(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f64':
+                return isSubnormalNumberF64(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f32':
+                return isSubnormalNumberF32(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              case 'f16':
+                return isSubnormalNumberF16(n.valueOf()) ?
+                `${Colors.bold(str)} (0x${hex} subnormal)` :
+                `${Colors.bold(str)} (0x${hex})`;
+              default:
+                unreachable(
+                  `Printing of floating point kind ${this.type.kind} is not implemented...`
+                );
+            }
+          }
+          return `${Colors.bold(this.value.toString())} (0x${hex})`;
         }
-        return `${Colors.bold(this.value.toString())} (0x${hex})`;
-      }
     }
   }
 }
 
+
+
+
+
 /** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
  * The working data array *must* be an alias of `workingData`.
  */
-function scalarFromValue(type, workingDataArray, value) {
+function scalarFromValue(
+type,
+workingDataArray,
+value)
+{
   // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
   workingDataU32[0] = 0;
@@ -981,7 +1004,12 @@ function scalarFromValue(type, workingDataArray, value) {
  * reinterpreting it as an element of `workingDataLoadArray`.
  * Both working data arrays *must* be aliases of `workingData`.
  */
-function scalarFromBits(type, workingDataStoreArray, workingDataLoadArray, bits) {
+function scalarFromBits(
+type,
+workingDataStoreArray,
+workingDataLoadArray,
+bits)
+{
   // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
   workingDataU32[0] = 0;
@@ -990,58 +1018,67 @@ function scalarFromBits(type, workingDataStoreArray, workingDataLoadArray, bits)
 }
 
 /** Create an AbstractFloat from a numeric value, a JS `number`. */
-export const abstractFloat = value => scalarFromValue(TypeAbstractFloat, workingDataF64, value);
+export const abstractFloat = (value) =>
+scalarFromValue(TypeAbstractFloat, workingDataF64, value);
 
 /** Create an f64 from a numeric value, a JS `number`. */
-export const f64 = value => scalarFromValue(TypeF64, workingDataF64, value);
+export const f64 = (value) => scalarFromValue(TypeF64, workingDataF64, value);
 
 /** Create an f32 from a numeric value, a JS `number`. */
-export const f32 = value => scalarFromValue(TypeF32, workingDataF32, value);
+export const f32 = (value) => scalarFromValue(TypeF32, workingDataF32, value);
 
 /** Create an f16 from a numeric value, a JS `number`. */
-export const f16 = value => scalarFromValue(TypeF16, workingDataF16, value);
+export const f16 = (value) => scalarFromValue(TypeF16, workingDataF16, value);
 
 /** Create an f32 from a bit representation, a uint32 represented as a JS `number`. */
-export const f32Bits = bits => scalarFromBits(TypeF32, workingDataU32, workingDataF32, bits);
+export const f32Bits = (bits) =>
+scalarFromBits(TypeF32, workingDataU32, workingDataF32, bits);
 
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
-export const f16Bits = bits => scalarFromBits(TypeF16, workingDataU16, workingDataF16, bits);
+export const f16Bits = (bits) =>
+scalarFromBits(TypeF16, workingDataU16, workingDataF16, bits);
 
 /** Create an i32 from a numeric value, a JS `number`. */
-export const i32 = value => scalarFromValue(TypeI32, workingDataI32, value);
+export const i32 = (value) => scalarFromValue(TypeI32, workingDataI32, value);
 
 /** Create an i16 from a numeric value, a JS `number`. */
-export const i16 = value => scalarFromValue(TypeI16, workingDataI16, value);
+export const i16 = (value) => scalarFromValue(TypeI16, workingDataI16, value);
 
 /** Create an i8 from a numeric value, a JS `number`. */
-export const i8 = value => scalarFromValue(TypeI8, workingDataI8, value);
+export const i8 = (value) => scalarFromValue(TypeI8, workingDataI8, value);
 
 /** Create an i32 from a bit representation, a uint32 represented as a JS `number`. */
-export const i32Bits = bits => scalarFromBits(TypeI32, workingDataU32, workingDataI32, bits);
+export const i32Bits = (bits) =>
+scalarFromBits(TypeI32, workingDataU32, workingDataI32, bits);
 
 /** Create an i16 from a bit representation, a uint16 represented as a JS `number`. */
-export const i16Bits = bits => scalarFromBits(TypeI16, workingDataU16, workingDataI16, bits);
+export const i16Bits = (bits) =>
+scalarFromBits(TypeI16, workingDataU16, workingDataI16, bits);
 
 /** Create an i8 from a bit representation, a uint8 represented as a JS `number`. */
-export const i8Bits = bits => scalarFromBits(TypeI8, workingDataU8, workingDataI8, bits);
+export const i8Bits = (bits) =>
+scalarFromBits(TypeI8, workingDataU8, workingDataI8, bits);
 
 /** Create a u32 from a numeric value, a JS `number`. */
-export const u32 = value => scalarFromValue(TypeU32, workingDataU32, value);
+export const u32 = (value) => scalarFromValue(TypeU32, workingDataU32, value);
 
 /** Create a u16 from a numeric value, a JS `number`. */
-export const u16 = value => scalarFromValue(TypeU16, workingDataU16, value);
+export const u16 = (value) => scalarFromValue(TypeU16, workingDataU16, value);
 
 /** Create a u8 from a numeric value, a JS `number`. */
-export const u8 = value => scalarFromValue(TypeU8, workingDataU8, value);
+export const u8 = (value) => scalarFromValue(TypeU8, workingDataU8, value);
 
 /** Create an u32 from a bit representation, a uint32 represented as a JS `number`. */
-export const u32Bits = bits => scalarFromBits(TypeU32, workingDataU32, workingDataU32, bits);
+export const u32Bits = (bits) =>
+scalarFromBits(TypeU32, workingDataU32, workingDataU32, bits);
 
 /** Create an u16 from a bit representation, a uint16 represented as a JS `number`. */
-export const u16Bits = bits => scalarFromBits(TypeU16, workingDataU16, workingDataU16, bits);
+export const u16Bits = (bits) =>
+scalarFromBits(TypeU16, workingDataU16, workingDataU16, bits);
 
 /** Create an u8 from a bit representation, a uint8 represented as a JS `number`. */
-export const u8Bits = bits => scalarFromBits(TypeU8, workingDataU8, workingDataU8, bits);
+export const u8Bits = (bits) =>
+scalarFromBits(TypeU8, workingDataU8, workingDataU8, bits);
 
 /** Create a boolean value. */
 export function bool(value) {
@@ -1063,6 +1100,9 @@ export const False = bool(false);
  * Class that encapsulates a vector value.
  */
 export class Vector {
+
+
+
   constructor(elements) {
     if (elements.length < 2 || elements.length > 4) {
       throw new Error(`vector element count must be between 2 and 4, got ${elements.length}`);
@@ -1096,12 +1136,12 @@ export class Vector {
    * @returns the WGSL representation of this vector value
    */
   wgsl() {
-    const els = this.elements.map(v => v.wgsl()).join(', ');
+    const els = this.elements.map((v) => v.wgsl()).join(', ');
     return `vec${this.type.width}(${els})`;
   }
 
   toString() {
-    return `${this.type}(${this.elements.map(e => e.toString()).join(', ')})`;
+    return `${this.type}(${this.elements.map((e) => e.toString()).join(', ')})`;
   }
 
   get x() {
@@ -1155,7 +1195,6 @@ export function toVector(v, op) {
     case 4:
       return vec4(op(v[0]), op(v[1]), op(v[2]), op(v[3]));
   }
-
   unreachable(`input to 'toVector' must contain 2, 3, or 4 elements`);
 }
 
@@ -1163,6 +1202,9 @@ export function toVector(v, op) {
  * Class that encapsulates a Matrix value.
  */
 export class Matrix {
+
+
+
   constructor(elements) {
     const num_cols = elements.length;
     if (num_cols < 2 || num_cols > 4) {
@@ -1170,7 +1212,7 @@ export class Matrix {
     }
 
     const num_rows = elements[0].length;
-    if (!elements.every(c => c.length === num_rows)) {
+    if (!elements.every((c) => c.length === num_rows)) {
       throw new Error(`cannot mix matrix column lengths`);
     }
 
@@ -1179,7 +1221,7 @@ export class Matrix {
     }
 
     const elem_type = elements[0][0].type;
-    if (!elements.every(c => c.every(r => objectEquals(r.type, elem_type)))) {
+    if (!elements.every((c) => c.every((r) => objectEquals(r.type, elem_type)))) {
       throw new Error(`cannot mix matrix element types`);
     }
 
@@ -1210,12 +1252,12 @@ export class Matrix {
    * @returns the WGSL representation of this matrix value
    */
   wgsl() {
-    const els = this.elements.flatMap(c => c.map(r => r.wgsl())).join(', ');
+    const els = this.elements.flatMap((c) => c.map((r) => r.wgsl())).join(', ');
     return `mat${this.type.cols}x${this.type.rows}(${els})`;
   }
 
   toString() {
-    return `${this.type}(${this.elements.map(c => c.join(', ')).join(', ')})`;
+    return `${this.type}(${this.elements.map((c) => c.join(', ')).join(', ')})`;
   }
 }
 
@@ -1229,7 +1271,7 @@ export class Matrix {
 export function toMatrix(m, op) {
   const cols = m.length;
   const rows = m[0].length;
-  const elements = [...Array(cols)].map(_ => [...Array(rows)]);
+  const elements = [...Array(cols)].map((_) => [...Array(rows)]);
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       elements[i][j] = op(m[i][j]);
@@ -1239,23 +1281,42 @@ export function toMatrix(m, op) {
   return new Matrix(elements);
 }
 
-/** Value is a Scalar or Vector value. */ var SerializedScalarKind;
+/** Value is a Scalar or Vector value. */var
 
-/** serializeScalarKind() serializes a ScalarKind to a BinaryStream */ (function (
-  SerializedScalarKind
-) {
-  SerializedScalarKind[(SerializedScalarKind['AbstractFloat'] = 0)] = 'AbstractFloat';
-  SerializedScalarKind[(SerializedScalarKind['F64'] = 1)] = 'F64';
-  SerializedScalarKind[(SerializedScalarKind['F32'] = 2)] = 'F32';
-  SerializedScalarKind[(SerializedScalarKind['F16'] = 3)] = 'F16';
-  SerializedScalarKind[(SerializedScalarKind['U32'] = 4)] = 'U32';
-  SerializedScalarKind[(SerializedScalarKind['U16'] = 5)] = 'U16';
-  SerializedScalarKind[(SerializedScalarKind['U8'] = 6)] = 'U8';
-  SerializedScalarKind[(SerializedScalarKind['I32'] = 7)] = 'I32';
-  SerializedScalarKind[(SerializedScalarKind['I16'] = 8)] = 'I16';
-  SerializedScalarKind[(SerializedScalarKind['I8'] = 9)] = 'I8';
-  SerializedScalarKind[(SerializedScalarKind['Bool'] = 10)] = 'Bool';
-})(SerializedScalarKind || (SerializedScalarKind = {}));
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+SerializedScalarKind = /*#__PURE__*/function (SerializedScalarKind) {SerializedScalarKind[SerializedScalarKind["AbstractFloat"] = 0] = "AbstractFloat";SerializedScalarKind[SerializedScalarKind["F64"] = 1] = "F64";SerializedScalarKind[SerializedScalarKind["F32"] = 2] = "F32";SerializedScalarKind[SerializedScalarKind["F16"] = 3] = "F16";SerializedScalarKind[SerializedScalarKind["U32"] = 4] = "U32";SerializedScalarKind[SerializedScalarKind["U16"] = 5] = "U16";SerializedScalarKind[SerializedScalarKind["U8"] = 6] = "U8";SerializedScalarKind[SerializedScalarKind["I32"] = 7] = "I32";SerializedScalarKind[SerializedScalarKind["I16"] = 8] = "I16";SerializedScalarKind[SerializedScalarKind["I8"] = 9] = "I8";SerializedScalarKind[SerializedScalarKind["Bool"] = 10] = "Bool";return SerializedScalarKind;}(SerializedScalarKind || {});
+
+
+
+
+
+
+
+
+
+
+
+
+
+/** serializeScalarKind() serializes a ScalarKind to a BinaryStream */
 function serializeScalarKind(s, v) {
   switch (v) {
     case 'abstract-float':
@@ -1323,14 +1384,15 @@ function deserializeScalarKind(s) {
     default:
       unreachable(`invalid serialized ScalarKind: ${kind}`);
   }
-}
-var SerializedValueKind;
+}var
 
-/** serializeValue() serializes a Value to a BinaryStream */ (function (SerializedValueKind) {
-  SerializedValueKind[(SerializedValueKind['Scalar'] = 0)] = 'Scalar';
-  SerializedValueKind[(SerializedValueKind['Vector'] = 1)] = 'Vector';
-  SerializedValueKind[(SerializedValueKind['Matrix'] = 2)] = 'Matrix';
-})(SerializedValueKind || (SerializedValueKind = {}));
+SerializedValueKind = /*#__PURE__*/function (SerializedValueKind) {SerializedValueKind[SerializedValueKind["Scalar"] = 0] = "Scalar";SerializedValueKind[SerializedValueKind["Vector"] = 1] = "Vector";SerializedValueKind[SerializedValueKind["Matrix"] = 2] = "Matrix";return SerializedValueKind;}(SerializedValueKind || {});
+
+
+
+
+
+/** serializeValue() serializes a Value to a BinaryStream */
 export function serializeValue(s, v) {
   const serializeScalar = (scalar, kind) => {
     switch (kind) {
@@ -1403,7 +1465,7 @@ export function serializeValue(s, v) {
 
 /** deserializeValue() deserializes a Value from a BinaryStream */
 export function deserializeValue(s) {
-  const deserializeScalar = kind => {
+  const deserializeScalar = (kind) => {
     switch (kind) {
       case 'abstract-float':
         return abstractFloat(s.readF64());
@@ -1434,26 +1496,26 @@ export function deserializeValue(s) {
   switch (valueKind) {
     case SerializedValueKind.Scalar:
       return deserializeScalar(scalarKind);
-    case SerializedValueKind.Vector: {
-      const width = s.readU8();
-      const scalars = new Array(width);
-      for (let i = 0; i < width; i++) {
-        scalars[i] = deserializeScalar(scalarKind);
-      }
-      return new Vector(scalars);
-    }
-    case SerializedValueKind.Matrix: {
-      const numCols = s.readU8();
-      const numRows = s.readU8();
-      const columns = new Array(numCols);
-      for (let c = 0; c < numCols; c++) {
-        columns[c] = new Array(numRows);
-        for (let i = 0; i < numRows; i++) {
-          columns[c][i] = deserializeScalar(scalarKind);
+    case SerializedValueKind.Vector:{
+        const width = s.readU8();
+        const scalars = new Array(width);
+        for (let i = 0; i < width; i++) {
+          scalars[i] = deserializeScalar(scalarKind);
         }
+        return new Vector(scalars);
       }
-      return new Matrix(columns);
-    }
+    case SerializedValueKind.Matrix:{
+        const numCols = s.readU8();
+        const numRows = s.readU8();
+        const columns = new Array(numCols);
+        for (let c = 0; c < numCols; c++) {
+          columns[c] = new Array(numRows);
+          for (let i = 0; i < numRows; i++) {
+            columns[c][i] = deserializeScalar(scalarKind);
+          }
+        }
+        return new Matrix(columns);
+      }
     default:
       unreachable(`invalid serialized value kind: ${valueKind}`);
   }
@@ -1484,8 +1546,8 @@ export function isAbstractType(ty) {
 export function isFloatType(ty) {
   if (ty instanceof ScalarType) {
     return (
-      ty.kind === 'abstract-float' || ty.kind === 'f64' || ty.kind === 'f32' || ty.kind === 'f16'
-    );
+      ty.kind === 'abstract-float' || ty.kind === 'f64' || ty.kind === 'f32' || ty.kind === 'f16');
+
   }
   return false;
 }
@@ -1495,70 +1557,74 @@ export const kAllFloatScalars = [TypeAbstractFloat, TypeF32, TypeF16];
 
 /// All floating-point vec2 types
 export const kAllFloatVector2 = [
-  TypeVec(2, TypeAbstractFloat),
-  TypeVec(2, TypeF32),
-  TypeVec(2, TypeF16),
-];
+TypeVec(2, TypeAbstractFloat),
+TypeVec(2, TypeF32),
+TypeVec(2, TypeF16)];
+
 
 /// All floating-point vec3 types
 export const kAllFloatVector3 = [
-  TypeVec(3, TypeAbstractFloat),
-  TypeVec(3, TypeF32),
-  TypeVec(3, TypeF16),
-];
+TypeVec(3, TypeAbstractFloat),
+TypeVec(3, TypeF32),
+TypeVec(3, TypeF16)];
+
 
 /// All floating-point vec4 types
 export const kAllFloatVector4 = [
-  TypeVec(4, TypeAbstractFloat),
-  TypeVec(4, TypeF32),
-  TypeVec(4, TypeF16),
-];
+TypeVec(4, TypeAbstractFloat),
+TypeVec(4, TypeF32),
+TypeVec(4, TypeF16)];
+
 
 /// All floating-point vector types
-export const kAllFloatVectors = [...kAllFloatVector2, ...kAllFloatVector3, ...kAllFloatVector4];
+export const kAllFloatVectors = [
+...kAllFloatVector2,
+...kAllFloatVector3,
+...kAllFloatVector4];
+
 
 /// All floating-point scalar and vector types
 export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors];
 
 /// All integer scalar and vector types
 export const kAllIntegerScalarsAndVectors = [
-  TypeI32,
-  TypeVec(2, TypeI32),
-  TypeVec(3, TypeI32),
-  TypeVec(4, TypeI32),
-  TypeU32,
-  TypeVec(2, TypeU32),
-  TypeVec(3, TypeU32),
-  TypeVec(4, TypeU32),
-];
+TypeI32,
+TypeVec(2, TypeI32),
+TypeVec(3, TypeI32),
+TypeVec(4, TypeI32),
+TypeU32,
+TypeVec(2, TypeU32),
+TypeVec(3, TypeU32),
+TypeVec(4, TypeU32)];
+
 
 /// All signed integer scalar and vector types
 export const kAllSignedIntegerScalarsAndVectors = [
-  TypeI32,
-  TypeVec(2, TypeI32),
-  TypeVec(3, TypeI32),
-  TypeVec(4, TypeI32),
-];
+TypeI32,
+TypeVec(2, TypeI32),
+TypeVec(3, TypeI32),
+TypeVec(4, TypeI32)];
+
 
 /// All unsigned integer scalar and vector types
 export const kAllUnsignedIntegerScalarsAndVectors = [
-  TypeU32,
-  TypeVec(2, TypeU32),
-  TypeVec(3, TypeU32),
-  TypeVec(4, TypeU32),
-];
+TypeU32,
+TypeVec(2, TypeU32),
+TypeVec(3, TypeU32),
+TypeVec(4, TypeU32)];
+
 
 /// All floating-point and integer scalar and vector types
 export const kAllFloatAndIntegerScalarsAndVectors = [
-  ...kAllFloatScalarsAndVectors,
-  ...kAllIntegerScalarsAndVectors,
-];
+...kAllFloatScalarsAndVectors,
+...kAllIntegerScalarsAndVectors];
+
 
 /// All floating-point and signed integer scalar and vector types
 export const kAllFloatAndSignedIntegerScalarsAndVectors = [
-  ...kAllFloatScalarsAndVectors,
-  ...kAllSignedIntegerScalarsAndVectors,
-];
+...kAllFloatScalarsAndVectors,
+...kAllSignedIntegerScalarsAndVectors];
+
 
 /** @returns the inner element type of the given type */
 export function elementType(t) {

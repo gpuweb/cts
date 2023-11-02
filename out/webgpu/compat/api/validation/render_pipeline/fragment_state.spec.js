@@ -11,7 +11,7 @@ export const g = makeTestGroup(CompatibilityTest);
 
 
 const cases = {
-  default(targets) {
+  default(_targets) {
     return true;
   },
   noBlendTarget0(targets) {
@@ -55,14 +55,14 @@ const caseNames = keysOf(cases);
 
 g.test('colorState').
 desc(
-`
+  `
 Tests that you can not create a render pipeline with different per target blend state or write mask in compat mode.
 
 - Test no blend state vs some blend state
 - Test different operation, srcFactor, dstFactor for color and alpha
 - Test different writeMask
-    `).
-
+    `
+).
 params((u) => u.combine('caseName', caseNames)).
 fn((t) => {
   const { caseName } = t.params;
@@ -121,9 +121,9 @@ fn((t) => {
   };
   const isValid = cases[caseName](targets);
   t.expectGPUError(
-  'validation',
-  () => t.device.createRenderPipeline(pipelineDescriptor),
-  !isValid);
-
+    'validation',
+    () => t.device.createRenderPipeline(pipelineDescriptor),
+    !isValid
+  );
 });
 //# sourceMappingURL=fragment_state.spec.js.map

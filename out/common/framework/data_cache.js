@@ -9,7 +9,7 @@
 
 
 
-
+/** Logger is a basic debug logger function */
 
 
 /**
@@ -48,7 +48,7 @@ class DataCacheNode {
     this.next = null;
   }
 
-
+  // The file path this node represents
   // The deserialized data for this node
   prev = null; // The previous node in the doubly-linked list
   next = null; // The next node in the doubly-linked list

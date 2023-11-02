@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ // Note: Types ensure every field is specified.
-function checkType(x) {}
+function checkType(_) {}
 
 const BufferUsage = {
   MAP_READ: 0x0001,

@@ -181,8 +181,8 @@ u.
 combine('case', keysOf(kCases)) //
 .combine('vector_decl', ['const', 'let', 'var', 'param']).
 combine('vector_width', [2, 3, 4]).
-combine('element_type', ['i32', 'u32', 'f32', 'f16', 'bool'])).
-
+combine('element_type', ['i32', 'u32', 'f32', 'f16', 'bool'])
+).
 beforeAllSubcases((t) => {
   if (t.params.element_type === 'f16') {
     t.selectDeviceOrSkipTestCase('shader-f16');

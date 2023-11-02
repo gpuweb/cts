@@ -11,32 +11,32 @@ g.test('unsupportedTextureFormats').
 desc(`Tests that you can not create a bgra8unorm-srgb texture in compat mode.`).
 fn((t) => {
   t.expectGPUError(
-  'validation',
-  () =>
-  t.device.createTexture({
-    size: [1, 1, 1],
-    format: 'bgra8unorm-srgb',
-    usage: GPUTextureUsage.TEXTURE_BINDING
-  }),
-  true);
-
+    'validation',
+    () =>
+    t.device.createTexture({
+      size: [1, 1, 1],
+      format: 'bgra8unorm-srgb',
+      usage: GPUTextureUsage.TEXTURE_BINDING
+    }),
+    true
+  );
 });
 
 g.test('unsupportedTextureViewFormats').
 desc(
-`Tests that you can not create a bgra8unorm texture with a bgra8unorm-srgb viewFormat in compat mode.`).
-
+  `Tests that you can not create a bgra8unorm texture with a bgra8unorm-srgb viewFormat in compat mode.`
+).
 fn((t) => {
   t.expectGPUError(
-  'validation',
-  () =>
-  t.device.createTexture({
-    size: [1, 1, 1],
-    format: 'bgra8unorm',
-    viewFormats: ['bgra8unorm-srgb'],
-    usage: GPUTextureUsage.TEXTURE_BINDING
-  }),
-  true);
-
+    'validation',
+    () =>
+    t.device.createTexture({
+      size: [1, 1, 1],
+      format: 'bgra8unorm',
+      viewFormats: ['bgra8unorm-srgb'],
+      usage: GPUTextureUsage.TEXTURE_BINDING
+    }),
+    true
+  );
 });
 //# sourceMappingURL=createTexture.spec.js.map

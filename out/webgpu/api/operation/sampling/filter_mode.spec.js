@@ -6,8 +6,8 @@ Tests the behavior of different filtering modes in minFilter/magFilter/mipmapFil
 import { kAddressModes, kMipmapFilterModes } from '../../../capability_info.js';
 import {
 
-kRenderableColorTextureFormats,
-kTextureFormatInfo } from
+  kRenderableColorTextureFormats,
+  kTextureFormatInfo } from
 '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { getTextureCopyLayout } from '../../../util/texture/layout.js';
@@ -32,15 +32,15 @@ class FilterModeTest extends TextureTestMixin(GPUTest) {
   instanceCount)
   {
     const sampleTexture = this.createTextureFromTexelView(
-    TexelView.fromTexelsAsColors(format, (coord) => {
-      const id = coord.x + coord.y * kCheckerTextureSize;
-      return kCheckerTextureData[id];
-    }),
-    {
-      size: [kCheckerTextureSize, kCheckerTextureSize],
-      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-    });
-
+      TexelView.fromTexelsAsColors(format, (coord) => {
+        const id = coord.x + coord.y * kCheckerTextureSize;
+        return kCheckerTextureData[id];
+      }),
+      {
+        size: [kCheckerTextureSize, kCheckerTextureSize],
+        usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+      }
+    );
     const renderTexture = this.device.createTexture({
       format,
       size: renderSize,
@@ -330,8 +330,8 @@ addressModeV)
             break;
           case 'mirror-repeat':
             expectedColors = kNearestUClampedVMirror;
-            break;}
-
+            break;
+        }
         break;
       }
     case 'repeat':
@@ -344,8 +344,8 @@ addressModeV)
           break;
         case 'mirror-repeat':
           expectedColors = kNearestURepeatVMirror;
-          break;}
-
+          break;
+      }
       break;
     case 'mirror-repeat':
       switch (addressModeV) {
@@ -357,10 +357,10 @@ addressModeV)
           break;
         case 'mirror-repeat':
           expectedColors = kNearestUMirrorVMirror;
-          break;}
-
-      break;}
-
+          break;
+      }
+      break;
+  }
   return TexelView.fromTexelsAsColors(format, (coord) => {
     const c = expectedColors[coord.y][coord.x];
     return { R: c, G: c, B: c, A: 1.0 };
@@ -383,8 +383,8 @@ addressModeV)
             break;
           case 'mirror-repeat':
             expectedColors = kLinearUClampedVMirror;
-            break;}
-
+            break;
+        }
         break;
       }
     case 'repeat':
@@ -397,8 +397,8 @@ addressModeV)
           break;
         case 'mirror-repeat':
           expectedColors = kLinearURepeatVMirror;
-          break;}
-
+          break;
+      }
       break;
     case 'mirror-repeat':
       switch (addressModeV) {
@@ -410,10 +410,10 @@ addressModeV)
           break;
         case 'mirror-repeat':
           expectedColors = kLinearUMirrorVMirror;
-          break;}
-
-      break;}
-
+          break;
+      }
+      break;
+  }
   return TexelView.fromTexelsAsColors(format, (coord) => {
     const c = expectedColors[coord.y][coord.x];
     return { R: c / 16, G: c / 16, B: c / 16, A: 1.0 };
@@ -429,8 +429,8 @@ addressModeV)
     case 'nearest':
       return expectedNearestColors(format, addressModeU, addressModeV);
     case 'linear':
-      return expectedLinearColors(format, addressModeU, addressModeV);}
-
+      return expectedLinearColors(format, addressModeU, addressModeV);
+  }
 }
 
 /* For the magFilter tests, each rendered pixel is an instanced quad such that the center of the
@@ -459,13 +459,13 @@ addressModeV)
  */
 g.test('magFilter,nearest').
 desc(
-`
+  `
   Test that for filterable formats, magFilter 'nearest' mode correctly modifies the sampling.
     - format= {<filterable formats>}
     - addressModeU= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
     - addressModeV= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
@@ -477,8 +477,8 @@ filter((t) => {
 }).
 beginSubcases().
 combine('addressModeU', kAddressModes).
-combine('addressModeV', kAddressModes)).
-
+combine('addressModeV', kAddressModes)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
@@ -535,18 +535,18 @@ fn((t) => {
   const vertexCount = 6;
   const instanceCount = kNearestRenderDim.reduce((sink, current) => sink * current);
   const render = t.runFilterRenderPipeline(
-  sampler,
-  module,
-  format,
-  kNearestRenderDim,
-  vertexCount,
-  instanceCount);
-
+    sampler,
+    module,
+    format,
+    kNearestRenderDim,
+    vertexCount,
+    instanceCount
+  );
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: render },
-  expectedColors(format, 'nearest', addressModeU, addressModeV),
-  kNearestRenderDim);
-
+    { texture: render },
+    expectedColors(format, 'nearest', addressModeU, addressModeV),
+    kNearestRenderDim
+  );
 });
 
 /* The following diagram shows the UV shift (almost to scale) for what the pixel at cell (0,0) (the
@@ -582,13 +582,13 @@ fn((t) => {
  */
 g.test('magFilter,linear').
 desc(
-`
+  `
   Test that for filterable formats, magFilter 'linear' mode correctly modifies the sampling.
     - format= {<filterable formats>}
     - addressModeU= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
     - addressModeV= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
@@ -600,8 +600,8 @@ filter((t) => {
 }).
 beginSubcases().
 combine('addressModeU', kAddressModes).
-combine('addressModeV', kAddressModes)).
-
+combine('addressModeV', kAddressModes)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
@@ -660,18 +660,18 @@ fn((t) => {
   const vertexCount = 6;
   const instanceCount = kLinearRenderDim.reduce((sink, current) => sink * current);
   const render = t.runFilterRenderPipeline(
-  sampler,
-  module,
-  format,
-  kLinearRenderDim,
-  vertexCount,
-  instanceCount);
-
+    sampler,
+    module,
+    format,
+    kLinearRenderDim,
+    vertexCount,
+    instanceCount
+  );
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: render },
-  expectedColors(format, 'linear', addressModeU, addressModeV),
-  kLinearRenderDim);
-
+    { texture: render },
+    expectedColors(format, 'linear', addressModeU, addressModeV),
+    kLinearRenderDim
+  );
 });
 
 /* For the minFilter tests, each rendered pixel is a small instanced quad that is UV mapped such
@@ -717,13 +717,13 @@ fn((t) => {
  */
 g.test('minFilter,nearest').
 desc(
-`
+  `
   Test that for filterable formats, minFilter 'nearest' mode correctly modifies the sampling.
     - format= {<filterable formats>}
     - addressModeU= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
     - addressModeV= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
@@ -735,8 +735,8 @@ filter((t) => {
 }).
 beginSubcases().
 combine('addressModeU', kAddressModes).
-combine('addressModeV', kAddressModes)).
-
+combine('addressModeV', kAddressModes)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
@@ -797,18 +797,18 @@ fn((t) => {
   const vertexCount = 6;
   const instanceCount = kNearestRenderDim.reduce((sink, current) => sink * current);
   const render = t.runFilterRenderPipeline(
-  sampler,
-  module,
-  format,
-  kNearestRenderDim,
-  vertexCount,
-  instanceCount);
-
+    sampler,
+    module,
+    format,
+    kNearestRenderDim,
+    vertexCount,
+    instanceCount
+  );
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: render },
-  expectedColors(format, 'nearest', addressModeU, addressModeV),
-  kNearestRenderDim);
-
+    { texture: render },
+    expectedColors(format, 'nearest', addressModeU, addressModeV),
+    kNearestRenderDim
+  );
 });
 
 /* The following diagram shows the sub-pixel quad and the relative distances between the sample
@@ -850,13 +850,13 @@ fn((t) => {
  */
 g.test('minFilter,linear').
 desc(
-`
+  `
   Test that for filterable formats, minFilter 'linear' mode correctly modifies the sampling.
     - format= {<filterable formats>}
     - addressModeU= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
     - addressModeV= {'clamp-to-edge', 'repeat', 'mirror-repeat'}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
@@ -868,8 +868,8 @@ filter((t) => {
 }).
 beginSubcases().
 combine('addressModeU', kAddressModes).
-combine('addressModeV', kAddressModes)).
-
+combine('addressModeV', kAddressModes)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
@@ -932,28 +932,28 @@ fn((t) => {
   const vertexCount = 6;
   const instanceCount = kLinearRenderDim.reduce((sink, current) => sink * current);
   const render = t.runFilterRenderPipeline(
-  sampler,
-  module,
-  format,
-  kLinearRenderDim,
-  vertexCount,
-  instanceCount);
-
+    sampler,
+    module,
+    format,
+    kLinearRenderDim,
+    vertexCount,
+    instanceCount
+  );
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: render },
-  expectedColors(format, 'linear', addressModeU, addressModeV),
-  kLinearRenderDim);
-
+    { texture: render },
+    expectedColors(format, 'linear', addressModeU, addressModeV),
+    kLinearRenderDim
+  );
 });
 
 g.test('mipmapFilter').
 desc(
-`
+  `
   Test that for filterable formats, mipmapFilter modes correctly modifies the sampling.
     - format= {<filterable formats>}
     - filterMode= {'nearest', 'linear'}
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kRenderableColorTextureFormats).
@@ -964,8 +964,8 @@ filter((t) => {
 
 }).
 beginSubcases().
-combine('filterMode', kMipmapFilterModes)).
-
+combine('filterMode', kMipmapFilterModes)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.format);
   if (kTextureFormatInfo[t.params.format].color.type === 'unfilterable-float') {
@@ -987,19 +987,19 @@ fn((t) => {
     mipmapFilter: filterMode
   });
   const sampleTexture = t.createTextureFromTexelViewsMultipleMipmaps(
-  [
-  TexelView.fromTexelsAsColors(format, () => {
-    return { R: 0.0, G: 0.0, B: 0.0, A: 1.0 };
-  }),
-  TexelView.fromTexelsAsColors(format, (coord) => {
-    return { R: 1.0, G: 1.0, B: 1.0, A: 1.0 };
-  })],
+    [
+    TexelView.fromTexelsAsColors(format, () => {
+      return { R: 0.0, G: 0.0, B: 0.0, A: 1.0 };
+    }),
+    TexelView.fromTexelsAsColors(format, (_coords) => {
+      return { R: 1.0, G: 1.0, B: 1.0, A: 1.0 };
+    })],
 
-  {
-    size: [kTextureSize, 1],
-    usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
-  });
-
+    {
+      size: [kTextureSize, 1],
+      usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
+    }
+  );
   const renderTexture = t.device.createTexture({
     format,
     size: [kRenderSize, 1],
@@ -1082,63 +1082,63 @@ fn((t) => {
   // filtered characteristics without strict value equalities via copies to a buffer.
   const buffer = t.copyWholeTextureToNewBufferSimple(renderTexture, 0);
   t.expectGPUBufferValuesPassCheck(
-  buffer,
-  (actual) => {
-    // Convert the buffer to texel view so we can do comparisons.
-    const layout = getTextureCopyLayout(format, '2d', [kRenderSize, 1, 1]);
-    const view = TexelView.fromTextureDataByReference(format, actual, {
-      bytesPerRow: layout.bytesPerRow,
-      rowsPerImage: layout.rowsPerImage,
-      subrectOrigin: [0, 0, 0],
-      subrectSize: [kRenderSize, 1, 1]
-    });
+    buffer,
+    (actual) => {
+      // Convert the buffer to texel view so we can do comparisons.
+      const layout = getTextureCopyLayout(format, '2d', [kRenderSize, 1, 1]);
+      const view = TexelView.fromTextureDataByReference(format, actual, {
+        bytesPerRow: layout.bytesPerRow,
+        rowsPerImage: layout.rowsPerImage,
+        subrectOrigin: [0, 0, 0],
+        subrectSize: [kRenderSize, 1, 1]
+      });
 
-    // We only check the R component for the conditions, since all components should be equal if
-    // specified in the format.
-    switch (filterMode) {
-      case 'linear':{
-          // For 'linear' mode, we check that the resulting 1d image is monotonically increasing.
-          for (let x = 1; x < kRenderSize; x++) {
-            const { R: Ri } = view.color({ x: x - 1, y: 0, z: 0 });
-            const { R: Rj } = view.color({ x, y: 0, z: 0 });
-            if (Ri >= Rj) {
+      // We only check the R component for the conditions, since all components should be equal if
+      // specified in the format.
+      switch (filterMode) {
+        case 'linear':{
+            // For 'linear' mode, we check that the resulting 1d image is monotonically increasing.
+            for (let x = 1; x < kRenderSize; x++) {
+              const { R: Ri } = view.color({ x: x - 1, y: 0, z: 0 });
+              const { R: Rj } = view.color({ x, y: 0, z: 0 });
+              if (Ri >= Rj) {
+                return Error(
+                  'Linear filtering on mipmaps should be a monotonically increasing sequence:\n' +
+                  view.toString(
+                    { x: 0, y: 0, z: 0 },
+                    { width: kRenderSize, height: 1, depthOrArrayLayers: 1 }
+                  )
+                );
+              }
+            }
+            break;
+          }
+        case 'nearest':{
+            // For 'nearest' mode, we check that the resulting 1d image changes from 0.0 to 1.0
+            // exactly once.
+            let changes = 0;
+            for (let x = 1; x < kRenderSize; x++) {
+              const { R: Ri } = view.color({ x: x - 1, y: 0, z: 0 });
+              const { R: Rj } = view.color({ x, y: 0, z: 0 });
+              if (Ri !== Rj) {
+                changes++;
+              }
+            }
+            if (changes !== 1) {
               return Error(
-              'Linear filtering on mipmaps should be a monotonically increasing sequence:\n' +
-              view.toString(
-              { x: 0, y: 0, z: 0 },
-              { width: kRenderSize, height: 1, depthOrArrayLayers: 1 }));
-
-
+                `Nearest filtering on mipmaps should change exacly once but found (${changes}):\n` +
+                view.toString(
+                  { x: 0, y: 0, z: 0 },
+                  { width: kRenderSize, height: 1, depthOrArrayLayers: 1 }
+                )
+              );
             }
+            break;
           }
-          break;
-        }
-      case 'nearest':{
-          // For 'nearest' mode, we check that the resulting 1d image changes from 0.0 to 1.0
-          // exactly once.
-          let changes = 0;
-          for (let x = 1; x < kRenderSize; x++) {
-            const { R: Ri } = view.color({ x: x - 1, y: 0, z: 0 });
-            const { R: Rj } = view.color({ x, y: 0, z: 0 });
-            if (Ri !== Rj) {
-              changes++;
-            }
-          }
-          if (changes !== 1) {
-            return Error(
-            `Nearest filtering on mipmaps should change exacly once but found (${changes}):\n` +
-            view.toString(
-            { x: 0, y: 0, z: 0 },
-            { width: kRenderSize, height: 1, depthOrArrayLayers: 1 }));
-
-
-          }
-          break;
-        }}
-
-    return undefined;
-  },
-  { srcByteOffset: 0, type: Uint8Array, typedLength: buffer.size });
-
+      }
+      return undefined;
+    },
+    { srcByteOffset: 0, type: Uint8Array, typedLength: buffer.size }
+  );
 });
 //# sourceMappingURL=filter_mode.spec.js.map

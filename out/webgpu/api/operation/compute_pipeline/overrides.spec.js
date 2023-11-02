@@ -55,28 +55,28 @@ export const g = makeTestGroup(F);
 
 g.test('basic').
 desc(
-`Test that either correct constants override values or default values when no constants override value are provided at pipeline creation time are used as the output to the storage buffer.`).
-
+  `Test that either correct constants override values or default values when no constants override value are provided at pipeline creation time are used as the output to the storage buffer.`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const count = 11;
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  new Uint32Array(range(count, (i) => i)),
-  {
-    c0: 0,
-    c1: 1,
-    c2: 2,
-    c3: 3,
-    // c4 is using default value
-    c5: 5,
-    c6: 6,
-    // c7 is using default value
-    c8: 8,
-    c9: 9
-    // c10 is using default value
-  },
-  `
+    t.params.isAsync,
+    new Uint32Array(range(count, (i) => i)),
+    {
+      c0: 0,
+      c1: 1,
+      c2: 2,
+      c3: 3,
+      // c4 is using default value
+      c5: 5,
+      c6: 6,
+      // c7 is using default value
+      c8: 8,
+      c9: 9
+      // c10 is using default value
+    },
+    `
       override c0: bool;              // type: bool
       override c1: bool = false;      // default override
       override c2: f32;               // type: float32
@@ -108,25 +108,25 @@ fn(async (t) => {
           buf.data[9] = u32(c9);
           buf.data[10] = u32(c10);
       }
-    `);
-
+    `
+  );
 });
 
 g.test('numeric_id').
 desc(
-`Test that correct values are used as output to the storage buffer for constants specified with numeric id instead of their names.`).
-
+  `Test that correct values are used as output to the storage buffer for constants specified with numeric id instead of their names.`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  new Uint32Array([1, 2, 3]),
-  {
-    1001: 1,
-    1: 2
-    // 1003 is using default value
-  },
-  `
+    t.params.isAsync,
+    new Uint32Array([1, 2, 3]),
+    {
+      1001: 1,
+      1: 2
+      // 1003 is using default value
+    },
+    `
         @id(1001) override c1: u32;            // some big numeric id
         @id(1) override c2: u32 = 0u;          // id == 1 might collide with some generated constant id
         @id(1003) override c3: u32 = 3u;       // default
@@ -142,27 +142,27 @@ fn(async (t) => {
             buf.data[1] = c2;
             buf.data[2] = c3;
         }
-      `);
-
+      `
+  );
 });
 
 g.test('precision').
 desc(
-`Test that float number precision is preserved for constants as they are used for compute shader output of the storage buffer.`).
-
+  `Test that float number precision is preserved for constants as they are used for compute shader output of the storage buffer.`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const c1 = 3.14159;
-  const c2 = 3.141592653589793238;
+  const c2 = 3.141592653589793;
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  // These values will get rounded to f32 and createComputePipeline, so the values coming out from the shader won't be the exact same one as shown here.
-  new Float32Array([c1, c2]),
-  {
-    c1,
-    c2
-  },
-  `
+    t.params.isAsync,
+    // These values will get rounded to f32 and createComputePipeline, so the values coming out from the shader won't be the exact same one as shown here.
+    new Float32Array([c1, c2]),
+    {
+      c1,
+      c2
+    },
+    `
         override c1: f32;
         override c2: f32;
 
@@ -176,31 +176,31 @@ fn(async (t) => {
             buf.data[0] = c1;
             buf.data[1] = c2;
         }
-      `);
-
+      `
+  );
 });
 
 g.test('workgroup_size').
 desc(
-`Test that constants can be used as workgroup size correctly, the compute shader should write the max local invocation id to the storage buffer which is equal to the workgroup size dimension given by the constant.`).
-
+  `Test that constants can be used as workgroup size correctly, the compute shader should write the max local invocation id to the storage buffer which is equal to the workgroup size dimension given by the constant.`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
 combine('type', ['u32', 'i32']).
 combine('size', [3, 16, 64]).
-combine('v', ['x', 'y', 'z'])).
-
+combine('v', ['x', 'y', 'z'])
+).
 fn(async (t) => {
   const { isAsync, type, size, v } = t.params;
   const workgroup_size_str = v === 'x' ? 'd' : v === 'y' ? '1, d' : '1, 1, d';
   await t.ExpectShaderOutputWithConstants(
-  isAsync,
-  new Uint32Array([size]),
-  {
-    d: size
-  },
-  `
+    isAsync,
+    new Uint32Array([size]),
+    {
+      d: size
+    },
+    `
         override d: ${type};
 
         struct Buf {
@@ -216,14 +216,14 @@ fn(async (t) => {
                 buf.data[0] = local_invocation_id.${v} + 1;
             }
         }
-      `);
-
+      `
+  );
 });
 
 g.test('shared_shader_module').
 desc(
-`Test that when the same shader module is shared by different pipelines, the correct constant values are used as output to the storage buffer. The constant value should not affect other pipeline sharing the same shader module.`).
-
+  `Test that when the same shader module is shared by different pipelines, the correct constant values are used as output to the storage buffer. The constant value should not affect other pipeline sharing the same shader module.`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const module = t.device.createShaderModule({
@@ -279,12 +279,12 @@ fn(async (t) => {
   const promises = t.params.isAsync ?
   Promise.all([
   t.device.createComputePipelineAsync(descriptors[0]),
-  t.device.createComputePipelineAsync(descriptors[1])]) :
-
+  t.device.createComputePipelineAsync(descriptors[1])]
+  ) :
   Promise.resolve([
   t.device.createComputePipeline(descriptors[0]),
-  t.device.createComputePipeline(descriptors[1])]);
-
+  t.device.createComputePipeline(descriptors[1])]
+  );
 
   const pipelines = await promises;
   const bindGroups = [
@@ -325,8 +325,8 @@ fn(async (t) => {
 
 g.test('multi_entry_points').
 desc(
-`Test that constants used for different entry points are used correctly as output to the storage buffer. They should have no impact for pipeline using entry points that doesn't reference them.`).
-
+  `Test that constants used for different entry points are used correctly as output to the storage buffer. They should have no impact for pipeline using entry points that doesn't reference them.`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn(async (t) => {
   const module = t.device.createShaderModule({
@@ -430,14 +430,14 @@ fn(async (t) => {
   t.device.createComputePipelineAsync(descriptors[0]),
   t.device.createComputePipelineAsync(descriptors[1]),
   t.device.createComputePipelineAsync(descriptors[2]),
-  t.device.createComputePipelineAsync(descriptors[3])]) :
-
+  t.device.createComputePipelineAsync(descriptors[3])]
+  ) :
   Promise.resolve([
   t.device.createComputePipeline(descriptors[0]),
   t.device.createComputePipeline(descriptors[1]),
   t.device.createComputePipeline(descriptors[2]),
-  t.device.createComputePipeline(descriptors[3])]);
-
+  t.device.createComputePipeline(descriptors[3])]
+  );
 
   const pipelines = await promises;
   const bindGroups = [

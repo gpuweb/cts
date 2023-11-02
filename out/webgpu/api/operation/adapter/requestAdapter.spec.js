@@ -98,8 +98,8 @@ desc(`request adapter with all possible options and check for basic functionalit
 params((u) =>
 u.
 combine('powerPreference', powerPreferenceModes).
-combine('forceFallbackAdapter', forceFallbackOptions)).
-
+combine('forceFallbackAdapter', forceFallbackOptions)
+).
 fn(async (t) => {
   const { powerPreference, forceFallbackAdapter } = t.params;
   const adapter = await getGPU(t.rec).requestAdapter({

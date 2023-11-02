@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { align, roundDown } from '../../../../util/math.js';import {
-kMaximumLimitBaseParams,
-makeLimitTestGroup } from
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup } from
 
 
 
@@ -17,8 +17,8 @@ function getSizeAndOffsetForBufferPart(device, bufferPart, size) {
     case 'wholeBuffer':
       return { size, offset: 0 };
     case 'biggerBufferWithOffset':
-      return { size: size + align, offset: align };}
-
+      return { size: size + align, offset: align };
+  }
 }
 
 const kStorageBufferRequiredSizeAlignment = 4;
@@ -41,8 +41,8 @@ maximumLimit)
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
-      return maximumLimit + kStorageBufferRequiredSizeAlignment;}
-
+      return maximumLimit + kStorageBufferRequiredSizeAlignment;
+  }
 }
 
 function getTestValue(testValueName, requestedLimit) {
@@ -52,10 +52,10 @@ function getTestValue(testValueName, requestedLimit) {
     case 'overLimit':
       // Note: the requestedLimit might not meet alignment requirements.
       return align(
-      requestedLimit + kStorageBufferRequiredSizeAlignment,
-      kStorageBufferRequiredSizeAlignment);}
-
-
+        requestedLimit + kStorageBufferRequiredSizeAlignment,
+        kStorageBufferRequiredSizeAlignment
+      );
+  }
 }
 
 function getDeviceLimitToRequestAndValueToTest(
@@ -81,67 +81,67 @@ fn(async (t) => {
   const { limitTest, testValueName, bufferPart } = t.params;
   const { defaultLimit, adapterLimit: maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-  limitTest,
-  testValueName,
-  defaultLimit,
-  maximumLimit);
-
+    limitTest,
+    testValueName,
+    defaultLimit,
+    maximumLimit
+  );
 
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ device, testValue, shouldError }) => {
-    const bindGroupLayout = device.createBindGroupLayout({
-      entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'storage' }
-      }]
+    requestedLimit,
+    testValue,
+    async ({ device, testValue, shouldError }) => {
+      const bindGroupLayout = device.createBindGroupLayout({
+        entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: 'storage' }
+        }]
 
-    });
+      });
 
-    const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
+      const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
 
-    // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
-    // skip the validation since the allocation will fail with a validation error.
-    if (size > device.limits.maxBufferSize) {
-      return;
-    }
+      // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
+      // skip the validation since the allocation will fail with a validation error.
+      if (size > device.limits.maxBufferSize) {
+        return;
+      }
 
-    device.pushErrorScope('out-of-memory');
-    const storageBuffer = t.trackForCleanup(
-    device.createBuffer({
-      usage: GPUBufferUsage.STORAGE,
-      size
-    }));
+      device.pushErrorScope('out-of-memory');
+      const storageBuffer = t.trackForCleanup(
+        device.createBuffer({
+          usage: GPUBufferUsage.STORAGE,
+          size
+        })
+      );
+      const outOfMemoryError = await device.popErrorScope();
 
-    const outOfMemoryError = await device.popErrorScope();
+      if (!outOfMemoryError) {
+        await t.expectValidationError(
+          () => {
+            device.createBindGroup({
+              layout: bindGroupLayout,
+              entries: [
+              {
+                binding: 0,
+                resource: {
+                  buffer: storageBuffer,
+                  offset,
+                  size: testValue
+                }
+              }]
 
-    if (!outOfMemoryError) {
-      await t.expectValidationError(
-      () => {
-        device.createBindGroup({
-          layout: bindGroupLayout,
-          entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: storageBuffer,
-              offset,
-              size: testValue
-            }
-          }]
-
-        });
-      },
-      shouldError,
-      `size: ${size}, offset: ${offset}, testValue: ${testValue}`);
-
-    }
-  },
-  kExtraLimits);
-
+            });
+          },
+          shouldError,
+          `size: ${size}, offset: ${offset}, testValue: ${testValue}`
+        );
+      }
+    },
+    kExtraLimits
+  );
 });
 
 g.test('validate').

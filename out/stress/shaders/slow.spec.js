@@ -114,8 +114,8 @@ fn((t) => {
   {
     coord: { x: 1, y: 1 },
     exp: new Uint8Array([255, 255, 0, 255])
-  }]);
-
+  }]
+  );
 });
 
 g.test('fragment').
@@ -186,7 +186,7 @@ fn((t) => {
   {
     coord: { x: 1, y: 1 },
     exp: new Uint8Array([255, 255, 0, 255])
-  }]);
-
+  }]
+  );
 });
 //# sourceMappingURL=slow.spec.js.map

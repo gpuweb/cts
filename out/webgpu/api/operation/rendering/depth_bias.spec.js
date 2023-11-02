@@ -6,14 +6,14 @@ Tests render results with different depth bias values like 'positive', 'negative
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable } from '../../../../common/util/util.js';
 import {
-kTextureFormatInfo } from
+  kTextureFormatInfo } from
 
 
 '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { TexelView } from '../../../util/texture/texel_view.js';var
 
-QuadAngle;
+QuadAngle = /*#__PURE__*/function (QuadAngle) {QuadAngle[QuadAngle["Flat"] = 0] = "Flat";QuadAngle[QuadAngle["TiltedX"] = 1] = "TiltedX";return QuadAngle;}(QuadAngle || {});
 
 
 
@@ -27,7 +27,7 @@ QuadAngle;
 //
 // To get a final bias of 0.25 for primitives with z = 0.25, we can use
 // depthBias = 0.25 / (2 ** (-2 - 23)) = 8388608.
-(function (QuadAngle) {QuadAngle[QuadAngle["Flat"] = 0] = "Flat";QuadAngle[QuadAngle["TiltedX"] = 1] = "TiltedX";})(QuadAngle || (QuadAngle = {}));const kPointTwoFiveBiasForPointTwoFiveZOnFloat = 8388608;
+const kPointTwoFiveBiasForPointTwoFiveZOnFloat = 8388608;
 
 class DepthBiasTest extends TextureTestMixin(GPUTest) {
   runDepthBiasTestInternal(
@@ -84,26 +84,26 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
           `;
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
 
     const renderTarget = this.trackForCleanup(
-    this.device.createTexture({
-      format: renderTargetFormat,
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-    }));
-
+      this.device.createTexture({
+        format: renderTargetFormat,
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+      })
+    );
 
     const depthTexture = this.trackForCleanup(
-    this.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: depthFormat,
-      sampleCount: 1,
-      mipLevelCount: 1,
-      usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
-    }));
-
+      this.device.createTexture({
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        format: depthFormat,
+        sampleCount: 1,
+        mipLevelCount: 1,
+        usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
+      })
+    );
 
     const depthStencilAttachment = {
       view: depthTexture.createView(),
@@ -175,7 +175,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
     });
 
     const expColor = { Depth: _expectedDepth };
-    const expTexelView = TexelView.fromTexelsAsColors(depthFormat, (coords) => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(depthFormat, (_coords) => expColor);
     this.expectTexelViewComparisonIsOkInTexture({ texture: depthTexture }, expTexelView, [1, 1]);
   }
 
@@ -210,7 +210,7 @@ class DepthBiasTest extends TextureTestMixin(GPUTest) {
       B: _expectedColor[2],
       A: _expectedColor[3]
     };
-    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, (coords) => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, (_coords) => expColor);
     this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
   }
 
@@ -245,11 +245,11 @@ export const g = makeTestGroup(DepthBiasTest);
 
 g.test('depth_bias').
 desc(
-`
+  `
   Tests that a square with different depth bias values like 'positive', 'negative',
   'slope', 'clamp', etc. is drawn as expected.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combineWithParams([
@@ -301,24 +301,24 @@ u //
   biasSlopeScale: -0.5,
   biasClamp: 0,
   _expectedDepth: 0
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   t.runDepthBiasTest('depth32float', t.params);
 });
 
 g.test('depth_bias_24bit_format').
 desc(
-`
+  `
   Tests that a square with different depth bias values like 'positive', 'negative',
   'slope', 'clamp', etc. is drawn as expected with 24 bit depth format.
 
   TODO: Enhance these tests by reading back the depth (emulating the copy using texture sampling)
   and checking the result directly, like the non-24-bit depth tests, instead of just relying on
   whether the depth test passes or fails.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('format', ['depth24plus', 'depth24plus-stencil8']).
@@ -343,9 +343,9 @@ combineWithParams([
   biasSlopeScale: 0,
   biasClamp: 0.1,
   _expectedColor: new Float32Array([0.0, 0.0, 0.0, 0.0])
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { format } = t.params;
   t.runDepthBiasTestFor24BitFormat(format, t.params);

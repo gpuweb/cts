@@ -143,23 +143,23 @@ const kComputePassEncoderCommands = keysOf(kComputePassEncoderCommandInfo);
 
 g.test('non_pass_commands').
 desc(
-`
+  `
   Test that functions of GPUCommandEncoder generate a validation error if the encoder is already
   finished.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('command', kEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])).
-
+combine('finishBeforeCommand', [false, true])
+).
 beforeAllSubcases((t) => {
   switch (t.params.command) {
     case 'writeTimestamp':
       t.selectDeviceOrSkipTestCase('timestamp-query');
-      break;}
-
+      break;
+  }
 }).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
@@ -220,28 +220,28 @@ fn((t) => {
       case 'copyBufferToTexture':
         {
           encoder.copyBufferToTexture(
-          { buffer: srcBuffer },
-          { texture: dstTexture },
-          textureSize);
-
+            { buffer: srcBuffer },
+            { texture: dstTexture },
+            textureSize
+          );
         }
         break;
       case 'copyTextureToBuffer':
         {
           encoder.copyTextureToBuffer(
-          { texture: srcTexture },
-          { buffer: dstBuffer },
-          textureSize);
-
+            { texture: srcTexture },
+            { buffer: dstBuffer },
+            textureSize
+          );
         }
         break;
       case 'copyTextureToTexture':
         {
           encoder.copyTextureToTexture(
-          { texture: srcTexture },
-          { texture: dstTexture },
-          textureSize);
-
+            { texture: srcTexture },
+            { texture: dstTexture },
+            textureSize
+          );
         }
         break;
       case 'insertDebugMarker':
@@ -270,26 +270,26 @@ fn((t) => {
         }
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }, finishBeforeCommand);
 });
 
 g.test('render_pass_commands').
 desc(
-`
+  `
     Test that functions of GPURenderPassEncoder generate a validation error if the encoder or the
     pass is already finished.
 
     - TODO: Consider testing: nothing before command, end before command, end+finish before command.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('command', kRenderPassEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])).
-
+combine('finishBeforeCommand', [false, true])
+).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
 
@@ -407,24 +407,24 @@ fn((t) => {
         }
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }, finishBeforeCommand);
 });
 
 g.test('render_bundle_commands').
 desc(
-`
+  `
     Test that functions of GPURenderBundleEncoder generate a validation error if the encoder or the
     pass is already finished.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('command', kRenderBundleEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])).
-
+combine('finishBeforeCommand', [false, true])
+).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
 
@@ -503,26 +503,26 @@ fn((t) => {
         }
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }, finishBeforeCommand);
 });
 
 g.test('compute_pass_commands').
 desc(
-`
+  `
     Test that functions of GPUComputePassEncoder generate a validation error if the encoder or the
     pass is already finished.
 
     - TODO: Consider testing: nothing before command, end before command, end+finish before command.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('command', kComputePassEncoderCommands).
 beginSubcases().
-combine('finishBeforeCommand', [false, true])).
-
+combine('finishBeforeCommand', [false, true])
+).
 fn((t) => {
   const { command, finishBeforeCommand } = t.params;
 
@@ -581,8 +581,8 @@ fn((t) => {
         }
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }, finishBeforeCommand);
 });
 //# sourceMappingURL=encoder_open_state.spec.js.map

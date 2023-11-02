@@ -13,22 +13,22 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { align } from '../../../../util/math.js';
 import { getTextureCopyLayout } from '../../../../util/texture/layout.js';
 import {
-kTexelRepresentationInfo } from
+  kTexelRepresentationInfo } from
 
 '../../../../util/texture/texel_data.js';
 import {
-kOperationBoundaries,
+  kOperationBoundaries,
 
-kBoundaryInfo,
-OperationContextHelper } from
+  kBoundaryInfo,
+  OperationContextHelper } from
 '../operation_context_helper.js';
 
 import {
-kAllReadOps,
-kAllWriteOps,
-checkOpsValidForContext,
+  kAllReadOps,
+  kAllWriteOps,
+  checkOpsValidForContext,
 
-kOpInfo } from
+  kOpInfo } from
 './texture_sync_test.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -67,12 +67,12 @@ class TextureSyncTestHelper extends OperationContextHelper {
   {
     super(t);
     this.texture = t.trackForCleanup(
-    t.device.createTexture({
-      size: this.kTextureSize,
-      format: this.kTextureFormat,
-      ...textureCreationParams
-    }));
-
+      t.device.createTexture({
+        size: this.kTextureSize,
+        format: this.kTextureFormat,
+        ...textureCreationParams
+      })
+    );
   }
 
   /**
@@ -84,66 +84,66 @@ class TextureSyncTestHelper extends OperationContextHelper {
     switch (op) {
       case 't2t-copy':{
           const texture = this.t.trackForCleanup(
-          this.device.createTexture({
-            size: this.kTextureSize,
-            format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
-          }));
-
+            this.device.createTexture({
+              size: this.kTextureSize,
+              format: this.kTextureFormat,
+              usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+            })
+          );
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyTextureToTexture(
-          {
-            texture: this.texture
-          },
-          { texture },
-          this.kTextureSize);
-
+            {
+              texture: this.texture
+            },
+            { texture },
+            this.kTextureSize
+          );
           return texture;
         }
       case 't2b-copy':{
           const { byteLength, bytesPerRow } = getTextureCopyLayout(this.kTextureFormat, '2d', [
           ...this.kTextureSize,
-          1]);
-
+          1]
+          );
           const buffer = this.t.trackForCleanup(
-          this.device.createBuffer({
-            size: byteLength,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-          }));
-
+            this.device.createBuffer({
+              size: byteLength,
+              usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+            })
+          );
 
           const texture = this.t.trackForCleanup(
-          this.device.createTexture({
-            size: this.kTextureSize,
-            format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
-          }));
-
+            this.device.createTexture({
+              size: this.kTextureSize,
+              format: this.kTextureFormat,
+              usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+            })
+          );
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyTextureToBuffer(
-          {
-            texture: this.texture
-          },
-          { buffer, bytesPerRow },
-          this.kTextureSize);
-
+            {
+              texture: this.texture
+            },
+            { buffer, bytesPerRow },
+            this.kTextureSize
+          );
           this.commandEncoder.copyBufferToTexture(
-          { buffer, bytesPerRow },
-          { texture },
-          this.kTextureSize);
-
+            { buffer, bytesPerRow },
+            { texture },
+            this.kTextureSize
+          );
           return texture;
         }
       case 'sample':{
           const texture = this.t.trackForCleanup(
-          this.device.createTexture({
-            size: this.kTextureSize,
-            format: this.kTextureFormat,
-            usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING
-          }));
-
+            this.device.createTexture({
+              size: this.kTextureSize,
+              format: this.kTextureFormat,
+              usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING
+            })
+          );
 
           const bindGroupLayout = this.device.createBindGroupLayout({
             entries: [
@@ -230,8 +230,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
                     this.renderPassEncoder.setPipeline(renderPipeline);
                     this.renderPassEncoder.setBindGroup(0, bindGroup);
                     this.renderPassEncoder.draw(6);
-                    break;}
-
+                    break;
+                }
                 break;
               }
             case 'compute-pass-encoder':{
@@ -264,22 +264,22 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 this.computePassEncoder.setPipeline(computePipeline);
                 this.computePassEncoder.setBindGroup(0, bindGroup);
                 this.computePassEncoder.dispatchWorkgroups(
-                Math.ceil(this.kTextureSize[0] / 8),
-                Math.ceil(this.kTextureSize[1] / 8));
-
+                  Math.ceil(this.kTextureSize[0] / 8),
+                  Math.ceil(this.kTextureSize[1] / 8)
+                );
                 break;
               }
             default:
-              unreachable();}
-
+              unreachable();
+          }
 
           return texture;
         }
       case 'b2t-copy':
       case 'attachment-resolve':
       case 'attachment-store':
-        unreachable();}
-
+        unreachable();
+    }
     unreachable();
   }
 
@@ -316,13 +316,13 @@ class TextureSyncTestHelper extends OperationContextHelper {
           }
 
           this.queue.writeTexture(
-          { texture: this.texture },
-          fullTexelData,
-          {
-            bytesPerRow: texelData.byteLength * this.kTextureSize[0]
-          },
-          this.kTextureSize);
-
+            { texture: this.texture },
+            fullTexelData,
+            {
+              bytesPerRow: texelData.byteLength * this.kTextureSize[0]
+            },
+            this.kTextureSize
+          );
           break;
         }
       case 't2t-copy':{
@@ -342,20 +342,20 @@ class TextureSyncTestHelper extends OperationContextHelper {
           }
 
           this.queue.writeTexture(
-          { texture },
-          fullTexelData,
-          {
-            bytesPerRow: texelData.byteLength * this.kTextureSize[0]
-          },
-          this.kTextureSize);
-
+            { texture },
+            fullTexelData,
+            {
+              bytesPerRow: texelData.byteLength * this.kTextureSize[0]
+            },
+            this.kTextureSize
+          );
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyTextureToTexture(
-          { texture },
-          { texture: this.texture },
-          this.kTextureSize);
-
+            { texture },
+            { texture: this.texture },
+            this.kTextureSize
+          );
           break;
         }
       case 'b2t-copy':{
@@ -367,42 +367,42 @@ class TextureSyncTestHelper extends OperationContextHelper {
           for (let i = 0; i < this.kTextureSize[1]; ++i) {
             for (let j = 0; j < this.kTextureSize[0]; ++j) {
               memcpy(
-              { src: texelData },
-              {
-                dst: fullTexelData,
-                start: i * bytesPerRow + j * texelData.byteLength
-              });
-
+                { src: texelData },
+                {
+                  dst: fullTexelData,
+                  start: i * bytesPerRow + j * texelData.byteLength
+                }
+              );
             }
           }
 
           const buffer = this.t.trackForCleanup(
-          this.device.createBuffer({
-            size: fullTexelData.byteLength,
-            usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
-          }));
-
+            this.device.createBuffer({
+              size: fullTexelData.byteLength,
+              usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+            })
+          );
 
           this.queue.writeBuffer(buffer, 0, fullTexelData);
 
           assert(this.commandEncoder !== undefined);
           this.commandEncoder.copyBufferToTexture(
-          { buffer, bytesPerRow },
-          { texture: this.texture },
-          this.kTextureSize);
-
+            { buffer, bytesPerRow },
+            { texture: this.texture },
+            this.kTextureSize
+          );
           break;
         }
       case 'attachment-resolve':{
           assert(this.commandEncoder !== undefined);
           const renderTarget = this.t.trackForCleanup(
-          this.device.createTexture({
-            format: this.kTextureFormat,
-            size: this.kTextureSize,
-            usage: GPUTextureUsage.RENDER_ATTACHMENT,
-            sampleCount: 4
-          }));
-
+            this.device.createTexture({
+              format: this.kTextureFormat,
+              size: this.kTextureSize,
+              usage: GPUTextureUsage.RENDER_ATTACHMENT,
+              sampleCount: 4
+            })
+          );
           this.renderPassEncoder = this.commandEncoder.beginRenderPass({
             colorAttachments: [
             {
@@ -496,8 +496,8 @@ class TextureSyncTestHelper extends OperationContextHelper {
                     this.renderPassEncoder.setPipeline(renderPipeline);
                     this.renderPassEncoder.setBindGroup(0, bindGroup);
                     this.renderPassEncoder.draw(6);
-                    break;}
-
+                    break;
+                }
                 break;
               }
             case 'compute-pass-encoder':{
@@ -529,31 +529,31 @@ class TextureSyncTestHelper extends OperationContextHelper {
                 this.computePassEncoder.setPipeline(computePipeline);
                 this.computePassEncoder.setBindGroup(0, bindGroup);
                 this.computePassEncoder.dispatchWorkgroups(
-                Math.ceil(this.kTextureSize[0] / 8),
-                Math.ceil(this.kTextureSize[1] / 8));
-
+                  Math.ceil(this.kTextureSize[0] / 8),
+                  Math.ceil(this.kTextureSize[1] / 8)
+                );
                 break;
               }
             default:
-              unreachable();}
-
+              unreachable();
+          }
           break;
         }
       case 't2b-copy':
       case 'sample':
-        unreachable();}
-
+        unreachable();
+    }
   }
 }
 
 g.test('rw').
 desc(
-`
+  `
     Perform a 'read' operations on a texture subresource, followed by a 'write' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The read should not see the contents written by the subsequent write.`).
-
+    The read should not see the contents written by the subsequent write.`
+).
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
@@ -569,8 +569,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage:
@@ -598,14 +598,14 @@ fn((t) => {
 
 g.test('wr').
 desc(
-`
+  `
     Perform a 'write' operation on a texture subresource, followed by a 'read' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
     The read should see exactly the contents written by the previous write.
 
-    - TODO: Use non-solid-color texture contents [2]`).
-
+    - TODO: Use non-solid-color texture contents [2]`
+).
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
@@ -621,8 +621,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage: kOpInfo[t.params.read.op].readUsage | kOpInfo[t.params.write.op].writeUsage
@@ -644,12 +644,12 @@ fn((t) => {
 
 g.test('ww').
 desc(
-`
+  `
     Perform a 'first' write operation on a texture subresource, followed by a 'second' write operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The second write should overwrite the contents of the first.`).
-
+    The second write should overwrite the contents of the first.`
+).
 params((u) =>
 u.
 combine('boundary', kOperationBoundaries).
@@ -665,8 +665,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn((t) => {
   const helper = new TextureSyncTestHelper(t, {
     usage:
@@ -696,15 +696,15 @@ fn((t) => {
 
 g.test('rw,single_pass,load_store').
 desc(
-`
-    TODO: Test memory synchronization when loading from a texture subresource in a single pass and storing to it.`).
-
+  `
+    TODO: Test memory synchronization when loading from a texture subresource in a single pass and storing to it.`
+).
 unimplemented();
 
 g.test('rw,single_pass,load_resolve').
 desc(
-`
-    TODO: Test memory synchronization when loading from a texture subresource in a single pass and resolving to it.`).
-
+  `
+    TODO: Test memory synchronization when loading from a texture subresource in a single pass and resolving to it.`
+).
 unimplemented();
 //# sourceMappingURL=same_subresource.spec.js.map

@@ -65,8 +65,8 @@ desc('Test that indirect recursion of structures via struct members is rejected'
 params((u) =>
 u //
 .combine('target', ['S1', 'S2']).
-combine('attribute', ['align', 'location', 'size'])).
-
+combine('attribute', ['align', 'location', 'size'])
+).
 fn((t) => {
   const wgsl = `
 struct S1 {
@@ -81,9 +81,9 @@ struct S2 {
 
 g.test('no_indirect_recursion_via_struct_member_nested_in_alias').
 desc(
-`Test that indirect recursion of structures via struct members is rejected when the member type
-    is an alias that contains the structure`).
-
+  `Test that indirect recursion of structures via struct members is rejected when the member type
+    is an alias that contains the structure`
+).
 params((u) => u.combine('target', ['i32', 'A'])).
 fn((t) => {
   const wgsl = `

@@ -48,10 +48,10 @@ void (async () => {
   const expectations =
   typeof loadWebGPUExpectations !== 'undefined' ?
   parseExpectationsForTestQuery(
-  await loadWebGPUExpectations,
-  filterQuery,
-  new URL(window.location.href)) :
-
+    await loadWebGPUExpectations,
+    filterQuery,
+    new URL(window.location.href)
+  ) :
   [];
 
   const log = new Logger();

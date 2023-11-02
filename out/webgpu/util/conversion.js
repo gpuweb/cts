@@ -6,13 +6,13 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
 import {
-cartesianProduct,
-clamp,
-correctlyRoundedF16,
-isFiniteF16,
-isSubnormalNumberF16,
-isSubnormalNumberF32,
-isSubnormalNumberF64 } from
+  cartesianProduct,
+  clamp,
+  correctlyRoundedF16,
+  isFiniteF16,
+  isSubnormalNumberF16,
+  isSubnormalNumberF32,
+  isSubnormalNumberF64 } from
 './math.js';
 
 /**
@@ -633,8 +633,8 @@ export class ScalarType {
       case 'i8':
         return i8(value);
       case 'bool':
-        return bool(value !== 0);}
-
+        return bool(value !== 0);
+    }
   }
 }
 
@@ -704,11 +704,11 @@ export class MatrixType {
     this.cols = cols;
     this.rows = rows;
     assert(
-    elementType.kind === 'f32' ||
-    elementType.kind === 'f16' ||
-    elementType.kind === 'abstract-float',
-    "MatrixType can only have elementType of 'f32' or 'f16' or 'abstract-float'");
-
+      elementType.kind === 'f32' ||
+      elementType.kind === 'f16' ||
+      elementType.kind === 'abstract-float',
+      "MatrixType can only have elementType of 'f32' or 'f16' or 'abstract-float'"
+    );
     this.elementType = elementType;
   }
 
@@ -763,40 +763,40 @@ function valueFromBytes(workingDataOut, buf, offset) {
 }
 
 export const TypeI32 = new ScalarType('i32', 4, (buf, offset) =>
-i32(valueFromBytes(workingDataI32, buf, offset)));
-
+i32(valueFromBytes(workingDataI32, buf, offset))
+);
 export const TypeU32 = new ScalarType('u32', 4, (buf, offset) =>
-u32(valueFromBytes(workingDataU32, buf, offset)));
-
+u32(valueFromBytes(workingDataU32, buf, offset))
+);
 export const TypeAbstractFloat = new ScalarType(
-'abstract-float',
-8,
-(buf, offset) => abstractFloat(valueFromBytes(workingDataF64, buf, offset)));
-
+  'abstract-float',
+  8,
+  (buf, offset) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
+);
 export const TypeF64 = new ScalarType('f64', 8, (buf, offset) =>
-f64(valueFromBytes(workingDataF64, buf, offset)));
-
+f64(valueFromBytes(workingDataF64, buf, offset))
+);
 export const TypeF32 = new ScalarType('f32', 4, (buf, offset) =>
-f32(valueFromBytes(workingDataF32, buf, offset)));
-
+f32(valueFromBytes(workingDataF32, buf, offset))
+);
 export const TypeI16 = new ScalarType('i16', 2, (buf, offset) =>
-i16(valueFromBytes(workingDataI16, buf, offset)));
-
+i16(valueFromBytes(workingDataI16, buf, offset))
+);
 export const TypeU16 = new ScalarType('u16', 2, (buf, offset) =>
-u16(valueFromBytes(workingDataU16, buf, offset)));
-
+u16(valueFromBytes(workingDataU16, buf, offset))
+);
 export const TypeF16 = new ScalarType('f16', 2, (buf, offset) =>
-f16Bits(valueFromBytes(workingDataU16, buf, offset)));
-
+f16Bits(valueFromBytes(workingDataU16, buf, offset))
+);
 export const TypeI8 = new ScalarType('i8', 1, (buf, offset) =>
-i8(valueFromBytes(workingDataI8, buf, offset)));
-
+i8(valueFromBytes(workingDataI8, buf, offset))
+);
 export const TypeU8 = new ScalarType('u8', 1, (buf, offset) =>
-u8(valueFromBytes(workingDataU8, buf, offset)));
-
+u8(valueFromBytes(workingDataU8, buf, offset))
+);
 export const TypeBool = new ScalarType('bool', 4, (buf, offset) =>
-bool(valueFromBytes(workingDataU32, buf, offset) !== 0));
-
+bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
+);
 
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind) {
@@ -822,8 +822,8 @@ export function scalarType(kind) {
     case 'i8':
       return TypeI8;
     case 'bool':
-      return TypeBool;}
-
+      return TypeBool;
+  }
 }
 
 /** @returns the number of scalar (element) types of the given Type */
@@ -925,12 +925,12 @@ export class Scalar {
         case 'i32':
           return `i32(${this.value})`;
         case 'bool':
-          return `${this.value}`;}
-
+          return `${this.value}`;
+      }
     }
     throw new Error(
-    `scalar of value ${this.value} and type ${this.type} has no WGSL representation`);
-
+      `scalar of value ${this.value} and type ${this.type} has no WGSL representation`
+    );
   }
 
   toString() {
@@ -971,13 +971,13 @@ export class Scalar {
                 `${Colors.bold(str)} (0x${hex})`;
               default:
                 unreachable(
-                `Printing of floating point kind ${this.type.kind} is not implemented...`);}
-
-
+                  `Printing of floating point kind ${this.type.kind} is not implemented...`
+                );
+            }
           }
           return `${Colors.bold(this.value.toString())} (0x${hex})`;
-        }}
-
+        }
+    }
   }
 }
 
@@ -1112,8 +1112,8 @@ export class Vector {
       const b = elements[i].type;
       if (a !== b) {
         throw new Error(
-        `cannot mix vector element types. Found elements with types '${a}' and '${b}'`);
-
+          `cannot mix vector element types. Found elements with types '${a}' and '${b}'`
+        );
       }
     }
     this.elements = elements;
@@ -1193,8 +1193,8 @@ export function toVector(v, op) {
     case 3:
       return vec3(op(v[0]), op(v[1]), op(v[2]));
     case 4:
-      return vec4(op(v[0]), op(v[1]), op(v[2]), op(v[3]));}
-
+      return vec4(op(v[0]), op(v[1]), op(v[2]), op(v[3]));
+  }
   unreachable(`input to 'toVector' must contain 2, 3, or 4 elements`);
 }
 
@@ -1302,7 +1302,7 @@ export function toMatrix(m, op) {
 
 
 
-SerializedScalarKind;
+SerializedScalarKind = /*#__PURE__*/function (SerializedScalarKind) {SerializedScalarKind[SerializedScalarKind["AbstractFloat"] = 0] = "AbstractFloat";SerializedScalarKind[SerializedScalarKind["F64"] = 1] = "F64";SerializedScalarKind[SerializedScalarKind["F32"] = 2] = "F32";SerializedScalarKind[SerializedScalarKind["F16"] = 3] = "F16";SerializedScalarKind[SerializedScalarKind["U32"] = 4] = "U32";SerializedScalarKind[SerializedScalarKind["U16"] = 5] = "U16";SerializedScalarKind[SerializedScalarKind["U8"] = 6] = "U8";SerializedScalarKind[SerializedScalarKind["I32"] = 7] = "I32";SerializedScalarKind[SerializedScalarKind["I16"] = 8] = "I16";SerializedScalarKind[SerializedScalarKind["I8"] = 9] = "I8";SerializedScalarKind[SerializedScalarKind["Bool"] = 10] = "Bool";return SerializedScalarKind;}(SerializedScalarKind || {});
 
 
 
@@ -1316,7 +1316,7 @@ SerializedScalarKind;
 
 
 
-/** serializeScalarKind() serializes a ScalarKind to a BinaryStream */(function (SerializedScalarKind) {SerializedScalarKind[SerializedScalarKind["AbstractFloat"] = 0] = "AbstractFloat";SerializedScalarKind[SerializedScalarKind["F64"] = 1] = "F64";SerializedScalarKind[SerializedScalarKind["F32"] = 2] = "F32";SerializedScalarKind[SerializedScalarKind["F16"] = 3] = "F16";SerializedScalarKind[SerializedScalarKind["U32"] = 4] = "U32";SerializedScalarKind[SerializedScalarKind["U16"] = 5] = "U16";SerializedScalarKind[SerializedScalarKind["U8"] = 6] = "U8";SerializedScalarKind[SerializedScalarKind["I32"] = 7] = "I32";SerializedScalarKind[SerializedScalarKind["I16"] = 8] = "I16";SerializedScalarKind[SerializedScalarKind["I8"] = 9] = "I8";SerializedScalarKind[SerializedScalarKind["Bool"] = 10] = "Bool";})(SerializedScalarKind || (SerializedScalarKind = {}));
+/** serializeScalarKind() serializes a ScalarKind to a BinaryStream */
 function serializeScalarKind(s, v) {
   switch (v) {
     case 'abstract-float':
@@ -1351,8 +1351,8 @@ function serializeScalarKind(s, v) {
       return;
     case 'bool':
       s.writeU8(SerializedScalarKind.Bool);
-      return;}
-
+      return;
+  }
 }
 
 /** deserializeScalarKind() deserializes a ScalarKind from a BinaryStream */
@@ -1382,17 +1382,17 @@ function deserializeScalarKind(s) {
     case SerializedScalarKind.Bool:
       return 'bool';
     default:
-      unreachable(`invalid serialized ScalarKind: ${kind}`);}
-
+      unreachable(`invalid serialized ScalarKind: ${kind}`);
+  }
 }var
 
-SerializedValueKind;
+SerializedValueKind = /*#__PURE__*/function (SerializedValueKind) {SerializedValueKind[SerializedValueKind["Scalar"] = 0] = "Scalar";SerializedValueKind[SerializedValueKind["Vector"] = 1] = "Vector";SerializedValueKind[SerializedValueKind["Matrix"] = 2] = "Matrix";return SerializedValueKind;}(SerializedValueKind || {});
 
 
 
 
 
-/** serializeValue() serializes a Value to a BinaryStream */(function (SerializedValueKind) {SerializedValueKind[SerializedValueKind["Scalar"] = 0] = "Scalar";SerializedValueKind[SerializedValueKind["Vector"] = 1] = "Vector";SerializedValueKind[SerializedValueKind["Matrix"] = 2] = "Matrix";})(SerializedValueKind || (SerializedValueKind = {}));
+/** serializeValue() serializes a Value to a BinaryStream */
 export function serializeValue(s, v) {
   const serializeScalar = (scalar, kind) => {
     switch (kind) {
@@ -1428,8 +1428,8 @@ export function serializeValue(s, v) {
         return;
       case 'bool':
         s.writeBool(scalar.value);
-        return;}
-
+        return;
+    }
   };
 
   if (v instanceof Scalar) {
@@ -1488,8 +1488,8 @@ export function deserializeValue(s) {
       case 'i8':
         return i8(s.readI8());
       case 'bool':
-        return bool(s.readBool());}
-
+        return bool(s.readBool());
+    }
   };
   const valueKind = s.readU8();
   const scalarKind = deserializeScalarKind(s);
@@ -1517,8 +1517,8 @@ export function deserializeValue(s) {
         return new Matrix(columns);
       }
     default:
-      unreachable(`invalid serialized value kind: ${valueKind}`);}
-
+      unreachable(`invalid serialized value kind: ${valueKind}`);
+  }
 }
 
 /** @returns if the Value is a float scalar type */

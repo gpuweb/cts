@@ -14,9 +14,9 @@ desc('Test that flow control exits a loop when reaching a break statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
@@ -28,8 +28,8 @@ fn((t) => {
     i++;
   }
   ${f.expect_order(8)}
-`);
-
+`
+  );
 });
 
 g.test('loop_continue').
@@ -37,9 +37,9 @@ desc('Test flow control for a loop continue statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
@@ -56,8 +56,8 @@ fn((t) => {
     i++;
   }
   ${f.expect_order(10)}
-`);
-
+`
+  );
 });
 
 g.test('loop_continuing_basic').
@@ -65,9 +65,9 @@ desc('Test basic flow control for a loop continuing block').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
@@ -80,8 +80,8 @@ fn((t) => {
     }
   }
   ${f.expect_order(7)}
-`);
-
+`
+  );
 });
 
 g.test('nested_loops').
@@ -89,9 +89,9 @@ desc('Test flow control for a loop nested in another loop').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
@@ -120,7 +120,7 @@ fn((t) => {
     }
   }
   ${f.expect_order(23)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=loop.spec.js.map

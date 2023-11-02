@@ -29,10 +29,10 @@ export const d = makeCaseCache('trunc', {
   },
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
-    fullF64Range(),
-    'unfiltered',
-    FP.abstract.truncInterval);
-
+      fullF64Range(),
+      'unfiltered',
+      FP.abstract.truncInterval
+    );
   }
 });
 
@@ -42,8 +42,8 @@ desc(`abstract float tests`).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('abstract');
   await run(t, abstractBuiltin('trunc'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
@@ -53,8 +53,8 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, builtin('trunc'), [TypeF32], TypeF32, t.params, cases);
@@ -64,8 +64,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

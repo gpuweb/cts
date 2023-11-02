@@ -21,15 +21,15 @@ flatMap((cols) =>
 [true, false].map((nonConst) => ({
   [`mat${cols}x${rows}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateMatrixScalarToMatrixCases(
-    sparseMatrixF32Range(cols, rows),
-    sparseF32Range(),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.multiplicationMatrixScalarInterval);
-
+      sparseMatrixF32Range(cols, rows),
+      sparseF32Range(),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.multiplicationMatrixScalarInterval
+    );
   }
-})))).
-
-
+}))
+)
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: scalar_matCxR_[non_]const
@@ -39,15 +39,15 @@ flatMap((cols) =>
 [true, false].map((nonConst) => ({
   [`scalar_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateScalarMatrixToMatrixCases(
-    sparseF32Range(),
-    sparseMatrixF32Range(cols, rows),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.multiplicationScalarMatrixInterval);
-
+      sparseF32Range(),
+      sparseMatrixF32Range(cols, rows),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.multiplicationScalarMatrixInterval
+    );
   }
-})))).
-
-
+}))
+)
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('binary/f32_matrix_scalar_multiplication', {
@@ -58,96 +58,96 @@ export const d = makeCaseCache('binary/f32_matrix_scalar_multiplication', {
 g.test('matrix_scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x is a matrix and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `mat${cols}x${rows}_scalar_const` :
-  `mat${cols}x${rows}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `mat${cols}x${rows}_scalar_const` :
+    `mat${cols}x${rows}_scalar_non_const`
+  );
   await run(
-  t,
-  binary('*'),
-  [TypeMat(cols, rows, TypeF32), TypeF32],
-  TypeMat(cols, rows, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    binary('*'),
+    [TypeMat(cols, rows, TypeF32), TypeF32],
+    TypeMat(cols, rows, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('matrix_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x *= y, where x is a matrix and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `mat${cols}x${rows}_scalar_const` :
-  `mat${cols}x${rows}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `mat${cols}x${rows}_scalar_const` :
+    `mat${cols}x${rows}_scalar_non_const`
+  );
   await run(
-  t,
-  compoundBinary('*='),
-  [TypeMat(cols, rows, TypeF32), TypeF32],
-  TypeMat(cols, rows, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    compoundBinary('*='),
+    [TypeMat(cols, rows, TypeF32), TypeF32],
+    TypeMat(cols, rows, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('scalar_matrix').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x is a scalar and y is a matrix
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `scalar_mat${cols}x${rows}_const` :
-  `scalar_mat${cols}x${rows}_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `scalar_mat${cols}x${rows}_const` :
+    `scalar_mat${cols}x${rows}_non_const`
+  );
   await run(
-  t,
-  binary('*'),
-  [TypeF32, TypeMat(cols, rows, TypeF32)],
-  TypeMat(cols, rows, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    binary('*'),
+    [TypeF32, TypeMat(cols, rows, TypeF32)],
+    TypeMat(cols, rows, TypeF32),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=f32_matrix_scalar_multiplication.spec.js.map

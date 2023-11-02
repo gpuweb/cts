@@ -4,8 +4,8 @@
 Tests for the indirect-specific aspects of drawIndirect/drawIndexedIndirect.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-kDrawIndirectParametersSize,
-kDrawIndexedIndirectParametersSize } from
+  kDrawIndirectParametersSize,
+  kDrawIndexedIndirectParametersSize } from
 '../../../capability_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 
@@ -17,13 +17,12 @@ const kRenderTargetFormat = 'rgba8unorm';
 class F extends GPUTest {
   MakeIndexBuffer() {
     return this.makeBufferWithContents(
-
-    new Uint32Array([
-    0, 1, 2, // The bottom left triangle
-    1, 2, 3 // The top right triangle
-    ]),
-    GPUBufferUsage.INDEX);
-
+      new Uint32Array([
+      0, 1, 2, // The bottom left triangle
+      1, 2, 3 // The top right triangle
+      ]),
+      GPUBufferUsage.INDEX
+    );
   }
 
   MakeVertexBuffer(isIndexed) {
@@ -129,7 +128,7 @@ export const g = makeTestGroup(TextureTestMixin(F));
 
 g.test('basics').
 desc(
-`Test that the indirect draw parameters are tightly packed for drawIndirect and drawIndexedIndirect.
+  `Test that the indirect draw parameters are tightly packed for drawIndirect and drawIndexedIndirect.
 An indirectBuffer is created based on indirectOffset. The actual draw args being used indicated by the
 indirectOffset is going to draw a left bottom triangle.
 While the remaining indirectBuffer is populated with random numbers or draw args
@@ -140,8 +139,8 @@ meaning the expected draw args is uploaded correctly by the indirectBuffer and i
 Params:
     - draw{Indirect, IndexedIndirect}
     - indirectOffset= {0, 4, k * sizeof(args struct), k * sizeof(args struct) + 4}
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('isIndexed', [true, false]).
@@ -160,8 +159,8 @@ expand('indirectOffset', (p) => {
   99 * indirectDrawParametersSize,
   99 * indirectDrawParametersSize + Uint32Array.BYTES_PER_ELEMENT];
 
-})).
-
+})
+).
 fn((t) => {
   const { isIndexed, indirectOffset } = t.params;
 
@@ -238,7 +237,7 @@ fn((t) => {
   // The bottom left area is filled
   { coord: { x: 0, y: 1 }, exp: filled },
   // The top right area is not filled
-  { coord: { x: 1, y: 0 }, exp: notFilled }]);
-
+  { coord: { x: 1, y: 0 }, exp: notFilled }]
+  );
 });
 //# sourceMappingURL=indirect_draw.spec.js.map

@@ -24,36 +24,36 @@ const kSmallMagnitudeTestValues = [0.1, 0.9, 1.0, 1.1, 1.9, -0.1, -0.9, -1.0, -1
 export const d = makeCaseCache('floor', {
   f32: () => {
     return FP.f32.generateScalarToIntervalCases(
-    [
-    ...kSmallMagnitudeTestValues,
-    ...fullF32Range(),
-    0x8000_0000 // https://github.com/gpuweb/cts/issues/2766
-    ],
-    'unfiltered',
-    FP.f32.floorInterval);
-
+      [
+      ...kSmallMagnitudeTestValues,
+      ...fullF32Range(),
+      0x8000_0000 // https://github.com/gpuweb/cts/issues/2766
+      ],
+      'unfiltered',
+      FP.f32.floorInterval
+    );
   },
   f16: () => {
     return FP.f16.generateScalarToIntervalCases(
-    [
-    ...kSmallMagnitudeTestValues,
-    ...fullF16Range(),
-    0x8000 // https://github.com/gpuweb/cts/issues/2766
-    ],
-    'unfiltered',
-    FP.f16.floorInterval);
-
+      [
+      ...kSmallMagnitudeTestValues,
+      ...fullF16Range(),
+      0x8000 // https://github.com/gpuweb/cts/issues/2766
+      ],
+      'unfiltered',
+      FP.f16.floorInterval
+    );
   },
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
-    [
-    ...kSmallMagnitudeTestValues,
-    ...fullF64Range(),
-    0x8000_0000_0000_0000 // https://github.com/gpuweb/cts/issues/2766
-    ],
-    'unfiltered',
-    FP.abstract.floorInterval);
-
+      [
+      ...kSmallMagnitudeTestValues,
+      ...fullF64Range(),
+      0x8000_0000_0000_0000 // https://github.com/gpuweb/cts/issues/2766
+      ],
+      'unfiltered',
+      FP.abstract.floorInterval
+    );
   }
 });
 
@@ -63,8 +63,8 @@ desc(`abstract float tests`).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('abstract');
   await run(t, abstractBuiltin('floor'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
@@ -74,8 +74,8 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, builtin('floor'), [TypeF32], TypeF32, t.params, cases);
@@ -85,8 +85,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

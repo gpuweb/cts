@@ -24,13 +24,13 @@ export const d = makeCaseCache('unary/u32_complement', {
 g.test('u32_complement').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 Expression: ~x
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('complement');
   await run(t, unary('~'), [TypeU32], TypeU32, t.params, cases);

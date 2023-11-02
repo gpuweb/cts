@@ -14,16 +14,16 @@ desc('Test that flow control executes a for-loop body the correct number of time
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < ${f.value(3)}; i++) {
     ${f.expect_order(1, 2, 3)}
   }
   ${f.expect_order(4)}
-`);
-
+`
+  );
 });
 
 g.test('for_break').
@@ -31,9 +31,9 @@ desc('Test that flow control exits a for-loop when reaching a break statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < ${f.value(5)}; i++) {
     ${f.expect_order(1, 3, 5, 7)}
@@ -44,8 +44,8 @@ fn((t) => {
     ${f.expect_order(2, 4, 6)}
   }
   ${f.expect_order(8)}
-`);
-
+`
+  );
 });
 
 g.test('for_continue').
@@ -53,9 +53,9 @@ desc('Test flow control for a for-loop continue statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < ${f.value(5)}; i++) {
     ${f.expect_order(1, 3, 5, 7, 8)}
@@ -66,8 +66,8 @@ fn((t) => {
     ${f.expect_order(2, 4, 6, 9)}
   }
   ${f.expect_order(10)}
-`);
-
+`
+  );
 });
 
 g.test('for_initalizer').
@@ -225,9 +225,9 @@ desc('Test flow control for a for-loop break statement in an outer for-loop').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < ${f.value(2)}; i++) {
     ${f.expect_order(1, 5)}
@@ -241,8 +241,8 @@ fn((t) => {
     }
   }
   ${f.expect_order(9)}
-`);
-
+`
+  );
 });
 
 g.test('nested_for_continue').
@@ -250,9 +250,9 @@ desc('Test flow control for a for-loop continue statement in an outer for-loop')
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < ${f.value(2)}; i++) {
     ${f.expect_order(1, 5)}
@@ -266,7 +266,7 @@ fn((t) => {
     }
   }
   ${f.expect_order(9)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=for.spec.js.map

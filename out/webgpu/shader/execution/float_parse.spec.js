@@ -27,9 +27,9 @@ function runShaderTest(t, wgsl, expected) {
 
   // Allocate a buffer and fill it with 0xdeadbeef words.
   const outputBuffer = t.makeBufferWithContents(
-  new Float32Array([...iterRange(expected.length, (x) => 0xdeadbeef)]),
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    new Float32Array([...iterRange(expected.length, (_i) => 0xdeadbeef)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: { buffer: outputBuffer } }]

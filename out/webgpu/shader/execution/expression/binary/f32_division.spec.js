@@ -26,11 +26,11 @@ const scalar_cases = [true, false].
 map((nonConst) => ({
   [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateScalarPairToIntervalCases(
-    sparseF32Range(),
-    sparseF32Range(),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.divisionInterval);
-
+      sparseF32Range(),
+      sparseF32Range(),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.divisionInterval
+    );
   }
 })).
 reduce((a, b) => ({ ...a, ...b }), {});
@@ -40,14 +40,14 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateVectorScalarToVectorCases(
-    sparseVectorF32Range(dim),
-    sparseF32Range(),
-    nonConst ? 'unfiltered' : 'finite',
-    divisionVectorScalarInterval);
-
+      sparseVectorF32Range(dim),
+      sparseF32Range(),
+      nonConst ? 'unfiltered' : 'finite',
+      divisionVectorScalarInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 const scalar_vector_cases = [2, 3, 4].
@@ -55,14 +55,14 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateScalarVectorToVectorCases(
-    sparseF32Range(),
-    sparseVectorF32Range(dim),
-    nonConst ? 'unfiltered' : 'finite',
-    divisionScalarVectorInterval);
-
+      sparseF32Range(),
+      sparseVectorF32Range(dim),
+      nonConst ? 'unfiltered' : 'finite',
+      divisionScalarVectorInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('binary/f32_division', {
@@ -74,31 +74,31 @@ export const d = makeCaseCache('binary/f32_division', {
 g.test('scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x and y are scalars
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const');
-
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
+  );
   await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x and y are vectors
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('vectorize', [2, 3, 4])).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
   );
   await run(t, binary('/'), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
@@ -106,90 +106,90 @@ fn(async (t) => {
 g.test('scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x /= y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const');
-
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
+  );
   await run(t, compoundBinary('/='), [TypeF32, TypeF32], TypeF32, t.params, cases);
 });
 
 g.test('vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`
+  );
   await run(
-  t,
-  binary('/'),
-  [TypeVec(dim, TypeF32), TypeF32],
-  TypeVec(dim, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    binary('/'),
+    [TypeVec(dim, TypeF32), TypeF32],
+    TypeVec(dim, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x /= y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`
+  );
   await run(
-  t,
-  compoundBinary('/='),
-  [TypeVec(dim, TypeF32), TypeF32],
-  TypeVec(dim, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    compoundBinary('/='),
+    [TypeVec(dim, TypeF32), TypeF32],
+    TypeVec(dim, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x is a scalar and y is a vector
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `scalar_vec${dim}_const` : `scalar_vec${dim}_non_const`);
-
+    t.params.inputSource === 'const' ? `scalar_vec${dim}_const` : `scalar_vec${dim}_non_const`
+  );
   await run(
-  t,
-  binary('/'),
-  [TypeF32, TypeVec(dim, TypeF32)],
-  TypeVec(dim, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    binary('/'),
+    [TypeF32, TypeVec(dim, TypeF32)],
+    TypeVec(dim, TypeF32),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=f32_division.spec.js.map

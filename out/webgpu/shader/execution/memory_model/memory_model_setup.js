@@ -82,7 +82,7 @@ const numReadOutputs = 2;
 
 
 
-
+/** Specifies the buffers used during a memory model test. */
 
 
 
@@ -387,9 +387,9 @@ export class MemoryModelTester {
   async run(iterations, weakIndex) {
     for (let i = 0; i < iterations; i++) {
       const numWorkgroups = this.getRandomInRange(
-      this.params.testingWorkgroups,
-      this.params.maxWorkgroups);
-
+        this.params.testingWorkgroups,
+        this.params.maxWorkgroups
+      );
       await this.setShuffledWorkgroups(numWorkgroups);
       await this.setScratchLocations(numWorkgroups);
       await this.setStressParams();
@@ -417,13 +417,13 @@ export class MemoryModelTester {
 
       this.test.device.queue.submit([encoder.finish()]);
       this.test.expectGPUBufferValuesPassCheck(
-      this.buffers.testResults.deviceBuf,
-      this.checkWeakIndex(weakIndex),
-      {
-        type: Uint32Array,
-        typedLength: this.params.numBehaviors
-      });
-
+        this.buffers.testResults.deviceBuf,
+        this.checkWeakIndex(weakIndex),
+        {
+          type: Uint32Array,
+          typedLength: this.params.numBehaviors
+        }
+      );
     }
   }
 
@@ -1014,7 +1014,7 @@ join('\n');
  * Defines the types of possible memory a test is operating on. Used as part of the process of building shader code from
  * its composite parts.
  */
-export let MemoryType;
+export let MemoryType = /*#__PURE__*/function (MemoryType) {MemoryType["AtomicStorageClass"] = "atomic_storage";MemoryType["NonAtomicStorageClass"] = "non_atomic_storage";MemoryType["AtomicWorkgroupClass"] = "atomic_workgroup";MemoryType["NonAtomicWorkgroupClass"] = "non_atomic_workgroup";return MemoryType;}({});
 
 
 
@@ -1028,16 +1028,16 @@ export let MemoryType;
 /**
  * Defines the relative positions of two invocations coordinating on a test. Used as part of the process of building shader
  * code from its composite parts.
- */(function (MemoryType) {MemoryType["AtomicStorageClass"] = "atomic_storage";MemoryType["NonAtomicStorageClass"] = "non_atomic_storage";MemoryType["AtomicWorkgroupClass"] = "atomic_workgroup";MemoryType["NonAtomicWorkgroupClass"] = "non_atomic_workgroup";})(MemoryType || (MemoryType = {}));
-export let TestType;
+ */
+export let TestType = /*#__PURE__*/function (TestType) {TestType["InterWorkgroup"] = "inter_workgroup";TestType["IntraWorkgroup"] = "intra_workgroup";return TestType;}({});
 
 
 
 
 
 
-/** Defines the number of behaviors a test may have. */(function (TestType) {TestType["InterWorkgroup"] = "inter_workgroup";TestType["IntraWorkgroup"] = "intra_workgroup";})(TestType || (TestType = {}));
-export let ResultType;
+/** Defines the number of behaviors a test may have. */
+export let ResultType = /*#__PURE__*/function (ResultType) {ResultType[ResultType["TwoBehavior"] = 0] = "TwoBehavior";ResultType[ResultType["FourBehavior"] = 1] = "FourBehavior";return ResultType;}({});
 
 
 
@@ -1045,7 +1045,7 @@ export let ResultType;
 /**
  * Given test code that performs the actual sequence of loads and stores, as well as a memory type and test type, returns
  * a complete test shader.
- */(function (ResultType) {ResultType[ResultType["TwoBehavior"] = 0] = "TwoBehavior";ResultType[ResultType["FourBehavior"] = 1] = "FourBehavior";})(ResultType || (ResultType = {}));
+ */
 export function buildTestShader(
 testCode,
 memoryType,
@@ -1066,8 +1066,8 @@ testType)
       memoryTypeCode = workgroupMemoryAtomicTestShaderCode;
       break;
     case MemoryType.NonAtomicWorkgroupClass:
-      memoryTypeCode = workgroupMemoryNonAtomicTestShaderCode;}
-
+      memoryTypeCode = workgroupMemoryNonAtomicTestShaderCode;
+  }
   let testTypeCode;
   switch (testType) {
     case TestType.InterWorkgroup:
@@ -1078,8 +1078,8 @@ testType)
         testTypeCode = storageIntraWorkgroupTestShaderCode;
       } else {
         testTypeCode = intraWorkgroupTestShaderCode;
-      }}
-
+      }
+  }
   return [memoryTypeCode, testTypeCode, testCode, testShaderCommonFooter].join('\n');
 }
 
@@ -1098,16 +1098,16 @@ resultType)
       resultStructure = twoBehaviorTestResultStructure;
       break;
     case ResultType.FourBehavior:
-      resultStructure = fourBehaviorTestResultStructure;}
-
+      resultStructure = fourBehaviorTestResultStructure;
+  }
   let testTypeCode;
   switch (testType) {
     case TestType.InterWorkgroup:
       testTypeCode = interWorkgroupResultShaderCode;
       break;
     case TestType.IntraWorkgroup:
-      testTypeCode = intraWorkgroupResultShaderCode;}
-
+      testTypeCode = intraWorkgroupResultShaderCode;
+  }
   return [
   resultStructure,
   resultShaderCommonCode,

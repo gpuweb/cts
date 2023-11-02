@@ -109,15 +109,15 @@ subresourceRange) =>
 
   assert(params.dimension === '2d');
   for (const viewDescriptor of t.generateTextureViewDescriptorsForRendering(
-  'all',
-  subresourceRange))
-  {
+    'all',
+    subresourceRange
+  )) {
     assert(viewDescriptor.baseMipLevel !== undefined);
     const [width, height] = virtualMipSize(
-    params.dimension,
-    [t.textureWidth, t.textureHeight, 1],
-    viewDescriptor.baseMipLevel);
-
+      params.dimension,
+      [t.textureWidth, t.textureHeight, 1],
+      viewDescriptor.baseMipLevel
+    );
 
     const renderTexture = t.device.createTexture({
       size: [width, height, 1],
@@ -165,8 +165,8 @@ subresourceRange) =>
           assert(expectedDepth !== undefined);
 
           pass.setPipeline(
-          getDepthTestEqualPipeline(t, params.format, params.sampleCount, expectedDepth));
-
+            getDepthTestEqualPipeline(t, params.format, params.sampleCount, expectedDepth)
+          );
           break;
         }
 
@@ -177,8 +177,8 @@ subresourceRange) =>
           pass.setPipeline(getStencilTestEqualPipeline(t, params.format, params.sampleCount));
           pass.setStencilReference(expectedStencil);
           break;
-        }}
-
+        }
+    }
 
     pass.draw(3);
     pass.end();

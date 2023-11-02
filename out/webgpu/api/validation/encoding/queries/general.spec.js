@@ -12,12 +12,12 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('occlusion_query,query_type').
 desc(
-`
+  `
 Tests that set occlusion query set with all types in render pass descriptor:
 - type {occlusion (control case), timestamp}
 - {undefined} for occlusion query set in render pass descriptor
-  `).
-
+  `
+).
 params((u) => u.combine('type', [undefined, ...kQueryTypes])).
 beforeAllSubcases((t) => {
   const { type } = t.params;
@@ -37,10 +37,10 @@ fn((t) => {
 
 g.test('occlusion_query,invalid_query_set').
 desc(
-`
+  `
 Tests that begin occlusion query with a invalid query set that failed during creation.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'invalid'])).
 fn((t) => {
   const occlusionQuerySet = t.createQuerySetWithState(t.params.querySetState);
@@ -53,11 +53,11 @@ fn((t) => {
 
 g.test('occlusion_query,query_index').
 desc(
-`
+  `
 Tests that begin occlusion query with query index:
 - queryIndex {in, out of} range for GPUQuerySet
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('queryIndex', [0, 2])).
 fn((t) => {
   const occlusionQuerySet = createQuerySetWithType(t, 'occlusion', 2);
@@ -70,19 +70,19 @@ fn((t) => {
 
 g.test('timestamp_query,query_type_and_index').
 desc(
-`
+  `
 Tests that write timestamp to all types of query set on all possible encoders:
 - type {occlusion, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('type', kQueryTypes).
 beginSubcases().
-expand('queryIndex', (p) => p.type === 'timestamp' ? [0, 2] : [0])).
-
+expand('queryIndex', (p) => p.type === 'timestamp' ? [0, 2] : [0])
+).
 beforeAllSubcases((t) => {
   const { type } = t.params;
 
@@ -107,11 +107,11 @@ fn((t) => {
 
 g.test('timestamp_query,invalid_query_set').
 desc(
-`
+  `
 Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} encoder
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'invalid'])).
 beforeAllSubcases((t) => {
   t.selectDeviceForQueryTypeOrSkipTestCase('timestamp');

@@ -72,14 +72,14 @@ export class TexelView {
 
     return TexelView.fromTexelsAsBytes(format, (coords) => {
       assert(
-      coords.x >= origin.x &&
-      coords.y >= origin.y &&
-      coords.z >= origin.z &&
-      coords.x < origin.x + size.width &&
-      coords.y < origin.y + size.height &&
-      coords.z < origin.z + size.depthOrArrayLayers,
-      () => `coordinate (${coords.x},${coords.y},${coords.z}) out of bounds`);
-
+        coords.x >= origin.x &&
+        coords.y >= origin.y &&
+        coords.z >= origin.z &&
+        coords.x < origin.x + size.width &&
+        coords.y < origin.y + size.height &&
+        coords.z < origin.z + size.depthOrArrayLayers,
+        () => `coordinate (${coords.x},${coords.y},${coords.z}) out of bounds`
+      );
 
       const imageOffsetInRows = (coords.z - origin.z) * rowsPerImage;
       const rowOffset = (imageOffsetInRows + (coords.y - origin.y)) * bytesPerRow;

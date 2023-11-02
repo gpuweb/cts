@@ -51,10 +51,10 @@ combine('blankspace', [
 ['\u000d\u000a', 'carriage_return_line_feed'],
 ['\u0085', 'next_line'],
 ['\u2028', 'line_separator'],
-['\u2029', 'paragraph_separator']]).
-
-beginSubcases()).
-
+['\u2029', 'paragraph_separator']]
+).
+beginSubcases()
+).
 fn((t) => {
   const code = `// Line comment${t.params.blankspace[0]}const invalid_outside_comment = should_fail`;
 

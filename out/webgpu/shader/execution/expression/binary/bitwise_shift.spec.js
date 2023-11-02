@@ -125,41 +125,41 @@ function makeShiftLeftConcreteCases(inputType, inputSource, type) {
     // Cases that are fine for unsigned values, but would overflow (sign change) signed
     // values when const evaluated.
     cases.push(
-    ...[
-    {
-      input: [/*  */V(0b01000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b10000000000000000000000000000000)
-    },
-    {
-      input: [/*  */V(0b01111111111111111111111111111111), u32(1)],
-      expected: /**/V(0b11111111111111111111111111111110)
-    },
-    {
-      input: [/*  */V(0b00000000000000000000000000000001), u32(31)],
-      expected: /**/V(0b10000000000000000000000000000000)
-    }]);
+      ...[
+      {
+        input: [/*  */V(0b01000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b10000000000000000000000000000000)
+      },
+      {
+        input: [/*  */V(0b01111111111111111111111111111111), u32(1)],
+        expected: /**/V(0b11111111111111111111111111111110)
+      },
+      {
+        input: [/*  */V(0b00000000000000000000000000000001), u32(31)],
+        expected: /**/V(0b10000000000000000000000000000000)
+      }]
 
-
+    );
   }
   if (add_signed_overflow_cases) {
     // Cases that are fine for signed values (no sign change), but would overflow
     // unsigned values when const evaluated.
     cases.push(
-    ...[
-    {
-      input: [/*  */V(0b11000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b10000000000000000000000000000000)
-    },
-    {
-      input: [/*  */V(0b11111111111111111111111111111111), u32(1)],
-      expected: /**/V(0b11111111111111111111111111111110)
-    },
-    {
-      input: [/*  */V(0b11111111111111111111111111111111), u32(31)],
-      expected: /**/V(0b10000000000000000000000000000000)
-    }]);
+      ...[
+      {
+        input: [/*  */V(0b11000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b10000000000000000000000000000000)
+      },
+      {
+        input: [/*  */V(0b11111111111111111111111111111111), u32(1)],
+        expected: /**/V(0b11111111111111111111111111111110)
+      },
+      {
+        input: [/*  */V(0b11111111111111111111111111111111), u32(31)],
+        expected: /**/V(0b10000000000000000000000000000000)
+      }]
 
-
+    );
   }
 
   // Generate cases that shift input value by [0,63] (invalid const eval cases are not returned).
@@ -178,18 +178,18 @@ function makeShiftLeftConcreteCases(inputType, inputSource, type) {
 g.test('shift_left_concrete').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 << e2
 
 Shift left (shifted value is concrete)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
@@ -199,18 +199,18 @@ fn(async (t) => {
 g.test('shift_left_concrete_compound').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 <<= e2
 
 Shift left (shifted value is concrete)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftLeftConcreteCases(t.params.type, t.params.inputSource, type);
@@ -242,79 +242,79 @@ function makeShiftRightConcreteCases(inputType, inputSource, type) {
   if (is_unsiged(inputType)) {
     // No sign extension
     cases.push(
-    ...[
-    {
-      input: /*  */[V(0b10000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b01000000000000000000000000000000)
-    },
-    {
-      input: /*  */[V(0b11000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b01100000000000000000000000000000)
-    }]);
+      ...[
+      {
+        input: /*  */[V(0b10000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b01000000000000000000000000000000)
+      },
+      {
+        input: /*  */[V(0b11000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b01100000000000000000000000000000)
+      }]
 
-
+    );
   } else {
     cases.push(
-    // Sign extension if msb is 1
-    ...[
-    {
-      input: /*  */[V(0b10000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b11000000000000000000000000000000)
-    },
-    {
-      input: /*  */[V(0b11000000000000000000000000000000), u32(1)],
-      expected: /**/V(0b11100000000000000000000000000000)
-    }]);
+      // Sign extension if msb is 1
+      ...[
+      {
+        input: /*  */[V(0b10000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b11000000000000000000000000000000)
+      },
+      {
+        input: /*  */[V(0b11000000000000000000000000000000), u32(1)],
+        expected: /**/V(0b11100000000000000000000000000000)
+      }]
 
-
+    );
   }
 
   // Generate cases that shift input value by [0,63] (invalid const eval cases are not returned).
   cases.push(
-  ...generate_shift_right_cases(0b00000000000000000000000000000000, inputType, is_const));
-
+    ...generate_shift_right_cases(0b00000000000000000000000000000000, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b00000000000000000000000000000001, inputType, is_const));
-
+    ...generate_shift_right_cases(0b00000000000000000000000000000001, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b00000000000000000000000000000010, inputType, is_const));
-
+    ...generate_shift_right_cases(0b00000000000000000000000000000010, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b00000000000000000000000000000011, inputType, is_const));
-
+    ...generate_shift_right_cases(0b00000000000000000000000000000011, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b10000000000000000000000000000000, inputType, is_const));
-
+    ...generate_shift_right_cases(0b10000000000000000000000000000000, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b01000000000000000000000000000000, inputType, is_const));
-
+    ...generate_shift_right_cases(0b01000000000000000000000000000000, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b11000000000000000000000000000000, inputType, is_const));
-
+    ...generate_shift_right_cases(0b11000000000000000000000000000000, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b00010000001000001000010001010101, inputType, is_const));
-
+    ...generate_shift_right_cases(0b00010000001000001000010001010101, inputType, is_const)
+  );
   cases.push(
-  ...generate_shift_right_cases(0b11101111110111110111101110101010, inputType, is_const));
-
+    ...generate_shift_right_cases(0b11101111110111110111101110101010, inputType, is_const)
+  );
   return cases;
 }
 
 g.test('shift_right_concrete').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 >> e2
 
 Shift right (shifted value is concrete)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);
@@ -324,18 +324,18 @@ fn(async (t) => {
 g.test('shift_right_concrete_compound').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 >>= e2
 
 Shift right (shifted value is concrete)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeShiftRightConcreteCases(t.params.type, t.params.inputSource, type);

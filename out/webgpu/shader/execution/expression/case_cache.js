@@ -3,23 +3,23 @@
 **/import { dataCache } from '../../../../common/framework/data_cache.js';import { unreachable } from '../../../../common/util/util.js';import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-Scalar,
-Vector,
-serializeValue,
-deserializeValue,
-Matrix } from
+  Scalar,
+  Vector,
+  serializeValue,
+  deserializeValue,
+  Matrix } from
 
 '../../../util/conversion.js';
 import {
-deserializeFPInterval,
-FPInterval,
-serializeFPInterval } from
+  deserializeFPInterval,
+  FPInterval,
+  serializeFPInterval } from
 '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
 import { isComparator } from './expression.js';var
 
-SerializedExpectationKind;
+SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {SerializedExpectationKind[SerializedExpectationKind["Value"] = 0] = "Value";SerializedExpectationKind[SerializedExpectationKind["Interval"] = 1] = "Interval";SerializedExpectationKind[SerializedExpectationKind["Interval1DArray"] = 2] = "Interval1DArray";SerializedExpectationKind[SerializedExpectationKind["Interval2DArray"] = 3] = "Interval2DArray";SerializedExpectationKind[SerializedExpectationKind["Array"] = 4] = "Array";SerializedExpectationKind[SerializedExpectationKind["Comparator"] = 5] = "Comparator";return SerializedExpectationKind;}(SerializedExpectationKind || {});
 
 
 
@@ -28,7 +28,7 @@ SerializedExpectationKind;
 
 
 
-/** serializeExpectation() serializes an Expectation to a BinaryStream */(function (SerializedExpectationKind) {SerializedExpectationKind[SerializedExpectationKind["Value"] = 0] = "Value";SerializedExpectationKind[SerializedExpectationKind["Interval"] = 1] = "Interval";SerializedExpectationKind[SerializedExpectationKind["Interval1DArray"] = 2] = "Interval1DArray";SerializedExpectationKind[SerializedExpectationKind["Interval2DArray"] = 3] = "Interval2DArray";SerializedExpectationKind[SerializedExpectationKind["Array"] = 4] = "Array";SerializedExpectationKind[SerializedExpectationKind["Comparator"] = 5] = "Comparator";})(SerializedExpectationKind || (SerializedExpectationKind = {}));
+/** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s, e) {
   if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     s.writeU8(SerializedExpectationKind.Value);
@@ -87,8 +87,8 @@ export function deserializeExpectation(s) {
       }
     default:{
         unreachable(`invalid serialized expectation kind: ${kind}`);
-      }}
-
+      }
+  }
 }
 
 /** serializeCase() serializes a Case to a BinaryStream */

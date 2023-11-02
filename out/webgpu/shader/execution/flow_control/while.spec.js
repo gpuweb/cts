@@ -14,9 +14,9 @@ desc('Test that flow control executes a while-loop body the correct number of ti
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   while (i < ${f.value(5)}) {
@@ -24,8 +24,8 @@ fn((t) => {
     i++;
   }
   ${f.expect_order(6)}
-`);
-
+`
+  );
 });
 
 g.test('while_break').
@@ -33,9 +33,9 @@ desc('Test that flow control exits a while-loop when reaching a break statement'
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   while (i < ${f.value(5)}) {
@@ -48,8 +48,8 @@ fn((t) => {
     i++;
   }
   ${f.expect_order(8)}
-`);
-
+`
+  );
 });
 
 g.test('while_continue').
@@ -57,9 +57,9 @@ desc('Test flow control for a while-loop continue statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   while (i < ${f.value(5)}) {
@@ -73,8 +73,8 @@ fn((t) => {
     i++;
   }
   ${f.expect_order(10)}
-`);
-
+`
+  );
 });
 
 g.test('while_nested_break').
@@ -82,9 +82,9 @@ desc('Test that flow control exits a nested while-loop when reaching a break sta
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   while (i < ${f.value(3)}) {
@@ -104,8 +104,8 @@ fn((t) => {
     ${f.expect_order(4, 10, 14)}
   }
   ${f.expect_order(15)}
-`);
-
+`
+  );
 });
 
 g.test('while_nested_continue').
@@ -113,9 +113,9 @@ desc('Test flow control for a nested while-loop with a continue statement').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   while (i < ${f.value(3)}) {
@@ -135,7 +135,7 @@ fn((t) => {
     ${f.expect_order(4, 10, 18)}
   }
   ${f.expect_order(19)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=while.spec.js.map

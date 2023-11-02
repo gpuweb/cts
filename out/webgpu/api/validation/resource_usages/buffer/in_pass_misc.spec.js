@@ -13,15 +13,15 @@ const kBufferSize = 256;
 
 g.test('subresources,reset_buffer_usage_before_dispatch').
 desc(
-`
+  `
 Test that the buffer usages which are reset by another state-setting commands before a dispatch call
-do not contribute directly to any usage scope in a compute pass.`).
-
+do not contribute directly to any usage scope in a compute pass.`
+).
 params((u) =>
 u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage']).
-combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect'])).
-
+combine('usage1', ['uniform', 'storage', 'read-only-storage', 'indirect'])
+).
 fn((t) => {
   const { usage0, usage1 } = t.params;
 
@@ -69,8 +69,8 @@ fn((t) => {
     case 'indirect':{
         computePassEncoder.dispatchWorkgroupsIndirect(buffer, 0);
         break;
-      }}
-
+      }
+  }
   computePassEncoder.end();
 
   t.expectValidationError(() => {
@@ -80,18 +80,18 @@ fn((t) => {
 
 g.test('subresources,reset_buffer_usage_before_draw').
 desc(
-`
+  `
 Test that the buffer usages which are reset by another state-setting commands before a draw call
-still contribute directly to the usage scope of the draw call.`).
-
+still contribute directly to the usage scope of the draw call.`
+).
 params((u) =>
 u.
 combine('usage0', ['uniform', 'storage', 'read-only-storage', 'vertex', 'index']).
 combine('usage1', kAllBufferUsages).
 unless((t) => {
   return t.usage0 === 'index' && t.usage1 === 'indirect';
-})).
-
+})
+).
 fn((t) => {
   const { usage0, usage1 } = t.params;
 
@@ -141,8 +141,8 @@ fn((t) => {
         renderPassEncoder.setIndexBuffer(buffer, 'uint16');
         renderPassEncoder.setIndexBuffer(anotherBuffer, 'uint16');
         break;
-      }}
-
+      }
+  }
 
   // Set buffer as usage1
   switch (usage1) {
@@ -166,8 +166,8 @@ fn((t) => {
       }
     case 'indirect':
     case 'indexedIndirect':
-      break;}
-
+      break;
+  }
 
   // Add draw call
   const pipelineLayout = t.device.createPipelineLayout({
@@ -205,8 +205,8 @@ fn((t) => {
           renderPassEncoder.draw(1);
         }
         break;
-      }}
-
+      }
+  }
 
   renderPassEncoder.end();
 
@@ -218,11 +218,11 @@ fn((t) => {
 
 g.test('subresources,buffer_usages_in_copy_and_pass').
 desc(
-`
+  `
   Test that using one buffer in a copy command, a render or compute pass encoder is always allowed
   as WebGPU SPEC (chapter 3.4.5) defines that out of any pass encoder, each command belongs to one
-  separated usage scope.`).
-
+  separated usage scope.`
+).
 params((u) =>
 u.
 combine('usage0', [
@@ -234,8 +234,8 @@ combine('usage0', [
 'vertex',
 'index',
 'indirect',
-'indexedIndirect']).
-
+'indexedIndirect']
+).
 combine('usage1', [
 'copy-src',
 'copy-dst',
@@ -245,8 +245,8 @@ combine('usage1', [
 'vertex',
 'index',
 'indirect',
-'indexedIndirect']).
-
+'indexedIndirect']
+).
 combine('pass', ['render', 'compute']).
 unless(({ usage0, usage1, pass }) => {
   const IsCopy = (usage) => {
@@ -269,16 +269,16 @@ unless(({ usage0, usage1, pass }) => {
       case 'indexedIndirect':
         return false;
       default:
-        return true;}
-
+        return true;
+    }
   };
   if (pass === 'compute') {
     return !IsValidComputeUsage(usage0) || !IsValidComputeUsage(usage1);
   }
 
   return false;
-})).
-
+})
+).
 fn((t) => {
   const { usage0, usage1, pass } = t.params;
 
@@ -343,8 +343,8 @@ fn((t) => {
                 break;
               }
             default:
-              unreachable();}
-
+              unreachable();
+          }
           break;
         }
       case 'vertex':{
@@ -378,8 +378,8 @@ fn((t) => {
                 break;
               }
             default:
-              unreachable();}
-
+              unreachable();
+          }
           break;
         }
       case 'indexedIndirect':{
@@ -396,8 +396,8 @@ fn((t) => {
           break;
         }
       default:
-        unreachable();}
-
+        unreachable();
+    }
   };
 
   const encoder = t.device.createCommandEncoder();

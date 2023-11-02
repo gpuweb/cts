@@ -14,9 +14,9 @@ desc('Test flow control for a continue statement in a switch, in a for-loop').
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) =>
-  `
+    t,
+    (f) =>
+    `
   ${f.expect_order(0)}
   for (var i = ${f.value(0)}; i < 3; i++) {
     ${f.expect_order(1, 4, 6)}
@@ -37,7 +37,7 @@ fn((t) => {
     ${f.expect_order(3, 8)}
   }
   ${f.expect_order(9)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=complex.spec.js.map

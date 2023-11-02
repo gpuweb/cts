@@ -25,11 +25,11 @@ export const g = makeTestGroup(F);
 
 g.test('basic').
 desc(
-`
+  `
 Control case for createComputePipeline and createComputePipelineAsync.
 Call the API with valid compute shader and matching valid entryPoint, making sure that the test function working well.
-`).
-
+`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn((t) => {
   const { isAsync } = t.params;
@@ -41,10 +41,10 @@ fn((t) => {
 
 g.test('shader_module,invalid').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) with a invalid compute shader, and check that the APIs catch this error.
-`).
-
+`
+).
 params((u) => u.combine('isAsync', [true, false])).
 fn((t) => {
   const { isAsync } = t.params;
@@ -59,16 +59,16 @@ fn((t) => {
 
 g.test('shader_module,compute').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) with valid but different stage shader and matching entryPoint,
 and check that the APIs only accept compute shader.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
-combine('shaderModuleStage', ['compute', 'vertex', 'fragment'])).
-
+combine('shaderModuleStage', ['compute', 'vertex', 'fragment'])
+).
 fn((t) => {
   const { isAsync, shaderModuleStage } = t.params;
   const descriptor = {
@@ -83,8 +83,8 @@ fn((t) => {
 
 g.test('shader_module,device_mismatch').
 desc(
-'Tests createComputePipeline(Async) cannot be called with a shader module created from another device').
-
+  'Tests createComputePipeline(Async) cannot be called with a shader module created from another device'
+).
 paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -111,8 +111,8 @@ fn((t) => {
 
 g.test('pipeline_layout,device_mismatch').
 desc(
-'Tests createComputePipeline(Async) cannot be called with a pipeline layout created from another device').
-
+  'Tests createComputePipeline(Async) cannot be called with a pipeline layout created from another device'
+).
 paramsSubcasesOnly((u) => u.combine('isAsync', [true, false]).combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -136,20 +136,20 @@ fn((t) => {
 
 g.test('limits,workgroup_storage_size').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for compute using <= device.limits.maxComputeWorkgroupStorageSize bytes of workgroup storage.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
 combineWithParams([
 { type: 'vec4<f32>', _typeSize: 16 },
-{ type: 'mat4x4<f32>', _typeSize: 64 }]).
-
+{ type: 'mat4x4<f32>', _typeSize: 64 }]
+).
 beginSubcases().
-combine('countDeltaFromLimit', [0, 1])).
-
+combine('countDeltaFromLimit', [0, 1])
+).
 fn((t) => {
   const { isAsync, type, _typeSize, countDeltaFromLimit } = t.params;
   const countAtLimit = Math.floor(t.device.limits.maxComputeWorkgroupStorageSize / _typeSize);
@@ -174,10 +174,10 @@ fn((t) => {
 
 g.test('limits,invocations_per_workgroup').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for compute using <= device.limits.maxComputeInvocationsPerWorkgroup per workgroup.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -188,9 +188,9 @@ combine('size', [
 [2, 128, 1],
 [2, 129, 1],
 [1, 8, 32],
-[1, 8, 33]])).
-
-
+[1, 8, 33]]
+)
+).
 fn((t) => {
   const { isAsync, size } = t.params;
 
@@ -208,18 +208,18 @@ fn((t) => {
   };
 
   t.doCreateComputePipelineTest(
-  isAsync,
-  size[0] * size[1] * size[2] <= t.device.limits.maxComputeInvocationsPerWorkgroup,
-  descriptor);
-
+    isAsync,
+    size[0] * size[1] * size[2] <= t.device.limits.maxComputeInvocationsPerWorkgroup,
+    descriptor
+  );
 });
 
 g.test('limits,invocations_per_workgroup,each_component').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for compute workgroup_size attribute has each component no more than their limits.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -232,9 +232,9 @@ combine('size', [
 [1, 257, 1],
 [1, 1, 63],
 [1, 1, 64],
-[1, 1, 65]])).
-
-
+[1, 1, 65]]
+)
+).
 fn((t) => {
   const { isAsync, size } = t.params;
 
@@ -264,10 +264,10 @@ fn((t) => {
 
 g.test('overrides,identifier').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for overridable constants identifiers.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -285,8 +285,8 @@ combineWithParams([
 { constants: { 1000: 0, c2: 0 }, _success: false },
 { constants: { 数: 0 }, _success: true },
 { constants: { séquençage: 0 }, _success: false } // test unicode is not normalized
-])).
-
+])
+).
 fn((t) => {
   const { isAsync, constants, _success } = t.params;
 
@@ -319,10 +319,10 @@ fn((t) => {
 
 g.test('overrides,uninitialized').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for uninitialized overridable constants.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -330,9 +330,9 @@ combineWithParams([
 { constants: {}, _success: false },
 { constants: { c0: 0, c2: 0, c8: 0 }, _success: false }, // c5 is missing
 { constants: { c0: 0, c2: 0, c5: 0, c8: 0 }, _success: true },
-{ constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true }])).
-
-
+{ constants: { c0: 0, c2: 0, c5: 0, c8: 0, c1: 0 }, _success: true }]
+)
+).
 fn((t) => {
   const { isAsync, constants, _success } = t.params;
 
@@ -377,10 +377,10 @@ fn((t) => {
 
 g.test('overrides,value,type_error').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for constant values like inf, NaN will results in TypeError.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -388,9 +388,9 @@ combineWithParams([
 { constants: { cf: 1 }, _success: true }, // control
 { constants: { cf: NaN }, _success: false },
 { constants: { cf: Number.POSITIVE_INFINITY }, _success: false },
-{ constants: { cf: Number.NEGATIVE_INFINITY }, _success: false }])).
-
-
+{ constants: { cf: Number.NEGATIVE_INFINITY }, _success: false }]
+)
+).
 fn((t) => {
   const { isAsync, constants, _success } = t.params;
 
@@ -414,12 +414,12 @@ fn((t) => {
 
 g.test('overrides,value,validation_error').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for unrepresentable constant values in compute stage.
 
 TODO(#2060): test with last_castable_pipeline_override.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -444,9 +444,9 @@ combineWithParams([
 },
 // Conversion to boolean can't fail
 { constants: { cb: Number.MAX_VALUE }, _success: true },
-{ constants: { cb: kValue.i32.negative.min - 1 }, _success: true }])).
-
-
+{ constants: { cb: kValue.i32.negative.min - 1 }, _success: true }]
+)
+).
 fn((t) => {
   const { isAsync, constants, _success } = t.params;
   const descriptor = {
@@ -475,13 +475,13 @@ fn((t) => {
 
 g.test('overrides,value,validation_error,f16').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for unrepresentable f16 constant values in compute stage.
 
 TODO(#2060): Tighten the cases around the valid/invalid boundary once we have WGSL spec
 clarity on whether values like f16.positive.last_castable_pipeline_override would be valid. See issue.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -505,9 +505,9 @@ combineWithParams([
 {
   constants: { cf16: kValue.f32.positive.first_non_castable_pipeline_override },
   _success: false
-}])).
-
-
+}]
+)
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
@@ -555,10 +555,10 @@ override z: i32 = 1;
 
 g.test('overrides,workgroup_size').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for overridable constants used for workgroup size.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
@@ -568,9 +568,9 @@ combineWithParams([
 { constants: { x: 0, y: 0, z: 0 }, _success: false },
 { constants: { x: 1, y: -1, z: 1 }, _success: false },
 { constants: { x: 1, y: 0, z: 0 }, _success: false },
-{ constants: { x: 16, y: 1, z: 1 }, _success: true }])).
-
-
+{ constants: { x: 16, y: 1, z: 1 }, _success: true }]
+)
+).
 fn((t) => {
   const { isAsync, type, constants, _success } = t.params;
 
@@ -590,15 +590,15 @@ fn((t) => {
 
 g.test('overrides,workgroup_size,limits').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for overridable constants for workgroupSize exceeds device limits.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('isAsync', [true, false]).
-combine('type', ['u32', 'i32'])).
-
+combine('type', ['u32', 'i32'])
+).
 fn((t) => {
   const { isAsync, type } = t.params;
 
@@ -630,26 +630,26 @@ fn((t) => {
   testFn(1, 1, limits.maxComputeWorkgroupSizeZ, true);
   testFn(1, 1, limits.maxComputeWorkgroupSizeZ + 1, false);
   testFn(
-  limits.maxComputeWorkgroupSizeX,
-  limits.maxComputeWorkgroupSizeY,
-  limits.maxComputeWorkgroupSizeZ,
-  limits.maxComputeWorkgroupSizeX *
-  limits.maxComputeWorkgroupSizeY *
-  limits.maxComputeWorkgroupSizeZ <=
-  limits.maxComputeInvocationsPerWorkgroup);
-
+    limits.maxComputeWorkgroupSizeX,
+    limits.maxComputeWorkgroupSizeY,
+    limits.maxComputeWorkgroupSizeZ,
+    limits.maxComputeWorkgroupSizeX *
+    limits.maxComputeWorkgroupSizeY *
+    limits.maxComputeWorkgroupSizeZ <=
+    limits.maxComputeInvocationsPerWorkgroup
+  );
 });
 
 g.test('overrides,workgroup_size,limits,workgroup_storage_size').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) validation for overridable constants for workgroupStorageSize exceeds device limits.
-`).
-
+`
+).
 params((u) =>
 u //
-.combine('isAsync', [true, false])).
-
+.combine('isAsync', [true, false])
+).
 fn((t) => {
   const { isAsync } = t.params;
 

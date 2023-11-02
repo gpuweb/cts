@@ -9,11 +9,11 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('compute').
 desc(
-`Tests execution of compute passes with non-halting dispatch operations.
+  `Tests execution of compute passes with non-halting dispatch operations.
 
 This is expected to hang for a bit, but it should ultimately result in graceful
-device loss.`).
-
+device loss.`
+).
 fn(async (t) => {
   const data = new Uint32Array([0]);
   const buffer = t.makeBufferWithContents(data, GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
@@ -51,11 +51,11 @@ fn(async (t) => {
 
 g.test('vertex').
 desc(
-`Tests execution of render passes with a non-halting vertex stage.
+  `Tests execution of render passes with a non-halting vertex stage.
 
 This is expected to hang for a bit, but it should ultimately result in graceful
-device loss.`).
-
+device loss.`
+).
 fn(async (t) => {
   const module = t.device.createShaderModule({
     code: `
@@ -123,11 +123,11 @@ fn(async (t) => {
 
 g.test('fragment').
 desc(
-`Tests execution of render passes with a non-halting fragment stage.
+  `Tests execution of render passes with a non-halting fragment stage.
 
 This is expected to hang for a bit, but it should ultimately result in graceful
-device loss.`).
-
+device loss.`
+).
 fn(async (t) => {
   const module = t.device.createShaderModule({
     code: `

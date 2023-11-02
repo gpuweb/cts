@@ -111,7 +111,7 @@ type,
 
 g.test('linear_memory').
 desc(
-`For each indexable data type (vec, mat, sized/unsized array, of various scalar types), attempts
+  `For each indexable data type (vec, mat, sized/unsized array, of various scalar types), attempts
     to access (read, write, atomic load/store) a region of memory (buffer or internal) at various
     (signed/unsigned) indices. Checks that the accesses conform to robust access (OOB reads only
     return bound memory, OOB writes don't write OOB).
@@ -122,8 +122,8 @@ desc(
     TODO: Test types like vec2<atomic<i32>>, if that's allowed.
     TODO: Test exprIndexAddon as constexpr.
     TODO: Test exprIndexAddon as pipeline-overridable constant expression.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combineWithParams([
@@ -155,23 +155,23 @@ combineWithParams([
 { addressSpace: 'function', access: 'read' },
 { addressSpace: 'function', access: 'write' },
 { addressSpace: 'workgroup', access: 'read' },
-{ addressSpace: 'workgroup', access: 'write' }]).
-
+{ addressSpace: 'workgroup', access: 'write' }]
+).
 combineWithParams([
 { containerType: 'array' },
 { containerType: 'matrix' },
-{ containerType: 'vector' }]).
-
+{ containerType: 'vector' }]
+).
 combineWithParams([
 { shadowingMode: 'none' },
 { shadowingMode: 'module-scope' },
-{ shadowingMode: 'function-scope' }]).
-
+{ shadowingMode: 'function-scope' }]
+).
 expand('isAtomic', (p) => supportsAtomics(p) ? [false, true] : [false]).
 beginSubcases().
 expand('baseType', supportedScalarTypes).
-expandWithParams(generateTypes)).
-
+expandWithParams(generateTypes)
+).
 fn((t) => {
   const {
     addressSpace,
@@ -248,8 +248,8 @@ struct TestData {
       usesCanary = true;
       globalSource += structDecl;
       testFunctionSource += 'var s: S;';
-      break;}
-
+      break;
+  }
 
   // Build the test function that will do the tests.
 
@@ -339,8 +339,8 @@ struct TestData {
               testFunctionSource += `
     s.data[index] = ${exprZeroElement};`;
             }
-            break;}
-
+            break;
+        }
         testFunctionSource += `
   }`;
       }
@@ -387,8 +387,8 @@ var<private> arrayLength = 0;
   let max = 0;
   let arrayLength = 0;
 `;
-      break;}
-
+      break;
+  }
 
   // Run the test
 
@@ -440,40 +440,40 @@ fn runTest() -> u32 {
 
     // Create a buffer that contains zeroes in the allowed access area, and 42s everywhere else.
     const testBuffer = t.makeBufferWithContents(
-    new Uint8Array(expectedData),
-    GPUBufferUsage.COPY_SRC |
-    GPUBufferUsage.UNIFORM |
-    GPUBufferUsage.STORAGE |
-    GPUBufferUsage.COPY_DST);
-
+      new Uint8Array(expectedData),
+      GPUBufferUsage.COPY_SRC |
+      GPUBufferUsage.UNIFORM |
+      GPUBufferUsage.STORAGE |
+      GPUBufferUsage.COPY_DST
+    );
 
     // Run the shader, accessing the buffer.
     runShaderTest(
-    t,
-    GPUShaderStage.COMPUTE,
-    testSource,
-    layout,
-    [
-    {
-      binding: 0,
-      resource: {
-        buffer: testBuffer,
-        offset: dynamicOffset ? 0 : bufferBindingOffset,
-        size: bufferBindingSize
-      }
-    }],
+      t,
+      GPUShaderStage.COMPUTE,
+      testSource,
+      layout,
+      [
+      {
+        binding: 0,
+        resource: {
+          buffer: testBuffer,
+          offset: dynamicOffset ? 0 : bufferBindingOffset,
+          size: bufferBindingSize
+        }
+      }],
 
-    dynamicOffset ? [bufferBindingOffset] : undefined);
-
+      dynamicOffset ? [bufferBindingOffset] : undefined
+    );
 
     // Check that content of the buffer outside of the allowed area didn't change.
     const expectedBytes = new Uint8Array(expectedData);
     t.expectGPUBufferValuesEqual(testBuffer, expectedBytes.subarray(0, bufferBindingOffset), 0);
     t.expectGPUBufferValuesEqual(
-    testBuffer,
-    expectedBytes.subarray(bufferBindingEnd, testBufferSize),
-    bufferBindingEnd);
-
+      testBuffer,
+      expectedBytes.subarray(bufferBindingEnd, testBufferSize),
+      bufferBindingEnd
+    );
   } else {
     runShaderTest(t, GPUShaderStage.COMPUTE, testSource, layout, []);
   }

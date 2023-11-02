@@ -9,17 +9,17 @@ export const g = makeTestGroup(CompatibilityTest);
 
 g.test('sample_mask').
 desc(
-`
+  `
 Tests that you can not create a render pipeline with a shader module that uses sample_mask in compat mode.
 
 - Test that a pipeline with a shader that uses sample_mask fails.
 - Test that a pipeline that references a module that has a shader that uses sample_mask
   but the pipeline does not reference that shader succeeds.
-    `).
-
+    `
+).
 params((u) =>
-u.combine('entryPoint', ['fsWithoutSampleMaskUsage', 'fsWithSampleMaskUsage'])).
-
+u.combine('entryPoint', ['fsWithoutSampleMaskUsage', 'fsWithSampleMaskUsage'])
+).
 fn((t) => {
   const { entryPoint } = t.params;
 
@@ -67,9 +67,9 @@ fn((t) => {
 
   const isValid = entryPoint === 'fsWithoutSampleMaskUsage';
   t.expectGPUError(
-  'validation',
-  () => t.device.createRenderPipeline(pipelineDescriptor),
-  !isValid);
-
+    'validation',
+    () => t.device.createRenderPipeline(pipelineDescriptor),
+    !isValid
+  );
 });
 //# sourceMappingURL=shader_module.spec.js.map

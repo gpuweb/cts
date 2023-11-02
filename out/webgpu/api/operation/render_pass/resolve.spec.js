@@ -35,8 +35,8 @@ beginSubcases().
 combine('numColorAttachments', [2, 4]).
 combine('slotsToResolve', kSlotsToResolve).
 combine('resolveTargetBaseMipLevel', [0, 1]).
-combine('resolveTargetBaseArrayLayer', [0, 1])).
-
+combine('resolveTargetBaseArrayLayer', [0, 1])
+).
 fn((t) => {
   const targets = [];
   for (let i = 0; i < t.params.numColorAttachments; i++) {
@@ -169,16 +169,16 @@ fn((t) => {
   const z = t.params.resolveTargetBaseArrayLayer;
   for (const resolveTarget of resolveTargets) {
     t.expectSinglePixelComparisonsAreOkInTexture(
-    { texture: resolveTarget, mipLevel: t.params.resolveTargetBaseMipLevel },
-    [
-    // Top left pixel should be {1.0, 1.0, 1.0, 1.0}.
-    { coord: { x: 0, y: 0, z }, exp: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 } },
-    // Bottom right pixel should be {0, 0, 0, 0}.
-    { coord: { x: kSize - 1, y: kSize - 1, z }, exp: { R: 0, G: 0, B: 0, A: 0 } },
-    // Top right pixel should be {0.5, 0.5, 0.5, 0.5} due to the multisampled resolve.
-    { coord: { x: kSize - 1, y: 0, z }, exp: { R: 0.5, G: 0.5, B: 0.5, A: 0.5 } }]);
+      { texture: resolveTarget, mipLevel: t.params.resolveTargetBaseMipLevel },
+      [
+      // Top left pixel should be {1.0, 1.0, 1.0, 1.0}.
+      { coord: { x: 0, y: 0, z }, exp: { R: 1.0, G: 1.0, B: 1.0, A: 1.0 } },
+      // Bottom right pixel should be {0, 0, 0, 0}.
+      { coord: { x: kSize - 1, y: kSize - 1, z }, exp: { R: 0, G: 0, B: 0, A: 0 } },
+      // Top right pixel should be {0.5, 0.5, 0.5, 0.5} due to the multisampled resolve.
+      { coord: { x: kSize - 1, y: 0, z }, exp: { R: 0.5, G: 0.5, B: 0.5, A: 0.5 } }]
 
-
+    );
   }
 });
 //# sourceMappingURL=resolve.spec.js.map

@@ -13,6 +13,7 @@ import { loadTreeForQuery } from './tree.js';
 
 
 
+// A .spec.ts file, as imported.
 
 
 
@@ -28,6 +29,8 @@ import { loadTreeForQuery } from './tree.js';
 
 
 
+// Override the types for addEventListener/removeEventListener so the callbacks can be used as
+// strongly-typed.
 
 
 
@@ -53,19 +56,16 @@ import { loadTreeForQuery } from './tree.js';
 
 
 // Base class for DefaultTestFileLoader and FakeTestFileLoader.
+
 export class TestFileLoader extends EventTarget {
 
 
 
   async importSpecFile(suite, path) {
     const url = `${suite}/${path.join('/')}.spec.js`;
-    this.dispatchEvent(
-    new MessageEvent('import', { data: { url } }));
-
+    this.dispatchEvent(new MessageEvent('import', { data: { url } }));
     const ret = await this.import(url);
-    this.dispatchEvent(
-    new MessageEvent('imported', { data: { url } }));
-
+    this.dispatchEvent(new MessageEvent('imported', { data: { url } }));
     return ret;
   }
 

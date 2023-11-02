@@ -8,12 +8,12 @@ import { GPUTest } from '../../../gpu_test.js';
 
 import {
 
-MemoryModelTester,
-buildTestShader,
-MemoryType,
-TestType,
-buildResultShader,
-ResultType } from
+  MemoryModelTester,
+  buildTestShader,
+  MemoryType,
+  TestType,
+  buildResultShader,
+  ResultType } from
 './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -94,11 +94,11 @@ const workgroupMemoryCorrRMWTestCode = `
 
 g.test('corr').
 desc(
-`Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
+  `Ensures two reads on one thread cannot observe an inconsistent view of a write on a second thread.
      The first thread writes the value 1 some location x, and the second thread reads x twice in a row.
      If the first read returns 1 but the second read returns 0, then there has been a coherence violation.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -132,8 +132,8 @@ paramsSimple([
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCorrRMWTestCode,
   extraFlags: 'rmw_variant'
-}]).
-
+}]
+).
 fn(async (t) => {
   const resultCode = `
       if ((r0 == 0u && r1 == 0u)) {
@@ -149,11 +149,11 @@ fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader
+  );
   await memModelTester.run(60, 3);
 });
 
@@ -183,11 +183,11 @@ const workgroupMemoryCowwRMWTestCode = `
 
 g.test('coww').
 desc(
-`Ensures two writes on one thread do not lead to incoherent results. The thread first writes 1 to
+  `Ensures two writes on one thread do not lead to incoherent results. The thread first writes 1 to
      some location x and then writes 2 to the same location. If the value in memory after the test finishes
      is 1, then there has been a coherence violation.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -221,8 +221,8 @@ paramsSimple([
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCowwRMWTestCode,
   extraFlags: 'rmw_variant'
-}]).
-
+}]
+).
 fn(async (t) => {
   const resultCode = `
       if (mem_x_0 == 2u) {
@@ -289,11 +289,11 @@ const workgroupMemoryCowrRMWTestCode = `
 
 g.test('cowr').
 desc(
-`The first thread first writes 1 to some location x and then reads x. The second thread writes 2 to x.
+  `The first thread first writes 1 to some location x and then reads x. The second thread writes 2 to x.
      If the first thread reads the value 2 and the value in memory at the end of the test is 1, then the read
      and write on the first thread have been reordered, a coherence violation.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -327,8 +327,8 @@ paramsSimple([
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCowrRMWTestCode,
   extraFlags: 'rmw_variant'
-}]).
-
+}]
+).
 fn(async (t) => {
   const resultCode = `
       if ((r0 == 1u && mem_x_0 == 2u)) {
@@ -344,11 +344,11 @@ fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader
+  );
   await memModelTester.run(60, 3);
 });
 
@@ -373,10 +373,10 @@ const workgroupMemoryCorw1TestCode = `
 
 g.test('corw1').
 desc(
-`One thread first reads from a memory location x and then writes 1 to x. If the read observes the subsequent
+  `One thread first reads from a memory location x and then writes 1 to x. If the read observes the subsequent
      write, there has been a coherence violation.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -392,8 +392,8 @@ paramsSimple([
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCorw1TestCode
-}]).
-
+}]
+).
 fn(async (t) => {
   const resultCode = `
       if (r0 == 0u) {
@@ -460,12 +460,12 @@ const workgroupMemoryCorw2RMWTestCode = `
 
 g.test('corw2').
 desc(
-`The first thread reads from some memory location x, and then writes 1 to x. The second thread
+  `The first thread reads from some memory location x, and then writes 1 to x. The second thread
      writes 2 to x. If the first thread reads the value 2, but the value in memory after the test
      completes is 1, then the instructions on the first thread have been re-ordered, leading to a
      coherence violation.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -499,8 +499,8 @@ paramsSimple([
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryCorw2RMWTestCode,
   extraFlags: 'rmw_variant'
-}]).
-
+}]
+).
 fn(async (t) => {
   const resultCode = `
       if ((r0 == 0u && mem_x_0 == 2u)) {
@@ -516,11 +516,11 @@ fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader
+  );
   await memModelTester.run(60, 3);
 });
 //# sourceMappingURL=coherence.spec.js.map

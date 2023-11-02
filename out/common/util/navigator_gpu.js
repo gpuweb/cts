@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/
+**/ /// <reference types="@webgpu/types" />
 
 import { ErrorWithExtra, assert, objectEquals } from './util.js';
 
@@ -10,9 +10,9 @@ import { ErrorWithExtra, assert, objectEquals } from './util.js';
  */
 function defaultGPUProvider() {
   assert(
-  typeof navigator !== 'undefined' && navigator.gpu !== undefined,
-  'No WebGPU implementation found');
-
+    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
+    'No WebGPU implementation found'
+  );
   return navigator.gpu;
 }
 

@@ -12,17 +12,17 @@ export const kQueryCount = 2;
 
 g.test('queryset_and_destination_buffer_state').
 desc(
-`
+  `
 Tests that resolve query set must be with valid query set and destination buffer.
 - {invalid, destroyed} GPUQuerySet results in validation error.
 - {invalid, destroyed} destination buffer results in validation error.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('querySetState', kResourceStates).
-combine('destinationState', kResourceStates)).
-
+combine('destinationState', kResourceStates)
+).
 fn((t) => {
   const { querySetState, destinationState } = t.params;
 
@@ -43,17 +43,17 @@ fn((t) => {
 
 g.test('first_query_and_query_count').
 desc(
-`
+  `
 Tests that resolve query set with invalid firstQuery and queryCount:
 - firstQuery and/or queryCount out of range
-  `).
-
+  `
+).
 paramsSubcasesOnly([
 { firstQuery: 0, queryCount: kQueryCount }, // control case
 { firstQuery: 0, queryCount: kQueryCount + 1 },
 { firstQuery: 1, queryCount: kQueryCount },
-{ firstQuery: kQueryCount, queryCount: 1 }]).
-
+{ firstQuery: kQueryCount, queryCount: 1 }]
+).
 fn((t) => {
   const { firstQuery, queryCount } = t.params;
 
@@ -70,18 +70,18 @@ fn((t) => {
 
 g.test('destination_buffer_usage').
 desc(
-`
+  `
 Tests that resolve query set with invalid destinationBuffer:
 - Buffer usage {with, without} QUERY_RESOLVE
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('bufferUsage', [
 GPUConst.BufferUsage.STORAGE,
 GPUConst.BufferUsage.QUERY_RESOLVE // control case
-])).
-
+])
+).
 fn((t) => {
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: kQueryCount });
   const destination = t.device.createBuffer({
@@ -96,11 +96,11 @@ fn((t) => {
 
 g.test('destination_offset_alignment').
 desc(
-`
+  `
 Tests that resolve query set with invalid destinationOffset:
 - destinationOffset is not a multiple of 256
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('destinationOffset', [0, 128, 256, 384])).
 fn((t) => {
   const { destinationOffset } = t.params;
@@ -117,20 +117,20 @@ fn((t) => {
 
 g.test('resolve_buffer_oob').
 desc(
-`
+  `
 Tests that resolve query set with the size oob:
 - The size of destinationBuffer - destinationOffset < queryCount * 8
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u.combineWithParams([
 { queryCount: 2, bufferSize: 16, destinationOffset: 0, _success: true },
 { queryCount: 3, bufferSize: 16, destinationOffset: 0, _success: false },
 { queryCount: 2, bufferSize: 16, destinationOffset: 256, _success: false },
 { queryCount: 2, bufferSize: 272, destinationOffset: 256, _success: true },
-{ queryCount: 2, bufferSize: 264, destinationOffset: 256, _success: false }])).
-
-
+{ queryCount: 2, bufferSize: 264, destinationOffset: 256, _success: false }]
+)
+).
 fn((t) => {
   const { queryCount, bufferSize, destinationOffset, _success } = t.params;
   const querySet = t.device.createQuerySet({ type: 'occlusion', count: queryCount });
@@ -146,13 +146,13 @@ fn((t) => {
 
 g.test('query_set_buffer,device_mismatch').
 desc(
-'Tests resolveQuerySet cannot be called with a query set or destination buffer created from another device').
-
+  'Tests resolveQuerySet cannot be called with a query set or destination buffer created from another device'
+).
 paramsSubcasesOnly([
 { querySetMismatched: false, bufferMismatched: false }, // control case
 { querySetMismatched: true, bufferMismatched: false },
-{ querySetMismatched: false, bufferMismatched: true }]).
-
+{ querySetMismatched: false, bufferMismatched: true }]
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).

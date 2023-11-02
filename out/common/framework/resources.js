@@ -29,8 +29,8 @@ function getAbsoluteBaseResourcePath(path) {
         break;
       default:
         relparts.push(pathparts[i]);
-        break;}
-
+        break;
+    }
   }
 
   return relparts.join('/');

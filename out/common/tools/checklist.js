@@ -100,11 +100,11 @@ matchQueries)
 
   if (donenessMismatches.length) {
     throw new StacklessError(
-    'Found done/todo mismatches:\n  ' +
-    donenessMismatches.
-    map((q) => `marked ${q.done ? 'DONE, but is TODO' : 'TODO, but is DONE'}: ${q.query}`).
-    join('\n  '));
-
+      'Found done/todo mismatches:\n  ' +
+      donenessMismatches.
+      map((q) => `marked ${q.done ? 'DONE, but is TODO' : 'TODO, but is DONE'}: ${q.query}`).
+      join('\n  ')
+    );
   }
 
   return subtreeCount;

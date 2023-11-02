@@ -9,11 +9,11 @@ import { TypeI32, TypeVec } from '../../../../util/conversion.js';
 import { sparseI32Range, vectorI32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
-allInputSources,
-generateBinaryToI32Cases,
-generateI32VectorBinaryToVectorCases,
-generateVectorI32BinaryToVectorCases,
-run } from
+  allInputSources,
+  generateBinaryToI32Cases,
+  generateI32VectorBinaryToVectorCases,
+  generateVectorI32BinaryToVectorCases,
+  run } from
 '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
@@ -150,184 +150,184 @@ export const d = makeCaseCache('binary/i32_arithmetic', {
   },
   division_scalar_vector2_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(2),
-    i32_divide_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(2),
+      i32_divide_non_const
+    );
   },
   division_scalar_vector3_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(3),
-    i32_divide_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(3),
+      i32_divide_non_const
+    );
   },
   division_scalar_vector4_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(4),
-    i32_divide_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(4),
+      i32_divide_non_const
+    );
   },
   division_vector2_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(2),
-    sparseI32Range(),
-    i32_divide_non_const);
-
+      vectorI32Range(2),
+      sparseI32Range(),
+      i32_divide_non_const
+    );
   },
   division_vector3_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(3),
-    sparseI32Range(),
-    i32_divide_non_const);
-
+      vectorI32Range(3),
+      sparseI32Range(),
+      i32_divide_non_const
+    );
   },
   division_vector4_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(4),
-    sparseI32Range(),
-    i32_divide_non_const);
-
+      vectorI32Range(4),
+      sparseI32Range(),
+      i32_divide_non_const
+    );
   },
   division_scalar_vector2_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(2),
-    i32_divide_const);
-
+      sparseI32Range(),
+      vectorI32Range(2),
+      i32_divide_const
+    );
   },
   division_scalar_vector3_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(3),
-    i32_divide_const);
-
+      sparseI32Range(),
+      vectorI32Range(3),
+      i32_divide_const
+    );
   },
   division_scalar_vector4_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(4),
-    i32_divide_const);
-
+      sparseI32Range(),
+      vectorI32Range(4),
+      i32_divide_const
+    );
   },
   division_vector2_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(2),
-    sparseI32Range(),
-    i32_divide_const);
-
+      vectorI32Range(2),
+      sparseI32Range(),
+      i32_divide_const
+    );
   },
   division_vector3_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(3),
-    sparseI32Range(),
-    i32_divide_const);
-
+      vectorI32Range(3),
+      sparseI32Range(),
+      i32_divide_const
+    );
   },
   division_vector4_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(4),
-    sparseI32Range(),
-    i32_divide_const);
-
+      vectorI32Range(4),
+      sparseI32Range(),
+      i32_divide_const
+    );
   },
   remainder_scalar_vector2_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(2),
-    i32_remainder_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(2),
+      i32_remainder_non_const
+    );
   },
   remainder_scalar_vector3_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(3),
-    i32_remainder_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(3),
+      i32_remainder_non_const
+    );
   },
   remainder_scalar_vector4_non_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(4),
-    i32_remainder_non_const);
-
+      sparseI32Range(),
+      vectorI32Range(4),
+      i32_remainder_non_const
+    );
   },
   remainder_vector2_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(2),
-    sparseI32Range(),
-    i32_remainder_non_const);
-
+      vectorI32Range(2),
+      sparseI32Range(),
+      i32_remainder_non_const
+    );
   },
   remainder_vector3_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(3),
-    sparseI32Range(),
-    i32_remainder_non_const);
-
+      vectorI32Range(3),
+      sparseI32Range(),
+      i32_remainder_non_const
+    );
   },
   remainder_vector4_scalar_non_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(4),
-    sparseI32Range(),
-    i32_remainder_non_const);
-
+      vectorI32Range(4),
+      sparseI32Range(),
+      i32_remainder_non_const
+    );
   },
   remainder_scalar_vector2_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(2),
-    i32_remainder_const);
-
+      sparseI32Range(),
+      vectorI32Range(2),
+      i32_remainder_const
+    );
   },
   remainder_scalar_vector3_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(3),
-    i32_remainder_const);
-
+      sparseI32Range(),
+      vectorI32Range(3),
+      i32_remainder_const
+    );
   },
   remainder_scalar_vector4_const: () => {
     return generateI32VectorBinaryToVectorCases(
-    sparseI32Range(),
-    vectorI32Range(4),
-    i32_remainder_const);
-
+      sparseI32Range(),
+      vectorI32Range(4),
+      i32_remainder_const
+    );
   },
   remainder_vector2_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(2),
-    sparseI32Range(),
-    i32_remainder_const);
-
+      vectorI32Range(2),
+      sparseI32Range(),
+      i32_remainder_const
+    );
   },
   remainder_vector3_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(3),
-    sparseI32Range(),
-    i32_remainder_const);
-
+      vectorI32Range(3),
+      sparseI32Range(),
+      i32_remainder_const
+    );
   },
   remainder_vector4_scalar_const: () => {
     return generateVectorI32BinaryToVectorCases(
-    vectorI32Range(4),
-    sparseI32Range(),
-    i32_remainder_const);
-
+      vectorI32Range(4),
+      sparseI32Range(),
+      i32_remainder_const
+    );
   }
 });
 
 g.test('addition').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x + y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('addition');
   await run(t, binary('+'), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -336,13 +336,13 @@ fn(async (t) => {
 g.test('addition_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x += y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('addition');
   await run(t, compoundBinary('+='), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -351,13 +351,13 @@ fn(async (t) => {
 g.test('subtraction').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x - y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('subtraction');
   await run(t, binary('-'), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -366,13 +366,13 @@ fn(async (t) => {
 g.test('subtraction_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x -= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('subtraction');
   await run(t, compoundBinary('-='), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -381,13 +381,13 @@ fn(async (t) => {
 g.test('multiplication').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('multiplication');
   await run(t, binary('*'), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -396,13 +396,13 @@ fn(async (t) => {
 g.test('multiplication_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x *= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('multiplication');
   await run(t, compoundBinary('*='), [TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -411,81 +411,81 @@ fn(async (t) => {
 g.test('division').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'division_const' : 'division_non_const');
-
+    t.params.inputSource === 'const' ? 'division_const' : 'division_non_const'
+  );
   await run(t, binary('/'), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('division_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x /= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'division_const' : 'division_non_const');
-
+    t.params.inputSource === 'const' ? 'division_const' : 'division_non_const'
+  );
   await run(t, compoundBinary('/='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('remainder').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x % y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const');
-
+    t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const'
+  );
   await run(t, binary('%'), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('remainder_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x %= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const');
-
+    t.params.inputSource === 'const' ? 'remainder_const' : 'remainder_non_const'
+  );
   await run(t, compoundBinary('%='), [TypeI32, TypeI32], TypeI32, t.params, cases);
 });
 
 g.test('addition_scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x + y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -496,13 +496,13 @@ fn(async (t) => {
 g.test('addition_vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x + y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -513,13 +513,13 @@ fn(async (t) => {
 g.test('addition_vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x += y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -530,13 +530,13 @@ fn(async (t) => {
 g.test('subtraction_scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x - y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -547,13 +547,13 @@ fn(async (t) => {
 g.test('subtraction_vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x - y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -564,13 +564,13 @@ fn(async (t) => {
 g.test('subtraction_vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x -= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -581,13 +581,13 @@ fn(async (t) => {
 g.test('multiplication_scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x * y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -598,13 +598,13 @@ fn(async (t) => {
 g.test('multiplication_vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x * y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -615,13 +615,13 @@ fn(async (t) => {
 g.test('multiplication_vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x *= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -632,13 +632,13 @@ fn(async (t) => {
 g.test('division_scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x / y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -650,13 +650,13 @@ fn(async (t) => {
 g.test('division_vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x / y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -668,13 +668,13 @@ fn(async (t) => {
 g.test('division_vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x /= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -686,13 +686,13 @@ fn(async (t) => {
 g.test('remainder_scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x % y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_rhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -704,13 +704,13 @@ fn(async (t) => {
 g.test('remainder_vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x % y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);
@@ -722,13 +722,13 @@ fn(async (t) => {
 g.test('remainder_vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#arithmetic-expr').
 desc(
-`
+  `
 Expression: x %= y
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize_lhs', [2, 3, 4])
+).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
   const vec_type = TypeVec(vec_size, TypeI32);

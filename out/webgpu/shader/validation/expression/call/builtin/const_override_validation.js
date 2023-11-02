@@ -2,11 +2,11 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, unreachable } from '../../../../../../common/util/util.js';import { kValue } from '../../../../../util/constants.js';import {
 
-TypeF16,
+  TypeF16,
 
-elementType,
-elementsOf,
-isAbstractType } from
+  elementType,
+  elementsOf,
+  isAbstractType } from
 '../../../../../util/conversion.js';
 import { fullF16Range, fullF32Range, fullF64Range, linearRange } from '../../../../../util/math.js';
 
@@ -124,10 +124,10 @@ stage)
   switch (stage) {
     case 'constant':{
         t.expectCompileResult(
-        expectedResult,
-        `${enables}
-const v = ${builtin}(${args.map((arg) => arg.wgsl()).join(', ')});`);
-
+          expectedResult,
+          `${enables}
+const v = ${builtin}(${args.map((arg) => arg.wgsl()).join(', ')});`
+        );
         break;
       }
     case 'override':{
@@ -155,8 +155,8 @@ var<private> v = ${builtin}(${callArgs.join(', ')});`,
           reference: ['v']
         });
         break;
-      }}
-
+      }
+  }
 }
 
 /** @returns a sweep of the representable values for element type of `type` */
@@ -182,11 +182,11 @@ export function fullRangeForType(type, count) {
       });
     case 'i32':
       return linearRange(kValue.i32.negative.min, kValue.i32.positive.max, count).map((f) =>
-      Math.floor(f));
-
+      Math.floor(f)
+      );
     case 'u32':
-      return linearRange(0, kValue.u32.max, count).map((f) => Math.floor(f));}
-
+      return linearRange(0, kValue.u32.max, count).map((f) => Math.floor(f));
+  }
   unreachable();
 }
 

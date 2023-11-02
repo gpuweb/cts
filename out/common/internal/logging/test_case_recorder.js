@@ -5,7 +5,7 @@
 import { LogMessageWithStack } from './log_message.js';var
 
 
-LogSeverity;(function (LogSeverity) {LogSeverity[LogSeverity["NotRun"] = 0] = "NotRun";LogSeverity[LogSeverity["Skip"] = 1] = "Skip";LogSeverity[LogSeverity["Pass"] = 2] = "Pass";LogSeverity[LogSeverity["Warn"] = 3] = "Warn";LogSeverity[LogSeverity["ExpectFailed"] = 4] = "ExpectFailed";LogSeverity[LogSeverity["ValidationFailed"] = 5] = "ValidationFailed";LogSeverity[LogSeverity["ThrewException"] = 6] = "ThrewException";})(LogSeverity || (LogSeverity = {}));
+LogSeverity = /*#__PURE__*/function (LogSeverity) {LogSeverity[LogSeverity["NotRun"] = 0] = "NotRun";LogSeverity[LogSeverity["Skip"] = 1] = "Skip";LogSeverity[LogSeverity["Pass"] = 2] = "Pass";LogSeverity[LogSeverity["Warn"] = 3] = "Warn";LogSeverity[LogSeverity["ExpectFailed"] = 4] = "ExpectFailed";LogSeverity[LogSeverity["ValidationFailed"] = 5] = "ValidationFailed";LogSeverity[LogSeverity["ThrewException"] = 6] = "ThrewException";return LogSeverity;}(LogSeverity || {});
 
 
 

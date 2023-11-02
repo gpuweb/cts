@@ -2,8 +2,8 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { GPUConst } from '../../../../constants.js';import { isPowerOfTwo } from '../../../../util/math.js';
 import {
-kMinimumLimitBaseParams,
-makeLimitTestGroup } from
+  kMinimumLimitBaseParams,
+  makeLimitTestGroup } from
 
 
 './limit_utils.js';
@@ -23,8 +23,8 @@ minimumLimit)
     case 'atMinimum':
       return minimumLimit;
     case 'underMinimum':
-      return 2 ** (Math.log2(minimumLimit) - 1);}
-
+      return 2 ** (Math.log2(minimumLimit) - 1);
+  }
 }
 
 function getTestValue(testValueName, requestedLimit) {
@@ -32,8 +32,8 @@ function getTestValue(testValueName, requestedLimit) {
     case 'atLimit':
       return requestedLimit;
     case 'underLimit':
-      return 2 ** (Math.log2(requestedLimit) - 1);}
-
+      return 2 ** (Math.log2(requestedLimit) - 1);
+  }
 }
 
 function getDeviceLimitToRequestAndValueToTest(
@@ -60,49 +60,49 @@ fn(async (t) => {
   // note: LimitTest.maximum is the adapter.limits[limit] value
   const { defaultLimit, adapterLimit: minimumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-  limitTest,
-  testValueName,
-  defaultLimit,
-  minimumLimit);
-
+    limitTest,
+    testValueName,
+    defaultLimit,
+    minimumLimit
+  );
 
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ device, testValue, shouldError }) => {
-    const storageBuffer = t.trackForCleanup(
-    device.createBuffer({
-      size: testValue * 2,
-      usage: GPUBufferUsage.STORAGE
-    }));
+    requestedLimit,
+    testValue,
+    async ({ device, testValue, shouldError }) => {
+      const storageBuffer = t.trackForCleanup(
+        device.createBuffer({
+          size: testValue * 2,
+          usage: GPUBufferUsage.STORAGE
+        })
+      );
 
-
-    const layout = device.createBindGroupLayout({
-      entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.COMPUTE,
-        buffer: { type: 'storage' }
-      }]
-
-    });
-
-    await t.expectValidationError(() => {
-      device.createBindGroup({
-        layout,
+      const layout = device.createBindGroupLayout({
         entries: [
         {
           binding: 0,
-          resource: {
-            buffer: storageBuffer,
-            offset: testValue
-          }
+          visibility: GPUShaderStage.COMPUTE,
+          buffer: { type: 'storage' }
         }]
 
       });
-    }, shouldError);
-  });
 
+      await t.expectValidationError(() => {
+        device.createBindGroup({
+          layout,
+          entries: [
+          {
+            binding: 0,
+            resource: {
+              buffer: storageBuffer,
+              offset: testValue
+            }
+          }]
+
+        });
+      }, shouldError);
+    }
+  );
 });
 
 g.test('setBindGroup,at_over').
@@ -113,59 +113,59 @@ fn(async (t) => {
   // note: LimitTest.maximum is the adapter.limits[limit] value
   const { defaultLimit, adapterLimit: minimumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-  limitTest,
-  testValueName,
-  defaultLimit,
-  minimumLimit);
-
+    limitTest,
+    testValueName,
+    defaultLimit,
+    minimumLimit
+  );
 
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ device, testValue, shouldError }) => {
-    const buffer = device.createBuffer({
-      size: testValue * 2,
-      usage: GPUBufferUsage.STORAGE
-    });
+    requestedLimit,
+    testValue,
+    async ({ device, testValue, shouldError }) => {
+      const buffer = device.createBuffer({
+        size: testValue * 2,
+        usage: GPUBufferUsage.STORAGE
+      });
 
-    const layout = device.createBindGroupLayout({
-      entries: [
-      {
-        binding: 0,
-        visibility: GPUConst.ShaderStage.COMPUTE,
-        buffer: {
-          type: 'storage',
-          hasDynamicOffset: true
-        }
-      }]
+      const layout = device.createBindGroupLayout({
+        entries: [
+        {
+          binding: 0,
+          visibility: GPUConst.ShaderStage.COMPUTE,
+          buffer: {
+            type: 'storage',
+            hasDynamicOffset: true
+          }
+        }]
 
-    });
+      });
 
-    const bindGroup = device.createBindGroup({
-      layout,
-      entries: [
-      {
-        binding: 0,
-        resource: {
-          buffer,
-          size: testValue / 2
-        }
-      }]
+      const bindGroup = device.createBindGroup({
+        layout,
+        entries: [
+        {
+          binding: 0,
+          resource: {
+            buffer,
+            size: testValue / 2
+          }
+        }]
 
-    });
+      });
 
-    const encoder = device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setBindGroup(0, bindGroup, [testValue]);
-    pass.end();
+      const encoder = device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setBindGroup(0, bindGroup, [testValue]);
+      pass.end();
 
-    await t.expectValidationError(() => {
-      encoder.finish();
-    }, shouldError);
+      await t.expectValidationError(() => {
+        encoder.finish();
+      }, shouldError);
 
-    buffer.destroy();
-  });
-
+      buffer.destroy();
+    }
+  );
 });
 
 g.test('validate,powerOf2').

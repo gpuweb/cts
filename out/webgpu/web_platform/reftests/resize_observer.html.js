@@ -54,11 +54,11 @@ runRefTest(async (t) => {
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST
   });
   device.queue.writeTexture(
-  { texture: tex },
-  patternImageData.data,
-  { bytesPerRow: patternSize * 4, rowsPerImage: 4 },
-  { width: patternSize, height: patternSize });
-
+    { texture: tex },
+    patternImageData.data,
+    { bytesPerRow: patternSize * 4, rowsPerImage: 4 },
+    { width: patternSize, height: patternSize }
+  );
 
   const bindGroup = device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
@@ -130,10 +130,10 @@ runRefTest(async (t) => {
   function setPatternsUsingSizeInfo(entries) {
     for (const entry of entries) {
       setCanvasPattern(
-      entry.target,
-      entry.devicePixelContentBoxSize[0].inlineSize,
-      entry.devicePixelContentBoxSize[0].blockSize);
-
+        entry.target,
+        entry.devicePixelContentBoxSize[0].inlineSize,
+        entry.devicePixelContentBoxSize[0].blockSize
+      );
     }
     resolve(true);
   }

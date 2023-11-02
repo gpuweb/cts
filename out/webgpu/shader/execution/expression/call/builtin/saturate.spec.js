@@ -22,36 +22,36 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('saturate', {
   f32: () => {
     return FP.f32.generateScalarToIntervalCases(
-    [
-    // Non-clamped values
-    ...linearRange(0.0, 1.0, 20),
-    ...fullF32Range()],
+      [
+      // Non-clamped values
+      ...linearRange(0.0, 1.0, 20),
+      ...fullF32Range()],
 
-    'unfiltered',
-    FP.f32.saturateInterval);
-
+      'unfiltered',
+      FP.f32.saturateInterval
+    );
   },
   f16: () => {
     return FP.f16.generateScalarToIntervalCases(
-    [
-    // Non-clamped values
-    ...linearRange(0.0, 1.0, 20),
-    ...fullF16Range()],
+      [
+      // Non-clamped values
+      ...linearRange(0.0, 1.0, 20),
+      ...fullF16Range()],
 
-    'unfiltered',
-    FP.f16.saturateInterval);
-
+      'unfiltered',
+      FP.f16.saturateInterval
+    );
   },
   abstract: () => {
     return FP.abstract.generateScalarToIntervalCases(
-    [
-    // Non-clamped values
-    ...linearRange(0.0, 1.0, 20),
-    ...fullF64Range()],
+      [
+      // Non-clamped values
+      ...linearRange(0.0, 1.0, 20),
+      ...fullF64Range()],
 
-    'unfiltered',
-    FP.abstract.saturateInterval);
-
+      'unfiltered',
+      FP.abstract.saturateInterval
+    );
   }
 });
 
@@ -61,25 +61,25 @@ desc(`abstract float tests`).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('abstract');
   await run(
-  t,
-  abstractBuiltin('saturate'),
-  [TypeAbstractFloat],
-  TypeAbstractFloat,
-  t.params,
-  cases);
-
+    t,
+    abstractBuiltin('saturate'),
+    [TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
 });
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, builtin('saturate'), [TypeF32], TypeF32, t.params, cases);
@@ -89,8 +89,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

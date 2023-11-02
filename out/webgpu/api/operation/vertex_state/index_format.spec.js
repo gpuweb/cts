@@ -45,8 +45,8 @@ const kNothing = [
 const { byteLength, bytesPerRow, rowsPerImage } = getTextureCopyLayout(kTextureFormat, '2d', [
 kWidth,
 kHeight,
-1]);
-
+1]
+);
 
 class IndexFormatTest extends GPUTest {
   MakeRenderPipeline(
@@ -146,10 +146,10 @@ class IndexFormatTest extends GPUTest {
     pass.drawIndexed(indexCount);
     pass.end();
     encoder.copyTextureToBuffer(
-    { texture: colorAttachment },
-    { buffer: result, bytesPerRow, rowsPerImage },
-    [kWidth, kHeight]);
-
+      { texture: colorAttachment },
+      { buffer: result, bytesPerRow, rowsPerImage },
+      [kWidth, kHeight]
+    );
     this.device.queue.submit([encoder.finish()]);
 
     return result;
@@ -177,8 +177,8 @@ desc('Test rendering result of indexed draw with index format of uint16.').
 paramsSubcasesOnly([
 { indexOffset: 0, _indexCount: 10, _expectedShape: kSquare },
 { indexOffset: 6, _indexCount: 6, _expectedShape: kBottomLeftTriangle },
-{ indexOffset: 18, _indexCount: 0, _expectedShape: kNothing }]).
-
+{ indexOffset: 18, _indexCount: 0, _expectedShape: kNothing }]
+).
 fn((t) => {
   const { indexOffset, _indexCount, _expectedShape } = t.params;
 
@@ -199,8 +199,8 @@ desc('Test rendering result of indexed draw with index format of uint32.').
 paramsSubcasesOnly([
 { indexOffset: 0, _indexCount: 10, _expectedShape: kSquare },
 { indexOffset: 12, _indexCount: 7, _expectedShape: kBottomLeftTriangle },
-{ indexOffset: 36, _indexCount: 0, _expectedShape: kNothing }]).
-
+{ indexOffset: 36, _indexCount: 0, _expectedShape: kNothing }]
+).
 fn((t) => {
   const { indexOffset, _indexCount, _expectedShape } = t.params;
 
@@ -264,10 +264,10 @@ fn((t) => {
   pass.drawIndexed(indexCount);
   pass.end();
   encoder.copyTextureToBuffer(
-  { texture: colorAttachment },
-  { buffer: result, bytesPerRow, rowsPerImage },
-  [kWidth, kHeight]);
-
+    { texture: colorAttachment },
+    { buffer: result, bytesPerRow, rowsPerImage },
+    [kWidth, kHeight]
+  );
   t.device.queue.submit([encoder.finish()]);
 
   const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
@@ -324,10 +324,10 @@ fn((t) => {
   pass.drawIndexed(indexCount);
   pass.end();
   encoder.copyTextureToBuffer(
-  { texture: colorAttachment },
-  { buffer: result, bytesPerRow, rowsPerImage },
-  [kWidth, kHeight]);
-
+    { texture: colorAttachment },
+    { buffer: result, bytesPerRow, rowsPerImage },
+    [kWidth, kHeight]
+  );
   t.device.queue.submit([encoder.finish()]);
 
   const expectedTextureValues = t.CreateExpectedUint8Array(expectedShape);
@@ -336,11 +336,11 @@ fn((t) => {
 
 g.test('index_format,setIndexBuffer_different_formats').
 desc(
-`
+  `
   Test that index buffers of multiple formats can be used with a pipeline that doesn't use strip
   primitive topology.
-  `).
-
+  `
+).
 fn((t) => {
   const indices = [1, 2, 0, 0, 0, 0, 0, 1, 3, 0];
 
@@ -384,10 +384,10 @@ fn((t) => {
     pass.drawIndexed(indexCount);
     pass.end();
     encoder.copyTextureToBuffer(
-    { texture: colorAttachment },
-    { buffer: result, bytesPerRow, rowsPerImage },
-    [kWidth, kHeight]);
-
+      { texture: colorAttachment },
+      { buffer: result, bytesPerRow, rowsPerImage },
+      [kWidth, kHeight]
+    );
   }
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(result, expectedTextureValues);
@@ -416,10 +416,10 @@ fn((t) => {
     pass.drawIndexed(indexCount);
     pass.end();
     encoder.copyTextureToBuffer(
-    { texture: colorAttachment },
-    { buffer: result, bytesPerRow, rowsPerImage },
-    [kWidth, kHeight]);
-
+      { texture: colorAttachment },
+      { buffer: result, bytesPerRow, rowsPerImage },
+      [kWidth, kHeight]
+    );
   }
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(result, expectedTextureValues);
@@ -427,7 +427,7 @@ fn((t) => {
 
 g.test('primitive_restart').
 desc(
-`
+  `
 Test primitive restart with each primitive topology.
 
 Primitive restart should be always active with strip primitive topologies
@@ -515,8 +515,8 @@ is different from what you would get if the topology were incorrect.
         |    ### |
         |  ## ## |
         |########|
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('indexFormat', ['uint16', 'uint32']).
@@ -570,9 +570,9 @@ combineWithParams([
   [0, 0, 0, 0, 1, 1, 1, 1],
   [0, 0, 0, 0, 1, 1, 1, 1]]
 
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { indexFormat, primitiveTopology, _indices, _expectedShape } = t.params;
 

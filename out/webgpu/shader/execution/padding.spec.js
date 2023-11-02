@@ -26,9 +26,9 @@ function runShaderTest(t, wgsl, expected) {
 
   // Allocate a buffer and fill it with 0xdeadbeef words.
   const outputBuffer = t.makeBufferWithContents(
-  new Uint32Array([...iterRange(expected.length, (x) => 0xdeadbeef)]),
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    new Uint32Array([...iterRange(expected.length, (_i) => 0xdeadbeef)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: { buffer: outputBuffer } }]
@@ -49,13 +49,13 @@ function runShaderTest(t, wgsl, expected) {
 
 g.test('struct_implicit').
 desc(
-`Test that padding bytes in between structure members are preserved.
+  `Test that padding bytes in between structure members are preserved.
 
      This test defines a structure that has implicit padding and creates a read-write storage
      buffer with that structure type. The shader assigns the whole variable at once, and we
      then test that data in the padding bytes was preserved.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       struct S {
@@ -74,37 +74,28 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // a : u32
-  0x12345678,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // b : vec3<u32>
-  0xabcdef01,
-  0xabcdef01,
-  0xabcdef01,
-  0xdeadbeef,
-  // c : vec2<u32>
-  0x98765432,
-  0x98765432,
-  0xdeadbeef,
-  0xdeadbeef]));
-
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // a : u32
+    0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // b : vec3<u32>
+    0xabcdef01, 0xabcdef01, 0xabcdef01, 0xdeadbeef,
+    // c : vec2<u32>
+    0x98765432, 0x98765432, 0xdeadbeef, 0xdeadbeef]
+    )
+  );
 });
 
 g.test('struct_explicit').
 desc(
-`Test that padding bytes in between structure members are preserved.
+  `Test that padding bytes in between structure members are preserved.
 
      This test defines a structure with explicit padding attributes and creates a read-write storage
      buffer with that structure type. The shader assigns the whole variable at once, and we
      then test that data in the padding bytes was preserved.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       struct S {
@@ -123,37 +114,28 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // a : u32
-  0x12345678,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // @align(16) @size(20) b : u32
-  0xabcdef01,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // @size(12) c : u32
-  0x98765432,
-  0xdeadbeef,
-  0xdeadbeef]));
-
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // a : u32
+    0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // @align(16) @size(20) b : u32
+    0xabcdef01, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // @size(12) c : u32
+    0x98765432, 0xdeadbeef, 0xdeadbeef]
+    )
+  );
 });
 
 g.test('struct_nested').
 desc(
-`Test that padding bytes in nested structures are preserved.
+  `Test that padding bytes in nested structures are preserved.
 
      This test defines a set of nested structures that have padding and creates a read-write storage
      buffer with the root structure type. The shader assigns the whole variable at once, and we
      then test that data in the padding bytes was preserved.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       // Size of S1 is 48 bytes.
@@ -192,116 +174,65 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // a3 : S1
-  // a3.a1 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // a3.b1 : vec3<u32>
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  // a3.c1 : vec2<u32>
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
+    t,
+    wgsl,
+    new Uint32Array([
+    // a3 : S1
+    // a3.a1 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // a3.b1 : vec3<u32>
+    0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
+    // a3.c1 : vec2<u32>
+    0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
 
-  // b3 : S2
-  // b3.a2 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // b3.b2 : S1
-  // b3.b2.a1 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // b3.b2.b1 : vec3<u32>
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  // b3.b2.c1 : vec2<u32>
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  // b3.c2 : S1
-  // b3.c2.a1 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // b3.c2.b1 : vec3<u32>
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  // b3.c2.c1 : vec2<u32>
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
+    // b3 : S2
+    // b3.a2 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // b3.b2 : S1
+    // b3.b2.a1 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // b3.b2.b1 : vec3<u32>
+    0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
+    // b3.b2.c1 : vec2<u32>
+    0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
+    // b3.c2 : S1
+    // b3.c2.a1 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // b3.c2.b1 : vec3<u32>
+    0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
+    // b3.c2.c1 : vec2<u32>
+    0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
 
-  // c3 : S2
-  // c3.a2 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // c3.b2 : S1
-  // c3.b2.a1 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // c3.b2.b1 : vec3<u32>
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  // c3.b2.c1 : vec2<u32>
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  // c3.c2 : S1
-  // c3.c2.a1 : u32
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  // c3.c2.b1 : vec3<u32>
-  0x00000000,
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  // c3.c2.c1 : vec2<u32>
-  0x00000000,
-  0x00000000,
-  0xdeadbeef,
-  0xdeadbeef]));
-
-
+    // c3 : S2
+    // c3.a2 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // c3.b2 : S1
+    // c3.b2.a1 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // c3.b2.b1 : vec3<u32>
+    0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
+    // c3.b2.c1 : vec2<u32>
+    0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef,
+    // c3.c2 : S1
+    // c3.c2.a1 : u32
+    0x00000000, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef,
+    // c3.c2.b1 : vec3<u32>
+    0x00000000, 0x00000000, 0x00000000, 0xdeadbeef,
+    // c3.c2.c1 : vec2<u32>
+    0x00000000, 0x00000000, 0xdeadbeef, 0xdeadbeef]
+    )
+  );
 });
 
 g.test('array_of_vec3').
 desc(
-`Test that padding bytes in between array elements are preserved.
+  `Test that padding bytes in between array elements are preserved.
 
      This test defines creates a read-write storage buffer with type array<vec3, 4>. The shader
      assigns the whole variable at once, and we then test that data in the padding bytes was
      preserved.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read_write> buffer : array<vec3<u32>, 4>;
@@ -317,42 +248,30 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // buffer[0]
-  0x12345678,
-  0x12345678,
-  0x12345678,
-  0xdeadbeef,
-  // buffer[1]
-  0xabcdef01,
-  0xabcdef01,
-  0xabcdef01,
-  0xdeadbeef,
-  // buffer[2]
-  0x98765432,
-  0x98765432,
-  0x98765432,
-  0xdeadbeef,
-  // buffer[2]
-  0x0f0f0f0f,
-  0x0f0f0f0f,
-  0x0f0f0f0f,
-  0xdeadbeef]));
-
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // buffer[0]
+    0x12345678, 0x12345678, 0x12345678, 0xdeadbeef,
+    // buffer[1]
+    0xabcdef01, 0xabcdef01, 0xabcdef01, 0xdeadbeef,
+    // buffer[2]
+    0x98765432, 0x98765432, 0x98765432, 0xdeadbeef,
+    // buffer[2]
+    0x0f0f0f0f, 0x0f0f0f0f, 0x0f0f0f0f, 0xdeadbeef]
+    )
+  );
 });
 
 g.test('array_of_struct').
 desc(
-`Test that padding bytes in between array elements are preserved.
+  `Test that padding bytes in between array elements are preserved.
 
      This test defines creates a read-write storage buffer with type array<S, 4>, where S is a
      structure that contains padding bytes. The shader assigns the whole variable at once, and we
      then test that data in the padding bytes was preserved.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       struct S {
@@ -371,45 +290,27 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // buffer[0]
-  0x12345678,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  0x0f0f0f0f,
-  0x0f0f0f0f,
-  0x0f0f0f0f,
-  0xdeadbeef,
-  // buffer[1]
-  0xabcdef01,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  0x7c7c7c7c,
-  0x7c7c7c7c,
-  0x7c7c7c7c,
-  0xdeadbeef,
-  // buffer[2]
-  0x98765432,
-  0xdeadbeef,
-  0xdeadbeef,
-  0xdeadbeef,
-  0x18181818,
-  0x18181818,
-  0x18181818,
-  0xdeadbeef]));
-
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // buffer[0]
+    0x12345678, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x0f0f0f0f, 0x0f0f0f0f, 0x0f0f0f0f,
+    0xdeadbeef,
+    // buffer[1]
+    0xabcdef01, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x7c7c7c7c, 0x7c7c7c7c, 0x7c7c7c7c,
+    0xdeadbeef,
+    // buffer[2]
+    0x98765432, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0x18181818, 0x18181818, 0x18181818,
+    0xdeadbeef]
+    )
+  );
 });
 
 g.test('vec3').
 desc(
-`Test padding bytes are preserved when assigning to a variable of type vec3 (without a struct).
-    `).
-
+  `Test padding bytes are preserved when assigning to a variable of type vec3 (without a struct).
+    `
+).
 fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read_write> buffer : vec3<u32>;
@@ -424,15 +325,15 @@ fn((t) => {
 
 g.test('matCx3').
 desc(
-`Test padding bytes are preserved when assigning to a variable of type matCx3.
-    `).
-
+  `Test padding bytes are preserved when assigning to a variable of type matCx3.
+    `
+).
 params((u) =>
 u.
 combine('columns', [2, 3, 4]).
 combine('use_struct', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const cols = t.params.columns;
   const wgsl = `
@@ -462,19 +363,19 @@ fn((t) => {
 
 g.test('array_of_matCx3').
 desc(
-`Test that padding bytes in between array elements are preserved.
+  `Test that padding bytes in between array elements are preserved.
 
      This test defines creates a read-write storage buffer with type array<matCx3<f32>, 4>. The
      shader assigns the whole variable at once, and we then test that data in the padding bytes was
      preserved.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('columns', [2, 3, 4]).
 combine('use_struct', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const cols = t.params.columns;
   const wgsl = `

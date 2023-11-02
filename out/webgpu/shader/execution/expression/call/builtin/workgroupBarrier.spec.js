@@ -21,19 +21,19 @@ export const g = makeTestGroup(GPUTest);
 g.test('stage').
 specURL('https://www.w3.org/TR/WGSL/#sync-builtin-functions').
 desc(
-`
+  `
 All synchronization functions must only be used in the compute shader stage.
-`).
-
+`
+).
 params((u) => u.combine('stage', ['vertex', 'fragment', 'compute'])).
 unimplemented();
 
 g.test('barrier').
 specURL('https://www.w3.org/TR/WGSL/#sync-builtin-functions').
 desc(
-`
+  `
 fn workgroupBarrier()
-`).
-
+`
+).
 unimplemented();
 //# sourceMappingURL=workgroupBarrier.spec.js.map

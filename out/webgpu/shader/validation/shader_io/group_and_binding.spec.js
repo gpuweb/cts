@@ -4,11 +4,11 @@
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
-declareEntrypoint,
-kResourceEmitters,
-kResourceKindsA,
-kResourceKindsAll,
-kResourceKindsB } from
+  declareEntrypoint,
+  kResourceEmitters,
+  kResourceKindsA,
+  kResourceKindsAll,
+  kResourceKindsB } from
 
 './util.js';
 
@@ -22,16 +22,16 @@ combine('stage', ['vertex', 'fragment', 'compute']).
 combine('has_group', [true, false]).
 combine('has_binding', [true, false]).
 combine('resource', kResourceKindsAll).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const emitter = kResourceEmitters.get(t.params.resource);
   //const emitter = kResourceEmitters.get('uniform') as ResourceDeclarationEmitter;
   const code = emitter(
-  'R',
-  t.params.has_group ? 0 : undefined,
-  t.params.has_binding ? 0 : undefined);
-
+    'R',
+    t.params.has_group ? 0 : undefined,
+    t.params.has_binding ? 0 : undefined
+  );
   const expect = t.params.has_group && t.params.has_binding;
   t.expectCompileResult(expect, code);
 });
@@ -88,8 +88,8 @@ fn((t) => {
 
 g.test('single_entry_point').
 desc(
-`Test that two different resource variables in a shader must not have the same group and binding values, when considered as a pair.`).
-
+  `Test that two different resource variables in a shader must not have the same group and binding values, when considered as a pair.`
+).
 params((u) =>
 u.
 combine('stage', ['vertex', 'fragment', 'compute']).
@@ -100,8 +100,8 @@ combine('b_group', [0, 3]).
 combine('a_binding', [0, 3]).
 combine('b_binding', [0, 3]).
 combine('usage', ['direct', 'transitive']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const resourceA = kResourceEmitters.get(t.params.a_kind);
   const resourceB = kResourceEmitters.get(t.params.b_kind);
@@ -131,8 +131,8 @@ ${declareEntrypoint('main', t.params.stage, 'use_a(); use_b();')}
 
 g.test('different_entry_points').
 desc(
-`Test that resources may use the same binding points if exclusively accessed by different entry points.`).
-
+  `Test that resources may use the same binding points if exclusively accessed by different entry points.`
+).
 params((u) =>
 u.
 combine('a_stage', ['vertex', 'fragment', 'compute']).
@@ -140,8 +140,8 @@ combine('b_stage', ['vertex', 'fragment', 'compute']).
 combine('a_kind', kResourceKindsA).
 combine('b_kind', kResourceKindsB).
 combine('usage', ['direct', 'transitive']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const resourceA = kResourceEmitters.get(t.params.a_kind);
   const resourceB = kResourceEmitters.get(t.params.b_kind);

@@ -49,11 +49,11 @@ export const g = makeTestGroup(F);
 
 g.test('pass_end_invalid_order').
 desc(
-`
+  `
   Test that beginning a {compute,render} pass before ending the previous {compute,render} pass
   causes an error.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('pass0Type', ['compute', 'render']).
@@ -62,8 +62,8 @@ beginSubcases().
 combine('firstPassEnd', [true, false]).
 combine('endPasses', [[], [0], [1], [0, 1], [1, 0]])
 // Don't end the first pass multiple times (that generates a validation error but doesn't invalidate the encoder)
-.unless((p) => p.firstPassEnd && p.endPasses.includes(0))).
-
+.unless((p) => p.firstPassEnd && p.endPasses.includes(0))
+).
 fn((t) => {
   const { pass0Type, pass1Type, firstPassEnd, endPasses } = t.params;
 
@@ -99,8 +99,8 @@ u.
 combine('callCmd', ['beginComputePass', 'beginRenderPass', 'insertDebugMarker']).
 beginSubcases().
 combine('prePassType', ['compute', 'render', 'no-op']).
-combine('IsEncoderFinished', [false, true])).
-
+combine('IsEncoderFinished', [false, true])
+).
 fn((t) => {
   const { prePassType, IsEncoderFinished, callCmd } = t.params;
 
@@ -144,8 +144,8 @@ fn((t) => {
       t.expectValidationError(() => {
         encoder.insertDebugMarker('');
       }, IsEncoderFinished);
-      break;}
-
+      break;
+  }
 
   if (!IsEncoderFinished) {
     encoder.finish();
@@ -154,10 +154,10 @@ fn((t) => {
 
 g.test('pass_end_none').
 desc(
-`
+  `
   Test that ending a {compute,render} pass without ending the passes generates a validation error.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('passType', ['compute', 'render']).combine('endCount', [0, 1])).
 fn((t) => {
   const { passType, endCount } = t.params;
@@ -179,16 +179,16 @@ fn((t) => {
 
 g.test('pass_end_twice,basic').
 desc(
-'Test that ending a {compute,render} pass twice generates a validation error. The parent encoder (command encoder) can be either locked or open.').
-
+  'Test that ending a {compute,render} pass twice generates a validation error. The parent encoder (command encoder) can be either locked or open.'
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('passType', ['compute', 'render'])
 // Simply end twice, the parent encoder is open at that time. If the second pass end is in the middle of another pass, the parent encoder is locked. It should generate a validation error in either situation.
 .combine('endTwice', [false, true]).
 combine('secondEndInAnotherPass', [false, 'compute', 'render']).
-filter((p) => p.endTwice || !p.secondEndInAnotherPass)).
-
+filter((p) => p.endTwice || !p.secondEndInAnotherPass)
+).
 fn((t) => {
   const { passType, endTwice, secondEndInAnotherPass } = t.params;
 
@@ -224,8 +224,8 @@ fn((t) => {
 
 g.test('pass_end_twice,render_pass_invalid').
 desc(
-'Test that ending a render pass twice generates a validation error even if the pass is invalid.').
-
+  'Test that ending a render pass twice generates a validation error even if the pass is invalid.'
+).
 paramsSubcasesOnly((u) => u.combine('endTwice', [false, true])).
 fn((t) => {
   const { endTwice } = t.params;

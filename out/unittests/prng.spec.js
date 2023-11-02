@@ -35,9 +35,9 @@ g.test('check').fn((t) => {
   expected.forEach((_, i) => {
     const val = p.randomU32();
     t.expect(
-    val === expected[i],
-    `PRNG(1) failed produced the ${i}th expected item, ${val} instead of ${expected[i]})`);
-
+      val === expected[i],
+      `PRNG(1) failed produced the ${i}th expected item, ${val} instead of ${expected[i]})`
+    );
   });
 });
 
@@ -51,9 +51,9 @@ g.test('deterministic_random').fn((t) => {
       const lhs_val = lhs.random();
       const rhs_val = rhs.random();
       t.expect(
-      lhs_val === rhs_val,
-      `For seed ${seed}, the ${i}th item, PRNG was non-deterministic (${lhs_val} vs ${rhs_val})`);
-
+        lhs_val === rhs_val,
+        `For seed ${seed}, the ${i}th item, PRNG was non-deterministic (${lhs_val} vs ${rhs_val})`
+      );
     }
   });
 });
@@ -66,9 +66,9 @@ g.test('deterministic_randomU32').fn((t) => {
       const lhs_val = lhs.randomU32();
       const rhs_val = rhs.randomU32();
       t.expect(
-      lhs_val === rhs_val,
-      `For seed ${seed}, the ${i}th item, PRNG was non-deterministic (${lhs_val} vs ${rhs_val})`);
-
+        lhs_val === rhs_val,
+        `For seed ${seed}, the ${i}th item, PRNG was non-deterministic (${lhs_val} vs ${rhs_val})`
+      );
     }
   });
 });

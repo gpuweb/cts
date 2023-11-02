@@ -2,10 +2,10 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { SkipTestCase } from '../../common/framework/fixture.js';import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';import { getGPU, getDefaultRequestAdapterOptions } from '../../common/util/navigator_gpu.js';
 import {
-assert,
-raceWithRejectOnTimeout,
-assertReject,
-unreachable } from
+  assert,
+  raceWithRejectOnTimeout,
+  assertReject,
+  unreachable } from
 '../../common/util/util.js';
 import { getDefaultLimits, kLimits } from '../capability_info.js';
 
@@ -40,9 +40,9 @@ export class DevicePool {
     }
 
     assert(
-    this.holders !== 'failed',
-    `WebGPU device failed to initialize${errorMessage}; not retrying`);
-
+      this.holders !== 'failed',
+      `WebGPU device failed to initialize${errorMessage}; not retrying`
+    );
 
     const holder = await this.holders.getOrCreate(recorder, descriptor);
 
@@ -68,9 +68,9 @@ export class DevicePool {
       // has finished (or timed out). If not, it could cause a finite number of extra test
       // failures following this one (but should recover eventually).)
       assert(
-      holder.lostInfo === undefined,
-      `Device was unexpectedly lost. Reason: ${holder.lostInfo?.reason}, Message: ${holder.lostInfo?.message}`);
-
+        holder.lostInfo === undefined,
+        `Device was unexpectedly lost. Reason: ${holder.lostInfo?.reason}, Message: ${holder.lostInfo?.message}`
+      );
     } catch (ex) {
       // Any error that isn't explicitly TestFailedButDeviceReusable forces a new device to be
       // created for the next test.
@@ -142,8 +142,8 @@ class DescriptorToHolderMap {
     // Quick-reject descriptors that are known to be unsupported already.
     if (this.unsupported.has(key)) {
       throw new SkipTestCase(
-      `GPUDeviceDescriptor previously failed: ${JSON.stringify(descriptor)}`);
-
+        `GPUDeviceDescriptor previously failed: ${JSON.stringify(descriptor)}`
+      );
     }
 
     // Search for an existing device with the same descriptor.
@@ -165,8 +165,8 @@ class DescriptorToHolderMap {
       if (ex instanceof FeaturesNotSupported) {
         this.unsupported.add(key);
         throw new SkipTestCase(
-        `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`);
-
+          `GPUDeviceDescriptor not supported: ${JSON.stringify(descriptor)}\n${ex?.message ?? ''}`
+        );
       }
 
       throw ex;
@@ -289,7 +289,7 @@ class DeviceHolder {
   state = 'free';
   /** initially undefined; becomes set when the device is lost */
 
-
+  /** Set if the device is expected to be lost. */
 
 
   // Gets a device and creates a DeviceHolder.
@@ -366,8 +366,8 @@ class DeviceHolder {
       [gpuOutOfMemoryError, gpuInternalError, gpuValidationError] = await Promise.all([
       this.device.popErrorScope(),
       this.device.popErrorScope(),
-      this.device.popErrorScope()]);
-
+      this.device.popErrorScope()]
+      );
     } catch (ex) {
       assert(this.lostInfo !== undefined, 'popErrorScope failed; did beginTestScope get missed?');
       throw ex;
@@ -392,15 +392,15 @@ class DeviceHolder {
       assert(gpuInternalError instanceof GPUInternalError);
       // Allow the device to be reused.
       throw new TestFailedButDeviceReusable(
-      `Unexpected internal error occurred: ${gpuInternalError.message}`);
-
+        `Unexpected internal error occurred: ${gpuInternalError.message}`
+      );
     }
     if (gpuValidationError !== null) {
       assert(gpuValidationError instanceof GPUValidationError);
       // Allow the device to be reused.
       throw new TestFailedButDeviceReusable(
-      `Unexpected validation error occurred: ${gpuValidationError.message}`);
-
+        `Unexpected validation error occurred: ${gpuValidationError.message}`
+      );
     }
   }
 

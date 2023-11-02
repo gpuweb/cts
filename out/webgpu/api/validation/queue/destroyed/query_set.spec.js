@@ -9,11 +9,11 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('beginOcclusionQuery').
 desc(
-`
+  `
 Tests that use a destroyed query set in occlusion query on render pass encoder.
 - x= {destroyed, not destroyed (control case)}
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'destroyed'])).
 fn((t) => {
   const occlusionQuerySet = t.createQuerySetWithState(t.params.querySetState);
@@ -26,11 +26,11 @@ fn((t) => {
 
 g.test('writeTimestamp').
 desc(
-`
+  `
 Tests that use a destroyed query set in writeTimestamp on {non-pass, compute, render} encoder.
 - x= {destroyed, not destroyed (control case)}
-  `).
-
+  `
+).
 params((u) => u.beginSubcases().combine('querySetState', ['valid', 'destroyed'])).
 beforeAllSubcases((t) => t.selectDeviceOrSkipTestCase('timestamp-query')).
 fn((t) => {
@@ -46,11 +46,11 @@ fn((t) => {
 
 g.test('resolveQuerySet').
 desc(
-`
+  `
 Tests that use a destroyed query set in resolveQuerySet.
 - x= {destroyed, not destroyed (control case)}
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'destroyed'])).
 fn((t) => {
   const querySet = t.createQuerySetWithState(t.params.querySetState);

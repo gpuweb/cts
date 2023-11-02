@@ -5,26 +5,26 @@ Execution Tests for the f32 conversion operations
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import {
-bool,
-f32,
-f16,
-i32,
-TypeBool,
-TypeF32,
-TypeF16,
-TypeI32,
-TypeMat,
-TypeU32,
-u32 } from
+  bool,
+  f32,
+  f16,
+  i32,
+  TypeBool,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeMat,
+  TypeU32,
+  u32 } from
 '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
 import {
-fullF32Range,
-fullF16Range,
-fullI32Range,
-fullU32Range,
-sparseMatrixF32Range,
-sparseMatrixF16Range } from
+  fullF32Range,
+  fullF16Range,
+  fullI32Range,
+  fullU32Range,
+  sparseMatrixF32Range,
+  sparseMatrixF16Range } from
 '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
@@ -40,14 +40,14 @@ flatMap((cols) =>
 [true, false].map((nonConst) => ({
   [`f32_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f32.generateMatrixToMatrixCases(
-    sparseMatrixF32Range(cols, rows),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.correctlyRoundedMatrix);
-
+      sparseMatrixF32Range(cols, rows),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.correctlyRoundedMatrix
+    );
   }
-})))).
-
-
+}))
+)
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: f16_matCxR_[non_]const
@@ -59,14 +59,14 @@ flatMap((cols) =>
   [`f16_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
     // Input matrix is of f16 types, use f16.generateMatrixToMatrixCases.
     return FP.f16.generateMatrixToMatrixCases(
-    sparseMatrixF16Range(cols, rows),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f32.correctlyRoundedMatrix);
-
+      sparseMatrixF16Range(cols, rows),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f32.correctlyRoundedMatrix
+    );
   }
-})))).
-
-
+}))
+)
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('unary/f32_conversion', {
@@ -114,15 +114,15 @@ function matrixExperession(cols, rows) {
 g.test('bool').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 f32(e), where e is a bool
 
 The result is 1.0 if e is true and 0.0 otherwise
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('bool');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeBool], TypeF32, t.params, cases);
@@ -131,15 +131,15 @@ fn(async (t) => {
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#bool-builtin').
 desc(
-`
+  `
 f32(e), where e is a u32
 
 Converted to f32
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('u32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeU32], TypeF32, t.params, cases);
@@ -148,15 +148,15 @@ fn(async (t) => {
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 f32(e), where e is a i32
 
 Converted to f32
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('i32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeI32], TypeF32, t.params, cases);
@@ -165,15 +165,15 @@ fn(async (t) => {
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
 f32(e), where e is a f32
 
 Identity operation
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, vectorizeToExpression(t.params.vectorize), [TypeF32], TypeF32, t.params, cases);
@@ -186,38 +186,38 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `f32_mat${cols}x${rows}_const` :
-  `f32_mat${cols}x${rows}_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `f32_mat${cols}x${rows}_const` :
+    `f32_mat${cols}x${rows}_non_const`
+  );
   await run(
-  t,
-  matrixExperession(cols, rows),
-  [TypeMat(cols, rows, TypeF32)],
-  TypeMat(cols, rows, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    matrixExperession(cols, rows),
+    [TypeMat(cols, rows, TypeF32)],
+    TypeMat(cols, rows, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function').
 desc(
-`
+  `
   f32(e), where e is a f16
 
   Expect the same value, since all f16 values is exactly representable in f32.
-  `).
-
+  `
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
@@ -233,8 +233,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('cols', [2, 3, 4]).
-combine('rows', [2, 3, 4])).
-
+combine('rows', [2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
@@ -242,17 +242,17 @@ fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
   const cases = await d.get(
-  t.params.inputSource === 'const' ?
-  `f16_mat${cols}x${rows}_const` :
-  `f16_mat${cols}x${rows}_non_const`);
-
+    t.params.inputSource === 'const' ?
+    `f16_mat${cols}x${rows}_const` :
+    `f16_mat${cols}x${rows}_non_const`
+  );
   await run(
-  t,
-  matrixExperession(cols, rows),
-  [TypeMat(cols, rows, TypeF16)],
-  TypeMat(cols, rows, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    matrixExperession(cols, rows),
+    [TypeMat(cols, rows, TypeF16)],
+    TypeMat(cols, rows, TypeF32),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=f32_conversion.spec.js.map

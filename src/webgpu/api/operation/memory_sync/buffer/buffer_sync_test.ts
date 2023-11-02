@@ -20,8 +20,8 @@ export const kAllReadOps = [
   'b2t-copy',
 ] as const;
 
-export type ReadOp = typeof kAllReadOps[number];
-export type WriteOp = typeof kAllWriteOps[number];
+export type ReadOp = (typeof kAllReadOps)[number];
+export type WriteOp = (typeof kAllWriteOps)[number];
 
 export type Op = ReadOp | WriteOp;
 
@@ -31,42 +31,42 @@ interface OpInfo {
 
 const kOpInfo: {
   readonly [k in Op]: OpInfo;
-} = /* prettier-ignore */ {
+} = {
   'write-buffer': {
-    contexts: [ 'queue' ],
+    contexts: ['queue'],
   },
   'b2t-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
   },
   'b2b-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
   },
   't2b-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
   },
-  'storage': {
-    contexts: [ 'compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder' ],
+  storage: {
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
   },
   'storage-read': {
-    contexts: [ 'compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
   },
   'input-vertex': {
-    contexts: [ 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
   'input-index': {
-    contexts: [ 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
   'input-indirect': {
-    contexts: [ 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
   'input-indirect-index': {
-    contexts: [ 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
   'input-indirect-dispatch': {
-    contexts: [ 'compute-pass-encoder' ],
+    contexts: ['compute-pass-encoder'],
   },
   'constant-uniform': {
-    contexts: [ 'render-pass-encoder', 'render-bundle-encoder' ],
+    contexts: ['render-pass-encoder', 'render-bundle-encoder'],
   },
 };
 

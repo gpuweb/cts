@@ -17,24 +17,24 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('unary/f16_arithmetic', {
   negation: () => {
     return FP.f16.generateScalarToIntervalCases(
-    fullF16Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
-    'unfiltered',
-    FP.f16.negationInterval);
-
+      fullF16Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
+      'unfiltered',
+      FP.f16.negationInterval
+    );
   }
 });
 
 g.test('negation').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: -x
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).

@@ -1,16 +1,16 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import {
-SkipTestCase,
+  SkipTestCase,
 
-UnexpectedPassError } from
+  UnexpectedPassError } from
 
 
 '../framework/fixture.js';
 import {
 
-builderIterateCasesWithSubcases,
-kUnitCaseParamsBuilder } from
+  builderIterateCasesWithSubcases,
+  kUnitCaseParamsBuilder } from
 
 
 '../framework/params_builder.js';
@@ -22,8 +22,8 @@ import { compareQueries, Ordering } from '../internal/query/compare.js';
 import { TestQuerySingleCase } from '../internal/query/query.js';
 import { kPathSeparator } from '../internal/query/separators.js';
 import {
-stringifyPublicParams,
-stringifyPublicParamsUniquely } from
+  stringifyPublicParams,
+  stringifyPublicParamsUniquely } from
 '../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 
@@ -52,7 +52,7 @@ import { logToWebsocket } from './websocket_logger.js';
 
 
 
-
+// Interface for defining tests
 
 
 
@@ -105,11 +105,11 @@ export class TestGroup {
 
   checkName(name) {
     assert(
-    // Shouldn't happen due to the rule above. Just makes sure that treating
-    // unencoded strings as encoded strings is OK.
-    name === decodeURIComponent(name),
-    `Not decodeURIComponent-idempotent: ${name} !== ${decodeURIComponent(name)}`);
-
+      // Shouldn't happen due to the rule above. Just makes sure that treating
+      // unencoded strings as encoded strings is OK.
+      name === decodeURIComponent(name),
+      `Not decodeURIComponent-idempotent: ${name} !== ${decodeURIComponent(name)}`
+    );
     assert(!this.seen.has(name), `Duplicate test name: ${name}`);
 
     this.seen.add(name);
@@ -250,7 +250,7 @@ class TestBuilder {
     return this;
   }
 
-  specURL(url) {
+  specURL(_url) {
     return this;
   }
 
@@ -318,9 +318,9 @@ class TestBuilder {
         // A (hopefully) unique representation of a params value.
         const testcaseStringUnique = stringifyPublicParamsUniquely(params);
         assert(
-        !seen.has(testcaseStringUnique),
-        `Duplicate public test case params for test ${testPathString}: ${testcaseString}`);
-
+          !seen.has(testcaseStringUnique),
+          `Duplicate public test case params for test ${testPathString}: ${testcaseString}`
+        );
         seen.add(testcaseStringUnique);
       }
     }
@@ -369,15 +369,15 @@ class TestBuilder {
   makeCaseSpecific(params, subcases) {
     assert(this.testFn !== undefined, 'No test function (.fn()) for test');
     return new RunCaseSpecific(
-    this.testPath,
-    params,
-    this.isUnimplemented,
-    subcases,
-    this.fixture,
-    this.testFn,
-    this.beforeFn,
-    this.testCreationStack);
-
+      this.testPath,
+      params,
+      this.isUnimplemented,
+      subcases,
+      this.fixture,
+      this.testFn,
+      this.beforeFn,
+      this.testCreationStack
+    );
   }
 
   *iterate(caseFilter) {
@@ -395,9 +395,9 @@ class TestBuilder {
     }
 
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(
-    this.testCases,
-    caseFilterWithoutBatch))
-    {
+      this.testCases,
+      caseFilterWithoutBatch
+    )) {
       // If batches are not used, yield just one case.
       if (this.batchSize === 0 || subcases === undefined) {
         yield this.makeCaseSpecific(caseParams, subcases);
@@ -415,9 +415,9 @@ class TestBuilder {
       const makeCaseForBatch = (batch) => {
         const sliceStart = batch * this.batchSize;
         return this.makeCaseSpecific(
-        { ...caseParams, [kBatchParamName]: batch },
-        subcaseArray.slice(sliceStart, Math.min(subcaseArray.length, sliceStart + this.batchSize)));
-
+          { ...caseParams, [kBatchParamName]: batch },
+          subcaseArray.slice(sliceStart, Math.min(subcaseArray.length, sliceStart + this.batchSize))
+        );
       };
 
       // If we filter to just one batch, yield it.
@@ -543,8 +543,8 @@ class RunCaseSpecific {
             didSeeFail = true;
             break;
           default:
-            unreachable();}
-
+            unreachable();
+        }
       }
       return didSeeFail ? 'fail' : 'pass';
     };
@@ -624,11 +624,11 @@ class RunCaseSpecific {
 
             const params = mergeParams(this.params, subParams);
             const subcaseQuery = new TestQuerySingleCase(
-            selfQuery.suite,
-            selfQuery.filePathParts,
-            selfQuery.testPathParts,
-            params);
-
+              selfQuery.suite,
+              selfQuery.filePathParts,
+              selfQuery.testPathParts,
+              params
+            );
 
             // Limit the maximum number of subcases in flight.
             if (subcasesInFlight >= maxSubcasesInFlight) {
@@ -643,12 +643,12 @@ class RunCaseSpecific {
             // Runs async without waiting so that subsequent subcases can start.
             // All finalization steps will be waited on at the end of the testcase.
             const finalizePromise = this.runTest(
-            subRec,
-            sharedState,
-            params,
-            /* throwSkip */true,
-            getExpectedStatus(subcaseQuery)).
-
+              subRec,
+              sharedState,
+              params,
+              /* throwSkip */true,
+              getExpectedStatus(subcaseQuery)
+            ).
             then(() => {
               subRec.info(new Error('OK'));
             }).
@@ -666,8 +666,8 @@ class RunCaseSpecific {
             finally(subcaseFinishedCallback);
 
             allPreviousSubcasesFinalizedPromise = allPreviousSubcasesFinalizedPromise.then(
-            () => finalizePromise);
-
+              () => finalizePromise
+            );
             ++totalCount;
           }
 
@@ -679,12 +679,12 @@ class RunCaseSpecific {
           }
         } else {
           await this.runTest(
-          rec,
-          sharedState,
-          this.params,
-          /* throwSkip */false,
-          getExpectedStatus(selfQuery));
-
+            rec,
+            sharedState,
+            this.params,
+            /* throwSkip */false,
+            getExpectedStatus(selfQuery)
+          );
         }
       } finally {
         testHeartbeatCallback();

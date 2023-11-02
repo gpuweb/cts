@@ -6,9 +6,9 @@ This test dedicatedly tests createRenderPipeline validation issues related to th
 Note: entry point matching tests are in ../shader_module/entry_point.spec.ts
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-getFragmentShaderCodeWithOutput,
-kDefaultVertexShaderCode,
-kDefaultFragmentShaderCode } from
+  getFragmentShaderCodeWithOutput,
+  kDefaultVertexShaderCode,
+  kDefaultFragmentShaderCode } from
 '../../../util/shader.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
@@ -19,15 +19,15 @@ const values = [0, 1, 0, 1];
 
 g.test('device_mismatch').
 desc(
-'Tests createRenderPipeline(Async) cannot be called with a shader module created from another device').
-
+  'Tests createRenderPipeline(Async) cannot be called with a shader module created from another device'
+).
 paramsSubcasesOnly((u) =>
 u.combine('isAsync', [true, false]).combineWithParams([
 { vertex_mismatched: false, fragment_mismatched: false, _success: true },
 { vertex_mismatched: true, fragment_mismatched: false, _success: false },
-{ vertex_mismatched: false, fragment_mismatched: true, _success: false }])).
-
-
+{ vertex_mismatched: false, fragment_mismatched: true, _success: false }]
+)
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -51,13 +51,13 @@ fn((t) => {
       module: fragment_mismatched ?
       t.mismatchedDevice.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
-        { values, plainType: 'f32', componentCount: 4 }])
-
+        { values, plainType: 'f32', componentCount: 4 }]
+        )
       }) :
       t.device.createShaderModule({
         code: getFragmentShaderCodeWithOutput([
-        { values, plainType: 'f32', componentCount: 4 }])
-
+        { values, plainType: 'f32', componentCount: 4 }]
+        )
       }),
       entryPoint: 'main',
       targets: [{ format: 'rgba8unorm' }]

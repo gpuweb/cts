@@ -182,10 +182,10 @@ combine('type', [
 { name: 'mat4x4<f16>', storage: 8, uniform: 8 },
 { name: 'array<vec2<i32>, 2>', storage: 8, uniform: 16 },
 { name: 'array<vec4<i32>, 2>', storage: 8, uniform: 16 },
-{ name: 'S', storage: 8, uniform: 16 }]).
-
-beginSubcases()).
-
+{ name: 'S', storage: 8, uniform: 16 }]
+).
+beginSubcases()
+).
 beforeAllSubcases((t) => {
   if (t.params.type.name.includes('f16')) {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -266,8 +266,8 @@ combine('scope', [
 'fn-var',
 'fn-return',
 'while-stmt',
-undefined]).
-
+undefined]
+).
 combine('attribute', [
 {
   'private-var': false,
@@ -278,10 +278,10 @@ combine('attribute', [
   'fn-var': false,
   'fn-return': false,
   'while-stmt': false
-}]).
-
-beginSubcases()).
-
+}]
+).
+beginSubcases()
+).
 fn((t) => {
   const scope = t.params.scope;
 

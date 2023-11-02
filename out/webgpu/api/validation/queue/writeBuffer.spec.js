@@ -6,7 +6,7 @@ Tests writeBuffer validation.
 Note: buffer map state is tested in ./buffer_mapped.spec.ts.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-kTypedArrayBufferViewConstructors } from
+  kTypedArrayBufferViewConstructors } from
 
 
 '../../../../common/util/util.js';
@@ -19,11 +19,11 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('buffer_state').
 desc(
-`
+  `
   Test that the buffer used for GPUQueue.writeBuffer() must be valid. Tests calling writeBuffer
   with {valid, invalid, destroyed} buffer.
-  `).
-
+  `
+).
 params((u) => u.combine('bufferState', kResourceStates)).
 fn((t) => {
   const { bufferState } = t.params;
@@ -41,7 +41,7 @@ fn((t) => {
 
 g.test('ranges').
 desc(
-`
+  `
   Tests that the data ranges given to GPUQueue.writeBuffer() are properly validated. Tests calling
   writeBuffer with both TypedArrays and ArrayBuffers and checks that the data offset and size is
   interpreted correctly for both.
@@ -52,8 +52,8 @@ desc(
     - Describes a valid range of the destination buffer and source buffer.
     - Fits fully within the destination buffer.
     - Has a byte size which is a multiple of 4.
-  `).
-
+  `
+).
 fn((t) => {
   const queue = t.device.queue;
 
@@ -155,11 +155,11 @@ fn((t) => {
 
 g.test('usages').
 desc(
-`
+  `
   Tests calling writeBuffer with the buffer missed COPY_DST usage.
     - buffer {with, without} COPY DST usage
-  `).
-
+  `
+).
 paramsSubcasesOnly([
 { usage: GPUConst.BufferUsage.COPY_DST, _valid: true }, // control case
 { usage: GPUConst.BufferUsage.STORAGE, _valid: false }, // without COPY_DST usage

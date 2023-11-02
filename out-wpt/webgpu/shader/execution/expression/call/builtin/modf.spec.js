@@ -1,6 +1,6 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ export const description = `
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/export const description = `
 Execution tests for the 'modf' builtin function
 
 T is f32 or f16 or AbstractFloat
@@ -16,16 +16,15 @@ Splits the components of |e| into fractional and whole number parts.
 The |i|'th component of the whole and fractional parts equal the whole and fractional parts of modf(e[i]).
 Returns the result_struct for the given type.
 
-`;
-import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+`;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
   toVector,
   TypeAbstractFloat,
   TypeF16,
   TypeF32,
-  TypeVec,
-} from '../../../../../util/conversion.js';
+  TypeVec } from
+'../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import {
   fullF16Range,
@@ -33,37 +32,39 @@ import {
   fullF64Range,
   vectorF16Range,
   vectorF32Range,
-  vectorF64Range,
-} from '../../../../../util/math.js';
+  vectorF64Range } from
+'../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   abstractFloatShaderBuilder,
   allInputSources,
   basicExpressionBuilder,
+
   onlyConstInputSource,
-  run,
-} from '../../expression.js';
+  run } from
+
+'../../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
 /** @returns an ShaderBuilder that evaluates modf and returns .whole from the result structure */
 function wholeBuilder() {
-  return basicExpressionBuilder(value => `modf(${value}).whole`);
+  return basicExpressionBuilder((value) => `modf(${value}).whole`);
 }
 
 /** @returns an ShaderBuilder that evaluates modf and returns .fract from the result structure */
 function fractBuilder() {
-  return basicExpressionBuilder(value => `modf(${value}).fract`);
+  return basicExpressionBuilder((value) => `modf(${value}).fract`);
 }
 
 /** @returns an ShaderBuilder that evaluates modf and returns .whole from the result structure for AbstractFloats */
 function abstractWholeBuilder() {
-  return abstractFloatShaderBuilder(value => `modf(${value}).whole`);
+  return abstractFloatShaderBuilder((value) => `modf(${value}).whole`);
 }
 
 /** @returns an ShaderBuilder that evaluates modf and returns .fract from the result structure for AbstractFloats */
 function abstractFractBuilder() {
-  return abstractFloatShaderBuilder(value => `modf(${value}).fract`);
+  return abstractFloatShaderBuilder((value) => `modf(${value}).fract`);
 }
 
 /** @returns a fract Case for a scalar vector input */
@@ -88,7 +89,7 @@ function makeScalarCaseWhole(kind, n) {
 function makeVectorCaseFract(kind, v) {
   const fp = FP[kind];
   v = v.map(fp.quantize);
-  const fs = v.map(e => {
+  const fs = v.map((e) => {
     return fp.modfInterval(e).fract;
   });
 
@@ -99,7 +100,7 @@ function makeVectorCaseFract(kind, v) {
 function makeVectorCaseWhole(kind, v) {
   const fp = FP[kind];
   v = v.map(fp.quantize);
-  const ws = v.map(e => {
+  const ws = v.map((e) => {
     return fp.modfInterval(e).whole;
   });
 
@@ -109,62 +110,62 @@ function makeVectorCaseWhole(kind, v) {
 const scalar_range = {
   f32: fullF32Range(),
   f16: fullF16Range(),
-  abstract: fullF64Range(),
+  abstract: fullF64Range()
 };
 
 const vector_range = {
   f32: {
     2: vectorF32Range(2),
     3: vectorF32Range(3),
-    4: vectorF32Range(4),
+    4: vectorF32Range(4)
   },
   f16: {
     2: vectorF16Range(2),
     3: vectorF16Range(3),
-    4: vectorF16Range(4),
+    4: vectorF16Range(4)
   },
   abstract: {
     2: vectorF64Range(2),
     3: vectorF64Range(3),
-    4: vectorF64Range(4),
-  },
+    4: vectorF64Range(4)
+  }
 };
 
 // Cases: [f32|f16|abstract]_[fract|whole]
-const scalar_cases = ['f32', 'f16', 'abstract']
-  .flatMap(kind =>
-    ['whole', 'fract'].map(portion => ({
-      [`${kind}_${portion}`]: () => {
-        const makeCase = portion === 'whole' ? makeScalarCaseWhole : makeScalarCaseFract;
-        return scalar_range[kind].map(makeCase.bind(null, kind));
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
+const scalar_cases = ['f32', 'f16', 'abstract'].
+flatMap((kind) =>
+['whole', 'fract'].map((portion) => ({
+  [`${kind}_${portion}`]: () => {
+    const makeCase = portion === 'whole' ? makeScalarCaseWhole : makeScalarCaseFract;
+    return scalar_range[kind].map(makeCase.bind(null, kind));
+  }
+}))
+).
+reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: [f32|f16|abstract]_vecN_[fract|whole]
-const vec_cases = ['f32', 'f16', 'abstract']
-  .flatMap(kind =>
-    [2, 3, 4].flatMap(n =>
-      ['whole', 'fract'].map(portion => ({
-        [`${kind}_vec${n}_${portion}`]: () => {
-          const makeCase = portion === 'whole' ? makeVectorCaseWhole : makeVectorCaseFract;
-          return vector_range[kind][n].map(makeCase.bind(null, kind));
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
+const vec_cases = ['f32', 'f16', 'abstract'].
+flatMap((kind) =>
+[2, 3, 4].flatMap((n) =>
+['whole', 'fract'].map((portion) => ({
+  [`${kind}_vec${n}_${portion}`]: () => {
+    const makeCase = portion === 'whole' ? makeVectorCaseWhole : makeVectorCaseFract;
+    return vector_range[kind][n].map(makeCase.bind(null, kind));
+  }
+}))
+)
+).
+reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('modf', {
   ...scalar_cases,
-  ...vec_cases,
+  ...vec_cases
 });
 
-g.test('f32_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is f32
 
 struct __modf_result_f32 {
@@ -172,17 +173,17 @@ struct __modf_result_f32 {
   whole : f32  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_fract');
-    await run(t, fractBuilder(), [TypeF32], TypeF32, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_fract');
+  await run(t, fractBuilder(), [TypeF32], TypeF32, t.params, cases);
+});
 
-g.test('f32_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is f32
 
 struct __modf_result_f32 {
@@ -190,17 +191,17 @@ struct __modf_result_f32 {
   whole : f32  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_whole');
-    await run(t, wholeBuilder(), [TypeF32], TypeF32, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_whole');
+  await run(t, wholeBuilder(), [TypeF32], TypeF32, t.params, cases);
+});
 
-g.test('f32_vec2_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec2_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<f32>
 
 struct __modf_result_vec2_f32 {
@@ -208,17 +209,17 @@ struct __modf_result_vec2_f32 {
   whole : vec2<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec2_fract');
-    await run(t, fractBuilder(), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec2_fract');
+  await run(t, fractBuilder(), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
+});
 
-g.test('f32_vec2_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec2_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<f32>
 
 struct __modf_result_vec2_f32 {
@@ -226,17 +227,17 @@ struct __modf_result_vec2_f32 {
   whole : vec2<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec2_whole');
-    await run(t, wholeBuilder(), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec2_whole');
+  await run(t, wholeBuilder(), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
+});
 
-g.test('f32_vec3_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec3_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<f32>
 
 struct __modf_result_vec3_f32 {
@@ -244,17 +245,17 @@ struct __modf_result_vec3_f32 {
   whole : vec3<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec3_fract');
-    await run(t, fractBuilder(), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec3_fract');
+  await run(t, fractBuilder(), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
+});
 
-g.test('f32_vec3_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec3_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<f32>
 
 struct __modf_result_vec3_f32 {
@@ -262,17 +263,17 @@ struct __modf_result_vec3_f32 {
   whole : vec3<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec3_whole');
-    await run(t, wholeBuilder(), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec3_whole');
+  await run(t, wholeBuilder(), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
+});
 
-g.test('f32_vec4_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec4_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<f32>
 
 struct __modf_result_vec4_f32 {
@@ -280,17 +281,17 @@ struct __modf_result_vec4_f32 {
   whole : vec4<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec4_fract');
-    await run(t, fractBuilder(), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec4_fract');
+  await run(t, fractBuilder(), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
+});
 
-g.test('f32_vec4_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f32_vec4_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<f32>
 
 struct __modf_result_vec4_f32 {
@@ -298,17 +299,17 @@ struct __modf_result_vec4_f32 {
   whole : vec4<f32>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .fn(async t => {
-    const cases = await d.get('f32_vec4_whole');
-    await run(t, wholeBuilder(), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+fn(async (t) => {
+  const cases = await d.get('f32_vec4_whole');
+  await run(t, wholeBuilder(), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
+});
 
-g.test('f16_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is f16
 
 struct __modf_result_f16 {
@@ -316,20 +317,20 @@ struct __modf_result_f16 {
   whole : f16  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_fract');
-    await run(t, fractBuilder(), [TypeF16], TypeF16, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_fract');
+  await run(t, fractBuilder(), [TypeF16], TypeF16, t.params, cases);
+});
 
-g.test('f16_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is f16
 
 struct __modf_result_f16 {
@@ -337,20 +338,20 @@ struct __modf_result_f16 {
   whole : f16  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_whole');
-    await run(t, wholeBuilder(), [TypeF16], TypeF16, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_whole');
+  await run(t, wholeBuilder(), [TypeF16], TypeF16, t.params, cases);
+});
 
-g.test('f16_vec2_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec2_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<f16>
 
 struct __modf_result_vec2_f16 {
@@ -358,20 +359,20 @@ struct __modf_result_vec2_f16 {
   whole : vec2<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec2_fract');
-    await run(t, fractBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec2_fract');
+  await run(t, fractBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
+});
 
-g.test('f16_vec2_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec2_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<f16>
 
 struct __modf_result_vec2_f16 {
@@ -379,20 +380,20 @@ struct __modf_result_vec2_f16 {
   whole : vec2<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec2_whole');
-    await run(t, wholeBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec2_whole');
+  await run(t, wholeBuilder(), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
+});
 
-g.test('f16_vec3_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec3_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<f16>
 
 struct __modf_result_vec3_f16 {
@@ -400,20 +401,20 @@ struct __modf_result_vec3_f16 {
   whole : vec3<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec3_fract');
-    await run(t, fractBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec3_fract');
+  await run(t, fractBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
+});
 
-g.test('f16_vec3_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec3_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<f16>
 
 struct __modf_result_vec3_f16 {
@@ -421,20 +422,20 @@ struct __modf_result_vec3_f16 {
   whole : vec3<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec3_whole');
-    await run(t, wholeBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec3_whole');
+  await run(t, wholeBuilder(), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
+});
 
-g.test('f16_vec4_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec4_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<f16>
 
 struct __modf_result_vec4_f16 {
@@ -442,20 +443,20 @@ struct __modf_result_vec4_f16 {
   whole : vec4<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec4_fract');
-    await run(t, fractBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec4_fract');
+  await run(t, fractBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
+});
 
-g.test('f16_vec4_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('f16_vec4_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<f16>
 
 struct __modf_result_vec4_f16 {
@@ -463,20 +464,20 @@ struct __modf_result_vec4_f16 {
   whole : vec4<f16>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', allInputSources))
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
-  .fn(async t => {
-    const cases = await d.get('f16_vec4_whole');
-    await run(t, wholeBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', allInputSources)).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+}).
+fn(async (t) => {
+  const cases = await d.get('f16_vec4_whole');
+  await run(t, wholeBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
+});
 
-g.test('abstract_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is AbstractFloat
 
 struct __modf_result_abstract {
@@ -484,17 +485,17 @@ struct __modf_result_abstract {
   whole : AbstractFloat  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_fract');
-    await run(t, abstractFractBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_fract');
+  await run(t, abstractFractBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+});
 
-g.test('abstract_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is AbstractFloat
 
 struct __modf_result_abstract {
@@ -502,17 +503,17 @@ struct __modf_result_abstract {
   whole : AbstractFloat  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_whole');
-    await run(t, abstractWholeBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_whole');
+  await run(t, abstractWholeBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+});
 
-g.test('abstract_vec2_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec2_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<abstract>
 
 struct __modf_result_vec2_abstract {
@@ -520,24 +521,24 @@ struct __modf_result_vec2_abstract {
   whole : vec2<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec2_fract');
-    await run(
-      t,
-      abstractFractBuilder(),
-      [TypeVec(2, TypeAbstractFloat)],
-      TypeVec(2, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec2_fract');
+  await run(
+    t,
+    abstractFractBuilder(),
+    [TypeVec(2, TypeAbstractFloat)],
+    TypeVec(2, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
-g.test('abstract_vec2_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec2_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec2<abstract>
 
 struct __modf_result_vec2_abstract {
@@ -545,24 +546,24 @@ struct __modf_result_vec2_abstract {
   whole : vec2<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec2_whole');
-    await run(
-      t,
-      abstractWholeBuilder(),
-      [TypeVec(2, TypeAbstractFloat)],
-      TypeVec(2, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec2_whole');
+  await run(
+    t,
+    abstractWholeBuilder(),
+    [TypeVec(2, TypeAbstractFloat)],
+    TypeVec(2, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
-g.test('abstract_vec3_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec3_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<abstract>
 
 struct __modf_result_vec3_abstract {
@@ -570,24 +571,24 @@ struct __modf_result_vec3_abstract {
   whole : vec3<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec3_fract');
-    await run(
-      t,
-      abstractFractBuilder(),
-      [TypeVec(3, TypeAbstractFloat)],
-      TypeVec(3, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec3_fract');
+  await run(
+    t,
+    abstractFractBuilder(),
+    [TypeVec(3, TypeAbstractFloat)],
+    TypeVec(3, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
-g.test('abstract_vec3_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec3_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec3<abstract>
 
 struct __modf_result_vec3_abstract {
@@ -595,24 +596,24 @@ struct __modf_result_vec3_abstract {
   whole : vec3<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec3_whole');
-    await run(
-      t,
-      abstractWholeBuilder(),
-      [TypeVec(3, TypeAbstractFloat)],
-      TypeVec(3, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec3_whole');
+  await run(
+    t,
+    abstractWholeBuilder(),
+    [TypeVec(3, TypeAbstractFloat)],
+    TypeVec(3, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
-g.test('abstract_vec4_fract')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec4_fract').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<abstract>
 
 struct __modf_result_vec4_abstract {
@@ -620,24 +621,24 @@ struct __modf_result_vec4_abstract {
   whole : vec4<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec4_fract');
-    await run(
-      t,
-      abstractFractBuilder(),
-      [TypeVec(4, TypeAbstractFloat)],
-      TypeVec(4, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec4_fract');
+  await run(
+    t,
+    abstractFractBuilder(),
+    [TypeVec(4, TypeAbstractFloat)],
+    TypeVec(4, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
-g.test('abstract_vec4_whole')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(
-    `
+g.test('abstract_vec4_whole').
+specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
+desc(
+  `
 T is vec4<abstract>
 
 struct __modf_result_vec4_abstract {
@@ -645,16 +646,16 @@ struct __modf_result_vec4_abstract {
   whole : vec4<abstract>  // whole part
 }
 `
-  )
-  .params(u => u.combine('inputSource', onlyConstInputSource))
-  .fn(async t => {
-    const cases = await d.get('abstract_vec4_whole');
-    await run(
-      t,
-      abstractWholeBuilder(),
-      [TypeVec(4, TypeAbstractFloat)],
-      TypeVec(4, TypeAbstractFloat),
-      t.params,
-      cases
-    );
-  });
+).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec4_whole');
+  await run(
+    t,
+    abstractWholeBuilder(),
+    [TypeVec(4, TypeAbstractFloat)],
+    TypeVec(4, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});

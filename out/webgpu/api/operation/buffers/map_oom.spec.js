@@ -22,15 +22,15 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('mappedAtCreation').
 desc(
-`Test creating a very large buffer mappedAtCreation buffer should throw a RangeError only
+  `Test creating a very large buffer mappedAtCreation buffer should throw a RangeError only
      because such a large allocation cannot be created when we initialize an active buffer mapping.
-`).
-
+`
+).
 params(
-oomAndSizeParams //
-.beginSubcases().
-combine('usage', kBufferUsages)).
-
+  oomAndSizeParams //
+  .beginSubcases().
+  combine('usage', kBufferUsages)
+).
 fn((t) => {
   const { oom, usage, size } = t.params;
 

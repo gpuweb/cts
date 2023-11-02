@@ -49,12 +49,12 @@ export const kOpInfo =
     readUsage: GPUConst.TextureUsage.COPY_SRC,
     writeUsage: 0
   },
-  'storage': {
+  storage: {
     contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.STORAGE
   },
-  'sample': {
+  sample: {
     contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
     readUsage: GPUConst.TextureUsage.SAMPLED,
     writeUsage: 0
@@ -105,8 +105,8 @@ context)
             case 't2t-copy':
             case 'write-texture':
               // These don't occur in a render pass.
-              return true;}
-
+              return true;
+          }
           break;
         case 'b2t-copy':
         case 'sample':
@@ -114,8 +114,8 @@ context)
         case 't2t-copy':
         case 'write-texture':
           // These are not write usages, or don't occur in a render pass.
-          break;}
-
+          break;
+      }
       return true;
     };
     return checkImpl(ops[0], ops[1]) && checkImpl(ops[1], ops[0]);

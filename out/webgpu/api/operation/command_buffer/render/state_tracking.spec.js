@@ -79,17 +79,17 @@ export const g = makeTestGroup(VertexAndIndexStateTrackingTest);
 
 g.test('set_index_buffer_without_changing_buffer').
 desc(
-`
+  `
   Test that setting index buffer states (index format, offset, size) multiple times in different
   orders still keeps the correctness of each draw call.
-`).
-
+`
+).
 fn((t) => {
   // Initialize the index buffer with 5 uint16 indices (0, 1, 2, 3, 4).
   const indexBuffer = t.makeBufferWithContents(
-  new Uint16Array([0, 1, 2, 3, 4]),
-  GPUBufferUsage.INDEX);
-
+    new Uint16Array([0, 1, 2, 3, 4]),
+    GPUBufferUsage.INDEX
+  );
 
   // Initialize the vertex buffer with required vertex attributes (position: f32, color: f32x4)
   // Note that the maximum index in the test is 0x10000.
@@ -173,23 +173,23 @@ fn((t) => {
   t.queue.submit([encoder.finish()]);
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsBytes('rgba8unorm', (coord) =>
-  coord.x === 1 ? kColors[kPositions.length - 1] : kColors[coord.x]),
-
-  outputTextureSize);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsBytes('rgba8unorm', (coord) =>
+    coord.x === 1 ? kColors[kPositions.length - 1] : kColors[coord.x]
+    ),
+    outputTextureSize
+  );
 });
 
 g.test('set_vertex_buffer_without_changing_buffer').
 desc(
-`
+  `
   Test that setting vertex buffer states (offset, size) multiple times in different orders still
   keeps the correctness of each draw call.
   - Tries several different sequences of setVertexBuffer+draw commands, each of which draws vertices
     in all 4 output pixels, and check they were drawn correctly.
-`).
-
+`
+).
 fn((t) => {
   const kPositions = [-0.875, -0.625, -0.375, -0.125, 0.125, 0.375, 0.625, 0.875];
   const kColors = [
@@ -251,46 +251,46 @@ fn((t) => {
 
   // Change 'offset' in setVertexBuffer()
   renderPass.setVertexBuffer(
-  0,
-  vertexBuffer,
-  t.kVertexAttributeSize * 2,
-  t.kVertexAttributeSize * 2);
-
+    0,
+    vertexBuffer,
+    t.kVertexAttributeSize * 2,
+    t.kVertexAttributeSize * 2
+  );
   renderPass.draw(2);
 
   // Change 'size' again in setVertexBuffer()
   renderPass.setVertexBuffer(
-  0,
-  vertexBuffer,
-  t.kVertexAttributeSize * 4,
-  t.kVertexAttributeSize * 2);
-
+    0,
+    vertexBuffer,
+    t.kVertexAttributeSize * 4,
+    t.kVertexAttributeSize * 2
+  );
   renderPass.setVertexBuffer(
-  0,
-  vertexBuffer,
-  t.kVertexAttributeSize * 4,
-  t.kVertexAttributeSize * 4);
-
+    0,
+    vertexBuffer,
+    t.kVertexAttributeSize * 4,
+    t.kVertexAttributeSize * 4
+  );
   renderPass.draw(4);
 
   renderPass.end();
   t.queue.submit([encoder.finish()]);
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kColors[coord.x]),
-  outputTextureSize);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kColors[coord.x]),
+    outputTextureSize
+  );
 });
 
 g.test('change_pipeline_before_and_after_vertex_buffer').
 desc(
-`
+  `
   Test that changing the pipeline {before,after} the vertex buffers still keeps the correctness of
   each draw call (In D3D12, the vertex buffer stride is part of SetVertexBuffer instead of the
   pipeline.)
-`).
-
+`
+).
 fn((t) => {
   const kPositions = [-0.8, -0.4, 0.0, 0.4, 0.8, 0.9];
   const kColors = [
@@ -362,24 +362,24 @@ fn((t) => {
   t.queue.submit([encoder.finish()]);
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsBytes('rgba8unorm', (coord) =>
-  coord.x === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[coord.x]),
-
-  outputTextureSize);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsBytes('rgba8unorm', (coord) =>
+    coord.x === 1 ? new Uint8Array([0, 0, 0, 255]) : kColors[coord.x]
+    ),
+    outputTextureSize
+  );
 });
 
 g.test('set_vertex_buffer_but_not_used_in_draw').
 desc(
-`
+  `
   Test that drawing after having set vertex buffer slots not used by the pipeline works correctly.
   - In the test there are 2 draw calls in the render pass. The first draw call uses 2 vertex buffers
     (position and color), and the second draw call only uses 1 vertex buffer (for color, the vertex
     position is defined as constant values in the vertex shader). The test verifies if both of these
     two draw calls work correctly.
-  `).
-
+  `
+).
 fn((t) => {
   const kPositions = new Float32Array([-0.75, -0.25]);
   const kColors = new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]);
@@ -540,18 +540,18 @@ fn((t) => {
 
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kExpectedColors[coord.x]),
-  outputTextureSize);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kExpectedColors[coord.x]),
+    outputTextureSize
+  );
 });
 
 g.test('set_index_buffer_before_non_indexed_draw').
 desc(
-`
+  `
   Test that setting / not setting the index buffer does not impact a non-indexed draw.
-  `).
-
+  `
+).
 fn((t) => {
   const kPositions = [-0.75, -0.25, 0.25, 0.75];
   const kColors = [
@@ -617,9 +617,9 @@ fn((t) => {
   t.queue.submit([encoder.finish()]);
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kColors[coord.x]),
-  outputTextureSize);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsBytes('rgba8unorm', (coord) => kColors[coord.x]),
+    outputTextureSize
+  );
 });
 //# sourceMappingURL=state_tracking.spec.js.map

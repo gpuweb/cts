@@ -5,9 +5,9 @@ Tests for validation in createBuffer.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import {
-kAllBufferUsageBits,
-kBufferSizeAlignment,
-kBufferUsages } from
+  kAllBufferUsageBits,
+  kBufferSizeAlignment,
+  kBufferUsages } from
 '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import { kMaxSafeMultipleOf8 } from '../../../util/math.js';
@@ -18,8 +18,8 @@ export const g = makeTestGroup(ValidationTest);
 assert(kBufferSizeAlignment === 4);
 g.test('size').
 desc(
-'Test buffer size alignment is validated to be a multiple of 4 if mappedAtCreation is true.').
-
+  'Test buffer size alignment is validated to be a multiple of 4 if mappedAtCreation is true.'
+).
 params((u) =>
 u.
 combine('mappedAtCreation', [false, true]).
@@ -29,18 +29,18 @@ combine('size', [
 kBufferSizeAlignment * 0.5,
 kBufferSizeAlignment,
 kBufferSizeAlignment * 1.5,
-kBufferSizeAlignment * 2])).
-
-
+kBufferSizeAlignment * 2]
+)
+).
 fn((t) => {
   const { mappedAtCreation, size } = t.params;
   const isValid = !mappedAtCreation || size % kBufferSizeAlignment === 0;
   const usage = BufferUsage.COPY_SRC;
   t.expectGPUError(
-  'validation',
-  () => t.device.createBuffer({ size, usage, mappedAtCreation }),
-  !isValid);
-
+    'validation',
+    () => t.device.createBuffer({ size, usage, mappedAtCreation }),
+    !isValid
+  );
 });
 
 g.test('limit').
@@ -63,8 +63,8 @@ u.
 combine('usage1', [0, ...kBufferUsages, kInvalidUsage]).
 combine('usage2', [0, ...kBufferUsages, kInvalidUsage]).
 beginSubcases().
-combine('mappedAtCreation', [false, true])).
-
+combine('mappedAtCreation', [false, true])
+).
 fn((t) => {
   const { mappedAtCreation, usage1, usage2 } = t.params;
   const usage = usage1 | usage2;
@@ -78,21 +78,21 @@ fn((t) => {
   (usage & ~(GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE)) === 0);
 
   t.expectGPUError(
-  'validation',
-  () => t.device.createBuffer({ size: kBufferSizeAlignment * 2, usage, mappedAtCreation }),
-  !isValid);
-
+    'validation',
+    () => t.device.createBuffer({ size: kBufferSizeAlignment * 2, usage, mappedAtCreation }),
+    !isValid
+  );
 });
 
 const BufferUsage = GPUConst.BufferUsage;
 
 g.test('createBuffer_invalid_and_oom').
 desc(
-`When creating a mappable buffer, it's expected that shmem may be immediately allocated
+  `When creating a mappable buffer, it's expected that shmem may be immediately allocated
 (in the content process, before validation occurs in the GPU process). If the buffer is really
 large, though, it could fail shmem allocation before validation fails. Ensure that OOM error is
-hidden behind the "more severe" validation error.`).
-
+hidden behind the "more severe" validation error.`
+).
 paramsSubcasesOnly((u) =>
 u.combineWithParams([
 { _valid: true, usage: BufferUsage.UNIFORM, size: 16 },
@@ -104,8 +104,8 @@ u.combineWithParams([
 { usage: BufferUsage.MAP_READ | BufferUsage.UNIFORM, size: 16 },
 { usage: BufferUsage.MAP_READ | BufferUsage.UNIFORM, size: kMaxSafeMultipleOf8 },
 { usage: BufferUsage.MAP_READ | BufferUsage.UNIFORM, size: 0x20_0000_0000 } // 128 GiB
-])).
-
+])
+).
 fn((t) => {
   const { _valid, usage, size } = t.params;
 

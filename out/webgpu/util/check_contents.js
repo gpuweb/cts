@@ -18,12 +18,12 @@ import { generatePrettyTable } from './pretty_diff_tables.js';
 
 /** Generate an expected value at `index`, to test for equality with the actual value. */
 
+/** Check whether the actual `value` at `index` is as expected. */
 
-
-
-
-
-
+/**
+ * Provides a pretty-printing implementation for a particular CheckElementsPredicate.
+ * This is an array; each element provides info to print an additional row in the error message.
+ */
 
 
 
@@ -77,17 +77,17 @@ actual,
 expected)
 {
   const error = checkElementsPassPredicate(
-  actual,
-  (index, value) =>
-  value >= Math.min(expected[0](index), expected[1](index)) &&
-  value <= Math.max(expected[0](index), expected[1](index)),
-  {
-    predicatePrinter: [
-    { leftHeader: 'between', getValueForCell: (index) => expected[0](index) },
-    { leftHeader: 'and', getValueForCell: (index) => expected[1](index) }]
+    actual,
+    (index, value) =>
+    value >= Math.min(expected[0](index), expected[1](index)) &&
+    value <= Math.max(expected[0](index), expected[1](index)),
+    {
+      predicatePrinter: [
+      { leftHeader: 'between', getValueForCell: (index) => expected[0](index) },
+      { leftHeader: 'and', getValueForCell: (index) => expected[1](index) }]
 
-  });
-
+    }
+  );
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
 }
@@ -101,15 +101,15 @@ actual,
 expected)
 {
   const error = checkElementsPassPredicate(
-  actual,
-  (index, value) => value === expected[0][index] || value === expected[1][index],
-  {
-    predicatePrinter: [
-    { leftHeader: 'either', getValueForCell: (index) => expected[0][index] },
-    { leftHeader: 'or', getValueForCell: (index) => expected[1][index] }]
+    actual,
+    (index, value) => value === expected[0][index] || value === expected[1][index],
+    {
+      predicatePrinter: [
+      { leftHeader: 'either', getValueForCell: (index) => expected[0][index] },
+      { leftHeader: 'or', getValueForCell: (index) => expected[1][index] }]
 
-  });
-
+    }
+  );
   // If there was an error, extend it with additional extras.
   return error ? new ErrorWithExtra(error, () => ({ expected })) : undefined;
 }
@@ -231,11 +231,11 @@ function failCheckElements({
   if (predicatePrinter) {
     for (const { leftHeader, getValueForCell: cell } of predicatePrinter) {
       printExpected.push(
-      function* () {
-        yield* [leftHeader, ''];
-        yield* iterRange(printElementsCount, (i) => cell(printElementsStart + i));
-      }());
-
+        function* () {
+          yield* [leftHeader, ''];
+          yield* iterRange(printElementsCount, (i) => cell(printElementsStart + i));
+        }()
+      );
     }
   }
 
@@ -253,8 +253,8 @@ function failCheckElements({
 ${generatePrettyTable(opts, [
   ['actual ==', numberPrefix, ...printActual],
   printFailedValueMarkers,
-  ...printExpected])
-  }`;
+  ...printExpected]
+  )}`;
   return new ErrorWithExtra(msg, () => ({
     actual: actual.slice()
   }));

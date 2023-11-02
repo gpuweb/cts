@@ -46,19 +46,19 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createRenderPipeline,at_over').
 desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`).
 params(
-kMaximumLimitBaseParams.combine('async', [false, true]).combine('pipelineType', kPipelineTypes)).
-
+  kMaximumLimitBaseParams.combine('async', [false, true]).combine('pipelineType', kPipelineTypes)
+).
 fn(async (t) => {
   const { limitTest, testValueName, async, pipelineType } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const pipelineDescriptor = getPipelineDescriptor(device, pipelineType, testValue);
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const pipelineDescriptor = getPipelineDescriptor(device, pipelineType, testValue);
 
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
-  });
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
+    }
+  );
 });
 
 g.test('setVertexBuffer,at_over').
@@ -67,28 +67,28 @@ params(kMaximumLimitBaseParams.combine('encoderType', kRenderEncoderTypes)).
 fn(async (t) => {
   const { limitTest, testValueName, encoderType } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError, actualLimit }) => {
-    const lastIndex = testValue - 1;
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError, actualLimit }) => {
+      const lastIndex = testValue - 1;
 
-    const buffer = device.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.VERTEX
-    });
+      const buffer = device.createBuffer({
+        size: 16,
+        usage: GPUBufferUsage.VERTEX
+      });
 
-    await t.testGPURenderCommandsMixin(
-    encoderType,
-    ({ mixin }) => {
-      mixin.setVertexBuffer(lastIndex, buffer);
-    },
-    shouldError,
-    `lastIndex: ${lastIndex}, actualLimit: ${actualLimit}, shouldError: ${shouldError}`);
+      await t.testGPURenderCommandsMixin(
+        encoderType,
+        ({ mixin }) => {
+          mixin.setVertexBuffer(lastIndex, buffer);
+        },
+        shouldError,
+        `lastIndex: ${lastIndex}, actualLimit: ${actualLimit}, shouldError: ${shouldError}`
+      );
 
-
-    buffer.destroy();
-  });
-
+      buffer.destroy();
+    }
+  );
 });
 
 g.test('validate,maxBindGroupsPlusVertexBuffers').

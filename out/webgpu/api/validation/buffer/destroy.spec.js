@@ -13,8 +13,8 @@ g.test('all_usages').
 desc('Test destroying buffers of every usage type.').
 paramsSubcasesOnly((u) =>
 u //
-.combine('usage', kBufferUsages)).
-
+.combine('usage', kBufferUsages)
+).
 fn((t) => {
   const { usage } = t.params;
   const buf = t.device.createBuffer({
@@ -34,19 +34,19 @@ fn((t) => {
 
 g.test('twice').
 desc(
-`Test that destroying a buffer more than once is allowed.
+  `Test that destroying a buffer more than once is allowed.
       - Tests buffers which are mapped at creation or not
-      - Tests buffers with various usages`).
-
+      - Tests buffers with various usages`
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('mappedAtCreation', [false, true]).
 combineWithParams([
 { size: 4, usage: GPUConst.BufferUsage.COPY_SRC },
 { size: 4, usage: GPUConst.BufferUsage.MAP_WRITE | GPUConst.BufferUsage.COPY_SRC },
-{ size: 4, usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ }])).
-
-
+{ size: 4, usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ }]
+)
+).
 fn((t) => {
   const buf = t.device.createBuffer(t.params);
 
@@ -56,10 +56,10 @@ fn((t) => {
 
 g.test('while_mapped').
 desc(
-`Test destroying buffers while mapped or after being unmapped.
+  `Test destroying buffers while mapped or after being unmapped.
       - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
-      - Tests while {mapped, mapped at creation, unmapped}`).
-
+      - Tests while {mapped, mapped at creation, unmapped}`
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('mappedAtCreation', [false, true]).
@@ -75,10 +75,10 @@ combineWithParams([
 {
   usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
   mapMode: GPUConst.MapMode.READ
-}]).
-
-unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)).
-
+}]
+).
+unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)
+).
 fn(async (t) => {
   const { usage, mapMode, mappedAtCreation, unmapBeforeDestroy } = t.params;
   const buf = t.device.createBuffer({

@@ -15,15 +15,15 @@ TODO: Add externalTexture to kResourceTypes [1]
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { memcpy, unreachable } from '../../../../../common/util/util.js';
 import {
-kSamplerBindingTypes,
-kShaderStageCombinations,
-kBufferBindingTypes } from
+  kSamplerBindingTypes,
+  kShaderStageCombinations,
+  kBufferBindingTypes } from
 
 '../../../../capability_info.js';
 import { GPUConst } from '../../../../constants.js';
 import {
 
-kProgrammableEncoderTypes } from
+  kProgrammableEncoderTypes } from
 '../../../../util/command_buffer_maker.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -158,8 +158,8 @@ class F extends ValidationTest {
         pass.dispatchWorkgroupsIndirect(this.getIndirectBuffer([x, 1, 1]), 0);
         break;
       default:
-        break;}
-
+        break;
+    }
   }
 
   doRender(
@@ -184,8 +184,8 @@ class F extends ValidationTest {
         pass.drawIndexedIndirect(this.getIndirectBuffer([vertexCount, 1, 0, 0, 0]), 0);
         break;
       default:
-        break;}
-
+        break;
+    }
   }
 
   createBindGroupLayoutEntry(
@@ -210,8 +210,8 @@ class F extends ValidationTest {
         break;
       case 'storageTex':
         entry.storageTexture = { access: 'write-only', format: 'rgba8unorm' };
-        break;}
-
+        break;
+    }
 
     return entry;
   }
@@ -240,12 +240,12 @@ class F extends ValidationTest {
       }
       if (dynamicOffsets) {
         encoder.setBindGroup(
-        i,
-        bindGroup,
-        new Uint32Array(dynamicOffsets),
-        0,
-        dynamicOffsets.length);
-
+          i,
+          bindGroup,
+          new Uint32Array(dynamicOffsets),
+          0,
+          dynamicOffsets.length
+        );
       } else {
         encoder.setBindGroup(i, bindGroup);
       }
@@ -265,24 +265,24 @@ export const g = makeTestGroup(F);
 
 g.test('bind_groups_and_pipeline_layout_mismatch').
 desc(
-`
+  `
     Tests the bind groups must match the requirements of the pipeline layout.
     - bind groups required by the pipeline layout are required.
     - bind groups unused by the pipeline layout can be set or not.
-    `).
-
+    `
+).
 params(
-kCompatTestParams.
-beginSubcases().
-combineWithParams([
-{ setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: true, _success: true },
-{ setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: false, _success: true },
-{ setBindGroup0: true, setBindGroup1: false, setUnusedBindGroup2: true, _success: false },
-{ setBindGroup0: false, setBindGroup1: true, setUnusedBindGroup2: true, _success: false },
-{ setBindGroup0: false, setBindGroup1: false, setUnusedBindGroup2: false, _success: false }]).
-
-combine('useU32Array', [false, true])).
-
+  kCompatTestParams.
+  beginSubcases().
+  combineWithParams([
+  { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: true, _success: true },
+  { setBindGroup0: true, setBindGroup1: true, setUnusedBindGroup2: false, _success: true },
+  { setBindGroup0: true, setBindGroup1: false, setUnusedBindGroup2: true, _success: false },
+  { setBindGroup0: false, setBindGroup1: true, setUnusedBindGroup2: true, _success: false },
+  { setBindGroup0: false, setBindGroup1: false, setUnusedBindGroup2: false, _success: false }]
+  ).
+  combine('useU32Array', [false, true])
+).
 fn((t) => {
   const {
     encoderType,
@@ -333,37 +333,37 @@ fn((t) => {
 
   // Test without the dispatch/draw (should always be valid)
   t.runTest(
-  encoderType,
-  pipeline,
-  [bindGroup0, bindGroup1, unusedBindGroup2],
-  dynamicOffsets,
-  undefined,
-  false,
-  true);
-
+    encoderType,
+    pipeline,
+    [bindGroup0, bindGroup1, unusedBindGroup2],
+    dynamicOffsets,
+    undefined,
+    false,
+    true
+  );
 
   // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
   t.runTest(
-  encoderType,
-  pipeline,
-  [bindGroup0, bindGroup1, unusedBindGroup2],
-  dynamicOffsets,
-  call,
-  callWithZero,
-  _success);
-
+    encoderType,
+    pipeline,
+    [bindGroup0, bindGroup1, unusedBindGroup2],
+    dynamicOffsets,
+    call,
+    callWithZero,
+    _success
+  );
 });
 
 g.test('buffer_binding,render_pipeline').
 desc(
-`
+  `
   The GPUBufferBindingLayout bindings configure should be exactly
   same in PipelineLayout and bindgroup.
   - TODO: test more draw functions, e.g. indirect
   - TODO: test more visibilities, e.g. vertex
   - TODO: bind group should be created with different layout
-  `).
-
+  `
+).
 params((u) => u.combine('type', kBufferBindingTypes)).
 fn((t) => {
   const { type } = t.params;
@@ -400,9 +400,9 @@ fn((t) => {
     buffer: {
       type
     }
-  }]]);
+  }]]
 
-
+  );
 
   const { encoder, validateFinish } = t.createEncoder('render pass');
   encoder.setPipeline(pipeline);
@@ -414,18 +414,18 @@ fn((t) => {
 
 g.test('sampler_binding,render_pipeline').
 desc(
-`
+  `
   The GPUSamplerBindingLayout bindings configure should be exactly
   same in PipelineLayout and bindgroup.
   - TODO: test more draw functions, e.g. indirect
   - TODO: test more visibilities, e.g. vertex
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('bglType', kSamplerBindingTypes).
-combine('bgType', kSamplerBindingTypes)).
-
+combine('bgType', kSamplerBindingTypes)
+).
 fn((t) => {
   const { bglType, bgType } = t.params;
   const bindGroup = t.device.createBindGroup({
@@ -458,9 +458,9 @@ fn((t) => {
     sampler: {
       type: bglType
     }
-  }]]);
+  }]]
 
-
+  );
 
   const { encoder, validateFinish } = t.createEncoder('render pass');
   encoder.setPipeline(pipeline);
@@ -472,31 +472,24 @@ fn((t) => {
 
 g.test('bgl_binding_mismatch').
 desc(
-'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]').
-
+  'Tests the binding number must exist or not exist in both bindGroups[i].layout and pipelineLayout.bgls[i]'
+).
 params(
-kCompatTestParams.
-beginSubcases().
-combineWithParams([
-{ bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
-{ bgBindings: [0, 1, 2], plBindings: [0, 1, 3], _success: false },
-{ bgBindings: [0, 2], plBindings: [0, 2], _success: true },
-{ bgBindings: [0, 2], plBindings: [2, 0], _success: true },
-{ bgBindings: [0, 1, 2], plBindings: [0, 1], _success: false },
-{ bgBindings: [0, 1], plBindings: [0, 1, 2], _success: false }]).
-
-combine('useU32Array', [false, true])).
-
+  kCompatTestParams.
+  beginSubcases().
+  combineWithParams([
+  { bgBindings: [0, 1, 2], plBindings: [0, 1, 2], _success: true },
+  { bgBindings: [0, 1, 2], plBindings: [0, 1, 3], _success: false },
+  { bgBindings: [0, 2], plBindings: [0, 2], _success: true },
+  { bgBindings: [0, 2], plBindings: [2, 0], _success: true },
+  { bgBindings: [0, 1, 2], plBindings: [0, 1], _success: false },
+  { bgBindings: [0, 1], plBindings: [0, 1, 2], _success: false }]
+  ).
+  combine('useU32Array', [false, true])
+).
 fn((t) => {
-  const {
-    encoderType,
-    call,
-    callWithZero,
-    bgBindings,
-    plBindings,
-    _success,
-    useU32Array
-  } = t.params;
+  const { encoderType, call, callWithZero, bgBindings, plBindings, _success, useU32Array } =
+  t.params;
   const visibility =
   encoderType === 'compute pass' ? GPUShaderStage.COMPUTE : GPUShaderStage.VERTEX;
 
@@ -535,20 +528,20 @@ fn((t) => {
 g.test('bgl_visibility_mismatch').
 desc('Tests the visibility in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched').
 params(
-kCompatTestParams.
-beginSubcases().
-combine('bgVisibility', kShaderStageCombinations).
-expand('plVisibility', (p) =>
-p.encoderType === 'compute pass' ?
-[GPUConst.ShaderStage.COMPUTE] :
-[
-GPUConst.ShaderStage.VERTEX,
-GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT]).
+  kCompatTestParams.
+  beginSubcases().
+  combine('bgVisibility', kShaderStageCombinations).
+  expand('plVisibility', (p) =>
+  p.encoderType === 'compute pass' ?
+  [GPUConst.ShaderStage.COMPUTE] :
+  [
+  GPUConst.ShaderStage.VERTEX,
+  GPUConst.ShaderStage.FRAGMENT,
+  GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT]
 
-
-combine('useU32Array', [false, true])).
-
+  ).
+  combine('useU32Array', [false, true])
+).
 fn((t) => {
   const { encoderType, call, callWithZero, bgVisibility, plVisibility, useU32Array } = t.params;
 
@@ -582,39 +575,33 @@ fn((t) => {
 
   // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
   t.runTest(
-  encoderType,
-  pipeline,
-  [bindGroup],
-  dynamicOffsets,
-  call,
-  callWithZero,
-  bgVisibility === plVisibility);
-
+    encoderType,
+    pipeline,
+    [bindGroup],
+    dynamicOffsets,
+    call,
+    callWithZero,
+    bgVisibility === plVisibility
+  );
 });
 
 g.test('bgl_resource_type_mismatch').
 desc(
-`
+  `
   Tests the binding resource type in bindGroups[i].layout and pipelineLayout.bgls[i] must be matched
   - TODO: Test externalTexture
-  `).
-
+  `
+).
 params(
-kCompatTestParams.
-beginSubcases().
-combine('bgResourceType', kResourceTypes).
-combine('plResourceType', kResourceTypes).
-expand('useU32Array', (p) => p.bgResourceType === 'uniformBuf' ? [true, false] : [false])).
-
+  kCompatTestParams.
+  beginSubcases().
+  combine('bgResourceType', kResourceTypes).
+  combine('plResourceType', kResourceTypes).
+  expand('useU32Array', (p) => p.bgResourceType === 'uniformBuf' ? [true, false] : [false])
+).
 fn((t) => {
-  const {
-    encoderType,
-    call,
-    callWithZero,
-    bgResourceType,
-    plResourceType,
-    useU32Array
-  } = t.params;
+  const { encoderType, call, callWithZero, bgResourceType, plResourceType, useU32Array } =
+  t.params;
 
   const bglEntries = [
   t.createBindGroupLayoutEntry(encoderType, bgResourceType, useU32Array)];
@@ -636,27 +623,27 @@ fn((t) => {
 
   // Test with the dispatch/draw, to make sure the validation happens in dispatch/draw.
   t.runTest(
-  encoderType,
-  pipeline,
-  [bindGroup],
-  dynamicOffsets,
-  call,
-  callWithZero,
-  bgResourceType === plResourceType);
-
+    encoderType,
+    pipeline,
+    [bindGroup],
+    dynamicOffsets,
+    call,
+    callWithZero,
+    bgResourceType === plResourceType
+  );
 });
 
 g.test('empty_bind_group_layouts_requires_empty_bind_groups,compute_pass').
 desc(
-`
+  `
   Test that a compute pipeline with empty bind groups layouts requires empty bind groups to be set.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('bindGroupLayoutEntryCount', [3, 4]).
-combine('computeCommand', ['dispatchIndirect', 'dispatch'])).
-
+combine('computeCommand', ['dispatchIndirect', 'dispatch'])
+).
 fn((t) => {
   const { bindGroupLayoutEntryCount, computeCommand } = t.params;
 
@@ -705,10 +692,10 @@ fn((t) => {
 
 g.test('empty_bind_group_layouts_requires_empty_bind_groups,render_pass').
 desc(
-`
+  `
   Test that a render pipeline with empty bind groups layouts requires empty bind groups to be set.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('bindGroupLayoutEntryCount', [3, 4]).
@@ -716,9 +703,9 @@ combine('renderCommand', [
 'draw',
 'drawIndexed',
 'drawIndirect',
-'drawIndexedIndirect'])).
-
-
+'drawIndexedIndirect']
+)
+).
 fn((t) => {
   const { bindGroupLayoutEntryCount, renderCommand } = t.params;
 

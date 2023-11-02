@@ -10,8 +10,8 @@ params((u) =>
 u.
 combine('x', [1, 2, 3]) //
 .beginSubcases().
-combine('y', [1, 2, 3])).
-
+combine('y', [1, 2, 3])
+).
 fn((t) => {
   const { x, y } = t.params;
   if (x + y > 5) {

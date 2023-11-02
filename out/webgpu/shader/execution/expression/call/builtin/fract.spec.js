@@ -23,49 +23,49 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('fract', {
   f32: () => {
     return FP.f32.generateScalarToIntervalCases(
-    [
-    0.5, // 0.5 -> 0.5
-    0.9, // ~0.9 -> ~0.9
-    1, // 1 -> 0
-    2, // 2 -> 0
-    1.11, // ~1.11 -> ~0.11
-    10.0001, // ~10.0001 -> ~0.0001
-    -0.1, // ~-0.1 -> ~0.9
-    -0.5, // -0.5 -> 0.5
-    -0.9, // ~-0.9 -> ~0.1
-    -1, // -1 -> 0
-    -2, // -2 -> 0
-    -1.11, // ~-1.11 -> ~0.89
-    -10.0001, // -10.0001 -> ~0.9999
-    0x80000000, // https://github.com/gpuweb/cts/issues/2766
-    ...fullF32Range()],
+      [
+      0.5, // 0.5 -> 0.5
+      0.9, // ~0.9 -> ~0.9
+      1, // 1 -> 0
+      2, // 2 -> 0
+      1.11, // ~1.11 -> ~0.11
+      10.0001, // ~10.0001 -> ~0.0001
+      -0.1, // ~-0.1 -> ~0.9
+      -0.5, // -0.5 -> 0.5
+      -0.9, // ~-0.9 -> ~0.1
+      -1, // -1 -> 0
+      -2, // -2 -> 0
+      -1.11, // ~-1.11 -> ~0.89
+      -10.0001, // -10.0001 -> ~0.9999
+      0x80000000, // https://github.com/gpuweb/cts/issues/2766
+      ...fullF32Range()],
 
-    'unfiltered',
-    FP.f32.fractInterval);
-
+      'unfiltered',
+      FP.f32.fractInterval
+    );
   },
   f16: () => {
     return FP.f16.generateScalarToIntervalCases(
-    [
-    0.5, // 0.5 -> 0.5
-    0.9, // ~0.9 -> ~0.9
-    1, // 1 -> 0
-    2, // 2 -> 0
-    1.11, // ~1.11 -> ~0.11
-    10.0078125, // 10.0078125 -> 0.0078125
-    -0.1, // ~-0.1 -> ~0.9
-    -0.5, // -0.5 -> 0.5
-    -0.9, // ~-0.9 -> ~0.1
-    -1, // -1 -> 0
-    -2, // -2 -> 0
-    -1.11, // ~-1.11 -> ~0.89
-    -10.0078125, // -10.0078125 -> 0.9921875
-    658.5, // 658.5 -> 0.5
-    ...fullF16Range()],
+      [
+      0.5, // 0.5 -> 0.5
+      0.9, // ~0.9 -> ~0.9
+      1, // 1 -> 0
+      2, // 2 -> 0
+      1.11, // ~1.11 -> ~0.11
+      10.0078125, // 10.0078125 -> 0.0078125
+      -0.1, // ~-0.1 -> ~0.9
+      -0.5, // -0.5 -> 0.5
+      -0.9, // ~-0.9 -> ~0.1
+      -1, // -1 -> 0
+      -2, // -2 -> 0
+      -1.11, // ~-1.11 -> ~0.89
+      -10.0078125, // -10.0078125 -> 0.9921875
+      658.5, // 658.5 -> 0.5
+      ...fullF16Range()],
 
-    'unfiltered',
-    FP.f16.fractInterval);
-
+      'unfiltered',
+      FP.f16.fractInterval
+    );
   }
 });
 
@@ -73,16 +73,16 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('f32');
   await run(t, builtin('fract'), [TypeF32], TypeF32, t.params, cases);
@@ -92,8 +92,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

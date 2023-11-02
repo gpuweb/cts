@@ -16,17 +16,17 @@ TODO: implement all canvas types, see TODO on kCanvasTypes.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
 import {
-kCanvasAlphaModes,
-kCanvasColorSpaces,
-kCanvasTextureFormats } from
+  kCanvasAlphaModes,
+  kCanvasColorSpaces,
+  kCanvasTextureFormats } from
 '../../capability_info.js';
 import { GPUTest } from '../../gpu_test.js';
 import { checkElementsEqual } from '../../util/check_contents.js';
 import {
-kAllCanvasTypes,
+  kAllCanvasTypes,
 
-createCanvas,
-createOnscreenCanvas } from
+  createCanvas,
+  createOnscreenCanvas } from
 '../../util/create_elements.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -47,17 +47,17 @@ const kPixelValueFloat = 0x66 / 0xff; // 0.4
 const expect = {
 
   'opaque': new Uint8ClampedArray([
-  0, 0, kPixelValue, 0xff, // blue
-  0, kPixelValue, 0, 0xff, // green
-  kPixelValue, 0, 0, 0xff, // red
-  kPixelValue, kPixelValue, 0, 0xff // yellow
+  0x00, 0x00, kPixelValue, 0xff, // blue
+  0x00, kPixelValue, 0x00, 0xff, // green
+  kPixelValue, 0x00, 0x00, 0xff, // red
+  kPixelValue, kPixelValue, 0x00, 0xff // yellow
   ]),
 
   'premultiplied': new Uint8ClampedArray([
-  0, 0, 0xff, kPixelValue, // blue
-  0, 0xff, 0, kPixelValue, // green
-  0xff, 0, 0, kPixelValue, // red
-  0xff, 0xff, 0, kPixelValue // yellow
+  0x00, 0x00, 0xff, kPixelValue, // blue
+  0x00, 0xff, 0x00, kPixelValue, // green
+  0xff, 0x00, 0x00, kPixelValue, // red
+  0xff, 0xff, 0x00, kPixelValue // yellow
   ])
 };
 
@@ -97,10 +97,10 @@ canvasType)
     });
     pass.end();
     encoder.copyTextureToTexture(
-    { texture: tempTexture },
-    { texture: canvasTexture, origin },
-    { width: 1, height: 1 });
-
+      { texture: tempTexture },
+      { texture: canvasTexture, origin },
+      { width: 1, height: 1 }
+    );
   };
 
   clearOnePixel([0, 0], [0, 0, kPixelValueFloat, kPixelValueFloat]);
@@ -187,7 +187,7 @@ expect)
 
 g.test('onscreenCanvas,snapshot').
 desc(
-`
+  `
     Ensure snapshot of canvas with WebGPU context is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
@@ -196,23 +196,23 @@ desc(
 
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('format', kCanvasTextureFormats).
 combine('alphaMode', kCanvasAlphaModes).
 combine('colorSpace', kCanvasColorSpaces).
-combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])).
-
+combine('snapshotType', ['toDataURL', 'toBlob', 'imageBitmap'])
+).
 fn(async (t) => {
   const canvas = initWebGPUCanvasContent(
-  t,
-  t.params.format,
-  t.params.alphaMode,
-  t.params.colorSpace,
-  'onscreen');
-
+    t,
+    t.params.format,
+    t.params.alphaMode,
+    t.params.colorSpace,
+    'onscreen'
+  );
 
   let snapshot;
   switch (t.params.snapshotType) {
@@ -241,15 +241,15 @@ fn(async (t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   checkImageResult(t, snapshot, t.params.colorSpace, expect[t.params.alphaMode]);
 });
 
 g.test('offscreenCanvas,snapshot').
 desc(
-`
+  `
     Ensure snapshot of offscreenCanvas with WebGPU context is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
@@ -258,28 +258,28 @@ desc(
 
     TODO: Snapshot offscreenCanvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('format', kCanvasTextureFormats).
 combine('alphaMode', kCanvasAlphaModes).
 combine('colorSpace', kCanvasColorSpaces).
-combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])).
-
+combine('snapshotType', ['convertToBlob', 'transferToImageBitmap', 'imageBitmap'])
+).
 fn(async (t) => {
   const offscreenCanvas = initWebGPUCanvasContent(
-  t,
-  t.params.format,
-  t.params.alphaMode,
-  t.params.colorSpace,
-  'offscreen');
-
+    t,
+    t.params.format,
+    t.params.alphaMode,
+    t.params.colorSpace,
+    'offscreen'
+  );
 
   let snapshot;
   switch (t.params.snapshotType) {
     case 'convertToBlob':{
-        if (typeof offscreenCanvas.convertToBlob === undefined) {
+        if (typeof offscreenCanvas.convertToBlob === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.convertToBlob");
           return;
         }
@@ -292,7 +292,7 @@ fn(async (t) => {
         break;
       }
     case 'transferToImageBitmap':{
-        if (typeof offscreenCanvas.transferToImageBitmap === undefined) {
+        if (typeof offscreenCanvas.transferToImageBitmap === 'undefined') {
           t.skip("Browser doesn't support OffscreenCanvas.transferToImageBitmap");
           return;
         }
@@ -304,28 +304,28 @@ fn(async (t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   checkImageResult(t, snapshot, t.params.colorSpace, expect[t.params.alphaMode]);
 });
 
 g.test('onscreenCanvas,uploadToWebGL').
 desc(
-`
+  `
     Ensure upload WebGPU context canvas to webgl texture is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
     - upload methods = {texImage2D, texSubImage2D}
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('format', kCanvasTextureFormats).
 combine('alphaMode', kCanvasAlphaModes).
 combine('webgl', ['webgl', 'webgl2']).
-combine('upload', ['texImage2D', 'texSubImage2D'])).
-
+combine('upload', ['texImage2D', 'texSubImage2D'])
+).
 fn((t) => {
   const { format, webgl, upload } = t.params;
   const canvas = initWebGPUCanvasContent(t, format, t.params.alphaMode, 'srgb', 'onscreen');
@@ -345,22 +345,22 @@ fn((t) => {
       }
     case 'texSubImage2D':{
         gl.texImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        canvas.width,
-        canvas.height,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        null);
-
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          canvas.width,
+          canvas.height,
+          0,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          null
+        );
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   const fb = gl.createFramebuffer();
 
@@ -376,23 +376,23 @@ fn((t) => {
 
 g.test('drawTo2DCanvas').
 desc(
-`
+  `
     Ensure draw WebGPU context canvas to 2d context canvas/offscreenCanvas is correct with
     - various WebGPU canvas texture formats
     - WebGPU canvas alpha mode = {"opaque", "premultiplied"}
     - colorSpace = {"srgb", "display-p3"}
     - WebGPU canvas type = {"onscreen", "offscreen"}
     - 2d canvas type = {"onscreen", "offscreen"}
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('format', kCanvasTextureFormats).
 combine('alphaMode', kCanvasAlphaModes).
 combine('colorSpace', kCanvasColorSpaces).
 combine('webgpuCanvasType', kAllCanvasTypes).
-combine('canvas2DType', kAllCanvasTypes)).
-
+combine('canvas2DType', kAllCanvasTypes)
+).
 fn((t) => {
   const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;
 
@@ -411,8 +411,8 @@ fn((t) => {
 
 g.test('transferToImageBitmap_unconfigured_nonzero_size').
 desc(
-`Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is not empty`).
-
+  `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is not empty`
+).
 fn((t) => {
   const canvas = createCanvas(t, 'offscreen', 2, 3);
   canvas.getContext('webgpu');
@@ -448,10 +448,10 @@ fn((t) => {
 
 g.test('transferToImageBitmap_zero_size').
 desc(
-`Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.
+  `Regression test for a crash when calling transferImageBitmap on an unconfigured. Case where the canvas is empty.
 
-    TODO: Spec and expect a particular Exception type here.`).
-
+    TODO: Spec and expect a particular Exception type here.`
+).
 params((u) => u.combine('configure', [true, false])).
 fn((t) => {
   const { configure } = t.params;

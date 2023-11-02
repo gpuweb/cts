@@ -14,17 +14,17 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('slot').
 desc(
-`
+  `
 Tests slot must be less than the maxVertexBuffers in device limits.
-  `).
-
+  `
+).
 paramsSubcasesOnly(
-kRenderEncodeTypeParams.combine('slotVariant', [
-{ mult: 0, add: 0 },
-{ mult: 1, add: -1 },
-{ mult: 1, add: 0 }])).
-
-
+  kRenderEncodeTypeParams.combine('slotVariant', [
+  { mult: 0, add: 0 },
+  { mult: 1, add: -1 },
+  { mult: 1, add: 0 }]
+  )
+).
 fn((t) => {
   const { encoderType, slotVariant } = t.params;
   const maxVertexBuffers = t.device.limits.maxVertexBuffers;
@@ -42,10 +42,10 @@ fn((t) => {
 
 g.test('vertex_buffer_state').
 desc(
-`
+  `
 Tests vertex buffer must be valid.
-  `).
-
+  `
+).
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('state', kResourceStates)).
 fn((t) => {
   const { encoderType, state } = t.params;
@@ -82,17 +82,17 @@ fn((t) => {
 
 g.test('vertex_buffer_usage').
 desc(
-`
+  `
 Tests vertex buffer must have 'Vertex' usage.
-  `).
-
+  `
+).
 paramsSubcasesOnly(
-kRenderEncodeTypeParams.combine('usage', [
-GPUConst.BufferUsage.VERTEX, // control case
-GPUConst.BufferUsage.COPY_DST,
-GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.VERTEX])).
-
-
+  kRenderEncodeTypeParams.combine('usage', [
+  GPUConst.BufferUsage.VERTEX, // control case
+  GPUConst.BufferUsage.COPY_DST,
+  GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.VERTEX]
+  )
+).
 fn((t) => {
   const { encoderType, usage } = t.params;
   const vertexBuffer = t.device.createBuffer({
@@ -107,10 +107,10 @@ fn((t) => {
 
 g.test('offset_alignment').
 desc(
-`
+  `
 Tests offset must be a multiple of 4.
-  `).
-
+  `
+).
 paramsSubcasesOnly(kRenderEncodeTypeParams.combine('offset', [0, 2, 4])).
 fn((t) => {
   const { encoderType, offset } = t.params;
@@ -126,10 +126,10 @@ fn((t) => {
 
 g.test('offset_and_size_oob').
 desc(
-`
+  `
 Tests offset and size cannot be larger than vertex buffer size.
-  `).
-
+  `
+).
 paramsSubcasesOnly(buildBufferOffsetAndSizeOOBTestParams(4, 256)).
 fn((t) => {
   const { encoderType, offset, size, _valid } = t.params;

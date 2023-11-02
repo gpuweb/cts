@@ -13,9 +13,9 @@ import { anyOf } from '../../../../../util/compare.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import {
-cartesianProduct,
-sparseVectorF32Range,
-sparseVectorF16Range } from
+  cartesianProduct,
+  sparseVectorF32Range,
+  sparseVectorF16Range } from
 '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
@@ -99,15 +99,15 @@ flatMap((n) =>
 [true, false].map((nonConst) => ({
   [`f32_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return generateCases(
-    'f32',
-    sparseVectorF32Range(n),
-    sparseVectorF32Range(n),
-    sparseVectorF32Range(n),
-    nonConst ? 'unfiltered' : 'finite');
-
+      'f32',
+      sparseVectorF32Range(n),
+      sparseVectorF32Range(n),
+      sparseVectorF32Range(n),
+      nonConst ? 'unfiltered' : 'finite'
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: f16_vecN_[non_]const
@@ -116,15 +116,15 @@ flatMap((n) =>
 [true, false].map((nonConst) => ({
   [`f16_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return generateCases(
-    'f16',
-    sparseVectorF16Range(n),
-    sparseVectorF16Range(n),
-    sparseVectorF16Range(n),
-    nonConst ? 'unfiltered' : 'finite');
-
+      'f16',
+      sparseVectorF16Range(n),
+      sparseVectorF16Range(n),
+      sparseVectorF16Range(n),
+      nonConst ? 'unfiltered' : 'finite'
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('faceForward', {
@@ -144,16 +144,16 @@ desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(2, TypeF32), TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
-  TypeVec(2, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(2, TypeF32), TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
+    TypeVec(2, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('f32_vec3').
@@ -162,16 +162,16 @@ desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(3, TypeF32), TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
-  TypeVec(3, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(3, TypeF32), TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
+    TypeVec(3, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('f32_vec4').
@@ -180,16 +180,16 @@ desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(4, TypeF32), TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
-  TypeVec(4, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(4, TypeF32), TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
+    TypeVec(4, TypeF32),
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec2').
@@ -201,16 +201,16 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(2, TypeF16), TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
-  TypeVec(2, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(2, TypeF16), TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
+    TypeVec(2, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec3').
@@ -222,16 +222,16 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(3, TypeF16), TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
-  TypeVec(3, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(3, TypeF16), TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
+    TypeVec(3, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec4').
@@ -243,15 +243,15 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const'
+  );
   await run(
-  t,
-  builtin('faceForward'),
-  [TypeVec(4, TypeF16), TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
-  TypeVec(4, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    builtin('faceForward'),
+    [TypeVec(4, TypeF16), TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
+    TypeVec(4, TypeF16),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=faceForward.spec.js.map

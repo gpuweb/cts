@@ -124,9 +124,9 @@ if (gpuProviderModule) {
     codeCoverage = gpuProviderModule.coverage;
     if (codeCoverage === undefined) {
       console.error(
-      `--coverage specified, but the GPUProviderModule does not support code coverage.
-Did you remember to build with code coverage instrumentation enabled?`);
-
+        `--coverage specified, but the GPUProviderModule does not support code coverage.
+Did you remember to build with code coverage instrumentation enabled?`
+      );
       sys.exit(1);
     }
   }
@@ -162,9 +162,9 @@ if (queries.length === 0) {
   const filterQuery = parseQuery(queries[0]);
   const testcases = await loader.loadCases(filterQuery);
   const expectations = parseExpectationsForTestQuery(
-  await (loadWebGPUExpectations ?? []),
-  filterQuery);
-
+    await (loadWebGPUExpectations ?? []),
+    filterQuery
+  );
 
   Logger.globalDebugMode = debug;
   const log = new Logger();
@@ -191,8 +191,8 @@ if (queries.length === 0) {
         }
         continue;
       default:
-        break;}
-
+        break;
+    }
 
     const [rec, res] = log.record(name);
     await testcase.run(rec, expectations);
@@ -215,8 +215,8 @@ if (queries.length === 0) {
         skipped.push([name, res]);
         break;
       default:
-        unreachable('unrecognized status');}
-
+        unreachable('unrecognized status');
+    }
   }
 
   if (codeCoverage !== undefined) {

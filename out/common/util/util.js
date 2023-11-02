@@ -66,9 +66,9 @@ p,
     if (!allowMissingStack) {
       const m = message ? ` (${message})` : '';
       assert(
-      ex instanceof Error && typeof ex.stack === 'string',
-      'threw as expected, but missing stack' + m);
-
+        ex instanceof Error && typeof ex.stack === 'string',
+        'threw as expected, but missing stack' + m
+      );
     }
   }
 }
@@ -160,7 +160,7 @@ msg)
     const handle = timeout(() => {
       resolve(undefined);
     }, ms);
-    p.finally(() => clearTimeout(handle));
+    void p.finally(() => clearTimeout(handle));
   });
   return Promise.race([rejectWhenSettled, timeoutPromise]);
 }
@@ -289,8 +289,8 @@ export function reorder(order, arr) {
     case 'shiftByHalf':{
         // should this be pseudo random?
         return shiftByHalf(arr);
-      }}
-
+      }
+  }
 }
 
 const TypedArrayBufferViewInstances = [
@@ -304,7 +304,6 @@ new Int32Array(),
 new Float16Array(),
 new Float32Array(),
 new Float64Array()];
-
 
 
 
@@ -462,8 +461,8 @@ dst)
  */
 export function filterUniqueValueTestVariants(valueTestVariants) {
   return new Map(
-  valueTestVariants.map((v) => [`m:${v.mult},a:${v.add}`, v])).
-  values();
+    valueTestVariants.map((v) => [`m:${v.mult},a:${v.add}`, v])
+  ).values();
 }
 
 /**

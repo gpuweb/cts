@@ -21,37 +21,37 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('format').
 desc(
-`Views of every allowed format.
+  `Views of every allowed format.
 
 - x= every texture format
 - x= sampleCount {1, 4} if valid
 - x= every possible view read method (see above)
-`).
-
+`
+).
 unimplemented();
 
 g.test('dimension').
 desc(
-`Views of every allowed dimension.
+  `Views of every allowed dimension.
 
 - x= a representative subset of formats
 - x= {every texture dimension} x {every valid view dimension}
   (per gpuweb#79 no dimension-count reinterpretations, like 2d-array <-> 3d, are possible)
 - x= sampleCount {1, 4} if valid
 - x= every possible view read method (see above)
-`).
-
+`
+).
 unimplemented();
 
 g.test('aspect').
 desc(
-`Views of every allowed aspect of depth/stencil textures.
+  `Views of every allowed aspect of depth/stencil textures.
 
 - x= every depth/stencil format
 - x= {"all", "stencil-only", "depth-only"} where valid for the format
 - x= sampleCount {1, 4} if valid
 - x= every possible view read method (see above)
-`).
-
+`
+).
 unimplemented();
 //# sourceMappingURL=read.spec.js.map

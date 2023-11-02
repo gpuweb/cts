@@ -2,8 +2,8 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { getIsBuildingDataCache } from '../../common/framework/data_cache.js';import { Colors } from '../../common/util/colors.js';import { assert, unreachable } from '../../common/util/util.js';
 import {
-deserializeExpectation,
-serializeExpectation } from
+  deserializeExpectation,
+  serializeExpectation } from
 '../shader/execution/expression/case_cache.js';
 import { toComparator } from '../shader/execution/expression/expression.js';
 
@@ -18,22 +18,22 @@ import { FPInterval } from './floating_point.js';
 
 
 
+// All Comparators must be serializable to be used in the CaseCache.
+// New Comparators should add a new entry to SerializableComparatorKind and
+// define functionality in serialize/deserializeComparator as needed.
+//
+// 'value' and 'packed' are internal framework Comparators that exist, so that
+// the whole Case type hierarchy doesn't need to be split into Serializable vs
+// non-Serializable paths. Passing them into the CaseCache will cause a runtime
+// error.
+// 'value' and 'packed' should never be used in .spec.ts files.
+//
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+/** Comparator is a function that compares whether the provided value matches an expectation. */
 
 
 
@@ -41,13 +41,13 @@ import { FPInterval } from './floating_point.js';
 
 
 /** SerializedComparator is an enum of all the possible serialized comparator types. */var
-SerializedComparatorKind;
+SerializedComparatorKind = /*#__PURE__*/function (SerializedComparatorKind) {SerializedComparatorKind[SerializedComparatorKind["AnyOf"] = 0] = "AnyOf";SerializedComparatorKind[SerializedComparatorKind["SkipUndefined"] = 1] = "SkipUndefined";SerializedComparatorKind[SerializedComparatorKind["AlwaysPass"] = 2] = "AlwaysPass";return SerializedComparatorKind;}(SerializedComparatorKind || {});
 
 
 
 
 
-/** serializeComparatorKind() serializes a ComparatorKind to a BinaryStream */(function (SerializedComparatorKind) {SerializedComparatorKind[SerializedComparatorKind["AnyOf"] = 0] = "AnyOf";SerializedComparatorKind[SerializedComparatorKind["SkipUndefined"] = 1] = "SkipUndefined";SerializedComparatorKind[SerializedComparatorKind["AlwaysPass"] = 2] = "AlwaysPass";})(SerializedComparatorKind || (SerializedComparatorKind = {}));
+/** serializeComparatorKind() serializes a ComparatorKind to a BinaryStream */
 function serializeComparatorKind(s, value) {
   switch (value) {
     case 'anyOf':
@@ -55,8 +55,8 @@ function serializeComparatorKind(s, value) {
     case 'skipUndefined':
       return s.writeU8(SerializedComparatorKind.SkipUndefined);
     case 'alwaysPass':
-      return s.writeU8(SerializedComparatorKind.AlwaysPass);}
-
+      return s.writeU8(SerializedComparatorKind.AlwaysPass);
+  }
 }
 
 /** deserializeComparatorKind() deserializes a ComparatorKind from a BinaryStream */
@@ -70,8 +70,8 @@ function deserializeComparatorKind(s) {
     case SerializedComparatorKind.AlwaysPass:
       return 'alwaysPass';
     default:
-      unreachable(`invalid serialized ComparatorKind: ${kind}`);}
-
+      unreachable(`invalid serialized ComparatorKind: ${kind}`);
+  }
 }
 
 /**
@@ -233,8 +233,8 @@ function compareVector(got, expected) {
   const failures = results.filter((v) => !v.match).map((v) => v.index);
   if (failures.length !== 0) {
     const expected_string = expected.map((v, idx) =>
-    idx in failures ? Colors.red(`[${v}]`) : Colors.green(`[${v}]`));
-
+    idx in failures ? Colors.red(`[${v}]`) : Colors.green(`[${v}]`)
+    );
     return {
       matched: false,
       got: `[${got.elements}]`,
@@ -302,8 +302,8 @@ function compareMatrix(got, expected) {
   // Check that got values fall in expected intervals
   let matched = true;
   const expected_strings = [...Array(got.elements.length)].map((_) => [
-  ...Array(got.elements[0].length)]);
-
+  ...Array(got.elements[0].length)]
+  );
 
   got.elements.forEach((c, i) => {
     c.forEach((r, j) => {
@@ -443,8 +443,8 @@ export function serializeComparator(s, c) {
     case 'packed':{
         unreachable(`Serializing '${c.kind}' comparators is not allowed (${c})`);
         break;
-      }}
-
+      }
+  }
   unreachable(`Unable serialize comparator '${c}'`);
 }
 
@@ -466,8 +466,8 @@ export function deserializeComparator(s) {
         }
       });
     case 'alwaysPass':
-      return alwaysPass(s.readString());}
-
+      return alwaysPass(s.readString());
+  }
   unreachable(`Unable deserialize comparator '${s}'`);
 }
 //# sourceMappingURL=compare.js.map

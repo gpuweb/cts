@@ -66,8 +66,8 @@ return fragColor;
         case 'rgba16float':
           break;
         default:
-          unreachable();}
-
+          unreachable();
+      }
 
       let usage = 0;
       switch (writeCanvasMethod) {
@@ -76,8 +76,8 @@ return fragColor;
           break;
         case 'copy':
           usage = GPUTextureUsage.COPY_DST;
-          break;}
-
+          break;
+      }
       ctx.configure({
         device: t.device,
         format,
@@ -133,8 +133,8 @@ return fragColor;
             format,
             usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.COPY_SRC
           });
-          break;}
-
+          break;
+      }
       const renderPassDescriptor = {
         colorAttachments: [
         {
@@ -160,16 +160,16 @@ return fragColor;
           break;
         case 'copy':
           commandEncoder.copyTextureToTexture(
-          {
-            texture: renderTarget
-          },
-          {
-            texture: ctx.getCurrentTexture()
-          },
-          [ctx.canvas.width, ctx.canvas.height]);
-
-          break;}
-
+            {
+              texture: renderTarget
+            },
+            {
+              texture: ctx.getCurrentTexture()
+            },
+            [ctx.canvas.width, ctx.canvas.height]
+          );
+          break;
+      }
 
       t.device.queue.submit([commandEncoder.finish()]);
     });

@@ -152,13 +152,13 @@ function shaderHeader(test_type) {
 g.test('single_element').
 specURL('https://www.w3.org/TR/WGSL/#arrayLength-builtin').
 desc(
-`Test the arrayLength() builtin with a binding that is just large enough for a single element.
+  `Test the arrayLength() builtin with a binding that is just large enough for a single element.
 
      Test parameters:
      - type: The WGSL type to use as the array element type.
      - stride: The stride in bytes of the array element type.
-    `).
-
+    `
+).
 params((u) => u.combineWithParams(kTestTypes)).
 beforeAllSubcases((t) => {
   if (typeRequiresF16(t.params.type)) {
@@ -186,7 +186,7 @@ fn((t) => {
 g.test('multiple_elements').
 specURL('https://www.w3.org/TR/WGSL/#arrayLength-builtin').
 desc(
-`Test the arrayLength() builtin with a binding that is large enough for multiple elements.
+  `Test the arrayLength() builtin with a binding that is large enough for multiple elements.
 
      We test sizes that are not exact multiples of the array element strides, to test that the
      length is correctly floored to the next whole element.
@@ -195,11 +195,11 @@ desc(
      - buffer_size: The size in bytes of the buffer.
      - type: The WGSL type to use as the array element type.
      - stride: The stride in bytes of the array element type.
-    `).
-
+    `
+).
 params((u) =>
-u.combine('buffer_size', [640, 1004, 1048576]).combineWithParams(kTestTypes)).
-
+u.combine('buffer_size', [640, 1004, 1048576]).combineWithParams(kTestTypes)
+).
 beforeAllSubcases((t) => {
   if (typeRequiresF16(t.params.type)) {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -223,7 +223,7 @@ fn((t) => {
 g.test('struct_member').
 specURL('https://www.w3.org/TR/WGSL/#arrayLength-builtin').
 desc(
-`Test the arrayLength() builtin with an array that is inside a structure.
+  `Test the arrayLength() builtin with an array that is inside a structure.
 
      We include offsets that are not exact multiples of the array element strides, to test that
      the length is correctly floored to the next whole element.
@@ -232,8 +232,8 @@ desc(
      - member_offset: The offset (in bytes) of the array member from the start of the struct.
      - type: The WGSL type to use as the array element type.
      - stride: The stride in bytes of the array element type.
-    `).
-
+    `
+).
 params((u) => u.combine('member_offset', [0, 4, 20]).combineWithParams(kTestTypes)).
 beforeAllSubcases((t) => {
   if (typeRequiresF16(t.params.type)) {
@@ -265,10 +265,10 @@ fn((t) => {
 g.test('binding_subregion').
 specURL('https://www.w3.org/TR/WGSL/#arrayLength-builtin').
 desc(
-`Test the arrayLength() builtin when used with a binding that starts at a non-zero offset and
+  `Test the arrayLength() builtin when used with a binding that starts at a non-zero offset and
      does not fill the entire buffer.
-    `).
-
+    `
+).
 fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read_write> buffer : array<vec3<f32>>;
@@ -288,9 +288,9 @@ fn((t) => {
 g.test('read_only').
 specURL('https://www.w3.org/TR/WGSL/#arrayLength-builtin').
 desc(
-`Test the arrayLength() builtin when used with a read-only storage buffer.
-    `).
-
+  `Test the arrayLength() builtin when used with a read-only storage buffer.
+    `
+).
 fn((t) => {
   const wgsl = `
       @group(0) @binding(0) var<storage, read> buffer : array<vec3<f32>>;

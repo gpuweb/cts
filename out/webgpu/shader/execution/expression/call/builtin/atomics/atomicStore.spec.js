@@ -7,12 +7,12 @@ import { keysOf } from '../../../../../../../common/util/data_tables.js';
 import { GPUTest } from '../../../../../../gpu_test.js';
 
 import {
-dispatchSizes,
-workgroupSizes,
-runStorageVariableTest,
-runWorkgroupVariableTest,
-typedArrayCtor,
-kMapId } from
+  dispatchSizes,
+  workgroupSizes,
+  runStorageVariableTest,
+  runWorkgroupVariableTest,
+  typedArrayCtor,
+  kMapId } from
 './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -20,20 +20,20 @@ export const g = makeTestGroup(GPUTest);
 g.test('store_storage_basic').
 specURL('https://www.w3.org/TR/WGSL/#atomic-store').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
   const bufferNumElements = numInvocations;
@@ -60,20 +60,20 @@ fn((t) => {
 g.test('store_workgroup_basic').
 specURL('https://www.w3.org/TR/WGSL/#atomic-store').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize;
   const wgNumElements = numInvocations;
@@ -83,8 +83,8 @@ fn((t) => {
   const initValue = 0;
   const op = `atomicStore(&wg[id], map_id(global_id))`;
   const expected = new (typedArrayCtor(t.params.scalarType))(
-  wgNumElements * t.params.dispatchSize);
-
+    wgNumElements * t.params.dispatchSize
+  );
   expected.forEach((_, i) => expected[i] = mapId.f(i, numInvocations));
 
   runWorkgroupVariableTest({
@@ -102,7 +102,7 @@ fn((t) => {
 g.test('store_storage_advanced').
 specURL('https://www.w3.org/TR/WGSL/#atomic-store').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -110,15 +110,15 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
 
 Tests that multiple invocations of atomicStore to the same location returns
 one of the values written.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
   const scalarType = t.params.scalarType;
@@ -187,15 +187,15 @@ fn(async (t) => {
 
   if (!expected_one_of.includes(outputBufferResult[0])) {
     t.fail(
-    `Unexpected value in output[0]: '${outputBufferResult[0]}, expected value to be one of: ${expected_one_of}`);
-
+      `Unexpected value in output[0]: '${outputBufferResult[0]}, expected value to be one of: ${expected_one_of}`
+    );
   }
 });
 
 g.test('store_workgroup_advanced').
 specURL('https://www.w3.org/TR/WGSL/#atomic-store').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -203,15 +203,15 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
 
 Tests that multiple invocations of atomicStore to the same location returns
 one of the values written.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize;
   const scalarType = t.params.scalarType;
@@ -294,8 +294,8 @@ fn(async (t) => {
   for (let d = 0; d < dispatchSize; d++) {
     if (!expected_one_of.includes(outputBufferResult[d])) {
       t.fail(
-      `Unexpected value in output[d] for dispatch d '${d}': '${outputBufferResult[d]}', expected value to be one of: ${expected_one_of}`);
-
+        `Unexpected value in output[d] for dispatch d '${d}': '${outputBufferResult[d]}', expected value to be one of: ${expected_one_of}`
+      );
     }
   }
 });

@@ -30,8 +30,8 @@ fn f() -> i32 {
 
 g.test('phony_assign_call_must_use').
 desc(
-'Test flow control for a phony assigned with a single function call annotated with @must_use').
-
+  'Test flow control for a phony assigned with a single function call annotated with @must_use'
+).
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
@@ -79,8 +79,8 @@ fn c(x : i32, y : i32) -> i32 {
 
 g.test('phony_assign_call_nested_must_use').
 desc(
-'Test flow control for a phony assigned with nested function calls, all annotated with @must_use').
-
+  'Test flow control for a phony assigned with nested function calls, all annotated with @must_use'
+).
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
@@ -111,8 +111,8 @@ fn c(x : i32, y : i32) -> i32 {
 
 g.test('phony_assign_call_builtin').
 desc(
-'Test flow control for a phony assigned with a builtin call, with two function calls as arguments').
-
+  'Test flow control for a phony assigned with a builtin call, with two function calls as arguments'
+).
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(t, (f) => ({

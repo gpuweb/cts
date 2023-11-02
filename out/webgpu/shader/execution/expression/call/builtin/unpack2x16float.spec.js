@@ -20,27 +20,27 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('unpack2x16float', {
   u32_const: () => {
     return FP.f32.generateU32ToIntervalCases(
-    fullU32Range(),
-    'finite',
-    FP.f32.unpack2x16floatInterval);
-
+      fullU32Range(),
+      'finite',
+      FP.f32.unpack2x16floatInterval
+    );
   },
   u32_non_const: () => {
     return FP.f32.generateU32ToIntervalCases(
-    fullU32Range(),
-    'unfiltered',
-    FP.f32.unpack2x16floatInterval);
-
+      fullU32Range(),
+      'unfiltered',
+      FP.f32.unpack2x16floatInterval
+    );
   }
 });
 
 g.test('unpack').
 specURL('https://www.w3.org/TR/WGSL/#unpack-builtin-functions').
 desc(
-`
+  `
 @const fn unpack2x16float(e: u32) -> vec2<f32>
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'u32_const' : 'u32_non_const');

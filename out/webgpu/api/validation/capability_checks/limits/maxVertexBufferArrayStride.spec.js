@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { roundDown } from '../../../../util/math.js';import {
-kMaximumLimitBaseParams,
-makeLimitTestGroup } from
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup } from
 
 
 './limit_utils.js';
@@ -49,14 +49,14 @@ maximumLimit)
       return defaultLimit - kMinAttributeStride;
     case 'betweenDefaultAndMaximum':
       return Math.min(
-      defaultLimit,
-      roundDown(Math.floor((defaultLimit + maximumLimit) / 2), kMinAttributeStride));
-
+        defaultLimit,
+        roundDown(Math.floor((defaultLimit + maximumLimit) / 2), kMinAttributeStride)
+      );
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
-      return maximumLimit + kMinAttributeStride;}
-
+      return maximumLimit + kMinAttributeStride;
+  }
 }
 
 function getTestValue(testValueName, requestedLimit) {
@@ -64,8 +64,8 @@ function getTestValue(testValueName, requestedLimit) {
     case 'atLimit':
       return requestedLimit;
     case 'overLimit':
-      return requestedLimit + kMinAttributeStride;}
-
+      return requestedLimit + kMinAttributeStride;
+  }
 }
 
 function getDeviceLimitToRequestAndValueToTest(
@@ -95,21 +95,21 @@ fn(async (t) => {
   const { limitTest, testValueName, async } = t.params;
   const { defaultLimit, adapterLimit: maximumLimit } = t;
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-  limitTest,
-  testValueName,
-  defaultLimit,
-  maximumLimit);
-
+    limitTest,
+    testValueName,
+    defaultLimit,
+    maximumLimit
+  );
 
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ device, testValue, shouldError }) => {
-    const pipelineDescriptor = getPipelineDescriptor(device, testValue);
+    requestedLimit,
+    testValue,
+    async ({ device, testValue, shouldError }) => {
+      const pipelineDescriptor = getPipelineDescriptor(device, testValue);
 
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
-  });
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
+    }
+  );
 });
 
 g.test('validate').

@@ -30,8 +30,8 @@ class F extends GPUTest {
         return GPUBufferUsage.COPY_SRC | GPUBufferUsage.MAP_WRITE;
       default:
         unreachable();
-        return 0;}
-
+        return 0;
+    }
   }
 
   CheckGPUBufferContent(
@@ -167,9 +167,9 @@ export const g = makeTestGroup(F);
 
 g.test('partial_write_buffer').
 desc(
-`Verify when we upload data to a part of a buffer with writeBuffer() just after the creation of
-the buffer, the remaining part of that buffer will be initialized to 0.`).
-
+  `Verify when we upload data to a part of a buffer with writeBuffer() just after the creation of
+the buffer, the remaining part of that buffer will be initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('offset', [0, 8, -12])).
 fn((t) => {
   const { offset } = t.params;
@@ -195,10 +195,10 @@ fn((t) => {
 
 g.test('map_whole_buffer').
 desc(
-`Verify when we map the whole range of a mappable GPUBuffer to a typed array buffer just after
+  `Verify when we map the whole range of a mappable GPUBuffer to a typed array buffer just after
 creating the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer itself
-have already been initialized to 0.`).
-
+have already been initialized to 0.`
+).
 params((u) => u.combine('mapMode', kMapModeOptions)).
 fn(async (t) => {
   const { mapMode } = t.params;
@@ -224,10 +224,10 @@ fn(async (t) => {
 
 g.test('map_partial_buffer').
 desc(
-`Verify when we map a subrange of a mappable GPUBuffer to a typed array buffer just after the
+  `Verify when we map a subrange of a mappable GPUBuffer to a typed array buffer just after the
 creation of the GPUBuffer, the contents of both the typed array buffer and the GPUBuffer have
-already been initialized to 0.`).
-
+already been initialized to 0.`
+).
 params((u) => u.combine('mapMode', kMapModeOptions).beginSubcases().combine('offset', [0, 8, -16])).
 fn(async (t) => {
   const { mapMode, offset } = t.params;
@@ -260,10 +260,10 @@ fn(async (t) => {
 
 g.test('mapped_at_creation_whole_buffer').
 desc(
-`Verify when we call getMappedRange() at the whole range of a GPUBuffer created with
+  `Verify when we call getMappedRange() at the whole range of a GPUBuffer created with
 mappedAtCreation === true just after its creation, the contents of both the returned typed
-array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`).
-
+array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`
+).
 params((u) => u.combine('bufferUsage', kBufferUsagesForMappedAtCreationTests)).
 fn((t) => {
   const { bufferUsage } = t.params;
@@ -288,16 +288,16 @@ fn((t) => {
 
 g.test('mapped_at_creation_partial_buffer').
 desc(
-`Verify when we call getMappedRange() at a subrange of a GPUBuffer created with
+  `Verify when we call getMappedRange() at a subrange of a GPUBuffer created with
 mappedAtCreation === true just after its creation, the contents of both the returned typed
-array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`).
-
+array buffer of getMappedRange() and the GPUBuffer itself have all been initialized to 0.`
+).
 params((u) =>
 u.
 combine('bufferUsage', kBufferUsagesForMappedAtCreationTests).
 beginSubcases().
-combine('offset', [0, 8, -16])).
-
+combine('offset', [0, 8, -16])
+).
 fn((t) => {
   const { bufferUsage, offset } = t.params;
   const bufferSize = 32;
@@ -328,9 +328,9 @@ fn((t) => {
 
 g.test('copy_buffer_to_buffer_copy_source').
 desc(
-`Verify when the first usage of a GPUBuffer is being used as the source buffer of
-CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialized to 0.`).
-
+  `Verify when the first usage of a GPUBuffer is being used as the source buffer of
+CopyBufferToBuffer(), the contents of the GPUBuffer have already been initialized to 0.`
+).
 fn((t) => {
   const bufferSize = 32;
   const bufferUsage = GPUBufferUsage.COPY_SRC;
@@ -347,9 +347,9 @@ fn((t) => {
 
 g.test('copy_buffer_to_texture').
 desc(
-`Verify when the first usage of a GPUBuffer is being used as the source buffer of
-CopyBufferToTexture(), the contents of the GPUBuffer have already been initialized to 0.`).
-
+  `Verify when the first usage of a GPUBuffer is being used as the source buffer of
+CopyBufferToTexture(), the contents of the GPUBuffer have already been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 8])).
 fn((t) => {
   const { bufferOffset } = t.params;
@@ -373,15 +373,15 @@ fn((t) => {
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToTexture(
-  {
-    buffer: srcBuffer,
-    offset: bufferOffset,
-    bytesPerRow: layout.bytesPerRow,
-    rowsPerImage: layout.rowsPerImage
-  },
-  { texture: dstTexture },
-  textureSize);
-
+    {
+      buffer: srcBuffer,
+      offset: bufferOffset,
+      bytesPerRow: layout.bytesPerRow,
+      rowsPerImage: layout.rowsPerImage
+    },
+    { texture: dstTexture },
+    textureSize
+  );
   t.queue.submit([encoder.finish()]);
 
   t.CheckBufferAndOutputTexture(srcBuffer, srcBufferSize, dstTexture, textureSize, {
@@ -394,9 +394,9 @@ fn((t) => {
 
 g.test('resolve_query_set_to_partial_buffer').
 desc(
-`Verify when we resolve a query set into a GPUBuffer just after creating that GPUBuffer, the
-remaining part of it will be initialized to 0.`).
-
+  `Verify when we resolve a query set into a GPUBuffer just after creating that GPUBuffer, the
+remaining part of it will be initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 256])).
 fn((t) => {
   const { bufferOffset } = t.params;
@@ -419,9 +419,9 @@ fn((t) => {
 
 g.test('copy_texture_to_partial_buffer').
 desc(
-`Verify when we copy from a GPUTexture into a GPUBuffer just after creating that GPUBuffer, the
-remaining part of it will be initialized to 0.`).
-
+  `Verify when we copy from a GPUTexture into a GPUBuffer just after creating that GPUBuffer, the
+remaining part of it will be initialized to 0.`
+).
 paramsSubcasesOnly((u) =>
 u.
 combine('bufferOffset', [0, 8, -16]).
@@ -431,8 +431,8 @@ combine('rowsPerImage', [16, 20]).
 filter((t) => {
   // We don't need to test the copies that will cover the whole GPUBuffer.
   return !(t.bufferOffset === 0 && t.rowsPerImage === 16);
-})).
-
+})
+).
 fn((t) => {
   const { bufferOffset, arrayLayerCount, copyMipLevel, rowsPerImage } = t.params;
   const srcTextureFormat = 'r8uint';
@@ -484,10 +484,10 @@ fn((t) => {
   // Do texture-to-buffer copy
   const appliedOffset = Math.max(bufferOffset, 0);
   encoder.copyTextureToBuffer(
-  { texture: srcTexture, mipLevel: copyMipLevel },
-  { buffer: dstBuffer, offset: appliedOffset, bytesPerRow, rowsPerImage },
-  layout.mipSize);
-
+    { texture: srcTexture, mipLevel: copyMipLevel },
+    { buffer: dstBuffer, offset: appliedOffset, bytesPerRow, rowsPerImage },
+    layout.mipSize
+  );
   t.queue.submit([encoder.finish()]);
 
   // Check if the contents of the destination buffer are what we expect.
@@ -505,9 +505,9 @@ fn((t) => {
 
 g.test('uniform_buffer').
 desc(
-`Verify when we use a GPUBuffer as a uniform buffer just after the creation of that GPUBuffer,
-    all the contents in that GPUBuffer have been initialized to 0.`).
-
+  `Verify when we use a GPUBuffer as a uniform buffer just after the creation of that GPUBuffer,
+    all the contents in that GPUBuffer have been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 256])).
 fn((t) => {
   const { bufferOffset } = t.params;
@@ -542,9 +542,9 @@ fn((t) => {
 
 g.test('readonly_storage_buffer').
 desc(
-`Verify when we use a GPUBuffer as a read-only storage buffer just after the creation of that
-    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`).
-
+  `Verify when we use a GPUBuffer as a read-only storage buffer just after the creation of that
+    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 256])).
 fn((t) => {
   const { bufferOffset } = t.params;
@@ -578,9 +578,9 @@ fn((t) => {
 
 g.test('storage_buffer').
 desc(
-`Verify when we use a GPUBuffer as a storage buffer just after the creation of that
-    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`).
-
+  `Verify when we use a GPUBuffer as a storage buffer just after the creation of that
+    GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 256])).
 fn((t) => {
   const { bufferOffset } = t.params;
@@ -614,16 +614,16 @@ fn((t) => {
 
 g.test('vertex_buffer').
 desc(
-`Verify when we use a GPUBuffer as a vertex buffer just after the creation of that
-  GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`).
-
+  `Verify when we use a GPUBuffer as a vertex buffer just after the creation of that
+  GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 16])).
 fn((t) => {
   const { bufferOffset } = t.params;
 
   const renderPipeline = t.CreateRenderPipelineForTest(
-  t.device.createShaderModule({
-    code: `
+    t.device.createShaderModule({
+      code: `
       struct VertexOut {
         @location(0) color : vec4<f32>,
         @builtin(position) position : vec4<f32>,
@@ -639,9 +639,9 @@ fn((t) => {
         output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
         return output;
       }`
-  }),
-  true);
-
+    }),
+    true
+  );
 
   const bufferSize = 16 + bufferOffset;
   const vertexBuffer = t.device.createBuffer({
@@ -679,16 +679,16 @@ fn((t) => {
 
 g.test('index_buffer').
 desc(
-`Verify when we use a GPUBuffer as an index buffer just after the creation of that
-GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`).
-
+  `Verify when we use a GPUBuffer as an index buffer just after the creation of that
+GPUBuffer, all the contents in that GPUBuffer have been initialized to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 16])).
 fn((t) => {
   const { bufferOffset } = t.params;
 
   const renderPipeline = t.CreateRenderPipelineForTest(
-  t.device.createShaderModule({
-    code: `
+    t.device.createShaderModule({
+      code: `
     struct VertexOut {
       @location(0) color : vec4<f32>,
       @builtin(position) position : vec4<f32>,
@@ -705,9 +705,9 @@ fn((t) => {
       output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
       return output;
     }`
-  }),
-  false);
-
+    }),
+    false
+  );
 
   // The size of GPUBuffer must be at least 4.
   const bufferSize = 4 + bufferOffset;
@@ -746,19 +746,19 @@ fn((t) => {
 
 g.test('indirect_buffer_for_draw_indirect').
 desc(
-`Verify when we use a GPUBuffer as an indirect buffer for drawIndirect() or
+  `Verify when we use a GPUBuffer as an indirect buffer for drawIndirect() or
 drawIndexedIndirect() just after the creation of that GPUBuffer, all the contents in that GPUBuffer
-have been initialized to 0.`).
-
+have been initialized to 0.`
+).
 params((u) =>
-u.combine('test_indexed_draw', [true, false]).beginSubcases().combine('bufferOffset', [0, 16])).
-
+u.combine('test_indexed_draw', [true, false]).beginSubcases().combine('bufferOffset', [0, 16])
+).
 fn((t) => {
   const { test_indexed_draw, bufferOffset } = t.params;
 
   const renderPipeline = t.CreateRenderPipelineForTest(
-  t.device.createShaderModule({
-    code: `
+    t.device.createShaderModule({
+      code: `
     struct VertexOut {
       @location(0) color : vec4<f32>,
       @builtin(position) position : vec4<f32>,
@@ -770,9 +770,9 @@ fn((t) => {
       output.position = vec4<f32>(0.0, 0.0, 0.0, 1.0);
       return output;
     }`
-  }),
-  false);
-
+    }),
+    false
+  );
 
   const kDrawIndirectParametersSize = 16;
   const kDrawIndexedIndirectParametersSize = 20;
@@ -829,10 +829,10 @@ fn((t) => {
 
 g.test('indirect_buffer_for_dispatch_indirect').
 desc(
-`Verify when we use a GPUBuffer as an indirect buffer for dispatchWorkgroupsIndirect() just
+  `Verify when we use a GPUBuffer as an indirect buffer for dispatchWorkgroupsIndirect() just
     after the creation of that GPUBuffer, all the contents in that GPUBuffer have been initialized
-    to 0.`).
-
+    to 0.`
+).
 paramsSubcasesOnly((u) => u.combine('bufferOffset', [0, 16])).
 fn((t) => {
   const { bufferOffset } = t.params;

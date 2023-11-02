@@ -14,12 +14,12 @@ import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
 import { unreachable } from '../util/util.js';
 
 import {
-kCTSOptionsInfo,
-parseSearchParamLikeWithOptions,
+  kCTSOptionsInfo,
+  parseSearchParamLikeWithOptions,
 
 
 
-camelCaseToSnakeCase } from
+  camelCaseToSnakeCase } from
 './helper/options.js';
 import { TestWorker } from './helper/test_worker.js';
 
@@ -44,9 +44,9 @@ const kStandaloneOptionsInfos = {
 };
 
 const { queries: qs, options } = parseSearchParamLikeWithOptions(
-kStandaloneOptionsInfos,
-window.location.search || rootQuerySpec);
-
+  kStandaloneOptionsInfos,
+  window.location.search || rootQuerySpec
+);
 const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
 globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
@@ -190,8 +190,8 @@ function makeCaseHTML(t) {
         result.warn++;
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
 
     if (updateRenderedResult) updateRenderedResult();
 
@@ -254,9 +254,9 @@ function makeSubtreeHTML(n, parentLevel) {
   let updateRenderedResult;
 
   const { runSubtree, generateSubtreeHTML } = makeSubtreeChildrenHTML(
-  n.children.values(),
-  n.query.level);
-
+    n.children.values(),
+    n.query.level
+  );
 
   const runMySubtree = async () => {
     if (runDepth === 0) {
@@ -357,8 +357,8 @@ parentLevel)
   };
   const generateMyHTML = (div) => {
     const setChildrenChecked = Array.from(childFns, ({ generateSubtreeHTML }) =>
-    generateSubtreeHTML(div));
-
+    generateSubtreeHTML(div)
+    );
 
     return () => {
       for (const setChildChecked of setChildrenChecked) {

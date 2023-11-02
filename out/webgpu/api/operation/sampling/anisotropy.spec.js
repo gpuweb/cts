@@ -43,10 +43,10 @@ class SamplerAnisotropicFilteringSlantedPlaneTest extends GPUTest {
 
     const commandEncoder = this.device.createCommandEncoder();
     commandEncoder.copyTextureToBuffer(
-    { texture: rt, mipLevel: 0, origin: [0, 0, 0] },
-    { buffer, bytesPerRow: kBytesPerRow, rowsPerImage: kRTSize },
-    { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 });
-
+      { texture: rt, mipLevel: 0, origin: [0, 0, 0] },
+      { buffer, bytesPerRow: kBytesPerRow, rowsPerImage: kRTSize },
+      { width: kRTSize, height: kRTSize, depthOrArrayLayers: 1 }
+    );
     this.queue.submit([commandEncoder.finish()]);
 
     return buffer;
@@ -165,14 +165,14 @@ export const g = makeTestGroup(TextureTestMixin(SamplerAnisotropicFilteringSlant
 
 g.test('anisotropic_filter_checkerboard').
 desc(
-`Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
+  `Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
     that only has a top level mipmap, the content of which is like a checkerboard.
     We will check the rendering result using sampler with maxAnisotropy values to be
     different from each other, as the sampling rate is different.
     We will also check if those large maxAnisotropy values are clamped so that rendering is the
     same as the supported upper limit say 16.
-    A similar webgl demo is at https://jsfiddle.net/yqnbez24`).
-
+    A similar webgl demo is at https://jsfiddle.net/yqnbez24`
+).
 fn(async (t) => {
   // init texture with only a top level mipmap
   const textureSize = 32;
@@ -201,25 +201,25 @@ fn(async (t) => {
     }
   }
   const buffer = t.makeBufferWithContents(
-  data,
-  GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
-
+    data,
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
   const bytesPerRow = kBytesPerRow;
   const rowsPerImage = textureSize;
 
   textureEncoder.copyBufferToTexture(
-  {
-    buffer,
-    bytesPerRow,
-    rowsPerImage
-  },
-  {
-    texture,
-    mipLevel: 0,
-    origin: [0, 0, 0]
-  },
-  [textureSize, textureSize, 1]);
-
+    {
+      buffer,
+      bytesPerRow,
+      rowsPerImage
+    },
+    {
+      texture,
+      mipLevel: 0,
+      origin: [0, 0, 0]
+    },
+    [textureSize, textureSize, 1]
+  );
 
   t.device.queue.submit([textureEncoder.finish()]);
 
@@ -235,9 +235,9 @@ fn(async (t) => {
       maxAnisotropy
     });
     const result = await t.readGPUBufferRangeTyped(
-    t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
-    { type: Uint8Array, typedLength: byteLength });
-
+      t.copyRenderTargetToBuffer(t.drawSlantedPlane(textureView, sampler)),
+      { type: Uint8Array, typedLength: byteLength }
+    );
     results.push(result);
   }
 
@@ -248,9 +248,9 @@ fn(async (t) => {
   const check1 = checkElementsEqual(results[1].data, results[2].data);
   if (check1 !== undefined) {
     t.expect(
-    false,
-    'Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.');
-
+      false,
+      'Render results with sampler.maxAnisotropy being 16 and 1024 should be the same.'
+    );
   }
 
   for (const result of results) {
@@ -260,13 +260,13 @@ fn(async (t) => {
 
 g.test('anisotropic_filter_mipmap_color').
 desc(
-`Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
+  `Anisotropic filter rendering tests that draws a slanted plane and samples from a texture
     containing mipmaps of different colors. Given the same fragment with dFdx and dFdy for uv being different,
     sampler with bigger maxAnisotropy value tends to bigger mip levels to provide better details.
     We can then look at the color of the fragment to know which mip level is being sampled from and to see
     if it fits expectations.
-    A similar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`).
-
+    A similar webgl demo is at https://jsfiddle.net/t8k7c95o/5/`
+).
 paramsSimple([
 {
   maxAnisotropy: 1,
@@ -283,13 +283,13 @@ paramsSimple([
   { coord: { x: xMiddle, y: 6 }, expected: colors[0] }],
 
   _generateWarningOnly: true
-}]).
-
+}]
+).
 fn((t) => {
   const texture = t.createTextureFromTexelViewsMultipleMipmaps(
-  colors.map((value) => TexelView.fromTexelsAsBytes(kTextureFormat, (coords_) => value)),
-  { size: [4, 4, 1], usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING });
-
+    colors.map((value) => TexelView.fromTexelsAsBytes(kTextureFormat, (_coords) => value)),
+    { size: [4, 4, 1], usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING }
+  );
   const textureView = texture.createView();
 
   const sampler = t.device.createSampler({
@@ -311,14 +311,14 @@ fn((t) => {
       // MAINTENANCE_TODO: Unify comparison to allow for a strict in-between comparison to support
       //                   this kind of expectation.
       t.expectSinglePixelBetweenTwoValuesIn2DTexture(
-      colorAttachment,
-      kColorAttachmentFormat,
-      entry.coord,
-      {
-        exp: entry.expected,
-        generateWarningOnly: t.params._generateWarningOnly
-      });
-
+        colorAttachment,
+        kColorAttachmentFormat,
+        entry.coord,
+        {
+          exp: entry.expected,
+          generateWarningOnly: t.params._generateWarningOnly
+        }
+      );
     }
   }
   t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, pixelComparisons);

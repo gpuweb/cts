@@ -19,8 +19,8 @@ const kValidInterpolationAttributes = new Set([
 '@interpolate(linear)',
 '@interpolate(linear, center)',
 '@interpolate(linear, centroid)',
-'@interpolate(linear, sample)']);
-
+'@interpolate(linear, sample)']
+);
 
 g.test('type_and_sampling').
 desc(`Test that all combinations of interpolation type and sampling are validated correctly.`).
@@ -47,8 +47,8 @@ combine('sampling', [
 'perspective', // Invalid as second param
 'linear' // Invalid as second param
 ]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   if (t.params.stage === 'vertex' && t.params.use_struct === false) {
     t.skip('vertex output must include a position builtin, so must use a struct');
@@ -83,8 +83,8 @@ u.
 combine('stage', ['vertex', 'fragment']).
 combine('attribute', ['@location(0)', '@builtin(position)']).
 combine('use_struct', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   if (
   t.params.stage === 'vertex' &&
@@ -112,8 +112,8 @@ combine('stage', ['vertex', 'fragment']).
 combine('type', ['i32', 'u32', 'vec2<i32>', 'vec4<u32>']).
 combine('use_struct', [true, false]).
 combine('attribute', kValidInterpolationAttributes).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   if (t.params.stage === 'vertex' && t.params.use_struct === false) {
     t.skip('vertex output must include a position builtin, so must use a struct');

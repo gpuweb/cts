@@ -45,25 +45,25 @@ fn(async (t) => {
 
 g.test('submit_a_destroyed_texture_as_attachment').
 desc(
-`
+  `
 Test that it is invalid to submit with a texture as {color, depth, stencil, depth-stencil} attachment
 that was destroyed {before, after} encoding finishes.
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('depthStencilTextureAspect', kTextureAspects).
 combine('colorTextureState', [
 'valid',
 'destroyedBeforeEncode',
-'destroyedAfterEncode']).
-
+'destroyedAfterEncode']
+).
 combine('depthStencilTextureState', [
 'valid',
 'destroyedBeforeEncode',
-'destroyedAfterEncode'])).
-
-
+'destroyedAfterEncode']
+)
+).
 fn((t) => {
   const { colorTextureState, depthStencilTextureAspect, depthStencilTextureState } = t.params;
 

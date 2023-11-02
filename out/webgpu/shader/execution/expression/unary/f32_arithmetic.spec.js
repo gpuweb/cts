@@ -17,24 +17,24 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('unary/f32_arithmetic', {
   negation: () => {
     return FP.f32.generateScalarToIntervalCases(
-    fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
-    'unfiltered',
-    FP.f32.negationInterval);
-
+      fullF32Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
+      'unfiltered',
+      FP.f32.negationInterval
+    );
   }
 });
 
 g.test('negation').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: -x
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('negation');
   await run(t, unary('-'), [TypeF32], TypeF32, t.params, cases);

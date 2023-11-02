@@ -11,11 +11,11 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('index_range,explicit_layout').
 desc(
-`
+  `
   Test that a validation error is generated if the index exceeds the size of the bind group layouts
   using a pipeline with an explicit layout.
-  `).
-
+  `
+).
 params((u) => u.combine('index', [0, 1, 2, 3, 4, 5])).
 fn((t) => {
   const { index } = t.params;
@@ -63,11 +63,11 @@ fn((t) => {
 
 g.test('index_range,auto_layout').
 desc(
-`
+  `
   Test that a validation error is generated if the index exceeds the size of the bind group layouts
   using a pipeline with an auto layout.
-  `).
-
+  `
+).
 params((u) => u.combine('index', [0, 1, 2, 3, 4, 5])).
 fn((t) => {
   const { index } = t.params;
@@ -110,10 +110,10 @@ fn((t) => {
 
 g.test('unique_js_object,auto_layout').
 desc(
-`
+  `
   Test that getBindGroupLayout returns a new JavaScript object for each call.
-  `).
-
+  `
+).
 fn((t) => {
   const pipeline = t.device.createRenderPipeline({
     layout: 'auto',
@@ -153,10 +153,10 @@ fn((t) => {
 
 g.test('unique_js_object,explicit_layout').
 desc(
-`
+  `
   Test that getBindGroupLayout returns a new JavaScript object for each call.
-  `).
-
+  `
+).
 fn((t) => {
   const pipelineBindGroupLayouts = t.device.createBindGroupLayout({
     entries: []

@@ -10,9 +10,9 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('many').
 desc(
-`Tests execution of a huge number of compute passes using the same
-GPUComputePipeline.`).
-
+  `Tests execution of a huge number of compute passes using the same
+GPUComputePipeline.`
+).
 fn((t) => {
   const kNumElements = 64;
   const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
@@ -48,21 +48,21 @@ fn((t) => {
     t.device.queue.submit([encoder.finish()]);
   }
   t.expectGPUBufferValuesEqual(
-  buffer,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
-
+    buffer,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)])
+  );
 });
 
 g.test('pipeline_churn').
 desc(
-`Tests execution of a huge number of compute passes which each use a different
-GPUComputePipeline.`).
-
+  `Tests execution of a huge number of compute passes which each use a different
+GPUComputePipeline.`
+).
 fn((t) => {
   const buffer = t.makeBufferWithContents(
-  new Uint32Array([0]),
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    new Uint32Array([0]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const kNumIterations = 10_000;
   const stages = iterRange(kNumIterations, (i) => ({
     module: t.device.createShaderModule({
@@ -95,20 +95,20 @@ fn((t) => {
 
 g.test('bind_group_churn').
 desc(
-`Tests execution of compute passes which switch between a huge number of bind
-groups.`).
-
+  `Tests execution of compute passes which switch between a huge number of bind
+groups.`
+).
 fn((t) => {
   const kNumElements = 64;
   const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
   const buffer1 = t.makeBufferWithContents(
-  data,
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    data,
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const buffer2 = t.makeBufferWithContents(
-  data,
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    data,
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const module = t.device.createShaderModule({
     code: `
         struct Buffer { data: array<u32>, };
@@ -146,13 +146,13 @@ fn((t) => {
   t.device.queue.submit([encoder.finish()]);
   const kTotalAddition = kNumIterations / 2 * 3;
   t.expectGPUBufferValuesEqual(
-  buffer1,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)]));
-
+    buffer1,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)])
+  );
   t.expectGPUBufferValuesEqual(
-  buffer2,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)]));
-
+    buffer2,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kTotalAddition)])
+  );
 });
 
 g.test('many_dispatches').
@@ -190,9 +190,9 @@ fn((t) => {
   pass.end();
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(
-  buffer,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
-
+    buffer,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)])
+  );
 });
 
 g.test('huge_dispatches').
@@ -237,8 +237,8 @@ fn(async (t) => {
     await t.device.queue.onSubmittedWorkDone();
   }
   t.expectGPUBufferValuesEqual(
-  buffer,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
-
+    buffer,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)])
+  );
 });
 //# sourceMappingURL=compute_pass.spec.js.map

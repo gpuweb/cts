@@ -47,7 +47,7 @@ const kDefaultLayoutOptions = {
 
 
 
-
+/** The info returned by {@link getTextureCopyLayout}. */
 
 
 
@@ -67,11 +67,11 @@ baseSize,
 { mipLevel, bytesPerRow, rowsPerImage, aspect } = kDefaultLayoutOptions)
 {
   const mipSize = physicalMipSize(
-  { width: baseSize[0], height: baseSize[1], depthOrArrayLayers: baseSize[2] },
-  format,
-  dimension,
-  mipLevel);
-
+    { width: baseSize[0], height: baseSize[1], depthOrArrayLayers: baseSize[2] },
+    format,
+    dimension,
+    mipLevel
+  );
 
   const layout = getTextureSubCopyLayout(format, mipSize, { bytesPerRow, rowsPerImage, aspect });
   return { ...layout, mipSize: [mipSize.width, mipSize.height, mipSize.depthOrArrayLayers] };
@@ -102,14 +102,14 @@ copySize,
 
   const copySize_ = reifyExtent3D(copySize);
   assert(
-  copySize_.width > 0 && copySize_.height > 0 && copySize_.depthOrArrayLayers > 0,
-  'not implemented for empty copySize');
-
+    copySize_.width > 0 && copySize_.height > 0 && copySize_.depthOrArrayLayers > 0,
+    'not implemented for empty copySize'
+  );
   assert(
-  copySize_.width % blockWidth === 0 && copySize_.height % blockHeight === 0,
-  () =>
-  `copySize (${copySize_.width},${copySize_.height}) must be a multiple of the block size (${blockWidth},${blockHeight})`);
-
+    copySize_.width % blockWidth === 0 && copySize_.height % blockHeight === 0,
+    () =>
+    `copySize (${copySize_.width},${copySize_.height}) must be a multiple of the block size (${blockWidth},${blockHeight})`
+  );
   const copySizeBlocks = {
     width: copySize_.width / blockWidth,
     height: copySize_.height / blockHeight,
@@ -168,11 +168,11 @@ options = kDefaultLayoutOptions)
   assert(bytesPerBlock === texelValue.byteLength, 'texelValue must be of size bytesPerBlock');
 
   const { byteLength, rowsPerImage, bytesPerRow } = getTextureCopyLayout(
-  format,
-  dimension,
-  size,
-  options);
-
+    format,
+    dimension,
+    size,
+    options
+  );
 
   assert(byteLength <= outputBuffer.byteLength);
 
@@ -207,11 +207,11 @@ options = kDefaultLayoutOptions)
 
 {
   const { byteLength, bytesPerRow, rowsPerImage, bytesPerBlock } = getTextureCopyLayout(
-  format,
-  dimension,
-  size,
-  options);
-
+    format,
+    dimension,
+    size,
+    options
+  );
 
   const buffer = device.createBuffer({
     mappedAtCreation: true,

@@ -9,20 +9,20 @@ params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    await t.testForValidationErrorWithPossibleOutOfMemoryError(() => {
-      const texture = device.createTexture({
-        size: [1, 1, testValue],
-        format: 'rgba8unorm',
-        usage: GPUTextureUsage.TEXTURE_BINDING
-      });
-      if (!shouldError) {
-        texture.destroy();
-      }
-    }, shouldError);
-  });
-
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      await t.testForValidationErrorWithPossibleOutOfMemoryError(() => {
+        const texture = device.createTexture({
+          size: [1, 1, testValue],
+          format: 'rgba8unorm',
+          usage: GPUTextureUsage.TEXTURE_BINDING
+        });
+        if (!shouldError) {
+          texture.destroy();
+        }
+      }, shouldError);
+    }
+  );
 });
 //# sourceMappingURL=maxTextureArrayLayers.spec.js.map

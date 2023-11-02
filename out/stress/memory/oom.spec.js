@@ -42,8 +42,8 @@ mappedAtCreation)
       });
       break;
     default:
-      unreachable();}
-
+      unreachable();
+  }
   // If we want the buffer to be mappable and also mappedAtCreation, we call unmap on it now.
   if (mappable && mappedAtCreation) {
     buffer.unmap();
@@ -59,18 +59,18 @@ fn(async (t) => {
 
 g.test('map_after_vram_oom').
 desc(
-`Allocates tons of buffers and textures with varying mapping states (unmappable,
+  `Allocates tons of buffers and textures with varying mapping states (unmappable,
 mappable, mapAtCreation, mapAtCreation-then-unmapped) until OOM; then attempts
 to mapAsync all the mappable objects. The last buffer should be an error buffer so
-mapAsync on it should reject and produce a validation error. `).
-
+mapAsync on it should reject and produce a validation error. `
+).
 params((u) =>
 u.
 combine('mapState', ['mapped', 'unmapped']).
 combine('mode', [GPUConst.MapMode.READ, GPUConst.MapMode.WRITE]).
 combine('mappedAtCreation', [true, false]).
-combine('unmapBeforeResolve', [true, false])).
-
+combine('unmapBeforeResolve', [true, false])
+).
 fn(async (t) => {
   // Use a relatively large size to quickly hit OOM.
   const kSize = 512 * 1024 * 1024;
@@ -101,8 +101,8 @@ fn(async (t) => {
       try {
         t.device.pushErrorScope('out-of-memory');
         const buffer = t.trackForCleanup(
-        createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation));
-
+          createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
+        );
         if (await t.device.popErrorScope()) {
           errorBuffer = buffer;
           break;
@@ -116,8 +116,8 @@ fn(async (t) => {
     } else {
       t.device.pushErrorScope('out-of-memory');
       const buffer = t.trackForCleanup(
-      createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation));
-
+        createBufferWithMapState(t.device, kSize, mapState, mode, mappedAtCreation)
+      );
       if (await t.device.popErrorScope()) {
         errorBuffer = buffer;
         break;
@@ -165,15 +165,15 @@ fn(async (t) => {
 
 g.test('validation_vs_oom').
 desc(
-`Tests that calls affected by both OOM and validation errors expose the
-validation error with precedence.`).
-
+  `Tests that calls affected by both OOM and validation errors expose the
+validation error with precedence.`
+).
 unimplemented();
 
 g.test('recovery').
 desc(
-`Tests that after going VRAM-OOM, destroying allocated resources eventually
-allows new resources to be allocated.`).
-
+  `Tests that after going VRAM-OOM, destroying allocated resources eventually
+allows new resources to be allocated.`
+).
 unimplemented();
 //# sourceMappingURL=oom.spec.js.map

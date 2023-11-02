@@ -49,10 +49,10 @@ export const kDefaultCTSOptions = {
 
 
 
-
-
-
-
+/**
+ * Type for info for every option. This definition means adding an option
+ * will generate a compile time error if no extra info is provided.
+ */
 
 
 /**

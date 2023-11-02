@@ -9,35 +9,35 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createBindGroupLayout,at_over').
 desc(`Test using createBindGroupLayout at and over ${limit} limit`).
 params(
-kMaximumLimitBaseParams.combine('visibility', [
-GPUConst.ShaderStage.VERTEX,
-GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.COMPUTE,
-GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.VERTEX,
-GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT])).
-
-
+  kMaximumLimitBaseParams.combine('visibility', [
+  GPUConst.ShaderStage.VERTEX,
+  GPUConst.ShaderStage.FRAGMENT,
+  GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT,
+  GPUConst.ShaderStage.COMPUTE,
+  GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.VERTEX,
+  GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.FRAGMENT,
+  GPUConst.ShaderStage.COMPUTE | GPUConst.ShaderStage.VERTEX | GPUConst.ShaderStage.FRAGMENT]
+  )
+).
 fn(async (t) => {
   const { limitTest, testValueName, visibility } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    shouldError ||= testValue > t.device.limits.maxUniformBuffersPerShaderStage;
-    await t.expectValidationError(() => {
-      device.createBindGroupLayout({
-        entries: range(testValue, (i) => ({
-          binding: i,
-          visibility,
-          buffer: {
-            hasDynamicOffset: true
-          }
-        }))
-      });
-    }, shouldError);
-  });
-
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      shouldError ||= testValue > t.device.limits.maxUniformBuffersPerShaderStage;
+      await t.expectValidationError(() => {
+        device.createBindGroupLayout({
+          entries: range(testValue, (i) => ({
+            binding: i,
+            visibility,
+            buffer: {
+              hasDynamicOffset: true
+            }
+          }))
+        });
+      }, shouldError);
+    }
+  );
 });
 //# sourceMappingURL=maxDynamicUniformBuffersPerPipelineLayout.spec.js.map

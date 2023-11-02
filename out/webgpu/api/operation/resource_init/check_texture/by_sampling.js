@@ -2,9 +2,9 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, unreachable } from '../../../../../common/util/util.js';import { kTextureFormatInfo } from '../../../../format_info.js';import { virtualMipSize } from '../../../../util/texture/base.js';
 import {
-kTexelRepresentationInfo,
-getSingleDataType,
-getComponentReadbackTraits } from
+  kTexelRepresentationInfo,
+  getSingleDataType,
+  getComponentReadbackTraits } from
 '../../../../util/texture/texel_data.js';
 
 
@@ -21,14 +21,14 @@ subresourceRange) =>
 
   for (const { level, layers } of subresourceRange.mipLevels()) {
     const [width, height, depth] = virtualMipSize(
-    params.dimension,
-    [t.textureWidth, t.textureHeight, t.textureDepth],
-    level);
-
+      params.dimension,
+      [t.textureWidth, t.textureHeight, t.textureDepth],
+      level
+    );
 
     const { ReadbackTypedArray, shaderType } = getComponentReadbackTraits(
-    getSingleDataType(format));
-
+      getSingleDataType(format)
+    );
 
     const componentOrder = rep.componentOrder;
     const componentCount = componentOrder.length;

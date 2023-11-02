@@ -29,10 +29,10 @@ combineWithParams([
 {
   groupSize: { x: 3, y: 7, z: 5 },
   numGroups: { x: 13, y: 9, z: 11 }
-}]).
-
-beginSubcases()).
-
+}]
+).
+beginSubcases()
+).
 fn((t) => {
   const invocationsPerGroup = t.params.groupSize.x * t.params.groupSize.y * t.params.groupSize.z;
   const totalInvocations =
@@ -93,8 +93,8 @@ fn((t) => {
       global_id = 'inputsA.global_id';
       group_id = 'inputsB.group_id';
       num_groups = 'num_groups';
-      break;}
-
+      break;
+  }
 
   // WGSL shader that stores every builtin value to a buffer, for every invocation in the grid.
   const wgsl = `
@@ -194,8 +194,8 @@ fn((t) => {
         dispatchBuffer.unmap();
         pass.dispatchWorkgroupsIndirect(dispatchBuffer, 0);
         break;
-      }}
-
+      }
+  }
   pass.end();
   t.queue.submit([encoder.finish()]);
 
@@ -221,29 +221,29 @@ fn((t) => {
                 const localIndex = (lz * t.params.groupSize.y + ly) * t.params.groupSize.x + lx;
                 const globalIndex = groupIndex * invocationsPerGroup + localIndex;
                 const expected = getBuiltinValue(
-                { x: gx, y: gy, z: gz },
-                { x: lx, y: ly, z: lz });
-
+                  { x: gx, y: gy, z: gz },
+                  { x: lx, y: ly, z: lz }
+                );
                 if (output[globalIndex * 4 + 0] !== expected.x) {
                   return new Error(
-                  `${name}.x failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                  `    expected: ${expected.x}\n` +
-                  `    got:      ${output[globalIndex * 4 + 0]}`);
-
+                    `${name}.x failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
+                    `    expected: ${expected.x}\n` +
+                    `    got:      ${output[globalIndex * 4 + 0]}`
+                  );
                 }
                 if (output[globalIndex * 4 + 1] !== expected.y) {
                   return new Error(
-                  `${name}.y failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                  `    expected: ${expected.y}\n` +
-                  `    got:      ${output[globalIndex * 4 + 1]}`);
-
+                    `${name}.y failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
+                    `    expected: ${expected.y}\n` +
+                    `    got:      ${output[globalIndex * 4 + 1]}`
+                  );
                 }
                 if (output[globalIndex * 4 + 2] !== expected.z) {
                   return new Error(
-                  `${name}.z failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
-                  `    expected: ${expected.z}\n` +
-                  `    got:      ${output[globalIndex * 4 + 2]}`);
-
+                    `${name}.z failed at group(${gx},${gy},${gz}) local(${lx},${ly},${lz}))\n` +
+                    `    expected: ${expected.z}\n` +
+                    `    got:      ${output[globalIndex * 4 + 2]}`
+                  );
                 }
               }
             }
@@ -256,16 +256,16 @@ fn((t) => {
 
   // Check @builtin(local_invocation_index) values.
   t.expectGPUBufferValuesEqual(
-  localIndexBuffer,
-  new Uint32Array([...iterRange(totalInvocations, (x) => x % invocationsPerGroup)]));
-
+    localIndexBuffer,
+    new Uint32Array([...iterRange(totalInvocations, (x) => x % invocationsPerGroup)])
+  );
 
   // Check @builtin(local_invocation_id) values.
   t.expectGPUBufferValuesPassCheck(
-  localIdBuffer,
-  (outputData) => checkEachIndex(outputData, 'local_invocation_id', (_, localId) => localId),
-  { type: Uint32Array, typedLength: totalInvocations * 4 });
-
+    localIdBuffer,
+    (outputData) => checkEachIndex(outputData, 'local_invocation_id', (_, localId) => localId),
+    { type: Uint32Array, typedLength: totalInvocations * 4 }
+  );
 
   // Check @builtin(global_invocation_id) values.
   const getGlobalId = (groupId, localId) => {
@@ -276,23 +276,23 @@ fn((t) => {
     };
   };
   t.expectGPUBufferValuesPassCheck(
-  globalIdBuffer,
-  (outputData) => checkEachIndex(outputData, 'global_invocation_id', getGlobalId),
-  { type: Uint32Array, typedLength: totalInvocations * 4 });
-
+    globalIdBuffer,
+    (outputData) => checkEachIndex(outputData, 'global_invocation_id', getGlobalId),
+    { type: Uint32Array, typedLength: totalInvocations * 4 }
+  );
 
   // Check @builtin(workgroup_id) values.
   t.expectGPUBufferValuesPassCheck(
-  groupIdBuffer,
-  (outputData) => checkEachIndex(outputData, 'workgroup_id', (groupId, _) => groupId),
-  { type: Uint32Array, typedLength: totalInvocations * 4 });
-
+    groupIdBuffer,
+    (outputData) => checkEachIndex(outputData, 'workgroup_id', (groupId, _) => groupId),
+    { type: Uint32Array, typedLength: totalInvocations * 4 }
+  );
 
   // Check @builtin(num_workgroups) values.
   t.expectGPUBufferValuesPassCheck(
-  numGroupsBuffer,
-  (outputData) => checkEachIndex(outputData, 'num_workgroups', () => t.params.numGroups),
-  { type: Uint32Array, typedLength: totalInvocations * 4 });
-
+    numGroupsBuffer,
+    (outputData) => checkEachIndex(outputData, 'num_workgroups', () => t.params.numGroups),
+    { type: Uint32Array, typedLength: totalInvocations * 4 }
+  );
 });
 //# sourceMappingURL=compute_builtins.spec.js.map

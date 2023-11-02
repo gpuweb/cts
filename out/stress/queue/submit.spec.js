@@ -10,10 +10,10 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('huge_command_buffer').
 desc(
-`Tests submission of huge command buffers to a GPUQueue. Huge buffers are
+  `Tests submission of huge command buffers to a GPUQueue. Huge buffers are
 encoded by chaining together long sequences of compute passes, with expected
-results verified at the end of the test.`).
-
+results verified at the end of the test.`
+).
 fn((t) => {
   const kNumElements = 64;
   const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
@@ -49,16 +49,16 @@ fn((t) => {
   }
   t.device.queue.submit([encoder.finish()]);
   t.expectGPUBufferValuesEqual(
-  buffer,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
-
+    buffer,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)])
+  );
 });
 
 g.test('many_command_buffers').
 desc(
-`Tests submission of a huge number of command buffers to a GPUQueue by a single
-submit() call.`).
-
+  `Tests submission of a huge number of command buffers to a GPUQueue by a single
+submit() call.`
+).
 fn((t) => {
   const kNumElements = 64;
   const data = new Uint32Array([...iterRange(kNumElements, (x) => x)]);
@@ -96,8 +96,8 @@ fn((t) => {
   }
   t.device.queue.submit(buffers);
   t.expectGPUBufferValuesEqual(
-  buffer,
-  new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)]));
-
+    buffer,
+    new Uint32Array([...iterRange(kNumElements, (x) => x + kNumIterations)])
+  );
 });
 //# sourceMappingURL=submit.spec.js.map

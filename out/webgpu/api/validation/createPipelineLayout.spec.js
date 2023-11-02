@@ -17,29 +17,29 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('number_of_dynamic_buffers_exceeds_the_maximum_value').
 desc(
-`
+  `
     Test that creating a pipeline layout fails with a validation error if the number of dynamic
     buffers exceeds the maximum value in the pipeline layout.
     - Test that creation of a pipeline using the maximum number of dynamic buffers added a dynamic
       buffer fails.
 
     TODO(#230): Update to enforce per-stage and per-pipeline-layout limits on BGLs as well.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('visibility', [0, 2, 4, 6]).
-combine('type', kBufferBindingTypes)).
-
+combine('type', kBufferBindingTypes)
+).
 fn((t) => {
   const { type, visibility } = t.params;
   const info = bufferBindingTypeInfo({ type });
   const { maxDynamicLimit } = info.perPipelineLimitClass;
   const perStageLimit = t.getDefaultLimit(info.perStageLimitClass.maxLimit);
   const maxDynamic = Math.min(
-  maxDynamicLimit ? t.getDefaultLimit(maxDynamicLimit) : 0,
-  perStageLimit);
-
+    maxDynamicLimit ? t.getDefaultLimit(maxDynamicLimit) : 0,
+    perStageLimit
+  );
 
   const maxDynamicBufferBindings = [];
   for (let binding = 0; binding < maxDynamic; binding++) {
@@ -88,13 +88,13 @@ fn((t) => {
 
 g.test('number_of_bind_group_layouts_exceeds_the_maximum_value').
 desc(
-`
+  `
     Test that creating a pipeline layout fails with a validation error if the number of bind group
     layouts exceeds the maximum value in the pipeline layout.
     - Test that creation of a pipeline using the maximum number of bind groups added a bind group
       fails.
-  `).
-
+  `
+).
 fn((t) => {
   const bindGroupLayoutDescriptor = {
     entries: []
@@ -102,8 +102,8 @@ fn((t) => {
 
   // 4 is the maximum number of bind group layouts.
   const maxBindGroupLayouts = [1, 2, 3, 4].map(() =>
-  t.device.createBindGroupLayout(bindGroupLayoutDescriptor));
-
+  t.device.createBindGroupLayout(bindGroupLayoutDescriptor)
+  );
 
   const goodPipelineLayoutDescriptor = {
     bindGroupLayouts: maxBindGroupLayouts
@@ -127,18 +127,18 @@ fn((t) => {
 
 g.test('bind_group_layouts,device_mismatch').
 desc(
-`
+  `
     Tests createPipelineLayout cannot be called with bind group layouts created from another device
     Test with two layouts to make sure all layouts can be validated:
     - layout0 and layout1 from same device
     - layout0 and layout1 from different device
-    `).
-
+    `
+).
 paramsSubcasesOnly([
 { layout0Mismatched: false, layout1Mismatched: false }, // control case
 { layout0Mismatched: true, layout1Mismatched: false },
-{ layout0Mismatched: false, layout1Mismatched: true }]).
-
+{ layout0Mismatched: false, layout1Mismatched: true }]
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).

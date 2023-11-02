@@ -46,8 +46,8 @@ combine('address_space', ['private', 'function']).
 combine('a_use', keysOf(kUses)).
 combine('b_use', keysOf(kUses)).
 combine('aliased', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = `
 ${t.params.address_space === 'private' ? `var<private> x : i32; var<private> y : i32;` : ``}
@@ -74,8 +74,8 @@ u.
 combine('a_use', keysOf(kUses)).
 combine('b_use', keysOf(kUses)).
 combine('aliased', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = `
 var<private> x : i32;
@@ -101,8 +101,8 @@ u.
 combine('a_use', ['no_access', 'assign', 'binary_lhs']).
 combine('b_use', ['no_access', 'assign', 'binary_lhs']).
 combine('aliased', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = `
 var<private> x : i32;
@@ -142,8 +142,8 @@ u.
 combine('a_use', ['no_access', 'assign', 'binary_lhs']).
 combine('b_use', ['no_access', 'assign', 'binary_lhs']).
 combine('aliased', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = `
 struct S { a : i32 }

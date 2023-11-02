@@ -43,8 +43,8 @@ class F extends ValidationTest {
         break;
       default:
         unreachable();
-        break;}
-
+        break;
+    }
     const layout = this.device.createBindGroupLayout({
       entries: [bindGroupLayoutEntry]
     });
@@ -71,11 +71,11 @@ const kTextureLayers = 3;
 
 g.test('subresources,color_attachments').
 desc(
-`
+  `
   Test that the different subresource of the same texture are allowed to be used as color
   attachments in same / different render pass encoder, while the same subresource is only allowed
-  to be used as different color attachments in different render pass encoders.`).
-
+  to be used as different color attachments in different render pass encoders.`
+).
 params((u) =>
 u.
 combine('layer0', [0, 1]).
@@ -83,8 +83,8 @@ combine('level0', [0, 1]).
 combine('layer1', [0, 1]).
 combine('level1', [0, 1]).
 combine('inSamePass', [true, false]).
-unless((t) => t.inSamePass && t.level0 !== t.level1)).
-
+unless((t) => t.inSamePass && t.level0 !== t.level1)
+).
 fn((t) => {
   const { layer0, level0, layer1, level1, inSamePass } = t.params;
 
@@ -133,11 +133,11 @@ fn((t) => {
 
 g.test('subresources,color_attachment_and_bind_group').
 desc(
-`
+  `
   Test that when one subresource of a texture is used as a color attachment, it cannot be used in a
   bind group simultaneously in the same render pass encoder. It is allowed when the bind group is
-  used in another render pass encoder instead of the same one.`).
-
+  used in another render pass encoder instead of the same one.`
+).
 params((u) =>
 u.
 combine('colorAttachmentLevel', [0, 1]).
@@ -145,17 +145,17 @@ combine('colorAttachmentLayer', [0, 1]).
 combineWithParams([
 { bgLevel: 0, bgLevelCount: 1 },
 { bgLevel: 1, bgLevelCount: 1 },
-{ bgLevel: 1, bgLevelCount: 2 }]).
-
+{ bgLevel: 1, bgLevelCount: 2 }]
+).
 combineWithParams([
 { bgLayer: 0, bgLayerCount: 1 },
 { bgLayer: 1, bgLayerCount: 1 },
-{ bgLayer: 1, bgLayerCount: 2 }]).
-
+{ bgLayer: 1, bgLayerCount: 2 }]
+).
 combine('bgUsage', ['texture', 'storage']).
 unless((t) => t.bgUsage === 'storage' && t.bgLevelCount > 1).
-combine('inSamePass', [true, false])).
-
+combine('inSamePass', [true, false])
+).
 fn((t) => {
   const {
     colorAttachmentLevel,
@@ -219,17 +219,17 @@ fn((t) => {
   }
 
   const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-  colorAttachmentLevel,
-  colorAttachmentLevel,
-  bgLevel,
-  bgLevel + bgLevelCount - 1);
-
+    colorAttachmentLevel,
+    colorAttachmentLevel,
+    bgLevel,
+    bgLevel + bgLevelCount - 1
+  );
   const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-  colorAttachmentLayer,
-  colorAttachmentLayer,
-  bgLayer,
-  bgLayer + bgLayerCount - 1);
-
+    colorAttachmentLayer,
+    colorAttachmentLayer,
+    bgLayer,
+    bgLayer + bgLayerCount - 1
+  );
   const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
   const success = inSamePass ? isNotOverlapped : true;
@@ -240,12 +240,12 @@ fn((t) => {
 
 g.test('subresources,depth_stencil_attachment_and_bind_group').
 desc(
-`
+  `
   Test that when one subresource of a texture is used as a depth stencil attachment, it cannot be
   used in a bind group simultaneously in the same render pass encoder. It is allowed when the bind
   group is used in another render pass encoder instead of the same one, or the subresource is used
-  as a read-only depth stencil attachment.`).
-
+  as a read-only depth stencil attachment.`
+).
 params((u) =>
 u.
 combine('dsLevel', [0, 1]).
@@ -253,18 +253,18 @@ combine('dsLayer', [0, 1]).
 combineWithParams([
 { bgLevel: 0, bgLevelCount: 1 },
 { bgLevel: 1, bgLevelCount: 1 },
-{ bgLevel: 1, bgLevelCount: 2 }]).
-
+{ bgLevel: 1, bgLevelCount: 2 }]
+).
 combineWithParams([
 { bgLayer: 0, bgLayerCount: 1 },
 { bgLayer: 1, bgLayerCount: 1 },
-{ bgLayer: 1, bgLayerCount: 2 }]).
-
+{ bgLayer: 1, bgLayerCount: 2 }]
+).
 beginSubcases().
 combine('dsReadOnly', [true, false]).
 combine('bgAspect', ['depth-only', 'stencil-only']).
-combine('inSamePass', [true, false])).
-
+combine('inSamePass', [true, false])
+).
 fn((t) => {
   const {
     dsLevel,
@@ -338,17 +338,17 @@ fn((t) => {
   }
 
   const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-  dsLevel,
-  dsLevel,
-  bgLevel,
-  bgLevel + bgLevelCount - 1);
-
+    dsLevel,
+    dsLevel,
+    bgLevel,
+    bgLevel + bgLevelCount - 1
+  );
   const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-  dsLayer,
-  dsLayer,
-  bgLayer,
-  bgLayer + bgLayerCount - 1);
-
+    dsLayer,
+    dsLayer,
+    bgLayer,
+    bgLayer + bgLayerCount - 1
+  );
   const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
   const success = !inSamePass || isNotOverlapped || dsReadOnly;
@@ -359,44 +359,44 @@ fn((t) => {
 
 g.test('subresources,multiple_bind_groups').
 desc(
-`
+  `
   Test that when one color texture subresource is bound to different bind groups, its list of
   internal usages within one usage scope can only be a compatible usage list. For texture
   subresources in bind groups, the compatible usage lists are {TEXTURE_BINDING} and
   {STORAGE_BINDING}, which means it can only be bound as both TEXTURE_BINDING and STORAGE_BINDING in
-  different render pass encoders, otherwise a validation error will occur.`).
-
+  different render pass encoders, otherwise a validation error will occur.`
+).
 params((u) =>
 u.
 combine('bg0Levels', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('bg0Layers', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('bg1Levels', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('bg1Layers', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('bgUsage0', ['texture', 'storage']).
 combine('bgUsage1', ['texture', 'storage']).
 unless(
-(t) =>
-t.bgUsage0 === 'storage' && t.bg0Levels.count > 1 ||
-t.bgUsage1 === 'storage' && t.bg1Levels.count > 1).
-
-combine('inSamePass', [true, false])).
-
+  (t) =>
+  t.bgUsage0 === 'storage' && t.bg0Levels.count > 1 ||
+  t.bgUsage1 === 'storage' && t.bg1Levels.count > 1
+).
+combine('inSamePass', [true, false])
+).
 fn((t) => {
   const { bg0Levels, bg0Layers, bg1Levels, bg1Layers, bgUsage0, bgUsage1, inSamePass } = t.params;
 
@@ -450,17 +450,17 @@ fn((t) => {
   }
 
   const isMipLevelNotOverlapped = t.isRangeNotOverlapped(
-  bg0Levels.base,
-  bg0Levels.base + bg0Levels.count - 1,
-  bg1Levels.base,
-  bg1Levels.base + bg1Levels.count - 1);
-
+    bg0Levels.base,
+    bg0Levels.base + bg0Levels.count - 1,
+    bg1Levels.base,
+    bg1Levels.base + bg1Levels.count - 1
+  );
   const isArrayLayerNotOverlapped = t.isRangeNotOverlapped(
-  bg0Layers.base,
-  bg0Layers.base + bg0Layers.count - 1,
-  bg1Layers.base,
-  bg1Layers.base + bg1Layers.count - 1);
-
+    bg0Layers.base,
+    bg0Layers.base + bg0Layers.count - 1,
+    bg1Layers.base,
+    bg1Layers.base + bg1Layers.count - 1
+  );
   const isNotOverlapped = isMipLevelNotOverlapped || isArrayLayerNotOverlapped;
 
   const success = !inSamePass || isNotOverlapped || bgUsage0 === bgUsage1;
@@ -471,47 +471,40 @@ fn((t) => {
 
 g.test('subresources,depth_stencil_texture_in_bind_groups').
 desc(
-`
+  `
   Test that when one depth stencil texture subresource is bound to different bind groups, we can
   always bind these two bind groups in either the same or different render pass encoder as the depth
-  stencil texture can only be bound as TEXTURE_BINDING in the bind group.`).
-
+  stencil texture can only be bound as TEXTURE_BINDING in the bind group.`
+).
 params((u) =>
 u.
 combine('view0Levels', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('view0Layers', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('view1Levels', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('view1Layers', [
 { base: 0, count: 1 },
 { base: 1, count: 1 },
-{ base: 1, count: 2 }]).
-
+{ base: 1, count: 2 }]
+).
 combine('aspect0', ['depth-only', 'stencil-only']).
 combine('aspect1', ['depth-only', 'stencil-only']).
-combine('inSamePass', [true, false])).
-
+combine('inSamePass', [true, false])
+).
 fn((t) => {
-  const {
-    view0Levels,
-    view0Layers,
-    view1Levels,
-    view1Layers,
-    aspect0,
-    aspect1,
-    inSamePass
-  } = t.params;
+  const { view0Levels, view0Layers, view1Levels, view1Layers, aspect0, aspect1, inSamePass } =
+  t.params;
 
   const texture = t.device.createTexture({
     format: 'depth24plus-stencil8',

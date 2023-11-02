@@ -46,10 +46,10 @@ kBit.f32.negative.infinity];
 g.test('bad_const_to_f32').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 It is a shader-creation error if any const-expression of floating-point type evaluates to NaN or infinity.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('fromScalarType', ['i32', 'u32']).
@@ -58,9 +58,9 @@ beginSubcases()
 // Also validate that testcases without using bad bit can pass the exam
 .combine('useBadValue', [true, false]).
 expand('bitBadValue', (p) =>
-p.useBadValue ? [...f32InfAndNaNInU32] : [0])).
-
-
+p.useBadValue ? [...f32InfAndNaNInU32] : [0]
+)
+).
 fn((t) => {
   // For scalar cases, generate code like:
   //  const f = bitcast<f32>(i32(u32(0x7f800000)));
@@ -113,10 +113,10 @@ function u16x2ToU32(u16x2) {
 g.test('bad_const_to_f16').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 It is a shader-creation error if any const-expression of floating-point type evaluates to NaN or infinity.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('fromScalarType', ['i32', 'u32']).
@@ -127,9 +127,9 @@ beginSubcases()
 // Also validate that testcases without using bad bit can pass the exam
 .combine('useBadValue', [true, false]).
 expand('bitBadValue', (p) =>
-p.useBadValue ? [...f16InfAndNaNInU16] : [0])).
-
-
+p.useBadValue ? [...f16InfAndNaNInU16] : [0]
+)
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
@@ -147,8 +147,8 @@ fn((t) => {
 
   // Put the bad f16 bits into lower 16 bits of source element if bad index is 0 or 2, else higher 16 bits.
   const badSrcElemBitsInU32 = u16x2ToU32(
-  badIndex % 2 === 0 ? [t.params.bitBadValue, 0] : [0, t.params.bitBadValue]);
-
+    badIndex % 2 === 0 ? [t.params.bitBadValue, 0] : [0, t.params.bitBadValue]
+  );
   const badScalar = `${t.params.fromScalarType}(u32(${badSrcElemBitsInU32}))`;
 
   const destType = `vec${width}<f16>`;
@@ -173,11 +173,11 @@ const bool_types = ['bool', ...[2, 3, 4].map((i) => `vec${i}<bool>`)];
 g.test('bad_type_constructible').
 specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
 desc(
-`
+  `
 Bitcast only applies to concrete numeric scalar or concrete numeric vector.
 Test constructible types.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', [
@@ -185,10 +185,10 @@ combine('type', [
 ...f16_matrix_types,
 ...bool_types,
 'array<i32,2>',
-'S']).
-
-combine('direction', ['to', 'from'])).
-
+'S']
+).
+combine('direction', ['to', 'from'])
+).
 beforeAllSubcases((t) => {
   if (t.params.type.includes('f16')) {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -208,11 +208,11 @@ fn((t) => {
 g.test('bad_type_nonconstructible').
 specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
 desc(
-`
+  `
 Bitcast only applies to concrete numeric scalar or concrete numeric vector.
 Test non-constructible types.
-`).
-
+`
+).
 params((u) => u.combine('var', ['s', 't', 'b', 'p']).combine('direction', ['to', 'from'])).
 fn((t) => {
   const typeOf = {
@@ -240,11 +240,11 @@ fn((t) => {
 g.test('bad_to_vec3h').
 specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
 desc(
-`
+  `
 Can't cast numeric type to vec3<f16> because it is 48 bits wide
 and no other type is that size.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('other_type', [
@@ -265,11 +265,11 @@ combine('other_type', [
 'vec3f',
 'vec4f',
 'vec2h',
-'vec4h']).
-
+'vec4h']
+).
 combine('direction', ['to', 'from']).
-combine('type', ['vec3<f16>', 'vec3h'])).
-
+combine('type', ['vec3<f16>', 'vec3h'])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
@@ -289,11 +289,11 @@ fn main() {
 g.test('bad_to_f16').
 specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin').
 desc(
-`
+  `
 Can't cast non-16-bit types to f16 because it is 16 bits wide
 and no other type is that size.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('other_type', [
@@ -315,10 +315,10 @@ combine('other_type', [
 'vec4f',
 'vec2h',
 'vec3h',
-'vec4h']).
-
-combine('direction', ['to', 'from'])).
-
+'vec4h']
+).
+combine('direction', ['to', 'from'])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
@@ -342,8 +342,8 @@ params((u) =>
 u.
 combine('other_type', ['u32', 'i32', 'f32']).
 combine('type', ['vec2<f16>', 'vec2h']).
-combine('direction', ['to', 'from'])).
-
+combine('direction', ['to', 'from'])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
@@ -371,11 +371,11 @@ combine('other_type', [
 'vec2<i32>',
 'vec2i',
 'vec2<f32>',
-'vec2f']).
-
+'vec2f']
+).
 combine('type', ['vec4<f16>', 'vec4h']).
-combine('direction', ['to', 'from'])).
-
+combine('direction', ['to', 'from'])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

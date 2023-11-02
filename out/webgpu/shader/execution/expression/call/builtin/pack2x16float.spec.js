@@ -8,13 +8,13 @@ which is then placed in bits 16 × i through 16 × i + 15 of the result.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf, skipUndefined } from '../../../../../util/compare.js';
 import {
-f32,
-pack2x16float,
-TypeF32,
-TypeU32,
-TypeVec,
-u32,
-vec2 } from
+  f32,
+  pack2x16float,
+  TypeF32,
+  TypeU32,
+  TypeVec,
+  u32,
+  vec2 } from
 '../../../../../util/conversion.js';
 import { cartesianProduct, fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
@@ -47,8 +47,8 @@ function makeCase(param0, param1, filter_undefined) {
   return {
     input: [vec2(f32(param0), f32(param1))],
     expected: anyOf(
-    ...results.map((r) => r === undefined ? skipUndefined(undefined) : skipUndefined(u32(r))))
-
+      ...results.map((r) => r === undefined ? skipUndefined(undefined) : skipUndefined(u32(r)))
+    )
   };
 }
 
@@ -77,10 +77,10 @@ export const d = makeCaseCache('pack2x16float', {
 g.test('pack').
 specURL('https://www.w3.org/TR/WGSL/#pack-builtin-functions').
 desc(
-`
+  `
 @const fn pack2x16float(e: vec2<f32>) -> u32
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');

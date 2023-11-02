@@ -24,13 +24,13 @@ export const d = makeCaseCache('unary/i32_arithmetic', {
 g.test('negation').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: -x
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('negation');
   await run(t, unary('-'), [TypeI32], TypeI32, t.params, cases);

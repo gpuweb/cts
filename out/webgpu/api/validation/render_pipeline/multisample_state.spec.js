@@ -15,8 +15,8 @@ params((u) =>
 u.
 combine('isAsync', [false, true]).
 beginSubcases().
-combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])).
-
+combine('count', [0, 1, 2, 3, 4, 8, 16, 1024])
+).
 fn((t) => {
   const { isAsync, count } = t.params;
 
@@ -28,15 +28,15 @@ fn((t) => {
 
 g.test('alpha_to_coverage,count').
 desc(
-`If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1, e.g. it can only be 4.`).
-
+  `If multisample.alphaToCoverageEnabled is true, multisample.count must be greater than 1, e.g. it can only be 4.`
+).
 params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('alphaToCoverageEnabled', [false, true]).
 beginSubcases().
-combine('count', [1, 4])).
-
+combine('count', [1, 4])
+).
 fn((t) => {
   const { isAsync, alphaToCoverageEnabled, count } = t.params;
 
@@ -48,15 +48,15 @@ fn((t) => {
 
 g.test('alpha_to_coverage,sample_mask').
 desc(
-`If sample_mask builtin is a pipeline output of fragment, multisample.alphaToCoverageEnabled should be false.`).
-
+  `If sample_mask builtin is a pipeline output of fragment, multisample.alphaToCoverageEnabled should be false.`
+).
 params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('alphaToCoverageEnabled', [false, true]).
 beginSubcases().
-combine('hasSampleMaskOutput', [false, true])).
-
+combine('hasSampleMaskOutput', [false, true])
+).
 fn((t) => {
   const { isAsync, alphaToCoverageEnabled, hasSampleMaskOutput } = t.params;
 

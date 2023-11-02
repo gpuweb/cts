@@ -65,16 +65,16 @@ const kTestTypes = [
 
 g.test('stage_inout').
 desc(
-`Test that each @builtin attribute is validated against the required stage and in/out usage for that built-in variable.`).
-
+  `Test that each @builtin attribute is validated against the required stage and in/out usage for that built-in variable.`
+).
 params((u) =>
 u.
 combineWithParams(kBuiltins).
 combine('use_struct', [true, false]).
 combine('target_stage', ['', 'vertex', 'fragment', 'compute']).
 combine('target_io', ['in', 'out']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = generateShader({
     attribute: `@builtin(${t.params.name})`,
@@ -86,27 +86,27 @@ fn((t) => {
 
   // Expect to pass iff the built-in table contains an entry that matches.
   const expectation = kBuiltins.some(
-  (x) =>
-  x.name === t.params.name && (
-  x.stage === t.params.target_stage ||
-  t.params.use_struct && t.params.target_stage === '') && (
-  x.io === t.params.target_io || t.params.target_stage === '') &&
-  x.type === t.params.type);
-
+    (x) =>
+    x.name === t.params.name && (
+    x.stage === t.params.target_stage ||
+    t.params.use_struct && t.params.target_stage === '') && (
+    x.io === t.params.target_io || t.params.target_stage === '') &&
+    x.type === t.params.type
+  );
   t.expectCompileResult(expectation, code);
 });
 
 g.test('type').
 desc(
-`Test that each @builtin attribute is validated against the required type of that built-in variable.`).
-
+  `Test that each @builtin attribute is validated against the required type of that built-in variable.`
+).
 params((u) =>
 u.
 combineWithParams(kBuiltins).
 combine('use_struct', [true, false]).
 combine('target_type', kTestTypes).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   let code = '';
 
@@ -127,12 +127,12 @@ fn((t) => {
 
   // Expect to pass iff the built-in table contains an entry that matches.
   const expectation = kBuiltins.some(
-  (x) =>
-  x.name === t.params.name &&
-  x.stage === t.params.stage &&
-  x.io === t.params.io &&
-  x.type === t.params.target_type);
-
+    (x) =>
+    x.name === t.params.name &&
+    x.stage === t.params.stage &&
+    x.io === t.params.io &&
+    x.type === t.params.target_type
+  );
   t.expectCompileResult(expectation, code);
 });
 
@@ -142,8 +142,8 @@ params((u) =>
 u.
 combine('target_stage', ['fragment', '']).
 combine('target_io', ['in', 'out']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   // Generate a struct that contains a sample_mask builtin, nested inside another struct.
   let code = `
@@ -179,8 +179,8 @@ u
 // By default, all of these variables will have unique @location() attributes.
 .combine('first', ['p1', 's1a', 's2a', 'ra']).
 combine('second', ['p2', 's1b', 's2b', 'rb']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const p1 =
   t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';
@@ -235,8 +235,8 @@ params((u) =>
 u.
 combine('use_struct', [true, false]).
 combine('attribute', ['@builtin(position)', '@location(0)']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = `
     struct S {
@@ -258,8 +258,8 @@ desc(`Test that a builtin name can be used in different contexts`).
 params((u) =>
 u.
 combineWithParams(kBuiltins).
-combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])).
-
+combine('use', ['alias', 'struct', 'function', 'module-var', 'function-var'])
+).
 fn((t) => {
   let code = '';
   if (t.params.use === 'alias') {

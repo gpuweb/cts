@@ -26,9 +26,9 @@ function runShaderTest(t, wgsl, expected) {
 
   // Allocate a buffer and fill it with 0xdeadbeef words.
   const outputBuffer = t.makeBufferWithContents(
-  new Uint32Array([...iterRange(expected.length, (x) => 0xdeadbeef)]),
-  GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC);
-
+    new Uint32Array([...iterRange(expected.length, (_i) => 0xdeadbeef)]),
+    GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+  );
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [{ binding: 0, resource: { buffer: outputBuffer } }]
@@ -130,32 +130,32 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // my_var
-  1, // my_var_start
-  10, // my_var_block_shadow
-  1, // my_var_unshadow
-  20, // my_var_param_shadow
-  30, // my_var_param_reshadow
-  1, // my_var_after_func
-  // my_const
-  100, // my_const_start
-  110, // my_const_block_shadow
-  100, // my_const_unshadow
-  120, // my_const_param_shadow
-  130, // my_const_param_reshadow
-  100, // my_const_after_func
-  // my_let
-  210, // my_let_block_shadow
-  220, // my_let_param_reshadow
-  200, // my_let_after_func
-  // my_func
-  300, // my_func_param_shadow
-  310 // my_func_shadow
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // my_var
+    1, // my_var_start
+    10, // my_var_block_shadow
+    1, // my_var_unshadow
+    20, // my_var_param_shadow
+    30, // my_var_param_reshadow
+    1, // my_var_after_func
+    // my_const
+    100, // my_const_start
+    110, // my_const_block_shadow
+    100, // my_const_unshadow
+    120, // my_const_param_shadow
+    130, // my_const_param_reshadow
+    100, // my_const_after_func
+    // my_let
+    210, // my_let_block_shadow
+    220, // my_let_param_reshadow
+    200, // my_let_after_func
+    // my_func
+    300, // my_func_param_shadow
+    310 // my_func_shadow
+    ])
+  );
 });
 
 g.test('builtin').
@@ -181,14 +181,14 @@ fn((t) => {
       }
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  // my_max
-  400, // my_max_shadow
-  410 // max_call
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    // my_max
+    400, // my_max_shadow
+    410 // max_call
+    ])
+  );
 });
 
 g.test('for_loop').
@@ -215,15 +215,15 @@ fn((t) => {
       };
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  500, // my_idx_before
-  501, // my_idx_loop[0]
-  502, // my_idx_loop[1]
-  500 // my_idx_after
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    500, // my_idx_before
+    501, // my_idx_loop[0]
+    502, // my_idx_loop[1]
+    500 // my_idx_after
+    ])
+  );
 });
 
 g.test('while').
@@ -254,15 +254,15 @@ fn((t) => {
       };
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  0, // my_idx_before
-  500, // my_idx_loop[0]
-  501, // my_idx_loop[1]
-  0 // my_idx_after
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    0, // my_idx_before
+    500, // my_idx_loop[0]
+    501, // my_idx_loop[1]
+    0 // my_idx_after
+    ])
+  );
 });
 
 g.test('loop').
@@ -300,17 +300,17 @@ fn((t) => {
       };
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  0, // my_idx_before
-  500, // my_idx_loop[0]
-  501, // my_idx_loop[1]
-  600, // my_idx_continuing[0]
-  601, // my_idx_continuing[1]
-  0 // my_idx_after
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    0, // my_idx_before
+    500, // my_idx_loop[0]
+    501, // my_idx_loop[1]
+    600, // my_idx_continuing[0]
+    601, // my_idx_continuing[1]
+    0 // my_idx_after
+    ])
+  );
 });
 
 g.test('switch').
@@ -347,15 +347,15 @@ fn((t) => {
       };
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  0, // my_idx_before
-  10, // my_idx_case
-  20, // my_idx_default
-  0 // my_idx_after
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    0, // my_idx_before
+    10, // my_idx_case
+    20, // my_idx_default
+    0 // my_idx_after
+    ])
+  );
 });
 
 g.test('if').
@@ -393,15 +393,15 @@ fn((t) => {
       };
     `;
   runShaderTest(
-  t,
-  wgsl,
-  new Uint32Array([
-  0, // my_idx_before
-  10, // my_idx_if
-  20, // my_idx_elseif
-  30, // my_idx_else
-  0 // my_idx_after
-  ]));
-
+    t,
+    wgsl,
+    new Uint32Array([
+    0, // my_idx_before
+    10, // my_idx_if
+    20, // my_idx_elseif
+    30, // my_idx_else
+    0 // my_idx_after
+    ])
+  );
 });
 //# sourceMappingURL=shadow.spec.js.map

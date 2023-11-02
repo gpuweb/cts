@@ -14,15 +14,15 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('postMessage').
 desc(
-`Using postMessage to send a getMappedRange-returned ArrayBuffer throws a TypeError
+  `Using postMessage to send a getMappedRange-returned ArrayBuffer throws a TypeError
      if it was included in the transfer list. Otherwise, it makes a copy.
-    Test combinations of transfer={false, true}, mapMode={read,write}.`).
-
+    Test combinations of transfer={false, true}, mapMode={read,write}.`
+).
 params((u) =>
 u //
 .combine('transfer', [false, true]).
-combine('mapMode', ['READ', 'WRITE'])).
-
+combine('mapMode', ['READ', 'WRITE'])
+).
 fn(async (t) => {
   const { transfer, mapMode } = t.params;
   const kSize = 1024;
@@ -34,9 +34,9 @@ fn(async (t) => {
   }
 
   const buf = t.makeBufferWithContents(
-  initialData,
-  mapMode === 'WRITE' ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ);
-
+    initialData,
+    mapMode === 'WRITE' ? GPUBufferUsage.MAP_WRITE : GPUBufferUsage.MAP_READ
+  );
 
   await buf.mapAsync(GPUMapMode[mapMode]);
   const ab1 = buf.getMappedRange();
@@ -47,8 +47,8 @@ fn(async (t) => {
     mc.port2.onmessage = (ev) => {
       if (transfer) {
         t.fail(
-        `postMessage with ab1 in transfer list should not be received. Unexpected message: ${ev.data}`);
-
+          `postMessage with ab1 in transfer list should not be received. Unexpected message: ${ev.data}`
+        );
       } else {
         resolve(ev.data);
       }

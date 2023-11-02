@@ -1,9 +1,16 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ /**
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/ /**
  * Utilities to improve the performance of the CTS, by caching data that is
  * expensive to build using a two-level cache (in-memory, pre-computed file).
- */ import { assert } from '../util/util.js';
+ */import { assert } from '../util/util.js';
+
+
+
+
+
+/** Logger is a basic debug logger function */
+
 
 /**
  * DataCacheNode represents a single cache entry in the LRU DataCache.
@@ -41,6 +48,7 @@ class DataCacheNode {
     this.next = null;
   }
 
+  // The file path this node represents
   // The deserialized data for this node
   prev = null; // The previous node in the doubly-linked list
   next = null; // The next node in the doubly-linked list

@@ -15,6 +15,7 @@ export const g = makeTestGroup(Fixture);
 /** Adapter preference identifier to option. */
 const kAdapterTypeOptions =
 
+
 {
   'low-power': { powerPreference: 'low-power', forceFallbackAdapter: false },
   'high-performance': { powerPreference: 'high-performance', forceFallbackAdapter: false },
@@ -80,9 +81,9 @@ async function createDeviceAndComputeCommands(adapter) {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindgroup);
       pass.dispatchWorkgroups(
-      limitInfo.maxComputeWorkgroupSizeX.default,
-      limitInfo.maxComputeWorkgroupSizeY.default);
-
+        limitInfo.maxComputeWorkgroupSizeX.default,
+        limitInfo.maxComputeWorkgroupSizeY.default
+      );
       pass.end();
       commands.push(encoder.finish());
     }
@@ -235,11 +236,11 @@ fn(async (t) => {
 
 g.test('continuous,with_destroy').
 desc(
-`Tests allocation and destruction of many GPUDevice objects over time. Device objects
+  `Tests allocation and destruction of many GPUDevice objects over time. Device objects
 are sequentially requested with a series of device allocated objects created on each
 device. The devices are then destroyed to verify that the device and the device allocated
-objects are recycled over a very large number of iterations.`).
-
+objects are recycled over a very large number of iterations.`
+).
 params((u) => u.combine('adapterType', kAdapterTypes)).
 fn(async (t) => {
   const { adapterType } = t.params;
@@ -267,11 +268,11 @@ fn(async (t) => {
 
 g.test('continuous,no_destroy').
 desc(
-`Tests allocation and implicit GC of many GPUDevice objects over time. Objects are
+  `Tests allocation and implicit GC of many GPUDevice objects over time. Objects are
 sequentially requested and dropped for GC over a very large number of iterations. Note
 that without destroy, we do not create device allocated objects because that will
-implicitly keep the device in scope.`).
-
+implicitly keep the device in scope.`
+).
 params((u) => u.combine('adapterType', kAdapterTypes)).
 fn(async (t) => {
   const { adapterType } = t.params;

@@ -4,33 +4,33 @@
 import { makeTestGroup } from '../common/internal/test_group.js';
 import { objectEquals } from '../common/util/util.js';
 import {
-deserializeExpectation,
-serializeExpectation } from
+  deserializeExpectation,
+  serializeExpectation } from
 '../webgpu/shader/execution/expression/case_cache.js';
 import BinaryStream from '../webgpu/util/binary_stream.js';
 import {
-anyOf,
-deserializeComparator,
-serializeComparator,
-skipUndefined } from
+  anyOf,
+  deserializeComparator,
+  serializeComparator,
+  skipUndefined } from
 '../webgpu/util/compare.js';
 import { kValue } from '../webgpu/util/constants.js';
 import {
-bool,
-deserializeValue,
-f16,
-f32,
-i16,
-i32,
-i8,
-serializeValue,
-toMatrix,
-u16,
-u32,
-u8,
-vec2,
-vec3,
-vec4 } from
+  bool,
+  deserializeValue,
+  f16,
+  f32,
+  i16,
+  i32,
+  i8,
+  serializeValue,
+  toMatrix,
+  u16,
+  u32,
+  u8,
+  vec2,
+  vec3,
+  vec4 } from
 '../webgpu/util/conversion.js';
 import { deserializeFPInterval, FP, serializeFPInterval } from '../webgpu/util/floating_point.js';
 
@@ -135,87 +135,87 @@ g.test('value').fn((t) => {
   vec4(bool(false), bool(true), bool(false), bool(true)),
 
   toMatrix(
-  [
-  [0.0, 1.0],
-  [2.0, 3.0]],
+    [
+    [0.0, 1.0],
+    [2.0, 3.0]],
 
-  f32),
-
+    f32
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0],
-  [3.0, 4.0, 5.0]],
+    [
+    [0.0, 1.0, 2.0],
+    [3.0, 4.0, 5.0]],
 
-  f16),
-
+    f16
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0, 3.0],
-  [4.0, 5.0, 6.0, 7.0]],
+    [
+    [0.0, 1.0, 2.0, 3.0],
+    [4.0, 5.0, 6.0, 7.0]],
 
-  f32),
-
+    f32
+  ),
   toMatrix(
-  [
-  [0.0, 1.0],
-  [2.0, 3.0],
-  [4.0, 5.0]],
+    [
+    [0.0, 1.0],
+    [2.0, 3.0],
+    [4.0, 5.0]],
 
-  f16),
-
+    f16
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0],
-  [3.0, 4.0, 5.0],
-  [6.0, 7.0, 8.0]],
+    [
+    [0.0, 1.0, 2.0],
+    [3.0, 4.0, 5.0],
+    [6.0, 7.0, 8.0]],
 
-  f32),
-
+    f32
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0, 3.0],
-  [4.0, 5.0, 6.0, 7.0],
-  [8.0, 9.0, 10.0, 11.0]],
+    [
+    [0.0, 1.0, 2.0, 3.0],
+    [4.0, 5.0, 6.0, 7.0],
+    [8.0, 9.0, 10.0, 11.0]],
 
-  f16),
-
+    f16
+  ),
   toMatrix(
-  [
-  [0.0, 1.0],
-  [2.0, 3.0],
-  [4.0, 5.0],
-  [6.0, 7.0]],
+    [
+    [0.0, 1.0],
+    [2.0, 3.0],
+    [4.0, 5.0],
+    [6.0, 7.0]],
 
-  f32),
-
+    f32
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0],
-  [3.0, 4.0, 5.0],
-  [6.0, 7.0, 8.0],
-  [9.0, 10.0, 11.0]],
+    [
+    [0.0, 1.0, 2.0],
+    [3.0, 4.0, 5.0],
+    [6.0, 7.0, 8.0],
+    [9.0, 10.0, 11.0]],
 
-  f16),
-
+    f16
+  ),
   toMatrix(
-  [
-  [0.0, 1.0, 2.0, 3.0],
-  [4.0, 5.0, 6.0, 7.0],
-  [8.0, 9.0, 10.0, 11.0],
-  [12.0, 13.0, 14.0, 15.0]],
+    [
+    [0.0, 1.0, 2.0, 3.0],
+    [4.0, 5.0, 6.0, 7.0],
+    [8.0, 9.0, 10.0, 11.0],
+    [12.0, 13.0, 14.0, 15.0]],
 
-  f32)])
-
+    f32
+  )])
   {
     const s = new BinaryStream(new Uint8Array(1024).buffer);
     serializeValue(s, value);
     const d = new BinaryStream(s.buffer().buffer);
     const deserialized = deserializeValue(d);
     t.expect(
-    objectEquals(value, deserialized),
-    `${value.type} ${value} -> serialize -> deserialize -> ${deserialized}
-buffer: ${s.buffer()}`);
-
+      objectEquals(value, deserialized),
+      `${value.type} ${value} -> serialize -> deserialize -> ${deserialized}
+buffer: ${s.buffer()}`
+    );
   }
 });
 
@@ -249,9 +249,9 @@ g.test('fpinterval_f32').fn((t) => {
     const d = new BinaryStream(s.buffer().buffer);
     const deserialized = deserializeFPInterval(d);
     t.expect(
-    objectEquals(interval, deserialized),
-    `interval ${interval} -> serialize -> deserialize -> ${deserialized}`);
-
+      objectEquals(interval, deserialized),
+      `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
+    );
   }
 });
 
@@ -285,9 +285,9 @@ g.test('fpinterval_f16').fn((t) => {
     const d = new BinaryStream(s.buffer().buffer);
     const deserialized = deserializeFPInterval(d);
     t.expect(
-    objectEquals(interval, deserialized),
-    `interval ${interval} -> serialize -> deserialize -> ${deserialized}`);
-
+      objectEquals(interval, deserialized),
+      `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
+    );
   }
 });
 
@@ -321,9 +321,9 @@ g.test('fpinterval_abstract').fn((t) => {
     const d = new BinaryStream(s.buffer().buffer);
     const deserialized = deserializeFPInterval(d);
     t.expect(
-    objectEquals(interval, deserialized),
-    `interval ${interval} -> serialize -> deserialize -> ${deserialized}`);
-
+      objectEquals(interval, deserialized),
+      `interval ${interval} -> serialize -> deserialize -> ${deserialized}`
+    );
   }
 });
 
@@ -343,9 +343,9 @@ g.test('expression_expectation').fn((t) => {
     const d = new BinaryStream(s.buffer().buffer);
     const deserialized = deserializeExpectation(d);
     t.expect(
-    objectEquals(expectation, deserialized),
-    `expectation ${expectation} -> serialize -> deserialize -> ${deserialized}`);
-
+      objectEquals(expectation, deserialized),
+      `expectation ${expectation} -> serialize -> deserialize -> ${deserialized}`
+    );
   }
 });
 
@@ -376,9 +376,9 @@ g.test('anyOf').fn((t) => {
         const got = deserialized.compare(val);
         const expect = c.comparator.compare(val);
         t.expect(
-        got.matched === expect.matched,
-        `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`);
-
+          got.matched === expect.matched,
+          `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
+        );
       }
     }
   });
@@ -404,9 +404,9 @@ g.test('skipUndefined').fn((t) => {
         const got = deserialized.compare(val);
         const expect = c.comparator.compare(val);
         t.expect(
-        got.matched === expect.matched,
-        `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`);
-
+          got.matched === expect.matched,
+          `comparator(${val}): got: ${expect.matched}, expect: ${got.matched}`
+        );
       }
     }
   });

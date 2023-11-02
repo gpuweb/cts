@@ -11,9 +11,9 @@ void (async () => {
       const name = testcase.query.toString();
       const maxLength = 375;
       assert(
-      name.length <= maxLength,
-      `Testcase ${name} is too long. Max length is ${maxLength} characters. Please shorten names or reduce parameters.`);
-
+        name.length <= maxLength,
+        `Testcase ${name} is too long. Max length is ${maxLength} characters. Please shorten names or reduce parameters.`
+      );
     }
   }
 })();

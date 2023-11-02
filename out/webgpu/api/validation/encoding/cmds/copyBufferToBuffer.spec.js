@@ -62,8 +62,8 @@ g.test('buffer_state').
 params((u) =>
 u //
 .combine('srcBufferState', kResourceStates).
-combine('dstBufferState', kResourceStates)).
-
+combine('dstBufferState', kResourceStates)
+).
 fn((t) => {
   const { srcBufferState, dstBufferState } = t.params;
   const srcBuffer = t.createBufferWithState(srcBufferState, {
@@ -95,13 +95,13 @@ fn((t) => {
 
 g.test('buffer,device_mismatch').
 desc(
-'Tests copyBufferToBuffer cannot be called with src buffer or dst buffer created from another device').
-
+  'Tests copyBufferToBuffer cannot be called with src buffer or dst buffer created from another device'
+).
 paramsSubcasesOnly([
 { srcMismatched: false, dstMismatched: false }, // control case
 { srcMismatched: true, dstMismatched: false },
-{ srcMismatched: false, dstMismatched: true }]).
-
+{ srcMismatched: false, dstMismatched: true }]
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -136,8 +136,8 @@ g.test('buffer_usage').
 paramsSubcasesOnly((u) =>
 u //
 .combine('srcUsage', kBufferUsages).
-combine('dstUsage', kBufferUsages)).
-
+combine('dstUsage', kBufferUsages)
+).
 fn((t) => {
   const { srcUsage, dstUsage } = t.params;
 
@@ -169,8 +169,8 @@ paramsSubcasesOnly([
 { copySize: 2, _isSuccess: false },
 { copySize: 4, _isSuccess: true },
 { copySize: 5, _isSuccess: false },
-{ copySize: 8, _isSuccess: true }]).
-
+{ copySize: 8, _isSuccess: true }]
+).
 fn((t) => {
   const { copySize, _isSuccess: isSuccess } = t.params;
 
@@ -204,8 +204,8 @@ paramsSubcasesOnly([
 { srcOffset: 0, dstOffset: 4, _isSuccess: true },
 { srcOffset: 0, dstOffset: 5, _isSuccess: false },
 { srcOffset: 0, dstOffset: 8, _isSuccess: true },
-{ srcOffset: 4, dstOffset: 4, _isSuccess: true }]).
-
+{ srcOffset: 4, dstOffset: 4, _isSuccess: true }]
+).
 fn((t) => {
   const { srcOffset, dstOffset, _isSuccess: isSuccess } = t.params;
 
@@ -241,8 +241,8 @@ paramsSubcasesOnly([
   srcOffset: kMaxSafeMultipleOf8,
   dstOffset: kMaxSafeMultipleOf8,
   copySize: kMaxSafeMultipleOf8
-}]).
-
+}]
+).
 fn((t) => {
   const { srcOffset, dstOffset, copySize } = t.params;
 
@@ -276,8 +276,8 @@ paramsSubcasesOnly([
 { srcOffset: 20, dstOffset: 0, copySize: 16 },
 { srcOffset: 20, dstOffset: 0, copySize: 12, _isSuccess: true },
 { srcOffset: 0, dstOffset: 20, copySize: 16 },
-{ srcOffset: 0, dstOffset: 20, copySize: 12, _isSuccess: true }]).
-
+{ srcOffset: 0, dstOffset: 20, copySize: 12, _isSuccess: true }]
+).
 fn((t) => {
   const { srcOffset, dstOffset, copySize, _isSuccess = false } = t.params;
 
@@ -305,8 +305,8 @@ paramsSubcasesOnly([
 { srcOffset: 0, dstOffset: 8, copySize: 4 },
 { srcOffset: 8, dstOffset: 0, copySize: 4 },
 { srcOffset: 0, dstOffset: 4, copySize: 8 },
-{ srcOffset: 4, dstOffset: 0, copySize: 8 }]).
-
+{ srcOffset: 4, dstOffset: 0, copySize: 8 }]
+).
 fn((t) => {
   const { srcOffset, dstOffset, copySize } = t.params;
 

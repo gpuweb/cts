@@ -110,8 +110,8 @@ desc('Test that indirect recursion of type aliases via struct members is rejecte
 params((u) =>
 u //
 .combine('target', ['i32', 'S']).
-combine('attribute', ['align', 'location', 'size'])).
-
+combine('attribute', ['align', 'location', 'size'])
+).
 fn((t) => {
   const wgsl = `
 struct S {

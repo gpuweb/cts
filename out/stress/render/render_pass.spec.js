@@ -10,9 +10,9 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('many').
 desc(
-`Tests execution of a huge number of render passes using the same GPURenderPipeline. This uses
-a single render pass for every output fragment, with each pass executing a one-vertex draw call.`).
-
+  `Tests execution of a huge number of render passes using the same GPURenderPipeline. This uses
+a single render pass for every output fragment, with each pass executing a one-vertex draw call.`
+).
 fn((t) => {
   const kSize = 1024;
   const module = t.device.createShaderModule({
@@ -70,9 +70,9 @@ fn((t) => {
 
 g.test('pipeline_churn').
 desc(
-`Tests execution of a large number of render pipelines, each within its own render pass. Each
-pass does a single draw call, with one pass per output fragment.`).
-
+  `Tests execution of a large number of render pipelines, each within its own render pass. Each
+pass does a single draw call, with one pass per output fragment.`
+).
 fn((t) => {
   const kWidth = 64;
   const kHeight = 8;
@@ -151,11 +151,11 @@ fn((t) => {
 
 g.test('bind_group_churn').
 desc(
-`Tests execution of render passes which switch between a huge number of bind groups. This uses
+  `Tests execution of render passes which switch between a huge number of bind groups. This uses
 a single render pass with a single pipeline, and one draw call per fragment of the output texture.
 Each draw call is made with a unique bind group 0, with binding 0 referencing a unique uniform
-buffer.`).
-
+buffer.`
+).
 fn((t) => {
   const kSize = 128;
   const module = t.device.createShaderModule({
@@ -220,9 +220,9 @@ fn((t) => {
     new Uint32Array(buffer.getMappedRange())[0] = i;
     buffer.unmap();
     pass.setBindGroup(
-    0,
-    t.device.createBindGroup({ layout, entries: [{ binding: 0, resource: { buffer } }] }));
-
+      0,
+      t.device.createBindGroup({ layout, entries: [{ binding: 0, resource: { buffer } }] })
+    );
     pass.draw(1, 1);
   });
   pass.end();
@@ -235,9 +235,9 @@ fn((t) => {
 
 g.test('many_draws').
 desc(
-`Tests execution of render passes with a huge number of draw calls. This uses a single
-render pass with a single pipeline, and one draw call per fragment of the output texture.`).
-
+  `Tests execution of render passes with a huge number of draw calls. This uses a single
+render pass with a single pipeline, and one draw call per fragment of the output texture.`
+).
 fn((t) => {
   const kSize = 4096;
   const module = t.device.createShaderModule({
@@ -293,9 +293,9 @@ fn((t) => {
 
 g.test('huge_draws').
 desc(
-`Tests execution of several render passes with huge draw calls. Each pass uses a single draw
-call which draws multiple vertices for each fragment of a large output texture.`).
-
+  `Tests execution of several render passes with huge draw calls. Each pass uses a single draw
+call which draws multiple vertices for each fragment of a large output texture.`
+).
 fn((t) => {
   const kSize = 32768;
   const kTextureSize = 4096;

@@ -19,13 +19,13 @@ class F extends UnitTest {
 export const g = makeTestGroup(F);
 g.test('findFailedPixels').
 desc(
-`
+  `
     Test findFailedPixels passes what is expected to pass and fails what is expected
     to fail. For example NaN === NaN should be true in a texture that allows NaN.
     2 different representations of the same rgb9e5ufloat should compare as equal.
     etc...
-  `).
-
+  `
+).
 params((u) =>
 u.combineWithParams([
 // Sanity Check
@@ -125,9 +125,9 @@ u.combineWithParams([
   actual: typedArrayParam('Uint32Array', [0b1111110000_00000000000_00000000000]),
   expected: typedArrayParam('Uint32Array', [0b1111101000_00000000000_00000000000]),
   isSame: true
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { format, actual, expected, isSame } = t.params;
   const actualData = new Uint8Array(typedArrayFromParam(actual).buffer);
@@ -148,14 +148,14 @@ fn((t) => {
 
   const zero = { x: 0, y: 0, z: 0 };
   const failedPixelsMessage = findFailedPixels(
-  format,
-  zero,
-  { width: 1, height: 1, depthOrArrayLayers: 1 },
-  { actTexelView, expTexelView },
-  {
-    maxFractionalDiff: 0
-  });
-
+    format,
+    zero,
+    { width: 1, height: 1, depthOrArrayLayers: 1 },
+    { actTexelView, expTexelView },
+    {
+      maxFractionalDiff: 0
+    }
+  );
 
   t.expect(isSame === !failedPixelsMessage, failedPixelsMessage);
 });

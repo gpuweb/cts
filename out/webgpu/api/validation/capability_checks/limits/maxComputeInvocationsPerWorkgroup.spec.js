@@ -1,10 +1,10 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import {
-kMaximumLimitBaseParams,
+  kMaximumLimitBaseParams,
 
 
-makeLimitTestGroup } from
+  makeLimitTestGroup } from
 './limit_utils.js';
 
 /**
@@ -72,8 +72,8 @@ maximumLimit)
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
-      return maximumLimit + 1;}
-
+      return maximumLimit + 1;
+  }
 }
 
 function getTestWorkgroupSize(
@@ -91,8 +91,8 @@ requestedLimit)
     case 'atLimit':
       return getClosestSizeUnderOrAtLimit(maxDimensions, requestedLimit);
     case 'overLimit':
-      return getClosestSizeOverLimit(maxDimensions, requestedLimit);}
-
+      return getClosestSizeOverLimit(maxDimensions, requestedLimit);
+  }
 }
 
 function getDeviceLimitToRequestAndValueToTest(
@@ -121,28 +121,28 @@ fn(async (t) => {
   const { defaultLimit, adapterLimit: maximumLimit } = t;
 
   const { requestedLimit, workgroupSize } = getDeviceLimitToRequestAndValueToTest(
-  t,
-  limitTest,
-  testValueName,
-  defaultLimit,
-  maximumLimit);
-
+    t,
+    limitTest,
+    testValueName,
+    defaultLimit,
+    maximumLimit
+  );
   const testValue = workgroupSize.reduce((a, b) => a * b, 1);
 
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ testValue, actualLimit, shouldError }) => {
-    const { module, code } = t.getModuleForWorkgroupSize(workgroupSize);
+    requestedLimit,
+    testValue,
+    async ({ testValue, actualLimit, shouldError }) => {
+      const { module, code } = t.getModuleForWorkgroupSize(workgroupSize);
 
-    await t.testCreatePipeline(
-    'createComputePipeline',
-    async,
-    module,
-    shouldError,
-    `workgroupSize: [${workgroupSize}], size: ${testValue}, limit: ${actualLimit}\n${code}`);
-
-  });
-
+      await t.testCreatePipeline(
+        'createComputePipeline',
+        async,
+        module,
+        shouldError,
+        `workgroupSize: [${workgroupSize}], size: ${testValue}, limit: ${actualLimit}\n${code}`
+      );
+    }
+  );
 });
 //# sourceMappingURL=maxComputeInvocationsPerWorkgroup.spec.js.map

@@ -101,8 +101,8 @@ fn d() -> i32 {
 
 g.test('binary_op_chain_R_C_C_C').
 desc(
-'Test evaluation order of a binary operator chain with a runtime-expression for the left-most expression').
-
+  'Test evaluation order of a binary operator chain with a runtime-expression for the left-most expression'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -121,8 +121,8 @@ fn f() -> i32 {
 
 g.test('binary_op_chain_C_R_C_C').
 desc(
-'Test evaluation order of a binary operator chain with a runtime-expression for the second-left-most-const').
-
+  'Test evaluation order of a binary operator chain with a runtime-expression for the second-left-most-const'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -141,8 +141,8 @@ fn f() -> i32 {
 
 g.test('binary_op_chain_C_C_R_C').
 desc(
-'Test evaluation order of a binary operator chain with a runtime-expression for the second-right-most-const').
-
+  'Test evaluation order of a binary operator chain with a runtime-expression for the second-right-most-const'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -161,8 +161,8 @@ fn f() -> i32 {
 
 g.test('binary_op_chain_C_C_C_R').
 desc(
-'Test evaluation order of a binary operator chain with a runtime-expression for the right-most expression').
-
+  'Test evaluation order of a binary operator chain with a runtime-expression for the right-most expression'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -238,8 +238,8 @@ fn c() -> i32 {
 
 g.test('array_index_lhs_assignment').
 desc(
-'Test that array indices are evaluated left-to-right, when indexing the LHS of an assignment').
-
+  'Test that array indices are evaluated left-to-right, when indexing the LHS of an assignment'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -270,8 +270,8 @@ fn d() -> i32 {
 
 g.test('array_index_lhs_member_assignment').
 desc(
-'Test that array indices are evaluated left-to-right, when indexing with member-accessors in the LHS of an assignment').
-
+  'Test that array indices are evaluated left-to-right, when indexing with member-accessors in the LHS of an assignment'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -421,8 +421,8 @@ fn b() -> i32 {
 
 g.test('logical_and').
 desc(
-'Test that a chain of logical-AND expressions are evaluated left-to-right, stopping at the first false').
-
+  'Test that a chain of logical-AND expressions are evaluated left-to-right, stopping at the first false'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -449,8 +449,8 @@ fn c() -> bool {
 
 g.test('logical_or').
 desc(
-'Test that a chain of logical-OR expressions are evaluated left-to-right, stopping at the first true').
-
+  'Test that a chain of logical-OR expressions are evaluated left-to-right, stopping at the first true'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -477,8 +477,8 @@ fn c() -> bool {
 
 g.test('bitwise_and').
 desc(
-'Test that a chain of bitwise-AND expressions are evaluated left-to-right, with no short-circuiting').
-
+  'Test that a chain of bitwise-AND expressions are evaluated left-to-right, with no short-circuiting'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `
@@ -505,8 +505,8 @@ fn c() -> bool {
 
 g.test('bitwise_or').
 desc(
-'Test that a chain of bitwise-OR expressions are evaluated left-to-right, with no short-circuiting').
-
+  'Test that a chain of bitwise-OR expressions are evaluated left-to-right, with no short-circuiting'
+).
 fn((t) => {
   runFlowControlTest(t, (f) => ({
     entrypoint: `

@@ -14,17 +14,17 @@ export class ProgrammableStateTest extends GPUTest {
   getBindGroupLayout(type) {
     if (!this.commonBindGroupLayouts.has(type)) {
       this.commonBindGroupLayouts.set(
-      type,
-      this.device.createBindGroupLayout({
-        entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
-          buffer: { type }
-        }]
+        type,
+        this.device.createBindGroupLayout({
+          entries: [
+          {
+            binding: 0,
+            visibility: GPUShaderStage.COMPUTE | GPUShaderStage.FRAGMENT,
+            buffer: { type }
+          }]
 
-      }));
-
+        })
+      );
     }
     return this.commonBindGroupLayouts.get(type);
   }
@@ -133,8 +133,8 @@ export class ProgrammableStateTest extends GPUTest {
           });
         }
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }
 
   setPipeline(pass, pipeline) {

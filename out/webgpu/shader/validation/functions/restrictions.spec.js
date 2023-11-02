@@ -48,8 +48,8 @@ desc(`Test that an entry point cannot be the target of a function call`).
 params((u) =>
 u.
 combine('stage', ['@fragment', '@vertex', '@compute @workgroup_size(1,1,1)']).
-combine('entry_point', ['with', 'without'])).
-
+combine('entry_point', ['with', 'without'])
+).
 fn((t) => {
   const use_attr = t.params.entry_point === 'with';
   let ret_attr = '';
@@ -449,16 +449,16 @@ function parameterMatches(decl, matches) {
 g.test('function_parameter_matching').
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#function-restriction').
 desc(
-`Test that function parameter types match function parameter type on user-declared functions`).
-
+  `Test that function parameter types match function parameter type on user-declared functions`
+).
 params((u) =>
 u.
 combine('decl', keysOf(kFunctionParamTypeCases)).
 combine('arg', keysOf(kFunctionParamValueCases)).
 filter((u) => {
   return kFunctionParamTypeCases[u.decl].valid;
-})).
-
+})
+).
 beforeAllSubcases((t) => {
   if (kFunctionParamTypeCases[t.params.decl].name === 'f16') {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -635,8 +635,8 @@ desc(`Test that function calls have an equal number of arguments as the number o
 params((u) =>
 u.
 combine('num_args', [0, 1, 2, 3, 4, 255]).
-combine('num_params', [0, 1, 2, 3, 4, 255])).
-
+combine('num_params', [0, 1, 2, 3, 4, 255])
+).
 fn((t) => {
   let code = `
     fn bar(`;
@@ -702,8 +702,8 @@ combine('p2_type', kParamsTypes).
 combine('p3_type', kParamsTypes).
 combine('arg1_value', keysOf(kArgValues)).
 combine('arg2_value', keysOf(kArgValues)).
-combine('arg3_value', keysOf(kArgValues))).
-
+combine('arg3_value', keysOf(kArgValues))
+).
 fn((t) => {
   let code = `
     fn bar(`;
@@ -721,8 +721,8 @@ fn((t) => {
       case 2:{
           code += `p${i} : ${t.params.p3_type},`;
           break;
-        }}
-
+        }
+    }
   }
   code += `) { }
     fn foo() {
@@ -741,8 +741,8 @@ fn((t) => {
       case 2:{
           code += `${kArgValues[t.params.arg3_value].value},`;
           break;
-        }}
-
+        }
+    }
   }
   code += `);\n}`;
 

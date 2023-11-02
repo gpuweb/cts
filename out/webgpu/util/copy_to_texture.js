@@ -72,9 +72,9 @@ export class CopyToTextureUtils extends TextureTestMixin(GPUTest) {
         const dstPixelPos = (height - i - 1) * width + j;
 
         memcpy(
-        { src: sourcePixels, start: srcPixelPos * bytesPerPixel, length: bytesPerPixel },
-        { dst: dstPixels, start: dstPixelPos * bytesPerPixel });
-
+          { src: sourcePixels, start: srcPixelPos * bytesPerPixel, length: bytesPerPixel },
+          { dst: dstPixels, start: dstPixelPos * bytesPerPixel }
+        );
       }
     }
 
@@ -118,54 +118,54 @@ export class CopyToTextureUtils extends TextureTestMixin(GPUTest) {
     const reifySubRectSize = reifyExtent3D(subRectSize);
 
     assert(
-    reifyDstOrigin.x + reifySubRectSize.width <= reifyDstSize.width &&
-    reifyDstOrigin.y + reifySubRectSize.height <= reifyDstSize.height,
-    'subrect is out of bounds');
-
+      reifyDstOrigin.x + reifySubRectSize.width <= reifyDstSize.width &&
+      reifyDstOrigin.y + reifySubRectSize.height <= reifyDstSize.height,
+      'subrect is out of bounds'
+    );
 
     const divide = 255.0;
     return TexelView.fromTexelsAsColors(
-    format,
-    (coords) => {
-      assert(
-      coords.x >= reifyDstOrigin.x &&
-      coords.y >= reifyDstOrigin.y &&
-      coords.x < reifyDstOrigin.x + reifySubRectSize.width &&
-      coords.y < reifyDstOrigin.y + reifySubRectSize.height &&
-      coords.z === 0,
-      'out of bounds');
+      format,
+      (coords) => {
+        assert(
+          coords.x >= reifyDstOrigin.x &&
+          coords.y >= reifyDstOrigin.y &&
+          coords.x < reifyDstOrigin.x + reifySubRectSize.width &&
+          coords.y < reifyDstOrigin.y + reifySubRectSize.height &&
+          coords.z === 0,
+          'out of bounds'
+        );
+        // Map dst coords to get candidate src pixel position in y.
+        let yInSubRect = coords.y - reifyDstOrigin.y;
 
-      // Map dst coords to get candidate src pixel position in y.
-      let yInSubRect = coords.y - reifyDstOrigin.y;
+        // If srcDoFlipYDuringCopy is true, a flipY op has been applied to src during copy.
+        // WebGPU spec requires origin option relative to the top-left corner of the source image,
+        // increasing downward consistently.
+        // https://www.w3.org/TR/webgpu/#dom-gpuimagecopyexternalimage-flipy
+        // Flip only happens in copy rect contents and src origin always top-left.
+        // Get candidate src pixel position in y by mirroring in copy sub rect.
+        if (srcDoFlipYDuringCopy) yInSubRect = reifySubRectSize.height - 1 - yInSubRect;
 
-      // If srcDoFlipYDuringCopy is true, a flipY op has been applied to src during copy.
-      // WebGPU spec requires origin option relative to the top-left corner of the source image,
-      // increasing downward consistently.
-      // https://www.w3.org/TR/webgpu/#dom-gpuimagecopyexternalimage-flipy
-      // Flip only happens in copy rect contents and src origin always top-left.
-      // Get candidate src pixel position in y by mirroring in copy sub rect.
-      if (srcDoFlipYDuringCopy) yInSubRect = reifySubRectSize.height - 1 - yInSubRect;
+        let src_y = yInSubRect + reifySrcOrigin.y;
 
-      let src_y = yInSubRect + reifySrcOrigin.y;
+        // Test might generate flipped source based on srcPixels, e.g. Create ImageBitmap based on srcPixels but set orientation to 'flipY'
+        // Get candidate src pixel position in y by mirroring in source.
+        if (flipSrcBeforeCopy) src_y = reifySrcSize.height - src_y - 1;
 
-      // Test might generate flipped source based on srcPixels, e.g. Create ImageBitmap based on srcPixels but set orientation to 'flipY'
-      // Get candidate src pixel position in y by mirroring in source.
-      if (flipSrcBeforeCopy) src_y = reifySrcSize.height - src_y - 1;
+        const pixelPos =
+        src_y * reifySrcSize.width + (coords.x - reifyDstOrigin.x) + reifySrcOrigin.x;
 
-      const pixelPos =
-      src_y * reifySrcSize.width + (coords.x - reifyDstOrigin.x) + reifySrcOrigin.x;
-
-      const rgba = {
-        R: srcPixels[pixelPos * 4] / divide,
-        G: srcPixels[pixelPos * 4 + 1] / divide,
-        B: srcPixels[pixelPos * 4 + 2] / divide,
-        A: srcPixels[pixelPos * 4 + 3] / divide
-      };
-      applyConversion(rgba);
-      return rgba;
-    },
-    { clampToFormatRange: true });
-
+        const rgba = {
+          R: srcPixels[pixelPos * 4] / divide,
+          G: srcPixels[pixelPos * 4 + 1] / divide,
+          B: srcPixels[pixelPos * 4 + 2] / divide,
+          A: srcPixels[pixelPos * 4 + 3] / divide
+        };
+        applyConversion(rgba);
+        return rgba;
+      },
+      { clampToFormatRange: true }
+    );
   }
 
   doTestAndCheckResult(
@@ -176,17 +176,17 @@ export class CopyToTextureUtils extends TextureTestMixin(GPUTest) {
   texelCompareOptions)
   {
     this.device.queue.copyExternalImageToTexture(
-    imageCopyExternalImage,
-    dstTextureCopyView,
-    copySize);
-
+      imageCopyExternalImage,
+      dstTextureCopyView,
+      copySize
+    );
 
     this.expectTexelViewComparisonIsOkInTexture(
-    { texture: dstTextureCopyView.texture, origin: dstTextureCopyView.origin },
-    expTexelView,
-    copySize,
-    texelCompareOptions);
-
+      { texture: dstTextureCopyView.texture, origin: dstTextureCopyView.origin },
+      expTexelView,
+      copySize,
+      texelCompareOptions
+    );
     this.trackForCleanup(dstTextureCopyView.texture);
   }
 }

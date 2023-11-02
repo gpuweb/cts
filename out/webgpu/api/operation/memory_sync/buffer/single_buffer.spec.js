@@ -15,16 +15,16 @@ Wait on another fence, then call expectContents to verify the dst buffer value.
   - If two writes are in the same passes, render result has loose guarantees.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-kOperationBoundaries,
-kBoundaryInfo,
-OperationContextHelper } from
+  kOperationBoundaries,
+  kBoundaryInfo,
+  OperationContextHelper } from
 '../operation_context_helper.js';
 
 import {
-kAllReadOps,
-kAllWriteOps,
-BufferSyncTest,
-checkOpsValidForContext } from
+  kAllReadOps,
+  kAllWriteOps,
+  BufferSyncTest,
+  checkOpsValidForContext } from
 './buffer_sync_test.js';
 
 // The src value is what stores in the src buffer before any operation.
@@ -36,12 +36,12 @@ export const g = makeTestGroup(BufferSyncTest);
 
 g.test('rw').
 desc(
-`
+  `
     Perform a 'read' operations on a buffer, followed by a 'write' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The read should not see the contents written by the subsequent write.`).
-
+    The read should not see the contents written by the subsequent write.`
+).
 params((u) =>
 u //
 .combine('boundary', kOperationBoundaries).
@@ -59,8 +59,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn(async (t) => {
   const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
   const helper = new OperationContextHelper(t);
@@ -81,12 +81,12 @@ fn(async (t) => {
 
 g.test('wr').
 desc(
-`
+  `
     Perform a 'write' operation on a buffer, followed by a 'read' operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The read should see exactly the contents written by the previous write.`).
-
+    The read should see exactly the contents written by the previous write.`
+).
 params((u) =>
 u //
 .combine('boundary', kOperationBoundaries).
@@ -104,8 +104,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn(async (t) => {
   const { readContext, readOp, writeContext, writeOp, boundary } = t.params;
   const helper = new OperationContextHelper(t);
@@ -126,12 +126,12 @@ fn(async (t) => {
 
 g.test('ww').
 desc(
-`
+  `
     Perform a 'first' write operation on a buffer, followed by a 'second' write operation.
     Operations are separated by a 'boundary' (pass, encoder, queue-op, etc.).
     Test that the results are synchronized.
-    The second write should overwrite the contents of the first.`).
-
+    The second write should overwrite the contents of the first.`
+).
 params((u) =>
 u //
 .combine('boundary', kOperationBoundaries).
@@ -147,8 +147,8 @@ expandWithParams(function* ({ _context }) {
       }
     }
   }
-})).
-
+})
+).
 fn(async (t) => {
   const { writeOps, contexts, boundary } = t.params;
   const helper = new OperationContextHelper(t);
@@ -168,15 +168,15 @@ fn(async (t) => {
 
 g.test('two_draws_in_the_same_render_pass').
 desc(
-`Test write-after-write operations in the same render pass. The first write will write 1 into
+  `Test write-after-write operations in the same render pass. The first write will write 1 into
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
-    data in buffer is either 1 or 2. It may use bundle in each draw.`).
-
+    data in buffer is either 1 or 2. It may use bundle in each draw.`
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('firstDrawUseBundle', [false, true]).
-combine('secondDrawUseBundle', [false, true])).
-
+combine('secondDrawUseBundle', [false, true])
+).
 fn(async (t) => {
   const { firstDrawUseBundle, secondDrawUseBundle } = t.params;
   const buffer = await t.createBufferWithValue(0);
@@ -206,10 +206,10 @@ fn(async (t) => {
 
 g.test('two_draws_in_the_same_render_bundle').
 desc(
-`Test write-after-write operations in the same render bundle. The first write will write 1 into
+  `Test write-after-write operations in the same render bundle. The first write will write 1 into
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
-    data in buffer is either 1 or 2.`).
-
+    data in buffer is either 1 or 2.`
+).
 fn(async (t) => {
   const buffer = await t.createBufferWithValue(0);
   const encoder = t.device.createCommandEncoder();
@@ -234,10 +234,10 @@ fn(async (t) => {
 
 g.test('two_dispatches_in_the_same_compute_pass').
 desc(
-`Test write-after-write operations in the same compute pass. The first write will write 1 into
+  `Test write-after-write operations in the same compute pass. The first write will write 1 into
     a storage buffer. The second write will write 2 into the same buffer in the same pass. Expected
-    data in buffer is 2.`).
-
+    data in buffer is 2.`
+).
 fn(async (t) => {
   const buffer = await t.createBufferWithValue(0);
   const encoder = t.device.createCommandEncoder();

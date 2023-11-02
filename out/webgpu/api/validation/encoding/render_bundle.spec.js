@@ -10,10 +10,10 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('empty_bundle_list').
 desc(
-`
+  `
     Test that it is valid to execute an empty list of render bundles
-    `).
-
+    `
+).
 fn((t) => {
   const encoder = t.createEncoder('render pass');
   encoder.encoder.executeBundles([]);
@@ -22,18 +22,18 @@ fn((t) => {
 
 g.test('device_mismatch').
 desc(
-`
+  `
     Tests executeBundles cannot be called with render bundles created from another device
     Test with two bundles to make sure all bundles can be validated:
     - bundle0 and bundle1 from same device
     - bundle0 and bundle1 from different device
-    `).
-
+    `
+).
 paramsSubcasesOnly([
 { bundle0Mismatched: false, bundle1Mismatched: false }, // control case
 { bundle0Mismatched: true, bundle1Mismatched: false },
-{ bundle0Mismatched: false, bundle1Mismatched: true }]).
-
+{ bundle0Mismatched: false, bundle1Mismatched: true }]
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -58,14 +58,14 @@ fn((t) => {
 
 g.test('color_formats_mismatch').
 desc(
-`
+  `
     Tests executeBundles cannot be called with render bundles that do match the colorFormats of the
     render pass. This includes:
     - formats don't match
     - formats match but are in a different order
     - formats match but there is a different count
-    `).
-
+    `
+).
 params((u) =>
 u.combineWithParams([
 {
@@ -92,9 +92,9 @@ u.combineWithParams([
   bundleFormats: ['bgra8unorm', 'rg8unorm'],
   passFormats: ['rg8unorm', 'bgra8unorm', 'rgba8unorm'],
   _compatible: false
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const { bundleFormats, passFormats, _compatible } = t.params;
 
@@ -115,21 +115,21 @@ fn((t) => {
 
 g.test('depth_stencil_formats_mismatch').
 desc(
-`
+  `
     Tests executeBundles cannot be called with render bundles that do match the depthStencil of the
     render pass. This includes:
     - formats don't match
     - formats have matching depth or stencil aspects, but other aspects are missing
-    `).
-
+    `
+).
 params((u) =>
 u.combineWithParams([
 { bundleFormat: 'depth24plus', passFormat: 'depth24plus' }, // control case
 { bundleFormat: 'depth24plus', passFormat: 'depth16unorm' },
 { bundleFormat: 'depth24plus', passFormat: 'depth24plus-stencil8' },
-{ bundleFormat: 'stencil8', passFormat: 'depth24plus-stencil8' }])).
-
-
+{ bundleFormat: 'stencil8', passFormat: 'depth24plus-stencil8' }]
+)
+).
 beforeAllSubcases((t) => {
   const { bundleFormat, passFormat } = t.params;
   t.selectDeviceForTextureFormatOrSkipTestCase([bundleFormat, passFormat]);
@@ -157,11 +157,11 @@ fn((t) => {
 
 g.test('depth_stencil_readonly_mismatch').
 desc(
-`
+  `
     Tests executeBundles cannot be called with render bundles that do match the depthStencil
     readonly state of the render pass.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('depthStencilFormat', kDepthStencilFormats).
@@ -181,8 +181,8 @@ filter((p) => {
 
   }
   return true;
-})).
-
+})
+).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.depthStencilFormat);
 }).
@@ -222,19 +222,19 @@ fn((t) => {
 
 g.test('sample_count_mismatch').
 desc(
-`
+  `
     Tests executeBundles cannot be called with render bundles that do match the sampleCount of the
     render pass.
-    `).
-
+    `
+).
 params((u) =>
 u.combineWithParams([
 { bundleSamples: 1, passSamples: 1 }, // control case
 { bundleSamples: 4, passSamples: 4 }, // control case
 { bundleFormat: 4, passFormat: 1 },
-{ bundleFormat: 1, passFormat: 4 }])).
-
-
+{ bundleFormat: 1, passFormat: 4 }]
+)
+).
 fn((t) => {
   const { bundleSamples, passSamples } = t.params;
 

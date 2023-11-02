@@ -13,20 +13,21 @@ import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.
 
 
 
-export const kVideoInfo = makeTable(
-['mimeType'],
-[undefined], {
-  // All video names
-  'four-colors-vp8-bt601.webm': ['video/webm; codecs=vp8'],
-  'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
-  'four-colors-h264-bt601.mp4': ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-vp9-bt601.webm': ['video/webm; codecs=vp9'],
-  'four-colors-vp9-bt709.webm': ['video/webm; codecs=vp9'],
-  'four-colors-vp9-bt2020.webm': ['video/webm; codecs=vp9'],
-  'four-colors-h264-bt601-rotate-90.mp4': ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-h264-bt601-rotate-180.mp4': ['video/mp4; codecs=avc1.4d400c'],
-  'four-colors-h264-bt601-rotate-270.mp4': ['video/mp4; codecs=avc1.4d400c']
-});
+export const kVideoInfo =
+makeTable(
+  ['mimeType'],
+  [undefined], {
+    // All video names
+    'four-colors-vp8-bt601.webm': ['video/webm; codecs=vp8'],
+    'four-colors-theora-bt601.ogv': ['video/ogg; codecs=theora'],
+    'four-colors-h264-bt601.mp4': ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-vp9-bt601.webm': ['video/webm; codecs=vp9'],
+    'four-colors-vp9-bt709.webm': ['video/webm; codecs=vp9'],
+    'four-colors-vp9-bt2020.webm': ['video/webm; codecs=vp9'],
+    'four-colors-h264-bt601-rotate-90.mp4': ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-h264-bt601-rotate-180.mp4': ['video/mp4; codecs=avc1.4d400c'],
+    'four-colors-h264-bt601-rotate-270.mp4': ['video/mp4; codecs=avc1.4d400c']
+  });
 
 
 // Expectation values about converting video contents to sRGB color space.
@@ -133,53 +134,53 @@ video,
 callback)
 {
   return raceWithRejectOnTimeout(
-  new Promise((resolve, reject) => {
-    const callbackAndResolve = () =>
-    void (async () => {
-      try {
-        await callback();
-        resolve();
-      } catch (ex) {
-        reject(ex);
-      }
-    })();
-    if (video.error) {
-      reject(
-      new ErrorWithExtra('Video.error: ' + video.error.message, () => ({ error: video.error })));
-
-      return;
-    }
-
-    video.addEventListener(
-    'error',
-    (event) => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
-    true);
-
-
-    if ('requestVideoFrameCallback' in video) {
-      video.requestVideoFrameCallback(() => {
-        callbackAndResolve();
-      });
-    } else {
-      // If requestVideoFrameCallback isn't available, check each frame if the video has advanced.
-      const timeWatcher = () => {
-        if (video.currentTime > 0) {
-          callbackAndResolve();
-        } else {
-          requestAnimationFrame(timeWatcher);
+    new Promise((resolve, reject) => {
+      const callbackAndResolve = () =>
+      void (async () => {
+        try {
+          await callback();
+          resolve();
+        } catch (ex) {
+          reject(ex);
         }
-      };
-      timeWatcher();
-    }
+      })();
+      if (video.error) {
+        reject(
+          new ErrorWithExtra('Video.error: ' + video.error.message, () => ({ error: video.error }))
+        );
+        return;
+      }
 
-    video.loop = true;
-    video.muted = true;
-    video.preload = 'auto';
-    video.play().catch(reject);
-  }),
-  2000,
-  'Video never became ready');
+      video.addEventListener(
+        'error',
+        (event) => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
+        true
+      );
 
+      if (video.requestVideoFrameCallback) {
+        video.requestVideoFrameCallback(() => {
+          callbackAndResolve();
+        });
+      } else {
+        // If requestVideoFrameCallback isn't available, check each frame if the video has advanced.
+        const timeWatcher = () => {
+          if (video.currentTime > 0) {
+            callbackAndResolve();
+          } else {
+            requestAnimationFrame(timeWatcher);
+          }
+        };
+        timeWatcher();
+      }
+
+      video.loop = true;
+      video.muted = true;
+      video.preload = 'auto';
+      video.play().catch(reject);
+    }),
+    2000,
+    'Video never became ready'
+  );
 }
 
 /**
@@ -229,31 +230,31 @@ video)
   }
 
   return raceWithRejectOnTimeout(
-  new Promise((resolve, reject) => {
-    const videoTrack = video.captureStream().getVideoTracks()[0];
-    const trackProcessor = new MediaStreamTrackProcessor({
-      track: videoTrack
-    });
-    const transformer = new TransformStream({
-      transform(videoFrame, controller) {
-        videoTrack.stop();
-        resolve(videoFrame);
-      },
-      flush(controller) {
-        controller.terminate();
-      }
-    });
-    const trackGenerator = new MediaStreamTrackGenerator({
-      kind: 'video'
-    });
-    trackProcessor.readable.
-    pipeThrough(transformer).
-    pipeTo(trackGenerator.writable).
-    catch(() => {});
-  }),
-  2000,
-  'Video never became ready');
-
+    new Promise((resolve) => {
+      const videoTrack = video.captureStream().getVideoTracks()[0];
+      const trackProcessor = new MediaStreamTrackProcessor({
+        track: videoTrack
+      });
+      const transformer = new TransformStream({
+        transform(videoFrame, _controller) {
+          videoTrack.stop();
+          resolve(videoFrame);
+        },
+        flush(controller) {
+          controller.terminate();
+        }
+      });
+      const trackGenerator = new MediaStreamTrackGenerator({
+        kind: 'video'
+      });
+      trackProcessor.readable.
+      pipeThrough(transformer).
+      pipeTo(trackGenerator.writable).
+      catch(() => {});
+    }),
+    2000,
+    'Video never became ready'
+  );
 }
 
 /**

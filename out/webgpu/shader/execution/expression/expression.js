@@ -5,27 +5,27 @@
 import { compare } from '../../../util/compare.js';
 import { kValue } from '../../../util/constants.js';
 import {
-ScalarType,
-Scalar,
+  ScalarType,
+  Scalar,
 
-TypeVec,
-TypeU32,
+  TypeVec,
+  TypeU32,
 
-Vector,
-VectorType,
-u32,
-i32,
-Matrix,
-MatrixType,
+  Vector,
+  VectorType,
+  u32,
+  i32,
+  Matrix,
+  MatrixType,
 
-scalarTypeOf } from
+  scalarTypeOf } from
 '../../../util/conversion.js';
 import { FPInterval } from '../../../util/floating_point.js';
 import {
-cartesianProduct,
+  cartesianProduct,
 
-quantizeToI32,
-quantizeToU32 } from
+  quantizeToI32,
+  quantizeToU32 } from
 '../../../util/math.js';
 
 
@@ -63,10 +63,10 @@ export function toComparator(input) {
 
 
 
+/** CaseList is a list of Cases */
 
 
-
-
+/** The input value source */
 
 
 
@@ -116,8 +116,8 @@ function valueStride(ty) {
             case 3:
               return 64;
             case 4:
-              return 64;}
-
+              return 64;
+          }
           break;
         case 3:
           switch (ty.rows) {
@@ -126,8 +126,8 @@ function valueStride(ty) {
             case 3:
               return 96;
             case 4:
-              return 96;}
-
+              return 96;
+          }
           break;
         case 4:
           switch (ty.rows) {
@@ -136,10 +136,10 @@ function valueStride(ty) {
             case 3:
               return 128;
             case 4:
-              return 128;}
-
-          break;}
-
+              return 128;
+          }
+          break;
+      }
     }
     unreachable(`AbstractFloats have not yet been implemented for ${ty.toString()}`);
   }
@@ -153,8 +153,8 @@ function valueStride(ty) {
           case 3:
             return 32;
           case 4:
-            return 32;}
-
+            return 32;
+        }
         break;
       case 3:
         switch (ty.rows) {
@@ -163,8 +163,8 @@ function valueStride(ty) {
           case 3:
             return 64;
           case 4:
-            return 64;}
-
+            return 64;
+        }
         break;
       case 4:
         switch (ty.rows) {
@@ -173,13 +173,13 @@ function valueStride(ty) {
           case 3:
             return 64;
           case 4:
-            return 64;}
-
-        break;}
-
+            return 64;
+        }
+        break;
+    }
     unreachable(
-    `Attempted to get stride length for a matrix with dimensions (${ty.cols}x${ty.rows}), which isn't currently handled`);
-
+      `Attempted to get stride length for a matrix with dimensions (${ty.cols}x${ty.rows}), which isn't currently handled`
+    );
   }
 
   // Handles scalars and vectors
@@ -196,9 +196,9 @@ function storageType(ty) {
   if (ty instanceof ScalarType) {
     assert(ty.kind !== 'f64', `No storage type defined for 'f64' values`);
     assert(
-    ty.kind !== 'abstract-float',
-    `Custom handling is implemented for 'abstract-float' values`);
-
+      ty.kind !== 'abstract-float',
+      `Custom handling is implemented for 'abstract-float' values`
+    );
     if (ty.kind === 'bool') {
       return TypeU32;
     }
@@ -220,9 +220,9 @@ function fromStorage(ty, expr) {
   }
   if (ty instanceof VectorType) {
     assert(
-    ty.elementType.kind !== 'abstract-float',
-    `AbstractFloat values cannot appear in input storage`);
-
+      ty.elementType.kind !== 'abstract-float',
+      `AbstractFloat values cannot appear in input storage`
+    );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
       return `${expr} != vec${ty.width}<u32>(0u)`;
@@ -235,9 +235,9 @@ function fromStorage(ty, expr) {
 function toStorage(ty, expr) {
   if (ty instanceof ScalarType) {
     assert(
-    ty.kind !== 'abstract-float',
-    `AbstractFloat values have custom code for writing to storage`);
-
+      ty.kind !== 'abstract-float',
+      `AbstractFloat values have custom code for writing to storage`
+    );
     assert(ty.kind !== 'f64', `No storage type defined for 'f64' values`);
     if (ty.kind === 'bool') {
       return `select(0u, 1u, ${expr})`;
@@ -245,9 +245,9 @@ function toStorage(ty, expr) {
   }
   if (ty instanceof VectorType) {
     assert(
-    ty.elementType.kind !== 'abstract-float',
-    `AbstractFloat values have custom code for writing to storage`);
-
+      ty.elementType.kind !== 'abstract-float',
+      `AbstractFloat values have custom code for writing to storage`
+    );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
       return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
@@ -324,15 +324,15 @@ batch_size)
         // Some drivers are slow to build pipelines with large uniform buffers.
         // 2k appears to be a sweet-spot when benchmarking.
         return Math.floor(
-        Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
-        valueStrides(parameterTypes));
-
+          Math.min(1024 * 2, t.device.limits.maxUniformBufferBindingSize) /
+          valueStrides(parameterTypes)
+        );
       case 'storage_r':
       case 'storage_rw':
         return Math.floor(
-        t.device.limits.maxStorageBufferBindingSize / valueStrides(parameterTypes));}
-
-
+          t.device.limits.maxStorageBufferBindingSize / valueStrides(parameterTypes)
+        );
+    }
   }();
 
   // A cache to hold built shader pipelines.
@@ -366,16 +366,16 @@ batch_size)
     batchesInFlight += 1;
 
     const checkBatch = submitBatch(
-    t,
-    shaderBuilder,
-    parameterTypes,
-    resultType,
-    batchCases,
-    cfg.inputSource,
-    pipelineCache);
-
+      t,
+      shaderBuilder,
+      parameterTypes,
+      resultType,
+      batchCases,
+      cfg.inputSource,
+      pipelineCache
+    );
     checkBatch();
-    t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
+    void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   }
 }
 
@@ -408,15 +408,15 @@ pipelineCache)
   });
 
   const [pipeline, group] = buildPipeline(
-  t,
-  shaderBuilder,
-  parameterTypes,
-  resultType,
-  cases,
-  inputSource,
-  outputBuffer,
-  pipelineCache);
-
+    t,
+    shaderBuilder,
+    parameterTypes,
+    resultType,
+    cases,
+    inputSource,
+    outputBuffer,
+    pipelineCache
+  );
 
   const encoder = t.device.createCommandEncoder();
   const pass = encoder.beginComputePass();
@@ -573,8 +573,8 @@ function wgslInputVar(inputSource, count) {
     case 'storage_rw':
       return `@group(0) @binding(1) var<storage, read_write> inputs : array<Input, ${count}>;`;
     case 'uniform':
-      return `@group(0) @binding(1) var<uniform> inputs : array<Input, ${count}>;`;}
-
+      return `@group(0) @binding(1) var<uniform> inputs : array<Input, ${count}>;`;
+  }
   throw new Error(`InputSource ${inputSource} does not use an input var`);
 }
 
@@ -608,9 +608,9 @@ cases,
 inputSource)
 {
   assert(
-  scalarTypeOf(resultType).kind !== 'abstract-float',
-  `abstractFloatShaderBuilder should be used when result type is 'abstract-float`);
-
+    scalarTypeOf(resultType).kind !== 'abstract-float',
+    `abstractFloatShaderBuilder should be used when result type is 'abstract-float`
+  );
   if (inputSource === 'const') {
     //////////////////////////////////////////////////////////////////////////
     // Constant eval
@@ -621,12 +621,12 @@ inputSource)
       // intermediate store, which will concretize the value early
       body = cases.
       map(
-      (c, i) =>
-      `  outputs[${i}].value = ${toStorage(
-      resultType,
-      expressionBuilder(map(c.input, (v) => v.wgsl())))
-      };`).
-
+        (c, i) =>
+        `  outputs[${i}].value = ${toStorage(
+          resultType,
+          expressionBuilder(map(c.input, (v) => v.wgsl()))
+        )};`
+      ).
       join('\n  ');
     } else if (globalTestConfig.unrollConstEvalLoops) {
       body = cases.
@@ -747,8 +747,8 @@ export function compoundAssignmentBuilder(op) {
     const rhsType = parameterTypes[1];
     if (!objectEquals(lhsType, resultType)) {
       throw new Error(
-      `compoundBinaryOp() requires result type (${resultType}) to be equal to the LHS type (${lhsType})`);
-
+        `compoundBinaryOp() requires result type (${resultType}) to be equal to the LHS type (${lhsType})`
+      );
     }
     if (inputSource === 'const') {
       //////////////////////////////////////////////////////////////////////////
@@ -966,9 +966,9 @@ export function abstractFloatShaderBuilder(expressionBuilder) {
   {
     assert(inputSource === 'const', 'AbstractFloat results are only defined for const-eval');
     assert(
-    scalarTypeOf(resultType).kind === 'abstract-float',
-    `Expected resultType of 'abstract-float', received '${scalarTypeOf(resultType).kind}' instead`);
-
+      scalarTypeOf(resultType).kind === 'abstract-float',
+      `Expected resultType of 'abstract-float', received '${scalarTypeOf(resultType).kind}' instead`
+    );
 
     const body = cases.
     map((c, i) => {
@@ -1019,8 +1019,8 @@ pipelineCache)
       const input_str = `[${inputTypes.join(',')}]`;
       const param_str = `[${parameterTypes.join(',')}]`;
       throw new Error(
-      `case input types ${input_str} do not match provided runner parameter types ${param_str}`);
-
+        `case input types ${input_str} do not match provided runner parameter types ${param_str}`
+      );
     }
   });
 
@@ -1089,10 +1089,10 @@ pipelineCache)
 
         // build the input buffer
         const inputBuffer = t.makeBufferWithContents(
-        inputData,
-        GPUBufferUsage.COPY_SRC | (
-        inputSource === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE));
-
+          inputData,
+          GPUBufferUsage.COPY_SRC | (
+          inputSource === 'uniform' ? GPUBufferUsage.UNIFORM : GPUBufferUsage.STORAGE)
+        );
 
         // build the bind group
         const group = t.device.createBindGroup({
@@ -1104,8 +1104,8 @@ pipelineCache)
         });
 
         return [pipeline, group];
-      }}
-
+      }
+  }
 }
 
 /**
@@ -1126,14 +1126,14 @@ vectorWidth)
     const ty = parameterTypes[i];
     if (!(ty instanceof ScalarType)) {
       throw new Error(
-      `packScalarsToVector() can only be used on scalar parameter types, but the ${i}'th parameter type is a ${ty}'`);
-
+        `packScalarsToVector() can only be used on scalar parameter types, but the ${i}'th parameter type is a ${ty}'`
+      );
     }
   }
   if (!(resultType instanceof ScalarType)) {
     throw new Error(
-    `packScalarsToVector() can only be used with a scalar return type, but the return type is a ${resultType}'`);
-
+      `packScalarsToVector() can only be used with a scalar return type, but the return type is a ${resultType}'`
+    );
   }
 
   const packedCases = [];
@@ -1199,12 +1199,12 @@ vectorWidth)
  */
 
 
+// No expectations
 
-
-
-
-
-
+/**
+ * A function that performs a binary operation on x and y, and returns the expected
+ * result.
+ */
 
 
 

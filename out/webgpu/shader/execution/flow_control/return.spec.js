@@ -14,13 +14,13 @@ desc("Test that flow control does not execute after a 'return' statement").
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   return;
   ${f.expect_not_reached()}
-`);
-
+`
+  );
 });
 
 g.test('return_conditional_true').
@@ -28,15 +28,15 @@ desc("Test that flow control does not execute after a 'return' statement in a if
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   if (${f.value(true)}) {
     return;
   }
   ${f.expect_not_reached()}
-`);
-
+`
+  );
 });
 
 g.test('return_conditional_false').
@@ -44,14 +44,14 @@ desc("Test that flow control does not execute after a 'return' statement in a if
 params((u) => u.combine('preventValueOptimizations', [true, false])).
 fn((t) => {
   runFlowControlTest(
-  t,
-  (f) => `
+    t,
+    (f) => `
   ${f.expect_order(0)}
   if (${f.value(false)}) {
     return;
   }
   ${f.expect_order(1)}
-`);
-
+`
+  );
 });
 //# sourceMappingURL=return.spec.js.map

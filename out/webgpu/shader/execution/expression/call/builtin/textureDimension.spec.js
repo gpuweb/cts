@@ -15,7 +15,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('sampled').
 specURL('https://www.w3.org/TR/WGSL/#texturedimensions').
 desc(
-`
+  `
 T: f32, i32, u32
 
 fn textureDimensions(t: texture_1d<T>) -> u32
@@ -37,8 +37,8 @@ Parameters:
  * level:
    - The mip level, with level 0 containing a full size version of the texture.
    - If omitted, the dimensions of level 0 are returned.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('texture_type', [
@@ -48,18 +48,18 @@ combine('texture_type', [
 'texture_3d',
 'texture_cube',
 'texture_cube_array',
-'texture_multisampled_2d']).
-
+'texture_multisampled_2d']
+).
 beginSubcases().
 combine('sampled_type', ['f32-only', 'i32', 'u32']).
-combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])).
-
+combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])
+).
 unimplemented();
 
 g.test('depth').
 specURL('https://www.w3.org/TR/WGSL/#texturedimensions').
 desc(
-`
+  `
 fn textureDimensions(t: texture_depth_2d) -> vec2<u32>
 fn textureDimensions(t: texture_depth_2d, level: u32) -> vec2<u32>
 fn textureDimensions(t: texture_depth_2d_array) -> vec2<u32>
@@ -75,8 +75,8 @@ Parameters:
  * level:
    - The mip level, with level 0 containing a full size version of the texture.
    - If omitted, the dimensions of level 0 are returned.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('texture_type', [
@@ -84,17 +84,17 @@ combine('texture_type', [
 'texture_depth_2d_array',
 'texture_depth_cube',
 'texture_depth_cube_array',
-'texture_depth_multisampled_2d']).
-
+'texture_depth_multisampled_2d']
+).
 beginSubcases().
-combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])).
-
+combine('level', [undefined, 0, 1, 'textureNumLevels', 'textureNumLevels+1'])
+).
 unimplemented();
 
 g.test('storage').
 specURL('https://www.w3.org/TR/WGSL/#texturedimensions').
 desc(
-`
+  `
 F: rgba8unorm
    rgba8snorm
    rgba8uint
@@ -120,8 +120,8 @@ fn textureDimensions(t: texture_storage_3d<F,A>) -> vec3<u32>
 
 Parameters:
  * t: the storage texture
-`).
-
+`
+).
 params((u) =>
 u.
 combine('texel_format', [
@@ -140,22 +140,22 @@ combine('texel_format', [
 'rg32float',
 'rgba32uint',
 'rgba32sint',
-'rgba32float']).
-
+'rgba32float']
+).
 beginSubcases().
-combine('access_mode', ['read', 'write', 'read_write'])).
-
+combine('access_mode', ['read', 'write', 'read_write'])
+).
 unimplemented();
 
 g.test('external').
 specURL('https://www.w3.org/TR/WGSL/#texturedimensions').
 desc(
-`
+  `
 fn textureDimensions(t: texture_external) -> vec2<u32>
 
 Parameters:
  * t: the external texture
-`).
-
+`
+).
 unimplemented();
 //# sourceMappingURL=textureDimension.spec.js.map

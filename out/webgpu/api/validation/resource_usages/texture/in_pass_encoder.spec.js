@@ -7,9 +7,9 @@ import { pp } from '../../../../../common/util/preprocessor.js';
 import { assert } from '../../../../../common/util/util.js';
 import { GPUConst } from '../../../../constants.js';
 import {
-kDepthStencilFormats,
-kDepthStencilFormatResolvedAspect,
-kTextureFormatInfo } from
+  kDepthStencilFormats,
+  kDepthStencilFormatResolvedAspect,
+  kTextureFormatInfo } from
 '../../../../format_info.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -74,8 +74,8 @@ class TextureUsageTracking extends ValidationTest {
       case 'writeonly-storage-texture':
         assert(format !== undefined);
         entry = { storageTexture: { access: 'write-only', format, viewDimension } };
-        break;}
-
+        break;
+    }
 
     return this.device.createBindGroupLayout({
       entries: [
@@ -155,9 +155,7 @@ class TextureUsageTracking extends ValidationTest {
     };
   }
 
-  testValidationScope(
-  compute)
-
+  testValidationScope(compute)
 
 
 
@@ -223,49 +221,49 @@ const SLICE_COUNT = 2;
 
 g.test('subresources_and_binding_types_combination_for_color').
 desc(
-`
+  `
     Test the resource usage rules by using two views of the same GPUTexture in a usage scope. Tests
     various combinations of {sampled, storage, render target} usages, mip-level ranges, and
     array-layer ranges, in {compute pass, render pass, render pass via bundle}.
       - Error if a subresource (level/layer) is used as read+write or write+write in the scope,
         except when both usages are writeonly-storage-texture which is allowed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('compute', [false, true]).
 expandWithParams(
-(p) =>
-[
-{ _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
-{ _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
-{ _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
-// Race condition upon multiple writable storage texture is valid.
-// For p.compute === true, fails at pass.dispatch because aliasing exists.
-{
-  _usageOK: !p.compute,
-  type0: 'writeonly-storage-texture',
-  type1: 'writeonly-storage-texture'
-},
-{ _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
-{ _usageOK: false, type0: 'render-target', type1: 'render-target' }]).
+  (p) =>
+  [
+  { _usageOK: true, type0: 'sampled-texture', type1: 'sampled-texture' },
+  { _usageOK: false, type0: 'sampled-texture', type1: 'writeonly-storage-texture' },
+  { _usageOK: false, type0: 'sampled-texture', type1: 'render-target' },
+  // Race condition upon multiple writable storage texture is valid.
+  // For p.compute === true, fails at pass.dispatch because aliasing exists.
+  {
+    _usageOK: !p.compute,
+    type0: 'writeonly-storage-texture',
+    type1: 'writeonly-storage-texture'
+  },
+  { _usageOK: false, type0: 'writeonly-storage-texture', type1: 'render-target' },
+  { _usageOK: false, type0: 'render-target', type1: 'render-target' }]
 
-
+).
 beginSubcases().
 combine('binding0InBundle', [false, true]).
 combine('binding1InBundle', [false, true]).
 unless(
-(p) =>
-// We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-p.binding0InBundle && p.type0 === 'render-target' ||
-p.binding1InBundle && p.type1 === 'render-target' ||
-// We can't set 'render-target' or bundle in compute.
-p.compute && (
-p.binding0InBundle ||
-p.binding1InBundle ||
-p.type0 === 'render-target' ||
-p.type1 === 'render-target')).
-
+  (p) =>
+  // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+  p.binding0InBundle && p.type0 === 'render-target' ||
+  p.binding1InBundle && p.type1 === 'render-target' ||
+  // We can't set 'render-target' or bundle in compute.
+  p.compute && (
+  p.binding0InBundle ||
+  p.binding1InBundle ||
+  p.type0 === 'render-target' ||
+  p.type1 === 'render-target')
+).
 combineWithParams([
 // Two texture usages are binding to the same texture subresource.
 {
@@ -400,19 +398,19 @@ combineWithParams([
   baseLayer1: BASE_LAYER + SLICE_COUNT - 1,
   layerCount1: 3,
   _resourceSuccess: false
-}]).
-
+}]
+).
 unless(
-(p) =>
-// Every color attachment or storage texture can use only one single subresource.
-p.type0 !== 'sampled-texture' && (p.levelCount0 !== 1 || p.layerCount0 !== 1) ||
-p.type1 !== 'sampled-texture' && (p.levelCount1 !== 1 || p.layerCount1 !== 1) ||
-// All color attachments' size should be the same.
-p.type0 === 'render-target' &&
-p.type1 === 'render-target' &&
-p.baseLevel1 !== BASE_LEVEL)).
-
-
+  (p) =>
+  // Every color attachment or storage texture can use only one single subresource.
+  p.type0 !== 'sampled-texture' && (p.levelCount0 !== 1 || p.layerCount0 !== 1) ||
+  p.type1 !== 'sampled-texture' && (p.levelCount1 !== 1 || p.layerCount1 !== 1) ||
+  // All color attachments' size should be the same.
+  p.type0 === 'render-target' &&
+  p.type1 === 'render-target' &&
+  p.baseLevel1 !== BASE_LEVEL
+)
+).
 fn((t) => {
   const {
     compute,
@@ -493,9 +491,9 @@ fn((t) => {
     const pass = compute ?
     encoder.beginComputePass() :
     t.beginSimpleRenderPass(
-    encoder,
-    type1 === 'render-target' ? view1 : t.createTexture().createView());
-
+      encoder,
+      type1 === 'render-target' ? view1 : t.createTexture().createView()
+    );
 
     const bgls = [];
     // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
@@ -535,9 +533,9 @@ fn((t) => {
     }
     if (compute) {
       t.setComputePipelineAndCallDispatch(
-      pass,
-      t.device.createPipelineLayout({ bindGroupLayouts: bgls }));
-
+        pass,
+        t.device.createPipelineLayout({ bindGroupLayouts: bgls })
+      );
     }
     pass.end();
   }
@@ -550,14 +548,14 @@ fn((t) => {
 
 g.test('subresources_and_binding_types_combination_for_aspect').
 desc(
-`
+  `
     Test the resource usage rules by using two views of the same GPUTexture in a usage scope. Tests
     various combinations of {sampled, render target} usages, {all, depth-only, stencil-only} aspects
     that overlap a given subresources in {compute pass, render pass, render pass via bundle}.
       - Error if a subresource (level/layer/aspect) is used as read+write or write+write in the
         scope.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('compute', [false, true]).
@@ -580,20 +578,20 @@ combineWithParams([
   baseLevel: BASE_LEVEL,
   baseLayer: BASE_LAYER + 1,
   _resourceSuccess: true
-}]).
-
+}]
+).
 combine('aspect0', ['all', 'depth-only', 'stencil-only']).
 combine('aspect1', ['all', 'depth-only', 'stencil-only']).
 unless(
-(p) =>
-p.aspect0 === 'stencil-only' && !kTextureFormatInfo[p.format].stencil ||
-p.aspect1 === 'stencil-only' && !kTextureFormatInfo[p.format].stencil).
-
+  (p) =>
+  p.aspect0 === 'stencil-only' && !kTextureFormatInfo[p.format].stencil ||
+  p.aspect1 === 'stencil-only' && !kTextureFormatInfo[p.format].stencil
+).
 unless(
-(p) =>
-p.aspect0 === 'depth-only' && !kTextureFormatInfo[p.format].depth ||
-p.aspect1 === 'depth-only' && !kTextureFormatInfo[p.format].depth).
-
+  (p) =>
+  p.aspect0 === 'depth-only' && !kTextureFormatInfo[p.format].depth ||
+  p.aspect1 === 'depth-only' && !kTextureFormatInfo[p.format].depth
+).
 combineWithParams([
 {
   type0: 'sampled-texture',
@@ -604,37 +602,37 @@ combineWithParams([
   type0: 'sampled-texture',
   type1: 'render-target',
   _usageSuccess: false
-}]).
-
+}]
+).
 unless(
-// Can't sample a multiplanar texture without selecting an aspect.
-(p) =>
-!!kTextureFormatInfo[p.format].depth &&
-!!kTextureFormatInfo[p.format].stencil && (
-p.aspect0 === 'all' && p.type0 === 'sampled-texture' ||
-p.aspect1 === 'all' && p.type1 === 'sampled-texture')).
-
+  // Can't sample a multiplanar texture without selecting an aspect.
+  (p) =>
+  !!kTextureFormatInfo[p.format].depth &&
+  !!kTextureFormatInfo[p.format].stencil && (
+  p.aspect0 === 'all' && p.type0 === 'sampled-texture' ||
+  p.aspect1 === 'all' && p.type1 === 'sampled-texture')
+).
 unless(
-(p) =>
-// We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-p.binding1InBundle && p.type1 === 'render-target').
-
+  (p) =>
+  // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+  p.binding1InBundle && p.type1 === 'render-target'
+).
 unless(
-(p) =>
-// We can't set 'render-target' or bundle in compute. Note that type0 is definitely not
-// 'render-target'
-p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')).
-
+  (p) =>
+  // We can't set 'render-target' or bundle in compute. Note that type0 is definitely not
+  // 'render-target'
+  p.compute && (p.binding0InBundle || p.binding1InBundle || p.type1 === 'render-target')
+).
 unless(
-(p) =>
-// Depth-stencil attachment views must encompass all aspects of the texture. Invalid
-// cases are for depth-stencil textures when the aspect is not 'all'.
-p.type1 === 'render-target' &&
-!!kTextureFormatInfo[p.format].depth &&
-!!kTextureFormatInfo[p.format].stencil &&
-p.aspect1 !== 'all')).
-
-
+  (p) =>
+  // Depth-stencil attachment views must encompass all aspects of the texture. Invalid
+  // cases are for depth-stencil textures when the aspect is not 'all'.
+  p.type1 === 'render-target' &&
+  !!kTextureFormatInfo[p.format].depth &&
+  !!kTextureFormatInfo[p.format].stencil &&
+  p.aspect1 !== 'all'
+)
+).
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
@@ -721,8 +719,8 @@ fn((t) => {
         if (kTextureFormatInfo[format].stencil) {
           return 'uint';
         }
-        return 'depth';}
-
+        return 'depth';
+    }
   };
 
   // Create bind groups. Set bind groups in pass directly or set bind groups in bundle.
@@ -764,14 +762,14 @@ fn((t) => {
 
 g.test('shader_stages_and_visibility,storage_write').
 desc(
-`
+  `
     Test that stage visibility doesn't affect resource usage validation.
     - Use a texture as sampled, with 'readVisibility' {0,VERTEX,FRAGMENT,COMPUTE}
     - Use a {same,different} texture as storage, with 'writeVisibility' {0,FRAGMENT,COMPUTE}
 
     There should be a validation error IFF the same texture was used.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('compute', [false, true]).
@@ -781,10 +779,10 @@ combine('readVisibility', [
 0,
 GPUConst.ShaderStage.VERTEX,
 GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.COMPUTE]).
-
-combine('writeVisibility', [0, GPUConst.ShaderStage.FRAGMENT, GPUConst.ShaderStage.COMPUTE])).
-
+GPUConst.ShaderStage.COMPUTE]
+).
+combine('writeVisibility', [0, GPUConst.ShaderStage.FRAGMENT, GPUConst.ShaderStage.COMPUTE])
+).
 fn((t) => {
   const { compute, readVisibility, writeVisibility, secondUseConflicts } = t.params;
 
@@ -816,11 +814,11 @@ fn((t) => {
     pass.setBindGroup(0, bindGroup);
 
     t.setComputePipelineAndCallDispatch(
-    pass,
-    t.device.createPipelineLayout({
-      bindGroupLayouts: [bgl]
-    }));
-
+      pass,
+      t.device.createPipelineLayout({
+        bindGroupLayouts: [bgl]
+      })
+    );
     pass.end();
   } else {
     const pass = t.beginSimpleRenderPass(encoder, t.createTexture().createView());
@@ -835,14 +833,14 @@ fn((t) => {
 
 g.test('shader_stages_and_visibility,attachment_write').
 desc(
-`
+  `
     Test that stage visibility doesn't affect resource usage validation.
     - Use a texture as sampled, with 'readVisibility' {0,VERTEX,FRAGMENT,COMPUTE}
     - Use a {same,different} texture as a render pass attachment
 
     There should be a validation error IFF the same texture was used.
-  `).
-
+  `
+).
 params((u) =>
 u.
 beginSubcases().
@@ -851,9 +849,9 @@ combine('readVisibility', [
 0,
 GPUConst.ShaderStage.VERTEX,
 GPUConst.ShaderStage.FRAGMENT,
-GPUConst.ShaderStage.COMPUTE])).
-
-
+GPUConst.ShaderStage.COMPUTE]
+)
+).
 fn((t) => {
   const { readVisibility, secondUseConflicts } = t.params;
 
@@ -887,23 +885,23 @@ fn((t) => {
 
 g.test('replaced_binding').
 desc(
-`
+  `
     Test whether a binding that's been replaced by another setBindGroup call can still
     cause validation to fail (with a write/write conflict).
       - In render pass, all setBindGroup calls contribute to the validation even if they're
         shadowed.
       - In compute pass, only the bindings visible at dispatchWorkgroups() contribute to validation.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('compute', [false, true]).
 combine('callDrawOrDispatch', [false, true]).
 combine('entry', [
 { texture: {} },
-{ storageTexture: { access: 'write-only', format: 'rgba8unorm' } }])).
-
-
+{ storageTexture: { access: 'write-only', format: 'rgba8unorm' } }]
+)
+).
 fn((t) => {
   const { compute, callDrawOrDispatch, entry } = t.params;
 
@@ -965,11 +963,11 @@ fn((t) => {
 
 g.test('bindings_in_bundle').
 desc(
-`
+  `
     Test the texture usages in bundles by using two bindings of the same texture with various
     combination of {sampled, storage, render target} usages.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('type0', ['render-target', ...kTextureBindingTypes]).
@@ -986,8 +984,8 @@ expandWithParams(function* ({ type0, type1 }) {
       case 'writeonly-storage-texture':
         return 'STORAGE_BINDING';
       case 'render-target':
-        return 'RENDER_ATTACHMENT';}
-
+        return 'RENDER_ATTACHMENT';
+    }
   };
 
   yield {
@@ -1000,33 +998,26 @@ expandWithParams(function* ({ type0, type1 }) {
   };
 }).
 unless(
-(p) =>
-// We can't set 'render-target' in bundle, so we need to exclude it from bundle.
-// In addition, if both bindings are non-bundle, there is no need to test it because
-// we have far more comprehensive test cases for that situation in this file.
-p.binding0InBundle && p.type0 === 'render-target' ||
-p.binding1InBundle && p.type1 === 'render-target' ||
-!p.binding0InBundle && !p.binding1InBundle ||
-// Storage textures can't be multisampled.
-p._sampleCount !== undefined &&
-p._sampleCount > 1 && (
-p._usage0 === 'STORAGE_BINDING' || p._usage1 === 'STORAGE_BINDING') ||
-// If both are sampled, we create two views of the same texture, so both must be
-// multisampled.
-p.type0 === 'multisampled-texture' && p.type1 === 'sampled-texture' ||
-p.type0 === 'sampled-texture' && p.type1 === 'multisampled-texture')).
-
-
+  (p) =>
+  // We can't set 'render-target' in bundle, so we need to exclude it from bundle.
+  // In addition, if both bindings are non-bundle, there is no need to test it because
+  // we have far more comprehensive test cases for that situation in this file.
+  p.binding0InBundle && p.type0 === 'render-target' ||
+  p.binding1InBundle && p.type1 === 'render-target' ||
+  !p.binding0InBundle && !p.binding1InBundle ||
+  // Storage textures can't be multisampled.
+  p._sampleCount !== undefined &&
+  p._sampleCount > 1 && (
+  p._usage0 === 'STORAGE_BINDING' || p._usage1 === 'STORAGE_BINDING') ||
+  // If both are sampled, we create two views of the same texture, so both must be
+  // multisampled.
+  p.type0 === 'multisampled-texture' && p.type1 === 'sampled-texture' ||
+  p.type0 === 'sampled-texture' && p.type1 === 'multisampled-texture'
+)
+).
 fn((t) => {
-  const {
-    binding0InBundle,
-    binding1InBundle,
-    type0,
-    type1,
-    _usage0,
-    _usage1,
-    _sampleCount
-  } = t.params;
+  const { binding0InBundle, binding1InBundle, type0, type1, _usage0, _usage1, _sampleCount } =
+  t.params;
 
   // Two bindings are attached to the same texture view.
   const usage =
@@ -1060,9 +1051,9 @@ fn((t) => {
   // At least one binding is in bundle, which means that its type is not 'render-target'.
   // As a result, only one binding's type is 'render-target' at most.
   const pass = t.beginSimpleRenderPass(
-  encoder,
-  type0 === 'render-target' || type1 === 'render-target' ? view : t.createTexture().createView());
-
+    encoder,
+    type0 === 'render-target' || type1 === 'render-target' ? view : t.createTexture().createView()
+  );
 
   const bindingsInBundle = [binding0InBundle, binding1InBundle];
   for (let i = 0; i < 2; i++) {
@@ -1089,8 +1080,8 @@ fn((t) => {
       case 'multisampled-texture':
         return true;
       default:
-        return false;}
-
+        return false;
+    }
   };
 
   let success = false;
@@ -1110,12 +1101,12 @@ fn((t) => {
 
 g.test('unused_bindings_in_pipeline').
 desc(
-`
+  `
     Test that for compute pipelines with 'auto' layout, only bindings used by the pipeline count
     toward the usage scope. For render passes, test the pipeline doesn't matter because only the
     calls to setBindGroup count toward the usage scope.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('compute', [false, true]).
@@ -1123,8 +1114,8 @@ combine('useBindGroup0', [false, true]).
 combine('useBindGroup1', [false, true]).
 combine('setBindGroupsOrder', ['common', 'reversed']).
 combine('setPipeline', ['before', 'middle', 'after', 'none']).
-combine('callDrawOrDispatch', [false, true])).
-
+combine('callDrawOrDispatch', [false, true])
+).
 fn((t) => {
   const {
     compute,
@@ -1237,19 +1228,19 @@ fn((t) => {
 
 g.test('scope,dispatch').
 desc(
-`
+  `
     Tests that in a compute pass, no usage validation occurs without a dispatch call.
     {Sets,skips} each of two conflicting bind groups in a pass {with,without} a dispatch call.
     If both are set, AND there is a dispatch call, validation should fail.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('dispatch', ['none', 'direct', 'indirect']).
 beginSubcases().
 expand('setBindGroup0', (p) => p.dispatch ? [true] : [false, true]).
-expand('setBindGroup1', (p) => p.dispatch ? [true] : [false, true])).
-
+expand('setBindGroup1', (p) => p.dispatch ? [true] : [false, true])
+).
 fn((t) => {
   const { dispatch, setBindGroup0, setBindGroup1 } = t.params;
 
@@ -1269,28 +1260,31 @@ fn((t) => {
         const indirectBuffer = t.device.createBuffer({ size: 4, usage: GPUBufferUsage.INDIRECT });
         pass.dispatchWorkgroupsIndirect(indirectBuffer, 0);
       }
-      break;}
-
+      break;
+  }
 
   pass.end();
 
-  t.expectValidationError(() => {
-    encoder.finish();
-  }, dispatch !== 'none' && setBindGroup0 && setBindGroup1);
+  t.expectValidationError(
+    () => {
+      encoder.finish();
+    },
+    dispatch !== 'none' && setBindGroup0 && setBindGroup1
+  );
 });
 
 g.test('scope,basic,render').
 desc(
-`
+  `
     Tests that in a render pass, validation occurs even without a pipeline or draw call.
     {Set,skip} each of two conflicting bind groups. If both are set, validation should fail.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('setBindGroup0', [false, true]).
-combine('setBindGroup1', [false, true])).
-
+combine('setBindGroup1', [false, true])
+).
 fn((t) => {
   const { setBindGroup0, setBindGroup1 } = t.params;
 
@@ -1309,11 +1303,11 @@ fn((t) => {
 
 g.test('scope,pass_boundary,compute').
 desc(
-`
+  `
     Test using two conflicting bind groups in separate dispatch calls, {with,without} a pass
     boundary in between. This should always be valid.
-    `).
-
+    `
+).
 paramsSubcasesOnly((u) => u.combine('splitPass', [false, true])).
 fn((t) => {
   const { splitPass } = t.params;
@@ -1323,15 +1317,15 @@ fn((t) => {
   const encoder = t.device.createCommandEncoder();
 
   const pipelineUsingBG0 = t.createNoOpComputePipeline(
-  t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[0]]
-  }));
-
+    t.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayouts[0]]
+    })
+  );
   const pipelineUsingBG1 = t.createNoOpComputePipeline(
-  t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[1]]
-  }));
-
+    t.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayouts[1]]
+    })
+  );
 
   let pass = encoder.beginComputePass();
   pass.setPipeline(pipelineUsingBG0);
@@ -1352,16 +1346,16 @@ fn((t) => {
 
 g.test('scope,pass_boundary,render').
 desc(
-`
+  `
     Test using two conflicting bind groups in separate draw calls, {with,without} a pass
     boundary in between. This should be valid only if there is a pass boundary.
-    `).
-
+    `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('splitPass', [false, true]).
-combine('draw', [false, true])).
-
+combine('draw', [false, true])
+).
 fn((t) => {
   const { splitPass, draw } = t.params;
 
@@ -1370,15 +1364,15 @@ fn((t) => {
   const encoder = t.device.createCommandEncoder();
 
   const pipelineUsingBG0 = t.createNoOpRenderPipeline(
-  t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[0]]
-  }));
-
+    t.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayouts[0]]
+    })
+  );
   const pipelineUsingBG1 = t.createNoOpRenderPipeline(
-  t.device.createPipelineLayout({
-    bindGroupLayouts: [bindGroupLayouts[1]]
-  }));
-
+    t.device.createPipelineLayout({
+      bindGroupLayouts: [bindGroupLayouts[1]]
+    })
+  );
 
   const attachment = t.createTexture().createView();
 

@@ -10,7 +10,7 @@ export const g = makeTestGroup(CompatibilityTest);
 
 g.test('maxVertexAttributesVertexIndexInstanceIndex').
 desc(
-`
+  `
 Tests @builtin(vertex_index) and @builtin(instance_index) each count as an attribute.
 
 - Test that you can use maxVertexAttributes
@@ -20,15 +20,15 @@ Tests @builtin(vertex_index) and @builtin(instance_index) each count as an attri
 - Test that you can use maxVertexAttributes - 1 and @builtin(instance_index)
 - Test that you can not use maxVertexAttributes - 1 and both @builtin(vertex_index) and @builtin(instance_index)
 - Test that you can use maxVertexAttributes - 2 and both @builtin(vertex_index) and @builtin(instance_index)
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('useVertexIndex', [false, true]).
 combine('useInstanceIndex', [false, true]).
 combine('numAttribsToReserve', [0, 1, 2]).
-combine('isAsync', [false, true])).
-
+combine('isAsync', [false, true])
+).
 fn((t) => {
   const { useVertexIndex, useInstanceIndex, numAttribsToReserve, isAsync } = t.params;
   const numAttribs = t.device.limits.maxVertexAttributes - numAttribsToReserve;

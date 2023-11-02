@@ -30,8 +30,8 @@ sampleMaskOut)
       ${
   lastVaryingNumComponents > 0 ?
   `@location(${num4ComponentVaryings}) vx: ${getTypeForNumComponents(
-  lastVaryingNumComponents)
-  },` :
+    lastVaryingNumComponents
+  )},` :
   ``
   }
   `;
@@ -102,14 +102,14 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createRenderPipeline,at_over').
 desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`).
 params(
-kMaximumLimitBaseParams.
-combine('async', [false, true]).
-combine('pointList', [false, true]).
-combine('frontFacing', [false, true]).
-combine('sampleIndex', [false, true]).
-combine('sampleMaskIn', [false, true]).
-combine('sampleMaskOut', [false, true])).
-
+  kMaximumLimitBaseParams.
+  combine('async', [false, true]).
+  combine('pointList', [false, true]).
+  combine('frontFacing', [false, true]).
+  combine('sampleIndex', [false, true]).
+  combine('sampleMaskIn', [false, true]).
+  combine('sampleMaskOut', [false, true])
+).
 beforeAllSubcases((t) => {
   if (t.isCompatibility && (t.params.sampleMaskIn || t.params.sampleMaskOut)) {
     t.skip('sample_mask not supported in compatibility mode');
@@ -131,22 +131,22 @@ fn(async (t) => {
   // maxInterStageShaderVariables.
   const extraLimits = { maxInterStageShaderVariables: 'adapterLimit' };
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const { pipelineDescriptor, code } = getPipelineDescriptor(
-    device,
-    testValue,
-    pointList,
-    frontFacing,
-    sampleIndex,
-    sampleMaskIn,
-    sampleMaskOut);
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const { pipelineDescriptor, code } = getPipelineDescriptor(
+        device,
+        testValue,
+        pointList,
+        frontFacing,
+        sampleIndex,
+        sampleMaskIn,
+        sampleMaskOut
+      );
 
-
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
-  },
-  extraLimits);
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
+    },
+    extraLimits
+  );
 });
 //# sourceMappingURL=maxInterStageShaderComponents.spec.js.map

@@ -25,7 +25,7 @@ export const g = makeTestGroup(CopyToTextureUtils);
 
 g.test('from_image').
 desc(
-`
+  `
   Test HTMLImageElement can be copied to WebGPU texture correctly.
   These images are highly possible living in GPU back resource.
 
@@ -49,8 +49,8 @@ desc(
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcDoFlipYDuringCopy' in cases)
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('srcDoFlipYDuringCopy', [true, false]).
@@ -58,8 +58,8 @@ combine('dstColorFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
-combine('height', [1, 2, 4, 15, 255, 256])).
-
+combine('height', [1, 2, 4, 15, 255, 256])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstColorFormat);
   if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
@@ -127,28 +127,28 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  {
-    source: image,
-    origin: { x: 0, y: 0 },
-    flipY: srcDoFlipYDuringCopy
-  },
-  {
-    texture: dst,
-    origin: { x: 0, y: 0 },
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  { width, height, depthOrArrayLayers: 1 },
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    {
+      source: image,
+      origin: { x: 0, y: 0 },
+      flipY: srcDoFlipYDuringCopy
+    },
+    {
+      texture: dst,
+      origin: { x: 0, y: 0 },
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    { width, height, depthOrArrayLayers: 1 },
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 
 g.test('copy_subrect_from_2D_Canvas').
 desc(
-`
+  `
   Test HTMLImageElement can be copied to WebGPU texture correctly.
   These images are highly possible living in GPU back resource.
 
@@ -174,15 +174,15 @@ desc(
   - Valid subrect copies.
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('srcDoFlipYDuringCopy', [true, false]).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
-combine('copySubRectInfo', kCopySubrectInfo)).
-
+combine('copySubRectInfo', kCopySubrectInfo)
+).
 beforeAllSubcases((t) => {
   if (typeof HTMLImageElement === 'undefined') t.skip('HTMLImageElement not available');
 }).
@@ -251,22 +251,22 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  {
-    source: image,
-    origin: srcOrigin,
-    flipY: srcDoFlipYDuringCopy
-  },
-  {
-    texture: dst,
-    origin: dstOrigin,
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  copyExtent,
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    {
+      source: image,
+      origin: srcOrigin,
+      flipY: srcDoFlipYDuringCopy
+    },
+    {
+      texture: dst,
+      origin: dstOrigin,
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    copyExtent,
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 //# sourceMappingURL=image.spec.js.map

@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { kCreatePipelineTypes, kMaximumLimitBaseParams,
-makeLimitTestGroup } from
+  makeLimitTestGroup } from
 './limit_utils.js';
 
 const limit = 'maxBindingsPerBindGroup';
@@ -13,47 +13,47 @@ params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    await t.expectValidationError(() => {
-      device.createBindGroupLayout({
-        entries: [
-        {
-          binding: testValue - 1,
-          visibility: GPUShaderStage.VERTEX,
-          buffer: {}
-        }]
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      await t.expectValidationError(() => {
+        device.createBindGroupLayout({
+          entries: [
+          {
+            binding: testValue - 1,
+            visibility: GPUShaderStage.VERTEX,
+            buffer: {}
+          }]
 
-      });
-    }, shouldError);
-  });
-
+        });
+      }, shouldError);
+    }
+  );
 });
 
 g.test('createPipeline,at_over').
 desc(
-`Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit`).
-
+  `Test using createRenderPipeline(Async) and createComputePipeline(Async) at and over ${limit} limit`
+).
 params(
-kMaximumLimitBaseParams.
-combine('createPipelineType', kCreatePipelineTypes).
-combine('async', [false, true])).
-
+  kMaximumLimitBaseParams.
+  combine('createPipelineType', kCreatePipelineTypes).
+  combine('async', [false, true])
+).
 fn(async (t) => {
   const { limitTest, testValueName, createPipelineType, async } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const lastIndex = testValue - 1;
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const lastIndex = testValue - 1;
 
-    const code = t.getBindingIndexWGSLForPipelineType(createPipelineType, lastIndex);
-    const module = device.createShaderModule({ code });
+      const code = t.getBindingIndexWGSLForPipelineType(createPipelineType, lastIndex);
+      const module = device.createShaderModule({ code });
 
-    await t.testCreatePipeline(createPipelineType, async, module, shouldError, code);
-  });
-
+      await t.testCreatePipeline(createPipelineType, async, module, shouldError, code);
+    }
+  );
 });
 
 g.test('validate').
@@ -69,8 +69,8 @@ fn((t) => {
   const maxShaderStagesPerPipeline = 2;
   const minMaxBindingsPerBindGroup = maxBindingsPerShaderStage * maxShaderStagesPerPipeline;
   t.expect(
-  adapterLimit >= minMaxBindingsPerBindGroup,
-  `maxBindingsPerBindGroup(${adapterLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) * maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`);
-
+    adapterLimit >= minMaxBindingsPerBindGroup,
+    `maxBindingsPerBindGroup(${adapterLimit}) >= maxBindingsPerShaderStage(${maxBindingsPerShaderStage}) * maxShaderStagesPerPipeline(${maxShaderStagesPerPipeline} = (${minMaxBindingsPerBindGroup}))`
+  );
 });
 //# sourceMappingURL=maxBindingsPerBindGroup.spec.js.map

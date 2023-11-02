@@ -20,7 +20,7 @@ export const g = makeTestGroup(CopyToTextureUtils);
 
 g.test('from_ImageData').
 desc(
-`
+  `
   Test ImageBitmap generated from ImageData can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living
   in CPU back resource.
@@ -44,8 +44,8 @@ desc(
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcFlipYInCopy' in cases)
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('alpha', ['none', 'premultiply']).
@@ -56,8 +56,8 @@ combine('dstFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
-combine('height', [1, 2, 4, 15, 255, 256])).
-
+combine('height', [1, 2, 4, 15, 255, 256])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstFormat);
 }).
@@ -124,24 +124,24 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcFlipYInCopy },
-  {
-    texture: dst,
-    origin: { x: 0, y: 0 },
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  { width, height, depthOrArrayLayers: 1 },
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcFlipYInCopy },
+    {
+      texture: dst,
+      origin: { x: 0, y: 0 },
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    { width, height, depthOrArrayLayers: 1 },
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 
 g.test('from_canvas').
 desc(
-`
+  `
   Test ImageBitmap generated from canvas/offscreenCanvas can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living in GPU back resource.
 
@@ -165,8 +165,8 @@ desc(
   - Valid 'flipY' config in 'GPUImageCopyExternalImage' (named 'srcFlipYInCopy' in cases)
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('orientation', ['none', 'flipY']).
@@ -176,8 +176,8 @@ combine('dstFormat', kValidTextureFormatsForCopyE2T).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
 combine('width', [1, 2, 4, 15, 255, 256]).
-combine('height', [1, 2, 4, 15, 255, 256])).
-
+combine('height', [1, 2, 4, 15, 255, 256])
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.dstFormat);
 }).
@@ -271,24 +271,24 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcFlipYInCopy },
-  {
-    texture: dst,
-    origin: { x: 0, y: 0 },
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  { width, height, depthOrArrayLayers: 1 },
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    { source: imageBitmap, origin: { x: 0, y: 0 }, flipY: srcFlipYInCopy },
+    {
+      texture: dst,
+      origin: { x: 0, y: 0 },
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    { width, height, depthOrArrayLayers: 1 },
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 
 g.test('copy_subrect_from_ImageData').
 desc(
-`
+  `
   Test ImageBitmap generated from ImageData can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living in CPU back resource.
 
@@ -314,8 +314,8 @@ desc(
   - Valid subrect copies.
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('alpha', ['none', 'premultiply']).
@@ -324,8 +324,8 @@ combine('colorSpaceConversion', ['none', 'default']).
 combine('srcFlipYInCopy', [true, false]).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
-combine('copySubRectInfo', kCopySubrectInfo)).
-
+combine('copySubRectInfo', kCopySubrectInfo)
+).
 fn(async (t) => {
   const {
     copySubRectInfo,
@@ -388,24 +388,24 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  { source: imageBitmap, origin: srcOrigin, flipY: srcFlipYInCopy },
-  {
-    texture: dst,
-    origin: dstOrigin,
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  copyExtent,
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    { source: imageBitmap, origin: srcOrigin, flipY: srcFlipYInCopy },
+    {
+      texture: dst,
+      origin: dstOrigin,
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    copyExtent,
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 
 g.test('copy_subrect_from_2D_Canvas').
 desc(
-`
+  `
   Test ImageBitmap generated from canvas/offscreenCanvas can be copied to WebGPU
   texture correctly. These imageBitmaps are highly possible living in GPU back resource.
 
@@ -431,8 +431,8 @@ desc(
   - Valid subrect copies.
 
   And the expected results are all passed.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('orientation', ['none', 'flipY']).
@@ -440,16 +440,11 @@ combine('colorSpaceConversion', ['none', 'default']).
 combine('srcFlipYInCopy', [true, false]).
 combine('dstPremultiplied', [true, false]).
 beginSubcases().
-combine('copySubRectInfo', kCopySubrectInfo)).
-
+combine('copySubRectInfo', kCopySubrectInfo)
+).
 fn(async (t) => {
-  const {
-    copySubRectInfo,
-    orientation,
-    colorSpaceConversion,
-    dstPremultiplied,
-    srcFlipYInCopy
-  } = t.params;
+  const { copySubRectInfo, orientation, colorSpaceConversion, dstPremultiplied, srcFlipYInCopy } =
+  t.params;
 
   const { srcOrigin, dstOrigin, srcSize, dstSize, copyExtent } = copySubRectInfo;
   const kColorFormat = 'rgba8unorm';
@@ -532,18 +527,18 @@ fn(async (t) => {
   });
 
   t.doTestAndCheckResult(
-  { source: imageBitmap, origin: srcOrigin, flipY: srcFlipYInCopy },
-  {
-    texture: dst,
-    origin: dstOrigin,
-    colorSpace: 'srgb',
-    premultipliedAlpha: dstPremultiplied
-  },
-  texelViewExpected,
-  copyExtent,
-  // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
-  // allow diffs of 1ULP since that's the generally-appropriate threshold.
-  { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 });
-
+    { source: imageBitmap, origin: srcOrigin, flipY: srcFlipYInCopy },
+    {
+      texture: dst,
+      origin: dstOrigin,
+      colorSpace: 'srgb',
+      premultipliedAlpha: dstPremultiplied
+    },
+    texelViewExpected,
+    copyExtent,
+    // 1.0 and 0.6 are representable precisely by all formats except rgb10a2unorm, but
+    // allow diffs of 1ULP since that's the generally-appropriate threshold.
+    { maxDiffULPsForFloatFormat: 1, maxDiffULPsForNormFormat: 1 }
+  );
 });
 //# sourceMappingURL=ImageBitmap.spec.js.map

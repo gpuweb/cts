@@ -13,12 +13,12 @@ import { keysOf } from '../../../../../../../common/util/data_tables.js';
 import { GPUTest } from '../../../../../../gpu_test.js';
 
 import {
-dispatchSizes,
-workgroupSizes,
-runStorageVariableTest,
-runWorkgroupVariableTest,
-kMapId,
-typedArrayCtor } from
+  dispatchSizes,
+  workgroupSizes,
+  runStorageVariableTest,
+  runWorkgroupVariableTest,
+  kMapId,
+  typedArrayCtor } from
 './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -26,20 +26,20 @@ export const g = makeTestGroup(GPUTest);
 g.test('xor_storage').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicXor(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
 
@@ -79,20 +79,20 @@ fn((t) => {
 g.test('xor_workgroup').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicXor(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize;
 
@@ -112,8 +112,8 @@ fn((t) => {
     `;
 
   const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize).fill(
-  initValue);
-
+    initValue
+  );
   for (let d = 0; d < t.params.dispatchSize; ++d) {
     for (let id = 0; id < numInvocations; ++id) {
       const wg = expected.subarray(d * wgNumElements);

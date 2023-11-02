@@ -5,9 +5,9 @@ Tests for render pass clear values.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert } from '../../../../common/util/util.js';
 import {
-kTextureFormatInfo,
-kDepthStencilFormats,
-depthStencilFormatAspectSize } from
+  kTextureFormatInfo,
+  kDepthStencilFormats,
+  depthStencilFormatAspectSize } from
 '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -19,51 +19,48 @@ unimplemented();
 
 g.test('loaded').
 desc(
-`Test render pass clear values are visible during the pass by doing some trivial blending
-with the attachment (e.g. add [0,0,0,0] to the color and verify the stored result).`).
-
+  `Test render pass clear values are visible during the pass by doing some trivial blending
+with the attachment (e.g. add [0,0,0,0] to the color and verify the stored result).`
+).
 unimplemented();
 
 g.test('srgb').
 desc(
-`Test that clear values on '-srgb' type attachments are interpreted as unencoded (linear),
-not decoded from srgb to linear.`).
-
+  `Test that clear values on '-srgb' type attachments are interpreted as unencoded (linear),
+not decoded from srgb to linear.`
+).
 unimplemented();
 
 g.test('layout').
 desc(
-`Test that bind group layouts of the default pipeline layout are correct by passing various
+  `Test that bind group layouts of the default pipeline layout are correct by passing various
 shaders and then checking their computed bind group layouts are compatible with particular bind
-groups.`).
-
+groups.`
+).
 unimplemented();
 
 g.test('stencil_clear_value').
 desc(
-`Test that when stencilLoadOp is "clear", the stencil aspect should be correctly cleared by
+  `Test that when stencilLoadOp is "clear", the stencil aspect should be correctly cleared by
      GPURenderPassDepthStencilAttachment.stencilClearValue, which will be converted to the type of
      the stencil aspect of view by taking the same number of LSBs as the number of bits in the
-     stencil aspect of one texel block of view.`).
-
+     stencil aspect of one texel block of view.`
+).
 params((u) =>
 u.
 combine('stencilFormat', kDepthStencilFormats).
 combine('stencilClearValue', [0, 1, 0xff, 0x100 + 2, 0x10000 + 3]).
 combine('applyStencilClearValueAsStencilReferenceValue', [true, false]).
-filter((t) => !!kTextureFormatInfo[t.stencilFormat].stencil)).
-
+filter((t) => !!kTextureFormatInfo[t.stencilFormat].stencil)
+).
 beforeAllSubcases((t) => {
   const { stencilFormat } = t.params;
   const info = kTextureFormatInfo[stencilFormat];
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
-  const {
-    stencilFormat,
-    stencilClearValue,
-    applyStencilClearValueAsStencilReferenceValue
-  } = t.params;
+  const { stencilFormat, stencilClearValue, applyStencilClearValueAsStencilReferenceValue } =
+  t.params;
 
   const kSize = [1, 1, 1];
   const colorFormat = 'rgba8unorm';
@@ -171,15 +168,15 @@ fn((t) => {
   });
   t.trackForCleanup(destinationBuffer);
   encoder.copyTextureToBuffer(
-  {
-    texture: stencilTexture,
-    aspect: 'stencil-only'
-  },
-  {
-    buffer: destinationBuffer
-  },
-  [1, 1, 1]);
-
+    {
+      texture: stencilTexture,
+      aspect: 'stencil-only'
+    },
+    {
+      buffer: destinationBuffer
+    },
+    [1, 1, 1]
+  );
 
   t.queue.submit([encoder.finish()]);
 

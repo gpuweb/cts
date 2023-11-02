@@ -25,41 +25,41 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { alwaysPass, anyOf } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import {
-f32,
-i32,
-u32,
-f16,
-TypeF32,
-TypeI32,
-TypeU32,
-TypeF16,
-TypeVec,
-Vector,
+  f32,
+  i32,
+  u32,
+  f16,
+  TypeF32,
+  TypeI32,
+  TypeU32,
+  TypeF16,
+  TypeVec,
+  Vector,
 
-toVector } from
+  toVector } from
 '../../../../../util/conversion.js';
 import { FPInterval, FP } from '../../../../../util/floating_point.js';
 import {
-fullF32Range,
-fullI32Range,
-fullU32Range,
-fullF16Range,
-linearRange,
-isSubnormalNumberF32,
-isSubnormalNumberF16,
-cartesianProduct,
-isFiniteF32,
-isFiniteF16 } from
+  fullF32Range,
+  fullI32Range,
+  fullU32Range,
+  fullF16Range,
+  linearRange,
+  isSubnormalNumberF32,
+  isSubnormalNumberF16,
+  cartesianProduct,
+  isFiniteF32,
+  isFiniteF16 } from
 '../../../../../util/math.js';
 import {
-reinterpretI32AsF32,
-reinterpretI32AsU32,
-reinterpretF32AsI32,
-reinterpretF32AsU32,
-reinterpretU32AsF32,
-reinterpretU32AsI32,
-reinterpretU16AsF16,
-reinterpretF16AsU16 } from
+  reinterpretI32AsF32,
+  reinterpretI32AsU32,
+  reinterpretF32AsI32,
+  reinterpretF32AsU32,
+  reinterpretU32AsF32,
+  reinterpretU32AsI32,
+  reinterpretU16AsF16,
+  reinterpretF16AsU16 } from
 '../../../../../util/reinterpret.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
@@ -212,8 +212,8 @@ const u32RangeForF16Vec2FiniteInfNaN = [
 
 // u32 values for bitcasting to finite only vec2<f16>, used for constant evaluation.
 const u32RangeForF16Vec2Finite = u32RangeForF16Vec2FiniteInfNaN.filter(
-canU32BitcastToFiniteVec2F16);
-
+  canU32BitcastToFiniteVec2F16
+);
 // i32 values for bitcasting to vec2<f16> finite, zeros, Inf, and NaN.
 const i32RangeForF16Vec2FiniteInfNaN = [
 ...fullI32Range(),
@@ -222,8 +222,8 @@ const i32RangeForF16Vec2FiniteInfNaN = [
 
 // i32 values for bitcasting to finite only vec2<f16>, used for constant evaluation.
 const i32RangeForF16Vec2Finite = i32RangeForF16Vec2FiniteInfNaN.filter((u) =>
-canU32BitcastToFiniteVec2F16(reinterpretI32AsU32(u)));
-
+canU32BitcastToFiniteVec2F16(reinterpretI32AsU32(u))
+);
 // f32 values with finite/Inf/NaN f32, for bitcasting to vec2<f16> finite, zeros, Inf, and NaN.
 const f32RangeWithInfAndNaNForF16Vec2FiniteInfNaN = [
 ...f32RangeWithInfAndNaN,
@@ -260,8 +260,8 @@ const i32RangeForF32FiniteInfNaN = [
 
 // i32 cases for bitcasting to f32 finite only.
 const i32RangeForF32Finite = i32RangeForF32FiniteInfNaN.filter((i) =>
-isFiniteF32(reinterpretI32AsF32(i)));
-
+isFiniteF32(reinterpretI32AsF32(i))
+);
 // u32 cases for bitcasting to f32 finite, zeros, Inf, and NaN.
 const u32RangeForF32FiniteInfNaN = [
 ...fullU32Range(),
@@ -270,8 +270,8 @@ const u32RangeForF32FiniteInfNaN = [
 
 // u32 cases for bitcasting to f32 finite only.
 const u32RangeForF32Finite = u32RangeForF32FiniteInfNaN.filter((u) =>
-isFiniteF32(reinterpretU32AsF32(u)));
-
+isFiniteF32(reinterpretU32AsF32(u))
+);
 
 /**
  * @returns a Comparator for checking if a f32 value is a valid
@@ -372,8 +372,8 @@ function bitcastU32ToVec2F16Comparator(u) {
   // Generate expection for vec2 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -386,8 +386,8 @@ function bitcastI32ToVec2F16Comparator(i) {
   // Generate expection for vec2 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -405,8 +405,8 @@ function bitcastF32ToVec2F16Comparator(f) {
   // Generate expection for vec2 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec2F16InU16x2.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -420,8 +420,8 @@ function bitcastVec2U32ToVec4F16Comparator(u32x2) {
   // Generate expection for vec4 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -438,8 +438,8 @@ function bitcastVec2I32ToVec4F16Comparator(i32x2) {
   // Generate expection for vec4 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -456,8 +456,8 @@ function bitcastVec2F32ToVec4F16Comparator(f32x2) {
   // Generate expection for vec4 f16 result, by generating expected intervals for each elements and
   // then do cartesian product.
   const expectedIntervalsCombination = cartesianProduct(
-  ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals));
-
+    ...bitcastedVec4F16InU16x4.map(generateF16ExpectationIntervals)
+  );
   return anyOf(...expectedIntervalsCombination);
 }
 
@@ -531,11 +531,11 @@ type)
   }
   const possibleU16Bits = f16x2InU16x2.map(possibleBitsInU16FromFiniteF16InU16);
   const possibleExpectations = cartesianProduct(...possibleU16Bits).flatMap(
-  (possibleBitsU16x2) => {
-    assert(possibleBitsU16x2.length === 2);
-    return expectationsForValue(reinterpretFromU32(u16x2ToU32(possibleBitsU16x2)));
-  });
-
+    (possibleBitsU16x2) => {
+      assert(possibleBitsU16x2.length === 2);
+      return expectationsForValue(reinterpretFromU32(u16x2ToU32(possibleBitsU16x2)));
+    }
+  );
   return { possibleExpectations, isUnbounded: false };
 }
 
@@ -588,8 +588,8 @@ function bitcastVec2F16ToF32Comparator(vec2F16InU16x2) {
 function bitcastVec4F16ToVec2U32Comparator(vec4F16InU16x4) {
   assert(vec4F16InU16x4.length === 4);
   const expectationsPerElement = [vec4F16InU16x4.slice(0, 2), vec4F16InU16x4.slice(2, 4)].map((e) =>
-  possible32BitScalarIntervalsFromF16x2(e, 'u32'));
-
+  possible32BitScalarIntervalsFromF16x2(e, 'u32')
+  );
   // Return alwaysPass if any element is expected unbounded. Although it may be only one unbounded
   // element in the result vector, currently we don't have a way to build a comparator that expect
   // only one element of i32/u32 vector unbounded.
@@ -597,10 +597,10 @@ function bitcastVec4F16ToVec2U32Comparator(vec4F16InU16x4) {
     return alwaysPass('any vec2<u32>');
   }
   return anyOf(
-  ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map(
-  (e) => new Vector(e)));
-
-
+    ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map(
+      (e) => new Vector(e)
+    )
+  );
 }
 
 /**
@@ -610,8 +610,8 @@ function bitcastVec4F16ToVec2U32Comparator(vec4F16InU16x4) {
 function bitcastVec4F16ToVec2I32Comparator(vec4F16InU16x4) {
   assert(vec4F16InU16x4.length === 4);
   const expectationsPerElement = [vec4F16InU16x4.slice(0, 2), vec4F16InU16x4.slice(2, 4)].map((e) =>
-  possible32BitScalarIntervalsFromF16x2(e, 'i32'));
-
+  possible32BitScalarIntervalsFromF16x2(e, 'i32')
+  );
   // Return alwaysPass if any element is expected unbounded. Although it may be only one unbounded
   // element in the result vector, currently we don't have a way to build a comparator that expect
   // only one element of i32/u32 vector unbounded.
@@ -619,10 +619,10 @@ function bitcastVec4F16ToVec2I32Comparator(vec4F16InU16x4) {
     return alwaysPass('any vec2<i32>');
   }
   return anyOf(
-  ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map(
-  (e) => new Vector(e)));
-
-
+    ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map(
+      (e) => new Vector(e)
+    )
+  );
 }
 
 /**
@@ -632,14 +632,14 @@ function bitcastVec4F16ToVec2I32Comparator(vec4F16InU16x4) {
 function bitcastVec4F16ToVec2F32Comparator(vec4F16InU16x4) {
   assert(vec4F16InU16x4.length === 4);
   const expectationsPerElement = [vec4F16InU16x4.slice(0, 2), vec4F16InU16x4.slice(2, 4)].map((e) =>
-  possible32BitScalarIntervalsFromF16x2(e, 'f32'));
-
+  possible32BitScalarIntervalsFromF16x2(e, 'f32')
+  );
   return anyOf(
-  ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map((e) => [
-  e[0],
-  e[1]]));
-
-
+    ...cartesianProduct(...expectationsPerElement.map((e) => e.possibleExpectations)).map((e) => [
+    e[0],
+    e[1]]
+    )
+  );
 }
 
 export const d = makeCaseCache('bitcast', {
@@ -822,10 +822,10 @@ export const d = makeCaseCache('bitcast', {
   vec4_f16_to_vec2_f32_finite: () =>
   f16Vec2FiniteInU16x4.
   filter(
-  (u16x4) =>
-  isFiniteF32(reinterpretU32AsF32(u16x2ToU32(u16x4.slice(0, 2)))) &&
-  isFiniteF32(reinterpretU32AsF32(u16x2ToU32(u16x4.slice(2, 4))))).
-
+    (u16x4) =>
+    isFiniteF32(reinterpretU32AsF32(u16x2ToU32(u16x4.slice(0, 2)))) &&
+    isFiniteF32(reinterpretU32AsF32(u16x2ToU32(u16x4.slice(2, 4))))
+  ).
   map((e) => ({
     input: u16x4ToVec4F16(e),
     expected: bitcastVec4F16ToVec2F32Comparator(e)
@@ -848,9 +848,9 @@ function bitcastBuilder(canonicalDestType, params) {
   canonicalDestType;
 
   return builtinWithPredeclaration(
-  `bitcast<${destType}>`,
-  params.alias ? `alias myalias = ${destType};` : '');
-
+    `bitcast<${destType}>`,
+    params.alias ? `alias myalias = ${destType};` : ''
+  );
 }
 
 // Identity cases
@@ -861,8 +861,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get('i32_to_i32');
   await run(t, bitcastBuilder('i32', t.params), [TypeI32], TypeI32, t.params, cases);
@@ -875,8 +875,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get('u32_to_u32');
   await run(t, bitcastBuilder('u32', t.params), [TypeU32], TypeU32, t.params, cases);
@@ -889,13 +889,13 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'f32_to_f32' : 'f32_inf_nan_to_f32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'f32_to_f32' : 'f32_inf_nan_to_f32'
+  );
   await run(t, bitcastBuilder('f32', t.params), [TypeF32], TypeF32, t.params, cases);
 });
 
@@ -907,8 +907,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get('u32_to_i32');
   await run(t, bitcastBuilder('i32', t.params), [TypeU32], TypeI32, t.params, cases);
@@ -921,13 +921,13 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'f32_to_i32' : 'f32_inf_nan_to_i32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'f32_to_i32' : 'f32_inf_nan_to_i32'
+  );
   await run(t, bitcastBuilder('i32', t.params), [TypeF32], TypeI32, t.params, cases);
 });
 
@@ -939,8 +939,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get('i32_to_u32');
   await run(t, bitcastBuilder('u32', t.params), [TypeI32], TypeU32, t.params, cases);
@@ -953,13 +953,13 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'f32_to_u32' : 'f32_inf_nan_to_u32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'f32_to_u32' : 'f32_inf_nan_to_u32'
+  );
   await run(t, bitcastBuilder('u32', t.params), [TypeF32], TypeU32, t.params, cases);
 });
 
@@ -971,13 +971,13 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'i32_to_f32' : 'i32_to_f32_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'i32_to_f32' : 'i32_to_f32_inf_nan'
+  );
   await run(t, bitcastBuilder('f32', t.params), [TypeI32], TypeF32, t.params, cases);
 });
 
@@ -988,13 +988,13 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'u32_to_f32' : 'u32_to_f32_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'u32_to_f32' : 'u32_to_f32_inf_nan'
+  );
   await run(t, bitcastBuilder('f32', t.params), [TypeU32], TypeF32, t.params, cases);
 });
 
@@ -1010,16 +1010,16 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('alias', [false, true])).
-
+combine('alias', [false, true])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'f16_to_f16' : 'f16_inf_nan_to_f16');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'f16_to_f16' : 'f16_inf_nan_to_f16'
+  );
   await run(t, bitcastBuilder('f16', t.params), [TypeF16], TypeF16, t.params, cases);
 });
 
@@ -1033,17 +1033,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'i32_to_vec2_f16' : 'i32_to_vec2_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'i32_to_vec2_f16' : 'i32_to_vec2_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<f16>', t.params),
-  [TypeI32],
-  TypeVec(2, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<f16>', t.params),
+    [TypeI32],
+    TypeVec(2, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('u32_to_vec2h').
@@ -1055,17 +1055,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'u32_to_vec2_f16' : 'u32_to_vec2_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'u32_to_vec2_f16' : 'u32_to_vec2_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<f16>', t.params),
-  [TypeU32],
-  TypeVec(2, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<f16>', t.params),
+    [TypeU32],
+    TypeVec(2, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('f32_to_vec2h').
@@ -1077,17 +1077,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'f32_to_vec2_f16' : 'f32_inf_nan_to_vec2_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'f32_to_vec2_f16' : 'f32_inf_nan_to_vec2_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<f16>', t.params),
-  [TypeF32],
-  TypeVec(2, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<f16>', t.params),
+    [TypeF32],
+    TypeVec(2, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 // f16: vec2<32-bit scalar numeric> to vec4<f16>
@@ -1100,17 +1100,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec2_i32_to_vec4_f16' : 'vec2_i32_to_vec4_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec2_i32_to_vec4_f16' : 'vec2_i32_to_vec4_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec4<f16>', t.params),
-  [TypeVec(2, TypeI32)],
-  TypeVec(4, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec4<f16>', t.params),
+    [TypeVec(2, TypeI32)],
+    TypeVec(4, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('vec2u_to_vec4h').
@@ -1122,17 +1122,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec2_u32_to_vec4_f16' : 'vec2_u32_to_vec4_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec2_u32_to_vec4_f16' : 'vec2_u32_to_vec4_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec4<f16>', t.params),
-  [TypeVec(2, TypeU32)],
-  TypeVec(4, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec4<f16>', t.params),
+    [TypeVec(2, TypeU32)],
+    TypeVec(4, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('vec2f_to_vec4h').
@@ -1144,19 +1144,19 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ?
-  'vec2_f32_to_vec4_f16' :
-  'vec2_f32_inf_nan_to_vec4_f16_inf_nan');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ?
+    'vec2_f32_to_vec4_f16' :
+    'vec2_f32_inf_nan_to_vec4_f16_inf_nan'
+  );
   await run(
-  t,
-  bitcastBuilder('vec4<f16>', t.params),
-  [TypeVec(2, TypeF32)],
-  TypeVec(4, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec4<f16>', t.params),
+    [TypeVec(2, TypeF32)],
+    TypeVec(4, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 // f16: vec2<f16> to 32-bit scalar numeric
@@ -1169,9 +1169,9 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec2_f16_to_i32' : 'vec2_f16_inf_nan_to_i32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec2_f16_to_i32' : 'vec2_f16_inf_nan_to_i32'
+  );
   await run(t, bitcastBuilder('i32', t.params), [TypeVec(2, TypeF16)], TypeI32, t.params, cases);
 });
 
@@ -1184,9 +1184,9 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec2_f16_to_u32' : 'vec2_f16_inf_nan_to_u32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec2_f16_to_u32' : 'vec2_f16_inf_nan_to_u32'
+  );
   await run(t, bitcastBuilder('u32', t.params), [TypeVec(2, TypeF16)], TypeU32, t.params, cases);
 });
 
@@ -1199,9 +1199,9 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec2_f16_to_f32_finite' : 'vec2_f16_inf_nan_to_f32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec2_f16_to_f32_finite' : 'vec2_f16_inf_nan_to_f32'
+  );
   await run(t, bitcastBuilder('f32', t.params), [TypeVec(2, TypeF16)], TypeF32, t.params, cases);
 });
 
@@ -1215,17 +1215,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec4_f16_to_vec2_i32' : 'vec4_f16_inf_nan_to_vec2_i32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec4_f16_to_vec2_i32' : 'vec4_f16_inf_nan_to_vec2_i32'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<i32>', t.params),
-  [TypeVec(4, TypeF16)],
-  TypeVec(2, TypeI32),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<i32>', t.params),
+    [TypeVec(4, TypeF16)],
+    TypeVec(2, TypeI32),
+    t.params,
+    cases
+  );
 });
 
 g.test('vec4h_to_vec2u').
@@ -1237,17 +1237,17 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ? 'vec4_f16_to_vec2_u32' : 'vec4_f16_inf_nan_to_vec2_u32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ? 'vec4_f16_to_vec2_u32' : 'vec4_f16_inf_nan_to_vec2_u32'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<u32>', t.params),
-  [TypeVec(4, TypeF16)],
-  TypeVec(2, TypeU32),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<u32>', t.params),
+    [TypeVec(4, TypeF16)],
+    TypeVec(2, TypeU32),
+    t.params,
+    cases
+  );
 });
 
 g.test('vec4h_to_vec2f').
@@ -1259,18 +1259,18 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  // Infinities and NaNs are errors in const-eval.
-  t.params.inputSource === 'const' ?
-  'vec4_f16_to_vec2_f32_finite' :
-  'vec4_f16_inf_nan_to_vec2_f32');
-
+    // Infinities and NaNs are errors in const-eval.
+    t.params.inputSource === 'const' ?
+    'vec4_f16_to_vec2_f32_finite' :
+    'vec4_f16_inf_nan_to_vec2_f32'
+  );
   await run(
-  t,
-  bitcastBuilder('vec2<f32>', t.params),
-  [TypeVec(4, TypeF16)],
-  TypeVec(2, TypeF32),
-  t.params,
-  cases);
-
+    t,
+    bitcastBuilder('vec2<f32>', t.params),
+    [TypeVec(4, TypeF16)],
+    TypeVec(2, TypeF32),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=bitcast.spec.js.map

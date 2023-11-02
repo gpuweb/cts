@@ -17,14 +17,14 @@ export const g = makeTestGroup(GPUTest);
 g.test('and').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 & e2
 Logical "and". Component-wise when T is a vector. Evaluates both e1 and e2.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(false) },
@@ -39,14 +39,14 @@ fn(async (t) => {
 g.test('and_compound').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 &= e2
 Logical "and". Component-wise when T is a vector. Evaluates both e1 and e2.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(false) },
@@ -61,11 +61,11 @@ fn(async (t) => {
 g.test('and_short_circuit').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 && e2
 short_circuiting "and". Yields true if both e1 and e2 are true; evaluates e2 only if e1 is true.
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = [
@@ -81,14 +81,14 @@ fn(async (t) => {
 g.test('or').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 | e2
 Logical "or". Component-wise when T is a vector. Evaluates both e1 and e2.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(false) },
@@ -103,14 +103,14 @@ fn(async (t) => {
 g.test('or_compound').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 |= e2
 Logical "or". Component-wise when T is a vector. Evaluates both e1 and e2.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(false) },
@@ -125,11 +125,11 @@ fn(async (t) => {
 g.test('or_short_circuit').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 || e2
 short_circuiting "and". Yields true if both e1 and e2 are true; evaluates e2 only if e1 is true.
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = [
@@ -145,14 +145,14 @@ fn(async (t) => {
 g.test('equals').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 == e2
 Equality. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(true) },
@@ -167,14 +167,14 @@ fn(async (t) => {
 g.test('not_equals').
 specURL('https://www.w3.org/TR/WGSL/#logical-expr').
 desc(
-`
+  `
 Expression: e1 != e2
 Equality. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = [
   { input: [bool(false), bool(false)], expected: bool(false) },

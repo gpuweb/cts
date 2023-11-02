@@ -46,13 +46,13 @@ export const g = makeTestGroup(GPUContextTest);
 
 g.test('configured').
 desc(
-`Checks that calling getCurrentTexture requires the context to be configured first, and
-  that each call to configure causes getCurrentTexture to return a new texture.`).
-
+  `Checks that calling getCurrentTexture requires the context to be configured first, and
+  that each call to configure causes getCurrentTexture to return a new texture.`
+).
 params((u) =>
 u //
-.combine('canvasType', kAllCanvasTypes)).
-
+.combine('canvasType', kAllCanvasTypes)
+).
 fn((t) => {
   const canvas = createCanvas(t, t.params.canvasType, 2, 2);
   const ctx = canvas.getContext('webgpu');
@@ -103,8 +103,8 @@ g.test('single_frames').
 desc(`Checks that the value of getCurrentTexture is consistent within a single frame.`).
 params((u) =>
 u //
-.combine('canvasType', kAllCanvasTypes)).
-
+.combine('canvasType', kAllCanvasTypes)
+).
 fn((t) => {
   const ctx = t.initCanvasContext(t.params.canvasType);
   const frameTexture = ctx.getCurrentTexture();
@@ -147,8 +147,8 @@ params((u) =>
 u //
 .combine('canvasType', kAllCanvasTypes).
 beginSubcases().
-combine('clearTexture', [true, false])).
-
+combine('clearTexture', [true, false])
+).
 beforeAllSubcases((t) => {
   const { canvasType } = t.params;
   if (canvasType === 'offscreen' && !('transferToImageBitmap' in OffscreenCanvas.prototype)) {
@@ -208,8 +208,8 @@ fn((t) => {
               break;
             }
           default:
-            unreachable();}
-
+            unreachable();
+        }
       } else {
         resolve();
       }
@@ -226,8 +226,8 @@ g.test('resize').
 desc(`Checks the value of getCurrentTexture differs when the canvas is resized.`).
 params((u) =>
 u //
-.combine('canvasType', kAllCanvasTypes)).
-
+.combine('canvasType', kAllCanvasTypes)
+).
 fn((t) => {
   const ctx = t.initCanvasContext(t.params.canvasType);
   let prevTexture = ctx.getCurrentTexture();
@@ -282,7 +282,7 @@ fn((t) => {
 
 g.test('expiry').
 desc(
-`
+  `
 Test automatic WebGPU canvas texture expiry on all canvas types with the following requirements:
 - getCurrentTexture returns the same texture object until the next task:
   - after previous frame update the rendering
@@ -299,14 +299,14 @@ TODO: test more canvas types, and ways to update the rendering
 - with canvas element added to DOM or not (applies to other canvas tests as well)
   - canvas is added to DOM after being rendered
   - canvas is already in DOM but becomes visible after being rendered
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('canvasType', kAllCanvasTypes).
 combine('prevFrameCallsite', ['runInNewCanvasFrame', 'requestAnimationFrame']).
-combine('getCurrentTextureAgain', [true, false])).
-
+combine('getCurrentTextureAgain', [true, false])
+).
 fn((t) => {
   const { canvasType, prevFrameCallsite, getCurrentTextureAgain } = t.params;
   const ctx = t.initCanvasContext(t.params.canvasType);
@@ -335,8 +335,8 @@ fn((t) => {
         fn();
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }
 
   function checkGetCurrentTexture() {
@@ -378,7 +378,7 @@ fn((t) => {
       requestAnimationFrame(checkGetCurrentTexture);
       break;
     default:
-      break;}
-
+      break;
+  }
 });
 //# sourceMappingURL=getCurrentTexture.spec.js.map

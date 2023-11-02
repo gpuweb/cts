@@ -7,9 +7,9 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { attemptGarbageCollection } from '../../../../common/util/collect_garbage.js';
 import { getGPU } from '../../../../common/util/navigator_gpu.js';
 import {
-assert,
-assertNotSettledWithinTime,
-raceWithRejectOnTimeout } from
+  assert,
+  assertNotSettledWithinTime,
+  raceWithRejectOnTimeout } from
 '../../../../common/util/util.js';
 
 class DeviceLostTests extends Fixture {
@@ -37,8 +37,8 @@ export const g = makeTestGroup(DeviceLostTests);
 
 g.test('not_lost_on_gc').
 desc(
-`'lost' is never resolved by GPUDevice being garbage collected (with attemptGarbageCollection).`).
-
+  `'lost' is never resolved by GPUDevice being garbage collected (with attemptGarbageCollection).`
+).
 fn(async (t) => {
   // Wraps a lost promise object creation in a function scope so that the device has the best
   // chance of being gone and ready for GC before trying to resolve the lost promise.

@@ -1,10 +1,10 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/
+**/ /** A range of indices expressed as `{ begin, count }`. */
 
 
 
-
+/* A range of indices, expressed as `{ begin, end }`. */
 
 
 

@@ -10,18 +10,18 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('count').
 desc(
-`
+  `
 Tests that create query set with the count for all query types:
 - count {<, =, >} kMaxQueryCount
 - x= {occlusion, timestamp} query
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('type', kQueryTypes).
 beginSubcases().
-combine('count', [0, kMaxQueryCount, kMaxQueryCount + 1])).
-
+combine('count', [0, kMaxQueryCount, kMaxQueryCount + 1])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceForQueryTypeOrSkipTestCase(t.params.type);
 }).

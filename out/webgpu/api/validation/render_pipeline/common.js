@@ -29,11 +29,11 @@ export class CreateRenderPipelineValidationTest extends ValidationTest {
       {
         values,
         plainType: getPlainTypeInfo(
-        kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType),
-
+          kTextureFormatInfo[targets[0] ? targets[0].format : 'rgba8unorm'].sampleType
+        ),
         componentCount: 4
-      }]),
-
+      }]
+      ),
       noFragment = false,
       fragmentConstants = {}
     } = options;

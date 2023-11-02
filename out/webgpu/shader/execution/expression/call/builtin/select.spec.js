@@ -14,24 +14,24 @@ Component-wise selection. Result component i is evaluated as select(f[i],t[i],co
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
 
-TypeVec,
-TypeBool,
-TypeF32,
-TypeF16,
-TypeI32,
-TypeU32,
-f32,
-f16,
-i32,
-u32,
-False,
-True,
-bool,
-vec2,
-vec3,
-vec4,
-abstractFloat,
-TypeAbstractFloat } from
+  TypeVec,
+  TypeBool,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeU32,
+  f32,
+  f16,
+  i32,
+  u32,
+  False,
+  True,
+  bool,
+  vec2,
+  vec3,
+  vec4,
+  abstractFloat,
+  TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { run, allInputSources } from '../../expression.js';
 
@@ -79,8 +79,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('component', ['b', 'af', 'f', 'h', 'i', 'u']).
-combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])).
-
+combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])
+).
 beforeAllSubcases((t) => {
   if (t.params.component === 'h') {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
@@ -139,13 +139,13 @@ fn(async (t) => {
   const overload = overloads[t.params.overload];
 
   await run(
-  t,
-  t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
-  [overload.type, overload.type, TypeBool],
-  overload.type,
-  t.params,
-  overload.cases);
-
+    t,
+    t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
+    [overload.type, overload.type, TypeBool],
+    overload.type,
+    t.params,
+    overload.cases
+  );
 });
 
 g.test('vector').
@@ -155,8 +155,8 @@ params((u) =>
 u.
 combine('inputSource', allInputSources).
 combine('component', ['b', 'af', 'f', 'h', 'i', 'u']).
-combine('overload', ['vec2', 'vec3', 'vec4'])).
-
+combine('overload', ['vec2', 'vec3', 'vec4'])
+).
 beforeAllSubcases((t) => {
   if (t.params.component === 'h') {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
@@ -239,16 +239,16 @@ fn(async (t) => {
 
         };
         break;
-      }}
-
+      }
+  }
 
   await run(
-  t,
-  t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
-  [tests.dataType, tests.dataType, tests.boolType],
-  tests.dataType,
-  t.params,
-  tests.cases);
-
+    t,
+    t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
+    [tests.dataType, tests.dataType, tests.boolType],
+    tests.dataType,
+    t.params,
+    tests.cases
+  );
 });
 //# sourceMappingURL=select.spec.js.map

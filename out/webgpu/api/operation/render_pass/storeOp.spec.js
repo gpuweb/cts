@@ -29,9 +29,9 @@
       TODO: depth slice set to {'0', slice > '0'} for 3D textures
       TODO: test with more interesting loadOp values`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-kTextureFormatInfo,
-kEncodableTextureFormats,
-kSizedDepthStencilFormats } from
+  kTextureFormatInfo,
+  kEncodableTextureFormats,
+  kSizedDepthStencilFormats } from
 '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 
@@ -60,8 +60,8 @@ g.test('render_pass_store_op,color_attachment_with_depth_stencil_attachment').
 params((u) =>
 u //
 .combine('colorStoreOperation', kStoreOps).
-combine('depthStencilStoreOperation', kStoreOps)).
-
+combine('depthStencilStoreOperation', kStoreOps)
+).
 fn((t) => {
   // Create a basic color attachment.
   const kColorFormat = 'rgba8unorm';
@@ -148,8 +148,8 @@ combine('colorFormat', kEncodableTextureFormats)
 combine('storeOperation', kStoreOps).
 beginSubcases().
 combine('mipLevel', kMipLevel).
-combine('arrayLayer', kArrayLayers)).
-
+combine('arrayLayer', kArrayLayers)
+).
 beforeAllSubcases((t) => {
   t.skipIfTextureFormatNotSupported(t.params.colorFormat);
 }).
@@ -211,20 +211,20 @@ u.
 combine('storeOperation1', kStoreOps).
 combine('storeOperation2', kStoreOps).
 beginSubcases().
-combine('colorAttachments', kNumColorAttachments)).
-
+combine('colorAttachments', kNumColorAttachments)
+).
 fn((t) => {
   const kColorFormat = 'rgba8unorm';
   const colorAttachments = [];
 
   for (let i = 0; i < t.params.colorAttachments; i++) {
     colorAttachments.push(
-    t.device.createTexture({
-      format: kColorFormat,
-      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-    }));
-
+      t.device.createTexture({
+        format: kColorFormat,
+        size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+      })
+    );
   }
 
   // Color load operation will clear to {1.0, 1.0, 1.0, 1.0}
@@ -266,23 +266,23 @@ fn((t) => {
 
 g.test('render_pass_store_op,depth_stencil_attachment_only').
 desc(
-`
+  `
 Tests that render pass depth stencil store operations work correctly for all renderable color
 formats, mip levels and array layers.
 
 - x= all (sized) depth stencil formats, all store ops, multiple mip levels, multiple array layers
 
 TODO: Also test unsized depth/stencil formats [1]
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('depthStencilFormat', kSizedDepthStencilFormats) // [1]
 .combine('storeOperation', kStoreOps).
 beginSubcases().
 combine('mipLevel', kMipLevel).
-combine('arrayLayer', kArrayLayers)).
-
+combine('arrayLayer', kArrayLayers)
+).
 fn((t) => {
   const depthStencilTexture = t.device.createTexture({
     format: t.params.depthStencilFormat,

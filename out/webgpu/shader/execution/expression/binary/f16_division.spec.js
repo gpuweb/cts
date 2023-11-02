@@ -26,11 +26,11 @@ const scalar_cases = [true, false].
 map((nonConst) => ({
   [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateScalarPairToIntervalCases(
-    sparseF16Range(),
-    sparseF16Range(),
-    nonConst ? 'unfiltered' : 'finite',
-    FP.f16.divisionInterval);
-
+      sparseF16Range(),
+      sparseF16Range(),
+      nonConst ? 'unfiltered' : 'finite',
+      FP.f16.divisionInterval
+    );
   }
 })).
 reduce((a, b) => ({ ...a, ...b }), {});
@@ -40,14 +40,14 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateVectorScalarToVectorCases(
-    sparseVectorF16Range(dim),
-    sparseF16Range(),
-    nonConst ? 'unfiltered' : 'finite',
-    divisionVectorScalarInterval);
-
+      sparseVectorF16Range(dim),
+      sparseF16Range(),
+      nonConst ? 'unfiltered' : 'finite',
+      divisionVectorScalarInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 const scalar_vector_cases = [2, 3, 4].
@@ -55,14 +55,14 @@ flatMap((dim) =>
 [true, false].map((nonConst) => ({
   [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return FP.f16.generateScalarVectorToVectorCases(
-    sparseF16Range(),
-    sparseVectorF16Range(dim),
-    nonConst ? 'unfiltered' : 'finite',
-    divisionScalarVectorInterval);
-
+      sparseF16Range(),
+      sparseVectorF16Range(dim),
+      nonConst ? 'unfiltered' : 'finite',
+      divisionScalarVectorInterval
+    );
   }
-}))).
-
+}))
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('binary/f16_division', {
@@ -74,37 +74,37 @@ export const d = makeCaseCache('binary/f16_division', {
 g.test('scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x and y are scalars
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const');
-
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
+  );
   await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
 });
 
 g.test('vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x and y are vectors
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('vectorize', [2, 3, 4])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const' // Using vectorize to generate vector cases based on scalar cases
   );
   await run(t, binary('/'), [TypeF16, TypeF16], TypeF16, t.params, cases);
 });
@@ -112,32 +112,32 @@ fn(async (t) => {
 g.test('scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x /= y
 Accuracy: 2.5 ULP for |y| in the range [2^-126, 2^126]
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const');
-
+    t.params.inputSource === 'const' ? 'scalar_const' : 'scalar_non_const'
+  );
   await run(t, compoundBinary('/='), [TypeF16, TypeF16], TypeF16, t.params, cases);
 });
 
 g.test('vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
@@ -145,26 +145,26 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`
+  );
   await run(
-  t,
-  binary('/'),
-  [TypeVec(dim, TypeF16), TypeF16],
-  TypeVec(dim, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    binary('/'),
+    [TypeVec(dim, TypeF16), TypeF16],
+    TypeVec(dim, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('vector_scalar_compound').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x /= y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
@@ -172,26 +172,26 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`);
-
+    t.params.inputSource === 'const' ? `vec${dim}_scalar_const` : `vec${dim}_scalar_non_const`
+  );
   await run(
-  t,
-  compoundBinary('/='),
-  [TypeVec(dim, TypeF16), TypeF16],
-  TypeVec(dim, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    compoundBinary('/='),
+    [TypeVec(dim, TypeF16), TypeF16],
+    TypeVec(dim, TypeF16),
+    t.params,
+    cases
+  );
 });
 
 g.test('scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x / y, where x is a scalar and y is a vector
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources).combine('dim', [2, 3, 4])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
@@ -199,15 +199,15 @@ beforeAllSubcases((t) => {
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(
-  t.params.inputSource === 'const' ? `scalar_vec${dim}_const` : `scalar_vec${dim}_non_const`);
-
+    t.params.inputSource === 'const' ? `scalar_vec${dim}_const` : `scalar_vec${dim}_non_const`
+  );
   await run(
-  t,
-  binary('/'),
-  [TypeF16, TypeVec(dim, TypeF16)],
-  TypeVec(dim, TypeF16),
-  t.params,
-  cases);
-
+    t,
+    binary('/'),
+    [TypeF16, TypeVec(dim, TypeF16)],
+    TypeVec(dim, TypeF16),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=f16_division.spec.js.map

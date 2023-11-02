@@ -18,7 +18,7 @@ g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#derivative-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 //# sourceMappingURL=dpdx.spec.js.map

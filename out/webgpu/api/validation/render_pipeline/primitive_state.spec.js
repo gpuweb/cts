@@ -11,14 +11,14 @@ export const g = makeTestGroup(CreateRenderPipelineValidationTest);
 
 g.test('strip_index_format').
 desc(
-`If primitive.topology is not "line-strip" or "triangle-strip", primitive.stripIndexFormat must be undefined.`).
-
+  `If primitive.topology is not "line-strip" or "triangle-strip", primitive.stripIndexFormat must be undefined.`
+).
 params((u) =>
 u.
 combine('isAsync', [false, true]).
 combine('topology', [undefined, ...kPrimitiveTopology]).
-combine('stripIndexFormat', [undefined, ...kIndexFormat])).
-
+combine('stripIndexFormat', [undefined, ...kIndexFormat])
+).
 fn((t) => {
   const { isAsync, topology, stripIndexFormat } = t.params;
 

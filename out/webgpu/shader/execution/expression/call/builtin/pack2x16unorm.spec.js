@@ -9,13 +9,13 @@ bits 16 × i through 16 × i + 15 of the result.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
-f32,
-pack2x16unorm,
-TypeF32,
-TypeU32,
-TypeVec,
-u32,
-vec2 } from
+  f32,
+  pack2x16unorm,
+  TypeF32,
+  TypeU32,
+  TypeVec,
+  u32,
+  vec2 } from
 '../../../../../util/conversion.js';
 import { quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
@@ -27,10 +27,10 @@ export const g = makeTestGroup(GPUTest);
 g.test('pack').
 specURL('https://www.w3.org/TR/WGSL/#pack-builtin-functions').
 desc(
-`
+  `
 @const fn pack2x16unorm(e: vec2<f32>) -> u32
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const makeCase = (x, y) => {

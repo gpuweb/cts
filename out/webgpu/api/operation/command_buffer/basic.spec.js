@@ -38,15 +38,15 @@ g.test('b2t2b').fn((t) => {
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToTexture(
-  { buffer: src, bytesPerRow: 256 },
-  { texture: mid, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { buffer: src, bytesPerRow: 256 },
+    { texture: mid, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   encoder.copyTextureToBuffer(
-  { texture: mid, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { buffer: dst, bytesPerRow: 256 },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { texture: mid, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { buffer: dst, bytesPerRow: 256 },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   t.device.queue.submit([encoder.finish()]);
 
   t.expectGPUBufferValuesEqual(dst, data);
@@ -78,20 +78,20 @@ g.test('b2t2t2b').fn((t) => {
 
   const encoder = t.device.createCommandEncoder();
   encoder.copyBufferToTexture(
-  { buffer: src, bytesPerRow: 256 },
-  { texture: mid1, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { buffer: src, bytesPerRow: 256 },
+    { texture: mid1, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   encoder.copyTextureToTexture(
-  { texture: mid1, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { texture: mid2, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { texture: mid1, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { texture: mid2, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   encoder.copyTextureToBuffer(
-  { texture: mid2, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { buffer: dst, bytesPerRow: 256 },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { texture: mid2, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { buffer: dst, bytesPerRow: 256 },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   t.device.queue.submit([encoder.finish()]);
 
   t.expectGPUBufferValuesEqual(dst, data);

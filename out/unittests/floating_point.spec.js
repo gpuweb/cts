@@ -8,9 +8,9 @@ import { kValue } from '../webgpu/util/constants.js';
 import { FP, FPInterval } from '../webgpu/util/floating_point.js';
 import { map2DArray, oneULPF32, oneULPF16, oneULPF64 } from '../webgpu/util/math.js';
 import {
-reinterpretU16AsF16,
-reinterpretU32AsF32,
-reinterpretU64AsF64 } from
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU64AsF64 } from
 '../webgpu/util/reinterpret.js';
 
 import { UnitTest } from './unit_test.js';
@@ -105,8 +105,8 @@ error)
         case 1:
           return [expected[0], expected[0]];
         case 2:
-          return [expected[0], expected[1]];}
-
+          return [expected[0], expected[1]];
+      }
       unreachable(`Tried to unpack an IntervalBounds with length other than 1 or 2`);
     } else {
       // TS doesn't narrow this to number automatically
@@ -172,19 +172,19 @@ expandWithParams((p) => {
     // Out of range
     { input: [0, 2 * constants.positive.max], expected: [0, 2 * constants.positive.max] },
     { input: [2 * constants.negative.min, 0], expected: [2 * constants.negative.min, 0] },
-    { input: [2 * constants.negative.min, 2 * constants.positive.max], expected: [2 * constants.negative.min, 2 * constants.positive.max] }]);
-
+    { input: [2 * constants.negative.min, 2 * constants.positive.max], expected: [2 * constants.negative.min, 2 * constants.positive.max] }]
+    );
   }
 
   return cases;
-})).
-
+})
+).
 fn((t) => {
   const i = new FPInterval(t.params.trait, ...t.params.input);
   t.expect(
-  objectEquals(i.bounds(), t.params.expected),
-  `new FPInterval('${t.params.trait}', [${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`);
-
+    objectEquals(i.bounds(), t.params.expected),
+    `new FPInterval('${t.params.trait}', [${t.params.input}]) returned ${i}. Expected [${t.params.expected}]`
+  );
 });
 
 
@@ -309,13 +309,13 @@ expandWithParams((p) => {
     { bounds: [2 * constants.negative.min, 0], value: constants.positive.infinity, expected: false },
     { bounds: [2 * constants.negative.min, 0], value: constants.negative.min, expected: true },
     { bounds: [2 * constants.negative.min, 0], value: constants.negative.max, expected: true },
-    { bounds: [2 * constants.negative.min, 0], value: constants.negative.infinity, expected: false }]);
-
+    { bounds: [2 * constants.negative.min, 0], value: constants.negative.infinity, expected: false }]
+    );
   }
 
   return cases;
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const i = trait.toInterval(t.params.bounds);
@@ -420,13 +420,13 @@ expandWithParams((p) => {
     { lhs: [2 * constants.negative.min, 0], rhs: [0, 1], expected: false },
     { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, 0], expected: false },
     { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, -100], expected: false },
-    { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false }]);
-
+    { lhs: [2 * constants.negative.min, 0], rhs: [constants.negative.infinity, constants.positive.infinity], expected: false }]
+    );
   }
 
   return cases;
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const lhs = trait.toInterval(t.params.lhs);
@@ -479,8 +479,8 @@ expandWithParams((p) => {
   { intervals: [1, 2], expected: [1, 2] },
   { intervals: [-10, 2], expected: [-10, 2] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const intervals = t.params.intervals.map((i) => trait.toInterval(i));
@@ -488,9 +488,9 @@ fn((t) => {
 
   const got = trait.spanIntervals(...intervals);
   t.expect(
-  objectEquals(got, expected),
-  `${t.params.trait}.span({${intervals}}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(got, expected),
+    `${t.params.trait}.span({${intervals}}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -585,8 +585,8 @@ expandWithParams((p) => {
   { input: [trait.toParam(1), 2], expected: false },
   { input: [trait.toParam(1), [2]], expected: false }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const input = t.params.input.map((e) => trait.fromParam(e));
@@ -594,9 +594,9 @@ fn((t) => {
 
   const got = trait.isVector(input);
   t.expect(
-  got === expected,
-  `${t.params.trait}.isVector([${input}]) returned ${got}. Expected ${expected}`);
-
+    got === expected,
+    `${t.params.trait}.isVector([${input}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -707,8 +707,8 @@ expandWithParams((p) => {
     expected: [1, 2, [2, 3], kUnboundedBounds]
   }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const input = t.params.input.map((e) => trait.fromParam(e));
@@ -716,9 +716,9 @@ fn((t) => {
 
   const got = trait.toVector(input);
   t.expect(
-  objectEquals(got, expected),
-  `${t.params.trait}.toVector([${input}]) returned [${got}]. Expected [${expected}]`);
-
+    objectEquals(got, expected),
+    `${t.params.trait}.toVector([${input}]) returned [${got}]. Expected [${expected}]`
+  );
 });
 
 
@@ -1142,8 +1142,8 @@ expandWithParams((p) => {
     expected: false
   }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const input = t.params.input.map((a) => a.map((e) => trait.fromParam(e)));
@@ -1151,9 +1151,9 @@ fn((t) => {
 
   const got = trait.isMatrix(input);
   t.expect(
-  got === expected,
-  `${t.params.trait}.isMatrix([${input}]) returned ${got}. Expected ${expected}`);
-
+    got === expected,
+    `${t.params.trait}.isMatrix([${input}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -1803,8 +1803,8 @@ expandWithParams((p) => {
 
   }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const input = map2DArray(t.params.input, (e) => trait.fromParam(e));
@@ -1812,9 +1812,9 @@ fn((t) => {
 
   const got = trait.toMatrix(input);
   t.expect(
-  objectEquals(got, expected),
-  `${t.params.trait}.toMatrix([${input}]) returned [${got}]. Expected [${expected}]`);
-
+    objectEquals(got, expected),
+    `${t.params.trait}.toMatrix([${input}]) returned [${got}]. Expected [${expected}]`
+  );
 });
 
 // API - Fundamental Error Intervals
@@ -1926,18 +1926,18 @@ expandWithParams((p) => {
   { value: -2, error: smallErr, expected: [-2 - smallErr, -2 + smallErr] },
   { value: -2, error: 1, expected: [-3, -1] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.absoluteErrorInterval(t.params.value, t.params.error);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.absoluteErrorInterval(${t.params.value}, ${
-  t.params.error
-  }) returned ${got} (${got.begin.toExponential()}, ${got.end.toExponential()}). Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.absoluteErrorInterval(${t.params.value}, ${
+    t.params.error
+    }) returned ${got} (${got.begin.toExponential()}, ${got.end.toExponential()}). Expected ${expected}`
+  );
 });
 
 
@@ -2059,16 +2059,16 @@ expandWithParams((p) => {
   // 64-bit normals that fall between two conjunction normal values in target type
   ...kCorrectlyRoundedF64NormalCases.map((t) => {return { value: t.value, expected: t.expected[p.trait] };})];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.correctlyRoundedInterval(t.params.value);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.correctlyRoundedInterval(${t.params.value}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.correctlyRoundedInterval(${t.params.value}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -2151,16 +2151,16 @@ expandWithParams((p) => {
   { value: 0, num_ulp: 1, expected: [minusOneULP(0), plusOneULP(0)] },
   { value: 0, num_ulp: ULPValue, expected: [minusNULP(0, ULPValue), plusNULP(0, ULPValue)] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.ulpInterval(t.params.value, t.params.num_ulp);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.ulpInterval(${t.params.value}, ${t.params.num_ulp}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // API - Acceptance Intervals
@@ -2240,16 +2240,16 @@ expandWithParams((p) => {
   // Zero
   { input: 0, expected: 0 }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.absInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.absInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.absInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Acos expectation intervals are bounded by both inherited atan2(sqrt(1.0 - x*x), x) and absolute error.
@@ -2308,16 +2308,16 @@ expandWithParams((p) => {
   // comes from ULP error and upper boundary comes from absolute error in those cases.
   ...kAcosIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.acosInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.acosInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -2354,16 +2354,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.acoshAlternativeInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.acoshAlternativeInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.acoshAlternativeInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -2400,16 +2400,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.acoshPrimaryInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.acoshPrimaryInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.acoshPrimaryInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Asin cases that bounded by inherited atan2(x, sqrt(1.0 - x*x)) rather than absolute error.
@@ -2460,16 +2460,16 @@ expandWithParams((p) => {
   // Cases that inherited from atan2(x, sqrt(1-x*x))
   ...kAsinIntervalInheritedCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.asinInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.asinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -2505,16 +2505,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.asinhInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -2572,8 +2572,8 @@ expandWithParams((p) => {
   { input: constants.negative.infinity, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
 
@@ -2586,9 +2586,9 @@ fn((t) => {
 
   const got = trait.atanInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.atanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -2626,16 +2626,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.atanhInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Large but still representable integer
@@ -2688,16 +2688,16 @@ expandWithParams((p) => {
   { input: constants.negative.subnormal.min, expected: 0 },
   { input: constants.negative.subnormal.max, expected: 0 }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.ceilInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.ceilInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.ceilInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Cos interval cases on x=π/3, the result of f32 and f16 is different because π/3 quantized to
@@ -2750,8 +2750,8 @@ expandWithParams((p) => {
 
   ...kCosIntervalThirdPiCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
 
@@ -2763,9 +2763,9 @@ fn((t) => {
 
   const got = trait.cosInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.cosInterval(${t.params.input}) returned ${got}. Expected ${expected}, ===${t.params.expected}===`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.cosInterval(${t.params.input}) returned ${got}. Expected ${expected}, ===${t.params.expected}===`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -2801,16 +2801,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.coshInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -2876,16 +2876,16 @@ expandWithParams((p) => {
   { input: constants.negative.infinity, expected: kUnboundedBounds },
   ...kDegreesIntervalCases[trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.degreesInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.degreesInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.degreesInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -2920,8 +2920,8 @@ expandWithParams((p) => {
   { input: 0, expected: 1 },
   ...kExpIntervalCases[trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const error = (x) => {
@@ -2934,8 +2934,8 @@ fn((t) => {
       case 'f16':{
           ulp_error = 1 + 2 * Math.abs(t.params.input);
           break;
-        }}
-
+        }
+    }
     return ulp_error * trait.oneULP(x);
   };
 
@@ -2943,9 +2943,9 @@ fn((t) => {
   const got = trait.expInterval(t.params.input);
 
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -2979,8 +2979,8 @@ expandWithParams((p) => {
   { input: 1, expected: 2 },
   ...kExp2IntervalCases[trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const error = (x) => {
@@ -2993,8 +2993,8 @@ fn((t) => {
       case 'f16':{
           ulp_error = 1 + 2 * Math.abs(t.params.input);
           break;
-        }}
-
+        }
+    }
     return ulp_error * trait.oneULP(x);
   };
 
@@ -3002,9 +3002,9 @@ fn((t) => {
 
   const got = trait.exp2Interval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Large but still representable integer
@@ -3065,16 +3065,16 @@ expandWithParams((p) => {
   { input: constants.negative.subnormal.min, expected: [-1, 0] },
   { input: constants.negative.subnormal.max, expected: [-1, 0] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.floorInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.floorInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.floorInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -3124,16 +3124,16 @@ expandWithParams((p) => {
   { input: constants.negative.min, expected: 0 },
   { input: constants.negative.max, expected: [constants.positive.less_than_one, 1.0] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.fractInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -3184,8 +3184,8 @@ expandWithParams((p) => {
   { input: 0, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
 
@@ -3197,9 +3197,9 @@ fn((t) => {
 
   const got = trait.inverseSqrtInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.inverseSqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.inverseSqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Expectation interval of 1/inverseSqrt(sum(x[i]^2)) on some special values array x for certain
@@ -3260,16 +3260,16 @@ expandWithParams((p) => {
   { input: constants.positive.min, expected: kUnboundedBounds },
   { input: constants.positive.max, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.lengthInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -3305,8 +3305,8 @@ expandWithParams((p) => {
   { input: 1, expected: 0 },
   ...kLogIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const abs_error = t.params.trait === 'f32' ? 2 ** -21 : 2 ** -7;
@@ -3321,9 +3321,9 @@ fn((t) => {
 
   const got = trait.logInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.logInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.logInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -3355,8 +3355,8 @@ expandWithParams((p) => {
   { input: 16, expected: 4 },
   ...kLog2IntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const abs_error = t.params.trait === 'f32' ? 2 ** -21 : 2 ** -7;
@@ -3371,9 +3371,9 @@ fn((t) => {
 
   const got = trait.log2Interval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.log2Interval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.log2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('negationInterval').
@@ -3409,53 +3409,53 @@ expandWithParams((p) => {
   { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
   { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.negationInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.negationInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.negationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('quantizeToF16Interval').
 paramsSubcasesOnly(
 
-[
-{ input: kValue.f32.negative.infinity, expected: kUnboundedBounds },
-{ input: kValue.f32.negative.min, expected: kUnboundedBounds },
-{ input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
-{ input: -1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['-1.9'] }, // ~-1.9
-{ input: -1, expected: -1 },
-{ input: -0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['-0.1'] }, // ~-0.1
-{ input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
-{ input: kValue.f16.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.min, 0] },
-{ input: kValue.f16.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
-{ input: kValue.f32.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
-{ input: 0, expected: 0 },
-{ input: kValue.f32.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
-{ input: kValue.f16.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
-{ input: kValue.f16.positive.subnormal.max, expected: [0, kValue.f16.positive.subnormal.max] },
-{ input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
-{ input: 0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['0.1'] }, // ~0.1
-{ input: 1, expected: 1 },
-{ input: 1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['1.9'] }, // ~1.9
-{ input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
-{ input: kValue.f32.positive.max, expected: kUnboundedBounds },
-{ input: kValue.f32.positive.infinity, expected: kUnboundedBounds }]).
+  [
+  { input: kValue.f32.negative.infinity, expected: kUnboundedBounds },
+  { input: kValue.f32.negative.min, expected: kUnboundedBounds },
+  { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
+  { input: -1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['-1.9'] }, // ~-1.9
+  { input: -1, expected: -1 },
+  { input: -0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['-0.1'] }, // ~-0.1
+  { input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
+  { input: kValue.f16.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.min, 0] },
+  { input: kValue.f16.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
+  { input: kValue.f32.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
+  { input: 0, expected: 0 },
+  { input: kValue.f32.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+  { input: kValue.f16.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+  { input: kValue.f16.positive.subnormal.max, expected: [0, kValue.f16.positive.subnormal.max] },
+  { input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
+  { input: 0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['0.1'] }, // ~0.1
+  { input: 1, expected: 1 },
+  { input: 1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['1.9'] }, // ~1.9
+  { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
+  { input: kValue.f32.positive.max, expected: kUnboundedBounds },
+  { input: kValue.f32.positive.infinity, expected: kUnboundedBounds }]
 
-
+).
 fn((t) => {
   const expected = FP.f32.toInterval(t.params.expected);
 
   const got = FP.f32.quantizeToF16Interval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `f32.quantizeToF16Interval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `f32.quantizeToF16Interval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -3519,16 +3519,16 @@ expandWithParams((p) => {
   { input: constants.negative.infinity, expected: kUnboundedBounds },
   ...kRadiansIntervalCases[trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.radiansInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.radiansInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.radiansInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Large but still representable integer
@@ -3585,16 +3585,16 @@ expandWithParams((p) => {
   { input: constants.negative.subnormal.min, expected: 0 },
   { input: constants.negative.subnormal.max, expected: 0 }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.roundInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.roundInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.roundInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('saturateInterval').
@@ -3630,16 +3630,16 @@ expandWithParams((p) => {
   { input: constants.positive.infinity, expected: kUnboundedBounds },
   { input: constants.negative.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.saturateInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('signInterval').
@@ -3669,16 +3669,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: 1 },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.signInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.signInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.signInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('sinInterval').
@@ -3704,8 +3704,8 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
 
@@ -3717,9 +3717,9 @@ fn((t) => {
 
   const got = trait.sinInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.sinInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.sinInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -3755,16 +3755,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.sinhInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // For sqrt interval inherited from 1.0 / inverseSqrt(x), errors come from:
@@ -3836,8 +3836,8 @@ expandWithParams((p) => {
   { input: 0, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
 
@@ -3851,9 +3851,9 @@ fn((t) => {
 
   const got = trait.sqrtInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `FP.${t.params.trait}.sqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `FP.${t.params.trait}.sqrtInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // All of these are hard coded, since the error intervals are difficult to express in a closed
@@ -3920,16 +3920,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.tanInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -3965,16 +3965,16 @@ expandWithParams((p) => {
   { input: constants.positive.max, expected: kUnboundedBounds },
   { input: constants.positive.infinity, expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.tanhInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('truncInterval').
@@ -4014,16 +4014,16 @@ expandWithParams((p) => {
   { input: constants.negative.min, expected: constants.negative.min },
   { input: constants.negative.max, expected: 0 }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.truncInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `FP.${t.params.trait}.truncInterval(${t.params.input}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `FP.${t.params.trait}.truncInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -4121,17 +4121,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.additionInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.additionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.additionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Cases for Atan2Interval. The positive x & y quadrant is tested in more detail, and the other
@@ -4254,17 +4254,17 @@ expandWithParams((p) => {
   { input: [1, constants.negative.min], expected: kUnboundedBounds },
   { input: [1, constants.negative.nearest_min], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const [y, x] = t.params.input;
   const expected = trait.toInterval(t.params.expected);
   const got = trait.atan2Interval(y, x);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.atan2Interval(${y}, ${x}) returned ${got}]. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.atan2Interval(${y}, ${x}) returned ${got}]. Expected ${expected}`
+  );
 });
 
 g.test('distanceIntervalScalar').
@@ -4310,16 +4310,16 @@ expandWithParams((p) => {
   { input: [constants.positive.min, 0], expected: kUnboundedBounds },
   { input: [constants.positive.max, 0], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.distanceInterval(...t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.distanceInterval(${t.params.input[0]}, ${t.params.input[1]}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.distanceInterval(${t.params.input[0]}, ${t.params.input[1]}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -4407,8 +4407,8 @@ expandWithParams((p) => {
   { input: [1, 0], expected: kUnboundedBounds },
   { input: [1, constants.positive.subnormal.max], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   // This is a ULP based interval, so abstract should behave like f32, so
   // swizzling the trait as needed for calculating the expected result.
@@ -4425,9 +4425,9 @@ fn((t) => {
   const expected = FP[t.params.trait].toInterval(applyError(t.params.expected, error));
   const got = FP[t.params.trait].divisionInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 const kLdexpIntervalCases = {
@@ -4515,17 +4515,17 @@ expandWithParams((p) => {
   { input: [constants.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
   { input: [constants.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.ldexpInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('maxInterval').
@@ -4581,17 +4581,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const [x, y] = t.params.input;
   const expected = trait.toInterval(t.params.expected);
   const got = trait.maxInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.maxInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.maxInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('minInterval').
@@ -4647,17 +4647,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const [x, y] = t.params.input;
   const expected = trait.toInterval(t.params.expected);
   const got = trait.minInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.minInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -4757,17 +4757,17 @@ expandWithParams((p) => {
   { input: [constants.positive.max, constants.negative.min], expected: kUnboundedBounds },
   { input: [constants.negative.min, constants.positive.max], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.multiplicationInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.multiplicationInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.multiplicationInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -4816,17 +4816,17 @@ expandWithParams((p) => {
 
   ...kPowIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.powInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -4888,17 +4888,17 @@ expandWithParams((p) => {
   { input: [1, 0], expected: kUnboundedBounds },
   { input: [1, constants.positive.subnormal.max], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const [x, y] = t.params.input;
   const expected = trait.toInterval(t.params.expected);
   const got = trait.remainderInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('stepInterval').
@@ -4971,17 +4971,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const [edge, x] = t.params.input;
   const expected = trait.toInterval(t.params.expected);
   const got = trait.stepInterval(edge, x);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.stepInterval(${edge}, ${x}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.stepInterval(${edge}, ${x}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -5069,17 +5069,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.subtractionInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.subtractionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.subtractionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -5132,17 +5132,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.negative.infinity, constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y, z] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.clampMedianInterval(x, y, z);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.clampMedianInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.clampMedianInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+  );
 });
 
 g.test('clampMinMaxInterval').
@@ -5190,17 +5190,17 @@ expandWithParams((p) => {
   { input: [constants.negative.infinity, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
   { input: [constants.negative.infinity, constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y, z] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.clampMinMaxInterval(x, y, z);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.clampMinMaxInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.clampMinMaxInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -5293,18 +5293,18 @@ expandWithParams((p) => {
   { input: [constants.positive.max, constants.positive.max, constants.positive.subnormal.min], expected: kUnboundedBounds },
   ...kFmaIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.fmaInterval(...t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.fmaInterval(${t.params.input.join(
-  ',')
-  }) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.fmaInterval(${t.params.input.join(
+      ','
+    )}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -5426,17 +5426,17 @@ expandWithParams((p) => {
   // The [negative.min, +/-10.0, 1.0] cases has different result for different trait on
   // imprecise version.
   ];
-})).
-
+})
+).
 fn((t) => {
   const [x, y, z] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.mixImpreciseInterval(x, y, z);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -5542,17 +5542,17 @@ expandWithParams((p) => {
   { input: [constants.negative.min, 10.0, 1.0], expected: 10.0 },
   { input: [constants.negative.min, -10.0, 1.0], expected: -10.0 }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y, z] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.mixPreciseInterval(x, y, z);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+  );
 });
 
 // Some of these are hard coded, since the error intervals are difficult to express in a closed
@@ -5635,17 +5635,17 @@ expandWithParams((p) => {
   { input: [0, constants.positive.infinity, 1], expected: kUnboundedBounds },
   { input: [0, constants.negative.infinity, 1], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [low, high, x] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.smoothStepInterval(low, high, x);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -5656,35 +5656,35 @@ fn((t) => {
 g.test('unpack2x16floatInterval').
 paramsSubcasesOnly(
 
-[
-// f16 normals
-{ input: 0x00000000, expected: [0, 0] },
-{ input: 0x80000000, expected: [0, 0] },
-{ input: 0x00008000, expected: [0, 0] },
-{ input: 0x80008000, expected: [0, 0] },
-{ input: 0x00003c00, expected: [1, 0] },
-{ input: 0x3c000000, expected: [0, 1] },
-{ input: 0x3c003c00, expected: [1, 1] },
-{ input: 0xbc00bc00, expected: [-1, -1] },
-{ input: 0x49004900, expected: [10, 10] },
-{ input: 0xc900c900, expected: [-10, -10] },
+  [
+  // f16 normals
+  { input: 0x00000000, expected: [0, 0] },
+  { input: 0x80000000, expected: [0, 0] },
+  { input: 0x00008000, expected: [0, 0] },
+  { input: 0x80008000, expected: [0, 0] },
+  { input: 0x00003c00, expected: [1, 0] },
+  { input: 0x3c000000, expected: [0, 1] },
+  { input: 0x3c003c00, expected: [1, 1] },
+  { input: 0xbc00bc00, expected: [-1, -1] },
+  { input: 0x49004900, expected: [10, 10] },
+  { input: 0xc900c900, expected: [-10, -10] },
 
-// f16 subnormals
-{ input: 0x000003ff, expected: [[0, kValue.f16.positive.subnormal.max], 0] },
-{ input: 0x000083ff, expected: [[kValue.f16.negative.subnormal.min, 0], 0] },
+  // f16 subnormals
+  { input: 0x000003ff, expected: [[0, kValue.f16.positive.subnormal.max], 0] },
+  { input: 0x000083ff, expected: [[kValue.f16.negative.subnormal.min, 0], 0] },
 
-// f16 out of bounds
-{ input: 0x7c000000, expected: [kUnboundedBounds, kUnboundedBounds] },
-{ input: 0xffff0000, expected: [kUnboundedBounds, kUnboundedBounds] }]).
+  // f16 out of bounds
+  { input: 0x7c000000, expected: [kUnboundedBounds, kUnboundedBounds] },
+  { input: 0xffff0000, expected: [kUnboundedBounds, kUnboundedBounds] }]
 
-
+).
 fn((t) => {
   const expected = FP.f32.toVector(t.params.expected);
   const got = FP.f32.unpack2x16floatInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `unpack2x16floatInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
-
+    objectEquals(expected, got),
+    `unpack2x16floatInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`
+  );
 });
 
 // Scope for unpack2x16snormInterval tests so that they can have constants for
@@ -5716,23 +5716,23 @@ fn((t) => {
   g.test('unpack2x16snormInterval').
   paramsSubcasesOnly(
 
-  [
-  { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
-  { input: 0x00007fff, expected: [kOneBoundsSnorm, kZeroBounds] },
-  { input: 0x7fff0000, expected: [kZeroBounds, kOneBoundsSnorm] },
-  { input: 0x7fff7fff, expected: [kOneBoundsSnorm, kOneBoundsSnorm] },
-  { input: 0x80018001, expected: [kNegOneBoundsSnorm, kNegOneBoundsSnorm] },
-  { input: 0x40004000, expected: [kHalfBounds2x16snorm, kHalfBounds2x16snorm] },
-  { input: 0xc001c001, expected: [kNegHalfBounds2x16snorm, kNegHalfBounds2x16snorm] }]).
+    [
+    { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
+    { input: 0x00007fff, expected: [kOneBoundsSnorm, kZeroBounds] },
+    { input: 0x7fff0000, expected: [kZeroBounds, kOneBoundsSnorm] },
+    { input: 0x7fff7fff, expected: [kOneBoundsSnorm, kOneBoundsSnorm] },
+    { input: 0x80018001, expected: [kNegOneBoundsSnorm, kNegOneBoundsSnorm] },
+    { input: 0x40004000, expected: [kHalfBounds2x16snorm, kHalfBounds2x16snorm] },
+    { input: 0xc001c001, expected: [kNegHalfBounds2x16snorm, kNegHalfBounds2x16snorm] }]
 
-
+  ).
   fn((t) => {
     const expected = FP.f32.toVector(t.params.expected);
     const got = FP.f32.unpack2x16snormInterval(t.params.input);
     t.expect(
-    objectEquals(expected, got),
-    `unpack2x16snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`);
-
+      objectEquals(expected, got),
+      `unpack2x16snormInterval(${t.params.input}) returned [${got}]. Expected [${expected}]`
+    );
   });
 }
 
@@ -5756,21 +5756,21 @@ fn((t) => {
   g.test('unpack2x16unormInterval').
   paramsSubcasesOnly(
 
-  [
-  { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
-  { input: 0x0000ffff, expected: [kOneBounds, kZeroBounds] },
-  { input: 0xffff0000, expected: [kZeroBounds, kOneBounds] },
-  { input: 0xffffffff, expected: [kOneBounds, kOneBounds] },
-  { input: 0x80008000, expected: [kHalfBounds, kHalfBounds] }]).
+    [
+    { input: 0x00000000, expected: [kZeroBounds, kZeroBounds] },
+    { input: 0x0000ffff, expected: [kOneBounds, kZeroBounds] },
+    { input: 0xffff0000, expected: [kZeroBounds, kOneBounds] },
+    { input: 0xffffffff, expected: [kOneBounds, kOneBounds] },
+    { input: 0x80008000, expected: [kHalfBounds, kHalfBounds] }]
 
-
+  ).
   fn((t) => {
     const expected = FP.f32.toVector(t.params.expected);
     const got = FP.f32.unpack2x16unormInterval(t.params.input);
     t.expect(
-    objectEquals(expected, got),
-    `unpack2x16unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
-
+      objectEquals(expected, got),
+      `unpack2x16unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`
+    );
   });
 }
 
@@ -5802,38 +5802,38 @@ fn((t) => {
   g.test('unpack4x8snormInterval').
   paramsSubcasesOnly(
 
-  [
-  { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x0000007f, expected: [kOneBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x00007f00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x007f0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kZeroBounds] },
-  { input: 0x7f000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kOneBounds] },
-  { input: 0x00007f7f, expected: [kOneBounds, kOneBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x7f7f0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kOneBounds] },
-  { input: 0x7f007f00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kOneBounds] },
-  { input: 0x007f007f, expected: [kOneBounds, kZeroBounds, kOneBounds, kZeroBounds] },
-  { input: 0x7f7f7f7f, expected: [kOneBounds, kOneBounds, kOneBounds, kOneBounds] },
-  {
-    input: 0x81818181,
-    expected: [kNegOneBounds, kNegOneBounds, kNegOneBounds, kNegOneBounds]
-  },
-  {
-    input: 0x40404040,
-    expected: [kHalfBounds, kHalfBounds, kHalfBounds, kHalfBounds]
-  },
-  {
-    input: 0xc1c1c1c1,
-    expected: [kNegHalfBounds, kNegHalfBounds, kNegHalfBounds, kNegHalfBounds]
-  }]).
+    [
+    { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x0000007f, expected: [kOneBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x00007f00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x007f0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kZeroBounds] },
+    { input: 0x7f000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kOneBounds] },
+    { input: 0x00007f7f, expected: [kOneBounds, kOneBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x7f7f0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kOneBounds] },
+    { input: 0x7f007f00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kOneBounds] },
+    { input: 0x007f007f, expected: [kOneBounds, kZeroBounds, kOneBounds, kZeroBounds] },
+    { input: 0x7f7f7f7f, expected: [kOneBounds, kOneBounds, kOneBounds, kOneBounds] },
+    {
+      input: 0x81818181,
+      expected: [kNegOneBounds, kNegOneBounds, kNegOneBounds, kNegOneBounds]
+    },
+    {
+      input: 0x40404040,
+      expected: [kHalfBounds, kHalfBounds, kHalfBounds, kHalfBounds]
+    },
+    {
+      input: 0xc1c1c1c1,
+      expected: [kNegHalfBounds, kNegHalfBounds, kNegHalfBounds, kNegHalfBounds]
+    }]
 
-
+  ).
   fn((t) => {
     const expected = FP.f32.toVector(t.params.expected);
     const got = FP.f32.unpack4x8snormInterval(t.params.input);
     t.expect(
-    objectEquals(expected, got),
-    `unpack4x8snormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
-
+      objectEquals(expected, got),
+      `unpack4x8snormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`
+    );
   });
 }
 
@@ -5857,30 +5857,30 @@ fn((t) => {
   g.test('unpack4x8unormInterval').
   paramsSubcasesOnly(
 
-  [
-  { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x000000ff, expected: [kOneBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x0000ff00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kZeroBounds] },
-  { input: 0x00ff0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kZeroBounds] },
-  { input: 0xff000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kOneBounds] },
-  { input: 0x0000ffff, expected: [kOneBounds, kOneBounds, kZeroBounds, kZeroBounds] },
-  { input: 0xffff0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kOneBounds] },
-  { input: 0xff00ff00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kOneBounds] },
-  { input: 0x00ff00ff, expected: [kOneBounds, kZeroBounds, kOneBounds, kZeroBounds] },
-  { input: 0xffffffff, expected: [kOneBounds, kOneBounds, kOneBounds, kOneBounds] },
-  {
-    input: 0x80808080,
-    expected: [kHalfBounds, kHalfBounds, kHalfBounds, kHalfBounds]
-  }]).
+    [
+    { input: 0x00000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x000000ff, expected: [kOneBounds, kZeroBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x0000ff00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kZeroBounds] },
+    { input: 0x00ff0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kZeroBounds] },
+    { input: 0xff000000, expected: [kZeroBounds, kZeroBounds, kZeroBounds, kOneBounds] },
+    { input: 0x0000ffff, expected: [kOneBounds, kOneBounds, kZeroBounds, kZeroBounds] },
+    { input: 0xffff0000, expected: [kZeroBounds, kZeroBounds, kOneBounds, kOneBounds] },
+    { input: 0xff00ff00, expected: [kZeroBounds, kOneBounds, kZeroBounds, kOneBounds] },
+    { input: 0x00ff00ff, expected: [kOneBounds, kZeroBounds, kOneBounds, kZeroBounds] },
+    { input: 0xffffffff, expected: [kOneBounds, kOneBounds, kOneBounds, kOneBounds] },
+    {
+      input: 0x80808080,
+      expected: [kHalfBounds, kHalfBounds, kHalfBounds, kHalfBounds]
+    }]
 
-
+  ).
   fn((t) => {
     const expected = FP.f32.toVector(t.params.expected);
     const got = FP.f32.unpack4x8unormInterval(t.params.input);
     t.expect(
-    objectEquals(expected, got),
-    `unpack4x8unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`);
-
+      objectEquals(expected, got),
+      `unpack4x8unormInterval(${t.params.input})\n\tReturned [${got}]\n\tExpected [${expected}]`
+    );
   });
 }
 
@@ -5931,16 +5931,16 @@ expandWithParams((p) => {
   { input: [constants.positive.max, constants.positive.nearest_max, constants.negative.min], expected: kUnboundedBounds },
   { input: [constants.negative.min, constants.positive.max, constants.positive.nearest_max], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.lengthInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.lengthInterval([${t.params.input}]) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.lengthInterval([${t.params.input}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -6000,16 +6000,16 @@ expandWithParams((p) => {
   { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] }, // ~0.1
   { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] } // ~0.1
   ];
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.distanceInterval(...t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.lengthInterval([${t.params.input[0]}, ${t.params.input[1]}]) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.lengthInterval([${t.params.input[0]}, ${t.params.input[1]}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -6083,17 +6083,17 @@ expandWithParams((p) => {
   { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds },
   { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: kUnboundedBounds }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.dotInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.dotInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -6154,17 +6154,17 @@ params((u) =>
 u.
 combine('trait', ['f32', 'f16']).
 beginSubcases().
-expandWithParams((p) => kNormalizeIntervalCases[p.trait])).
-
+expandWithParams((p) => kNormalizeIntervalCases[p.trait])
+).
 fn((t) => {
   const x = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toVector(t.params.expected);
   const got = trait.normalizeInterval(x);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -6262,17 +6262,17 @@ expandWithParams((p) => {
   { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
   ...kCrossIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toVector(t.params.expected);
   const got = trait.crossInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+  );
 });
 
 
@@ -6348,19 +6348,19 @@ expandWithParams((p) => {
   // Test that post-dot going OOB propagates
   { input: [[constants.positive.max, 1.0, 2.0, 3.0], [-1.0, constants.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toVector(t.params.expected);
   const got = trait.reflectInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
-  got)
-  }. Expected ${JSON.stringify(expected)}`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
+      got
+    )}. Expected ${JSON.stringify(expected)}`
+  );
 });
 
 
@@ -6462,20 +6462,20 @@ combineWithParams([
   [2, 3, 3, 1]],
 
   expected: -240
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const input = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toInterval(t.params.expected);
   const got = trait.determinantInterval(input);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.determinantInterval([${JSON.stringify(
-  input)
-  }]) returned '${got}. Expected '${expected}'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.determinantInterval([${JSON.stringify(
+      input
+    )}]) returned '${got}. Expected '${expected}'`
+  );
 });
 
 
@@ -6617,19 +6617,19 @@ expandWithParams((p) => {
 
   }];
 
-})).
-
+})
+).
 fn((t) => {
   const input = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toMatrix(t.params.expected);
   const got = trait.transposeInterval(input);
   t.expect(
-  objectEquals(expected, got),
-  `FP.${t.params.trait}.transposeInterval([${JSON.stringify(
-  input)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `FP.${t.params.trait}.transposeInterval([${JSON.stringify(
+      input
+    )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 
@@ -6818,20 +6818,20 @@ combineWithParams([
   [99, 1010, 1111, 1212],
   [1313, 1414, 1515, 1616]]
 
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toMatrix(t.params.expected);
   const got = trait.additionMatrixMatrixInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.additionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
-  y)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.additionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+      y
+    )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 g.test('subtractionMatrixMatrixInterval').
@@ -7015,20 +7015,20 @@ combineWithParams([
   [99, 1010, 1111, 1212],
   [1313, 1414, 1515, 1616]]
 
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toMatrix(t.params.expected);
   const got = trait.subtractionMatrixMatrixInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.subtractionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
-  y)
-  }]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.subtractionMatrixMatrixInterval([${JSON.stringify(x)}], [${JSON.stringify(
+      y
+    )}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 g.test('multiplicationMatrixMatrixInterval').
@@ -7556,22 +7556,22 @@ combineWithParams([
   [930, 1060, 1190, 1320],
   [1210, 1380, 1550, 1720]]
 
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const [x, y] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = trait.toMatrix(t.params.expected);
   const got = trait.multiplicationMatrixMatrixInterval(x, y);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.multiplicationMatrixMatrixInterval([${JSON.stringify(
-  x)
-  }], [${JSON.stringify(y)}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(
-  expected)
-  }]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.multiplicationMatrixMatrixInterval([${JSON.stringify(
+      x
+    )}], [${JSON.stringify(y)}]) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(
+      expected
+    )}]'`
+  );
 });
 
 
@@ -7744,8 +7744,8 @@ expandWithParams((p) => {
   },
   ...kMultiplicationMatrixScalarIntervalCases[p.trait]];
 
-})).
-
+})
+).
 fn((t) => {
   const matrix = t.params.matrix;
   const scalar = t.params.scalar;
@@ -7753,11 +7753,11 @@ fn((t) => {
   const expected = trait.toMatrix(t.params.expected);
   const got = trait.multiplicationMatrixScalarInterval(matrix, scalar);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.multiplicationMatrixScalarInterval([${JSON.stringify(
-  matrix)
-  }], ${scalar}) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.multiplicationMatrixScalarInterval([${JSON.stringify(
+      matrix
+    )}], ${scalar}) returned '[${JSON.stringify(got)}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 // There are no explicit tests for multiplicationScalarMatrixInterval, since it
@@ -7861,9 +7861,9 @@ combineWithParams([
 
   vector: [11, 22, 33, 44],
   expected: [990, 1100, 1210, 1320]
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const matrix = t.params.matrix;
   const vector = t.params.vector;
@@ -7871,13 +7871,13 @@ fn((t) => {
   const expected = trait.toVector(t.params.expected);
   const got = trait.multiplicationMatrixVectorInterval(matrix, vector);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.multiplicationMatrixVectorInterval([${JSON.stringify(
-  matrix)
-  }], [${JSON.stringify(vector)}]) returned '[${JSON.stringify(
-  got)
-  }]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.multiplicationMatrixVectorInterval([${JSON.stringify(
+      matrix
+    )}], [${JSON.stringify(vector)}]) returned '[${JSON.stringify(
+      got
+    )}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 
@@ -7979,9 +7979,9 @@ combineWithParams([
   [41, 42, 43, 44]],
 
   expected: [130, 230, 330, 430]
-}])).
-
-
+}]
+)
+).
 fn((t) => {
   const vector = t.params.vector;
   const matrix = t.params.matrix;
@@ -7989,13 +7989,13 @@ fn((t) => {
   const expected = trait.toVector(t.params.expected);
   const got = trait.multiplicationVectorMatrixInterval(vector, matrix);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.multiplicationVectorMatrixInterval([${JSON.stringify(
-  vector)
-  }], [${JSON.stringify(matrix)}]) returned '[${JSON.stringify(
-  got)
-  }]'. Expected '[${JSON.stringify(expected)}]'`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.multiplicationVectorMatrixInterval([${JSON.stringify(
+      vector
+    )}], [${JSON.stringify(matrix)}]) returned '[${JSON.stringify(
+      got
+    )}]'. Expected '[${JSON.stringify(expected)}]'`
+  );
 });
 
 // API - Acceptance Intervals w/ bespoke implementations
@@ -8066,17 +8066,17 @@ expandWithParams((p) => {
   // dot going OOB returns [undefined, x, -x]
   { input: [[1.0, 1.0], [constants.positive.max, constants.positive.max], [constants.positive.max, constants.positive.max]], expected: [undefined, [1, 1], [-1, -1]] }];
 
-})).
-
+})
+).
 fn((t) => {
   const [x, y, z] = t.params.input;
   const trait = FP[t.params.trait];
   const expected = t.params.expected.map((e) => e !== undefined ? trait.toVector(e) : undefined);
   const got = trait.faceForwardIntervals(x, y, z);
   t.expect(
-  objectEquals(expected, got),
-  `${t.params.trait}.faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`);
-
+    objectEquals(expected, got),
+    `${t.params.trait}.faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`
+  );
 });
 
 
@@ -8117,8 +8117,8 @@ expandWithParams((p) => {
   { input: constants.positive.min, fract: constants.positive.min, whole: 0 },
   { input: constants.positive.max, fract: 0, whole: constants.positive.max }];
 
-})).
-
+})
+).
 fn((t) => {
   const trait = FP[t.params.trait];
   const expected = {
@@ -8128,9 +8128,9 @@ fn((t) => {
 
   const got = trait.modfInterval(t.params.input);
   t.expect(
-  objectEquals(expected, got),
-  `${trait}.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`);
-
+    objectEquals(expected, got),
+    `${trait}.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+  );
 });
 
 
@@ -8223,17 +8223,17 @@ fn((t) => {
     { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
     { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] }];
 
-  })).
-
+  })
+  ).
   fn((t) => {
     const [i, s, r] = t.params.input;
     const trait = FP[t.params.trait];
     const expected = trait.toVector(t.params.expected);
     const got = trait.refractInterval(i, s, r);
     t.expect(
-    objectEquals(expected, got),
-    `${t.params.trait}.refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`);
-
+      objectEquals(expected, got),
+      `${t.params.trait}.refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`
+    );
   });
 }
 //# sourceMappingURL=floating_point.spec.js.map

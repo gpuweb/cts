@@ -17,9 +17,9 @@ u.combine('scope', [
 'fn-var',
 'fn-return',
 'while-stmt',
-undefined])).
-
-
+undefined]
+)
+).
 fn((t) => {
   const scope = t.params.scope;
 

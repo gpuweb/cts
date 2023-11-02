@@ -21,8 +21,8 @@ class BGRA8UnormStorageValidationTests extends ValidationTest {
         break;
       case 'compute':
         shaderDeclaration = '@compute @workgroup_size(1)';
-        break;}
-
+        break;
+    }
     this.expectValidationError(() => {
       this.device.createShaderModule({
         code: `
@@ -40,12 +40,12 @@ export const g = makeTestGroup(BGRA8UnormStorageValidationTests);
 
 g.test('create_texture').
 desc(
-`
+  `
 Test that it is valid to create bgra8unorm texture with STORAGE usage iff the feature
 bgra8unorm-storage is enabled. Note, the createTexture test suite covers the validation cases where
 this feature is not enabled, which are skipped here.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
 }).
@@ -60,12 +60,12 @@ fn((t) => {
 
 g.test('create_bind_group_layout').
 desc(
-`
+  `
 Test that it is valid to create GPUBindGroupLayout that uses bgra8unorm as storage texture format
 iff the feature bgra8unorm-storage is enabled. Note, the createBindGroupLayout test suite covers the
 validation cases where this feature is not enabled, which are skipped here.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
 }).
@@ -83,11 +83,11 @@ fn((t) => {
 
 g.test('create_shader_module_with_bgra8unorm_storage').
 desc(
-`
+  `
 Test that it is valid to declare the format of a storage texture as bgra8unorm in a shader module if
 the feature bgra8unorm-storage is enabled.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
 }).
@@ -100,11 +100,11 @@ fn((t) => {
 
 g.test('create_shader_module_without_bgra8unorm_storage').
 desc(
-`
+  `
 Test that it is invalid to declare the format of a storage texture as bgra8unorm in a shader module
 if the feature bgra8unorm-storage is not enabled.
-`).
-
+`
+).
 params((u) => u.combine('shaderType', ['fragment', 'compute'])).
 fn((t) => {
   const { shaderType } = t.params;
@@ -114,16 +114,16 @@ fn((t) => {
 
 g.test('configure_storage_usage_on_canvas_context_without_bgra8unorm_storage').
 desc(
-`
+  `
 Test that it is invalid to configure a GPUCanvasContext to 'GPUStorageBinding' usage with
 'bgra8unorm' format on a GPUDevice with 'bgra8unorm-storage' disabled.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
 beginSubcases().
-expand('usage', (p) => {
+expand('usage', () => {
   const usageSet = new Set();
   for (const usage0 of kTextureUsages) {
     for (const usage1 of kTextureUsages) {
@@ -131,8 +131,8 @@ expand('usage', (p) => {
     }
   }
   return usageSet;
-})).
-
+})
+).
 fn((t) => {
   const { canvasType, usage } = t.params;
   const canvas = createCanvas(t, canvasType, 1, 1);
@@ -151,11 +151,11 @@ fn((t) => {
 
 g.test('configure_storage_usage_on_canvas_context_with_bgra8unorm_storage').
 desc(
-`
+  `
 Test that it is valid to configure a GPUCanvasContext with GPUStorageBinding usage and a GPUDevice
 with 'bgra8unorm-storage' enabled.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
 }).
@@ -163,14 +163,14 @@ params((u) =>
 u.
 combine('canvasType', kAllCanvasTypes).
 beginSubcases().
-expand('usage', (p) => {
+expand('usage', () => {
   const usageSet = new Set();
   for (const usage of kTextureUsages) {
     usageSet.add(usage | GPUConst.TextureUsage.STORAGE_BINDING);
   }
   return usageSet;
-})).
-
+})
+).
 fn((t) => {
   const { canvasType, usage } = t.params;
   const canvas = createCanvas(t, canvasType, 1, 1);

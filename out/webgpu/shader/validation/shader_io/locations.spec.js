@@ -34,8 +34,8 @@ const kValidLocationTypes = new Set([
 'vec4f',
 'vec4i',
 'vec4u',
-'MyAlias']);
-
+'MyAlias']
+);
 
 const kInvalidLocationTypes = new Set([
 'bool',
@@ -94,8 +94,8 @@ const kInvalidLocationTypes = new Set([
 'texture_depth_cube_array',
 'texture_depth_multisampled_2d',
 'sampler',
-'sampler_comparison']);
-
+'sampler_comparison']
+);
 
 g.test('stage_inout').
 desc(`Test validation of user-defined IO stage and in/out usage`).
@@ -104,8 +104,8 @@ u.
 combine('use_struct', [true, false]).
 combine('target_stage', ['vertex', 'fragment', 'compute']).
 combine('target_io', ['in', 'out']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = generateShader({
     attribute: '@location(0)',
@@ -129,8 +129,8 @@ params((u) =>
 u.
 combine('use_struct', [true, false]).
 combine('type', new Set([...kValidLocationTypes, ...kInvalidLocationTypes])).
-beginSubcases()).
-
+beginSubcases()
+).
 beforeAllSubcases((t) => {
   if (
   t.params.type === 'f16' ||
@@ -179,8 +179,8 @@ params((u) =>
 u.
 combine('target_stage', ['vertex', 'fragment', '']).
 combine('target_io', ['in', 'out']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   let code = '';
 
@@ -217,8 +217,8 @@ u
 // By default, all of these user-defined IO variables will have unique location attributes.
 .combine('first', ['p1', 's1a', 's2a', 'ra']).
 combine('second', ['p2', 's1b', 's2b', 'rb']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const p1 = t.params.first === 'p1' ? '0' : '1';
   const p2 = t.params.second === 'p2' ? '0' : '2';

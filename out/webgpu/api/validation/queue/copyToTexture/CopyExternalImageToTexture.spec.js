@@ -6,23 +6,23 @@ Note that we don't need to add tests on the destination texture dimension as cur
 the destination texture should have RENDER_ATTACHMENT usage, which is only allowed to be used on 2D
 textures.
 `;import {
-getResourcePath,
-getCrossOriginResourcePath } from
+  getResourcePath,
+  getCrossOriginResourcePath } from
 '../../../../../common/framework/resources.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { raceWithRejectOnTimeout, unreachable, assert } from '../../../../../common/util/util.js';
 import { kTextureUsages } from '../../../../capability_info.js';
 import {
-kTextureFormatInfo,
-kTextureFormats,
-kValidTextureFormatsForCopyE2T } from
+  kTextureFormatInfo,
+  kTextureFormats,
+  kValidTextureFormatsForCopyE2T } from
 '../../../../format_info.js';
 import { kResourceStates } from '../../../../gpu_test.js';
 import {
 
-createCanvas,
-createOnscreenCanvas,
-createOffscreenCanvas } from
+  createCanvas,
+  createOnscreenCanvas,
+  createOffscreenCanvas } from
 '../../../../util/create_elements.js';
 import { ValidationTest } from '../../validation_test.js';
 
@@ -163,8 +163,8 @@ class CopyExternalImageToTextureTest extends ValidationTest {
         break;
       case 'offscreen':
         assert(ctx instanceof OffscreenCanvasRenderingContext2D);
-        break;}
-
+        break;
+    }
     ctx.drawImage(content, 0, 0);
 
     return canvas;
@@ -189,18 +189,18 @@ class CopyExternalImageToTextureTest extends ValidationTest {
     if (exceptionName) {
       this.shouldThrow(exceptionName, () => {
         this.device.queue.copyExternalImageToTexture(
-        imageBitmapCopyView,
-        textureCopyView,
-        copySize);
-
+          imageBitmapCopyView,
+          textureCopyView,
+          copySize
+        );
       });
     } else {
       this.expectValidationError(() => {
         this.device.queue.copyExternalImageToTexture(
-        imageBitmapCopyView,
-        textureCopyView,
-        copySize);
-
+          imageBitmapCopyView,
+          textureCopyView,
+          copySize
+        );
       }, !validationScopeSuccess);
     }
   }
@@ -210,15 +210,15 @@ export const g = makeTestGroup(CopyExternalImageToTextureTest);
 
 g.test('source_image,crossOrigin').
 desc(
-`
+  `
   Test contents of source image is [clean, cross-origin].
 
   Load crossOrigin image or same origin image and init the source
   images.
 
   Check whether 'SecurityError' is generated when source image is not origin clean.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('sourceImage', ['canvas', 'offscreenCanvas', 'imageBitmap']).
@@ -227,9 +227,9 @@ beginSubcases().
 combine('contentFrom', ['image', 'imageBitmap', 'canvas', 'offscreenCanvas']).
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { sourceImage, isOriginClean, contentFrom, copySize } = t.params;
   if (typeof document === 'undefined') {
@@ -276,8 +276,8 @@ fn(async (t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   // Update the externalImage content with source.
   let externalImage;
@@ -293,8 +293,8 @@ fn(async (t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   const dstTexture = t.device.createTexture({
     size: { width: 1, height: 1, depthOrArrayLayers: 1 },
@@ -303,17 +303,17 @@ fn(async (t) => {
   });
 
   t.runTest(
-  { source: externalImage },
-  { texture: dstTexture },
-  copySize,
-  true, // No validation errors.
-  isOriginClean ? '' : 'SecurityError');
-
+    { source: externalImage },
+    { texture: dstTexture },
+    copySize,
+    true, // No validation errors.
+    isOriginClean ? '' : 'SecurityError'
+  );
 });
 
 g.test('source_imageBitmap,state').
 desc(
-`
+  `
   Test ImageBitmap as source image in state [valid, closed].
 
   Call imageBitmap.close() to transfer the imageBitmap into
@@ -321,17 +321,17 @@ desc(
 
   Check whether 'InvalidStateError' is generated when ImageBitmap is
   closed.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('closed', [false, true]).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { closed, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
@@ -344,17 +344,17 @@ fn(async (t) => {
   if (closed) imageBitmap.close();
 
   t.runTest(
-  { source: imageBitmap },
-  { texture: dstTexture },
-  copySize,
-  true, // No validation errors.
-  closed ? 'InvalidStateError' : '');
-
+    { source: imageBitmap },
+    { texture: dstTexture },
+    copySize,
+    true, // No validation errors.
+    closed ? 'InvalidStateError' : ''
+  );
 });
 
 g.test('source_canvas,state').
 desc(
-`
+  `
   Test HTMLCanvasElement as source image in state
   [nocontext, 'placeholder-nocontext', 'placeholder-hascontext', valid].
 
@@ -371,17 +371,17 @@ desc(
 
   Check whether 'InvalidStateError' is generated when HTMLCanvasElement is
   in 'placeholder' state.
-    `).
-
+    `
+).
 params((u) =>
 u //
 .combine('state', ['nocontext', 'placeholder-nocontext', 'placeholder-hascontext', 'valid']).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn((t) => {
   const { state, copySize } = t.params;
   const canvas = createOnscreenCanvas(t, 1, 1);
@@ -419,21 +419,21 @@ fn((t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   t.runTest(
-  { source: canvas },
-  { texture: dstTexture },
-  copySize,
-  true, // No validation errors.
-  exceptionName);
-
+    { source: canvas },
+    { texture: dstTexture },
+    copySize,
+    true, // No validation errors.
+    exceptionName
+  );
 });
 
 g.test('source_offscreenCanvas,state').
 desc(
-`
+  `
   Test OffscreenCanvas as source image in state [valid, detached].
 
   Nocontext means using a canvas without any context as copy param.
@@ -445,8 +445,8 @@ desc(
 
   Check whether 'InvalidStateError' is generated when OffscreenCanvas is
   detached.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('state', ['nocontext', 'detached-nocontext', 'detached-hascontext', 'valid']).
@@ -454,9 +454,9 @@ beginSubcases().
 combine('getContextInOffscreenCanvas', [false, true]).
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { state, copySize } = t.params;
   const offscreenCanvas = createOffscreenCanvas(t, 1, 1);
@@ -498,36 +498,36 @@ fn(async (t) => {
         break;
       }
     default:
-      unreachable();}
-
+      unreachable();
+  }
 
   t.runTest(
-  { source: offscreenCanvas },
-  { texture: dstTexture },
-  copySize,
-  true, // No validation errors.
-  exceptionName);
-
+    { source: offscreenCanvas },
+    { texture: dstTexture },
+    copySize,
+    true, // No validation errors.
+    exceptionName
+  );
 });
 
 g.test('destination_texture,state').
 desc(
-`
+  `
   Test dst texture is [valid, invalid, destroyed].
 
   Check that an error is generated when texture is an error texture.
   Check that an error is generated when texture is in destroyed state.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('state', kResourceStates).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { state, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
@@ -538,8 +538,8 @@ fn(async (t) => {
 
 g.test('destination_texture,device_mismatch').
 desc(
-'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device').
-
+  'Tests copyExternalImageToTexture cannot be called with a destination texture created from another device'
+).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -562,21 +562,21 @@ fn(async (t) => {
 
 g.test('destination_texture,usage').
 desc(
-`
+  `
   Test dst texture usages
 
   Check that an error is generated when texture is created without usage COPY_DST | RENDER_ATTACHMENT.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('usage', kTextureUsages).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { usage, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
@@ -587,30 +587,30 @@ fn(async (t) => {
   });
 
   t.runTest(
-  { source: imageBitmap },
-  { texture: dstTexture },
-  copySize,
-  !!(usage & GPUTextureUsage.COPY_DST && usage & GPUTextureUsage.RENDER_ATTACHMENT));
-
+    { source: imageBitmap },
+    { texture: dstTexture },
+    copySize,
+    !!(usage & GPUTextureUsage.COPY_DST && usage & GPUTextureUsage.RENDER_ATTACHMENT)
+  );
 });
 
 g.test('destination_texture,sample_count').
 desc(
-`
+  `
   Test dst texture sample count.
 
   Check that an error is generated when sample count it not 1.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('sampleCount', [1, 4]).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { sampleCount, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
@@ -626,21 +626,21 @@ fn(async (t) => {
 
 g.test('destination_texture,mipLevel').
 desc(
-`
+  `
   Test dst mipLevel.
 
   Check that an error is generated when mipLevel is too large.
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combine('mipLevel', [0, kDefaultMipLevelCount - 1, kDefaultMipLevelCount]).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 fn(async (t) => {
   const { mipLevel, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(1, 1));
@@ -652,30 +652,30 @@ fn(async (t) => {
   });
 
   t.runTest(
-  { source: imageBitmap },
-  { texture: dstTexture, mipLevel },
-  copySize,
-  mipLevel < kDefaultMipLevelCount);
-
+    { source: imageBitmap },
+    { texture: dstTexture, mipLevel },
+    copySize,
+    mipLevel < kDefaultMipLevelCount
+  );
 });
 
 g.test('destination_texture,format').
 desc(
-`
+  `
   Test dst texture format.
 
   Check that an error is generated when texture format is not valid.
-  `).
-
+  `
+).
 params((u) =>
 u.
 combine('format', kTextureFormats).
 beginSubcases().
 combine('copySize', [
 { width: 0, height: 0, depthOrArrayLayers: 0 },
-{ width: 1, height: 1, depthOrArrayLayers: 1 }])).
-
-
+{ width: 1, height: 1, depthOrArrayLayers: 1 }]
+)
+).
 beforeAllSubcases((t) => {
   const { format } = t.params;
   t.skipIfTextureFormatNotSupported(format);
@@ -703,12 +703,12 @@ fn(async (t) => {
 
 g.test('OOB,source').
 desc(
-`
+  `
   Test source image origin and copy size
 
   Check that an error is generated when source.externalImage.origin + copySize is too large.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u.
 combine('srcOrigin', [
@@ -719,8 +719,8 @@ combine('srcOrigin', [
 { x: kDefaultWidth + 1, y: 0 }, // x is too large
 { x: 0, y: kDefaultHeight + 1 } // y is too large
 ]).
-expand('copySize', generateCopySizeForSrcOOB)).
-
+expand('copySize', generateCopySizeForSrcOOB)
+).
 fn(async (t) => {
   const { srcOrigin, copySize } = t.params;
   const imageBitmap = await t.createImageBitmap(t.getImageData(kDefaultWidth, kDefaultHeight));
@@ -746,35 +746,35 @@ fn(async (t) => {
   }
 
   t.runTest(
-  { source: imageBitmap, origin: srcOrigin },
-  { texture: dstTexture },
-  copySize,
-  true,
-  success ? '' : 'OperationError');
-
+    { source: imageBitmap, origin: srcOrigin },
+    { texture: dstTexture },
+    copySize,
+    true,
+    success ? '' : 'OperationError'
+  );
 });
 
 g.test('OOB,destination').
 desc(
-`
+  `
   Test dst texture copy origin and copy size
 
   Check that an error is generated when destination.texture.origin + copySize is too large.
   Check that 'OperationError' is generated when copySize.depth is larger than 1.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u.
 combine('mipLevel', [0, 1, kDefaultMipLevelCount - 2]).
 expand('dstOrigin', generateDstOriginValue).
-expand('copySize', generateCopySizeForDstOOB)).
-
+expand('copySize', generateCopySizeForDstOOB)
+).
 fn(async (t) => {
   const { mipLevel, dstOrigin, copySize } = t.params;
 
   const imageBitmap = await t.createImageBitmap(
-  t.getImageData(kDefaultWidth + 1, kDefaultHeight + 1));
-
+    t.getImageData(kDefaultWidth + 1, kDefaultHeight + 1)
+  );
   const dstTexture = t.device.createTexture({
     size: {
       width: kDefaultWidth,
@@ -803,15 +803,15 @@ fn(async (t) => {
   }
 
   t.runTest(
-  { source: imageBitmap },
-  {
-    texture: dstTexture,
-    mipLevel,
-    origin: dstOrigin
-  },
-  copySize,
-  success,
-  hasOperationError ? 'OperationError' : '');
-
+    { source: imageBitmap },
+    {
+      texture: dstTexture,
+      mipLevel,
+      origin: dstOrigin
+    },
+    copySize,
+    success,
+    hasOperationError ? 'OperationError' : ''
+  );
 });
 //# sourceMappingURL=CopyExternalImageToTexture.spec.js.map

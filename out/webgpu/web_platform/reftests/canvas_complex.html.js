@@ -37,8 +37,8 @@ targets)
         isOutputSrgb = true;
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
     const shaderValueStr = shaderValue.toFixed(5);
 
     function copyBufferToTexture(ctx) {
@@ -91,31 +91,31 @@ targets)
             float32ToFloat16Bits(0.4),
             float32ToFloat16Bits(0.0),
             float32ToFloat16Bits(0.0),
-            float32ToFloat16Bits(1.0)]);
-
+            float32ToFloat16Bits(1.0)]
+            );
             green = new Uint16Array([
             float32ToFloat16Bits(0.0),
             float32ToFloat16Bits(0.4),
             float32ToFloat16Bits(0.0),
-            float32ToFloat16Bits(1.0)]);
-
+            float32ToFloat16Bits(1.0)]
+            );
             blue = new Uint16Array([
             float32ToFloat16Bits(0.0),
             float32ToFloat16Bits(0.0),
             float32ToFloat16Bits(0.4),
-            float32ToFloat16Bits(1.0)]);
-
+            float32ToFloat16Bits(1.0)]
+            );
             yellow = new Uint16Array([
             float32ToFloat16Bits(0.4),
             float32ToFloat16Bits(0.4),
             float32ToFloat16Bits(0.0),
-            float32ToFloat16Bits(1.0)]);
-
+            float32ToFloat16Bits(1.0)]
+            );
           }
           break;
         default:
-          unreachable();}
-
+          unreachable();
+      }
       for (let i = 0; i < ctx.canvas.width; ++i)
       for (let j = 0; j < ctx.canvas.height; ++j) {
         let pixel;
@@ -140,8 +140,8 @@ targets)
       encoder.copyBufferToTexture({ buffer, bytesPerRow }, { texture: ctx.getCurrentTexture() }, [
       ctx.canvas.width,
       ctx.canvas.height,
-      1]);
-
+      1]
+      );
       t.device.queue.submit([encoder.finish()]);
     }
 
@@ -181,18 +181,18 @@ targets)
       });
       t.device.queue.copyExternalImageToTexture({ source: imageBitmap }, { texture: srcTexture }, [
       imageBitmap.width,
-      imageBitmap.height]);
-
+      imageBitmap.height]
+      );
       return srcTexture;
     }
 
     async function copyExternalImageToTexture(ctx) {
       const imageBitmap = await getImageBitmap(ctx);
       t.device.queue.copyExternalImageToTexture(
-      { source: imageBitmap },
-      { texture: ctx.getCurrentTexture() },
-      [imageBitmap.width, imageBitmap.height]);
-
+        { source: imageBitmap },
+        { texture: ctx.getCurrentTexture() },
+        [imageBitmap.width, imageBitmap.height]
+      );
     }
 
     async function copyTextureToTexture(ctx) {
@@ -201,10 +201,10 @@ targets)
 
       const encoder = t.device.createCommandEncoder();
       encoder.copyTextureToTexture(
-      { texture: srcTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      { texture: ctx.getCurrentTexture(), mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-      [imageBitmap.width, imageBitmap.height, 1]);
-
+        { texture: srcTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+        { texture: ctx.getCurrentTexture(), mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+        [imageBitmap.width, imageBitmap.height, 1]
+      );
       t.device.queue.submit([encoder.finish()]);
     }
 
@@ -695,10 +695,10 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bg);
       pass.dispatchWorkgroups(
-      align(ctx.canvas.width, 16) / 16,
-      align(ctx.canvas.height, 16) / 16,
-      1);
-
+        align(ctx.canvas.width, 16) / 16,
+        align(ctx.canvas.height, 16) / 16,
+        1
+      );
       pass.end();
       t.device.queue.submit([encoder.finish()]);
     }
@@ -727,8 +727,8 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
           usage = GPUTextureUsage.STORAGE_BINDING;
           break;
         default:
-          unreachable();}
-
+          unreachable();
+      }
 
       ctx.configure({
         device: t.device,
@@ -765,8 +765,8 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
           ComputeWorkgroup16x16TextureStore(ctx);
           break;
         default:
-          unreachable();}
-
+          unreachable();
+      }
     }
   });
 }

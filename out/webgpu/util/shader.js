@@ -42,8 +42,8 @@ export function getPlainTypeInfo(sampleType) {
     case 'depth':
       return 'f32';
     default:
-      unreachable();}
-
+      unreachable();
+  }
 }
 
 /**
@@ -137,12 +137,12 @@ fragDepth = null)
       case 4:
         outputType = `vec4<${plainType}>`;
         resultStrings.push(
-        `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix}, ${v[3]}${suffix})`);
-
+          `${outputType}(${v[0]}${suffix}, ${v[1]}${suffix}, ${v[2]}${suffix}, ${v[3]}${suffix})`
+        );
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
 
     outputStructString += `@location(${i}) o${i} : ${outputType},\n`;
   }
@@ -190,8 +190,8 @@ export function getShaderWithEntryPoint(shaderStage, entryPoint) {
     default:{
         code = '';
         break;
-      }}
-
+      }
+  }
   return code;
 }
 //# sourceMappingURL=shader.js.map

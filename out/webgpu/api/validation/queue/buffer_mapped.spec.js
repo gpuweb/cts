@@ -96,19 +96,19 @@ fn(async (t) => {
   const data = new Uint32Array([42]);
 
   await t.runBufferDependencyTest(
-  GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  (buffer) => {
-    t.queue.writeBuffer(buffer, 0, data);
-  });
-
+    GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    (buffer) => {
+      t.queue.writeBuffer(buffer, 0, data);
+    }
+  );
 });
 
 g.test('copyBufferToBuffer').
 desc(
-`
+  `
   Test that an outstanding mapping will prevent copyBufferToTexture commands from submitting,
-  both when used as the source and destination.`).
-
+  both when used as the source and destination.`
+).
 fn(async (t) => {
   const sourceBuffer = t.device.createBuffer({
     size: 8,
@@ -121,28 +121,28 @@ fn(async (t) => {
   });
 
   await t.runBufferDependencyTest(
-  GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-  (buffer) => {
-    const commandEncoder = t.device.createCommandEncoder();
-    commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
-    t.queue.submit([commandEncoder.finish()]);
-  });
-
+    GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+    (buffer) => {
+      const commandEncoder = t.device.createCommandEncoder();
+      commandEncoder.copyBufferToBuffer(buffer, 0, destBuffer, 0, 4);
+      t.queue.submit([commandEncoder.finish()]);
+    }
+  );
 
   await t.runBufferDependencyTest(
-  GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  (buffer) => {
-    const commandEncoder = t.device.createCommandEncoder();
-    commandEncoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
-    t.queue.submit([commandEncoder.finish()]);
-  });
-
+    GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    (buffer) => {
+      const commandEncoder = t.device.createCommandEncoder();
+      commandEncoder.copyBufferToBuffer(sourceBuffer, 0, buffer, 0, 4);
+      t.queue.submit([commandEncoder.finish()]);
+    }
+  );
 });
 
 g.test('copyBufferToTexture').
 desc(
-`Test that an outstanding mapping will prevent copyBufferToTexture commands from submitting.`).
-
+  `Test that an outstanding mapping will prevent copyBufferToTexture commands from submitting.`
+).
 fn(async (t) => {
   const size = { width: 1, height: 1 };
 
@@ -153,19 +153,19 @@ fn(async (t) => {
   });
 
   await t.runBufferDependencyTest(
-  GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
-  (buffer) => {
-    const commandEncoder = t.device.createCommandEncoder();
-    commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
-    t.queue.submit([commandEncoder.finish()]);
-  });
-
+    GPUBufferUsage.MAP_WRITE | GPUBufferUsage.COPY_SRC,
+    (buffer) => {
+      const commandEncoder = t.device.createCommandEncoder();
+      commandEncoder.copyBufferToTexture({ buffer }, { texture }, size);
+      t.queue.submit([commandEncoder.finish()]);
+    }
+  );
 });
 
 g.test('copyTextureToBuffer').
 desc(
-`Test that an outstanding mapping will prevent copyTextureToBuffer commands from submitting.`).
-
+  `Test that an outstanding mapping will prevent copyTextureToBuffer commands from submitting.`
+).
 fn(async (t) => {
   const size = { width: 1, height: 1 };
 
@@ -176,22 +176,22 @@ fn(async (t) => {
   });
 
   await t.runBufferDependencyTest(
-  GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
-  (buffer) => {
-    const commandEncoder = t.device.createCommandEncoder();
-    commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
-    t.queue.submit([commandEncoder.finish()]);
-  });
-
+    GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
+    (buffer) => {
+      const commandEncoder = t.device.createCommandEncoder();
+      commandEncoder.copyTextureToBuffer({ texture }, { buffer }, size);
+      t.queue.submit([commandEncoder.finish()]);
+    }
+  );
 });
 
 g.test('map_command_recording_order').
 desc(
-`
+  `
 Test that the order of mapping a buffer relative to when commands are recorded that use it
   does not matter, as long as the buffer is unmapped when the commands are submitted.
-  `).
-
+  `
+).
 paramsSubcasesOnly([
 {
   order: ['record', 'map', 'unmap', 'finish', 'submit'],
@@ -235,8 +235,8 @@ paramsSubcasesOnly([
 },
 { order: ['record', 'unmap', 'finish', 'submit'], mappedAtCreation: true, _shouldError: false },
 { order: ['record', 'finish', 'unmap', 'submit'], mappedAtCreation: true, _shouldError: false },
-{ order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true }]).
-
+{ order: ['record', 'finish', 'submit', 'unmap'], mappedAtCreation: true, _shouldError: true }]
+).
 fn(async (t) => {
   const { order, mappedAtCreation, _shouldError: shouldError } = t.params;
 

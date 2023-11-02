@@ -4,9 +4,9 @@
 Test texture views can reinterpret the format of the original texture.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import {
-kRenderableColorTextureFormats,
-kRegularTextureFormats,
-viewCompatible } from
+  kRenderableColorTextureFormats,
+  kRegularTextureFormats,
+  viewCompatible } from
 
 '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
@@ -31,13 +31,13 @@ const kTextureSize = 16;
 
 function makeInputTexelView(format) {
   return TexelView.fromTexelsAsColors(
-  format,
-  (coords) => {
-    const pixelPos = coords.y * kTextureSize + coords.x;
-    return kColors[pixelPos % kColors.length];
-  },
-  { clampToFormatRange: true });
-
+    format,
+    (coords) => {
+      const pixelPos = coords.y * kTextureSize + coords.x;
+      return kColors[pixelPos % kColors.length];
+    },
+    { clampToFormatRange: true }
+  );
 }
 
 function makeBlitPipeline(
@@ -100,9 +100,9 @@ u //
 .combine('format', kRegularTextureFormats).
 combine('viewFormat', kRegularTextureFormats).
 filter(
-({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat))).
-
-
+  ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
+)
+).
 beforeAllSubcases((t) => {
   const { format, viewFormat } = t.params;
   t.skipIfTextureFormatNotSupported(format, viewFormat);
@@ -146,12 +146,12 @@ fn((t) => {
 
   // Create an rgba8unorm output texture.
   const outputTexture = t.trackForCleanup(
-  t.device.createTexture({
-    format: 'rgba8unorm',
-    size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC
-  }));
-
+    t.device.createTexture({
+      format: 'rgba8unorm',
+      size: [kTextureSize, kTextureSize],
+      usage: GPUTextureUsage.STORAGE_BINDING | GPUTextureUsage.COPY_SRC
+    })
+  );
 
   // Execute a compute pass to load data from the reinterpreted view and
   // write out to the rgba8unorm texture.
@@ -159,51 +159,51 @@ fn((t) => {
   const pass = commandEncoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(
-  0,
-  t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-    {
-      binding: 0,
-      resource: reinterpretedView
-    },
-    {
-      binding: 1,
-      resource: outputTexture.createView()
-    }]
+    0,
+    t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+      {
+        binding: 0,
+        resource: reinterpretedView
+      },
+      {
+        binding: 1,
+        resource: outputTexture.createView()
+      }]
 
-  }));
-
+    })
+  );
   pass.dispatchWorkgroups(kTextureSize, kTextureSize);
   pass.end();
   t.device.queue.submit([commandEncoder.finish()]);
 
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: outputTexture },
-  TexelView.fromTexelsAsColors('rgba8unorm', reinterpretedTexelView.color, {
-    clampToFormatRange: true
-  }),
-  [kTextureSize, kTextureSize]);
-
+    { texture: outputTexture },
+    TexelView.fromTexelsAsColors('rgba8unorm', reinterpretedTexelView.color, {
+      clampToFormatRange: true
+    }),
+    [kTextureSize, kTextureSize]
+  );
 });
 
 g.test('render_and_resolve_attachment').
 desc(
-`Test that a color render attachment allocated as 'format' is correctly rendered to as 'viewFormat',
+  `Test that a color render attachment allocated as 'format' is correctly rendered to as 'viewFormat',
 and resolved to an attachment allocated as 'format' viewed as 'viewFormat'.
 
 Other combinations aren't possible because the render and resolve targets must both match
-in view format and match in base format.`).
-
+in view format and match in base format.`
+).
 params((u) =>
 u //
 .combine('format', kRenderableColorTextureFormats).
 combine('viewFormat', kRenderableColorTextureFormats).
 filter(
-({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)).
-
-combine('sampleCount', [1, 4])).
-
+  ({ format, viewFormat }) => format !== viewFormat && viewCompatible(format, viewFormat)
+).
+combine('sampleCount', [1, 4])
+).
 beforeAllSubcases((t) => {
   const { format, viewFormat } = t.params;
   t.skipIfTextureFormatNotSupported(format, viewFormat);
@@ -216,28 +216,28 @@ fn((t) => {
 
   // Create the renderTexture as |format|.
   const renderTexture = t.trackForCleanup(
-  t.device.createTexture({
-    format,
-    size: [kTextureSize, kTextureSize],
-    usage:
-    GPUTextureUsage.RENDER_ATTACHMENT | (
-    sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
-    viewFormats: [viewFormat],
-    sampleCount
-  }));
-
+    t.device.createTexture({
+      format,
+      size: [kTextureSize, kTextureSize],
+      usage:
+      GPUTextureUsage.RENDER_ATTACHMENT | (
+      sampleCount > 1 ? GPUTextureUsage.TEXTURE_BINDING : GPUTextureUsage.COPY_SRC),
+      viewFormats: [viewFormat],
+      sampleCount
+    })
+  );
 
   const resolveTexture =
   sampleCount === 1 ?
   undefined :
   t.trackForCleanup(
-  t.device.createTexture({
-    format,
-    size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
-    viewFormats: [viewFormat]
-  }));
-
+    t.device.createTexture({
+      format,
+      size: [kTextureSize, kTextureSize],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+      viewFormats: [viewFormat]
+    })
+  );
 
   // Create the sample source with the contents of the input texel view.
   // We will sample this texture into |renderTexture|. It uses the same format to keep the same
@@ -272,17 +272,17 @@ fn((t) => {
   });
   pass.setPipeline(pipeline);
   pass.setBindGroup(
-  0,
-  t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: [
-    {
-      binding: 0,
-      resource: sampleSource.createView()
-    }]
+    0,
+    t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+      {
+        binding: 0,
+        resource: sampleSource.createView()
+      }]
 
-  }));
-
+    })
+  );
   pass.draw(6);
   pass.end();
 
@@ -290,12 +290,12 @@ fn((t) => {
   // the contents.
   const singleSampleRenderTexture = resolveTexture ?
   t.trackForCleanup(
-  t.device.createTexture({
-    format,
-    size: [kTextureSize, kTextureSize],
-    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-  })) :
-
+    t.device.createTexture({
+      format,
+      size: [kTextureSize, kTextureSize],
+      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
+    })
+  ) :
   renderTexture;
 
   if (resolveTexture) {
@@ -314,17 +314,17 @@ fn((t) => {
     });
     pass.setPipeline(pipeline);
     pass.setBindGroup(
-    0,
-    t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-      {
-        binding: 0,
-        resource: renderTexture.createView()
-      }]
+      0,
+      t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+        {
+          binding: 0,
+          resource: renderTexture.createView()
+        }]
 
-    }));
-
+      })
+    );
     pass.draw(6);
     pass.end();
   }
@@ -337,11 +337,11 @@ fn((t) => {
     clampToFormatRange: true
   });
   t.expectTexelViewComparisonIsOkInTexture(
-  { texture: singleSampleRenderTexture },
-  renderViewTexels,
-  [kTextureSize, kTextureSize],
-  { maxDiffULPsForNormFormat: 2 });
-
+    { texture: singleSampleRenderTexture },
+    renderViewTexels,
+    [kTextureSize, kTextureSize],
+    { maxDiffULPsForNormFormat: 2 }
+  );
 
   // Check the resolved contents.
   if (resolveTexture) {
@@ -349,11 +349,11 @@ fn((t) => {
       clampToFormatRange: true
     });
     t.expectTexelViewComparisonIsOkInTexture(
-    { texture: resolveTexture },
-    resolveView,
-    [kTextureSize, kTextureSize],
-    { maxDiffULPsForNormFormat: 2 });
-
+      { texture: resolveTexture },
+      resolveView,
+      [kTextureSize, kTextureSize],
+      { maxDiffULPsForNormFormat: 2 }
+    );
   }
 });
 //# sourceMappingURL=format_reinterpretation.spec.js.map

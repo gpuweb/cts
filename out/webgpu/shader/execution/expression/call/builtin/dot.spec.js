@@ -27,15 +27,15 @@ flatMap((trait) =>
     // vec3 and vec4 require calculating all possible permutations, so their runtime is much
     // longer per test, so only using sparse vectors for them.
     return FP[trait].generateVectorPairToIntervalCases(
-    N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
-    N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
-    nonConst ? 'unfiltered' : 'finite',
-    FP[trait].dotInterval);
-
+      N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
+      N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
+      nonConst ? 'unfiltered' : 'finite',
+      FP[trait].dotInterval
+    );
   }
-})))).
-
-
+}))
+)
+).
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('dot', cases);
@@ -70,16 +70,16 @@ desc(`f32 tests using vec2s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
-  TypeF32,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
+    TypeF32,
+    t.params,
+    cases
+  );
 });
 
 g.test('f32_vec3').
@@ -88,16 +88,16 @@ desc(`f32 tests using vec3s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
-  TypeF32,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
+    TypeF32,
+    t.params,
+    cases
+  );
 });
 
 g.test('f32_vec4').
@@ -106,16 +106,16 @@ desc(`f32 tests using vec4s`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const');
-
+    t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
-  TypeF32,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
+    TypeF32,
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec2').
@@ -127,16 +127,16 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
-  TypeF16,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
+    TypeF16,
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec3').
@@ -148,16 +148,16 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
-  TypeF16,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
+    TypeF16,
+    t.params,
+    cases
+  );
 });
 
 g.test('f16_vec4').
@@ -169,15 +169,15 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(
-  t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const');
-
+    t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const'
+  );
   await run(
-  t,
-  builtin('dot'),
-  [TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
-  TypeF16,
-  t.params,
-  cases);
-
+    t,
+    builtin('dot'),
+    [TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
+    TypeF16,
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=dot.spec.js.map

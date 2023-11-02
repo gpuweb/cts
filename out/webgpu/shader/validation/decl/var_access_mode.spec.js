@@ -11,18 +11,18 @@ import { kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
 import { ShaderValidationTest } from '../shader_validation_test.js';
 
 import {
-explicitSpaceExpander,
-getVarDeclShader,
-accessModeExpander,
-supportsRead,
-supportsWrite } from
+  explicitSpaceExpander,
+  getVarDeclShader,
+  accessModeExpander,
+  supportsRead,
+  supportsWrite } from
 
 './util.js';
 
 // Address spaces that can hold an i32 variable.
 const kNonHandleAddressSpaces = keysOf(kAddressSpaceInfo).filter(
-(as) => as !== 'handle');
-
+  (as) => as !== 'handle'
+);
 
 export const g = makeTestGroup(ShaderValidationTest);
 
@@ -30,17 +30,17 @@ g.test('explicit_access_mode').
 desc('Validate uses of an explicit access mode on a var declaration').
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls').
 params(
-(u) =>
-u.
-combine('addressSpace', kNonHandleAddressSpaces).
-combine('explicitSpace', [true, false])
-// Only keep cases where:
-//   *if* the address space must be specified on a var decl (e.g. var<private>)
-//   then the address space will actually be specified in this test case.
-.filter((t) => kAddressSpaceInfo[t.addressSpace].spell !== 'must' || t.explicitSpace).
-combine('explicitAccess', [true]).
-combine('accessMode', keysOf(kAccessModeInfo)).
-combine('stage', ['compute']) // Only need to check compute shaders
+  (u) =>
+  u.
+  combine('addressSpace', kNonHandleAddressSpaces).
+  combine('explicitSpace', [true, false])
+  // Only keep cases where:
+  //   *if* the address space must be specified on a var decl (e.g. var<private>)
+  //   then the address space will actually be specified in this test case.
+  .filter((t) => kAddressSpaceInfo[t.addressSpace].spell !== 'must' || t.explicitSpace).
+  combine('explicitAccess', [true]).
+  combine('accessMode', keysOf(kAccessModeInfo)).
+  combine('stage', ['compute']) // Only need to check compute shaders
 ).
 fn((t) => {
   const prog = getVarDeclShader(t.params);
@@ -61,13 +61,13 @@ g.test('implicit_access_mode').
 desc('Validate an implicit access mode on a var declaration').
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls').
 params(
-(u) =>
-u.
-combine('addressSpace', kNonHandleAddressSpaces).
-expand('explicitSpace', explicitSpaceExpander).
-combine('explicitAccess', [false]).
-combine('accessMode', ['']).
-combine('stage', ['compute']) // Only need to check compute shaders
+  (u) =>
+  u.
+  combine('addressSpace', kNonHandleAddressSpaces).
+  expand('explicitSpace', explicitSpaceExpander).
+  combine('explicitAccess', [false]).
+  combine('accessMode', ['']).
+  combine('stage', ['compute']) // Only need to check compute shaders
 ).
 fn((t) => {
   const prog = getVarDeclShader(t.params);
@@ -83,13 +83,13 @@ g.test('read_access').
 desc('A variable can be read from when the access mode permits').
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls').
 params(
-(u) =>
-u.
-combine('addressSpace', kNonHandleAddressSpaces).
-expand('explicitSpace', explicitSpaceExpander).
-combine('explicitAccess', [false, true]).
-expand('accessMode', accessModeExpander).
-combine('stage', ['compute']) // Only need to check compute shaders
+  (u) =>
+  u.
+  combine('addressSpace', kNonHandleAddressSpaces).
+  expand('explicitSpace', explicitSpaceExpander).
+  combine('explicitAccess', [false, true]).
+  expand('accessMode', accessModeExpander).
+  combine('stage', ['compute']) // Only need to check compute shaders
 ).
 fn((t) => {
   const prog = getVarDeclShader(t.params, 'let copy = x;');
@@ -101,13 +101,13 @@ g.test('write_access').
 desc('A variable can be written to when the access mode permits').
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls').
 params(
-(u) =>
-u.
-combine('addressSpace', kNonHandleAddressSpaces).
-expand('explicitSpace', explicitSpaceExpander).
-combine('explicitAccess', [false, true]).
-expand('accessMode', accessModeExpander).
-combine('stage', ['compute']) // Only need to check compute shaders
+  (u) =>
+  u.
+  combine('addressSpace', kNonHandleAddressSpaces).
+  expand('explicitSpace', explicitSpaceExpander).
+  combine('explicitAccess', [false, true]).
+  expand('accessMode', accessModeExpander).
+  combine('stage', ['compute']) // Only need to check compute shaders
 ).
 fn((t) => {
   const prog = getVarDeclShader(t.params, 'x = 0;');

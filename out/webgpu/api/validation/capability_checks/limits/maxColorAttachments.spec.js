@@ -37,14 +37,14 @@ params(kMaximumLimitBaseParams.combine('async', [false, true])).
 fn(async (t) => {
   const { limitTest, testValueName, async } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const pipelineDescriptor = getPipelineDescriptor(device, testValue);
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const pipelineDescriptor = getPipelineDescriptor(device, testValue);
 
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
-  });
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError);
+    }
+  );
 });
 
 g.test('beginRenderPass,at_over').
@@ -53,35 +53,35 @@ params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const encoder = device.createCommandEncoder();
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const encoder = device.createCommandEncoder();
 
-    const textures = range(testValue, (_) =>
-    t.trackForCleanup(
-    device.createTexture({
-      size: [1, 1],
-      format: 'r8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT
-    })));
+      const textures = range(testValue, (_) =>
+      t.trackForCleanup(
+        device.createTexture({
+          size: [1, 1],
+          format: 'r8unorm',
+          usage: GPUTextureUsage.RENDER_ATTACHMENT
+        })
+      )
+      );
 
+      const pass = encoder.beginRenderPass({
+        colorAttachments: range(testValue, (i) => ({
+          view: textures[i].createView(),
+          loadOp: 'clear',
+          storeOp: 'store'
+        }))
+      });
+      pass.end();
 
-
-    const pass = encoder.beginRenderPass({
-      colorAttachments: range(testValue, (i) => ({
-        view: textures[i].createView(),
-        loadOp: 'clear',
-        storeOp: 'store'
-      }))
-    });
-    pass.end();
-
-    await t.expectValidationError(() => {
-      encoder.finish();
-    }, shouldError);
-  });
-
+      await t.expectValidationError(() => {
+        encoder.finish();
+      }, shouldError);
+    }
+  );
 });
 
 g.test('createRenderBundle,at_over').
@@ -90,16 +90,16 @@ params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    await t.expectValidationError(() => {
-      device.createRenderBundleEncoder({
-        colorFormats: new Array(testValue).fill('r8unorm')
-      });
-    }, shouldError);
-  });
-
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      await t.expectValidationError(() => {
+        device.createRenderBundleEncoder({
+          colorFormats: new Array(testValue).fill('r8unorm')
+        });
+      }, shouldError);
+    }
+  );
 });
 
 g.test('validate,maxColorAttachmentBytesPerSample').
@@ -115,10 +115,10 @@ fn((t) => {
 
 g.test('validate,kMaxColorAttachmentsToTest').
 desc(
-`
+  `
     Tests that kMaxColorAttachmentsToTest is large enough to test the limits of this device
-  `).
-
+  `
+).
 fn((t) => {
   t.expect(t.adapter.limits.maxColorAttachments <= kMaxColorAttachmentsToTest);
 });

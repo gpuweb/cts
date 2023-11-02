@@ -432,9 +432,9 @@ struct VSOutputs {
 
           /* prettier-ignore */
           const data = [
-            [0, 0, 0, 0],
+            [   0,    0,    0, 0],
             [1023, 1023, 1023, 3],
-            [243, 567, 765, 2],
+            [ 243,  567,  765, 2],
           ];
           const vertexData = new Uint32Array(data.map(makeRgb10a2)).buffer;
           const expectedData = new Float32Array(data.flat().map(normalizeRgb10a2)).buffer;

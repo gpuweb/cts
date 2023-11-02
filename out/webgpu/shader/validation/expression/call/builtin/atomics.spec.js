@@ -25,15 +25,15 @@ const kAtomicOps = {
 g.test('stage').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 Atomic built-in functions must not be used in a vertex shader stage.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('stage', ['fragment', 'vertex', 'compute']) //
-.combine('atomicOp', keysOf(kAtomicOps))).
-
+.combine('atomicOp', keysOf(kAtomicOps))
+).
 fn((t) => {
   const atomicOp = kAtomicOps[t.params.atomicOp].src;
   let code = `
@@ -62,8 +62,8 @@ fn((t) => {
   ${atomicOp};
   return vec4<f32>();
 }`;
-      break;}
-
+      break;
+  }
 
   const pass = t.params.stage !== 'vertex';
   t.expectCompileResult(pass, code);

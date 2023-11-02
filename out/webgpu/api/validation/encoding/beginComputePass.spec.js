@@ -22,15 +22,15 @@ export const g = makeTestGroup(F);
 
 g.test('timestampWrites,query_set_type').
 desc(
-`
+  `
   Test that all entries of the timestampWrites must have type 'timestamp'. If all query types are
   not 'timestamp' in GPUComputePassDescriptor, a validation error should be generated.
-  `).
-
+  `
+).
 params((u) =>
 u //
-.combine('queryType', kQueryTypes)).
-
+.combine('queryType', kQueryTypes)
+).
 beforeAllSubcases((t) => {
   t.selectDeviceForQueryTypeOrSkipTestCase(['timestamp', t.params.queryType]);
 }).
@@ -80,14 +80,14 @@ fn((t) => {
 
 g.test('timestampWrites,query_index').
 desc(
-`Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
-         query indexes are unique.`).
-
+  `Test that querySet.count should be greater than timestampWrite.queryIndex, and that the
+         query indexes are unique.`
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('beginningOfPassWriteIndex', [undefined, 0, 1, 2, 3]).
-combine('endOfPassWriteIndex', [undefined, 0, 1, 2, 3])).
-
+combine('endOfPassWriteIndex', [undefined, 0, 1, 2, 3])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase(['timestamp-query']);
 }).
@@ -116,10 +116,10 @@ fn((t) => {
 
 g.test('timestamp_query_set,device_mismatch').
 desc(
-`
+  `
   Tests beginComputePass cannot be called with a timestamp query set created from another device.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase(['timestamp-query']);

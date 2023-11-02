@@ -8,10 +8,10 @@ import { assert, now } from '../util/util.js';
 import { comparePublicParamsPaths, compareQueries, Ordering } from './query/compare.js';
 import {
 
-TestQueryMultiCase,
-TestQuerySingleCase,
-TestQueryMultiFile,
-TestQueryMultiTest } from
+  TestQueryMultiCase,
+  TestQuerySingleCase,
+  TestQueryMultiFile,
+  TestQueryMultiTest } from
 './query/query.js';
 import { kBigSeparator, kWildcard, kPathSeparator, kParamSeparator } from './query/separators.js';
 import { stringifySingleParam } from './query/stringify_params.js';
@@ -69,15 +69,15 @@ import { StacklessError } from './util.js';
 
 
 
-
-
-
-
-
-
-
-
-
+/**
+ * When iterating through "collapsed" tree nodes, indicates how many "query levels" to traverse
+ * through before starting to collapse nodes.
+ *
+ * Corresponds with TestQueryLevel, but excludes 4 (SingleCase):
+ * - 1 = MultiFile. Expands so every file is in the collapsed tree.
+ * - 2 = MultiTest. Expands so every test is in the collapsed tree.
+ * - 3 = MultiCase. Expands so every case is in the collapsed tree (i.e. collapsing disabled).
+ */
 
 
 export class TestTree {
@@ -96,9 +96,9 @@ export class TestTree {
     this.forQuery = forQuery;
     this.root = root;
     assert(
-    root.query.level === 1 && root.query.depthInLevel === 0,
-    'TestTree root must be the root (suite:*)');
-
+      root.query.level === 1 && root.query.depthInLevel === 0,
+      'TestTree root must be the root (suite:*)'
+    );
   }
 
   static async create(
@@ -231,11 +231,11 @@ export class TestTree {
     // - TestQuerySingleCase nodes can't be collapsed, so we ignore them.
     if (chunking && subtree.query instanceof TestQueryMultiCase) {
       const testLevelQuery = new TestQueryMultiCase(
-      subtree.query.suite,
-      subtree.query.filePathParts,
-      subtree.query.testPathParts,
-      {}).
-      toString();
+        subtree.query.suite,
+        subtree.query.filePathParts,
+        subtree.query.testPathParts,
+        {}
+      ).toString();
 
       const metadata = chunking.metadata;
 
@@ -354,8 +354,8 @@ queryToLoad,
   if (globalTestConfig.frameworkDebugLog) {
     const imported_time = performance.now() - imports_start;
     globalTestConfig.frameworkDebugLog(
-    `Imported importedSpecFiles[${entriesWithImports.length}] in ${imported_time}ms.`);
-
+      `Imported importedSpecFiles[${entriesWithImports.length}] in ${imported_time}ms.`
+    );
   }
 
   for (const entry of entriesWithImports) {
@@ -367,10 +367,10 @@ queryToLoad,
       // (This is always going to dedup with a file path, if there are any test spec files under
       // the directory that has the README).
       const readmeSubtree = addSubtreeForDirPath(
-      subtreeL0,
-      entry.file,
-      isCollapsible);
-
+        subtreeL0,
+        entry.file,
+        isCollapsible
+      );
       setSubtreeDescriptionAndCountTODOs(readmeSubtree, entry.readme);
       continue;
     }
@@ -379,10 +379,10 @@ queryToLoad,
     const spec = entry.importedSpec;
     // subtreeL1 is suite:a,b:*
     const subtreeL1 = addSubtreeForFilePath(
-    subtreeL0,
-    entry.file,
-    isCollapsible);
-
+      subtreeL0,
+      entry.file,
+      isCollapsible
+    );
     setSubtreeDescriptionAndCountTODOs(subtreeL1, spec.description);
 
     let groupHasTests = false;
@@ -399,11 +399,11 @@ queryToLoad,
 
       // subtreeL2 is suite:a,b:c,d:*
       const subtreeL2 = addSubtreeForTestPath(
-      subtreeL1,
-      t.testPath,
-      t.testCreationStack,
-      isCollapsible);
-
+        subtreeL1,
+        t.testPath,
+        t.testCreationStack,
+        isCollapsible
+      );
       // This is 1 test. Set tests=1 then count TODOs.
       subtreeL2.subtreeCounts ??= { tests: 1, nodesWithTODO: 0, totalTimeMS: 0 };
       if (t.description) setSubtreeDescriptionAndCountTODOs(subtreeL2, t.description);
@@ -433,8 +433,8 @@ queryToLoad,
     }
     if (!groupHasTests && !subtreeL1.subtreeCounts) {
       throw new StacklessError(
-      `${subtreeL1.query} has no tests - it must have "TODO" in its description`);
-
+        `${subtreeL1.query} has no tests - it must have "TODO" in its description`
+      );
     }
   }
 
@@ -442,9 +442,9 @@ queryToLoad,
     const subquerySeen = seenSubqueriesToExpand[i];
     if (!subquerySeen) {
       throw new StacklessError(
-      `subqueriesToExpand entry did not match anything \
-(could be wrong, or could be redundant with a previous subquery):\n  ${sq.toString()}`);
-
+        `subqueriesToExpand entry did not match anything \
+(could be wrong, or could be redundant with a previous subquery):\n  ${sq.toString()}`
+      );
     }
   }
   assert(foundCase, `Query \`${queryToLoad.toString()}\` does not match any cases`);
@@ -533,10 +533,10 @@ isCollapsible)
     subqueryTest.push(part);
     tree = getOrInsertSubtree(part, tree, () => {
       const query = new TestQueryMultiTest(
-      tree.query.suite,
-      tree.query.filePathParts,
-      subqueryTest);
-
+        tree.query.suite,
+        tree.query.filePathParts,
+        subqueryTest
+      );
       return {
         readableRelativeName: part + kPathSeparator + kWildcard,
         query,
@@ -547,11 +547,11 @@ isCollapsible)
   // This goes from that -> suite:a,b:c,d:*
   return getOrInsertSubtree('', tree, () => {
     const query = new TestQueryMultiCase(
-    tree.query.suite,
-    tree.query.filePathParts,
-    subqueryTest,
-    {});
-
+      tree.query.suite,
+      tree.query.filePathParts,
+      subqueryTest,
+      {}
+    );
     assert(subqueryTest.length > 0, 'subqueryTest is empty');
     return {
       readableRelativeName: subqueryTest[subqueryTest.length - 1] + kBigSeparator + kWildcard,
@@ -580,11 +580,11 @@ checkCollapsible)
 
     tree = getOrInsertSubtree(name, tree, () => {
       const subquery = new TestQueryMultiCase(
-      query.suite,
-      query.filePathParts,
-      query.testPathParts,
-      subqueryParams);
-
+        query.suite,
+        query.filePathParts,
+        query.testPathParts,
+        subqueryParams
+      );
       return {
         readableRelativeName: name + kParamSeparator + kWildcard,
         query: subquery,
@@ -595,11 +595,11 @@ checkCollapsible)
 
   // This goes from that -> suite:a,b:c,d:x=1;y=2
   const subquery = new TestQuerySingleCase(
-  query.suite,
-  query.filePathParts,
-  query.testPathParts,
-  subqueryParams);
-
+    query.suite,
+    query.filePathParts,
+    query.testPathParts,
+    subqueryParams
+  );
   checkCollapsible(subquery); // mark seenSubqueriesToExpand
   insertLeaf(tree, subquery, t);
 }

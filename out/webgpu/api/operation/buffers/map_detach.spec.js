@@ -13,12 +13,12 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('while_mapped').
 desc(
-`
+  `
     Test that a mapped buffers are able to properly detach.
     - Tests {mappable, unmappable mapAtCreation, mappable mapAtCreation}
     - Tests while {mapped, mapped at creation, mapped at creation then unmapped and mapped again}
-    - When {unmap, destroy, unmap && destroy, device.destroy} is called`).
-
+    - When {unmap, destroy, unmap && destroy, device.destroy} is called`
+).
 paramsSubcasesOnly((u) =>
 u.
 combine('mappedAtCreation', [false, true]).
@@ -33,16 +33,16 @@ combineWithParams([
 {
   usage: GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.MAP_READ,
   mapMode: GPUConst.MapMode.READ
-}]).
-
+}]
+).
 combineWithParams([
 { unmap: true, destroy: false },
 { unmap: false, destroy: true },
 { unmap: true, destroy: true },
-{ unmap: false, destroy: false, deviceDestroy: true }]).
-
-unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)).
-
+{ unmap: false, destroy: false, deviceDestroy: true }]
+).
+unless((p) => p.mappedAtCreation === false && p.mapMode === undefined)
+).
 fn(async (t) => {
   const { usage, mapMode, mappedAtCreation, unmap, destroy, deviceDestroy } = t.params;
 

@@ -4,10 +4,10 @@
 import { align } from '../../../../util/math.js';
 
 import {
-kMaximumLimitBaseParams,
+  kMaximumLimitBaseParams,
 
 
-makeLimitTestGroup } from
+  makeLimitTestGroup } from
 './limit_utils.js';
 
 const kFormatsToUseBySize = [
@@ -133,13 +133,13 @@ testValue)
 function createTextures(t, targets) {
   return targets.map(({ format }) =>
   t.trackForCleanup(
-  t.device.createTexture({
-    size: [1, 1],
-    format,
-    usage: GPUTextureUsage.RENDER_ATTACHMENT
-  })));
-
-
+    t.device.createTexture({
+      size: [1, 1],
+      format,
+      usage: GPUTextureUsage.RENDER_ATTACHMENT
+    })
+  )
+  );
 }
 
 const kExtraLimits = {
@@ -152,110 +152,110 @@ export const { g, description } = makeLimitTestGroup(limit);
 g.test('createRenderPipeline,at_over').
 desc(`Test using at and over ${limit} limit in createRenderPipeline(Async)`).
 params(
-kMaximumLimitBaseParams.
-combine('async', [false, true]).
-combine('sampleCount', kTextureSampleCounts).
-combine('interleaveFormat', kInterleaveFormats)).
-
+  kMaximumLimitBaseParams.
+  combine('async', [false, true]).
+  combine('sampleCount', kTextureSampleCounts).
+  combine('interleaveFormat', kInterleaveFormats)
+).
 fn(async (t) => {
   const { limitTest, testValueName, async, sampleCount, interleaveFormat } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    const result = getPipelineDescriptor(
-    device,
-    actualLimit,
-    interleaveFormat,
-    sampleCount,
-    testValue);
+    limitTest,
+    testValueName,
+    async ({ device, testValue, actualLimit, shouldError }) => {
+      const result = getPipelineDescriptor(
+        device,
+        actualLimit,
+        interleaveFormat,
+        sampleCount,
+        testValue
+      );
+      if (!result) {
+        return;
+      }
+      const { pipelineDescriptor, code } = result;
+      const numTargets = pipelineDescriptor.fragment.targets.length;
+      if (numTargets > device.limits.maxColorAttachments) {
+        return;
+      }
 
-    if (!result) {
-      return;
-    }
-    const { pipelineDescriptor, code } = result;
-    const numTargets = pipelineDescriptor.fragment.targets.length;
-    if (numTargets > device.limits.maxColorAttachments) {
-      return;
-    }
-
-    await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
-  },
-  kExtraLimits);
-
+      await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
+    },
+    kExtraLimits
+  );
 });
 
 g.test('beginRenderPass,at_over').
 desc(`Test using at and over ${limit} limit in beginRenderPass`).
 params(
-kMaximumLimitBaseParams.
-combine('sampleCount', kTextureSampleCounts).
-combine('interleaveFormat', kInterleaveFormats)).
-
+  kMaximumLimitBaseParams.
+  combine('sampleCount', kTextureSampleCounts).
+  combine('interleaveFormat', kInterleaveFormats)
+).
 fn(async (t) => {
   const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    const targets = getAttachments(interleaveFormat, testValue);
-    if (targets.length > device.limits.maxColorAttachments) {
-      return;
-    }
+    limitTest,
+    testValueName,
+    async ({ device, testValue, actualLimit, shouldError }) => {
+      const targets = getAttachments(interleaveFormat, testValue);
+      if (targets.length > device.limits.maxColorAttachments) {
+        return;
+      }
 
-    const encoder = device.createCommandEncoder();
-    const textures = createTextures(t, targets);
+      const encoder = device.createCommandEncoder();
+      const textures = createTextures(t, targets);
 
-    const pass = encoder.beginRenderPass({
-      colorAttachments: textures.map((texture) => ({
-        view: texture.createView(),
-        loadOp: 'clear',
-        storeOp: 'store'
-      }))
-    });
-    pass.end();
+      const pass = encoder.beginRenderPass({
+        colorAttachments: textures.map((texture) => ({
+          view: texture.createView(),
+          loadOp: 'clear',
+          storeOp: 'store'
+        }))
+      });
+      pass.end();
 
-    await t.expectValidationError(
-    () => {
-      encoder.finish();
+      await t.expectValidationError(
+        () => {
+          encoder.finish();
+        },
+        shouldError,
+        getDescription(testValue, actualLimit, sampleCount, targets)
+      );
     },
-    shouldError,
-    getDescription(testValue, actualLimit, sampleCount, targets));
-
-  },
-  kExtraLimits);
-
+    kExtraLimits
+  );
 });
 
 g.test('createRenderBundle,at_over').
 desc(`Test using at and over ${limit} limit in createRenderBundle`).
 params(
-kMaximumLimitBaseParams.
-combine('sampleCount', kTextureSampleCounts).
-combine('interleaveFormat', kInterleaveFormats)).
-
+  kMaximumLimitBaseParams.
+  combine('sampleCount', kTextureSampleCounts).
+  combine('interleaveFormat', kInterleaveFormats)
+).
 fn(async (t) => {
   const { limitTest, testValueName, sampleCount, interleaveFormat } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    const targets = getAttachments(interleaveFormat, testValue);
-    if (targets.length > device.limits.maxColorAttachments) {
-      return;
-    }
+    limitTest,
+    testValueName,
+    async ({ device, testValue, actualLimit, shouldError }) => {
+      const targets = getAttachments(interleaveFormat, testValue);
+      if (targets.length > device.limits.maxColorAttachments) {
+        return;
+      }
 
-    await t.expectValidationError(
-    () => {
-      device.createRenderBundleEncoder({
-        colorFormats: targets.map(({ format }) => format)
-      });
+      await t.expectValidationError(
+        () => {
+          device.createRenderBundleEncoder({
+            colorFormats: targets.map(({ format }) => format)
+          });
+        },
+        shouldError,
+        getDescription(testValue, actualLimit, sampleCount, targets)
+      );
     },
-    shouldError,
-    getDescription(testValue, actualLimit, sampleCount, targets));
-
-  },
-  kExtraLimits);
-
+    kExtraLimits
+  );
 });
 //# sourceMappingURL=maxColorAttachmentBytesPerSample.spec.js.map

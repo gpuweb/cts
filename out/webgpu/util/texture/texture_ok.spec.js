@@ -14,8 +14,8 @@ params((u) =>
 u.
 combineWithParams([
 { format: 'rgba32float' }, //
-{ format: 'rg32float' }]).
-
+{ format: 'rg32float' }]
+).
 beginSubcases().
 combineWithParams([
 // Expected data is 0.6 in all channels
@@ -32,9 +32,9 @@ combineWithParams([
 { data: 0.5999, opts: { maxDiffULPsForFloatFormat: 1678 }, _ok: true },
 
 { data: 0.6001, opts: { maxDiffULPsForFloatFormat: 1676 }, _ok: false },
-{ data: 0.6001, opts: { maxDiffULPsForFloatFormat: 1677 }, _ok: true }])).
-
-
+{ data: 0.6001, opts: { maxDiffULPsForFloatFormat: 1677 }, _ok: true }]
+)
+).
 fn(async (t) => {
   const { format, data, opts, _ok } = t.params;
 
@@ -48,7 +48,7 @@ fn(async (t) => {
   t.device.queue.writeTexture({ texture }, new Float32Array([data, data, data, data]), {}, size);
 
   const expColor = { R: 0.6, G: 0.6, B: 0.6, A: 0.6 };
-  const expTexelView = TexelView.fromTexelsAsColors(format, (coords) => expColor);
+  const expTexelView = TexelView.fromTexelsAsColors(format, (_coords) => expColor);
 
   const result = await textureContentIsOKByT2B(t, { texture }, size, { expTexelView }, opts);
   t.expect(result === undefined === _ok, `expected ${_ok}, got ${result === undefined}`);
@@ -61,17 +61,17 @@ u.
 combine('mode', ['bytes', 'colors']).
 combineWithParams([
 { format: 'r8unorm', _maxValue: 255 },
-{ format: 'r8snorm', _maxValue: 127 }]).
-
+{ format: 'r8snorm', _maxValue: 127 }]
+).
 beginSubcases().
 combineWithParams([
 // Expected data is [10, 10]
 { data: [10, 10], _ok: true },
 { data: [10, 11], _ok: false },
 { data: [11, 10], _ok: false },
-{ data: [11, 11], _ok: false }])).
-
-
+{ data: [11, 11], _ok: false }]
+)
+).
 fn(async (t) => {
   const { mode, format, _maxValue, data, _ok } = t.params;
 
@@ -87,36 +87,36 @@ fn(async (t) => {
   let expTexelView;
   switch (mode) {
     case 'bytes':
-      expTexelView = TexelView.fromTexelsAsBytes(format, (coords) => new Uint8Array([10]));
+      expTexelView = TexelView.fromTexelsAsBytes(format, (_coords) => new Uint8Array([10]));
       break;
     case 'colors':
-      expTexelView = TexelView.fromTexelsAsColors(format, (coords) => ({ R: 10 / _maxValue }));
-      break;}
-
+      expTexelView = TexelView.fromTexelsAsColors(format, (_coords) => ({ R: 10 / _maxValue }));
+      break;
+  }
 
   const result = await textureContentIsOKByT2B(
-  t,
-  { texture },
-  size,
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 0 });
-
+    t,
+    { texture },
+    size,
+    { expTexelView },
+    { maxDiffULPsForNormFormat: 0 }
+  );
   t.expect(result === undefined === _ok, result?.message);
 });
 
 g.test('snorm_min').
 desc(
-`The minimum snorm value has two possible representations (e.g. -127 and -128). Ensure that
-    actual/expected can mismatch in both directions and pass the test.`).
-
+  `The minimum snorm value has two possible representations (e.g. -127 and -128). Ensure that
+    actual/expected can mismatch in both directions and pass the test.`
+).
 params((u) =>
 u //
 .combine('mode', ['bytes', 'colors']).
 combineWithParams([
 //
-{ format: 'r8snorm', _maxValue: 127 }])).
-
-
+{ format: 'r8snorm', _maxValue: 127 }]
+)
+).
 fn(async (t) => {
   const { mode, format, _maxValue } = t.params;
 
@@ -138,23 +138,23 @@ fn(async (t) => {
         // Actual value should be [-127,-128], expected value is [-128,-127], both should pass.
         const exp = [-_maxValue - 1, -_maxValue];
         expTexelView = TexelView.fromTexelsAsBytes(
-        format,
-        (coords) => new Uint8Array([exp[coords.x]]));
-
+          format,
+          (coords) => new Uint8Array([exp[coords.x]])
+        );
       }
       break;
     case 'colors':
-      expTexelView = TexelView.fromTexelsAsColors(format, (coords) => ({ R: -1 }));
-      break;}
-
+      expTexelView = TexelView.fromTexelsAsColors(format, (_coords) => ({ R: -1 }));
+      break;
+  }
 
   const result = await textureContentIsOKByT2B(
-  t,
-  { texture },
-  size,
-  { expTexelView },
-  { maxDiffULPsForNormFormat: 0 });
-
+    t,
+    { texture },
+    size,
+    { expTexelView },
+    { maxDiffULPsForNormFormat: 0 }
+  );
   t.expectOK(result);
 });
 //# sourceMappingURL=texture_ok.spec.js.map

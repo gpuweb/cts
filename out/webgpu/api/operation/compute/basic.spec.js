@@ -69,8 +69,8 @@ u
 .beginSubcases()
 // 0 == x axis; 1 == y axis; 2 == z axis.
 .combine('largeDimension', [0, 1, 2]).
-expand('workgroupSize', (p) => [1, 2, 8, 32, 'maximum'])).
-
+expand('workgroupSize', () => [1, 2, 8, 32, 'maximum'])
+).
 fn((t) => {
   // The output storage buffer is filled with this value.
   const val = 0x01020304;
@@ -153,7 +153,7 @@ fn((t) => {
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectGPUBufferValuesPassCheck(dst, (a) => checkElementsEqualGenerated(a, (i) => val), {
+  t.expectGPUBufferValuesPassCheck(dst, (a) => checkElementsEqualGenerated(a, (_i) => val), {
     type: Uint32Array,
     typedLength: bufferLength
   });

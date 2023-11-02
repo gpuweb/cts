@@ -10,12 +10,12 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('create_texture').
 desc(
-`
+  `
 Test that it is valid to create rg11b10ufloat texture with RENDER_ATTACHMENT usage and/or
 sampleCount > 1, iff rg11b10ufloat-renderable feature is enabled.
 Note, the createTexture tests cover these validation cases where this feature is not enabled.
-`).
-
+`
+).
 params((u) => u.combine('sampleCount', [1, 4])).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
@@ -33,11 +33,11 @@ fn((t) => {
 
 g.test('begin_render_pass_single_sampled').
 desc(
-`
+  `
 Test that it is valid to begin render pass with rg11b10ufloat texture format
 iff rg11b10ufloat-renderable feature is enabled. Single sampled case.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
 }).
@@ -65,11 +65,11 @@ fn((t) => {
 
 g.test('begin_render_pass_msaa_and_resolve').
 desc(
-`
+  `
 Test that it is valid to begin render pass with rg11b10ufloat texture format
 iff rg11b10ufloat-renderable feature is enabled. MSAA and resolve case.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
 }).
@@ -104,11 +104,11 @@ fn((t) => {
 
 g.test('begin_render_bundle_encoder').
 desc(
-`
+  `
 Test that it is valid to begin render bundle encoder with rg11b10ufloat texture
 format iff rg11b10ufloat-renderable feature is enabled.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
 }).
@@ -120,11 +120,11 @@ fn((t) => {
 
 g.test('create_render_pipeline').
 desc(
-`
+  `
 Test that it is valid to create render pipeline with rg11b10ufloat texture format
 in descriptor.fragment.targets iff rg11b10ufloat-renderable feature is enabled.
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('rg11b10ufloat-renderable');
 }).

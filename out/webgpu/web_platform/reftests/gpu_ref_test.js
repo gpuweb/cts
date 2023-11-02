@@ -9,9 +9,9 @@
 export function runRefTest(fn) {
   void (async () => {
     assert(
-    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
-    'No WebGPU implementation found');
-
+      typeof navigator !== 'undefined' && navigator.gpu !== undefined,
+      'No WebGPU implementation found'
+    );
 
     const adapter = await navigator.gpu.requestAdapter();
     assert(adapter !== null);

@@ -8,10 +8,10 @@ export const g = makeTestGroup(UnitTest);
 
 g.test('f').
 desc(
-`Test plan for f
+  `Test plan for f
     - Test stuff
-    - Test some more stuff`).
-
+    - Test some more stuff`
+).
 fn(() => {});
 
 g.test('f,g').fn(() => {});
@@ -29,8 +29,8 @@ params((u) =>
 u //
 .combine('x', [1, 2]).
 combine('y', [1, 2]).
-combine('z', [1, 2])).
-
+combine('z', [1, 2])
+).
 fn(() => {});
 
 g.test('statuses,debug').fn((t) => {
@@ -56,10 +56,10 @@ g.test('statuses,throw').fn(() => {
 g.test('multiple_same_stack').fn((t) => {
   for (let i = 0; i < 3; ++i) {
     t.fail(
-    i === 2 ?
-    'this should appear after deduplicated line' :
-    'this should be "seen 2 times with identical stack"');
-
+      i === 2 ?
+      'this should appear after deduplicated line' :
+      'this should be "seen 2 times with identical stack"'
+    );
   }
 });
 

@@ -25,8 +25,8 @@ u.
 combine('encoderType', kEncoderTypes).
 beginSubcases().
 combine('pushCount', [0, 1, 2]).
-combine('popCount', [0, 1, 2])).
-
+combine('popCount', [0, 1, 2])
+).
 fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   for (let i = 0; i < t.params.pushCount; ++i) {
@@ -43,8 +43,8 @@ params((u) =>
 u //
 .combine('encoderType', kEncoderTypes).
 beginSubcases().
-combine('label', ['', 'group', 'null\0in\0group\0label', '\0null at beginning', '🌞👆'])).
-
+combine('label', ['', 'group', 'null\0in\0group\0label', '\0null at beginning', '🌞👆'])
+).
 fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   encoder.pushDebugGroup(t.params.label);
@@ -57,8 +57,8 @@ params((u) =>
 u //
 .combine('encoderType', kEncoderTypes).
 beginSubcases().
-combine('label', ['', 'marker', 'null\0in\0marker', '\0null at beginning', '🌞👆'])).
-
+combine('label', ['', 'marker', 'null\0in\0marker', '\0null at beginning', '🌞👆'])
+).
 fn((t) => {
   const { encoder, validateFinishAndSubmit } = t.createEncoder(t.params.encoderType);
   encoder.insertDebugMarker(t.params.label);

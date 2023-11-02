@@ -10,10 +10,10 @@ import { Logger } from '../common/internal/logging/logger.js';
 import { parseQuery } from '../common/internal/query/parseQuery.js';
 import {
 
-TestQuerySingleCase,
-TestQueryMultiCase,
-TestQueryMultiTest,
-TestQueryMultiFile } from
+  TestQuerySingleCase,
+  TestQueryMultiCase,
+  TestQueryMultiTest,
+  TestQueryMultiFile } from
 
 '../common/internal/query/query.js';
 import { makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
@@ -71,8 +71,8 @@ const specsData = {
       g.test('zed').
       paramsSimple([
       { a: 1, b: 2, _c: 0 },
-      { b: 3, a: 1, _c: 0 }]).
-
+      { b: 3, a: 1, _c: 0 }]
+      ).
       fn(() => {});
       g.test('batched')
       // creates two cases: one for subcases 1,2 and one for subcase 3
@@ -124,7 +124,7 @@ class LoadingTest extends UnitTest {
     if (!this.isListenersAdded) {
       this.isListenersAdded = true;
       this.loader.addEventListener('import', (ev) => this.events.push(ev.data.url));
-      this.loader.addEventListener('finish', (ev) => this.events.push(null));
+      this.loader.addEventListener('finish', (_ev) => this.events.push(null));
     }
   }
 
@@ -148,14 +148,14 @@ g.test('group').fn(async (t) => {
   t.collectEvents();
   t.expect((await t.load('suite1:*')).length === 10);
   t.expect(
-  objectEquals(t.events, [
-  'suite1/foo.spec.js',
-  'suite1/bar/biz.spec.js',
-  'suite1/bar/buzz/buzz.spec.js',
-  'suite1/baz.spec.js',
-  null]));
-
-
+    objectEquals(t.events, [
+    'suite1/foo.spec.js',
+    'suite1/bar/biz.spec.js',
+    'suite1/bar/buzz/buzz.spec.js',
+    'suite1/baz.spec.js',
+    null]
+    )
+  );
 
   t.collectEvents();
   t.expect((await t.load('suite1:foo,*')).length === 3); // x:foo,* matches x:foo:
@@ -164,8 +164,8 @@ g.test('group').fn(async (t) => {
   t.collectEvents();
   t.expect((await t.load('suite1:bar,*')).length === 1);
   t.expect(
-  objectEquals(t.events, ['suite1/bar/biz.spec.js', 'suite1/bar/buzz/buzz.spec.js', null]));
-
+    objectEquals(t.events, ['suite1/bar/biz.spec.js', 'suite1/bar/buzz/buzz.spec.js', null])
+  );
 
   t.collectEvents();
   t.expect((await t.load('suite1:bar,buzz,buzz,*')).length === 1);
@@ -280,38 +280,38 @@ g.test('end2end').fn(async (t) => {
   const log = new Logger({ overrideDebugMode: true });
 
   await runTestcase(
-  t,
-  log,
-  l,
-  0,
-  new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
-  [],
-  'pass',
-  (logs) => objectEquals(logs, ['"DEBUG: OK"']));
-
+    t,
+    log,
+    l,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    [],
+    'pass',
+    (logs) => objectEquals(logs, ['"DEBUG: OK"'])
+  );
   await runTestcase(
-  t,
-  log,
-  l,
-  1,
-  new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }),
-  [],
-  'pass',
-  (logs) => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"']));
-
+    t,
+    log,
+    l,
+    1,
+    new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }),
+    [],
+    'pass',
+    (logs) => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
+  );
   await runTestcase(
-  t,
-  log,
-  l,
-  2,
-  new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
-  [],
-  'fail',
-  (logs) =>
-  logs.length === 1 &&
-  logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n') &&
-  logs[0].indexOf('loaders_and_trees.spec.') !== -1);
-
+    t,
+    log,
+    l,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    [],
+    'fail',
+    (logs) =>
+    logs.length === 1 &&
+    logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n') &&
+    logs[0].indexOf('loaders_and_trees.spec.') !== -1
+  );
 });
 
 g.test('expectations,single_case').fn(async (t) => {
@@ -327,26 +327,26 @@ g.test('expectations,single_case').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  0,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  zedExpectationsSkipA1B2,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1B2,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  1,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
-  zedExpectationsSkipA1B2,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1B2,
+    'pass',
+    (logs) => logs.length === 0
+  );
 });
 
 g.test('expectations,single_case,none').fn(async (t) => {
@@ -361,26 +361,26 @@ g.test('expectations,single_case,none').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  0,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  zedExpectationsSkipA1B0,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1B0,
+    'pass',
+    (logs) => logs.length === 0
+  );
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  1,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
-  zedExpectationsSkipA1B0,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1B0,
+    'pass',
+    (logs) => logs.length === 0
+  );
 });
 
 g.test('expectations,multi_case').fn(async (t) => {
@@ -395,26 +395,26 @@ g.test('expectations,multi_case').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  0,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  zedExpectationsSkipB3,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipB3,
+    'pass',
+    (logs) => logs.length === 0
+  );
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  1,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
-  zedExpectationsSkipB3,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipB3,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,multi_case_all').fn(async (t) => {
@@ -429,26 +429,26 @@ g.test('expectations,multi_case_all').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  0,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  zedExpectationsSkipA1,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipA1,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  1,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
-  zedExpectationsSkipA1,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipA1,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,multi_case_none').fn(async (t) => {
@@ -463,26 +463,26 @@ g.test('expectations,multi_case_none').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  0,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  zedExpectationsSkipZed,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    0,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    zedExpectationsSkipZed,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  zedCases,
-  1,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
-  zedExpectationsSkipZed,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    zedCases,
+    1,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
+    zedExpectationsSkipZed,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,multi_test').fn(async (t) => {
@@ -498,26 +498,26 @@ g.test('expectations,multi_test').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  4,
-  new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
-  expectationsSkipAllInBaz,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite1Cases,
+    4,
+    new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
+    expectationsSkipAllInBaz,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  6,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  expectationsSkipAllInBaz,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite1Cases,
+    6,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    expectationsSkipAllInBaz,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,multi_test,none').fn(async (t) => {
@@ -533,26 +533,26 @@ g.test('expectations,multi_test,none').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  4,
-  new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
-  expectationsSkipAllInFoo,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    suite1Cases,
+    4,
+    new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
+    expectationsSkipAllInFoo,
+    'pass',
+    (logs) => logs.length === 0
+  );
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  6,
-  new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
-  expectationsSkipAllInFoo,
-  'pass',
-  (logs) => logs.length === 0);
-
+    t,
+    log,
+    suite1Cases,
+    6,
+    new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
+    expectationsSkipAllInFoo,
+    'pass',
+    (logs) => logs.length === 0
+  );
 });
 
 g.test('expectations,multi_file').fn(async (t) => {
@@ -568,26 +568,26 @@ g.test('expectations,multi_file').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  0,
-  new TestQuerySingleCase('suite1', ['foo'], ['hello'], {}),
-  expectationsSkipAll,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite1Cases,
+    0,
+    new TestQuerySingleCase('suite1', ['foo'], ['hello'], {}),
+    expectationsSkipAll,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  suite1Cases,
-  3,
-  new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
-  expectationsSkipAll,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite1Cases,
+    3,
+    new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
+    expectationsSkipAll,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,catches_failure').fn(async (t) => {
@@ -603,27 +603,27 @@ g.test('expectations,catches_failure').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite2Cases,
-  0,
-  new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
-  expectedFailures,
-  'pass',
-  (logs) => objectEquals(logs, ['"DEBUG: OK"']));
-
+    t,
+    log,
+    suite2Cases,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    expectedFailures,
+    'pass',
+    (logs) => objectEquals(logs, ['"DEBUG: OK"'])
+  );
 
   // Status is passed, but failure is logged.
   await runTestcase(
-  t,
-  log,
-  suite2Cases,
-  2,
-  new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
-  expectedFailures,
-  'pass',
-  (logs) => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n'));
-
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'pass',
+    (logs) => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
+  );
 });
 
 g.test('expectations,skip_dominates_failure').fn(async (t) => {
@@ -642,15 +642,15 @@ g.test('expectations,skip_dominates_failure').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite2Cases,
-  2,
-  new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
-  expectedFailures,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 });
 
 g.test('expectations,skip_inside_failure').fn(async (t) => {
@@ -669,26 +669,26 @@ g.test('expectations,skip_inside_failure').fn(async (t) => {
 
 
   await runTestcase(
-  t,
-  log,
-  suite2Cases,
-  0,
-  new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
-  expectedFailures,
-  'skip',
-  (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"'));
-
+    t,
+    log,
+    suite2Cases,
+    0,
+    new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
+    expectedFailures,
+    'skip',
+    (logs) => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+  );
 
   await runTestcase(
-  t,
-  log,
-  suite2Cases,
-  2,
-  new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
-  expectedFailures,
-  'pass',
-  (logs) => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n'));
-
+    t,
+    log,
+    suite2Cases,
+    2,
+    new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
+    expectedFailures,
+    'pass',
+    (logs) => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
+  );
 });
 
 async function testIterateCollapsed(
@@ -716,15 +716,15 @@ includeEmptySubtrees = false)
   });
   const testingTODOs = expectedResult.length > 0 && expectedResult[0] instanceof Array;
   const actual = Array.from(actualIter, ({ query, subtreeCounts }) =>
-  testingTODOs ? [query.toString(), subtreeCounts?.nodesWithTODO] : query.toString());
-
+  testingTODOs ? [query.toString(), subtreeCounts?.nodesWithTODO] : query.toString()
+  );
   if (!objectEquals(actual, expectedResult)) {
     t.fail(
-    `iterateCollapsed failed:
+      `iterateCollapsed failed:
   got ${JSON.stringify(actual)}
   exp ${JSON.stringify(expectedResult)}
-${tree.toString()}`);
-
+${tree.toString()}`
+    );
   }
 }
 
@@ -735,227 +735,227 @@ g.test('print').fn(async (t) => {
 
 g.test('iterateCollapsed').fn(async (t) => {
   await testIterateCollapsed(
-  t,
-  1,
-  [],
-  [
-  ['suite1:foo:*', 1], // to-do propagated up from foo:hola
-  ['suite1:bar,buzz,buzz:*', 1], // to-do in file description
-  ['suite1:baz:*', 0]]);
+    t,
+    1,
+    [],
+    [
+    ['suite1:foo:*', 1], // to-do propagated up from foo:hola
+    ['suite1:bar,buzz,buzz:*', 1], // to-do in file description
+    ['suite1:baz:*', 0]]
 
-
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  [],
-  [
-  ['suite1:foo:hello:*', 0],
-  ['suite1:foo:bonjour:*', 0],
-  ['suite1:foo:hola:*', 1], // to-do in test description
-  ['suite1:bar,buzz,buzz:zap:*', 0],
-  ['suite1:baz:wye:*', 0],
-  ['suite1:baz:zed:*', 0],
-  ['suite1:baz:batched:*', 0]]);
+    t,
+    2,
+    [],
+    [
+    ['suite1:foo:hello:*', 0],
+    ['suite1:foo:bonjour:*', 0],
+    ['suite1:foo:hola:*', 1], // to-do in test description
+    ['suite1:bar,buzz,buzz:zap:*', 0],
+    ['suite1:baz:wye:*', 0],
+    ['suite1:baz:zed:*', 0],
+    ['suite1:baz:batched:*', 0]]
 
-
+  );
   await testIterateCollapsed(
-  t,
-  3,
-  [],
-  [
-  ['suite1:foo:hello:', undefined],
-  ['suite1:foo:bonjour:', undefined],
-  ['suite1:foo:hola:', undefined],
-  ['suite1:bar,buzz,buzz:zap:', undefined],
-  ['suite1:baz:wye:', undefined],
-  ['suite1:baz:wye:x=1', undefined],
-  ['suite1:baz:zed:a=1;b=2', undefined],
-  ['suite1:baz:zed:b=3;a=1', undefined],
-  ['suite1:baz:batched:batch__=0', undefined],
-  ['suite1:baz:batched:batch__=1', undefined]]);
+    t,
+    3,
+    [],
+    [
+    ['suite1:foo:hello:', undefined],
+    ['suite1:foo:bonjour:', undefined],
+    ['suite1:foo:hola:', undefined],
+    ['suite1:bar,buzz,buzz:zap:', undefined],
+    ['suite1:baz:wye:', undefined],
+    ['suite1:baz:wye:x=1', undefined],
+    ['suite1:baz:zed:a=1;b=2', undefined],
+    ['suite1:baz:zed:b=3;a=1', undefined],
+    ['suite1:baz:batched:batch__=0', undefined],
+    ['suite1:baz:batched:batch__=1', undefined]]
 
-
+  );
 
   // Expectations lists that have no effect
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:foo:*'],
-  ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']);
-
+    t,
+    1,
+    ['suite1:foo:*'],
+    ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:bar,buzz,buzz:*'],
-  ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']);
-
+    t,
+    1,
+    ['suite1:bar,buzz,buzz:*'],
+    ['suite1:foo:*', 'suite1:bar,buzz,buzz:*', 'suite1:baz:*']
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  ['suite1:baz:wye:*'],
-  [
-  'suite1:foo:hello:*',
-  'suite1:foo:bonjour:*',
-  'suite1:foo:hola:*',
-  'suite1:bar,buzz,buzz:zap:*',
-  'suite1:baz:wye:*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched:*']);
+    t,
+    2,
+    ['suite1:baz:wye:*'],
+    [
+    'suite1:foo:hello:*',
+    'suite1:foo:bonjour:*',
+    'suite1:foo:hola:*',
+    'suite1:bar,buzz,buzz:zap:*',
+    'suite1:baz:wye:*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched:*']
 
-
+  );
   // Test with includeEmptySubtrees=true
   await testIterateCollapsed(
-  t,
-  1,
-  [],
-  [
-  'suite1:foo:*',
-  'suite1:bar,biz:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:*',
-  'suite1:empty,*'],
+    t,
+    1,
+    [],
+    [
+    'suite1:foo:*',
+    'suite1:bar,biz:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:*',
+    'suite1:empty,*'],
 
-  true);
-
+    true
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  [],
-  [
-  'suite1:foo:hello:*',
-  'suite1:foo:bonjour:*',
-  'suite1:foo:hola:*',
-  'suite1:bar,biz:*',
-  'suite1:bar,buzz,buzz:zap:*',
-  'suite1:baz:wye:*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched:*',
-  'suite1:empty,*'],
+    t,
+    2,
+    [],
+    [
+    'suite1:foo:hello:*',
+    'suite1:foo:bonjour:*',
+    'suite1:foo:hola:*',
+    'suite1:bar,biz:*',
+    'suite1:bar,buzz,buzz:zap:*',
+    'suite1:baz:wye:*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched:*',
+    'suite1:empty,*'],
 
-  true);
-
+    true
+  );
 
   // Expectations lists that have some effect
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:baz:wye:*'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye:*',
-  'suite1:baz:zed,*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:baz:wye:*'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye:*',
+    'suite1:baz:zed,*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:baz:zed:*'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye,*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:baz:zed:*'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye,*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:baz:wye:*', 'suite1:baz:zed:*'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye:*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:baz:wye:*', 'suite1:baz:zed:*'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye:*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:baz:wye:'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1;*',
-  'suite1:baz:zed,*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:baz:wye:'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1;*',
+    'suite1:baz:zed,*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:baz:wye:x=1'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1',
-  'suite1:baz:zed,*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:baz:wye:x=1'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1',
+    'suite1:baz:zed,*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  1,
-  ['suite1:foo:*', 'suite1:baz:wye:'],
-  [
-  'suite1:foo:*',
-  'suite1:bar,buzz,buzz:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1;*',
-  'suite1:baz:zed,*',
-  'suite1:baz:batched,*']);
+    t,
+    1,
+    ['suite1:foo:*', 'suite1:baz:wye:'],
+    [
+    'suite1:foo:*',
+    'suite1:bar,buzz,buzz:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1;*',
+    'suite1:baz:zed,*',
+    'suite1:baz:batched,*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  ['suite1:baz:wye:'],
-  [
-  'suite1:foo:hello:*',
-  'suite1:foo:bonjour:*',
-  'suite1:foo:hola:*',
-  'suite1:bar,buzz,buzz:zap:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1;*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched:*']);
+    t,
+    2,
+    ['suite1:baz:wye:'],
+    [
+    'suite1:foo:hello:*',
+    'suite1:foo:bonjour:*',
+    'suite1:foo:hola:*',
+    'suite1:bar,buzz,buzz:zap:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1;*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched:*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  ['suite1:baz:wye:x=1'],
-  [
-  'suite1:foo:hello:*',
-  'suite1:foo:bonjour:*',
-  'suite1:foo:hola:*',
-  'suite1:bar,buzz,buzz:zap:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched:*']);
+    t,
+    2,
+    ['suite1:baz:wye:x=1'],
+    [
+    'suite1:foo:hello:*',
+    'suite1:foo:bonjour:*',
+    'suite1:foo:hola:*',
+    'suite1:bar,buzz,buzz:zap:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched:*']
 
-
+  );
   await testIterateCollapsed(
-  t,
-  2,
-  ['suite1:foo:hello:*', 'suite1:baz:wye:'],
-  [
-  'suite1:foo:hello:*',
-  'suite1:foo:bonjour:*',
-  'suite1:foo:hola:*',
-  'suite1:bar,buzz,buzz:zap:*',
-  'suite1:baz:wye:',
-  'suite1:baz:wye:x=1;*',
-  'suite1:baz:zed:*',
-  'suite1:baz:batched:*']);
+    t,
+    2,
+    ['suite1:foo:hello:*', 'suite1:baz:wye:'],
+    [
+    'suite1:foo:hello:*',
+    'suite1:foo:bonjour:*',
+    'suite1:foo:hola:*',
+    'suite1:bar,buzz,buzz:zap:*',
+    'suite1:baz:wye:',
+    'suite1:baz:wye:x=1;*',
+    'suite1:baz:zed:*',
+    'suite1:baz:batched:*']
 
-
+  );
 
   // Invalid expectation queries
   await testIterateCollapsed(t, 1, ['*'], 'throws');

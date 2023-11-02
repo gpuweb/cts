@@ -34,9 +34,9 @@ export class IDLTest extends Fixture {
     const expKeys = Object.keys(exp);
     const actKeys = Object.keys(act);
     assert(
-    actKeys.length === expKeys.length,
-    () => `Had ${actKeys.length} keys, expected ${expKeys.length}`);
-
+      actKeys.length === expKeys.length,
+      () => `Had ${actKeys.length} keys, expected ${expKeys.length}`
+    );
   }
 }
 //# sourceMappingURL=idl_test.js.map

@@ -24,39 +24,39 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('smoothstep', {
   f32_const: () => {
     return FP.f32.generateScalarTripleToIntervalCases(
-    sparseF32Range(),
-    sparseF32Range(),
-    sparseF32Range(),
-    'finite',
-    FP.f32.smoothStepInterval);
-
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      'finite',
+      FP.f32.smoothStepInterval
+    );
   },
   f32_non_const: () => {
     return FP.f32.generateScalarTripleToIntervalCases(
-    sparseF32Range(),
-    sparseF32Range(),
-    sparseF32Range(),
-    'unfiltered',
-    FP.f32.smoothStepInterval);
-
+      sparseF32Range(),
+      sparseF32Range(),
+      sparseF32Range(),
+      'unfiltered',
+      FP.f32.smoothStepInterval
+    );
   },
   f16_const: () => {
     return FP.f16.generateScalarTripleToIntervalCases(
-    sparseF16Range(),
-    sparseF16Range(),
-    sparseF16Range(),
-    'finite',
-    FP.f16.smoothStepInterval);
-
+      sparseF16Range(),
+      sparseF16Range(),
+      sparseF16Range(),
+      'finite',
+      FP.f16.smoothStepInterval
+    );
   },
   f16_non_const: () => {
     return FP.f16.generateScalarTripleToIntervalCases(
-    sparseF16Range(),
-    sparseF16Range(),
-    sparseF16Range(),
-    'unfiltered',
-    FP.f16.smoothStepInterval);
-
+      sparseF16Range(),
+      sparseF16Range(),
+      sparseF16Range(),
+      'unfiltered',
+      FP.f16.smoothStepInterval
+    );
   }
 });
 
@@ -64,16 +64,16 @@ g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
   await run(t, builtin('smoothstep'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
@@ -83,8 +83,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

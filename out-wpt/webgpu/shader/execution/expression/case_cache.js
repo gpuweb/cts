@@ -1,36 +1,34 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { dataCache } from '../../../../common/framework/data_cache.js';
-import { unreachable } from '../../../../common/util/util.js';
-import BinaryStream from '../../../util/binary_stream.js';
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import { dataCache } from '../../../../common/framework/data_cache.js';import { unreachable } from '../../../../common/util/util.js';import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
   Scalar,
   Vector,
   serializeValue,
   deserializeValue,
-  Matrix,
-} from '../../../util/conversion.js';
+  Matrix } from
+
+'../../../util/conversion.js';
 import {
   deserializeFPInterval,
   FPInterval,
-  serializeFPInterval,
-} from '../../../util/floating_point.js';
+  serializeFPInterval } from
+'../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { isComparator } from './expression.js';
-var SerializedExpectationKind;
+import { isComparator } from './expression.js';var
 
-/** serializeExpectation() serializes an Expectation to a BinaryStream */ (function (
-  SerializedExpectationKind
-) {
-  SerializedExpectationKind[(SerializedExpectationKind['Value'] = 0)] = 'Value';
-  SerializedExpectationKind[(SerializedExpectationKind['Interval'] = 1)] = 'Interval';
-  SerializedExpectationKind[(SerializedExpectationKind['Interval1DArray'] = 2)] = 'Interval1DArray';
-  SerializedExpectationKind[(SerializedExpectationKind['Interval2DArray'] = 3)] = 'Interval2DArray';
-  SerializedExpectationKind[(SerializedExpectationKind['Array'] = 4)] = 'Array';
-  SerializedExpectationKind[(SerializedExpectationKind['Comparator'] = 5)] = 'Comparator';
-})(SerializedExpectationKind || (SerializedExpectationKind = {}));
+SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {SerializedExpectationKind[SerializedExpectationKind["Value"] = 0] = "Value";SerializedExpectationKind[SerializedExpectationKind["Interval"] = 1] = "Interval";SerializedExpectationKind[SerializedExpectationKind["Interval1DArray"] = 2] = "Interval1DArray";SerializedExpectationKind[SerializedExpectationKind["Interval2DArray"] = 3] = "Interval2DArray";SerializedExpectationKind[SerializedExpectationKind["Array"] = 4] = "Array";SerializedExpectationKind[SerializedExpectationKind["Comparator"] = 5] = "Comparator";return SerializedExpectationKind;}(SerializedExpectationKind || {});
+
+
+
+
+
+
+
+
+/** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s, e) {
   if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
     s.writeU8(SerializedExpectationKind.Value);
@@ -70,26 +68,26 @@ export function serializeExpectation(s, e) {
 export function deserializeExpectation(s) {
   const kind = s.readU8();
   switch (kind) {
-    case SerializedExpectationKind.Value: {
-      return deserializeValue(s);
-    }
-    case SerializedExpectationKind.Interval: {
-      return deserializeFPInterval(s);
-    }
-    case SerializedExpectationKind.Interval1DArray: {
-      return s.readArray(deserializeFPInterval);
-    }
-    case SerializedExpectationKind.Interval2DArray: {
-      const cols = s.readU16();
-      const rows = s.readU16();
-      return unflatten2DArray(s.readArray(deserializeFPInterval), cols, rows);
-    }
-    case SerializedExpectationKind.Comparator: {
-      return deserializeComparator(s);
-    }
-    default: {
-      unreachable(`invalid serialized expectation kind: ${kind}`);
-    }
+    case SerializedExpectationKind.Value:{
+        return deserializeValue(s);
+      }
+    case SerializedExpectationKind.Interval:{
+        return deserializeFPInterval(s);
+      }
+    case SerializedExpectationKind.Interval1DArray:{
+        return s.readArray(deserializeFPInterval);
+      }
+    case SerializedExpectationKind.Interval2DArray:{
+        const cols = s.readU16();
+        const rows = s.readU16();
+        return unflatten2DArray(s.readArray(deserializeFPInterval), cols, rows);
+      }
+    case SerializedExpectationKind.Comparator:{
+        return deserializeComparator(s);
+      }
+    default:{
+        unreachable(`invalid serialized expectation kind: ${kind}`);
+      }
   }
 }
 
@@ -103,7 +101,7 @@ export function serializeCase(s, c) {
     if_false: () => {
       // c.input is not array
       serializeValue(s, c.input);
-    },
+    }
   });
   serializeExpectation(s, c.expected);
 }
@@ -118,13 +116,14 @@ export function deserializeCase(s) {
     if_false: () => {
       // c.input is not array
       return deserializeValue(s);
-    },
+    }
   });
   const expected = deserializeExpectation(s);
   return { input, expected };
 }
 
 /** CaseListBuilder is a function that builds a CaseList */
+
 
 /**
  * CaseCache is a cache of CaseList.
@@ -191,6 +190,9 @@ export class CaseCache {
     }
     return casesByName;
   }
+
+
+
 }
 
 export function makeCaseCache(name, builders) {

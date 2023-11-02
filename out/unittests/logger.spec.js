@@ -150,8 +150,8 @@ g.test('fail,threw').fn((t) => {
 g.test('debug').
 paramsSimple([
 { debug: true, _logsCount: 5 }, //
-{ debug: false, _logsCount: 3 }]).
-
+{ debug: false, _logsCount: 3 }]
+).
 fn((t) => {
   const { debug, _logsCount } = t.params;
 

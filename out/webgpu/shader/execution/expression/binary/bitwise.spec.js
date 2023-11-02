@@ -61,19 +61,19 @@ function makeBitwiseOrCases(inputType) {
 g.test('bitwise_or').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 | e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-or. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseOrCases(t.params.type);
@@ -84,19 +84,19 @@ fn(async (t) => {
 g.test('bitwise_or_compound').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 |= e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-or. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseOrCases(t.params.type);
@@ -162,19 +162,19 @@ function makeBitwiseAndCases(inputType) {
 g.test('bitwise_and').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 & e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-and. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseAndCases(t.params.type);
@@ -184,19 +184,19 @@ fn(async (t) => {
 g.test('bitwise_and_compound').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 &= e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-and. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseAndCases(t.params.type);
@@ -261,19 +261,19 @@ function makeBitwiseExcluseOrCases(inputType) {
 g.test('bitwise_exclusive_or').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 ^ e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-exclusive-or. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseExcluseOrCases(t.params.type);
@@ -283,19 +283,19 @@ fn(async (t) => {
 g.test('bitwise_exclusive_or_compound').
 specURL('https://www.w3.org/TR/WGSL/#bit-expr').
 desc(
-`
+  `
 e1 ^= e2: T
 T is i32, u32, vecN<i32>, or vecN<u32>
 
 Bitwise-exclusive-or. Component-wise when T is a vector.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('type', ['i32', 'u32']).
 combine('inputSource', allInputSources).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const type = scalarType(t.params.type);
   const cases = makeBitwiseExcluseOrCases(t.params.type);

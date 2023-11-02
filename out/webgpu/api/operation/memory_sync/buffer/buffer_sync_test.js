@@ -44,7 +44,7 @@ const kOpInfo =
   't2b-copy': {
     contexts: ['command-encoder']
   },
-  'storage': {
+  storage: {
     contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder']
   },
   'storage-read': {
@@ -105,8 +105,8 @@ context)
             case 'b2b-copy':
             case 'write-buffer':
               // These don't occur in a render pass.
-              return true;}
-
+              return true;
+          }
           break;
         case 'input-vertex':
         case 'input-index':
@@ -118,8 +118,8 @@ context)
         case 'b2b-copy':
         case 'write-buffer':
           // These are not write usages, or don't occur in a render pass.
-          break;}
-
+          break;
+      }
       return true;
     };
     return checkImpl(ops[0], ops[1]) && checkImpl(ops[1], ops[0]);
@@ -161,8 +161,8 @@ export class BufferSyncTest extends GPUTest {
         this.tmpValueTextures[slot] = await this.createTextureWithValue(value);
         break;
       default:
-        break;}
-
+        break;
+    }
   }
 
   // Create extra buffers/textures needed by read operation
@@ -190,8 +190,8 @@ export class BufferSyncTest extends GPUTest {
         this.indexBuffer = await this.createBufferWithValues([0]);
         break;
       default:
-        break;}
-
+        break;
+    }
 
     let srcBuffer;
     switch (readOp) {
@@ -218,22 +218,22 @@ export class BufferSyncTest extends GPUTest {
         break;
       default:
         srcBuffer = await this.createBufferWithValue(srcValue);
-        break;}
-
+        break;
+    }
 
     const dstBuffer = this.trackForCleanup(
-    this.device.createBuffer({
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage:
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.VERTEX |
-      GPUBufferUsage.INDEX |
-      GPUBufferUsage.INDIRECT |
-      GPUBufferUsage.UNIFORM
-    }));
-
+      this.device.createBuffer({
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM
+      })
+    );
 
     return { srcBuffer, dstBuffer };
   }
@@ -241,19 +241,19 @@ export class BufferSyncTest extends GPUTest {
   // Create a buffer with 1 uint32 element, and initialize it to a specified value.
   async createBufferWithValue(initValue) {
     const buffer = this.trackForCleanup(
-    this.device.createBuffer({
-      mappedAtCreation: true,
-      size: Uint32Array.BYTES_PER_ELEMENT,
-      usage:
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.VERTEX |
-      GPUBufferUsage.INDEX |
-      GPUBufferUsage.INDIRECT |
-      GPUBufferUsage.UNIFORM
-    }));
-
+      this.device.createBuffer({
+        mappedAtCreation: true,
+        size: Uint32Array.BYTES_PER_ELEMENT,
+        usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM
+      })
+    );
     new Uint32Array(buffer.getMappedRange()).fill(initValue);
     buffer.unmap();
     await this.queue.onSubmittedWorkDone();
@@ -263,19 +263,19 @@ export class BufferSyncTest extends GPUTest {
   // Create a buffer, and initialize it to the specified values.
   async createBufferWithValues(initValues) {
     const buffer = this.trackForCleanup(
-    this.device.createBuffer({
-      mappedAtCreation: true,
-      size: Uint32Array.BYTES_PER_ELEMENT * initValues.length,
-      usage:
-      GPUBufferUsage.COPY_SRC |
-      GPUBufferUsage.COPY_DST |
-      GPUBufferUsage.STORAGE |
-      GPUBufferUsage.VERTEX |
-      GPUBufferUsage.INDEX |
-      GPUBufferUsage.INDIRECT |
-      GPUBufferUsage.UNIFORM
-    }));
-
+      this.device.createBuffer({
+        mappedAtCreation: true,
+        size: Uint32Array.BYTES_PER_ELEMENT * initValues.length,
+        usage:
+        GPUBufferUsage.COPY_SRC |
+        GPUBufferUsage.COPY_DST |
+        GPUBufferUsage.STORAGE |
+        GPUBufferUsage.VERTEX |
+        GPUBufferUsage.INDEX |
+        GPUBufferUsage.INDIRECT |
+        GPUBufferUsage.UNIFORM
+      })
+    );
     const bufferView = new Uint32Array(buffer.getMappedRange());
     bufferView.set(initValues);
     buffer.unmap();
@@ -288,18 +288,18 @@ export class BufferSyncTest extends GPUTest {
     // This is not hot in profiles; optimize if this gets used more heavily.
     const data = new Uint32Array(1).fill(initValue);
     const texture = this.trackForCleanup(
-    this.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: 'r32uint',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
-    }));
-
+      this.device.createTexture({
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        format: 'r32uint',
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+      })
+    );
     this.device.queue.writeTexture(
-    { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    data,
-    { offset: 0, bytesPerRow: 256, rowsPerImage: 1 },
-    { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+      { texture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      data,
+      { offset: 0, bytesPerRow: 256, rowsPerImage: 1 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
     await this.queue.onSubmittedWorkDone();
     return texture;
   }
@@ -380,12 +380,12 @@ export class BufferSyncTest extends GPUTest {
 
   beginSimpleRenderPass(encoder) {
     const view = this.trackForCleanup(
-    this.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
-      usage: GPUTextureUsage.RENDER_ATTACHMENT
-    })).
-    createView();
+      this.device.createTexture({
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        format: 'rgba8unorm',
+        usage: GPUTextureUsage.RENDER_ATTACHMENT
+      })
+    ).createView();
     return encoder.beginRenderPass({
       colorAttachments: [
       {
@@ -439,10 +439,10 @@ export class BufferSyncTest extends GPUTest {
     assert(tmpTexture !== undefined);
     // The write operation via t2b copy is just encoded into command encoder, it doesn't write immediately.
     encoder.copyTextureToBuffer(
-    { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { buffer, bytesPerRow: 256 },
-    { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer, bytesPerRow: 256 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
   }
 
   // Write buffer via writeBuffer API on queue
@@ -482,8 +482,8 @@ export class BufferSyncTest extends GPUTest {
             this.encodeWriteAsStorageBufferInComputePass(helper.computePassEncoder, buffer, value);
             break;
           default:
-            unreachable();}
-
+            unreachable();
+        }
         break;
       case 'b2b-copy':
         assert(helper.commandEncoder !== undefined);
@@ -494,8 +494,8 @@ export class BufferSyncTest extends GPUTest {
         this.encodeWriteByT2BCopy(helper.commandEncoder, buffer, writeOpSlot);
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }
 
   // Create a compute pipeline: read from src buffer and write it into the storage buffer.
@@ -807,25 +807,25 @@ export class BufferSyncTest extends GPUTest {
   // Read and Write texture via BufferToTexture copy.
   encodeReadByB2TCopy(encoder, srcBuffer, dstBuffer) {
     const tmpTexture = this.trackForCleanup(
-    this.device.createTexture({
-      size: { width: 1, height: 1, depthOrArrayLayers: 1 },
-      format: 'r32uint',
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
-    }));
-
+      this.device.createTexture({
+        size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+        format: 'r32uint',
+        usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST
+      })
+    );
 
     // The b2t copy is just encoded into command encoder, it doesn't write immediately.
     encoder.copyBufferToTexture(
-    { buffer: srcBuffer, bytesPerRow: 256 },
-    { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+      { buffer: srcBuffer, bytesPerRow: 256 },
+      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
     // The t2b copy is just encoded into command encoder, it doesn't write immediately.
     encoder.copyTextureToBuffer(
-    { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { buffer: dstBuffer, bytesPerRow: 256 },
-    { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+      { texture: tmpTexture, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer: dstBuffer, bytesPerRow: 256 },
+      { width: 1, height: 1, depthOrArrayLayers: 1 }
+    );
   }
 
   encodeReadOp(
@@ -861,11 +861,11 @@ export class BufferSyncTest extends GPUTest {
         assert(renderer !== undefined);
         assert(this.vertexBuffer !== undefined);
         this.encodeReadAsIndirectBufferInRenderPass(
-        renderer,
-        srcBuffer,
-        dstBuffer,
-        this.vertexBuffer);
-
+          renderer,
+          srcBuffer,
+          dstBuffer,
+          this.vertexBuffer
+        );
         break;
       case 'input-indirect-index':
         // The srcBuffer is used as indirectBuffer for drawIndexedIndirect.
@@ -874,12 +874,12 @@ export class BufferSyncTest extends GPUTest {
         assert(this.vertexBuffer !== undefined);
         assert(this.indexBuffer !== undefined);
         this.encodeReadAsIndexedIndirectBufferInRenderPass(
-        renderer,
-        srcBuffer,
-        dstBuffer,
-        this.vertexBuffer,
-        this.indexBuffer);
-
+          renderer,
+          srcBuffer,
+          dstBuffer,
+          this.vertexBuffer,
+          this.indexBuffer
+        );
         break;
       case 'input-indirect-dispatch':
         // The srcBuffer is used as indirectBuffer for dispatch.
@@ -904,8 +904,8 @@ export class BufferSyncTest extends GPUTest {
             this.encodeReadAsStorageBufferInComputePass(computePass, srcBuffer, dstBuffer);
             break;
           default:
-            unreachable();}
-
+            unreachable();
+        }
         break;
       case 'b2b-copy':
         assert(helper.commandEncoder !== undefined);
@@ -916,8 +916,8 @@ export class BufferSyncTest extends GPUTest {
         this.encodeReadByB2TCopy(helper.commandEncoder, srcBuffer, dstBuffer);
         break;
       default:
-        unreachable();}
-
+        unreachable();
+    }
   }
 
   verifyData(buffer, expectedValue) {
@@ -934,10 +934,10 @@ export class BufferSyncTest extends GPUTest {
     const bufferData2 = new Uint32Array(1);
     bufferData2[0] = expectedValue2;
     this.expectGPUBufferValuesPassCheck(
-    buffer,
-    (a) => checkElementsEqualEither(a, [bufferData1, bufferData2]),
-    { type: Uint32Array, typedLength: 1 });
-
+      buffer,
+      (a) => checkElementsEqualEither(a, [bufferData1, bufferData2]),
+      { type: Uint32Array, typedLength: 1 }
+    );
   }
 }
 //# sourceMappingURL=buffer_sync_test.js.map

@@ -9,21 +9,21 @@ params(kMaximumLimitBaseParams).
 fn(async (t) => {
   const { limitTest, testValueName } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    await t.testForValidationErrorWithPossibleOutOfMemoryError(
-    () => {
-      const buffer = device.createBuffer({
-        usage: GPUBufferUsage.VERTEX,
-        size: testValue
-      });
-      buffer.destroy();
-    },
-    shouldError,
-    `size: ${testValue}, limit: ${actualLimit}`);
-
-  });
-
+    limitTest,
+    testValueName,
+    async ({ device, testValue, actualLimit, shouldError }) => {
+      await t.testForValidationErrorWithPossibleOutOfMemoryError(
+        () => {
+          const buffer = device.createBuffer({
+            usage: GPUBufferUsage.VERTEX,
+            size: testValue
+          });
+          buffer.destroy();
+        },
+        shouldError,
+        `size: ${testValue}, limit: ${actualLimit}`
+      );
+    }
+  );
 });
 //# sourceMappingURL=maxBufferSize.spec.js.map

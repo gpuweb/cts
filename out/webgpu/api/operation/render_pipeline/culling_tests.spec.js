@@ -32,8 +32,8 @@ class CullingTest extends TextureTestMixin(GPUTest) {
   {
     this.expectSinglePixelComparisonsAreOkInTexture({ texture }, [
     { coord: { x: 0, y: 0 }, exp: expectedTopLeftColor },
-    { coord: { x: texture.width - 1, y: texture.height - 1 }, exp: expectedBottomRightColor }]);
-
+    { coord: { x: texture.width - 1, y: texture.height - 1 }, exp: expectedBottomRightColor }]
+    );
   }
 
   drawFullClipSpaceTriangleAndCheckCornerPixels(
@@ -60,11 +60,11 @@ class CullingTest extends TextureTestMixin(GPUTest) {
     });
 
     pass.setPipeline(
-    device.createRenderPipeline({
-      layout: 'auto',
-      vertex: {
-        module: device.createShaderModule({
-          code: `
+      device.createRenderPipeline({
+        layout: 'auto',
+        vertex: {
+          module: device.createShaderModule({
+            code: `
               @vertex fn main(
                 @builtin(vertex_index) VertexIndex : u32
                 ) -> @builtin(position) vec4<f32> {
@@ -74,25 +74,25 @@ class CullingTest extends TextureTestMixin(GPUTest) {
                     vec2<f32>(-1.0,  3.0));
                 return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
               }`
-        }),
-        entryPoint: 'main'
-      },
-      fragment: {
-        module: device.createShaderModule({
-          code: `
+          }),
+          entryPoint: 'main'
+        },
+        fragment: {
+          module: device.createShaderModule({
+            code: `
               @fragment fn main() -> @location(0) vec4<f32> {
                 return vec4f(${Array.from(color).map((v) => v / 255)});
               }`
-        }),
-        entryPoint: 'main',
-        targets: [{ format }]
-      },
-      primitive: {
-        topology
-      },
-      depthStencil
-    }));
-
+          }),
+          entryPoint: 'main',
+          targets: [{ format }]
+        },
+        primitive: {
+          topology
+        },
+        depthStencil
+      })
+    );
     pass.draw(3);
     pass.end();
 
@@ -106,7 +106,7 @@ export const g = makeTestGroup(CullingTest);
 
 g.test('culling').
 desc(
-`
+  `
     Test 2 triangles with different winding orders:
 
     - Test that the counter-clock wise triangle has correct output for:
@@ -120,8 +120,8 @@ desc(
       - All CullModes (none, front, back)
       - All depth stencil attachment types (none, depth24plus, depth32float, depth24plus-stencil8)
       - Some primitive topologies (triangle-list, triangle-strip)
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('frontFace', ['ccw', 'cw']).
@@ -131,10 +131,10 @@ combine('depthStencilFormat', [
 null,
 'depth24plus',
 'depth32float',
-'depth24plus-stencil8']).
-
-combine('topology', ['triangle-list', 'triangle-strip'])).
-
+'depth24plus-stencil8']
+).
+combine('topology', ['triangle-list', 'triangle-strip'])
+).
 fn((t) => {
   const { frontFace, cullMode, depthStencilFormat, topology } = t.params;
   const size = 4;
@@ -228,18 +228,18 @@ fn((t) => {
   //         |
   //         4
   pass.setPipeline(
-  t.device.createRenderPipeline({
-    layout: 'auto',
-    vertex: {
-      module: t.device.createShaderModule({
-        code: `
+    t.device.createRenderPipeline({
+      layout: 'auto',
+      vertex: {
+        module: t.device.createShaderModule({
+          code: `
               @vertex fn main(
                 @builtin(vertex_index) VertexIndex : u32
                 ) -> @builtin(position) vec4<f32> {
                   var pos : array<vec2<f32>, 6> = array<vec2<f32>, 6>(
                 ${
-        topology === 'triangle-list' ?
-        `
+          topology === 'triangle-list' ?
+          `
                     vec2<f32>(-1.0,  1.0),
                     vec2<f32>(-1.0,  0.0),
                     vec2<f32>( 0.0,  1.0),
@@ -247,7 +247,7 @@ fn((t) => {
                     vec2<f32>( 1.0,  0.0),
                     vec2<f32>( 1.0, -1.0));
                 ` :
-        `
+          `
                     vec2<f32>( 0.0,  2.0),
                     vec2<f32>(-2.0,  0.0),
                     vec2<f32>( 0.0,  0.0),
@@ -255,15 +255,15 @@ fn((t) => {
                     vec2<f32>( 0.0, -2.0),
                     vec2<f32>( 2.0,  0.0));
                 `
-        }
+          }
                 return vec4<f32>(pos[VertexIndex], 0.0, 1.0);
               }`
-      }),
-      entryPoint: 'main'
-    },
-    fragment: {
-      module: t.device.createShaderModule({
-        code: `
+        }),
+        entryPoint: 'main'
+      },
+      fragment: {
+        module: t.device.createShaderModule({
+          code: `
               @fragment fn main(
                 @builtin(front_facing) FrontFacing : bool
                 ) -> @location(0) vec4<f32> {
@@ -275,18 +275,18 @@ fn((t) => {
                 }
                 return color;
               }`
-      }),
-      entryPoint: 'main',
-      targets: [{ format }]
-    },
-    primitive: {
-      topology,
-      frontFace,
-      cullMode
-    },
-    depthStencil
-  }));
-
+        }),
+        entryPoint: 'main',
+        targets: [{ format }]
+      },
+      primitive: {
+        topology,
+        frontFace,
+        cullMode
+      },
+      depthStencil
+    })
+  );
   pass.draw(6);
   pass.end();
 
@@ -320,15 +320,15 @@ fn((t) => {
     kCWTriangleBottomRightColor;
 
     t.drawFullClipSpaceTriangleAndCheckCornerPixels(
-    texture,
-    format,
-    topology,
-    k2ndDrawColor,
-    depthStencil,
-    depthStencilAttachment,
-    kExpectedTopLeftColor,
-    kExpectedBottomRightColor);
-
+      texture,
+      format,
+      topology,
+      k2ndDrawColor,
+      depthStencil,
+      depthStencilAttachment,
+      kExpectedTopLeftColor,
+      kExpectedBottomRightColor
+    );
 
     if (haveStencil) {
       // draw a triangle that covers all of clip space in cyan with the stencil
@@ -345,15 +345,15 @@ fn((t) => {
       kCWTriangleBottomRightColor;
 
       t.drawFullClipSpaceTriangleAndCheckCornerPixels(
-      texture,
-      format,
-      topology,
-      k3rdDrawColor,
-      depthStencil,
-      depthStencilAttachment,
-      kExpectedTopLeftColor,
-      kExpectedBottomRightColor);
-
+        texture,
+        format,
+        topology,
+        k3rdDrawColor,
+        depthStencil,
+        depthStencilAttachment,
+        kExpectedTopLeftColor,
+        kExpectedBottomRightColor
+      );
     }
   }
 });

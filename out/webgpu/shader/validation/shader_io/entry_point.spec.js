@@ -8,8 +8,8 @@ export const g = makeTestGroup(ShaderValidationTest);
 g.test('missing_attribute_on_param').
 desc(`Test that an entry point without an IO attribute on one of its parameters is rejected.`).
 params((u) =>
-u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()).
-
+u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()
+).
 fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
@@ -39,11 +39,11 @@ fn comp_main(@builtin(global_invocation_id) a : vec3<u32>,
 
 g.test('missing_attribute_on_param_struct').
 desc(
-`Test that an entry point struct parameter without an IO attribute on one of its members is rejected.`).
-
+  `Test that an entry point struct parameter without an IO attribute on one of its members is rejected.`
+).
 params((u) =>
-u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()).
-
+u.combine('target_stage', ['', 'vertex', 'fragment', 'compute']).beginSubcases()
+).
 fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';
   const fragment_attr = t.params.target_stage === 'fragment' ? '' : '@location(1)';
@@ -103,8 +103,8 @@ fn frag_main() -> ${fragment_attr} vec4<f32> {
 
 g.test('missing_attribute_on_return_type_struct').
 desc(
-`Test that an entry point struct return type without an IO attribute on one of its members is rejected.`).
-
+  `Test that an entry point struct return type without an IO attribute on one of its members is rejected.`
+).
 params((u) => u.combine('target_stage', ['', 'vertex', 'fragment']).beginSubcases()).
 fn((t) => {
   const vertex_attr = t.params.target_stage === 'vertex' ? '' : '@location(1)';

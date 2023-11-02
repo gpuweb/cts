@@ -53,7 +53,7 @@ function formatTableWithDefaults<Defaults extends {}, Table extends { readonly [
       ? Table[F][K]
       : K extends keyof Defaults
       ? Defaults[K]
-      : typeof kFormatUniversalDefaults[K];
+      : (typeof kFormatUniversalDefaults)[K];
   };
 } {
   return Object.fromEntries(

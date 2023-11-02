@@ -12,7 +12,7 @@ import { TexelView } from './texel_view.js';
 
 
 
-
+/** Threshold options for comparing texels of different formats (norm/float/int). */
 
 
 
@@ -75,24 +75,24 @@ opts)
   } else if (fmtIsNorm && maxDiffULPsForNormFormat !== undefined) {
     tvc.predicate = (coords) =>
     comparePerComponent(
-    actTexelView.ulpFromZero(coords),
-    expTexelView.ulpFromZero(coords),
-    maxDiffULPsForNormFormat);
-
+      actTexelView.ulpFromZero(coords),
+      expTexelView.ulpFromZero(coords),
+      maxDiffULPsForNormFormat
+    );
   } else if (fmtIsFloat && maxDiffULPsForFloatFormat !== undefined) {
     tvc.predicate = (coords) =>
     comparePerComponent(
-    actTexelView.ulpFromZero(coords),
-    expTexelView.ulpFromZero(coords),
-    maxDiffULPsForFloatFormat);
-
+      actTexelView.ulpFromZero(coords),
+      expTexelView.ulpFromZero(coords),
+      maxDiffULPsForFloatFormat
+    );
   } else if (maxFractionalDiff !== undefined) {
     tvc.predicate = (coords) =>
     comparePerComponent(
-    actTexelView.color(coords),
-    expTexelView.color(coords),
-    maxFractionalDiff);
-
+      actTexelView.color(coords),
+      expTexelView.color(coords),
+      maxFractionalDiff
+    );
   } else {
     if (fmtIsNorm) {
       unreachable('need maxFractionalDiff or maxDiffULPsForNormFormat to compare norm textures');
@@ -197,10 +197,10 @@ texelCompareOptions,
 coords)
 {
   const comparer = makeTexelViewComparer(
-  format,
-  { actTexelView, expTexelView },
-  texelCompareOptions);
-
+    format,
+    { actTexelView, expTexelView },
+    texelCompareOptions
+  );
 
   const lowerCorner = [subrectSize.width, subrectSize.height, subrectSize.depthOrArrayLayers];
   const upperCorner = [0, 0, 0];
@@ -283,8 +283,8 @@ ${generatePrettyTable(opts, [
   printExpectedColors,
   printActualULPs,
   printExpectedULPs,
-  ...comparer.tableRows(failedPixels)])
-  }`;
+  ...comparer.tableRows(failedPixels)]
+  )}`;
 }
 
 /**
@@ -308,11 +308,11 @@ coords)
   const format = expTexelView.format;
 
   const { buffer, bytesPerRow, rowsPerImage } = createTextureCopyForMapRead(
-  t,
-  source,
-  subrectSize,
-  { format });
-
+    t,
+    source,
+    subrectSize,
+    { format }
+  );
 
   await buffer.mapAsync(GPUMapMode.READ);
   const data = new Uint8Array(buffer.getMappedRange());
@@ -327,13 +327,13 @@ coords)
   const actTexelView = TexelView.fromTextureDataByReference(format, data, texelViewConfig);
 
   const failedPixelsMessage = findFailedPixels(
-  format,
-  subrectOrigin,
-  subrectSize,
-  { actTexelView, expTexelView },
-  texelCompareOptions,
-  coords);
-
+    format,
+    subrectOrigin,
+    subrectSize,
+    { actTexelView, expTexelView },
+    texelCompareOptions,
+    coords
+  );
 
   if (failedPixelsMessage === undefined) {
     return undefined;

@@ -112,8 +112,8 @@ function getDstIndexExpression(i, pattern) {
       // Odd elements map to themselves.
       return `select(${i}, ${kNumValues} - 2 - ${i}, (${i} & 1) == 0)`;
     case 3:
-      return `${kNumValues} - 1 -${i}`;}
-
+      return `${kNumValues} - 1 -${i}`;
+  }
 }
 
 /**
@@ -146,8 +146,8 @@ function computeReference(pattern, src, dst) {
         break;
       case 3:
         dst[src.length - 1 - i] = src[i];
-        break;}
-
+        break;
+    }
   }
 }
 
@@ -263,8 +263,8 @@ function runTest(t) {
 
 g.test('f16').
 desc(
-`Check that writes by different invocations to adjacent f16 values in an array do not interfere with each other.`).
-
+  `Check that writes by different invocations to adjacent f16 values in an array do not interfere with each other.`
+).
 params((u) => u.combine('addressSpace', kAddressSpaces).combine('pattern', kPatterns)).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');

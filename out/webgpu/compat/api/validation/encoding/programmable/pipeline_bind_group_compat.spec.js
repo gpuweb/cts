@@ -195,7 +195,7 @@ const kBindCaseNames = keysOf(kBindCases);
 const kDrawUseCases =
 
 {
-  draw: (t, encoder) => {
+  draw: (_t, encoder) => {
     encoder.draw(3);
   },
   drawIndexed: (t, encoder) => {
@@ -205,18 +205,18 @@ const kDrawUseCases =
   },
   drawIndirect(t, encoder) {
     const indirectBuffer = t.makeBufferWithContents(
-    new Uint32Array([3, 1, 0, 0]),
-    GPUBufferUsage.INDIRECT);
-
+      new Uint32Array([3, 1, 0, 0]),
+      GPUBufferUsage.INDIRECT
+    );
     encoder.drawIndirect(indirectBuffer, 0);
   },
   drawIndexedIndirect(t, encoder) {
     const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 1, 2]), GPUBufferUsage.INDEX);
     encoder.setIndexBuffer(indexBuffer, 'uint16');
     const indirectBuffer = t.makeBufferWithContents(
-    new Uint32Array([3, 1, 0, 0, 0]),
-    GPUBufferUsage.INDIRECT);
-
+      new Uint32Array([3, 1, 0, 0, 0]),
+      GPUBufferUsage.INDIRECT
+    );
     encoder.drawIndexedIndirect(indirectBuffer, 0);
   }
 };
@@ -225,14 +225,14 @@ const kDrawCaseNames = keysOf(kDrawUseCases);
 const kDispatchUseCases =
 
 {
-  dispatchWorkgroups(t, encoder) {
+  dispatchWorkgroups(_t, encoder) {
     encoder.dispatchWorkgroups(1);
   },
   dispatchWorkgroupsIndirect(t, encoder) {
     const indirectBuffer = t.makeBufferWithContents(
-    new Uint32Array([1, 1, 1]),
-    GPUBufferUsage.INDIRECT);
-
+      new Uint32Array([1, 1, 1]),
+      GPUBufferUsage.INDIRECT
+    );
     encoder.dispatchWorkgroupsIndirect(indirectBuffer, 0);
   }
 };
@@ -299,7 +299,7 @@ export const g = makeTestGroup(CompatibilityTest);
 
 g.test('twoDifferentTextureViews,render_pass,used').
 desc(
-`
+  `
 Tests that you can not use 2 different views of the same texture in a render pass in compat mode.
 
 - Test you can not use incompatible views in the same bindGroup
@@ -309,8 +309,8 @@ Tests that you can not use 2 different views of the same texture in a render pas
 
   The last test is to check validation happens at the correct time (draw/dispatch) and not
   at setBindGroup.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('encoderType', kRenderEncodeTypes).
@@ -318,17 +318,17 @@ combine('bindCase', kBindCaseNames).
 combine('useCase', kDrawCaseNames).
 combine('textureType', kTextureTypes).
 filter(
-// storage textures can't have 2 bind groups point to the same
-// view even in non-compat. They can have different views in
-// non-compat but not compat.
-(p) =>
-!(
-p.textureType === 'storage' && (
-p.bindCase === 'can bind same view in different bindGroups' ||
-p.bindCase === 'binding incompatible bindGroups then fix')))).
+  // storage textures can't have 2 bind groups point to the same
+  // view even in non-compat. They can have different views in
+  // non-compat but not compat.
+  (p) =>
+  !(
+  p.textureType === 'storage' && (
+  p.bindCase === 'can bind same view in different bindGroups' ||
+  p.bindCase === 'binding incompatible bindGroups then fix'))
 
-
-
+)
+).
 fn((t) => {
   const { encoderType, bindCase, useCase, textureType } = t.params;
   const { bindConfig, fn } = kBindCases[bindCase];
@@ -342,18 +342,18 @@ fn((t) => {
 
 g.test('twoDifferentTextureViews,render_pass,unused').
 desc(
-`
+  `
 Tests that binding 2 different views of the same texture but not using them does not generate a validation error.
-    `).
-
+    `
+).
 params((u) => u.combine('encoderType', kRenderEncodeTypes).combine('textureType', kTextureTypes)).
 fn((t) => {
   const { encoderType, textureType } = t.params;
   const { texture, pipeline } = createResourcesForRenderPassTest(
-  t,
-  textureType,
-  'two bindgroups');
-
+    t,
+    textureType,
+    'two bindgroups'
+  );
   const { encoder, validateFinish } = t.createEncoder(encoderType);
   encoder.setPipeline(pipeline);
   createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(t.device, pipeline, encoder, texture);
@@ -362,7 +362,7 @@ fn((t) => {
 
 g.test('twoDifferentTextureViews,compute_pass,used').
 desc(
-`
+  `
 Tests that you can not use 2 different views of the same texture in a compute pass in compat mode.
 
 - Test you can not use incompatible views in the same bindGroup
@@ -372,25 +372,25 @@ Tests that you can not use 2 different views of the same texture in a compute pa
 
   The last test is to check validation happens at the correct time (draw/dispatch) and not
   at setBindGroup.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('bindCase', kBindCaseNames).
 combine('useCase', kDispatchCaseNames).
 combine('textureType', kTextureTypes).
 filter(
-// storage textures can't have 2 bind groups point to the same
-// view even in non-compat. They can have different views in
-// non-compat but not compat.
-(p) =>
-!(
-p.textureType === 'storage' && (
-p.bindCase === 'can bind same view in different bindGroups' ||
-p.bindCase === 'binding incompatible bindGroups then fix')))).
+  // storage textures can't have 2 bind groups point to the same
+  // view even in non-compat. They can have different views in
+  // non-compat but not compat.
+  (p) =>
+  !(
+  p.textureType === 'storage' && (
+  p.bindCase === 'can bind same view in different bindGroups' ||
+  p.bindCase === 'binding incompatible bindGroups then fix'))
 
-
-
+)
+).
 fn((t) => {
   const { bindCase, useCase, textureType } = t.params;
   const { bindConfig, fn } = kBindCases[bindCase];
@@ -404,18 +404,18 @@ fn((t) => {
 
 g.test('twoDifferentTextureViews,compute_pass,unused').
 desc(
-`
+  `
 Tests that binding 2 different views of the same texture but not using them does not generate a validation error.
-    `).
-
+    `
+).
 params((u) => u.combine('textureType', kTextureTypes)).
 fn((t) => {
   const { textureType } = t.params;
   const { texture, pipeline } = createResourcesForComputePassTest(
-  t,
-  textureType,
-  'two bindgroups');
-
+    t,
+    textureType,
+    'two bindgroups'
+  );
   const { encoder, validateFinish } = t.createEncoder('compute pass');
   encoder.setPipeline(pipeline);
   createAndBindTwoBindGroupsWithDifferentViewsOfSameTexture(t.device, pipeline, encoder, texture);

@@ -88,8 +88,8 @@ combine('scope', [
 'fn-decl',
 'fn-var',
 'while-stmt',
-undefined]).
-
+undefined]
+).
 combine('attribute', [
 {
   'private-var': false,
@@ -101,10 +101,10 @@ combine('attribute', [
   'fn-var': false,
   'fn-return': false,
   'while-stmt': false
-}]).
-
-beginSubcases()).
-
+}]
+).
+beginSubcases()
+).
 fn((t) => {
   const scope = t.params.scope;
 

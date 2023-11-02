@@ -41,8 +41,8 @@ export function getPipelineTypeForBindingCombination(bindingCombination) {
     case 'vertexAndFragmentWithPossibleFragmentStageOverflow':
       return 'createRenderPipelineWithFragmentStage';
     case 'compute':
-      return 'createComputePipeline';}
-
+      return 'createComputePipeline';
+  }
 }
 
 function getBindGroupIndex(bindGroupTest, i) {
@@ -50,8 +50,8 @@ function getBindGroupIndex(bindGroupTest, i) {
     case 'sameGroup':
       return 0;
     case 'differentGroups':
-      return i % 3;}
-
+      return i % 3;
+  }
 }
 
 function getWGSLBindings(
@@ -62,16 +62,16 @@ numBindings,
 id)
 {
   return reorder(
-  order,
-  range(
-  numBindings,
-  (i) =>
-  `@group(${getBindGroupIndex(
-  bindGroupTest,
-  i)
-  }) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`)).
-
-  join('\n        ');
+    order,
+    range(
+      numBindings,
+      (i) =>
+      `@group(${getBindGroupIndex(
+        bindGroupTest,
+        i
+      )}) @binding(${i}) ${storageDefinitionWGSLSnippetFn(i, id)};`
+    )
+  ).join('\n        ');
 }
 
 export function getPerStageWGSLForBindingCombinationImpl(
@@ -154,8 +154,8 @@ extraWGSL = '')
           ${bodyFn(numBindings, 0)}
         }
       `;
-      break;}
-
+      break;
+  }
 }
 
 export function getPerStageWGSLForBindingCombination(
@@ -168,15 +168,15 @@ numBindings,
 extraWGSL = '')
 {
   return getPerStageWGSLForBindingCombinationImpl(
-  bindingCombination,
-  order,
-  bindGroupTest,
-  storageDefinitionWGSLSnippetFn,
-  (numBindings, set) =>
-  `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
-  numBindings,
-  extraWGSL);
-
+    bindingCombination,
+    order,
+    bindGroupTest,
+    storageDefinitionWGSLSnippetFn,
+    (numBindings, set) =>
+    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
+    numBindings,
+    extraWGSL
+  );
 }
 
 export function getPerStageWGSLForBindingCombinationStorageTextures(
@@ -189,15 +189,15 @@ numBindings,
 extraWGSL = '')
 {
   return getPerStageWGSLForBindingCombinationImpl(
-  bindingCombination,
-  order,
-  bindGroupTest,
-  storageDefinitionWGSLSnippetFn,
-  (numBindings, set) =>
-  `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
-  numBindings,
-  extraWGSL);
-
+    bindingCombination,
+    order,
+    bindGroupTest,
+    storageDefinitionWGSLSnippetFn,
+    (numBindings, set) =>
+    `${range(numBindings, (i) => usageWGSLSnippetFn(i, set)).join('\n          ')}`,
+    numBindings,
+    extraWGSL
+  );
 }
 
 export const kLimitModes = ['defaultLimit', 'adapterLimit'];
@@ -212,8 +212,8 @@ export function getMaximumTestValue(limit, testValue) {
     case 'atLimit':
       return limit;
     case 'overLimit':
-      return limit + 1;}
-
+      return limit + 1;
+  }
 }
 
 export const kMinimumTestValues = ['atLimit', 'underLimit'];
@@ -244,8 +244,8 @@ limitValueTest)
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
-      return maximumLimit + 1;}
-
+      return maximumLimit + 1;
+  }
 }
 
 export const kMinimumLimitValueTests = [
@@ -281,8 +281,8 @@ export function getDefaultLimitForAdapter(adapter, limit) {
 
 const kMinimumLimits = new Set([
 'minUniformBufferOffsetAlignment',
-'minStorageBufferOffsetAlignment']);
-
+'minStorageBufferOffsetAlignment']
+);
 
 /**
  * Adds the default parameters to a limit test
@@ -344,8 +344,8 @@ export class LimitTestsImpl extends GPUTestBase {
       case 'defaultLimit':
         return getDefaultLimitForAdapter(this.adapter, limit);
       case 'adapterLimit':
-        return this.adapter.limits[limit];}
-
+        return this.adapter.limits[limit];
+    }
   }
 
   /**
@@ -378,11 +378,11 @@ export class LimitTestsImpl extends GPUTestBase {
     requestedLimit > adapterLimit;
 
     const device = await this.requestDeviceWithLimits(
-    adapter,
-    requiredLimits,
-    shouldReject,
-    features);
-
+      adapter,
+      requiredLimits,
+      shouldReject,
+      features
+    );
     const actualLimit = device ? device.limits[limit] : 0;
 
     if (shouldReject) {
@@ -391,26 +391,26 @@ export class LimitTestsImpl extends GPUTestBase {
       if (kMinimumLimits.has(limit)) {
         if (requestedLimit <= defaultLimit) {
           this.expect(
-          actualLimit === requestedLimit,
-          `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${requestedLimit}`);
-
+            actualLimit === requestedLimit,
+            `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${requestedLimit}`
+          );
         } else {
           this.expect(
-          actualLimit === defaultLimit,
-          `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`);
-
+            actualLimit === defaultLimit,
+            `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`
+          );
         }
       } else {
         if (requestedLimit <= defaultLimit) {
           this.expect(
-          actualLimit === defaultLimit,
-          `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`);
-
+            actualLimit === defaultLimit,
+            `expected actual actualLimit: ${actualLimit} to equal defaultLimit: ${defaultLimit}`
+          );
         } else {
           this.expect(
-          actualLimit === requestedLimit,
-          `expected actual actualLimit: ${actualLimit} to equal requestedLimit: ${requestedLimit}`);
-
+            actualLimit === requestedLimit,
+            `expected actual actualLimit: ${actualLimit} to equal requestedLimit: ${requestedLimit}`
+          );
         }
       }
     }
@@ -463,9 +463,9 @@ export class LimitTestsImpl extends GPUTestBase {
 
     this.expect(!validationError, `unexpected validation error: ${validationError?.message || ''}`);
     this.expect(
-    !outOfMemoryError,
-    `unexpected out-of-memory error: ${outOfMemoryError?.message || ''}`);
-
+      !outOfMemoryError,
+      `unexpected out-of-memory error: ${outOfMemoryError?.message || ''}`
+    );
     this.expect(!internalError, `unexpected internal error: ${internalError?.message || ''}`);
 
     device.destroy();
@@ -488,10 +488,10 @@ export class LimitTestsImpl extends GPUTestBase {
     assert(!this._device);
 
     const deviceAndLimits = await this._getDeviceWithSpecificLimit(
-    deviceLimitValue,
-    extraLimits,
-    features);
-
+      deviceLimitValue,
+      extraLimits,
+      features
+    );
     // If we request over the limit requestDevice will throw
     if (!deviceAndLimits) {
       return;
@@ -524,12 +524,12 @@ export class LimitTestsImpl extends GPUTestBase {
     const testValue = getMaximumTestValue(actualLimit, testValueName);
 
     await this._testThenDestroyDevice(
-    deviceAndLimits,
-    testValue,
-    async (inputs) => {
-      await fn({ ...inputs, testValueName });
-    });
-
+      deviceAndLimits,
+      testValue,
+      async (inputs) => {
+        await fn({ ...inputs, testValueName });
+      }
+    );
   }
 
   /**
@@ -552,9 +552,9 @@ export class LimitTestsImpl extends GPUTestBase {
 
     const error = await device.popErrorScope();
     this.expect(
-    !!error === shouldError,
-    `${error?.message || 'no error when one was expected'}: ${msg}`);
-
+      !!error === shouldError,
+      `${error?.message || 'no error when one was expected'}: ${msg}`
+    );
 
     return returnValue;
   }
@@ -584,7 +584,11 @@ export class LimitTestsImpl extends GPUTestBase {
   /**
    * Calls a function that expects a validation error if shouldError is true
    */
-  async expectValidationError(fn, shouldError = true, msg = '') {
+  async expectValidationError(
+  fn,
+  shouldError = true,
+  msg = '')
+  {
     return this.expectGPUErrorAsync('validation', fn, shouldError, msg);
   }
 
@@ -621,9 +625,9 @@ export class LimitTestsImpl extends GPUTestBase {
     const validationError = await device.popErrorScope();
 
     this.expect(
-    !!validationError,
-    `${validationError?.message || 'no error when one was expected'}: ${msg}`);
-
+      !!validationError,
+      `${validationError?.message || 'no error when one was expected'}: ${msg}`
+    );
 
     return returnValue;
   }
@@ -654,8 +658,8 @@ export class LimitTestsImpl extends GPUTestBase {
             _ = v;
           }
         `;
-        break;}
-
+        break;
+    }
   }
 
   getBindingIndexWGSLForPipelineType(pipelineType, bindingIndex) {
@@ -684,8 +688,8 @@ export class LimitTestsImpl extends GPUTestBase {
             _ = v;
           }
         `;
-        break;}
-
+        break;
+    }
   }
 
   _createRenderPipelineDescriptor(module) {
@@ -739,13 +743,13 @@ export class LimitTestsImpl extends GPUTestBase {
         break;
       case 'createRenderPipelineWithFragmentStage':
         return device.createRenderPipeline(
-        this._createRenderPipelineDescriptorWithFragmentShader(module));
-
+          this._createRenderPipelineDescriptorWithFragmentShader(module)
+        );
         break;
       case 'createComputePipeline':
         return device.createComputePipeline(this._createComputePipelineDescriptor(module));
-        break;}
-
+        break;
+    }
   }
 
   createPipelineAsync(createPipelineType, module) {
@@ -756,11 +760,11 @@ export class LimitTestsImpl extends GPUTestBase {
         return device.createRenderPipelineAsync(this._createRenderPipelineDescriptor(module));
       case 'createRenderPipelineWithFragmentStage':
         return device.createRenderPipelineAsync(
-        this._createRenderPipelineDescriptorWithFragmentShader(module));
-
+          this._createRenderPipelineDescriptorWithFragmentShader(module)
+        );
       case 'createComputePipeline':
-        return device.createComputePipelineAsync(this._createComputePipelineDescriptor(module));}
-
+        return device.createComputePipelineAsync(this._createComputePipelineDescriptor(module));
+    }
   }
 
   async testCreatePipeline(
@@ -772,19 +776,19 @@ export class LimitTestsImpl extends GPUTestBase {
   {
     if (async) {
       await this.shouldRejectConditionally(
-      'GPUPipelineError',
-      this.createPipelineAsync(createPipelineType, module),
-      shouldError,
-      msg);
-
+        'GPUPipelineError',
+        this.createPipelineAsync(createPipelineType, module),
+        shouldError,
+        msg
+      );
     } else {
       await this.expectValidationError(
-      () => {
-        this.createPipeline(createPipelineType, module);
-      },
-      shouldError,
-      msg);
-
+        () => {
+          this.createPipeline(createPipelineType, module);
+        },
+        shouldError,
+        msg
+      );
     }
   }
 
@@ -797,19 +801,19 @@ export class LimitTestsImpl extends GPUTestBase {
     const { device } = this;
     if (async) {
       await this.shouldRejectConditionally(
-      'GPUPipelineError',
-      device.createRenderPipelineAsync(pipelineDescriptor),
-      shouldError,
-      msg);
-
+        'GPUPipelineError',
+        device.createRenderPipelineAsync(pipelineDescriptor),
+        shouldError,
+        msg
+      );
     } else {
       await this.expectValidationError(
-      () => {
-        device.createRenderPipeline(pipelineDescriptor);
-      },
-      shouldError,
-      msg);
-
+        () => {
+          device.createRenderPipeline(pipelineDescriptor);
+        },
+        shouldError,
+        msg
+      );
     }
   }
 
@@ -824,27 +828,27 @@ export class LimitTestsImpl extends GPUTestBase {
     };
 
     await this.testDeviceWithRequestedMaximumLimits(
-    limitTest,
-    testValueName,
-    async ({ device, testValue, actualLimit, shouldError }) => {
-      if (testValue > device.limits.maxComputeInvocationsPerWorkgroup) {
-        return;
-      }
+      limitTest,
+      testValueName,
+      async ({ device, testValue, actualLimit, shouldError }) => {
+        if (testValue > device.limits.maxComputeInvocationsPerWorkgroup) {
+          return;
+        }
 
-      const size = [1, 1, 1];
-      size[axis.codePointAt(0) - 'X'.codePointAt(0)] = testValue;
-      const { module, code } = this.getModuleForWorkgroupSize(size);
+        const size = [1, 1, 1];
+        size[axis.codePointAt(0) - 'X'.codePointAt(0)] = testValue;
+        const { module, code } = this.getModuleForWorkgroupSize(size);
 
-      await this.testCreatePipeline(
-      'createComputePipeline',
-      async,
-      module,
-      shouldError,
-      `size: ${testValue}, limit: ${actualLimit}\n${code}`);
-
-    },
-    kExtraLimits);
-
+        await this.testCreatePipeline(
+          'createComputePipeline',
+          async,
+          module,
+          shouldError,
+          `size: ${testValue}, limit: ${actualLimit}\n${code}`
+        );
+      },
+      kExtraLimits
+    );
   }
 
   /**
@@ -856,19 +860,19 @@ export class LimitTestsImpl extends GPUTestBase {
     switch (encoderType) {
       case 'render':{
           const buffer = this.trackForCleanup(
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.UNIFORM
-          }));
-
+            device.createBuffer({
+              size: 16,
+              usage: GPUBufferUsage.UNIFORM
+            })
+          );
 
           const texture = this.trackForCleanup(
-          device.createTexture({
-            size: [1, 1],
-            format: 'rgba8unorm',
-            usage: GPUTextureUsage.RENDER_ATTACHMENT
-          }));
-
+            device.createTexture({
+              size: [1, 1],
+              format: 'rgba8unorm',
+              usage: GPUTextureUsage.RENDER_ATTACHMENT
+            })
+          );
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -916,11 +920,11 @@ export class LimitTestsImpl extends GPUTestBase {
 
       case 'renderBundle':{
           const buffer = this.trackForCleanup(
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.UNIFORM
-          }));
-
+            device.createBuffer({
+              size: 16,
+              usage: GPUBufferUsage.UNIFORM
+            })
+          );
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -955,8 +959,8 @@ export class LimitTestsImpl extends GPUTestBase {
             }
           };
           break;
-        }}
-
+        }
+    }
   }
 
   /**
@@ -985,11 +989,11 @@ export class LimitTestsImpl extends GPUTestBase {
     switch (encoderType) {
       case 'compute':{
           const buffer = this.trackForCleanup(
-          device.createBuffer({
-            size: 16,
-            usage: GPUBufferUsage.UNIFORM
-          }));
-
+            device.createBuffer({
+              size: 16,
+              usage: GPUBufferUsage.UNIFORM
+            })
+          );
 
           const layout = device.createBindGroupLayout({
             entries: [
@@ -1028,8 +1032,8 @@ export class LimitTestsImpl extends GPUTestBase {
       case 'render':
         return this._getGPURenderCommandsMixin('render');
       case 'renderBundle':
-        return this._getGPURenderCommandsMixin('renderBundle');}
-
+        return this._getGPURenderCommandsMixin('renderBundle');
+    }
   }
 
   /**

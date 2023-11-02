@@ -18,11 +18,11 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
 
-TypeF32,
-TypeF16,
-TypeI32,
-TypeU32,
-TypeAbstractFloat } from
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeU32,
+  TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { sparseF32Range, sparseF16Range, sparseF64Range } from '../../../../../util/math.js';
@@ -91,9 +91,9 @@ stage)
   test_values.map((e) => ({
     input: [type.create(e), type.create(low), type.create(high)],
     expected: type.create(Math.min(Math.max(e, low), high))
-  }))));
-
-
+  }))
+  )
+  );
 }
 
 function generateFloatTestCases(
@@ -107,32 +107,32 @@ stage)
   [] :
   test_values.flatMap((e) => {
     const c = FP[trait].makeScalarTripleToIntervalCase(
-    e,
-    low,
-    high,
-    stage === 'const' ? 'finite' : 'unfiltered',
-    ...FP[trait].clampIntervals);
-
+      e,
+      low,
+      high,
+      stage === 'const' ? 'finite' : 'unfiltered',
+      ...FP[trait].clampIntervals
+    );
     return c === undefined ? [] : [c];
-  })));
-
-
+  })
+  )
+  );
 }
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`abstract int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 unimplemented();
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`u32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'u32_const' : 'u32_non_const');
   await run(t, builtin('clamp'), [TypeU32, TypeU32, TypeU32], TypeU32, t.params, cases);
@@ -142,8 +142,8 @@ g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`i32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'i32_const' : 'i32_non_const');
   await run(t, builtin('clamp'), [TypeI32, TypeI32, TypeI32], TypeI32, t.params, cases);
@@ -155,26 +155,26 @@ desc(`abstract float tests`).
 params((u) =>
 u.
 combine('inputSource', onlyConstInputSource).
-combine('vectorize', [undefined, 2, 3, 4])).
-
+combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('abstract');
   await run(
-  t,
-  abstractBuiltin('clamp'),
-  [TypeAbstractFloat, TypeAbstractFloat, TypeAbstractFloat],
-  TypeAbstractFloat,
-  t.params,
-  cases);
-
+    t,
+    abstractBuiltin('clamp'),
+    [TypeAbstractFloat, TypeAbstractFloat, TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
 });
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
   await run(t, builtin('clamp'), [TypeF32, TypeF32, TypeF32], TypeF32, t.params, cases);
@@ -184,8 +184,8 @@ g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`f16 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase('shader-f16');
 }).

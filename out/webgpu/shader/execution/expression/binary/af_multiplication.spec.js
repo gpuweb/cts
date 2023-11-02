@@ -25,11 +25,11 @@ export const g = makeTestGroup(GPUTest);
 const scalar_cases = {
   ['scalar']: () => {
     return FP.abstract.generateScalarPairToIntervalCases(
-    sparseF64Range(),
-    sparseF64Range(),
-    'finite',
-    FP.abstract.multiplicationInterval);
-
+      sparseF64Range(),
+      sparseF64Range(),
+      'finite',
+      FP.abstract.multiplicationInterval
+    );
   }
 };
 
@@ -37,11 +37,11 @@ const vector_scalar_cases = [2, 3, 4].
 map((dim) => ({
   [`vec${dim}_scalar`]: () => {
     return FP.abstract.generateVectorScalarToVectorCases(
-    sparseVectorF64Range(dim),
-    sparseF64Range(),
-    'finite',
-    multiplicationVectorScalarInterval);
-
+      sparseVectorF64Range(dim),
+      sparseF64Range(),
+      'finite',
+      multiplicationVectorScalarInterval
+    );
   }
 })).
 reduce((a, b) => ({ ...a, ...b }), {});
@@ -50,11 +50,11 @@ const scalar_vector_cases = [2, 3, 4].
 map((dim) => ({
   [`scalar_vec${dim}`]: () => {
     return FP.abstract.generateScalarVectorToVectorCases(
-    sparseF64Range(),
-    sparseVectorF64Range(dim),
-    'finite',
-    multiplicationScalarVectorInterval);
-
+      sparseF64Range(),
+      sparseVectorF64Range(dim),
+      'finite',
+      multiplicationScalarVectorInterval
+    );
   }
 })).
 reduce((a, b) => ({ ...a, ...b }), {});
@@ -68,88 +68,88 @@ export const d = makeCaseCache('binary/af_multiplication', {
 g.test('scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x and y are scalars
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', onlyConstInputSource)).
 fn(async (t) => {
   const cases = await d.get('scalar');
   await run(
-  t,
-  abstractBinary('*'),
-  [TypeAbstractFloat, TypeAbstractFloat],
-  TypeAbstractFloat,
-  t.params,
-  cases);
-
+    t,
+    abstractBinary('*'),
+    [TypeAbstractFloat, TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
 });
 
 g.test('vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x and y are vectors
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) =>
-u.combine('inputSource', onlyConstInputSource).combine('vectorize', [2, 3, 4])).
-
+u.combine('inputSource', onlyConstInputSource).combine('vectorize', [2, 3, 4])
+).
 fn(async (t) => {
   const cases = await d.get('scalar'); // Using vectorize to generate vector cases based on scalar cases
   await run(
-  t,
-  abstractBinary('*'),
-  [TypeAbstractFloat, TypeAbstractFloat],
-  TypeAbstractFloat,
-  t.params,
-  cases);
-
+    t,
+    abstractBinary('*'),
+    [TypeAbstractFloat, TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
 });
 
 g.test('vector_scalar').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', onlyConstInputSource).combine('dim', [2, 3, 4])).
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(`vec${dim}_scalar`);
   await run(
-  t,
-  abstractBinary('*'),
-  [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
-  TypeVec(dim, TypeAbstractFloat),
-  t.params,
-  cases);
-
+    t,
+    abstractBinary('*'),
+    [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
+    TypeVec(dim, TypeAbstractFloat),
+    t.params,
+    cases
+  );
 });
 
 g.test('scalar_vector').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation').
 desc(
-`
+  `
 Expression: x * y, where x is a scalar and y is a vector
 Accuracy: Correctly rounded
-`).
-
+`
+).
 params((u) => u.combine('inputSource', onlyConstInputSource).combine('dim', [2, 3, 4])).
 fn(async (t) => {
   const dim = t.params.dim;
   const cases = await d.get(`scalar_vec${dim}`);
   await run(
-  t,
-  abstractBinary('*'),
-  [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
-  TypeVec(dim, TypeAbstractFloat),
-  t.params,
-  cases);
-
+    t,
+    abstractBinary('*'),
+    [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
+    TypeVec(dim, TypeAbstractFloat),
+    t.params,
+    cases
+  );
 });
 //# sourceMappingURL=af_multiplication.spec.js.map

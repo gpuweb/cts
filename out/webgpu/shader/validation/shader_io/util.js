@@ -127,9 +127,9 @@ export const kResourceEmitters = new Map([
 [
 'storage',
 (name, group, binding) =>
-`${groupAndBinding(group, binding)} var<storage> ${name} : array<vec4<f32>, 16>;\n`]]);
+`${groupAndBinding(group, binding)} var<storage> ${name} : array<vec4<f32>, 16>;\n`]]
 
-
+);
 
 /** All possible resource types for use as test permutations. */
 export const kResourceKindsAll = [
@@ -191,7 +191,7 @@ fn ${name}() {
       return `@compute @workgroup_size(1)
 fn ${name}() {
   ${body}
-}`;}
-
+}`;
+  }
 }
 //# sourceMappingURL=util.js.map

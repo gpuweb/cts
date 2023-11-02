@@ -5,8 +5,8 @@
 import {
 
 
-kMaximumLimitBaseParams,
-makeLimitTestGroup } from
+  kMaximumLimitBaseParams,
+  makeLimitTestGroup } from
 './limit_utils.js';
 
 const limit = 'maxComputeWorkgroupStorageSize';
@@ -113,8 +113,8 @@ maximumLimit)
     case 'atMaximum':
       return maximumLimit;
     case 'overMaximum':
-      return maximumLimit + kSmallestWorkgroupVarSize;}
-
+      return maximumLimit + kSmallestWorkgroupVarSize;
+  }
 }
 
 function getTestValue(testValueName, requestedLimit) {
@@ -122,8 +122,8 @@ function getTestValue(testValueName, requestedLimit) {
     case 'atLimit':
       return requestedLimit;
     case 'overLimit':
-      return requestedLimit + kSmallestWorkgroupVarSize;}
-
+      return requestedLimit + kSmallestWorkgroupVarSize;
+  }
 }
 
 function getDeviceLimitToRequestAndValueToTest(
@@ -143,8 +143,8 @@ maximumLimit)
 g.test('createComputePipeline,at_over').
 desc(`Test using createComputePipeline(Async) at and over ${limit} limit`).
 params(
-kMaximumLimitBaseParams.combine('async', [false, true]).combine('wgslType', kWGSLTypes)).
-
+  kMaximumLimitBaseParams.combine('async', [false, true]).combine('wgslType', kWGSLTypes)
+).
 fn(async (t) => {
   const { limitTest, testValueName, async, wgslType } = t.params;
   const { defaultLimit, adapterLimit: maximumLimit } = t;
@@ -157,27 +157,27 @@ fn(async (t) => {
   const features = hasF16 ? ['shader-f16'] : [];
 
   const { requestedLimit, testValue } = getDeviceLimitToRequestAndValueToTest(
-  limitTest,
-  testValueName,
-  defaultLimit,
-  maximumLimit);
-
+    limitTest,
+    testValueName,
+    defaultLimit,
+    maximumLimit
+  );
   await t.testDeviceWithSpecificLimits(
-  requestedLimit,
-  testValue,
-  async ({ device, testValue, actualLimit, shouldError }) => {
-    const { module, code } = getModuleForWorkgroupStorageSize(device, wgslType, testValue);
+    requestedLimit,
+    testValue,
+    async ({ device, testValue, actualLimit, shouldError }) => {
+      const { module, code } = getModuleForWorkgroupStorageSize(device, wgslType, testValue);
 
-    await t.testCreatePipeline(
-    'createComputePipeline',
-    async,
-    module,
-    shouldError,
-    `size: ${testValue}, limit: ${actualLimit}\n${code}`);
-
-  },
-  {},
-  features);
-
+      await t.testCreatePipeline(
+        'createComputePipeline',
+        async,
+        module,
+        shouldError,
+        `size: ${testValue}, limit: ${actualLimit}\n${code}`
+      );
+    },
+    {},
+    features
+  );
 });
 //# sourceMappingURL=maxComputeWorkgroupStorageSize.spec.js.map

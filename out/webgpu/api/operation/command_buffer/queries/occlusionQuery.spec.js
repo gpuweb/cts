@@ -21,10 +21,10 @@ API operations tests for occlusion queries.
 `;import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import {
-assert,
+  assert,
 
-range,
-unreachable } from
+  range,
+  unreachable } from
 '../../../../../common/util/util.js';
 import { kMaxQueryCount } from '../../../../capability_info.js';
 
@@ -52,20 +52,20 @@ const kBufferOffsets = ['zero', 'non-zero'];
 
 
 
+// MAINTENANCE_TODO: Refactor these helper classes to use GPUTestBase.createEncoder
+//
+// The refactor would require some new features in CommandBufferMaker such as:
+//
+// * Multi render bundle in single render pass support
+//
+// * Some way to allow calling render pass commands on render bundle encoder.
+//   Potentially have a special abstract encoder that wraps the two and defers
+//   relevant calls appropriately.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+/**
+ * This class is used by the RenderPassHelper below to
+ * abstract calling these 4 functions on a RenderPassEncoder or a RenderBundleEncoder.
+ */
 
 
 
@@ -212,7 +212,9 @@ class QueryStarterRenderBundle {
   {
     this._device = device;
     this._pass = pass;
-    const colorAttachment = renderPassDescriptor.colorAttachments[0];
+    const colorAttachment =
+    renderPassDescriptor.colorAttachments[
+    0];
     this._renderBundleEncoderDescriptor = {
       colorFormats: ['rgba8unorm'],
       depthStencilFormat: renderPassDescriptor.depthStencilAttachment?.depthLoadOp ?
@@ -268,8 +270,8 @@ class OcclusionQueryTest extends GPUTest {
     return this.createVertexBuffer(new Float32Array([
     -0.5, -0.5, z,
     0.5, -0.5, z,
-    -0.5, 0.5, z]));
-
+    -0.5, 0.5, z]
+    ));
   }
   async readBufferAsBigUint64(buffer) {
     await buffer.mapAsync(GPUMapMode.READ);
@@ -465,11 +467,11 @@ class OcclusionQueryTest extends GPUTest {
     if (renderPassDescriptor) {
       const pass = encoder.beginRenderPass(renderPassDescriptor);
       const helper = new RenderPassHelper(
-      pass,
-      renderMode === 'direct' ?
-      new QueryStarterDirect(pass) :
-      new QueryStarterRenderBundle(device, pass, renderPassDescriptor));
-
+        pass,
+        renderMode === 'direct' ?
+        new QueryStarterDirect(pass) :
+        new QueryStarterRenderBundle(device, pass, renderPassDescriptor)
+      );
 
       for (const queryIndex of queryIndices) {
         encodePassFn(helper, queryIndex);
@@ -478,19 +480,19 @@ class OcclusionQueryTest extends GPUTest {
     }
 
     encoder.resolveQuerySet(
-    occlusionQuerySet,
-    querySetOffset,
-    numQueries,
-    queryResolveBuffer,
-    queryResolveBufferOffset);
-
+      occlusionQuerySet,
+      querySetOffset,
+      numQueries,
+      queryResolveBuffer,
+      queryResolveBufferOffset
+    );
     encoder.copyBufferToBuffer(
-    queryResolveBuffer,
-    queryResolveBufferOffset,
-    readBuffer,
-    0,
-    readBuffer.size);
-
+      queryResolveBuffer,
+      queryResolveBufferOffset,
+      readBuffer,
+      0,
+      readBuffer.size
+    );
     device.queue.submit([encoder.finish()]);
 
     const result = await this.readBufferAsBigUint64(readBuffer);
@@ -518,13 +520,13 @@ fn(async (t) => {
   const kNumQueries = kMaxQueryCount;
   const resources = t.setup({ numQueries: kNumQueries });
   await t.runQueryTest(
-  resources,
-  null,
-  () => {},
-  (passed) => {
-    t.expect(!passed);
-  });
-
+    resources,
+    null,
+    () => {},
+    (passed) => {
+      t.expect(!passed);
+    }
+  );
 });
 
 g.test('occlusion_query,basic').
@@ -543,35 +545,35 @@ fn(async (t) => {
   const { renderPassDescriptor, vertexBuffer, pipeline } = resources;
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(vertexBuffer);
-    queryHelper.draw(3);
-    queryHelper.end();
-  },
-  (passed, queryIndex) => {
-    const expectPassed = true;
-    t.expect(
-    !!passed === expectPassed,
-    `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`);
-
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(vertexBuffer);
+      queryHelper.draw(3);
+      queryHelper.end();
+    },
+    (passed, queryIndex) => {
+      const expectPassed = true;
+      t.expect(
+        !!passed === expectPassed,
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
+      );
+    }
+  );
 });
 
 g.test('occlusion_query,empty').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery with nothing in between clears the queries
 
       Calls beginOcclusionQuery/draw/endOcclusionQuery that should show passing fragments
       and validates they passed. Then executes the same queries (same QuerySet) without drawing.
       Those queries should have not passed.
-    `).
-
+    `
+).
 fn(async (t) => {
   const kNumQueries = 30;
   const resources = t.setup({ numQueries: kNumQueries });
@@ -593,32 +595,32 @@ fn(async (t) => {
     return (passed, queryIndex) => {
       const expectPassed = draw;
       t.expect(
-      !!passed === expectPassed,
-      `draw: ${draw}, queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`);
-
+        !!passed === expectPassed,
+        `draw: ${draw}, queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}`
+      );
     };
   };
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  makeQueryRunner(true),
-  makeQueryChecker(true));
-
+    resources,
+    renderPassDescriptor,
+    makeQueryRunner(true),
+    makeQueryChecker(true)
+  );
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  makeQueryRunner(false),
-  makeQueryChecker(false));
-
+    resources,
+    renderPassDescriptor,
+    makeQueryRunner(false),
+    makeQueryChecker(false)
+  );
 });
 
 g.test('occlusion_query,scissor').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery using scissor to occlude
-    `).
-
+    `
+).
 params(kQueryTestBaseParams).
 fn(async (t) => {
   const { writeMask, renderMode, bufferOffset, querySetOffset } = t.params;
@@ -672,42 +674,42 @@ fn(async (t) => {
           name: 'top quarter'
         };
       default:
-        unreachable();}
-
+        unreachable();
+    }
   };
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    const { x, y, width, height } = getScissorRect(queryIndex);
-    helper.setScissorRect(x, y, width, height);
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(vertexBuffer);
-    queryHelper.draw(3);
-    queryHelper.end();
-  },
-  (passed, queryIndex) => {
-    const { occluded, name: scissorCase } = getScissorRect(queryIndex);
-    const expectPassed = !occluded;
-    t.expect(
-    !!passed === expectPassed,
-    `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}, ${name}`);
-
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      const { x, y, width, height } = getScissorRect(queryIndex);
+      helper.setScissorRect(x, y, width, height);
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(vertexBuffer);
+      queryHelper.draw(3);
+      queryHelper.end();
+    },
+    (passed, queryIndex) => {
+      const { occluded, name: scissorCase } = getScissorRect(queryIndex);
+      const expectPassed = !occluded;
+      t.expect(
+        !!passed === expectPassed,
+        `queryIndex: ${queryIndex}, scissorCase: ${scissorCase}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+      );
+    }
+  );
 });
 
 g.test('occlusion_query,depth').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery using depth test to occlude
 
       Compares depth against 0.5, with alternating vertex buffers which have a depth
       of 0 and 1. When depth check passes, we expect non-zero successful fragments.
-    `).
-
+    `
+).
 params(kQueryTestBaseParams).
 fn(async (t) => {
   const { writeMask, renderMode, bufferOffset, querySetOffset } = t.params;
@@ -724,34 +726,34 @@ fn(async (t) => {
   const vertexBufferAtZ1 = t.createSingleTriangleVertexBuffer(1);
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferAtZ1 : vertexBufferAtZ0);
-    queryHelper.draw(3);
-    queryHelper.end();
-  },
-  (passed, queryIndex) => {
-    const expectPassed = queryIndex % 2 === 0;
-    t.expect(
-    !!passed === expectPassed,
-    `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`);
-
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferAtZ1 : vertexBufferAtZ0);
+      queryHelper.draw(3);
+      queryHelper.end();
+    },
+    (passed, queryIndex) => {
+      const expectPassed = queryIndex % 2 === 0;
+      t.expect(
+        !!passed === expectPassed,
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+      );
+    }
+  );
 });
 
 g.test('occlusion_query,stencil').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery using stencil to occlude
 
       Compares stencil against 0, with alternating stencil reference values of
       of 0 and 1. When stencil test passes, we expect non-zero successful fragments.
-    `).
-
+    `
+).
 params(kQueryTestBaseParams).
 fn(async (t) => {
   const { writeMask, renderMode, bufferOffset, querySetOffset } = t.params;
@@ -767,37 +769,37 @@ fn(async (t) => {
   const { vertexBuffer, renderPassDescriptor, pipeline } = resources;
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    helper.setStencilReference(queryIndex % 2);
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(vertexBuffer);
-    queryHelper.draw(3);
-    queryHelper.end();
-  },
-  (passed, queryIndex) => {
-    const expectPassed = queryIndex % 2 === 0;
-    t.expect(
-    !!passed === expectPassed,
-    `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`);
-
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      helper.setStencilReference(queryIndex % 2);
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(vertexBuffer);
+      queryHelper.draw(3);
+      queryHelper.end();
+    },
+    (passed, queryIndex) => {
+      const expectPassed = queryIndex % 2 === 0;
+      t.expect(
+        !!passed === expectPassed,
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+      );
+    }
+  );
 });
 
 g.test('occlusion_query,sample_mask').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery using sample_mask to occlude
 
       Set sampleMask to 0, 2, 4, 6 and draw quads in top right or bottom left corners of the texel.
       If the corner we draw to matches the corner masked we expect non-zero successful fragments.
 
       See: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels
-    `).
-
+    `
+).
 params(kQueryTestBaseParams.combine('sampleMask', [0, 2, 4, 6])).
 fn(async (t) => {
   const { writeMask, renderMode, bufferOffset, querySetOffset, sampleMask } = t.params;
@@ -822,42 +824,42 @@ fn(async (t) => {
     offset + 0, offset + 0.25, 0,
     offset + 0, offset + 0.25, 0,
     offset + 0.25, offset + 0, 0,
-    offset + 0.25, offset + 0.25, 0]));
-
+    offset + 0.25, offset + 0.25, 0]
+    ));
   };
 
   const vertexBufferBL = createQuad(0);
   const vertexBufferTR = createQuad(0.25);
 
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferTR : vertexBufferBL);
-    queryHelper.draw(6);
-    queryHelper.end();
-  },
-  (passed, queryIndex) => {
-    // Above we draw to a specific corner (sample) of a multi-sampled texel
-    // drawMask is the "sampleMask" representation of that corner.
-    // In other words, if drawMask is 2 (we drew to the top right) and
-    // sampleMask is 2 (drawing is allowed to the top right) then we expect
-    // passing fragments.
-    const drawMask = queryIndex % 2 ? 2 : 4;
-    const expectPassed = !!(sampleMask & drawMask);
-    t.expect(
-    !!passed === expectPassed,
-    `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`);
-
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(queryIndex % 2 ? vertexBufferTR : vertexBufferBL);
+      queryHelper.draw(6);
+      queryHelper.end();
+    },
+    (passed, queryIndex) => {
+      // Above we draw to a specific corner (sample) of a multi-sampled texel
+      // drawMask is the "sampleMask" representation of that corner.
+      // In other words, if drawMask is 2 (we drew to the top right) and
+      // sampleMask is 2 (drawing is allowed to the top right) then we expect
+      // passing fragments.
+      const drawMask = queryIndex % 2 ? 2 : 4;
+      const expectPassed = !!(sampleMask & drawMask);
+      t.expect(
+        !!passed === expectPassed,
+        `queryIndex: ${queryIndex}, was: ${!!passed}, expected: ${expectPassed}, ${name}`
+      );
+    }
+  );
 });
 
 g.test('occlusion_query,alpha_to_coverage').
 desc(
-`
+  `
       Test beginOcclusionQuery/endOcclusionQuery using alphaToCoverage to occlude
 
       Set alpha to 0, 0.25, 0.5, 0.75, and 1, draw quads in 4 corners of texel.
@@ -869,8 +871,8 @@ desc(
       queries.
 
       See: https://bgolus.medium.com/anti-aliased-alpha-test-the-esoteric-alpha-to-coverage-8b177335ae4f
-    `).
-
+    `
+).
 params(kQueryTestBaseParams.combine('alpha', [0, 0.25, 0.5, 0.75, 1.0])).
 fn(async (t) => {
   const { writeMask, renderMode, bufferOffset, querySetOffset, alpha } = t.params;
@@ -895,8 +897,8 @@ fn(async (t) => {
     xOffset + 0, yOffset + 0.25, 0,
     xOffset + 0, yOffset + 0.25, 0,
     xOffset + 0.25, yOffset + 0, 0,
-    xOffset + 0.25, yOffset + 0.25, 0]));
-
+    xOffset + 0.25, yOffset + 0.25, 0]
+    ));
   };
 
   const vertexBuffers = [
@@ -917,27 +919,27 @@ fn(async (t) => {
   let queryCount = 0;
   let resultCount = 0;
   await t.runQueryTest(
-  resources,
-  renderPassDescriptor,
-  (helper, queryIndex) => {
-    const queryHelper = helper.beginOcclusionQuery(queryIndex);
-    queryHelper.setPipeline(pipeline);
-    queryHelper.setVertexBuffer(vertexBuffers[queryCount++ % 4]);
-    queryHelper.draw(6);
-    queryHelper.end();
-  },
-  (passed) => {
-    const groupIndex = resultCount++ / 4 | 0;
-    numPassedPerGroup[groupIndex] += passed ? 1 : 0;
-  });
-
+    resources,
+    renderPassDescriptor,
+    (helper, queryIndex) => {
+      const queryHelper = helper.beginOcclusionQuery(queryIndex);
+      queryHelper.setPipeline(pipeline);
+      queryHelper.setVertexBuffer(vertexBuffers[queryCount++ % 4]);
+      queryHelper.draw(6);
+      queryHelper.end();
+    },
+    (passed) => {
+      const groupIndex = resultCount++ / 4 | 0;
+      numPassedPerGroup[groupIndex] += passed ? 1 : 0;
+    }
+  );
 
   const expected = alpha / 0.25 | 0;
   numPassedPerGroup.forEach((numPassed, queryGroup) => {
     t.expect(
-    numPassed === expected,
-    `queryGroup: ${queryGroup}, was: ${numPassed}, expected: ${expected}`);
-
+      numPassed === expected,
+      `queryGroup: ${queryGroup}, was: ${numPassed}, expected: ${expected}`
+    );
   });
 });
 
@@ -1015,17 +1017,17 @@ fn(async (t) => {
   const results = await Promise.all([
   t.readBufferAsBigUint64(readBuffer),
   t.readBufferAsBigUint64(readBuffer2),
-  t.readBufferAsBigUint64(readBuffer3)]);
-
+  t.readBufferAsBigUint64(readBuffer3)]
+  );
 
   results.forEach((result, r) => {
     for (let i = 0; i < kNumQueries; ++i) {
       const passed = !!result[i];
       const expectPassed = !!(i % 2);
       t.expect(
-      passed === expectPassed,
-      `result(${r}): queryIndex: ${i}, passed: ${passed}, expected: ${expectPassed}`);
-
+        passed === expectPassed,
+        `result(${r}): queryIndex: ${i}, passed: ${passed}, expected: ${expectPassed}`
+      );
     }
   });
 });

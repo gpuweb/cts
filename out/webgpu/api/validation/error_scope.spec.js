@@ -38,28 +38,28 @@ class ErrorScopeTests extends Fixture {
     switch (filter) {
       case 'out-of-memory':
         this.trackForCleanup(
-        this.device.createTexture({
-          // One of the largest formats. With the base limits, the texture will be 256 GiB.
-          format: 'rgba32float',
-          usage: GPUTextureUsage.COPY_DST,
-          size: [
-          this.device.limits.maxTextureDimension2D,
-          this.device.limits.maxTextureDimension2D,
-          this.device.limits.maxTextureArrayLayers]
+          this.device.createTexture({
+            // One of the largest formats. With the base limits, the texture will be 256 GiB.
+            format: 'rgba32float',
+            usage: GPUTextureUsage.COPY_DST,
+            size: [
+            this.device.limits.maxTextureDimension2D,
+            this.device.limits.maxTextureDimension2D,
+            this.device.limits.maxTextureArrayLayers]
 
-        }));
-
+          })
+        );
         break;
       case 'validation':
         // Generating a validation error by passing in an invalid usage when creating a buffer.
         this.trackForCleanup(
-        this.device.createBuffer({
-          size: 1024,
-          usage: 0xffff // Invalid GPUBufferUsage
-        }));
-
-        break;}
-
+          this.device.createBuffer({
+            size: 1024,
+            usage: 0xffff // Invalid GPUBufferUsage
+          })
+        );
+        break;
+    }
     // MAINTENANCE_TODO: This is a workaround for Chromium not flushing. Remove when not needed.
     this.device.queue.submit([]);
   }
@@ -72,8 +72,8 @@ class ErrorScopeTests extends Fixture {
       case 'validation':
         return error instanceof GPUValidationError;
       case 'internal':
-        return error instanceof GPUInternalError;}
-
+        return error instanceof GPUInternalError;
+    }
   }
 
   // Expect an uncapturederror event to occur. Note: this MUST be awaited, because
@@ -95,10 +95,10 @@ class ErrorScopeTests extends Fixture {
       fn();
 
       return raceWithRejectOnTimeout(
-      promise,
-      TIMEOUT_IN_MS,
-      'Timeout occurred waiting for uncaptured error');
-
+        promise,
+        TIMEOUT_IN_MS,
+        'Timeout occurred waiting for uncaptured error'
+      );
     });
   }
 }
@@ -107,16 +107,16 @@ export const g = makeTestGroup(ErrorScopeTests);
 
 g.test('simple').
 desc(
-`
+  `
 Tests that error scopes catches their expected errors, firing an uncaptured error event otherwise.
 
 - Same error and error filter (popErrorScope should return the error)
 - Different error from filter (uncaptured error should result)
-    `).
-
+    `
+).
 params((u) =>
-u.combine('errorType', kGeneratableErrorScopeFilters).combine('errorFilter', kErrorScopeFilters)).
-
+u.combine('errorType', kGeneratableErrorScopeFilters).combine('errorFilter', kErrorScopeFilters)
+).
 fn(async (t) => {
   const { errorType, errorFilter } = t.params;
   t.device.pushErrorScope(errorFilter);
@@ -140,10 +140,10 @@ fn(async (t) => {
 
 g.test('empty').
 desc(
-`
+  `
 Tests that popping an empty error scope stack should reject.
-    `).
-
+    `
+).
 fn((t) => {
   const promise = t.device.popErrorScope();
   t.shouldReject('OperationError', promise);
@@ -151,18 +151,18 @@ fn((t) => {
 
 g.test('parent_scope').
 desc(
-`
+  `
 Tests that an error bubbles to the correct parent scope.
 
 - Different error types as the parent scope
 - Different depths of non-capturing filters for the generated error
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('errorFilter', kGeneratableErrorScopeFilters).
-combine('stackDepth', [1, 10, 100, 1000])).
-
+combine('stackDepth', [1, 10, 100, 1000])
+).
 fn(async (t) => {
   const { errorFilter, stackDepth } = t.params;
   t.device.pushErrorScope(errorFilter);
@@ -191,18 +191,18 @@ fn(async (t) => {
 
 g.test('current_scope').
 desc(
-`
+  `
 Tests that an error does not bubbles to parent scopes when local scope matches.
 
 - Different error types as the current scope
 - Different depths of non-capturing filters for the generated error
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('errorFilter', kGeneratableErrorScopeFilters).
-combine('stackDepth', [1, 10, 100, 1000, 100000])).
-
+combine('stackDepth', [1, 10, 100, 1000, 100000])
+).
 fn(async (t) => {
   const { errorFilter, stackDepth } = t.params;
 
@@ -228,16 +228,16 @@ fn(async (t) => {
 
 g.test('balanced_siblings').
 desc(
-`
+  `
 Tests that sibling error scopes need to be balanced.
 
 - Different error types as the current scope
 - Different number of sibling errors
-    `).
-
+    `
+).
 params((u) =>
-u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])).
-
+u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])
+).
 fn(async (t) => {
   const { errorFilter, numErrors } = t.params;
 
@@ -259,16 +259,16 @@ fn(async (t) => {
 
 g.test('balanced_nesting').
 desc(
-`
+  `
 Tests that nested error scopes need to be balanced.
 
 - Different error types as the current scope
 - Different number of nested errors
-    `).
-
+    `
+).
 params((u) =>
-u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])).
-
+u.combine('errorFilter', kErrorScopeFilters).combine('numErrors', [1, 10, 100, 1000])
+).
 fn(async (t) => {
   const { errorFilter, numErrors } = t.params;
 

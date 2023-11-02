@@ -123,8 +123,8 @@ promiseReactionJob@[native code]`
     at async RunCaseSpecific.run (http://localhost:8080/out/common/framework/test_group.js:119:7)
     at async runCase (http://localhost:8080/out/common/runtime/standalone.js:37:17)
     at async http://localhost:8080/out/common/runtime/standalone.js:102:7`
-}]).
-
+}]
+).
 fn((t) => {
   const ex = new Error();
   ex.stack = t.params._stack;

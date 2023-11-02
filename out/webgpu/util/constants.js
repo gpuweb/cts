@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { reinterpretU64AsF64, reinterpretF64AsU64,
-reinterpretU32AsF32,
-reinterpretU16AsF16 } from
+  reinterpretU32AsF32,
+  reinterpretU16AsF16 } from
 './reinterpret.js';
 
 export const kBit = {
@@ -338,8 +338,8 @@ export const kValue = {
       // which when cast to f32 will not produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL
       last_castable_pipeline_override: reinterpretU64AsF64(
-      reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1))
-
+        reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      )
     },
     negative: {
       max: reinterpretU32AsF32(kBit.f32.negative.max),
@@ -371,8 +371,8 @@ export const kValue = {
       // which when cast to f32 will not produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
       last_castable_pipeline_override: -reinterpretU64AsF64(
-      reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1))
-
+        reinterpretF64AsU64(reinterpretU32AsF32(kBit.f32.positive.max) / 2 + 2 ** 127) - BigInt(1)
+      )
     },
     max_ulp: reinterpretU32AsF32(kBit.f32.max_ulp),
     emax: 127
@@ -427,8 +427,8 @@ export const kValue = {
       // which when cast to f16 will not produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL
       last_castable_pipeline_override: reinterpretU64AsF64(
-      reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1))
-
+        reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1)
+      )
     },
     negative: {
       max: reinterpretU16AsF16(kBit.f16.negative.max),
@@ -460,8 +460,8 @@ export const kValue = {
       // which when cast to f16 will not produce infinity. This comes from WGSL
       // conversion rules and the rounding rules of WebIDL.
       last_castable_pipeline_override: -reinterpretU64AsF64(
-      reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1))
-
+        reinterpretF64AsU64(reinterpretU16AsF16(kBit.f16.positive.max) / 2 + 2 ** 15) - BigInt(1)
+      )
     },
     max_ulp: reinterpretU16AsF16(kBit.f16.max_ulp),
     emax: 15

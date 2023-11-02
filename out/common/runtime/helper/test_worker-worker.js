@@ -9,7 +9,7 @@ import { assert } from '../../util/util.js';
 
 
 
-
+// Should be DedicatedWorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
 
 
 

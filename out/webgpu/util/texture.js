@@ -56,10 +56,10 @@ desc)
 
     // Copy from the staging buffer into the texture.
     commandEncoder.copyBufferToTexture(
-    { buffer: stagingBuffer, bytesPerRow },
-    { texture, mipLevel },
-    [mipWidth, mipHeight, mipDepthOrArray]);
-
+      { buffer: stagingBuffer, bytesPerRow },
+      { texture, mipLevel },
+      [mipWidth, mipHeight, mipDepthOrArray]
+    );
   }
   device.queue.submit([commandEncoder.finish()]);
 

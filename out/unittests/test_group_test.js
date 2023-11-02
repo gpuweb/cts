@@ -24,12 +24,12 @@ export class TestGroupTest extends UnitTest {
       gcases.push(...Array.from(t.iterate(null), (c) => c.id));
     }
     this.expect(
-    objectEquals(gcases, cases),
-    `expected
+      objectEquals(gcases, cases),
+      `expected
   ${JSON.stringify(cases)}
 got
-  ${JSON.stringify(gcases)}`);
-
+  ${JSON.stringify(gcases)}`
+    );
   }
 }
 //# sourceMappingURL=test_group_test.js.map

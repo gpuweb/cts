@@ -11,10 +11,10 @@ import { filteredF64Range, fullF64Range, isSubnormalNumberF64 } from '../../../.
 import { reinterpretU64AsF64 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
-abstractFloatShaderBuilder,
-basicExpressionBuilder,
-onlyConstInputSource,
-run } from
+  abstractFloatShaderBuilder,
+  basicExpressionBuilder,
+  onlyConstInputSource,
+  run } from
 
 '../expression.js';
 
@@ -72,10 +72,10 @@ export const d = makeCaseCache('unary/af_assignment', {
 g.test('abstract').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion').
 desc(
-`
+  `
 testing that extracting abstract floats works
-`).
-
+`
+).
 params((u) => u.combine('inputSource', onlyConstInputSource)).
 fn(async (t) => {
   const cases = await d.get('abstract');
@@ -85,10 +85,10 @@ fn(async (t) => {
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion').
 desc(
-`
+  `
 concretizing to f32
-`).
-
+`
+).
 params((u) => u.combine('inputSource', onlyConstInputSource)).
 fn(async (t) => {
   const cases = await d.get('f32');
@@ -98,10 +98,10 @@ fn(async (t) => {
 g.test('f16').
 specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion').
 desc(
-`
+  `
 concretizing to f16
-`).
-
+`
+).
 beforeAllSubcases((t) => {
   t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
 }).

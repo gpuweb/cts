@@ -9,10 +9,10 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('id_conflict').
 desc(
-`
+  `
 Tests that overrides' explicit numeric identifier should not conflict.
-`).
-
+`
+).
 fn((t) => {
   t.expectValidationError(() => {
     t.device.createShaderModule({
@@ -47,10 +47,10 @@ fn((t) => {
 
 g.test('name_conflict').
 desc(
-`
+  `
 Tests that overrides' variable name should not conflict, regardless of their numeric identifiers.
-`).
-
+`
+).
 fn((t) => {
   t.expectValidationError(() => {
     t.device.createShaderModule({

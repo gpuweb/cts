@@ -19,11 +19,11 @@ import { assert } from '../../../../../../../common/util/util.js';
 import { GPUTest } from '../../../../../../gpu_test.js';
 
 import {
-dispatchSizes,
-workgroupSizes,
-typedArrayCtor,
-kMapId,
-onlyWorkgroupSizes } from
+  dispatchSizes,
+  workgroupSizes,
+  typedArrayCtor,
+  kMapId,
+  onlyWorkgroupSizes } from
 './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -31,7 +31,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('compare_exchange_weak_storage_basic').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -41,15 +41,15 @@ struct __atomic_compare_exchange_result<T> {
   old_value : T,    // old value stored in the atomic
   exchanged : bool, // true if the exchange was done
 }
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
   const bufferNumElements = numInvocations;
@@ -170,7 +170,7 @@ fn(async (t) => {
 g.test('compare_exchange_weak_workgroup_basic').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -180,15 +180,15 @@ struct __atomic_compare_exchange_result<T> {
   old_value : T,    // old value stored in the atomic
   exchanged : bool, // true if the exchange was done
 }
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize;
   const wgNumElements = numInvocations;
@@ -303,8 +303,8 @@ fn(async (t) => {
   // And the wg copy buffer should have been modified to a computed value for every third value,
   // unless the comparison spuriously failed.
   const wgCopyBufferExpected = new (typedArrayCtor(t.params.scalarType))(
-  wgNumElements * dispatchSize);
-
+    wgNumElements * dispatchSize
+  );
   wgCopyBufferExpected.forEach((_, i) => {
     if (i % 3 === 0 && exchangedBufferResult.data[i]) {
       wgCopyBufferExpected[i] = mapId.f(i * 2, numInvocations);
@@ -318,7 +318,7 @@ fn(async (t) => {
 g.test('compare_exchange_weak_storage_advanced').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -328,13 +328,13 @@ struct __atomic_compare_exchange_result<T> {
   old_value : T,    // old value stored in the atomic
   exchanged : bool, // true if the exchange was done
 }
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', onlyWorkgroupSizes) //
-.combine('scalarType', ['u32', 'i32'])).
-
+.combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize;
   const scalarType = t.params.scalarType;
@@ -495,8 +495,8 @@ fn(async (t) => {
       // Spurious failure, all values in oldValues should be the default value
       if (!oldValues.every((v) => v === defaultValue)) {
         t.fail(
-        `Spurious failure detected, expected only default value of ${defaultValue} in oldValues buffer.${dumpValues()}`);
-
+          `Spurious failure detected, expected only default value of ${defaultValue} in oldValues buffer.${dumpValues()}`
+        );
         return;
       }
     } else {
@@ -514,8 +514,8 @@ fn(async (t) => {
       const oldValue = pingPongValues[w % 2];
       if (oldValues[idx] !== oldValue) {
         t.fail(
-        `oldValues[${idx}] expected to contain old value from exchange: ${oldValue}.${dumpValues()}'`);
-
+          `oldValues[${idx}] expected to contain old value from exchange: ${oldValue}.${dumpValues()}'`
+        );
         return;
       }
 
@@ -524,8 +524,8 @@ fn(async (t) => {
       const oldValuesRest = oldValues.filter((_, i) => i !== idx);
       if (!oldValuesRest.every((v) => pingPongValues.includes(v))) {
         t.fail(
-        `Values in oldValues buffer should be one of '${pingPongValues}', except at index '${idx} where it is '${oldValue}'.${dumpValues()}`);
-
+          `Values in oldValues buffer should be one of '${pingPongValues}', except at index '${idx} where it is '${oldValue}'.${dumpValues()}`
+        );
         return;
       }
     }
@@ -535,7 +535,7 @@ fn(async (t) => {
 g.test('compare_exchange_weak_workgroup_advanced').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
@@ -545,13 +545,13 @@ struct __atomic_compare_exchange_result<T> {
   old_value : T,    // old value stored in the atomic
   exchanged : bool, // true if the exchange was done
 }
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', onlyWorkgroupSizes) //
-.combine('scalarType', ['u32', 'i32'])).
-
+.combine('scalarType', ['u32', 'i32'])
+).
 fn(async (t) => {
   const numInvocations = t.params.workgroupSize;
   const scalarType = t.params.scalarType;
@@ -704,8 +704,8 @@ fn(async (t) => {
       // Spurious failure, all values in oldValues should be the default value
       if (!oldValues.every((v) => v === defaultValue)) {
         t.fail(
-        `Spurious failure detected, expected only default value of ${defaultValue} in oldValues buffer.${dumpValues()}`);
-
+          `Spurious failure detected, expected only default value of ${defaultValue} in oldValues buffer.${dumpValues()}`
+        );
         return;
       }
     } else {
@@ -723,8 +723,8 @@ fn(async (t) => {
       const oldValue = pingPongValues[w % 2];
       if (oldValues[idx] !== oldValue) {
         t.fail(
-        `oldValues[${idx}] expected to contain old value from exchange: ${oldValue}.${dumpValues()}'`);
-
+          `oldValues[${idx}] expected to contain old value from exchange: ${oldValue}.${dumpValues()}'`
+        );
         return;
       }
 
@@ -733,8 +733,8 @@ fn(async (t) => {
       const oldValuesRest = oldValues.filter((_, i) => i !== idx);
       if (!oldValuesRest.every((v) => pingPongValues.includes(v))) {
         t.fail(
-        `Values in oldValues buffer should be one of '${pingPongValues}', except at index '${idx} where it is '${oldValue}'.${dumpValues()}`);
-
+          `Values in oldValues buffer should be one of '${pingPongValues}', except at index '${idx} where it is '${oldValue}'.${dumpValues()}`
+        );
         return;
       }
     }

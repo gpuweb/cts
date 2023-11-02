@@ -4,9 +4,9 @@
 import { kTextureDimensions } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import {
-kSizedTextureFormats,
-kTextureFormatInfo,
-textureDimensionAndFormatCompatible } from
+  kSizedTextureFormats,
+  kTextureFormatInfo,
+  textureDimensionAndFormatCompatible } from
 '../../../format_info.js';
 import { kResourceStates } from '../../../gpu_test.js';
 import { kImageCopyTypes } from '../../../util/texture/layout.js';
@@ -17,18 +17,18 @@ export const g = makeTestGroup(ImageCopyTest);
 
 g.test('buffer_state').
 desc(
-`
+  `
 Test that the buffer must be valid and not destroyed.
 - for all buffer <-> texture copy methods
 - for various buffer states
-`).
-
+`
+).
 params((u) =>
 u //
 // B2B copy validations are at api,validation,encoding,cmds,copyBufferToBuffer.spec.ts
 .combine('method', ['CopyB2T', 'CopyT2B']).
-combine('state', kResourceStates)).
-
+combine('state', kResourceStates)
+).
 fn((t) => {
   const { method, state } = t.params;
 
@@ -49,19 +49,19 @@ fn((t) => {
   });
 
   t.testBuffer(
-  buffer,
-  texture,
-  { bytesPerRow: 0 },
-  { width: 0, height: 0, depthOrArrayLayers: 0 },
-  { dataSize: 16, method, success, submit });
-
+    buffer,
+    texture,
+    { bytesPerRow: 0 },
+    { width: 0, height: 0, depthOrArrayLayers: 0 },
+    { dataSize: 16, method, success, submit }
+  );
 });
 
 g.test('buffer,device_mismatch').
 desc('Tests the image copies cannot be called with a buffer created from another device').
 paramsSubcasesOnly((u) =>
-u.combine('method', ['CopyB2T', 'CopyT2B']).combine('mismatched', [true, false])).
-
+u.combine('method', ['CopyB2T', 'CopyT2B']).combine('mismatched', [true, false])
+).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
 }).
@@ -85,23 +85,23 @@ fn((t) => {
 
   // Expect success in both finish and submit, or validation error in finish
   t.testBuffer(
-  buffer,
-  texture,
-  { bytesPerRow: 0 },
-  { width: 0, height: 0, depthOrArrayLayers: 0 },
-  { dataSize: 16, method, success, submit: success });
-
+    buffer,
+    texture,
+    { bytesPerRow: 0 },
+    { width: 0, height: 0, depthOrArrayLayers: 0 },
+    { dataSize: 16, method, success, submit: success }
+  );
 });
 
 g.test('usage').
 desc(
-`
+  `
 Test the buffer must have the appropriate COPY_SRC/COPY_DST usage.
 TODO update such that it tests
 - for all buffer source usages
 - for all buffer destination usages
-`).
-
+`
+).
 params((u) =>
 u
 // B2B copy validations are at api,validation,encoding,cmds,copyBufferToBuffer.spec.ts
@@ -110,9 +110,9 @@ beginSubcases().
 combine('usage', [
 GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.UNIFORM,
 GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.UNIFORM,
-GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST])).
-
-
+GPUConst.BufferUsage.COPY_SRC | GPUConst.BufferUsage.COPY_DST]
+)
+).
 fn((t) => {
   const { method, usage } = t.params;
 
@@ -134,25 +134,25 @@ fn((t) => {
 
   // Expect success in both finish and submit, or validation error in finish
   t.testBuffer(
-  buffer,
-  texture,
-  { bytesPerRow: 0 },
-  { width: 0, height: 0, depthOrArrayLayers: 0 },
-  { dataSize: 16, method, success, submit: success });
-
+    buffer,
+    texture,
+    { bytesPerRow: 0 },
+    { width: 0, height: 0, depthOrArrayLayers: 0 },
+    { dataSize: 16, method, success, submit: success }
+  );
 });
 
 g.test('bytes_per_row_alignment').
 desc(
-`
+  `
 Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is required.
 - for all copy methods between linear data and textures
 - for all texture dimensions
 - for all sized formats.
 - for various bytesPerRow aligned to 256 or not
 - for various number of blocks rows copied
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('method', kImageCopyTypes).
@@ -164,8 +164,8 @@ beginSubcases().
 combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512]).
 combine('copyHeightInBlocks', [0, 1, 2, 3]).
 expand('_textureHeightInBlocks', (p) => [
-p.copyHeightInBlocks === 0 ? 1 : p.copyHeightInBlocks]).
-
+p.copyHeightInBlocks === 0 ? 1 : p.copyHeightInBlocks]
+).
 unless((p) => p.dimension === '1d' && p.copyHeightInBlocks > 1)
 // Depth/stencil format copies must copy the whole subresource.
 .unless((p) => {
@@ -177,25 +177,19 @@ unless((p) => p.dimension === '1d' && p.copyHeightInBlocks > 1)
 // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
 // Note that we are copying one single block on each row in this test.
 .filter(
-({ format, bytesPerRow, copyHeightInBlocks }) =>
-bytesPerRow === undefined && copyHeightInBlocks <= 1 ||
-bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)).
-
-
+  ({ format, bytesPerRow, copyHeightInBlocks }) =>
+  bytesPerRow === undefined && copyHeightInBlocks <= 1 ||
+  bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock
+)
+).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
-  const {
-    method,
-    dimension,
-    format,
-    bytesPerRow,
-    copyHeightInBlocks,
-    _textureHeightInBlocks
-  } = t.params;
+  const { method, dimension, format, bytesPerRow, copyHeightInBlocks, _textureHeightInBlocks } =
+  t.params;
 
   const info = kTextureFormatInfo[format];
 

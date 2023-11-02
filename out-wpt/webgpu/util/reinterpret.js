@@ -1,7 +1,6 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
-/**
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import { Float16Array } from '../../external/petamoriken/float16/float16.js'; /**
  * Once-allocated ArrayBuffer/views to avoid overhead of allocation when converting between numeric formats
  *
  * workingData* is shared between multiple functions in this file, so to avoid re-entrancy problems, make sure in

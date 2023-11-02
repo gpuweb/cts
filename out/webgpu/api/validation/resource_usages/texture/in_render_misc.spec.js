@@ -30,8 +30,8 @@ class F extends ValidationTest {
         break;
       default:
         unreachable();
-        break;}
-
+        break;
+    }
     return this.device.createBindGroupLayout({
       entries: [bindGroupLayoutEntry]
     });
@@ -57,11 +57,11 @@ const kTextureLayers = 3;
 
 g.test('subresources,set_bind_group_on_same_index_color_texture').
 desc(
-`
+  `
   Test that when one color texture subresource is bound to different bind groups, whether the bind
   groups are reset by another compatible ones or not, its list of internal usages within one usage
-  scope can only be a compatible usage list.`).
-
+  scope can only be a compatible usage list.`
+).
 params((u) =>
 u.
 combineWithParams([
@@ -69,10 +69,10 @@ combineWithParams([
 { useDifferentTextureAsTexture2: false, baseLayer2: 0, view2Binding: 'texture' },
 { useDifferentTextureAsTexture2: false, baseLayer2: 1, view2Binding: 'texture' },
 { useDifferentTextureAsTexture2: false, baseLayer2: 0, view2Binding: 'storage' },
-{ useDifferentTextureAsTexture2: false, baseLayer2: 1, view2Binding: 'storage' }]).
-
-combine('hasConflict', [true, false])).
-
+{ useDifferentTextureAsTexture2: false, baseLayer2: 1, view2Binding: 'storage' }]
+).
+combine('hasConflict', [true, false])
+).
 fn((t) => {
   const { useDifferentTextureAsTexture2, baseLayer2, view2Binding, hasConflict } = t.params;
 
@@ -139,16 +139,16 @@ fn((t) => {
 
 g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture').
 desc(
-`
+  `
   Test that when one depth stencil texture subresource is bound to different bind groups, whether
   the bind groups are reset by another compatible ones or not, its list of internal usages within
-  one usage scope can only be a compatible usage list.`).
-
+  one usage scope can only be a compatible usage list.`
+).
 params((u) =>
 u.
 combine('bindAspect', ['depth-only', 'stencil-only']).
-combine('depthStencilReadOnly', [true, false])).
-
+combine('depthStencilReadOnly', [true, false])
+).
 fn((t) => {
   const { bindAspect, depthStencilReadOnly } = t.params;
   const depthStencilTexture = t.device.createTexture({
@@ -158,13 +158,13 @@ fn((t) => {
   });
 
   const conflictedToNonReadOnlyAttachmentBindGroup = t.createBindGroupForTest(
-  depthStencilTexture.createView({
-    dimension: '2d-array',
-    aspect: bindAspect
-  }),
-  'texture',
-  bindAspect === 'depth-only' ? 'depth' : 'uint');
-
+    depthStencilTexture.createView({
+      dimension: '2d-array',
+      aspect: bindAspect
+    }),
+    'texture',
+    bindAspect === 'depth-only' ? 'depth' : 'uint'
+  );
 
   const colorTexture = t.device.createTexture({
     format: 'rgba8unorm',
@@ -172,12 +172,12 @@ fn((t) => {
     size: [kTextureSize, kTextureSize, 1]
   });
   const validBindGroup = t.createBindGroupForTest(
-  colorTexture.createView({
-    dimension: '2d-array'
-  }),
-  'texture',
-  'float');
-
+    colorTexture.createView({
+      dimension: '2d-array'
+    }),
+    'texture',
+    'float'
+  );
 
   const encoder = t.device.createCommandEncoder();
   const renderPassEncoder = encoder.beginRenderPass({
@@ -199,11 +199,11 @@ fn((t) => {
 
 g.test('subresources,set_unused_bind_group').
 desc(
-`
+  `
   Test that when one texture subresource is bound to different bind groups and the bind groups are
   used in the same render or compute pass encoder, its list of internal usages within one usage
-  scope can only be a compatible usage list.`).
-
+  scope can only be a compatible usage list.`
+).
 params((u) => u.combine('inRenderPass', [true, false]).combine('hasConflict', [true, false])).
 fn((t) => {
   const { inRenderPass, hasConflict } = t.params;
@@ -314,11 +314,11 @@ fn((t) => {
 
 g.test('subresources,texture_usages_in_copy_and_render_pass').
 desc(
-`
+  `
   Test that using one texture subresource in a render pass encoder and a copy command is always
   allowed as WebGPU SPEC (chapter 3.4.5) defines that out of any pass encoder, each command always
-  belongs to one usage scope.`).
-
+  belongs to one usage scope.`
+).
 params((u) =>
 u.
 combine('usage0', [
@@ -326,23 +326,23 @@ combine('usage0', [
 'copy-dst',
 'texture',
 'storage',
-'color-attachment']).
-
+'color-attachment']
+).
 combine('usage1', [
 'copy-src',
 'copy-dst',
 'texture',
 'storage',
-'color-attachment']).
-
+'color-attachment']
+).
 filter(
-({ usage0, usage1 }) =>
-usage0 === 'copy-src' ||
-usage0 === 'copy-dst' ||
-usage1 === 'copy-src' ||
-usage1 === 'copy-dst')).
-
-
+  ({ usage0, usage1 }) =>
+  usage0 === 'copy-src' ||
+  usage0 === 'copy-dst' ||
+  usage1 === 'copy-src' ||
+  usage1 === 'copy-dst'
+)
+).
 fn((t) => {
   const { usage0, usage1 } = t.params;
 
@@ -399,17 +399,17 @@ fn((t) => {
 
           });
           const bindGroup = t.createBindGroupForTest(
-          texture.createView({
-            dimension: '2d-array'
-          }),
-          usage,
-          'float');
-
+            texture.createView({
+              dimension: '2d-array'
+            }),
+            usage,
+            'float'
+          );
           renderPassEncoder.setBindGroup(0, bindGroup);
           renderPassEncoder.end();
           break;
-        }}
-
+        }
+    }
   };
   const encoder = t.device.createCommandEncoder();
   UseTextureOnCommandEncoder(texture, usage0, encoder);

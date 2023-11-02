@@ -47,8 +47,8 @@ const kU32 = new Set([
   ...kAbstractIntNonNegative,
   ...kAbstractIntNegative,
   ...kI32,
-  ...kU32]);
-
+  ...kU32]
+  );
   const kInvalidIntegers = new Set([
   '0123', // Integer does not start with zero
   '2147483648i', // max signed int + 1
@@ -61,8 +61,8 @@ const kU32 = new Set([
   g.test('abstract_int').
   desc(`Test that valid integers are accepted, and invalid integers are rejected.`).
   params((u) =>
-  u.combine('val', new Set([...kValidIntegers, ...kInvalidIntegers])).beginSubcases()).
-
+  u.combine('val', new Set([...kValidIntegers, ...kInvalidIntegers])).beginSubcases()
+  ).
   fn((t) => {
     const code = `var test = ${t.params.val};`;
     t.expectCompileResult(kValidIntegers.has(t.params.val), t.wrapInEntryPoint(code));
@@ -115,8 +115,8 @@ const kU32 = new Set([
   ]);
   g.test('u32').
   desc(
-  `Test that valid unsigned integers are accepted, and invalid unsigned integers are rejected.`).
-
+    `Test that valid unsigned integers are accepted, and invalid unsigned integers are rejected.`
+  ).
   params((u) => u.combine('val', new Set([...kValidU32, ...kInvalidU32])).beginSubcases()).
   beforeAllSubcases((t) => {
     if (t.params.val.includes('h')) {
@@ -206,8 +206,8 @@ const kAbstractFloat = new Set([
   params((u) =>
   u.
   combine('val', new Set([...kValidFloats, ...kInvalidFloats, ...kInvalidF16s])).
-  beginSubcases()).
-
+  beginSubcases()
+  ).
   beforeAllSubcases((t) => {
     if (kF16.has(t.params.val) || kInvalidF16s.has(t.params.val)) {
       t.selectDeviceOrSkipTestCase('shader-f16');
@@ -217,9 +217,9 @@ const kAbstractFloat = new Set([
     const code = `var test = ${t.params.val};`;
     const extensionList = kF16.has(t.params.val) || kInvalidF16s.has(t.params.val) ? ['f16'] : [];
     t.expectCompileResult(
-    kValidFloats.has(t.params.val),
-    t.wrapInEntryPoint(code, extensionList));
-
+      kValidFloats.has(t.params.val),
+      t.wrapInEntryPoint(code, extensionList)
+    );
   });
 }
 
@@ -285,10 +285,10 @@ const kAbstractFloat = new Set([
 
   g.test('f16').
   desc(
-  `
+    `
 Test that valid half floats are accepted, and invalid half floats are rejected
-`).
-
+`
+  ).
   params((u) => u.combine('val', new Set([...kValidF16, ...kInvalidF16])).beginSubcases()).
   beforeAllSubcases((t) => {
     t.selectDeviceOrSkipTestCase('shader-f16');

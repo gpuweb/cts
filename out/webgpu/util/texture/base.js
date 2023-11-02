@@ -25,8 +25,8 @@ export function maxMipLevelCount({
       break;
     case '3d':
       maxMippedDimension = Math.max(sizeDict.width, sizeDict.height, sizeDict.depthOrArrayLayers);
-      break;}
-
+      break;
+  }
 
   return Math.floor(Math.log2(maxMippedDimension)) + 1;
 }
@@ -49,20 +49,20 @@ level)
 
     case '2d':{
         assert(
-        Math.max(baseSize.width, baseSize.height) >> level > 0,
-        () => `level (${level}) too large for base size (${baseSize.width}x${baseSize.height})`);
-
+          Math.max(baseSize.width, baseSize.height) >> level > 0,
+          () => `level (${level}) too large for base size (${baseSize.width}x${baseSize.height})`
+        );
 
         const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
         const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
         const physicalWidthAtLevel = align(
-        virtualWidthAtLevel,
-        kTextureFormatInfo[format].blockWidth);
-
+          virtualWidthAtLevel,
+          kTextureFormatInfo[format].blockWidth
+        );
         const physicalHeightAtLevel = align(
-        virtualHeightAtLevel,
-        kTextureFormatInfo[format].blockHeight);
-
+          virtualHeightAtLevel,
+          kTextureFormatInfo[format].blockHeight
+        );
         return {
           width: physicalWidthAtLevel,
           height: physicalHeightAtLevel,
@@ -72,21 +72,21 @@ level)
 
     case '3d':{
         assert(
-        Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0,
-        () =>
-        `level (${level}) too large for base size (${baseSize.width}x${baseSize.height}x${baseSize.depthOrArrayLayers})`);
-
+          Math.max(baseSize.width, baseSize.height, baseSize.depthOrArrayLayers) >> level > 0,
+          () =>
+          `level (${level}) too large for base size (${baseSize.width}x${baseSize.height}x${baseSize.depthOrArrayLayers})`
+        );
         assert(
-        kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1,
-        'not implemented for 3d block formats');
-
+          kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1,
+          'not implemented for 3d block formats'
+        );
         return {
           width: Math.max(baseSize.width >> level, 1),
           height: Math.max(baseSize.height >> level, 1),
           depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1)
         };
-      }}
-
+      }
+  }
 }
 
 /**
@@ -121,8 +121,8 @@ mipLevel)
     case '3d':
       return [shiftMinOne(size[0]), shiftMinOne(size[1]), shiftMinOne(size[2])];
     default:
-      unreachable();}
-
+      unreachable();
+  }
 }
 
 /**
@@ -141,8 +141,8 @@ export function getTextureDimensionFromView(viewDimension) {
     case '3d':
       return '3d';
     default:
-      unreachable();}
-
+      unreachable();
+  }
 }
 
 /** Returns the possible valid view dimensions for a given texture dimension. */
@@ -153,8 +153,8 @@ export function viewDimensionsForTextureDimension(textureDimension) {
     case '2d':
       return ['2d', '2d-array', 'cube', 'cube-array'];
     case '3d':
-      return ['3d'];}
-
+      return ['3d'];
+  }
 }
 
 /** Returns the default view dimension for a given texture descriptor. */
@@ -169,8 +169,8 @@ export function defaultViewDimensionsForTexture(textureDescriptor) {
     case '3d':
       return '3d';
     default:
-      unreachable();}
-
+      unreachable();
+  }
 }
 
 /** Reifies the optional fields of `GPUTextureDescriptor`.

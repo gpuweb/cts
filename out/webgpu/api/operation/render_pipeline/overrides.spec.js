@@ -98,8 +98,8 @@ override A: f32 = 1.0;
 
 g.test('basic').
 desc(
-`Test that either correct constants override values or default values when no constants override value are provided at pipeline creation time are used correctly in vertex and fragment shader.`).
-
+  `Test that either correct constants override values or default values when no constants override value are provided at pipeline creation time are used correctly in vertex and fragment shader.`
+).
 params((u) =>
 u.
 combine('isAsync', [true, false]).
@@ -144,31 +144,31 @@ combineWithParams([
 
 
 
-}])).
-
-
+}]
+)
+).
 fn(async (t) => {
   const format = 'bgra8unorm';
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  format,
-  t.params.expected,
-  {
-    module: t.device.createShaderModule({
-      code: kFullScreenTriangleVertexShader
-    }),
-    entryPoint: 'main',
-    constants: t.params.vertexConstants
-  },
-  {
-    module: t.device.createShaderModule({
-      code: kFullScreenTriangleFragmentShader
-    }),
-    entryPoint: 'main',
-    constants: t.params.fragmentConstants,
-    targets: [{ format }]
-  });
-
+    t.params.isAsync,
+    format,
+    t.params.expected,
+    {
+      module: t.device.createShaderModule({
+        code: kFullScreenTriangleVertexShader
+      }),
+      entryPoint: 'main',
+      constants: t.params.vertexConstants
+    },
+    {
+      module: t.device.createShaderModule({
+        code: kFullScreenTriangleFragmentShader
+      }),
+      entryPoint: 'main',
+      constants: t.params.fragmentConstants,
+      targets: [{ format }]
+    }
+  );
 });
 
 g.test('precision').
@@ -184,43 +184,40 @@ combineWithParams([
   fragmentConstants: { R: 3.14159 }
 },
 {
-  expected: { R: 3.141592653589793238, G: 1.0, B: 1.0, A: 1.0 },
+  expected: { R: 3.141592653589793, G: 1.0, B: 1.0, A: 1.0 },
   vertexConstants: {},
-  fragmentConstants: { R: 3.141592653589793238 }
-
-
-
-}])).
-
-
+  fragmentConstants: { R: 3.141592653589793 }
+}]
+)
+).
 fn(async (t) => {
   const format = 'rgba32float';
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  format,
-  t.params.expected,
-  {
-    module: t.device.createShaderModule({
-      code: kFullScreenTriangleVertexShader
-    }),
-    entryPoint: 'main',
-    constants: t.params.vertexConstants
-  },
-  {
-    module: t.device.createShaderModule({
-      code: kFullScreenTriangleFragmentShader
-    }),
-    entryPoint: 'main',
-    constants: t.params.fragmentConstants,
-    targets: [{ format }]
-  });
-
+    t.params.isAsync,
+    format,
+    t.params.expected,
+    {
+      module: t.device.createShaderModule({
+        code: kFullScreenTriangleVertexShader
+      }),
+      entryPoint: 'main',
+      constants: t.params.vertexConstants
+    },
+    {
+      module: t.device.createShaderModule({
+        code: kFullScreenTriangleFragmentShader
+      }),
+      entryPoint: 'main',
+      constants: t.params.fragmentConstants,
+      targets: [{ format }]
+    }
+  );
 });
 
 g.test('shared_shader_module').
 desc(
-`Test that when the same module is shared by different pipelines, the constant values are still being used correctly.`).
-
+  `Test that when the same module is shared by different pipelines, the constant values are still being used correctly.`
+).
 params((u) =>
 u.
 combine('isAsync', [true, false]).
@@ -263,9 +260,9 @@ combineWithParams([
 
 
 
-}])).
-
-
+}]
+)
+).
 fn(async (t) => {
   const format = 'bgra8unorm';
   const vertexModule = t.device.createShaderModule({
@@ -306,13 +303,13 @@ fn(async (t) => {
   };
 
   const pipeline0 = await createPipelineFn(
-  t.params.vertexConstants0,
-  t.params.fragmentConstants0);
-
+    t.params.vertexConstants0,
+    t.params.fragmentConstants0
+  );
   const pipeline1 = await createPipelineFn(
-  t.params.vertexConstants1,
-  t.params.fragmentConstants1);
-
+    t.params.vertexConstants1,
+    t.params.fragmentConstants1
+  );
 
   const renderTarget0 = t.device.createTexture({
     format,
@@ -379,8 +376,8 @@ fn(async (t) => {
 
 g.test('multi_entry_points').
 desc(
-`Test that when the same module is shared by vertex and fragment shader, the constant values are still being used correctly.`).
-
+  `Test that when the same module is shared by vertex and fragment shader, the constant values are still being used correctly.`
+).
 params((u) =>
 u.
 combine('isAsync', [true, false]).
@@ -409,9 +406,9 @@ combineWithParams([
 
 
 
-}])).
-
-
+}]
+)
+).
 fn(async (t) => {
   const format = 'bgra8unorm';
   const module = t.device.createShaderModule({
@@ -438,20 +435,20 @@ fn(async (t) => {
       `
   });
   await t.ExpectShaderOutputWithConstants(
-  t.params.isAsync,
-  format,
-  t.params.expected,
-  {
-    module,
-    entryPoint: 'vertexMain',
-    constants: t.params.vertexConstants
-  },
-  {
-    module,
-    entryPoint: 'fragmentMain',
-    constants: t.params.fragmentConstants,
-    targets: [{ format }]
-  });
-
+    t.params.isAsync,
+    format,
+    t.params.expected,
+    {
+      module,
+      entryPoint: 'vertexMain',
+      constants: t.params.vertexConstants
+    },
+    {
+      module,
+      entryPoint: 'fragmentMain',
+      constants: t.params.fragmentConstants,
+      targets: [{ format }]
+    }
+  );
 });
 //# sourceMappingURL=overrides.spec.js.map

@@ -140,8 +140,8 @@ void (async () => {
 
   for (const suite of suites) {
     const currentMetadata = JSON.parse(
-    fs.readFileSync(`./src/${suite}/listing_meta.json`, 'utf8'));
-
+      fs.readFileSync(`./src/${suite}/listing_meta.json`, 'utf8')
+    );
 
     const metadata = { ...currentMetadata };
     for (const [testQString, { totalTimeMS, subcaseCount }] of testTimes.get(suite)) {

@@ -9,11 +9,11 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('texture_state').
 desc(
-`
+  `
   Test that the texture used for GPUQueue.writeTexture() must be valid. Tests calling writeTexture
   with {valid, invalid, destroyed} texture.
-  `).
-
+  `
+).
 params((u) => u.combine('textureState', kResourceStates)).
 fn((t) => {
   const { textureState } = t.params;
@@ -30,17 +30,17 @@ fn((t) => {
 
 g.test('usages').
 desc(
-`
+  `
   Tests calling writeTexture with the texture missed COPY_DST usage.
     - texture {with, without} COPY DST usage
-  `).
-
+  `
+).
 paramsSubcasesOnly([
 { usage: GPUConst.TextureUsage.COPY_DST }, // control case
 { usage: GPUConst.TextureUsage.STORAGE_BINDING },
 { usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.COPY_SRC },
-{ usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.COPY_DST }]).
-
+{ usage: GPUConst.TextureUsage.STORAGE_BINDING | GPUConst.TextureUsage.COPY_DST }]
+).
 fn((t) => {
   const { usage } = t.params;
   const texture = t.device.createTexture({
@@ -59,11 +59,11 @@ fn((t) => {
 
 g.test('sample_count').
 desc(
-`
+  `
   Test that the texture sample count. Check that a validation error is generated if sample count is
   not 1.
-  `).
-
+  `
+).
 params((u) => u.combine('sampleCount', [1, 4])).
 fn((t) => {
   const { sampleCount } = t.params;

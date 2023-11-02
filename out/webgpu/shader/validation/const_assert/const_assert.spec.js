@@ -61,15 +61,15 @@ params((u) =>
 u.
 combine('case', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = kConditionCases[t.params.case].expr;
   const val = kConditionCases[t.params.case].val;
   t.expectCompileResult(
-  true,
-  kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope));
-
+    true,
+    kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope)
+  );
 });
 
 g.test('constant_expression_assert').
@@ -78,103 +78,103 @@ params((u) =>
 u.
 combine('case', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = kConditionCases[t.params.case].expr;
   const val = kConditionCases[t.params.case].val;
   t.expectCompileResult(
-  false,
-  kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope));
-
+    false,
+    kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope)
+  );
 });
 
 g.test('constant_expression_logical_or_no_assert').
 desc(
-`Test that const_assert does not assert on a condition expression that contains a logical-or which evaluates to true`).
-
+  `Test that const_assert does not assert on a condition expression that contains a logical-or which evaluates to true`
+).
 params((u) =>
 u.
 combine('lhs', keysOf(kConditionCases)).
 combine('rhs', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = `(${kConditionCases[t.params.lhs].expr}) || (${
   kConditionCases[t.params.rhs].expr
   })`;
   const val = kConditionCases[t.params.lhs].val || kConditionCases[t.params.rhs].val;
   t.expectCompileResult(
-  true,
-  kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope));
-
+    true,
+    kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope)
+  );
 });
 
 g.test('constant_expression_logical_or_assert').
 desc(
-`Test that const_assert does assert on a condition expression that contains a logical-or which evaluates to false`).
-
+  `Test that const_assert does assert on a condition expression that contains a logical-or which evaluates to false`
+).
 params((u) =>
 u.
 combine('lhs', keysOf(kConditionCases)).
 combine('rhs', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = `(${kConditionCases[t.params.lhs].expr}) || (${
   kConditionCases[t.params.rhs].expr
   })`;
   const val = kConditionCases[t.params.lhs].val || kConditionCases[t.params.rhs].val;
   t.expectCompileResult(
-  false,
-  kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope));
-
+    false,
+    kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope)
+  );
 });
 
 g.test('constant_expression_logical_and_no_assert').
 desc(
-`Test that const_assert does not assert on a condition expression that contains a logical-and which evaluates to true`).
-
+  `Test that const_assert does not assert on a condition expression that contains a logical-and which evaluates to true`
+).
 params((u) =>
 u.
 combine('lhs', keysOf(kConditionCases)).
 combine('rhs', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = `(${kConditionCases[t.params.lhs].expr}) && (${
   kConditionCases[t.params.rhs].expr
   })`;
   const val = kConditionCases[t.params.lhs].val && kConditionCases[t.params.rhs].val;
   t.expectCompileResult(
-  true,
-  kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope));
-
+    true,
+    kConditionConstants + buildStaticAssert(val ? expr : `!(${expr})`, t.params.scope)
+  );
 });
 
 g.test('constant_expression_logical_and_assert').
 desc(
-`Test that const_assert does assert on a condition expression that contains a logical-and which evaluates to false`).
-
+  `Test that const_assert does assert on a condition expression that contains a logical-and which evaluates to false`
+).
 params((u) =>
 u.
 combine('lhs', keysOf(kConditionCases)).
 combine('rhs', keysOf(kConditionCases)).
 combine('scope', ['module', 'function']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const expr = `(${kConditionCases[t.params.lhs].expr}) && (${
   kConditionCases[t.params.rhs].expr
   })`;
   const val = kConditionCases[t.params.lhs].val && kConditionCases[t.params.rhs].val;
   t.expectCompileResult(
-  false,
-  kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope));
-
+    false,
+    kConditionConstants + buildStaticAssert(val ? `!(${expr})` : expr, t.params.scope)
+  );
 });
 
 g.test('evaluation_stage').
@@ -183,8 +183,8 @@ params((u) =>
 u.
 combine('scope', ['module', 'function']).
 combine('stage', ['constant', 'override', 'runtime']).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const staticAssert = buildStaticAssert('value', t.params.scope);
   switch (t.params.stage) {
@@ -196,7 +196,7 @@ fn((t) => {
       break;
     case 'runtime':
       t.expectCompileResult(false, `var<private> value = true;\n${staticAssert}`);
-      break;}
-
+      break;
+  }
 });
 //# sourceMappingURL=const_assert.spec.js.map

@@ -12,7 +12,7 @@ export const g = makeTestGroup(GPUTest);
 g.test('sampled').
 specURL('https://www.w3.org/TR/WGSL/#texturenumlayers').
 desc(
-`
+  `
 T, a sampled type.
 
 fn textureNumLayers(t: texture_2d_array<T>) -> u32
@@ -20,36 +20,36 @@ fn textureNumLayers(t: texture_cube_array<T>) -> u32
 
 Parameters
  * t The sampled array texture.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('texture_type', ['texture_2d_array', 'texture_cube_array']).
 beginSubcases().
-combine('sampled_type', ['f32-only', 'i32', 'u32'])).
-
+combine('sampled_type', ['f32-only', 'i32', 'u32'])
+).
 unimplemented();
 
 g.test('arrayed').
 specURL('https://www.w3.org/TR/WGSL/#texturenumlayers').
 desc(
-`
+  `
 fn textureNumLayers(t: texture_depth_2d_array) -> u32
 fn textureNumLayers(t: texture_depth_cube_array) -> u32
 
 Parameters
  * t The depth array texture.
-`).
-
+`
+).
 params((u) =>
-u.combine('texture_type', ['texture_depth_2d_array', 'texture_depth_cube_array'])).
-
+u.combine('texture_type', ['texture_depth_2d_array', 'texture_depth_cube_array'])
+).
 unimplemented();
 
 g.test('storage').
 specURL('https://www.w3.org/TR/WGSL/#texturenumlayers').
 desc(
-`
+  `
 F: rgba8unorm
    rgba8snorm
    rgba8uint
@@ -72,8 +72,8 @@ fn textureNumLayers(t: texture_storage_2d_array<F,A>) -> u32
 
 Parameters
  * t The sampled storage array texture.
-`).
-
+`
+).
 params((u) =>
 u.
 beginSubcases().
@@ -93,9 +93,9 @@ combine('texel_format', [
 'rg32float',
 'rgba32uint',
 'rgba32sint',
-'rgba32float']).
-
-combine('access_mode', ['read', 'write', 'read_write'])).
-
+'rgba32float']
+).
+combine('access_mode', ['read', 'write', 'read_write'])
+).
 unimplemented();
 //# sourceMappingURL=textureNumLayers.spec.js.map

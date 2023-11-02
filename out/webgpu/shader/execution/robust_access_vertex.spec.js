@@ -164,12 +164,12 @@ class DrawCall {
     this.bindVertexBuffers(pass);
     pass.setIndexBuffer(indexBuffer, 'uint32');
     pass.drawIndexed(
-    this.indexCount,
-    this.instanceCount,
-    this.firstIndex,
-    this.baseVertex,
-    this.firstInstance);
-
+      this.indexCount,
+      this.instanceCount,
+      this.firstIndex,
+      this.baseVertex,
+      this.firstInstance
+    );
   }
 
   // Insert an indirect draw call into |pass|
@@ -224,8 +224,8 @@ class DrawCall {
     this.vertexCount,
     this.instanceCount,
     this.firstVertex,
-    this.firstInstance]);
-
+    this.firstInstance]
+    );
     return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 
@@ -236,8 +236,8 @@ class DrawCall {
     this.instanceCount,
     this.firstIndex,
     this.baseVertex,
-    this.firstInstance]);
-
+    this.firstInstance]
+    );
     return this.test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
   }
 }
@@ -283,8 +283,8 @@ class F extends TextureTestMixin(GPUTest) {
   {
     // Make an array big enough for the vertices, attributes, and size of each element
     const vertexArray = new Float32Array(
-    numVertices * attributesPerBuffer * (typeInfo.sizeInBytes / 4));
-
+      numVertices * attributesPerBuffer * (typeInfo.sizeInBytes / 4)
+    );
 
     for (let i = 0; i < vertexArray.length; ++i) {
       vertexArray[i] = arbitraryValues[i % arbitraryValues.length];
@@ -470,10 +470,10 @@ class F extends TextureTestMixin(GPUTest) {
   }) {
     // Vertex buffer descriptors
     const buffers = this.generateVertexBufferDescriptors(
-    bufferCount,
-    attributesPerBuffer,
-    dataType);
-
+      bufferCount,
+      attributesPerBuffer,
+      dataType
+    );
 
     // Pipeline setup, texture setup
     const pipeline = this.createRenderPipeline({
@@ -515,8 +515,8 @@ class F extends TextureTestMixin(GPUTest) {
 
     // Validate we see green on the left pixel, showing that no failure case is detected
     this.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
-    { coord: { x: 0, y: 0 }, exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]) }]);
-
+    { coord: { x: 0, y: 0 }, exp: new Uint8Array([0x00, 0xff, 0x00, 0xff]) }]
+    );
   }
 }
 
@@ -524,29 +524,29 @@ export const g = makeTestGroup(F);
 
 g.test('vertex_buffer_access').
 params(
-(u) =>
-u.
-combineWithParams([
-{ indexed: false, indirect: true },
-{ indexed: true, indirect: false },
-{ indexed: true, indirect: true }]).
-
-expand('drawCallTestParameter', function* (p) {
-  if (p.indexed) {
-    yield* ['baseVertex', 'vertexCountInIndexBuffer'];
-    if (p.indirect) {
-      yield* ['indexCount', 'instanceCount', 'firstIndex'];
+  (u) =>
+  u.
+  combineWithParams([
+  { indexed: false, indirect: true },
+  { indexed: true, indirect: false },
+  { indexed: true, indirect: true }]
+  ).
+  expand('drawCallTestParameter', function* (p) {
+    if (p.indexed) {
+      yield* ['baseVertex', 'vertexCountInIndexBuffer'];
+      if (p.indirect) {
+        yield* ['indexCount', 'instanceCount', 'firstIndex'];
+      }
+    } else if (p.indirect) {
+      yield* ['vertexCount', 'instanceCount', 'firstVertex'];
     }
-  } else if (p.indirect) {
-    yield* ['vertexCount', 'instanceCount', 'firstVertex'];
-  }
-}).
-combine('type', Object.keys(typeInfoMap)).
-combine('additionalBuffers', [0, 4]).
-combine('partialLastNumber', [false, true]).
-combine('offsetVertexBuffer', [false, true]).
-combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6]).
-unless((p) => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
+  }).
+  combine('type', Object.keys(typeInfoMap)).
+  combine('additionalBuffers', [0, 4]).
+  combine('partialLastNumber', [false, true]).
+  combine('offsetVertexBuffer', [false, true]).
+  combine('errorScale', [0, 1, 4, 10 ** 2, 10 ** 4, 10 ** 6]).
+  unless((p) => p.drawCallTestParameter === 'instanceCount' && p.errorScale > 10 ** 4) // To avoid timeout
 ).
 fn((t) => {
   const p = t.params;
@@ -568,12 +568,12 @@ fn((t) => {
   // Generate vertex buffer contents. Only the first buffer is instance step mode, all others are vertex step mode
   const bufferCount = p.additionalBuffers + 2; // At least one instance step mode and one vertex step mode buffer
   const bufferContents = t.generateBufferContents(
-  numVertices,
-  attributesPerBuffer,
-  typeInfo,
-  arbitraryValues,
-  bufferCount);
-
+    numVertices,
+    attributesPerBuffer,
+    typeInfo,
+    arbitraryValues,
+    bufferCount
+  );
 
   // Mutable draw call
   const draw = new DrawCall({

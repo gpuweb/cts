@@ -19,9 +19,9 @@ fn((t) => {
 
   const isValid = dimension === 'cube';
   t.expectGPUError(
-  'validation',
-  () => texture.createView({ dimension, format: 'rgba8unorm' }),
-  !isValid);
-
+    'validation',
+    () => texture.createView({ dimension, format: 'rgba8unorm' }),
+    !isValid
+  );
 });
 //# sourceMappingURL=cubeArray.spec.js.map

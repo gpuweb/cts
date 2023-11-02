@@ -103,9 +103,9 @@ export class Fixture {
    */
   async finalize() {
     assert(
-    this.numOutstandingAsyncExpectations === 0,
-    'there were outstanding immediateAsyncExpectations (e.g. expectUncapturedError) at the end of the test');
-
+      this.numOutstandingAsyncExpectations === 0,
+      'there were outstanding immediateAsyncExpectations (e.g. expectUncapturedError) at the end of the test'
+    );
 
     // Loop to exhaust the eventualExpectations in case they chain off each other.
     while (this.eventualExpectations.length) {
@@ -346,4 +346,14 @@ export class Fixture {
     });
   }
 }
+
+
+
+/**
+ * FixtureClass encapsulates a constructor for fixture and a corresponding
+ * shared state factory function. An interface version of the type is also
+ * defined for mixin declaration use ONLY. The interface version is necessary
+ * because mixin classes need a constructor with a single any[] rest
+ * parameter.
+ */
 //# sourceMappingURL=fixture.js.map

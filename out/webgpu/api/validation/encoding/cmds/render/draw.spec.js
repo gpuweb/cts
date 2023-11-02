@@ -38,12 +38,12 @@ param)
   switch (drawType) {
     case 'drawIndexed':{
         encoder.drawIndexed(
-        param.indexCount,
-        param.instanceCount ?? 1,
-        param.firstIndex ?? 0,
-        param.baseVertex ?? 0,
-        param.firstInstance ?? 0);
-
+          param.indexCount,
+          param.instanceCount ?? 1,
+          param.firstIndex ?? 0,
+          param.baseVertex ?? 0,
+          param.firstInstance ?? 0
+        );
         break;
       }
     case 'drawIndexedIndirect':{
@@ -52,13 +52,13 @@ param)
         param.instanceCount ?? 1,
         param.firstIndex ?? 0,
         param.baseVertex ?? 0,
-        param.firstInstance ?? 0]);
-
+        param.firstInstance ?? 0]
+        );
         const indirectBuffer = test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
         encoder.drawIndexedIndirect(indirectBuffer, 0);
         break;
-      }}
-
+      }
+  }
 }
 
 
@@ -76,11 +76,11 @@ param)
   switch (drawType) {
     case 'draw':{
         encoder.draw(
-        param.vertexCount,
-        param.instanceCount ?? 1,
-        param.firstVertex ?? 0,
-        param.firstInstance ?? 0);
-
+          param.vertexCount,
+          param.instanceCount ?? 1,
+          param.firstVertex ?? 0,
+          param.firstInstance ?? 0
+        );
         break;
       }
     case 'drawIndirect':{
@@ -88,13 +88,13 @@ param)
         param.vertexCount,
         param.instanceCount ?? 1,
         param.firstVertex ?? 0,
-        param.firstInstance ?? 0]);
-
+        param.firstInstance ?? 0]
+        );
         const indirectBuffer = test.makeBufferWithContents(indirectArray, GPUBufferUsage.INDIRECT);
         encoder.drawIndirect(indirectBuffer, 0);
         break;
-      }}
-
+      }
+  }
 }
 
 function makeTestPipeline(
@@ -194,13 +194,13 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test(`unused_buffer_bound`).
 desc(
-`
+  `
 In this test we test that a small buffer bound to unused buffer slot won't cause validation error.
 - All draw commands,
   - An unused {index , vertex} buffer with uselessly small range is bound (immediately before draw
     call)
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('smallIndexBuffer', [false, true]).
@@ -209,14 +209,14 @@ combine('smallInstanceBuffer', [false, true]).
 beginSubcases().
 combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect']).
 unless(
-// Always provide index buffer of enough size if it is used by indexed draw
-(p) =>
-p.smallIndexBuffer && (
-p.drawType === 'drawIndexed' || p.drawType === 'drawIndexedIndirect')).
-
+  // Always provide index buffer of enough size if it is used by indexed draw
+  (p) =>
+  p.smallIndexBuffer && (
+  p.drawType === 'drawIndexed' || p.drawType === 'drawIndexedIndirect')
+).
 combine('bufferOffset', [0, 4]).
-combine('boundSize', [0, 1])).
-
+combine('boundSize', [0, 1])
+).
 fn((t) => {
   const {
     smallIndexBuffer,
@@ -289,15 +289,15 @@ fn((t) => {
 
 g.test(`index_buffer_OOB`).
 desc(
-`
+  `
 In this test we test that index buffer OOB is caught as a validation error in drawIndexed, but not in
 drawIndexedIndirect as it is GPU-validated.
 - Issue an indexed draw call, with the following index buffer states, for {all index formats}:
     - range and GPUBuffer are exactly the required size for the draw call
     - range is too small but GPUBuffer is still large enough
     - range and GPUBuffer are both too small
-`).
-
+`
+).
 params((u) =>
 u.
 combine('bufferSizeInElements', [10, 100])
@@ -306,16 +306,11 @@ combine('bufferSizeInElements', [10, 100])
 combine('drawIndexCount', [10, 11]).
 combine('drawType', ['drawIndexed', 'drawIndexedIndirect']).
 beginSubcases().
-combine('indexFormat', ['uint16', 'uint32'])).
-
+combine('indexFormat', ['uint16', 'uint32'])
+).
 fn((t) => {
-  const {
-    indexFormat,
-    bindingSizeInElements,
-    bufferSizeInElements,
-    drawIndexCount,
-    drawType
-  } = t.params;
+  const { indexFormat, bindingSizeInElements, bufferSizeInElements, drawIndexCount, drawType } =
+  t.params;
 
   const indexElementSize = indexFormat === 'uint16' ? 2 : 4;
   const bindingSize = bindingSizeInElements * indexElementSize;
@@ -360,7 +355,7 @@ fn((t) => {
 
 g.test(`vertex_buffer_OOB`).
 desc(
-`
+  `
 In this test we test the vertex buffer OOB validation in draw calls. Specifically, only vertex step
 mode buffer OOB in draw and instance step mode buffer OOB in draw and drawIndexed are CPU-validated.
 Other cases are handled by robust access and no validation error occurs.
@@ -398,8 +393,8 @@ vertex step mode vertex buffer. Then, we generate buffer parameters (i.e. GPU bu
 binding offset and binding size) for all buffers, covering both (bound size == required size),
 (bound size == required size - 1), and (bound size == 0), and test that draw and drawIndexed will
 success/error as expected. Such set of buffer parameters should include cases like weird offset values.
-`).
-
+`
+).
 params((u) =>
 u
 // type of draw call
@@ -411,8 +406,8 @@ u
 { VBSize: 'zero', IBSize: 'exact' },
 { VBSize: 'oneTooSmall', IBSize: 'exact' },
 { VBSize: 'exact', IBSize: 'zero' },
-{ VBSize: 'exact', IBSize: 'oneTooSmall' }])
-
+{ VBSize: 'exact', IBSize: 'oneTooSmall' }]
+)
 // the state of array stride
 .combine('AStride', ['zero', 'exact', 'oversize']).
 beginSubcases()
@@ -431,9 +426,9 @@ p.VStride0 ?
 { firstVertex: 0, vertexCount: 1 },
 { firstVertex: 0, vertexCount: 10000 },
 { firstVertex: 10000, vertexCount: 0 },
-{ firstVertex: 10000, vertexCount: 10000 }]).
+{ firstVertex: 10000, vertexCount: 10000 }]
 
-
+).
 expandWithParams((p) =>
 p.IStride0 ?
 [{ firstInstance: 0, instanceCount: 0 }] :
@@ -441,11 +436,11 @@ p.IStride0 ?
 { firstInstance: 0, instanceCount: 1 },
 { firstInstance: 0, instanceCount: 10000 },
 { firstInstance: 10000, instanceCount: 0 },
-{ firstInstance: 10000, instanceCount: 10000 }]).
+{ firstInstance: 10000, instanceCount: 10000 }]
 
-
-unless((p) => p.vertexCount === 10000 && p.instanceCount === 10000)).
-
+).
+unless((p) => p.vertexCount === 10000 && p.instanceCount === 10000)
+).
 fn((t) => {
   const {
     type: drawType,
@@ -501,22 +496,22 @@ fn((t) => {
       case 'exact':{
           setBufferSize = requiredBufferSize;
           break;
-        }}
-
+        }
+    }
     return setBufferSize;
   };
 
   const strideCountForVertexBuffer = firstVertex + vertexCount;
   const setVertexBufferSize = calcSetBufferSize(
-  boundVertexBufferSizeState,
-  strideCountForVertexBuffer);
-
+    boundVertexBufferSizeState,
+    strideCountForVertexBuffer
+  );
   const vertexBufferSize = setBufferOffset + setVertexBufferSize;
   const strideCountForInstanceBuffer = firstInstance + instanceCount;
   const setInstanceBufferSize = calcSetBufferSize(
-  boundInstanceBufferSizeState,
-  strideCountForInstanceBuffer);
-
+    boundInstanceBufferSizeState,
+    strideCountForInstanceBuffer
+  );
   const instanceBufferSize = setBufferOffset + setInstanceBufferSize;
 
   const vertexBuffer = t.createBufferWithState('valid', {
@@ -529,11 +524,11 @@ fn((t) => {
   });
 
   const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
-  t,
-  arrayStride,
-  attributeFormat,
-  attributeOffset);
-
+    t,
+    arrayStride,
+    attributeFormat,
+    attributeOffset
+  );
 
   for (const encoderType of ['render bundle', 'render pass']) {
     for (const setPipelineBeforeBuffer of [false, true]) {
@@ -559,12 +554,8 @@ fn((t) => {
 
         callDraw(t, renderEncoder, drawType, drawParam);
       } else {
-        const {
-          indexFormat,
-          indexCount,
-          firstIndex,
-          indexBufferSize
-        } = kDefaultParameterForIndexedDraw;
+        const { indexFormat, indexCount, firstIndex, indexBufferSize } =
+        kDefaultParameterForIndexedDraw;
 
         const desc = {
           size: indexBufferSize,
@@ -601,7 +592,7 @@ fn((t) => {
 
 g.test(`buffer_binding_overlap`).
 desc(
-`
+  `
 In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
 buffer slot and index buffer will cause no validation error, with completely/partial overlap.
     - x= all draw types
@@ -610,8 +601,8 @@ buffer slot and index buffer will cause no validation error, with completely/par
     of buffers overlapping or not. This test should be refactored to test specific overlap cases,
     and have fewer total parameterizations.
     See https://github.com/gpuweb/cts/pull/3122#discussion_r1378623214
-`).
-
+`
+).
 params((u) =>
 u //
 .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect']).
@@ -619,8 +610,8 @@ beginSubcases().
 combine('vertexBoundOffestFactor', [0, 0.5, 1, 1.5, 2]).
 combine('instanceBoundOffestFactor', [0, 0.5, 1, 1.5, 2]).
 combine('indexBoundOffestFactor', [0, 0.5, 1, 1.5, 2]).
-combine('arrayStrideState', ['zero', 'exact', 'oversize'])).
-
+combine('arrayStrideState', ['zero', 'exact', 'oversize'])
+).
 fn((t) => {
   const {
     drawType,
@@ -675,13 +666,13 @@ fn((t) => {
   const strideCountForInstanceBuffer = firstInstance + instanceCount;
   const setInstanceBufferSize = calcAttributeBufferSize(strideCountForInstanceBuffer);
   const setInstanceBufferOffset = calcSetBufferOffset(
-  setInstanceBufferSize,
-  instanceBoundOffestFactor);
-
+    setInstanceBufferSize,
+    instanceBoundOffestFactor
+  );
   requiredBufferSize = Math.max(
-  requiredBufferSize,
-  setInstanceBufferOffset + setInstanceBufferSize);
-
+    requiredBufferSize,
+    setInstanceBufferOffset + setInstanceBufferSize
+  );
 
   const { indexBufferSize: setIndexBufferSize, indexFormat } = kDefaultParameterForIndexedDraw;
   const setIndexBufferOffset = calcSetBufferOffset(setIndexBufferSize, indexBoundOffestFactor);
@@ -694,10 +685,10 @@ fn((t) => {
   });
 
   const renderPipeline = makeTestPipelineWithVertexAndInstanceBuffer(
-  t,
-  arrayStride,
-  attributeFormat);
-
+    t,
+    arrayStride,
+    attributeFormat
+  );
 
   for (const encoderType of ['render bundle', 'render pass']) {
     for (const setPipelineBeforeBuffer of [false, true]) {
@@ -709,17 +700,17 @@ fn((t) => {
       }
       renderEncoder.setVertexBuffer(1, sharedBuffer, setVertexBufferOffset, setVertexBufferSize);
       renderEncoder.setVertexBuffer(
-      7,
-      sharedBuffer,
-      setInstanceBufferOffset,
-      setInstanceBufferSize);
-
+        7,
+        sharedBuffer,
+        setInstanceBufferOffset,
+        setInstanceBufferSize
+      );
       renderEncoder.setIndexBuffer(
-      sharedBuffer,
-      indexFormat,
-      setIndexBufferOffset,
-      setIndexBufferSize);
-
+        sharedBuffer,
+        indexFormat,
+        setIndexBufferOffset,
+        setIndexBufferSize
+      );
       if (!setPipelineBeforeBuffer) {
         renderEncoder.setPipeline(renderPipeline);
       }
@@ -746,18 +737,18 @@ fn((t) => {
 
 g.test(`last_buffer_setting_take_account`).
 desc(
-`
+  `
 In this test we test that only the last setting for a buffer slot take account.
 - All (non/indexed, in/direct) draw commands
   - setPl, setVB, setIB, draw, {setPl,setVB,setIB,nothing (control)}, then a larger draw that
     wouldn't have been valid before that
-`).
-
+`
+).
 unimplemented();
 
 g.test(`max_draw_count`).
 desc(
-`
+  `
 In this test we test that draw count which exceeds
 GPURenderPassDescriptor.maxDrawCount causes validation error on
 GPUCommandEncoder.finish(). The test sets specified maxDrawCount,
@@ -767,16 +758,16 @@ and checks whether GPUCommandEncoder.finish() causes a validation error.
     - x= whether to use a bundle for the second half of the draw calls
     - x= several different draw counts
     - x= several different maxDrawCounts
-`).
-
+`
+).
 params((u) =>
 u.
 combine('bundleFirstHalf', [false, true]).
 combine('bundleSecondHalf', [false, true]).
 combine('maxDrawCount', [0, 1, 4, 16]).
 beginSubcases().
-expand('drawCount', (p) => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))).
-
+expand('drawCount', (p) => new Set([0, p.maxDrawCount, p.maxDrawCount + 1]))
+).
 fn((t) => {
   const { bundleFirstHalf, bundleSecondHalf, maxDrawCount, drawCount } = t.params;
 
@@ -812,13 +803,13 @@ fn((t) => {
 
   const indexBuffer = t.makeBufferWithContents(new Uint16Array([0, 0, 0]), GPUBufferUsage.INDEX);
   const indirectBuffer = t.makeBufferWithContents(
-  new Uint32Array([3, 1, 0, 0]),
-  GPUBufferUsage.INDIRECT);
-
+    new Uint32Array([3, 1, 0, 0]),
+    GPUBufferUsage.INDIRECT
+  );
   const indexedIndirectBuffer = t.makeBufferWithContents(
-  new Uint32Array([3, 1, 0, 0, 0]),
-  GPUBufferUsage.INDIRECT);
-
+    new Uint32Array([3, 1, 0, 0, 0]),
+    GPUBufferUsage.INDIRECT
+  );
 
   const commandEncoder = t.device.createCommandEncoder();
   const renderPassEncoder = commandEncoder.beginRenderPass({

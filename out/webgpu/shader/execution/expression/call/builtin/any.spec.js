@@ -11,13 +11,13 @@ Returns true if any component of e is true if e is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
-False,
-True,
-TypeBool,
-TypeVec,
-vec2,
-vec3,
-vec4 } from
+  False,
+  True,
+  TypeBool,
+  TypeVec,
+  vec2,
+  vec3,
+  vec4 } from
 '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -31,8 +31,8 @@ desc(`bool tests`).
 params((u) =>
 u.
 combine('inputSource', allInputSources).
-combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])).
-
+combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'])
+).
 fn(async (t) => {
   const overloads = {
     scalar: {

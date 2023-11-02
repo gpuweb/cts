@@ -10,11 +10,11 @@ TODO: consider whether external_texture and copyToTexture video tests should be 
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
-startPlayingAndWaitForVideo,
-getVideoFrameFromVideoElement,
-getVideoElement,
-kVideoExpectations,
-kVideoRotationExpectations } from
+  startPlayingAndWaitForVideo,
+  getVideoFrameFromVideoElement,
+  getVideoElement,
+  kVideoExpectations,
+  kVideoRotationExpectations } from
 '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -131,17 +131,17 @@ function checkNonStandardIsZeroCopyIfAvailable() {
 
 g.test('importExternalTexture,sample').
 desc(
-`
+  `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
 for several combinations of video format and color space.
-`).
-
+`
+).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
 combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoExpectations)).
-
+combineWithParams(kVideoExpectations)
+).
 fn(async (t) => {
   const sourceType = t.params.sourceType;
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
@@ -164,11 +164,11 @@ fn(async (t) => {
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
     const bindGroup = createExternalTextureSamplingTestBindGroup(
-    t,
-    t.params.checkNonStandardIsZeroCopy,
-    source,
-    pipeline);
-
+      t,
+      t.params.checkNonStandardIsZeroCopy,
+      source,
+      pipeline
+    );
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -197,8 +197,8 @@ fn(async (t) => {
     // Bottom-left should be blue.
     { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._blueExpectation },
     // Bottom-right should be green.
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._greenExpectation }]);
-
+    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._greenExpectation }]
+    );
 
     if (sourceType === 'VideoFrame') source.close();
   });
@@ -206,17 +206,17 @@ fn(async (t) => {
 
 g.test('importExternalTexture,sampleWithRotationMetadata').
 desc(
-`
+  `
 Tests that when importing an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sampling from
 it will honor rotation metadata.
-`).
-
+`
+).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
 combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoRotationExpectations)).
-
+combineWithParams(kVideoRotationExpectations)
+).
 fn(async (t) => {
   const sourceType = t.params.sourceType;
   const videoElement = getVideoElement(t, t.params.videoName);
@@ -235,11 +235,11 @@ fn(async (t) => {
 
     const pipeline = createExternalTextureSamplingTestPipeline(t);
     const bindGroup = createExternalTextureSamplingTestBindGroup(
-    t,
-    t.params.checkNonStandardIsZeroCopy,
-    source,
-    pipeline);
-
+      t,
+      t.params.checkNonStandardIsZeroCopy,
+      source,
+      pipeline
+    );
 
     const commandEncoder = t.device.createCommandEncoder();
     const passEncoder = commandEncoder.beginRenderPass({
@@ -264,8 +264,8 @@ fn(async (t) => {
     { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._topLeftExpectation },
     { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._topRightExpectation },
     { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._bottomLeftExpectation },
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._bottomRightExpectation }]);
-
+    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._bottomRightExpectation }]
+    );
 
     if (sourceType === 'VideoFrame') source.close();
   });
@@ -273,16 +273,16 @@ fn(async (t) => {
 
 g.test('importExternalTexture,sampleWithVideoFrameWithVisibleRectParam').
 desc(
-`
+  `
 Tests that we can import VideoFrames and sample the correct sub-rectangle when visibleRect
 parameters are present.
-`).
-
+`
+).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
-combineWithParams(kVideoExpectations)).
-
+combineWithParams(kVideoExpectations)
+).
 fn(async (t) => {
   const videoElement = getVideoElement(t, t.params.videoName);
 
@@ -345,11 +345,11 @@ fn(async (t) => {
 
       const pipeline = createExternalTextureSamplingTestPipeline(t);
       const bindGroup = createExternalTextureSamplingTestBindGroup(
-      t,
-      t.params.checkNonStandardIsZeroCopy,
-      subRect,
-      pipeline);
-
+        t,
+        t.params.checkNonStandardIsZeroCopy,
+        subRect,
+        pipeline
+      );
 
       const commandEncoder = t.device.createCommandEncoder();
       const passEncoder = commandEncoder.beginRenderPass({
@@ -374,8 +374,8 @@ fn(async (t) => {
       { coord: { x: kWidth * 0.1, y: kHeight * 0.1 }, exp: cropParam.color },
       { coord: { x: kWidth * 0.9, y: kHeight * 0.1 }, exp: cropParam.color },
       { coord: { x: kWidth * 0.1, y: kHeight * 0.9 }, exp: cropParam.color },
-      { coord: { x: kWidth * 0.9, y: kHeight * 0.9 }, exp: cropParam.color }]);
-
+      { coord: { x: kWidth * 0.9, y: kHeight * 0.9 }, exp: cropParam.color }]
+      );
 
       subRect.close();
     }
@@ -385,17 +385,17 @@ fn(async (t) => {
 });
 g.test('importExternalTexture,compute').
 desc(
-`
+  `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
 compute shader, for several combinations of video format and color space.
-`).
-
+`
+).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
 combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoExpectations)).
-
+combineWithParams(kVideoExpectations)
+).
 fn(async (t) => {
   const sourceType = t.params.sourceType;
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
@@ -472,8 +472,8 @@ fn(async (t) => {
     // Bottom-left should be blue.
     { coord: { x: 1, y: 0 }, exp: t.params._blueExpectation },
     // Bottom-right should be green.
-    { coord: { x: 1, y: 1 }, exp: t.params._greenExpectation }]);
-
+    { coord: { x: 1, y: 1 }, exp: t.params._greenExpectation }]
+    );
 
     if (sourceType === 'VideoFrame') source.close();
   });

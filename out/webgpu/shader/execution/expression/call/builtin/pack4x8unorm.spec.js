@@ -9,14 +9,14 @@ bits 8 × i through 8 × i + 7 of the result.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
-f32,
-pack4x8unorm,
+  f32,
+  pack4x8unorm,
 
-TypeF32,
-TypeU32,
-TypeVec,
-u32,
-vec4 } from
+  TypeF32,
+  TypeU32,
+  TypeVec,
+  u32,
+  vec4 } from
 '../../../../../util/conversion.js';
 import { quantizeToF32, vectorF32Range } from '../../../../../util/math.js';
 import { allInputSources, run } from '../../expression.js';
@@ -28,10 +28,10 @@ export const g = makeTestGroup(GPUTest);
 g.test('pack').
 specURL('https://www.w3.org/TR/WGSL/#pack-builtin-functions').
 desc(
-`
+  `
 @const fn pack4x8unorm(e: vec4<f32>) -> u32
-`).
-
+`
+).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const makeCase = (vals) => {

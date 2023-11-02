@@ -39,8 +39,8 @@ fn((t) => {
 g.test('combine_one,case').
 params((u) =>
 u //
-.combineWithParams([{ x: 1 }])).
-
+.combineWithParams([{ x: 1 }])
+).
 fn((t) => {
   t.expect(t.params.x === 1);
 });
@@ -48,8 +48,8 @@ fn((t) => {
 g.test('combine_one,subcase').
 paramsSubcasesOnly((u) =>
 u //
-.combineWithParams([{ x: 1 }])).
-
+.combineWithParams([{ x: 1 }])
+).
 fn((t) => {
   t.expect(t.params.x === 1);
 });
@@ -59,10 +59,10 @@ params((u) =>
 u.
 combineWithParams([
 { a: true, x: 1 }, //
-{ a: false, y: 2 }]).
-
-filter((p) => p.a)).
-
+{ a: false, y: 2 }]
+).
+filter((p) => p.a)
+).
 fn((t) => {
   t.expect(t.params.a);
 });
@@ -72,10 +72,10 @@ params((u) =>
 u.
 combineWithParams([
 { a: true, x: 1 }, //
-{ a: false, y: 2 }]).
-
-unless((p) => p.a)).
-
+{ a: false, y: 2 }]
+).
+unless((p) => p.a)
+).
 fn((t) => {
   t.expect(!t.params.a);
 });
@@ -95,8 +95,8 @@ g.test('generator').fn((t0) => {
         }
       }
     }
-  })).
-
+  })
+  ).
   fn((t) => {
     ran.push(t.params);
   });
@@ -107,7 +107,7 @@ g.test('generator').fn((t0) => {
   { test: ['generator'], params: { x: 1, y: 0 } },
   { test: ['generator'], params: { x: 1, y: 1 } },
   { test: ['generator'], params: { x: 2, y: 0 } },
-  { test: ['generator'], params: { x: 2, y: 1 } }]);
-
+  { test: ['generator'], params: { x: 2, y: 1 } }]
+  );
 });
 //# sourceMappingURL=params_builder_toplevel.spec.js.map

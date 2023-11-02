@@ -35,10 +35,10 @@ g.test('clear').fn((t) => {
   });
   pass.end();
   encoder.copyTextureToBuffer(
-  { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { buffer: dst, bytesPerRow: 256 },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { buffer: dst, bytesPerRow: 256 },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   t.device.queue.submit([encoder.finish()]);
 
   t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
@@ -104,10 +104,10 @@ g.test('fullscreen_quad').fn((t) => {
   pass.draw(3);
   pass.end();
   encoder.copyTextureToBuffer(
-  { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-  { buffer: dst, bytesPerRow: 256 },
-  { width: 1, height: 1, depthOrArrayLayers: 1 });
-
+    { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+    { buffer: dst, bytesPerRow: 256 },
+    { width: 1, height: 1, depthOrArrayLayers: 1 }
+  );
   t.device.queue.submit([encoder.finish()]);
 
   t.expectGPUBufferValuesEqual(dst, new Uint8Array([0x00, 0xff, 0x00, 0xff]));
@@ -115,7 +115,7 @@ g.test('fullscreen_quad').fn((t) => {
 
 g.test('large_draw').
 desc(
-`Test reasonably-sized large {draw, drawIndexed} (see also stress tests).
+  `Test reasonably-sized large {draw, drawIndexed} (see also stress tests).
 
   Tests that draw calls behave reasonably with large vertex counts for
   non-indexed draws, large index counts for indexed draws, and large instance
@@ -135,13 +135,13 @@ desc(
 
   Params:
     - indexed= {true, false} - whether to test indexed or non-indexed draw calls
-    - indirect= {true, false} - whether to use indirect or direct draw calls`).
-
+    - indirect= {true, false} - whether to use indirect or direct draw calls`
+).
 params((u) =>
 u //
 .combine('indexed', [true, false]).
-combine('indirect', [true, false])).
-
+combine('indirect', [true, false])
+).
 fn(async (t) => {
   const { indexed, indirect } = t.params;
 
@@ -292,10 +292,10 @@ fn(async (t) => {
     }
     pass.end();
     encoder.copyTextureToBuffer(
-    { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
-    { buffer: dst, bytesPerRow: kBytesPerRow },
-    { width: 3, height: 3, depthOrArrayLayers: 1 });
-
+      { texture: colorAttachment, mipLevel: 0, origin: { x: 0, y: 0, z: 0 } },
+      { buffer: dst, bytesPerRow: kBytesPerRow },
+      { width: 3, height: 3, depthOrArrayLayers: 1 }
+    );
 
     const params = new Uint32Array([numVertices, numInstances]);
     t.device.queue.writeBuffer(paramsBuffer, 0, params, 0, 2);

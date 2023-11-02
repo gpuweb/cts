@@ -1,10 +1,19 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { SkipTestCase, UnexpectedPassError } from '../framework/fixture.js';
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import {
+  SkipTestCase,
+
+  UnexpectedPassError } from
+
+
+'../framework/fixture.js';
 import {
+
   builderIterateCasesWithSubcases,
-  kUnitCaseParamsBuilder,
-} from '../framework/params_builder.js';
+  kUnitCaseParamsBuilder } from
+
+
+'../framework/params_builder.js';
 import { globalTestConfig } from '../framework/test_config.js';
 
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
@@ -14,13 +23,38 @@ import { TestQuerySingleCase } from '../internal/query/query.js';
 import { kPathSeparator } from '../internal/query/separators.js';
 import {
   stringifyPublicParams,
-  stringifyPublicParamsUniquely,
-} from '../internal/query/stringify_params.js';
+  stringifyPublicParamsUniquely } from
+'../internal/query/stringify_params.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 
 import { assert, unreachable } from '../util/util.js';
 
 import { logToWebsocket } from './websocket_logger.js';
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Interface for defining tests
+
+
 
 export function makeTestGroup(fixture) {
   return new TestGroup(fixture);
@@ -28,14 +62,36 @@ export function makeTestGroup(fixture) {
 
 // Interfaces for running tests
 
-export function makeTestGroupForUnitTesting(fixture) {
+
+
+
+
+
+
+
+
+
+
+
+
+export function makeTestGroupForUnitTesting(
+fixture)
+{
   return new TestGroup(fixture);
 }
 
 /** Parameter name for batch number (see also TestBuilder.batch). */
 const kBatchParamName = 'batch__';
 
+
+
+
+
+
+
+
 export class TestGroup {
+
   seen = new Set();
   tests = [];
 
@@ -54,7 +110,6 @@ export class TestGroup {
       name === decodeURIComponent(name),
       `Not decodeURIComponent-idempotent: ${name} !== ${decodeURIComponent(name)}`
     );
-
     assert(!this.seen.has(name), `Duplicate test name: ${name}`);
 
     this.seen.add(name);
@@ -92,7 +147,94 @@ export class TestGroup {
   }
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 class TestBuilder {
+
+
+
+
+
+
+
+
   testCases = undefined;
   batchSize = 0;
 
@@ -108,7 +250,7 @@ class TestBuilder {
     return this;
   }
 
-  specURL(url) {
+  specURL(_url) {
     return this;
   }
 
@@ -119,6 +261,7 @@ class TestBuilder {
   }
 
   fn(fn) {
+
     // MAINTENANCE_TODO: add "TODO" if there's no description? (and make sure it only ends up on
     // actual tests, not on test parents in the tree, which is what happens if you do it here, not
     // sure why)
@@ -135,7 +278,7 @@ class TestBuilder {
     assert(this.testFn === undefined);
 
     this.description =
-      (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
+    (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
     this.isUnimplemented = true;
 
     this.testFn = () => {
@@ -178,7 +321,6 @@ class TestBuilder {
           !seen.has(testcaseStringUnique),
           `Duplicate public test case params for test ${testPathString}: ${testcaseString}`
         );
-
         seen.add(testcaseStringUnique);
       }
     }
@@ -196,7 +338,9 @@ class TestBuilder {
     return caseCount;
   }
 
-  params(cases) {
+  params(
+  cases)
+  {
     assert(this.testCases === undefined, 'test case is already parameterized');
     if (cases instanceof Function) {
       this.testCases = cases(kUnitCaseParamsBuilder);
@@ -212,7 +356,9 @@ class TestBuilder {
     return this;
   }
 
-  paramsSubcasesOnly(subcases) {
+  paramsSubcasesOnly(
+  subcases)
+  {
     if (subcases instanceof Function) {
       return this.params(subcases(kUnitCaseParamsBuilder.beginSubcases()));
     } else {
@@ -266,7 +412,7 @@ class TestBuilder {
       }
 
       // There are multiple batches. Helper function for this case:
-      const makeCaseForBatch = batch => {
+      const makeCaseForBatch = (batch) => {
         const sliceStart = batch * this.batchSize;
         return this.makeCaseSpecific(
           { ...caseParams, [kBatchParamName]: batch },
@@ -289,16 +435,26 @@ class TestBuilder {
 }
 
 class RunCaseSpecific {
+
+
+
+
+
+
+
+
+
+
   constructor(
-    testPath,
-    params,
-    isUnimplemented,
-    subcases,
-    fixture,
-    fn,
-    beforeFn,
-    testCreationStack
-  ) {
+  testPath,
+  params,
+  isUnimplemented,
+  subcases,
+  fixture,
+  fn,
+  beforeFn,
+  testCreationStack)
+  {
     this.id = { test: testPath, params: extractPublicParams(params) };
     this.isUnimplemented = isUnimplemented;
     this.params = params;
@@ -321,7 +477,13 @@ class RunCaseSpecific {
     }
   }
 
-  async runTest(rec, sharedState, params, throwSkip, expectedStatus) {
+  async runTest(
+  rec,
+  sharedState,
+  params,
+  throwSkip,
+  expectedStatus)
+  {
     try {
       rec.beginSubCase();
       if (expectedStatus === 'skip') {
@@ -358,8 +520,12 @@ class RunCaseSpecific {
     }
   }
 
-  async run(rec, selfQuery, expectations) {
-    const getExpectedStatus = selfQueryWithSubParams => {
+  async run(
+  rec,
+  selfQuery,
+  expectations)
+  {
+    const getExpectedStatus = (selfQueryWithSubParams) => {
       let didSeeFail = false;
       for (const exp of expectations) {
         const ordering = compareQueries(exp.query, selfQueryWithSubParams);
@@ -438,11 +604,12 @@ class RunCaseSpecific {
                             try {
                               arg.stack = stack;
                             } catch {
+
                               // If that fails too, just silence it.
-                            }
-                          }
+                            }}
                         }
                       }
+
 
                       const rv = prop.apply(target, args);
                       // Because this proxy executes functions in a deferred manner,
@@ -452,7 +619,7 @@ class RunCaseSpecific {
                   };
                 }
                 return prop;
-              },
+              }
             });
 
             const params = mergeParams(this.params, subParams);
@@ -465,7 +632,7 @@ class RunCaseSpecific {
 
             // Limit the maximum number of subcases in flight.
             if (subcasesInFlight >= maxSubcasesInFlight) {
-              await new Promise(resolve => {
+              await new Promise((resolve) => {
                 // There should only be one subcase waiting at a time.
                 assert(resolvePromiseBlockingSubcase === undefined);
                 resolvePromiseBlockingSubcase = resolve;
@@ -479,29 +646,28 @@ class RunCaseSpecific {
               subRec,
               sharedState,
               params,
-              /* throwSkip */ true,
+              /* throwSkip */true,
               getExpectedStatus(subcaseQuery)
-            )
-              .then(() => {
-                subRec.info(new Error('OK'));
-              })
-              .catch(ex => {
-                if (ex instanceof SkipTestCase) {
-                  // Convert SkipTestCase to info messages
-                  ex.message = 'subcase skipped: ' + ex.message;
-                  subRec.info(ex);
-                  ++skipCount;
-                } else {
-                  // Since we are catching all error inside runTest(), this should never happen
-                  subRec.threw(ex);
-                }
-              })
-              .finally(subcaseFinishedCallback);
+            ).
+            then(() => {
+              subRec.info(new Error('OK'));
+            }).
+            catch((ex) => {
+              if (ex instanceof SkipTestCase) {
+                // Convert SkipTestCase to info messages
+                ex.message = 'subcase skipped: ' + ex.message;
+                subRec.info(ex);
+                ++skipCount;
+              } else {
+                // Since we are catching all error inside runTest(), this should never happen
+                subRec.threw(ex);
+              }
+            }).
+            finally(subcaseFinishedCallback);
 
             allPreviousSubcasesFinalizedPromise = allPreviousSubcasesFinalizedPromise.then(
               () => finalizePromise
             );
-
             ++totalCount;
           }
 
@@ -516,7 +682,7 @@ class RunCaseSpecific {
             rec,
             sharedState,
             this.params,
-            /* throwSkip */ false,
+            /* throwSkip */false,
             getExpectedStatus(selfQuery)
           );
         }
@@ -538,7 +704,7 @@ class RunCaseSpecific {
       const msg = {
         q: selfQuery.toString(),
         timems: rec.result.timems,
-        nonskippedSubcaseCount: rec.nonskippedSubcaseCount,
+        nonskippedSubcaseCount: rec.nonskippedSubcaseCount
       };
       logToWebsocket(JSON.stringify(msg));
     }

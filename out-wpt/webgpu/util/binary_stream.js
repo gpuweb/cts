@@ -1,7 +1,6 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { assert } from '../../common/util/util.js';
-import { float16ToUint16, uint16ToFloat16 } from './conversion.js';
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import { assert } from '../../common/util/util.js';import { float16ToUint16, uint16ToFloat16 } from './conversion.js';
 import { align } from './math.js';
 
 /**
@@ -48,22 +47,22 @@ export default class BinaryStream {
 
   /** writeU16() writes a uint16 to the buffer at the next 16-bit aligned offset */
   writeU16(value) {
-    this.view.setUint16(this.alignedOffset(2), value, /* littleEndian */ true);
+    this.view.setUint16(this.alignedOffset(2), value, /* littleEndian */true);
   }
 
   /** readU16() reads a uint16 from the buffer at the next 16-bit aligned offset */
   readU16() {
-    return this.view.getUint16(this.alignedOffset(2), /* littleEndian */ true);
+    return this.view.getUint16(this.alignedOffset(2), /* littleEndian */true);
   }
 
   /** writeU32() writes a uint32 to the buffer at the next 32-bit aligned offset */
   writeU32(value) {
-    this.view.setUint32(this.alignedOffset(4), value, /* littleEndian */ true);
+    this.view.setUint32(this.alignedOffset(4), value, /* littleEndian */true);
   }
 
   /** readU32() reads a uint32 from the buffer at the next 32-bit aligned offset */
   readU32() {
-    return this.view.getUint32(this.alignedOffset(4), /* littleEndian */ true);
+    return this.view.getUint32(this.alignedOffset(4), /* littleEndian */true);
   }
 
   /** writeI8() writes a int8 to the buffer at the next byte offset */
@@ -78,22 +77,22 @@ export default class BinaryStream {
 
   /** writeI16() writes a int16 to the buffer at the next 16-bit aligned offset */
   writeI16(value) {
-    this.view.setInt16(this.alignedOffset(2), value, /* littleEndian */ true);
+    this.view.setInt16(this.alignedOffset(2), value, /* littleEndian */true);
   }
 
   /** readI16() reads a int16 from the buffer at the next 16-bit aligned offset */
   readI16() {
-    return this.view.getInt16(this.alignedOffset(2), /* littleEndian */ true);
+    return this.view.getInt16(this.alignedOffset(2), /* littleEndian */true);
   }
 
   /** writeI32() writes a int32 to the buffer at the next 32-bit aligned offset */
   writeI32(value) {
-    this.view.setInt32(this.alignedOffset(4), value, /* littleEndian */ true);
+    this.view.setInt32(this.alignedOffset(4), value, /* littleEndian */true);
   }
 
   /** readI32() reads a int32 from the buffer at the next 32-bit aligned offset */
   readI32() {
-    return this.view.getInt32(this.alignedOffset(4), /* littleEndian */ true);
+    return this.view.getInt32(this.alignedOffset(4), /* littleEndian */true);
   }
 
   /** writeF16() writes a float16 to the buffer at the next 16-bit aligned offset */
@@ -108,22 +107,22 @@ export default class BinaryStream {
 
   /** writeF32() writes a float32 to the buffer at the next 32-bit aligned offset */
   writeF32(value) {
-    this.view.setFloat32(this.alignedOffset(4), value, /* littleEndian */ true);
+    this.view.setFloat32(this.alignedOffset(4), value, /* littleEndian */true);
   }
 
   /** readF32() reads a float32 from the buffer at the next 32-bit aligned offset */
   readF32() {
-    return this.view.getFloat32(this.alignedOffset(4), /* littleEndian */ true);
+    return this.view.getFloat32(this.alignedOffset(4), /* littleEndian */true);
   }
 
   /** writeF64() writes a float64 to the buffer at the next 64-bit aligned offset */
   writeF64(value) {
-    this.view.setFloat64(this.alignedOffset(8), value, /* littleEndian */ true);
+    this.view.setFloat64(this.alignedOffset(8), value, /* littleEndian */true);
   }
 
   /** readF64() reads a float64 from the buffer at the next 64-bit aligned offset */
   readF64() {
-    return this.view.getFloat64(this.alignedOffset(8), /* littleEndian */ true);
+    return this.view.getFloat64(this.alignedOffset(8), /* littleEndian */true);
   }
 
   /**
@@ -208,4 +207,7 @@ export default class BinaryStream {
     this.offset = aligned + bytes;
     return aligned;
   }
+
+
+
 }

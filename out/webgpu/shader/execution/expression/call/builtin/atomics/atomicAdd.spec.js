@@ -12,11 +12,11 @@ Returns the original value stored in the atomic object.
 import { GPUTest } from '../../../../../../gpu_test.js';
 
 import {
-dispatchSizes,
-workgroupSizes,
-runStorageVariableTest,
-runWorkgroupVariableTest,
-typedArrayCtor } from
+  dispatchSizes,
+  workgroupSizes,
+  runStorageVariableTest,
+  runWorkgroupVariableTest,
+  typedArrayCtor } from
 './harness.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -24,19 +24,19 @@ export const g = makeTestGroup(GPUTest);
 g.test('add_storage').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
   // Allocate one extra element to ensure it doesn't get modified
@@ -61,19 +61,19 @@ fn((t) => {
 g.test('add_workgroup').
 specURL('https://www.w3.org/TR/WGSL/#atomic-rmw').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicAdd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   // Allocate one extra element to ensure it doesn't get modified
   const wgNumElements = 2;
@@ -82,8 +82,8 @@ fn((t) => {
   const op = `atomicAdd(&wg[0], 1)`;
 
   const expected = new (typedArrayCtor(t.params.scalarType))(
-  wgNumElements * t.params.dispatchSize);
-
+    wgNumElements * t.params.dispatchSize
+  );
   for (let d = 0; d < t.params.dispatchSize; ++d) {
     const wg = expected.subarray(d * wgNumElements);
     wg[0] = t.params.workgroupSize;

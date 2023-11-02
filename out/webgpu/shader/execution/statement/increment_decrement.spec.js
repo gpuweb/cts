@@ -79,10 +79,10 @@ g.test('scalar_i32_increment').
 desc('Tests increment of scalar i32 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-9, 11, kValue.i32.negative.min + 1, kValue.i32.positive.max, 1]),
-  `
+    t,
+    'i32',
+    new Int32Array([-9, 11, kValue.i32.negative.min + 1, kValue.i32.positive.max, 1]),
+    `
     var a: i32 = -10;
     var b: i32 = 10;
     var c: i32 = ${kValue.i32.negative.min};
@@ -100,33 +100,33 @@ fn((t) => {
     push_output(c);
     push_output(d);
     push_output(e);
-`);
-
+`
+  );
 });
 
 g.test('scalar_i32_increment_overflow').
 desc('Tests increment of scalar i32 values which overflows').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([kValue.i32.negative.min]),
-  `
+    t,
+    'i32',
+    new Int32Array([kValue.i32.negative.min]),
+    `
     var a: i32 = ${kValue.i32.positive.max};
     a++;
     push_output(a);
-`);
-
+`
+  );
 });
 
 g.test('scalar_u32_increment').
 desc('Tests increment of scalar u32 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'u32',
-  new Uint32Array([1, 11, kValue.u32.max]),
-  `
+    t,
+    'u32',
+    new Uint32Array([1, 11, kValue.u32.max]),
+    `
     var a: u32 = 0;
     var b: u32 = 10;
     var c: u32 = ${kValue.u32.max - 1};
@@ -138,33 +138,33 @@ fn((t) => {
     push_output(a);
     push_output(b);
     push_output(c);
-`);
-
+`
+  );
 });
 
 g.test('scalar_u32_increment_overflow').
 desc('Tests increment of scalar u32 values which overflows').
 fn((t) => {
   runStatementTest(
-  t,
-  'u32',
-  new Uint32Array([0]),
-  `
+    t,
+    'u32',
+    new Uint32Array([0]),
+    `
     var a: u32 = ${kValue.u32.max};
     a++;
     push_output(a);
-`);
-
+`
+  );
 });
 
 g.test('scalar_i32_decrement').
 desc('Tests decrement of scalar i32 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-11, 9, kValue.i32.negative.min, kValue.i32.positive.max - 1, -1]),
-  `
+    t,
+    'i32',
+    new Int32Array([-11, 9, kValue.i32.negative.min, kValue.i32.positive.max - 1, -1]),
+    `
     var a: i32 = -10;
     var b: i32 = 10;
     var c: i32 = ${kValue.i32.negative.min + 1};
@@ -182,33 +182,33 @@ fn((t) => {
     push_output(c);
     push_output(d);
     push_output(e);
-`);
-
+`
+  );
 });
 
 g.test('scalar_i32_decrement_underflow').
 desc('Tests decrement of scalar i32 values which underflow').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([kValue.i32.positive.max]),
-  `
+    t,
+    'i32',
+    new Int32Array([kValue.i32.positive.max]),
+    `
     var a: i32 = ${kValue.i32.negative.min};
     a--;
     push_output(a);
-`);
-
+`
+  );
 });
 
 g.test('scalar_u32_decrement').
 desc('Tests decrement of scalar u32 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'u32',
-  new Uint32Array([0, 9, kValue.u32.max - 1]),
-  `
+    t,
+    'u32',
+    new Uint32Array([0, 9, kValue.u32.max - 1]),
+    `
     var a: u32 = 1;
     var b: u32 = 10;
     var c: u32 = ${kValue.u32.max};
@@ -220,33 +220,33 @@ fn((t) => {
     push_output(a);
     push_output(b);
     push_output(c);
-`);
-
+`
+  );
 });
 
 g.test('scalar_u32_decrement_underflow').
 desc('Tests decrement of scalar u32 values which underflow').
 fn((t) => {
   runStatementTest(
-  t,
-  'u32',
-  new Uint32Array([kValue.u32.max]),
-  `
+    t,
+    'u32',
+    new Uint32Array([kValue.u32.max]),
+    `
     var a: u32 = 0;
     a--;
     push_output(a);
-`);
-
+`
+  );
 });
 
 g.test('vec2_element_increment').
 desc('Tests increment of ve2 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-9, 11]),
-  `
+    t,
+    'i32',
+    new Int32Array([-9, 11]),
+    `
     var a = vec2(-10, 10);
 
     a.x++;
@@ -254,18 +254,18 @@ fn((t) => {
 
     push_output(a.x);
     push_output(a.y);
-`);
-
+`
+  );
 });
 
 g.test('vec3_element_increment').
 desc('Tests increment of vec3 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-9, 11, kValue.i32.negative.min + 1]),
-  `
+    t,
+    'i32',
+    new Int32Array([-9, 11, kValue.i32.negative.min + 1]),
+    `
     var a = vec3(-10, 10, ${kValue.i32.negative.min});
 
     a.x++;
@@ -275,18 +275,18 @@ fn((t) => {
     push_output(a.x);
     push_output(a.y);
     push_output(a.z);
-`);
-
+`
+  );
 });
 
 g.test('vec4_element_increment').
 desc('Tests increment of vec4 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-9, 11, kValue.i32.negative.min + 1, kValue.i32.positive.max]),
-  `
+    t,
+    'i32',
+    new Int32Array([-9, 11, kValue.i32.negative.min + 1, kValue.i32.positive.max]),
+    `
     var a: vec4<i32> = vec4(-10, 10, ${kValue.i32.negative.min}, ${kValue.i32.positive.max - 1});
 
     a.x++;
@@ -298,18 +298,18 @@ fn((t) => {
     push_output(a.y);
     push_output(a.z);
     push_output(a.w);
-`);
-
+`
+  );
 });
 
 g.test('vec2_element_decrement').
 desc('Tests decrement of vec2 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-11, 9]),
-  `
+    t,
+    'i32',
+    new Int32Array([-11, 9]),
+    `
     var a = vec2(-10, 10);
 
     a.x--;
@@ -317,18 +317,18 @@ fn((t) => {
 
     push_output(a.x);
     push_output(a.y);
-`);
-
+`
+  );
 });
 
 g.test('vec3_element_decrement').
 desc('Tests decrement of vec3 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-11, 9, kValue.i32.negative.min]),
-  `
+    t,
+    'i32',
+    new Int32Array([-11, 9, kValue.i32.negative.min]),
+    `
     var a = vec3(-10, 10, ${kValue.i32.negative.min + 1});
 
     a.x--;
@@ -338,18 +338,18 @@ fn((t) => {
     push_output(a.x);
     push_output(a.y);
     push_output(a.z);
-`);
-
+`
+  );
 });
 
 g.test('vec4_element_decrement').
 desc('Tests decrement of vec4 values').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([-11, 9, kValue.i32.negative.min, kValue.i32.positive.max - 1]),
-  `
+    t,
+    'i32',
+    new Int32Array([-11, 9, kValue.i32.negative.min, kValue.i32.positive.max - 1]),
+    `
     var a: vec4<i32> = vec4(-10, 10, ${kValue.i32.negative.min + 1}, ${kValue.i32.positive.max});
 
     a.x--;
@@ -361,22 +361,22 @@ fn((t) => {
     push_output(a.y);
     push_output(a.z);
     push_output(a.w);
-`);
-
+`
+  );
 });
 
 g.test('frexp_exp_increment').
 desc('Tests increment can be used on a frexp field').
 fn((t) => {
   runStatementTest(
-  t,
-  'i32',
-  new Int32Array([2]),
-  `
+    t,
+    'i32',
+    new Int32Array([2]),
+    `
     var a = frexp(1.23);
     a.exp++;
     push_output(a.exp);
-`);
-
+`
+  );
 });
 //# sourceMappingURL=increment_decrement.spec.js.map

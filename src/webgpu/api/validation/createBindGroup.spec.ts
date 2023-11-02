@@ -466,19 +466,20 @@ g.test('minBindingSize')
       usage: GPUBufferUsage.STORAGE,
     });
 
-    t.expectValidationError(() => {
-      t.device.createBindGroup({
-        layout: bindGroupLayout,
-        entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: storageBuffer,
+    t.expectValidationError(
+      () => {
+        t.device.createBindGroup({
+          layout: bindGroupLayout,
+          entries: [
+            {
+              binding: 0,
+              resource: { buffer: storageBuffer },
             },
-          },
-        ],
-      });
-    }, minBindingSize !== undefined && size < minBindingSize);
+          ],
+        });
+      },
+      minBindingSize !== undefined && size < minBindingSize
+    );
   });
 
 g.test('buffer,resource_state')

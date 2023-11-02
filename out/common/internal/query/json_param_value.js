@@ -30,36 +30,36 @@ const fromStringMagicValue = new Map([
 [jsPositiveInfinityMagicValue, Number.POSITIVE_INFINITY],
 [jsNegativeInfinityMagicValue, Number.NEGATIVE_INFINITY],
 // -0 is handled in this direction because there is no comparison issue.
-[jsNegativeZeroMagicValue, -0]]);
+[jsNegativeZeroMagicValue, -0]]
+);
 
-
-function stringifyFilter(k, v) {
+function stringifyFilter(_k, v) {
   // Make sure no one actually uses a magic value as a parameter.
   if (typeof v === 'string') {
     assert(
-    !fromStringMagicValue.has(v),
-    `${v} is a magic value for stringification, so cannot be used`);
-
-
-    assert(
-    v !== jsNegativeZeroMagicValue,
-    `${v} is a magic value for stringification, so cannot be used`);
-
+      !fromStringMagicValue.has(v),
+      `${v} is a magic value for stringification, so cannot be used`
+    );
 
     assert(
-    v.match(jsBigIntMagicPattern) === null,
-    `${v} matches bigint magic pattern for stringification, so cannot be used`);
+      v !== jsNegativeZeroMagicValue,
+      `${v} is a magic value for stringification, so cannot be used`
+    );
 
+    assert(
+      v.match(jsBigIntMagicPattern) === null,
+      `${v} matches bigint magic pattern for stringification, so cannot be used`
+    );
   }
 
   const isObject = v !== null && typeof v === 'object' && !Array.isArray(v);
   if (isObject) {
     assert(
-    isPlainObject(v),
-    `value must be a plain object but it appears to be a '${
-    Object.getPrototypeOf(v).constructor.name
-    }`);
-
+      isPlainObject(v),
+      `value must be a plain object but it appears to be a '${
+      Object.getPrototypeOf(v).constructor.name
+      }`
+    );
   }
   assert(typeof v !== 'function', `${v} can not be a function`);
 
@@ -93,7 +93,7 @@ export function stringifyParamValueUniquely(value) {
 
 // 'any' is part of the JSON.parse reviver interface, so cannot be avoided.
 
-function parseParamValueReviver(k, v) {
+function parseParamValueReviver(_k, v) {
   if (fromStringMagicValue.has(v)) {
     return fromStringMagicValue.get(v);
   }

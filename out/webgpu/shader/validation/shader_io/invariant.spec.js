@@ -66,8 +66,8 @@ params((u) =>
 u.
 combineWithParams(kBuiltins).
 combine('use_struct', [true, false]).
-beginSubcases()).
-
+beginSubcases()
+).
 fn((t) => {
   const code = generateShader({
     attribute: `@builtin(${t.params.name}) @invariant`,

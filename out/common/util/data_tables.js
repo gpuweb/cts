@@ -111,11 +111,11 @@ table)
 {
   const result = {};
   const keyToIndex = new Map(
-  columnsKept.map((name) => {
-    const remappedName = columnRenames[name] === undefined ? name : columnRenames[name];
-    return [name, columns.indexOf(remappedName)];
-  }));
-
+    columnsKept.map((name) => {
+      const remappedName = columnRenames[name] === undefined ? name : columnRenames[name];
+      return [name, columns.indexOf(remappedName)];
+    })
+  );
   for (const [k, v] of Object.entries(table)) {
     const item = {};
     for (const member of columnsKept) {

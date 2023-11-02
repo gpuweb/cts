@@ -5,12 +5,12 @@ import { GPUTest } from '../../../gpu_test.js';
 
 import {
 
-MemoryModelTester,
-buildTestShader,
-TestType,
-buildResultShader,
-ResultType,
-MemoryType } from
+  MemoryModelTester,
+  buildTestShader,
+  TestType,
+  buildResultShader,
+  ResultType,
+  MemoryType } from
 './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -67,11 +67,11 @@ const resultCode = `
 
 g.test('atomicity').
 desc(
-`Checks whether a store on one thread can interrupt an atomic RMW on a second thread. If the read returned by
+  `Checks whether a store on one thread can interrupt an atomic RMW on a second thread. If the read returned by
     the RMW instruction is the initial value of memory (0), but the final value in memory is 1, then the atomic write
     in the second thread occurred in between the read and the write of the RMW.
-    `).
-
+    `
+).
 paramsSimple([
 {
   memType: MemoryType.AtomicStorageClass,
@@ -87,17 +87,17 @@ paramsSimple([
   memType: MemoryType.AtomicWorkgroupClass,
   testType: TestType.IntraWorkgroup,
   _testCode: workgroupMemoryTestCode
-}]).
-
+}]
+).
 fn(async (t) => {
   const testShader = buildTestShader(t.params._testCode, t.params.memType, t.params.testType);
   const resultShader = buildResultShader(resultCode, t.params.testType, ResultType.FourBehavior);
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader
+  );
   await memModelTester.run(10, 3);
 });
 //# sourceMappingURL=atomicity.spec.js.map

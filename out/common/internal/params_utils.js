@@ -37,8 +37,8 @@ export function extractPublicParams(params) {
 const kPercent = '%';
 
 export const badParamValueChars = new RegExp(
-'[' + kParamKVSeparator + kParamSeparator + kWildcard + kPercent + ']');
-
+  '[' + kParamKVSeparator + kParamSeparator + kWildcard + kPercent + ']'
+);
 
 export function publicParamsEquals(x, y) {
   return comparePublicParamsPaths(x, y) === Ordering.Equal;
@@ -48,16 +48,16 @@ export function publicParamsEquals(x, y) {
 
 
 
-
-
-
-
-
-
-
-
-
-
+/**
+ * Flatten a union of interfaces into a single interface encoding the same type.
+ *
+ * Flattens a union in such a way that:
+ * `{ a: number, b?: undefined } | { b: string, a?: undefined }`
+ * (which is the value type of `[{ a: 1 }, { b: 1 }]`)
+ * becomes `{ a: number | undefined, b: string | undefined }`.
+ *
+ * And also works for `{ a: number } | { b: string }` which maps to the same.
+ */
 
 
 
@@ -131,9 +131,9 @@ export function mergeParams(a, b) {
 export function mergeParamsChecked(a, b) {
   const merged = mergeParams(a, b);
   assert(
-  Object.keys(merged).length === Object.keys(a).length + Object.keys(b).length,
-  () => `Duplicate key between ${JSON.stringify(a)} and ${JSON.stringify(b)}`);
-
+    Object.keys(merged).length === Object.keys(a).length + Object.keys(b).length,
+    () => `Duplicate key between ${JSON.stringify(a)} and ${JSON.stringify(b)}`
+  );
   return merged;
 }
 //# sourceMappingURL=params_utils.js.map

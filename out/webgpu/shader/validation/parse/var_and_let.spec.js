@@ -44,19 +44,19 @@ const kTestTypes = [
 
 g.test('initializer_type').
 desc(
-`
+  `
   If present, the initializer's type must match the store type of the variable.
   Testing scalars, vectors, and matrices of every dimension and type.
   TODO: add test for: structs - arrays of vectors and matrices - arrays of different length
-`).
-
+`
+).
 params((u) =>
 u.
 combine('variableOrConstant', ['var', 'let']).
 beginSubcases().
 combine('lhsType', kTestTypes).
-combine('rhsType', kTestTypes)).
-
+combine('rhsType', kTestTypes)
+).
 fn((t) => {
   const { variableOrConstant, lhsType, rhsType } = t.params;
 
@@ -73,15 +73,15 @@ fn((t) => {
 
 g.test('var_access_mode_bad_other_template_contents').
 desc(
-'A variable declaration with explicit access mode with varying other template list contents').
-
+  'A variable declaration with explicit access mode with varying other template list contents'
+).
 specURL('https://gpuweb.github.io/gpuweb/wgsl/#var-decls').
 params((u) =>
 u.
 combine('accessMode', ['read', 'read_write']).
 combine('prefix', ['storage,', '', ',']).
-combine('suffix', [',storage', ',read', ',', ''])).
-
+combine('suffix', [',storage', ',read', ',', ''])
+).
 fn((t) => {
   const prog = `@group(0) @binding(0)
                   var<${t.params.prefix}${t.params.accessMode}${t.params.suffix}> x: i32;`;
@@ -96,8 +96,8 @@ params((u) =>
 u.
 combine('accessMode', ['read', 'read_write']).
 combine('prefix', ['', '<', '>', ',']).
-combine('suffix', ['', '<', '>', ','])).
-
+combine('suffix', ['', '<', '>', ','])
+).
 fn((t) => {
   const prog = `@group(0) @binding(0)
                   var ${t.params.prefix}storage,${t.params.accessMode}${t.params.suffix} x: i32;`;

@@ -23,8 +23,8 @@ g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`u32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cfg = t.params;
   await run(t, builtin('firstTrailingBit'), [TypeU32], TypeU32, cfg, [
@@ -130,16 +130,16 @@ fn(async (t) => {
   { input: u32Bits(0b11010100000000000000000000000000), expected: u32(26) },
   { input: u32Bits(0b10111000000000000000000000000000), expected: u32(27) },
   { input: u32Bits(0b01110000000000000000000000000000), expected: u32(28) },
-  { input: u32Bits(0b10100000000000000000000000000000), expected: u32(29) }]);
-
+  { input: u32Bits(0b10100000000000000000000000000000), expected: u32(29) }]
+  );
 });
 
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`i32 tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])).
-
+u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+).
 fn(async (t) => {
   const cfg = t.params;
   await run(t, builtin('firstTrailingBit'), [TypeI32], TypeI32, cfg, [
@@ -245,7 +245,7 @@ fn(async (t) => {
   { input: i32Bits(0b11010100000000000000000000000000), expected: i32(26) },
   { input: i32Bits(0b10111000000000000000000000000000), expected: i32(27) },
   { input: i32Bits(0b01110000000000000000000000000000), expected: i32(28) },
-  { input: i32Bits(0b10100000000000000000000000000000), expected: i32(29) }]);
-
+  { input: i32Bits(0b10100000000000000000000000000000), expected: i32(29) }]
+  );
 });
 //# sourceMappingURL=firstTrailingBit.spec.js.map

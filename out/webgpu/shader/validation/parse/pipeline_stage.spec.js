@@ -115,10 +115,10 @@ combine('scope', [
 'fn-var',
 'fn-return',
 'while-stmt',
-undefined]).
-
-combine('attr', ['@compute', '@fragment', '@vertex'])).
-
+undefined]
+).
+combine('attr', ['@compute', '@fragment', '@vertex'])
+).
 fn((t) => {
   const scope = t.params.scope;
 

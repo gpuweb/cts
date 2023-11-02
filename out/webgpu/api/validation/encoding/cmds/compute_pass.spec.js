@@ -50,10 +50,10 @@ export const g = makeTestGroup(F);
 
 g.test('set_pipeline').
 desc(
-`
+  `
 setPipeline should generate an error iff using an 'invalid' pipeline.
-`).
-
+`
+).
 params((u) => u.beginSubcases().combine('state', ['valid', 'invalid'])).
 fn((t) => {
   const { state } = t.params;
@@ -91,7 +91,7 @@ fn((t) => {
 
 g.test('dispatch_sizes').
 desc(
-`Test 'direct' and 'indirect' dispatch with various sizes.
+  `Test 'direct' and 'indirect' dispatch with various sizes.
 
   Only direct dispatches can produce validation errors.
   Workgroup sizes:
@@ -99,8 +99,8 @@ desc(
     - invalid: { just over limit, way over limit }
 
   TODO: Verify that the invalid cases don't execute any invocations at all.
-`).
-
+`
+).
 params((u) =>
 u.
 combine('dispatchType', ['direct', 'indirect']).
@@ -110,12 +110,12 @@ combine('largeDimValueVariant', [
 { mult: 1, add: 0 },
 { mult: 1, add: 1 },
 { mult: 0, add: 0x7fff_ffff },
-{ mult: 0, add: 0xffff_ffff }]).
-
+{ mult: 0, add: 0xffff_ffff }]
+).
 beginSubcases().
 combine('largeDimIndex', [0, 1, 2]).
-combine('smallDimValue', [0, 1])).
-
+combine('smallDimValue', [0, 1])
+).
 fn((t) => {
   const { dispatchType, largeDimIndex, smallDimValue, largeDimValueVariant } = t.params;
   const maxDispatch = t.device.limits.maxComputeWorkgroupsPerDimension;
@@ -133,9 +133,9 @@ fn((t) => {
     encoder.dispatchWorkgroups(x, y, z);
   } else if (dispatchType === 'indirect') {
     encoder.dispatchWorkgroupsIndirect(
-    t.createIndirectBuffer('valid', new Uint32Array(workSizes)),
-    0);
-
+      t.createIndirectBuffer('valid', new Uint32Array(workSizes)),
+      0
+    );
   }
 
   const shouldError =
@@ -148,7 +148,7 @@ fn((t) => {
 const kBufferData = new Uint32Array(6).fill(1);
 g.test('indirect_dispatch_buffer_state').
 desc(
-`
+  `
 Test dispatchWorkgroupsIndirect validation by submitting various dispatches with a no-op pipeline
 and an indirectBuffer with 6 elements.
 - indirectBuffer: {'valid', 'invalid', 'destroyed'}
@@ -156,8 +156,8 @@ and an indirectBuffer with 6 elements.
   - valid, within the buffer: {beginning, middle, end} of the buffer
   - invalid, non-multiple of 4
   - invalid, the last element is outside the buffer
-`).
-
+`
+).
 paramsSubcasesOnly((u) =>
 u //
 .combine('state', kResourceStates).
@@ -169,9 +169,9 @@ kBufferData.byteLength - 3 * Uint32Array.BYTES_PER_ELEMENT,
 // invalid, non-multiple of 4 offset
 1,
 // invalid, last element outside buffer
-kBufferData.byteLength - 2 * Uint32Array.BYTES_PER_ELEMENT])).
-
-
+kBufferData.byteLength - 2 * Uint32Array.BYTES_PER_ELEMENT]
+)
+).
 fn((t) => {
   const { state, offset } = t.params;
   const pipeline = t.createNoOpComputePipeline();
@@ -190,8 +190,8 @@ fn((t) => {
 
 g.test('indirect_dispatch_buffer,device_mismatch').
 desc(
-`Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another device`).
-
+  `Tests dispatchWorkgroupsIndirect cannot be called with an indirect buffer created from another device`
+).
 paramsSubcasesOnly((u) => u.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -217,11 +217,11 @@ fn((t) => {
 
 g.test('indirect_dispatch_buffer,usage').
 desc(
-`
+  `
     Tests dispatchWorkgroupsIndirect generates a validation error if the buffer usage does not
     contain INDIRECT usage.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u
 // If bufferUsage0 and bufferUsage1 are the same, the usage being test is a single usage.
@@ -229,12 +229,12 @@ u
 .combine('bufferUsage0', kBufferUsages).
 combine('bufferUsage1', kBufferUsages).
 unless(
-({ bufferUsage0, bufferUsage1 }) =>
-((bufferUsage0 | bufferUsage1) & (
-GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
-0)).
-
-
+  ({ bufferUsage0, bufferUsage1 }) =>
+  ((bufferUsage0 | bufferUsage1) & (
+  GPUConst.BufferUsage.MAP_READ | GPUConst.BufferUsage.MAP_WRITE)) !==
+  0
+)
+).
 fn((t) => {
   const { bufferUsage0, bufferUsage1 } = t.params;
 

@@ -22,17 +22,17 @@ import { GPUTest } from './gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 // Note: spaces aren't allowed in test names; use underscores.
-g.test('test_name').fn((t) => {});
+g.test('test_name').fn((_t) => {});
 
 g.test('not_implemented_yet,without_plan').unimplemented();
 g.test('not_implemented_yet,with_plan').
 desc(
-`
+  `
 Plan for this test. What it tests. Summary of how it tests that functionality.
 - Description of cases, by describing parameters {a, b, c}
 - x= more parameters {x, y, z}
-`).
-
+`
+).
 unimplemented();
 
 g.test('basic').fn((t) => {
@@ -40,42 +40,42 @@ g.test('basic').fn((t) => {
   t.expect(true, 'true should be true');
 
   t.shouldThrow(
-  // The expected '.name' of the thrown error.
-  'TypeError',
-  // This function is run inline inside shouldThrow, and is expected to throw.
-  () => {
-    throw new TypeError();
-  },
-  // Log message.
-  { message: 'function should throw Error' });
-
+    // The expected '.name' of the thrown error.
+    'TypeError',
+    // This function is run inline inside shouldThrow, and is expected to throw.
+    () => {
+      throw new TypeError();
+    },
+    // Log message.
+    { message: 'function should throw Error' }
+  );
 });
 
 g.test('basic,async').fn((t) => {
   // shouldReject must be awaited to ensure it can wait for the promise before the test ends.
   t.shouldReject(
-  // The expected '.name' of the thrown error.
-  'TypeError',
-  // Promise expected to reject.
-  Promise.reject(new TypeError()),
-  // Log message.
-  { message: 'Promise.reject should reject' });
-
+    // The expected '.name' of the thrown error.
+    'TypeError',
+    // Promise expected to reject.
+    Promise.reject(new TypeError()),
+    // Log message.
+    { message: 'Promise.reject should reject' }
+  );
 
   // Promise can also be an IIFE (immediately-invoked function expression).
   t.shouldReject(
-  'TypeError',
+    'TypeError',
 
-  (async () => {
-    throw new TypeError();
-  })(),
-  { message: 'Promise.reject should reject' });
-
+    (async () => {
+      throw new TypeError();
+    })(),
+    { message: 'Promise.reject should reject' }
+  );
 });
 
 g.test('basic,plain_cases').
 desc(
-`
+  `
 A test can be parameterized with a simple array of objects using .paramsSimple([ ... ]).
 Each such instance of the test is a "case".
 
@@ -85,19 +85,19 @@ each with just one subcase:
       - { x:   2, y:   2 }
   - webgpu:examples:basic,cases:x=-10;y=-10  runs 1 subcase, with t.params set to:
       - { x: -10, y: -10 }
-  `).
-
+  `
+).
 paramsSimple([
 { x: 2, y: 2 }, //
-{ x: -10, y: -10 }]).
-
+{ x: -10, y: -10 }]
+).
 fn((t) => {
   t.expect(t.params.x === t.params.y);
 });
 
 g.test('basic,plain_cases_private').
 desc(
-`
+  `
 Parameters can be public ("x", "y") which means they're part of the case name.
 They can also be private by starting with an underscore ("_result"), which passes
 them into the test but does not make them part of the case name:
@@ -107,12 +107,12 @@ In this example, the following cases are generated, each with just one subcase:
       - { x:   2, y:  4, _result: 6 }
   - webgpu:examples:basic,cases:x=-10;y=18  runs 1 subcase, with t.params set to:
       - { x: -10, y: 18, _result: 8 }
-  `).
-
+  `
+).
 paramsSimple([
 { x: 2, y: 4, _result: 6 }, //
-{ x: -10, y: 18, _result: 8 }]).
-
+{ x: -10, y: 18, _result: 8 }]
+).
 fn((t) => {
   t.expect(t.params.x + t.params.y === t.params._result);
 });
@@ -120,7 +120,7 @@ fn((t) => {
 
 g.test('basic,builder_cases').
 desc(
-`
+  `
 A "CaseParamsBuilder" or "SubcaseParamsBuilder" can be passed to .params() instead.
 The params builder provides facilities for generating tests combinatorially (by cartesian
 product). For convenience, the "unit" CaseParamsBuilder is passed as an argument ("u" below).
@@ -134,18 +134,18 @@ In this example, the following cases are generated, each with just one subcase:
       - { x: 2, y: 1 }
   - webgpu:examples:basic,cases:x=2,y=2  runs 1 subcase, with t.params set to:
       - { x: 2, y: 2 }
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combineWithParams([{ x: 1 }, { x: 2 }]).
-combineWithParams([{ y: 1 }, { y: 2 }])).
-
+combineWithParams([{ y: 1 }, { y: 2 }])
+).
 fn(() => {});
 
 g.test('basic,builder_cases_subcases').
 desc(
-`
+  `
 Each case sub-parameterized using .beginSubcases().
 Each such instance of the test is a "subcase", which cannot be run independently of other
 subcases. It is somewhat like wrapping the entire fn body in a for-loop.
@@ -157,38 +157,38 @@ In this example, the following cases are generated:
   - webgpu:examples:basic,cases:x=2      runs 2 subcases, with t.params set to:
       - { x: 2, y: 1 }
       - { x: 2, y: 2 }
-  `).
-
+  `
+).
 params((u) =>
 u //
 .combineWithParams([{ x: 1 }, { x: 2 }]).
 beginSubcases().
-combineWithParams([{ y: 1 }, { y: 2 }])).
-
+combineWithParams([{ y: 1 }, { y: 2 }])
+).
 fn(() => {});
 
 g.test('basic,builder_subcases').
 desc(
-`
+  `
 In this example, the following single case is generated:
   - webgpu:examples:basic,cases:         runs 4 subcases, with t.params set to:
       - { x: 1, y: 1 }
       - { x: 1, y: 2 }
       - { x: 2, y: 1 }
       - { x: 2, y: 2 }
-  `).
-
+  `
+).
 params((u) =>
 u //
 .beginSubcases().
 combineWithParams([{ x: 1 }, { x: 2 }]).
-combineWithParams([{ y: 1 }, { y: 2 }])).
-
+combineWithParams([{ y: 1 }, { y: 2 }])
+).
 fn(() => {});
 
 g.test('basic,builder_subcases_short').
 desc(
-`
+  `
 As a shorthand, .paramsSubcasesOnly() can be used.
 
 In this example, the following single case is generated:
@@ -197,13 +197,13 @@ In this example, the following single case is generated:
       - { x: 1, y: 2 }
       - { x: 2, y: 1 }
       - { x: 2, y: 2 }
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
 u //
 .combineWithParams([{ x: 1 }, { x: 2 }]).
-combineWithParams([{ y: 1 }, { y: 2 }])).
-
+combineWithParams([{ y: 1 }, { y: 2 }])
+).
 fn(() => {});
 
 g.test('gpu,async').fn(async (t) => {
@@ -225,9 +225,9 @@ g.test('gpu,buffers').fn((t) => {
 
 g.test('gpu,with_texture_compression,bc').
 desc(
-`Example of a test using a device descriptor.
-Tests that a BC format passes validation iff the feature is enabled.`).
-
+  `Example of a test using a device descriptor.
+Tests that a BC format passes validation iff the feature is enabled.`
+).
 params((u) => u.combine('textureCompressionBC', [false, true])).
 beforeAllSubcases((t) => {
   const { textureCompressionBC } = t.params;
@@ -250,9 +250,9 @@ fn((t) => {
 
 g.test('gpu,with_texture_compression,etc2').
 desc(
-`Example of a test using a device descriptor.
-Tests that an ETC2 format passes validation iff the feature is enabled.`).
-
+  `Example of a test using a device descriptor.
+Tests that an ETC2 format passes validation iff the feature is enabled.`
+).
 params((u) => u.combine('textureCompressionETC2', [false, true])).
 beforeAllSubcases((t) => {
   const { textureCompressionETC2 } = t.params;

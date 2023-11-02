@@ -13,21 +13,21 @@ export const g = makeTestGroup(GPUTest);
 g.test('load_storage').
 specURL('https://www.w3.org/TR/WGSL/#atomic-load').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
 
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
   const bufferNumElements = numInvocations;
@@ -104,21 +104,21 @@ fn((t) => {
 g.test('load_workgroup').
 specURL('https://www.w3.org/TR/WGSL/#atomic-load').
 desc(
-`
+  `
 AS is storage or workgroup
 T is i32 or u32
 
 fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
 
-`).
-
+`
+).
 params((u) =>
 u.
 combine('workgroupSize', workgroupSizes).
 combine('dispatchSize', dispatchSizes).
 combine('mapId', keysOf(kMapId)).
-combine('scalarType', ['u32', 'i32'])).
-
+combine('scalarType', ['u32', 'i32'])
+).
 fn((t) => {
   const numInvocations = t.params.workgroupSize;
   const wgNumElements = numInvocations;
@@ -184,8 +184,8 @@ fn((t) => {
 
   // Expected values should be map_id(0..n)
   const expected = new (typedArrayCtor(t.params.scalarType))(
-  wgNumElements * t.params.dispatchSize);
-
+    wgNumElements * t.params.dispatchSize
+  );
   expected.forEach((_, i) => expected[i] = mapId.f(i, numInvocations));
 
   t.expectGPUBufferValuesEqual(outputBuffer, expected);

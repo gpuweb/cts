@@ -47,8 +47,8 @@ desc('Test that indirect recursion of const declarations via struct members is r
 params((u) =>
 u //
 .combine('target', ['a', 'b']).
-combine('attribute', ['align', 'location', 'size'])).
-
+combine('attribute', ['align', 'location', 'size'])
+).
 fn((t) => {
   const wgsl = `
 struct S {

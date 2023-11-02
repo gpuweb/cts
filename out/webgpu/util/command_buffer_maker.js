@@ -7,7 +7,7 @@ export const kProgrammableEncoderTypes = ['compute pass', ...kRenderEncodeTypes]
 export const kEncoderTypes = ['non-pass', ...kProgrammableEncoderTypes];
 
 
-
+// Look up the type of the encoder based on `T`. If `T` is a union, this will be too!
 
 
 

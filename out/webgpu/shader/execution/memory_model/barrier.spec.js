@@ -6,13 +6,13 @@ import { GPUTest } from '../../../gpu_test.js';
 
 import {
 
-MemoryModelTester,
-kAccessValueTypes,
-buildTestShader,
-MemoryType,
-TestType,
-buildResultShader,
-ResultType } from
+  MemoryModelTester,
+  kAccessValueTypes,
+  buildTestShader,
+  MemoryType,
+  TestType,
+  buildResultShader,
+  ResultType } from
 './memory_model_setup.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -107,23 +107,23 @@ function getTestCode(p) {
     case 'ww':
       return p.memType === MemoryType.NonAtomicStorageClass ?
       storageMemoryBarrierStoreStoreTestCode :
-      workgroupMemoryBarrierStoreStoreTestCode;}
-
+      workgroupMemoryBarrierStoreStoreTestCode;
+  }
 }
 
 g.test('workgroup_barrier_store_load').
 desc(
-`Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
+  `Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
     separate threads in the same workgroup. Within a workgroup, the barrier should force an invocation
     after the barrier to read a write from an invocation before the barrier.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('accessValueType', kAccessValueTypes).
 combine('memType', kMemTypes).
-combine('accessPair', ['wr'])).
-
+combine('accessPair', ['wr'])
+).
 beforeAllSubcases((t) => {
   if (t.params.accessValueType === 'f16') {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -138,38 +138,38 @@ fn(async (t) => {
       }
     `;
   const testShader = buildTestShader(
-  getTestCode(t.params),
-  t.params.memType,
-  TestType.IntraWorkgroup);
-
+    getTestCode(t.params),
+    t.params.memType,
+    TestType.IntraWorkgroup
+  );
   const resultShader = buildResultShader(
-  resultCode,
-  TestType.IntraWorkgroup,
-  ResultType.TwoBehavior);
-
+    resultCode,
+    TestType.IntraWorkgroup,
+    ResultType.TwoBehavior
+  );
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader,
-  t.params.accessValueType);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader,
+    t.params.accessValueType
+  );
   await memModelTester.run(15, 1);
 });
 
 g.test('workgroup_barrier_load_store').
 desc(
-`Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
+  `Checks whether the workgroup barrier properly synchronizes a non-atomic write and read on
     separate threads in the same workgroup. Within a workgroup, the barrier should force an invocation
     before the barrier to not read the write from an invocation after the barrier.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('accessValueType', kAccessValueTypes).
 combine('memType', kMemTypes).
-combine('accessPair', ['rw'])).
-
+combine('accessPair', ['rw'])
+).
 beforeAllSubcases((t) => {
   if (t.params.accessValueType === 'f16') {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -184,38 +184,38 @@ fn(async (t) => {
       }
     `;
   const testShader = buildTestShader(
-  getTestCode(t.params),
-  t.params.memType,
-  TestType.IntraWorkgroup);
-
+    getTestCode(t.params),
+    t.params.memType,
+    TestType.IntraWorkgroup
+  );
   const resultShader = buildResultShader(
-  resultCode,
-  TestType.IntraWorkgroup,
-  ResultType.TwoBehavior);
-
+    resultCode,
+    TestType.IntraWorkgroup,
+    ResultType.TwoBehavior
+  );
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader,
-  t.params.accessValueType);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader,
+    t.params.accessValueType
+  );
   await memModelTester.run(12, 1);
 });
 
 g.test('workgroup_barrier_store_store').
 desc(
-`Checks whether the workgroup barrier properly synchronizes non-atomic writes on
+  `Checks whether the workgroup barrier properly synchronizes non-atomic writes on
     separate threads in the same workgroup. Within a workgroup, the barrier should force the value in memory
     to be the result of the write after the barrier, not the write before.
-    `).
-
+    `
+).
 params((u) =>
 u.
 combine('accessValueType', kAccessValueTypes).
 combine('memType', kMemTypes).
-combine('accessPair', ['ww'])).
-
+combine('accessPair', ['ww'])
+).
 beforeAllSubcases((t) => {
   if (t.params.accessValueType === 'f16') {
     t.selectDeviceOrSkipTestCase('shader-f16');
@@ -230,22 +230,22 @@ fn(async (t) => {
       }
     `;
   const testShader = buildTestShader(
-  getTestCode(t.params),
-  t.params.memType,
-  TestType.IntraWorkgroup);
-
+    getTestCode(t.params),
+    t.params.memType,
+    TestType.IntraWorkgroup
+  );
   const resultShader = buildResultShader(
-  resultCode,
-  TestType.IntraWorkgroup,
-  ResultType.TwoBehavior);
-
+    resultCode,
+    TestType.IntraWorkgroup,
+    ResultType.TwoBehavior
+  );
   const memModelTester = new MemoryModelTester(
-  t,
-  memoryModelTestParams,
-  testShader,
-  resultShader,
-  t.params.accessValueType);
-
+    t,
+    memoryModelTestParams,
+    testShader,
+    resultShader,
+    t.params.accessValueType
+  );
   await memModelTester.run(10, 1);
 });
 //# sourceMappingURL=barrier.spec.js.map

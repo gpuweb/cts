@@ -64,9 +64,9 @@ class F extends GPUTest {
     const expectedData = new Uint8Array(bufferSize).fill(0xff);
 
     const buffer = this.makeBufferWithContents(
-    expectedData,
-    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST);
-
+      expectedData,
+      GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+    );
 
     for (const { bufferOffset, data, arrayType, useArrayBuffer, dataOffset, dataSize } of writes) {
       const TypedArrayConstructor = globalThis[arrayType];
@@ -74,9 +74,9 @@ class F extends GPUTest {
       const writeSrc = useArrayBuffer ? writeData.buffer : writeData;
       this.queue.writeBuffer(buffer, bufferOffset, writeSrc, dataOffset, dataSize);
       memcpy(
-      { src: writeSrc, start: dataOffset, length: dataSize },
-      { dst: expectedData, start: bufferOffset });
-
+        { src: writeSrc, start: dataOffset, length: dataSize },
+        { dst: expectedData, start: bufferOffset }
+      );
     }
 
     this.debug(`expectedData: [${expectedData.join(', ')}]`);
@@ -93,8 +93,8 @@ desc('Tests that writeBuffer correctly handles different TypedArrays and ArrayBu
 params((u) =>
 u //
 .combine('arrayType', kTypedArrays).
-combine('useArrayBuffer', [false, true])).
-
+combine('useArrayBuffer', [false, true])
+).
 fn((t) => {
   const { arrayType, useArrayBuffer } = t.params;
   const dataOffset = 1;
@@ -111,7 +111,7 @@ fn((t) => {
 
 g.test('multiple_writes_at_different_offsets_and_sizes').
 desc(
-`
+  `
 Tests that writeBuffer currently handles different offsets and writes. This includes:
 - Non-overlapping TypedArrays and ArrayLists
 - Overlapping TypedArrays and ArrayLists
@@ -119,8 +119,8 @@ Tests that writeBuffer currently handles different offsets and writes. This incl
 - Writing on zero sized buffers
 - Unaligned source
 - Multiple overlapping writes with decreasing sizes
-    `).
-
+    `
+).
 paramsSubcasesOnly([
 {
   // Concatenate 2 Uint32Arrays
@@ -228,8 +228,8 @@ paramsSubcasesOnly([
     useArrayBuffer: false
   }]
   // Expected [1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5]
-}]).
-
+}]
+).
 fn((t) => {
   t.testWriteBuffer(...t.params.writes);
 });

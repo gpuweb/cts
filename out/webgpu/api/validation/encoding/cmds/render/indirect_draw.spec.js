@@ -24,10 +24,10 @@ export const g = makeTestGroup(F);
 
 g.test('indirect_buffer_state').
 desc(
-`
+  `
 Tests indirect buffer must be valid.
-  `).
-
+  `
+).
 paramsSubcasesOnly(kIndirectDrawTestParams.combine('state', kResourceStates)).
 fn((t) => {
   const { encoderType, indexed, state } = t.params;
@@ -52,8 +52,8 @@ fn((t) => {
 
 g.test('indirect_buffer,device_mismatch').
 desc(
-'Tests draw(Indexed)Indirect cannot be called with an indirect buffer created from another device').
-
+  'Tests draw(Indexed)Indirect cannot be called with an indirect buffer created from another device'
+).
 paramsSubcasesOnly(kIndirectDrawTestParams.combine('mismatched', [true, false])).
 beforeAllSubcases((t) => {
   t.selectMismatchedDeviceOrSkipTestCase(undefined);
@@ -83,17 +83,17 @@ fn((t) => {
 
 g.test('indirect_buffer_usage').
 desc(
-`
+  `
 Tests indirect buffer must have 'Indirect' usage.
-  `).
-
+  `
+).
 paramsSubcasesOnly(
-kIndirectDrawTestParams.combine('usage', [
-GPUConst.BufferUsage.INDIRECT, // control case
-GPUConst.BufferUsage.COPY_DST,
-GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.INDIRECT])).
-
-
+  kIndirectDrawTestParams.combine('usage', [
+  GPUConst.BufferUsage.INDIRECT, // control case
+  GPUConst.BufferUsage.COPY_DST,
+  GPUConst.BufferUsage.COPY_DST | GPUConst.BufferUsage.INDIRECT]
+  )
+).
 fn((t) => {
   const { encoderType, indexed, usage } = t.params;
   const indirectBuffer = t.device.createBuffer({
@@ -115,10 +115,10 @@ fn((t) => {
 
 g.test('indirect_offset_alignment').
 desc(
-`
+  `
 Tests indirect offset must be a multiple of 4.
-  `).
-
+  `
+).
 paramsSubcasesOnly(kIndirectDrawTestParams.combine('indirectOffset', [0, 2, 4])).
 fn((t) => {
   const { encoderType, indexed, indirectOffset } = t.params;
@@ -143,7 +143,7 @@ fn((t) => {
 
 g.test('indirect_offset_oob').
 desc(
-`
+  `
 Tests indirect draw calls with various indirect offsets and buffer sizes.
 - (offset, b.size) is
   - (0, 0)
@@ -159,27 +159,27 @@ Tests indirect draw calls with various indirect offsets and buffer sizes.
   - (min size + min alignment, min size)
   - min size = indirect draw parameters size
   - x =(drawIndirect, drawIndexedIndirect)
-  `).
-
+  `
+).
 paramsSubcasesOnly(
-kIndirectDrawTestParams.expandWithParams((p) => {
-  const indirectParamsSize = p.indexed ? 20 : 16;
-  return [
-  { indirectOffset: 0, bufferSize: 0, _valid: false },
-  { indirectOffset: 0, bufferSize: indirectParamsSize, _valid: true },
-  { indirectOffset: 0, bufferSize: indirectParamsSize + 1, _valid: true },
-  { indirectOffset: 0, bufferSize: indirectParamsSize - 1, _valid: false },
-  { indirectOffset: 0, bufferSize: indirectParamsSize - 4, _valid: false },
-  { indirectOffset: 4, bufferSize: indirectParamsSize + 4, _valid: true },
-  { indirectOffset: 4, bufferSize: indirectParamsSize + 3, _valid: false },
-  { indirectOffset: 2, bufferSize: indirectParamsSize + 4, _valid: false },
-  { indirectOffset: 3, bufferSize: indirectParamsSize + 4, _valid: false },
-  { indirectOffset: 5, bufferSize: indirectParamsSize + 4, _valid: false },
-  { indirectOffset: indirectParamsSize, bufferSize: indirectParamsSize, _valid: false },
-  { indirectOffset: indirectParamsSize + 4, bufferSize: indirectParamsSize, _valid: false }];
+  kIndirectDrawTestParams.expandWithParams((p) => {
+    const indirectParamsSize = p.indexed ? 20 : 16;
+    return [
+    { indirectOffset: 0, bufferSize: 0, _valid: false },
+    { indirectOffset: 0, bufferSize: indirectParamsSize, _valid: true },
+    { indirectOffset: 0, bufferSize: indirectParamsSize + 1, _valid: true },
+    { indirectOffset: 0, bufferSize: indirectParamsSize - 1, _valid: false },
+    { indirectOffset: 0, bufferSize: indirectParamsSize - 4, _valid: false },
+    { indirectOffset: 4, bufferSize: indirectParamsSize + 4, _valid: true },
+    { indirectOffset: 4, bufferSize: indirectParamsSize + 3, _valid: false },
+    { indirectOffset: 2, bufferSize: indirectParamsSize + 4, _valid: false },
+    { indirectOffset: 3, bufferSize: indirectParamsSize + 4, _valid: false },
+    { indirectOffset: 5, bufferSize: indirectParamsSize + 4, _valid: false },
+    { indirectOffset: indirectParamsSize, bufferSize: indirectParamsSize, _valid: false },
+    { indirectOffset: indirectParamsSize + 4, bufferSize: indirectParamsSize, _valid: false }];
 
-})).
-
+  })
+).
 fn((t) => {
   const { encoderType, indexed, indirectOffset, bufferSize, _valid } = t.params;
   const pipeline = t.createNoOpRenderPipeline();

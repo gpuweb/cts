@@ -9,8 +9,8 @@ function getSizeAndOffsetForBufferPart(device, bufferPart, size) {
     case 'wholeBuffer':
       return { offset: 0, size };
     case 'biggerBufferWithOffset':
-      return { size: size + align, offset: align };}
-
+      return { size: size + align, offset: align };
+  }
 }
 
 const limit = 'maxUniformBufferBindingSize';
@@ -25,60 +25,60 @@ params(kMaximumLimitBaseParams.combine('bufferPart', kBufferParts)).
 fn(async (t) => {
   const { limitTest, testValueName, bufferPart } = t.params;
   await t.testDeviceWithRequestedMaximumLimits(
-  limitTest,
-  testValueName,
-  async ({ device, testValue, shouldError }) => {
-    const bindGroupLayout = device.createBindGroupLayout({
-      entries: [
-      {
-        binding: 0,
-        visibility: GPUShaderStage.VERTEX,
-        buffer: {}
-      }]
+    limitTest,
+    testValueName,
+    async ({ device, testValue, shouldError }) => {
+      const bindGroupLayout = device.createBindGroupLayout({
+        entries: [
+        {
+          binding: 0,
+          visibility: GPUShaderStage.VERTEX,
+          buffer: {}
+        }]
 
-    });
+      });
 
-    const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
+      const { size, offset } = getSizeAndOffsetForBufferPart(device, bufferPart, testValue);
 
-    // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
-    // skip the validation since the allocation will fail with a validation error.
-    if (size > device.limits.maxBufferSize) {
-      return;
-    }
+      // If the size of the buffer exceeds the related but separate maxBufferSize limit, we can
+      // skip the validation since the allocation will fail with a validation error.
+      if (size > device.limits.maxBufferSize) {
+        return;
+      }
 
-    device.pushErrorScope('out-of-memory');
-    const uniformBuffer = t.trackForCleanup(
-    device.createBuffer({
-      usage: GPUBufferUsage.UNIFORM,
-      size
-    }));
+      device.pushErrorScope('out-of-memory');
+      const uniformBuffer = t.trackForCleanup(
+        device.createBuffer({
+          usage: GPUBufferUsage.UNIFORM,
+          size
+        })
+      );
+      const outOfMemoryError = await device.popErrorScope();
 
-    const outOfMemoryError = await device.popErrorScope();
+      if (!outOfMemoryError) {
+        await t.expectValidationError(
+          () => {
+            device.createBindGroup({
+              layout: bindGroupLayout,
+              entries: [
+              {
+                binding: 0,
+                resource: {
+                  buffer: uniformBuffer,
+                  offset,
+                  size: testValue
+                }
+              }]
 
-    if (!outOfMemoryError) {
-      await t.expectValidationError(
-      () => {
-        device.createBindGroup({
-          layout: bindGroupLayout,
-          entries: [
-          {
-            binding: 0,
-            resource: {
-              buffer: uniformBuffer,
-              offset,
-              size: testValue
-            }
-          }]
-
-        });
-      },
-      shouldError,
-      `size: ${size}, offset: ${offset}, testValue: ${testValue}`);
-
-    }
-  },
-  kExtraLimits);
-
+            });
+          },
+          shouldError,
+          `size: ${size}, offset: ${offset}, testValue: ${testValue}`
+        );
+      }
+    },
+    kExtraLimits
+  );
 });
 
 g.test('validate,maxBufferSize').

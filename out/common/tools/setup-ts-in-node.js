@@ -20,8 +20,8 @@ Module._resolveFilename = (request, parentModule, isMain) => {
       // can't do any kind of file resolution).
       if (request.endsWith('/index.js')) {
         throw new Error(
-        "Avoid the name `index.js`; we don't have Node-style path resolution: " + request);
-
+          "Avoid the name `index.js`; we don't have Node-style path resolution: " + request
+        );
       }
 
       // Import of Node addon modules are valid and should pass through.

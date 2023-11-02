@@ -6,8 +6,8 @@ const kRGBAData = new Uint8Array([
 0, 255, 0, 255,
 117, 251, 7, 255,
 170, 35, 209, 255,
-80, 150, 200, 255]);
-
+80, 150, 200, 255]
+);
 const width = kRGBAData.length / 4;
 
 function createCanvas(colorSpace) {
@@ -31,8 +31,8 @@ combine('colorSpace', kCanvasColorSpaces).
 combine('creation', [
 'canvas',
 'transferControlToOffscreen',
-'transferControlToOffscreenWorker']);
-
+'transferControlToOffscreenWorker']
+);
 
 // Generate reference canvases for all combinations from the test.
 // We only need colorSpace to generate the correct reference.

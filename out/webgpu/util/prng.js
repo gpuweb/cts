@@ -72,12 +72,12 @@ export class PRNG {
     // Check that the initial state isn't all 0s, since the algorithm assumes
     // that this never occurs
     assert(
-    (this.state[0] & PRNG.kMask) !== 0 ||
-    this.state[1] !== 0 ||
-    this.state[2] !== 0 ||
-    this.state[2] !== 0,
-    'Initialization of PRNG unexpectedly generated all 0s initial state, this means the tuning parameters are bad');
-
+      (this.state[0] & PRNG.kMask) !== 0 ||
+      this.state[1] !== 0 ||
+      this.state[2] !== 0 ||
+      this.state[2] !== 0,
+      'Initialization of PRNG unexpectedly generated all 0s initial state, this means the tuning parameters are bad'
+    );
 
     for (let i = 0; i < PRNG.kPreLoop; i++) {
       this.next();

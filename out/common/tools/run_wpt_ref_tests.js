@@ -202,11 +202,11 @@ startingRow = 0)
   if (!pass) {
     writePng(diffName, width, height, diffData);
     console.error(
-    `FAIL: too many differences in: ${filename1} vs ${filename2}
+      `FAIL: too many differences in: ${filename1} vs ${filename2}
        ${numPixelsDifferent} differences, expected: ${totalPixels[0]}-${totalPixels[1]} with range: ${maxDifference[0]}-${maxDifference[1]}
        wrote difference to: ${diffName};
-      `);
-
+      `
+    );
   } else {
     console.log(`PASS`);
   }
@@ -266,8 +266,8 @@ async function main() {
   }
 
   const testNames = getRefTestNames(kRefTestsPath).filter((name) =>
-  refTestName ? name.includes(refTestName) : true);
-
+  refTestName ? name.includes(refTestName) : true
+  );
 
   if (!exists(kScreenshotPath)) {
     fs.mkdirSync(kScreenshotPath, { recursive: true });
@@ -363,20 +363,20 @@ async function main() {
 
     const pass = compareImages(testScreenshotName, refScreenshotName, fuzzy, diffName);
     addResult(
-    pass ? 'PASS' : 'FAILURE',
-    testName,
-    refLink,
-    testScreenshotName,
-    refScreenshotName,
-    diffName);
-
+      pass ? 'PASS' : 'FAILURE',
+      testName,
+      refLink,
+      testScreenshotName,
+      refScreenshotName,
+      diffName
+    );
   }
 
   console.log(
-  `----results----\n${results.
-  map(({ status, testName }) => `[ ${status.padEnd(7)} ] ${testName}`).
-  join('\n')}`);
-
+    `----results----\n${results.
+    map(({ status, testName }) => `[ ${status.padEnd(7)} ] ${testName}`).
+    join('\n')}`
+  );
 
   const imgLink = (filename, title) => {
     const name = path.basename(filename);
@@ -391,8 +391,8 @@ async function main() {
 
   const indexName = path.join(kScreenshotPath, 'index.html');
   fs.writeFileSync(
-  indexName,
-  `<!DOCTYPE html>
+    indexName,
+    `<!DOCTYPE html>
 <html>
   <head>
     <style>
@@ -410,26 +410,26 @@ async function main() {
   </head>
   <body>
   ${results.
-  map(({ status, testName, refName, testScreenshotName, refScreenshotName, diffName }) => {
-    return `
+    map(({ status, testName, refName, testScreenshotName, refScreenshotName, diffName }) => {
+      return `
         <div>
            <div>[ ${status} ]: ${testName} ref: ${refName}</div>
            ${
-    status === 'FAILURE' ?
-    `${imgLink(testScreenshotName, 'actual')}
+      status === 'FAILURE' ?
+      `${imgLink(testScreenshotName, 'actual')}
                   ${imgLink(refScreenshotName, 'ref')}
                   ${imgLink(diffName, 'diff')}` :
-    ``
-    }
+      ``
+      }
         </div>
         <hr>
       `;
-  }).
-  join('\n')}
+    }).
+    join('\n')}
   </body>
 </html>
-  `);
-
+  `
+  );
 
   // the file:// with an absolute path makes it clickable in some terminals
   console.log(`\nsee: file://${path.resolve(indexName)}\n`);

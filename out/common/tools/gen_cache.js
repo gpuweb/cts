@@ -50,8 +50,8 @@ for (let i = 0; i < process.argv.length; i++) {
       case '--nth':{
           const err = () => {
             console.error(
-            `--nth requires a value of the form 'i/n', where i and n are positive integers and i < n`);
-
+              `--nth requires a value of the form 'i/n', where i and n are positive integers and i < n`
+            );
             process.exit(1);
           };
           i++;
@@ -72,8 +72,8 @@ for (let i = 0; i < process.argv.length; i++) {
       default:{
           console.log('unrecognized flag: ', arg);
           usage(1);
-        }}
-
+        }
+    }
   } else {
     nonFlagsArgs.push(arg);
   }
@@ -110,27 +110,27 @@ const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
 
 async function crawlFilesRecursively(dir) {
   const subpathInfo = await Promise.all(
-  (await fs.promises.readdir(dir)).map(async (d) => {
-    const p = path.join(dir, d);
-    const stats = await fs.promises.stat(p);
-    return {
-      path: p,
-      isDirectory: stats.isDirectory(),
-      isFile: stats.isFile()
-    };
-  }));
-
+    (await fs.promises.readdir(dir)).map(async (d) => {
+      const p = path.join(dir, d);
+      const stats = await fs.promises.stat(p);
+      return {
+        path: p,
+        isDirectory: stats.isDirectory(),
+        isFile: stats.isFile()
+      };
+    })
+  );
 
   const files = subpathInfo.
   filter((i) => i.isFile && i.path.endsWith(specFileSuffix)).
   map((i) => i.path);
 
   return files.concat(
-  await subpathInfo.
-  filter((i) => i.isDirectory).
-  map((i) => crawlFilesRecursively(i.path)).
-  reduce(async (a, b) => (await a).concat(await b), Promise.resolve([])));
-
+    await subpathInfo.
+    filter((i) => i.isDirectory).
+    map((i) => crawlFilesRecursively(i.path)).
+    reduce(async (a, b) => (await a).concat(await b), Promise.resolve([]))
+  );
 }
 
 async function build(suiteDir) {
@@ -159,11 +159,11 @@ async function build(suiteDir) {
         const existing = cacheablePathToTS.get(cacheable.path);
         if (existing !== undefined) {
           console.error(
-          `error: Cacheable '${cacheable.path}' is emitted by both:
+            `error: Cacheable '${cacheable.path}' is emitted by both:
     '${existing}'
 and
-    '${file}'`);
-
+    '${file}'`
+          );
           process.exit(1);
         }
         cacheablePathToTS.set(cacheable.path, file);
@@ -190,8 +190,8 @@ and
           case 'validate':{
               // Only check currently performed is the collision detection above
               break;
-            }}
-
+            }
+        }
       }
     }
   }

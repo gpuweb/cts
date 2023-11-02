@@ -12,7 +12,7 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('resolve_attachment').
 desc(
-`
+  `
 Test various validation behaviors when a resolveTarget is provided.
 
 - base case (valid).
@@ -28,8 +28,8 @@ Test various validation behaviors when a resolveTarget is provided.
     - {bgra8unorm, rgba8unorm-srgb} -> rgba8unorm
     - test with other color attachments having a different format
 - resolve source and target have different sizes.
-`).
-
+`
+).
 paramsSimple([
 // control case should be valid
 { _valid: true },
@@ -73,8 +73,8 @@ paramsSimple([
 { colorAttachmentHeight: 4, _valid: false },
 { colorAttachmentWidth: 4, _valid: false },
 { resolveTargetHeight: 4, _valid: false },
-{ resolveTargetWidth: 4, _valid: false }]).
-
+{ resolveTargetWidth: 4, _valid: false }]
+).
 fn((t) => {
   const {
     colorAttachmentFormat = 'rgba8unorm',

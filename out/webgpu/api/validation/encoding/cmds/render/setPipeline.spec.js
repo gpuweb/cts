@@ -12,13 +12,13 @@ export const g = makeTestGroup(ValidationTest);
 
 g.test('invalid_pipeline').
 desc(
-`
+  `
 Tests setPipeline should generate an error iff using an 'invalid' pipeline.
-  `).
-
+  `
+).
 paramsSubcasesOnly((u) =>
-u.combine('encoderType', kRenderEncodeTypes).combine('state', ['valid', 'invalid'])).
-
+u.combine('encoderType', kRenderEncodeTypes).combine('state', ['valid', 'invalid'])
+).
 fn((t) => {
   const { encoderType, state } = t.params;
   const pipeline = t.createRenderPipelineWithState(state);

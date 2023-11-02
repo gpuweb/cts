@@ -64,7 +64,7 @@ const kCases = {
 g.test('vector').
 desc('Tests validation of vector types').
 params(
-(u) => u.combine('case', keysOf(kCases)) //
+  (u) => u.combine('case', keysOf(kCases)) //
 ).
 beforeAllSubcases((t) => {
   const c = kCases[t.params.case];

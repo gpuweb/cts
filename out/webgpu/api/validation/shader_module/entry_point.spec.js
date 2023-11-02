@@ -42,11 +42,11 @@ const kEntryPointTestCases = [
 
 g.test('compute').
 desc(
-`
+  `
 Tests calling createComputePipeline(Async) with valid vertex stage shader and different entryPoints,
 and check that the APIs only accept matching entryPoint.
-`).
-
+`
+).
 params((u) => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases)).
 fn((t) => {
   const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
@@ -65,11 +65,11 @@ fn((t) => {
 
 g.test('vertex').
 desc(
-`
+  `
 Tests calling createRenderPipeline(Async) with valid vertex stage shader and different entryPoints,
 and check that the APIs only accept matching entryPoint.
-`).
-
+`
+).
 params((u) => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases)).
 fn((t) => {
   const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;
@@ -88,11 +88,11 @@ fn((t) => {
 
 g.test('fragment').
 desc(
-`
+  `
 Tests calling createRenderPipeline(Async) with valid fragment stage shader and different entryPoints,
 and check that the APIs only accept matching entryPoint.
-`).
-
+`
+).
 params((u) => u.combine('isAsync', [true, false]).combineWithParams(kEntryPointTestCases)).
 fn((t) => {
   const { isAsync, shaderModuleEntryPoint, stageEntryPoint } = t.params;

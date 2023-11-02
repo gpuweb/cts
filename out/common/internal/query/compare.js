@@ -4,7 +4,7 @@
 
 
 
-export let Ordering;
+export let Ordering = /*#__PURE__*/function (Ordering) {Ordering[Ordering["Unordered"] = 0] = "Unordered";Ordering[Ordering["StrictSuperset"] = 1] = "StrictSuperset";Ordering[Ordering["Equal"] = 2] = "Equal";Ordering[Ordering["StrictSubset"] = 3] = "StrictSubset";return Ordering;}({});
 
 
 
@@ -15,7 +15,7 @@ export let Ordering;
  * Compares two queries for their ordering (which is used to build the tree).
  *
  * See src/unittests/query_compare.spec.ts for examples.
- */(function (Ordering) {Ordering[Ordering["Unordered"] = 0] = "Unordered";Ordering[Ordering["StrictSuperset"] = 1] = "StrictSuperset";Ordering[Ordering["Equal"] = 2] = "Equal";Ordering[Ordering["StrictSubset"] = 3] = "StrictSubset";})(Ordering || (Ordering = {}));
+ */
 export function compareQueries(a, b) {
   if (a.suite !== b.suite) {
     return Ordering.Unordered;
