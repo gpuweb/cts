@@ -353,6 +353,22 @@ batch_size)
     }
   };
 
+  const processBatch = async (batchCases) => {
+    const checkBatch = await submitBatch(
+      t,
+      shaderBuilder,
+      parameterTypes,
+      resultType,
+      batchCases,
+      cfg.inputSource,
+      pipelineCache
+    );
+    checkBatch();
+    void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
+  };
+
+  const pendingBatches = [];
+
   for (let i = 0; i < cases.length; i += casesPerBatch) {
     const batchCases = cases.slice(i, Math.min(i + casesPerBatch, cases.length));
 
@@ -365,18 +381,10 @@ batch_size)
     }
     batchesInFlight += 1;
 
-    const checkBatch = submitBatch(
-      t,
-      shaderBuilder,
-      parameterTypes,
-      resultType,
-      batchCases,
-      cfg.inputSource,
-      pipelineCache
-    );
-    checkBatch();
-    void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
+    pendingBatches.push(processBatch(batchCases));
   }
+
+  await Promise.all(pendingBatches);
 }
 
 /**
@@ -391,7 +399,7 @@ batch_size)
  * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
-function submitBatch(
+async function submitBatch(
 t,
 shaderBuilder,
 parameterTypes,
@@ -407,7 +415,7 @@ pipelineCache)
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
   });
 
-  const [pipeline, group] = buildPipeline(
+  const [pipeline, group] = await buildPipeline(
     t,
     shaderBuilder,
     parameterTypes,
@@ -1003,7 +1011,7 @@ ${body}
  * @param outputBuffer the buffer that will hold the output values of the tests
  * @param pipelineCache the cache of compute pipelines, shared between batches
  */
-function buildPipeline(
+async function buildPipeline(
 t,
 shaderBuilder,
 parameterTypes,
@@ -1032,7 +1040,7 @@ pipelineCache)
         const module = t.device.createShaderModule({ code: source });
 
         // build the pipeline
-        const pipeline = t.device.createComputePipeline({
+        const pipeline = await t.device.createComputePipelineAsync({
           layout: 'auto',
           compute: { module, entryPoint: 'main' }
         });

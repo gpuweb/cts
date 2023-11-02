@@ -23,7 +23,7 @@ const kMinI32 = -0x8000_0000;
  * Non-test bindings are in bind group 1, including:
  * - `constants.zero`: a dynamically-uniform `0u` value.
  */
-function runShaderTest(
+async function runShaderTest(
 t,
 stage,
 testSource,
@@ -62,7 +62,7 @@ fn main() {
 
   t.debug(source);
   const module = t.device.createShaderModule({ code: source });
-  const pipeline = t.device.createComputePipeline({
+  const pipeline = await t.device.createComputePipelineAsync({
     layout,
     compute: { module, entryPoint: 'main' }
   });
@@ -172,7 +172,7 @@ beginSubcases().
 expand('baseType', supportedScalarTypes).
 expandWithParams(generateTypes)
 ).
-fn((t) => {
+fn(async (t) => {
   const {
     addressSpace,
     storageMode,
@@ -448,7 +448,7 @@ fn runTest() -> u32 {
     );
 
     // Run the shader, accessing the buffer.
-    runShaderTest(
+    await runShaderTest(
       t,
       GPUShaderStage.COMPUTE,
       testSource,
@@ -475,7 +475,7 @@ fn runTest() -> u32 {
       bufferBindingEnd
     );
   } else {
-    runShaderTest(t, GPUShaderStage.COMPUTE, testSource, layout, []);
+    await runShaderTest(t, GPUShaderStage.COMPUTE, testSource, layout, []);
   }
 });
 //# sourceMappingURL=robust_access.spec.js.map
