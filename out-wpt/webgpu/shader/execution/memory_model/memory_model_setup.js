@@ -112,11 +112,10 @@ export class MemoryModelTester {
         size: testLocationsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-      srcBuf: this.test.makeBufferWithContents(
-        new Uint32Array(testLocationsSize).fill(0),
-        GPUBufferUsage.COPY_SRC
-      ),
-
+      srcBuf: this.test.device.createBuffer({
+        size: testLocationsSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      }),
       size: testLocationsSize,
     };
 
@@ -126,11 +125,10 @@ export class MemoryModelTester {
         size: readResultsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-      srcBuf: this.test.makeBufferWithContents(
-        new Uint32Array(readResultsSize).fill(0),
-        GPUBufferUsage.COPY_SRC
-      ),
-
+      srcBuf: this.test.device.createBuffer({
+        size: readResultsSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      }),
       size: readResultsSize,
     };
 
@@ -140,11 +138,10 @@ export class MemoryModelTester {
         size: testResultsSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       }),
-      srcBuf: this.test.makeBufferWithContents(
-        new Uint32Array(testResultsSize).fill(0),
-        GPUBufferUsage.COPY_SRC
-      ),
-
+      srcBuf: this.test.device.createBuffer({
+        size: testResultsSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      }),
       size: testResultsSize,
     };
 
@@ -167,11 +164,10 @@ export class MemoryModelTester {
         size: barrierSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-      srcBuf: this.test.makeBufferWithContents(
-        new Uint32Array(barrierSize).fill(0),
-        GPUBufferUsage.COPY_SRC
-      ),
-
+      srcBuf: this.test.device.createBuffer({
+        size: barrierSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      }),
       size: barrierSize,
     };
 
@@ -181,11 +177,10 @@ export class MemoryModelTester {
         size: scratchpadSize,
         usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
       }),
-      srcBuf: this.test.makeBufferWithContents(
-        new Uint32Array(scratchpadSize).fill(0),
-        GPUBufferUsage.COPY_SRC
-      ),
-
+      srcBuf: this.test.device.createBuffer({
+        size: scratchpadSize,
+        usage: GPUBufferUsage.COPY_SRC,
+      }),
       size: scratchpadSize,
     };
 

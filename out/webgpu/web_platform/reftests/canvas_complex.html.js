@@ -55,6 +55,7 @@ targets)
         size: rows * bytesPerRow,
         usage: GPUBufferUsage.COPY_SRC
       });
+      // These are run only once per test, so there are no wasted reallocations below.
       let red;
       let green;
       let blue;

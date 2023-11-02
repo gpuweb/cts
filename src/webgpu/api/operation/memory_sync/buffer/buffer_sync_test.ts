@@ -285,6 +285,7 @@ export class BufferSyncTest extends GPUTest {
 
   // Create a 1x1 texture, and initialize it to a specified value for all elements.
   async createTextureWithValue(initValue: number): Promise<GPUTexture> {
+    // This is not hot in profiles; optimize if this gets used more heavily.
     const data = new Uint32Array(1).fill(initValue);
     const texture = this.trackForCleanup(
       this.device.createTexture({
@@ -446,6 +447,7 @@ export class BufferSyncTest extends GPUTest {
 
   // Write buffer via writeBuffer API on queue
   writeByWriteBuffer(buffer: GPUBuffer, value: number) {
+    // This is not hot in profiles; optimize if this gets used more heavily.
     const data = new Uint32Array(1).fill(value);
     this.device.queue.writeBuffer(buffer, 0, data);
   }
@@ -919,12 +921,14 @@ export class BufferSyncTest extends GPUTest {
   }
 
   verifyData(buffer: GPUBuffer, expectedValue: number) {
+    // This is not hot in profiles; optimize if this gets used more heavily.
     const bufferData = new Uint32Array(1);
     bufferData[0] = expectedValue;
     this.expectGPUBufferValuesEqual(buffer, bufferData);
   }
 
   verifyDataTwoValidValues(buffer: GPUBuffer, expectedValue1: number, expectedValue2: number) {
+    // This is not hot in profiles; optimize if this gets used more heavily.
     const bufferData1 = new Uint32Array(1);
     bufferData1[0] = expectedValue1;
     const bufferData2 = new Uint32Array(1);

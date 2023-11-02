@@ -5,6 +5,7 @@
 import { runRefTest } from './gpu_ref_test.js';
 
 function bgra8UnormFromRgba8Unorm(rgba8Unorm) {
+  // This is used only once. May need to optimize if reused.
   const bgra8Unorm = rgba8Unorm.slice();
   for (let i = 0; i < bgra8Unorm.length; i += 4) {
     [bgra8Unorm[i], bgra8Unorm[i + 2]] = [bgra8Unorm[i + 2], bgra8Unorm[i]];
@@ -13,6 +14,7 @@ function bgra8UnormFromRgba8Unorm(rgba8Unorm) {
 }
 
 function rgba16floatFromRgba8unorm(rgba8Unorm) {
+  // This is used only once. May need to optimize if reused.
   const rgba16Float = new Float16Array(rgba8Unorm.length);
   for (let i = 0; i < rgba8Unorm.length; ++i) {
     rgba16Float[i] = rgba8Unorm[i] / 255;
