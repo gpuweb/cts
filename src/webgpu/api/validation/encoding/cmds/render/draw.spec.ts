@@ -609,6 +609,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     TODO: The "Factor" parameters don't necessarily guarantee that we test all configurations
     of buffers overlapping or not. This test should be refactored to test specific overlap cases,
     and have fewer total parameterizations.
+    See https://github.com/gpuweb/cts/pull/3122#discussion_r1378623214
 `
   )
   .params(u =>
