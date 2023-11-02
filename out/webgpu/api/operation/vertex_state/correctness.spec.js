@@ -746,18 +746,16 @@ expand('arrayStrideVariant', (p) => {
   { mult: 1, add: 0 }];
 
 }).
-expand('offsetVariant', (p) => {
+expand('offsetVariant', function* (p) {
   const formatInfo = kVertexFormatInfo[p.format];
   const formatSize = formatInfo.byteSize;
-  return [
-  { mult: 0, add: 0 },
-  { mult: 0, add: formatSize },
-  { mult: 0, add: 4 },
-  { mult: 0.5, add: 0 },
-  { mult: 1, add: -formatSize * 2 },
-  { mult: 1, add: -formatSize - 4 },
-  { mult: 1, add: -formatSize }];
-
+  yield { mult: 0, add: 0 };
+  yield { mult: 0, add: 4 };
+  if (formatSize !== 4) yield { mult: 0, add: formatSize };
+  yield { mult: 0.5, add: 0 };
+  yield { mult: 1, add: -formatSize * 2 };
+  if (formatSize !== 4) yield { mult: 1, add: -formatSize - 4 };
+  yield { mult: 1, add: -formatSize };
 })).
 
 fn((t) => {
