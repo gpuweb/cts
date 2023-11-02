@@ -605,40 +605,27 @@ g.test(`buffer_binding_overlap`)
 In this test we test that binding one GPU buffer to multiple vertex buffer slot or both vertex
 buffer slot and index buffer will cause no validation error, with completely/partial overlap.
     - x= all draw types
+
+    TODO: The "Factor" parameters don't necessarily guarantee that we test all configurations
+    of buffers overlapping or not. This test should be refactored to test specific overlap cases,
+    and have fewer total parameterizations.
 `
   )
   .params(u =>
     u //
       .combine('drawType', ['draw', 'drawIndexed', 'drawIndirect', 'drawIndexedIndirect'] as const)
       .beginSubcases()
+      .combine('vertexBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
+      .combine('instanceBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
+      .combine('indexBoundOffestFactor', [0, 0.5, 1, 1.5, 2])
       .combine('arrayStrideState', ['zero', 'exact', 'oversize'] as const)
-      .combineWithParams([
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 1.0, instanceOffsetFactor: 1.0, indexOffsetFactor: 1.0 },
-        //
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 1.0, indexOffsetFactor: 2.0 },
-        { vertexOffsetFactor: 1.0, instanceOffsetFactor: 2.0, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 2.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 1.0 },
-        //
-        { vertexOffsetFactor: 0.5, instanceOffsetFactor: 0.0, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 1.5, instanceOffsetFactor: 0.0, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 2.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 0.0 },
-        //
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 0.5, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 1.5, indexOffsetFactor: 0.0 },
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 2.0, indexOffsetFactor: 0.0 },
-        //
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 0.5 },
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 1.5 },
-        { vertexOffsetFactor: 0.0, instanceOffsetFactor: 0.0, indexOffsetFactor: 2.0 },
-      ])
   )
   .fn(t => {
     const {
       drawType,
-      vertexOffsetFactor,
-      instanceOffsetFactor,
-      indexOffsetFactor,
+      vertexBoundOffestFactor,
+      instanceBoundOffestFactor,
+      indexBoundOffestFactor,
       arrayStrideState,
     } = t.params;
 
@@ -680,7 +667,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     const { vertexCount, firstVertex } = kDefaultParameterForNonIndexedDraw;
     const strideCountForVertexBuffer = firstVertex + vertexCount;
     const setVertexBufferSize = calcAttributeBufferSize(strideCountForVertexBuffer);
-    const setVertexBufferOffset = calcSetBufferOffset(setVertexBufferSize, vertexOffsetFactor);
+    const setVertexBufferOffset = calcSetBufferOffset(setVertexBufferSize, vertexBoundOffestFactor);
     let requiredBufferSize = setVertexBufferOffset + setVertexBufferSize;
 
     const { instanceCount, firstInstance } = kDefaultParameterForDraw;
@@ -688,7 +675,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     const setInstanceBufferSize = calcAttributeBufferSize(strideCountForInstanceBuffer);
     const setInstanceBufferOffset = calcSetBufferOffset(
       setInstanceBufferSize,
-      instanceOffsetFactor
+      instanceBoundOffestFactor
     );
     requiredBufferSize = Math.max(
       requiredBufferSize,
@@ -696,7 +683,7 @@ buffer slot and index buffer will cause no validation error, with completely/par
     );
 
     const { indexBufferSize: setIndexBufferSize, indexFormat } = kDefaultParameterForIndexedDraw;
-    const setIndexBufferOffset = calcSetBufferOffset(setIndexBufferSize, indexOffsetFactor);
+    const setIndexBufferOffset = calcSetBufferOffset(setIndexBufferSize, indexBoundOffestFactor);
     requiredBufferSize = Math.max(requiredBufferSize, setIndexBufferOffset + setIndexBufferSize);
 
     // Create the shared GPU buffer with both vertetx and index usage
