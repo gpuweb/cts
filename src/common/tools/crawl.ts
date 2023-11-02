@@ -83,6 +83,8 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
         assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
         assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
 
+        mod.g.validate();
+
         for (const { testPath } of mod.g.collectNonEmptyTests()) {
           const testQuery = new TestQueryMultiCase(suite, pathSegments, testPath, {}).toString();
           if (validateTimingsEntries) {

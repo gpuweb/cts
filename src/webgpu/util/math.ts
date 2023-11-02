@@ -3,6 +3,7 @@ import { assert } from '../../common/util/util.js';
 import {
   Float16Array,
   getFloat16,
+  hfround,
   setFloat16,
 } from '../../external/petamoriken/float16/float16.js';
 
@@ -2012,40 +2013,42 @@ export interface QuantizeFunc {
   (num: number): number;
 }
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToF32Data = new Float32Array(new ArrayBuffer(4));
-
 /** @returns the closest 32-bit floating point value to the input */
 export function quantizeToF32(num: number): number {
-  quantizeToF32Data[0] = num;
-  return quantizeToF32Data[0];
+  return Math.fround(num);
 }
-
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToF16Data = new Float16Array(new ArrayBuffer(2));
 
 /** @returns the closest 16-bit floating point value to the input */
 export function quantizeToF16(num: number): number {
-  quantizeToF16Data[0] = num;
-  return quantizeToF16Data[0];
+  return hfround(num);
 }
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToI32Data = new Int32Array(new ArrayBuffer(4));
-
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit signed integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToI32(num: number): number {
-  quantizeToI32Data[0] = num;
-  return quantizeToI32Data[0];
+  if (num >= kValue.i32.positive.max) {
+    return kValue.i32.positive.max;
+  }
+  if (num <= kValue.i32.negative.min) {
+    return kValue.i32.negative.min;
+  }
+  return Math.trunc(num);
 }
 
-/** Statically allocate working data, so it doesn't need per-call creation */
-const quantizeToU32Data = new Uint32Array(new ArrayBuffer(4));
-
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit unsigned integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToU32(num: number): number {
-  quantizeToU32Data[0] = num;
-  return quantizeToU32Data[0];
+  if (num >= kValue.u32.max) {
+    return kValue.u32.max;
+  }
+  if (num <= 0) {
+    return 0;
+  }
+  return Math.trunc(num);
 }
 
 /** @returns whether the number is an integer and a power of two */

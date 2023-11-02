@@ -206,7 +206,7 @@ g.test('invalid_test_name').fn(t => {
       () => {
         g.test(name).fn(() => {});
       },
-      name
+      { message: name }
     );
   }
 });
