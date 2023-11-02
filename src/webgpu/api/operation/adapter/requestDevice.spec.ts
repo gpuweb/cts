@@ -326,7 +326,7 @@ g.test('limit,out_of_range')
         yield Number.MIN_SAFE_INTEGER - 3;
         yield Number.MIN_SAFE_INTEGER - 1;
         yield Number.MIN_SAFE_INTEGER;
-        yield -(2**32);
+        yield -(2 ** 32);
         yield -1;
         yield 0;
         yield 2 ** 32 - 2;
