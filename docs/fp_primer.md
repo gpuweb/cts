@@ -701,8 +701,8 @@ f32 values.
 AbstractFloat internally is defined as a f64, and this applies for exact and
 correctly rounded accuracies. Thus, correctly rounded refers to the nearest f64
 values. However, AbstractFloat differs for ULP and absolute errors. Reading
-the spec strictly, these all have unbounded accuracies, but is recommended that
-their accuracies be at least as good as the f32 equivalent.
+the spec strictly, these all have unbounded accuracies, but it is recommended
+that their accuracies be at least as good as the f32 equivalent.
 
 The difference between f32 and f64 ULP at a specific value X are significant, so
 at least as good as f32 requirement is always less strict than if it was
