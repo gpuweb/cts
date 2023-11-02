@@ -227,7 +227,7 @@ g.test('compute,zero_init')
       })
   )
   .batch(15)
-  .fn(t => {
+  .fn(async t => {
     const { workgroupSize } = t.params;
     const { maxComputeInvocationsPerWorkgroup } = t.device.limits;
     const numWorkgroupInvocations = workgroupSize.reduce((a, b) => a * b);
@@ -446,7 +446,7 @@ g.test('compute,zero_init')
         ],
       });
 
-      const fillPipeline = t.device.createComputePipeline({
+      const fillPipeline = await t.device.createComputePipelineAsync({
         layout: t.device.createPipelineLayout({ bindGroupLayouts: [fillLayout] }),
         label: 'Workgroup Fill Pipeline',
         compute: {
@@ -495,7 +495,7 @@ g.test('compute,zero_init')
       t.queue.submit([e.finish()]);
     }
 
-    const pipeline = t.device.createComputePipeline({
+    const pipeline = await t.device.createComputePipelineAsync({
       layout: 'auto',
       compute: {
         module: t.device.createShaderModule({
