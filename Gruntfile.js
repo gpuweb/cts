@@ -2,7 +2,11 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable no-console */
 
+const timer = require('grunt-timer');
+
 module.exports = function (grunt) {
+  timer.init(grunt);
+
   // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
