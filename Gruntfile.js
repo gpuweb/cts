@@ -174,10 +174,47 @@ module.exports = function (grunt) {
         },
       },
     },
+
+    parallel: {
+      'write-out-wpt-cts-html-all': {
+        options: { grunt: true },
+        tasks: [
+          'run:write-out-wpt-cts-html',
+          'run:write-out-wpt-cts-html-chunked2sec',
+        ],
+      },
+      'all-builds': {
+        options: { grunt: true },
+        tasks: [
+          'build-standalone',
+          'build-wpt',
+          'run:build-out-node',
+        ],
+      },
+      'all-checks': {
+        options: { grunt: true },
+        tasks: [
+          'ts:check',
+          'run:validate',
+          'run:validate-cache',
+          'run:unittest',
+          'run:lint',
+          'run:tsdoc-treatWarningsAsErrors',
+        ],
+      },
+      'all-builds-and-checks': {
+        options: { grunt: true },
+        tasks: [
+          'build-all', // Internally parallel
+          'parallel:all-checks',
+        ],
+      },
+    },
   });
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-parallel');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
 
@@ -202,14 +239,20 @@ module.exports = function (grunt) {
   grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-common)', [
     'run:build-out-wpt',
     'run:copy-assets-wpt',
-    'run:autoformat-out-wpt',
     'copy:gen-to-out-wpt',
     'copy:htmlfiles-to-out-wpt',
-    'run:write-out-wpt-cts-html',
-    'run:write-out-wpt-cts-html-chunked2sec',
+    'parallel:write-out-wpt-cts-html-all',
+    'run:autoformat-out-wpt',
+  ]);
+  grunt.registerTask('build-all', 'Build out*/ (no checks; run after generate-common)', [
+    'parallel:all-builds',
+    'build-done-message',
   ]);
   grunt.registerTask('build-done-message', () => {
-    process.stderr.write('\nBuild completed! Running checks/tests');
+    grunt.log.writeln(`\
+=====================================================
+==== Build completed! Continuing checks/tests... ====
+=====================================================`);
   });
 
   grunt.registerTask('pre', ['all']);
@@ -217,12 +260,7 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('all', 'Run all builds and checks', [
     'clean',
     'generate-common',
-    // None of the steps below have interdependencies.
-    'build-standalone',
-    'build-wpt',
-    'run:build-out-node',
-    'build-done-message',
-    'checks',
+    'parallel:all-builds-and-checks',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone (out/) (no checks)', [
     'generate-common',
@@ -235,12 +273,7 @@ module.exports = function (grunt) {
     'build-done-message',
   ]);
   registerTaskAndAddToHelp('checks', 'Run all checks (and build tsdoc)', [
-    'ts:check',
-    'run:validate',
-    'run:validate-cache',
-    'run:unittest',
-    'run:lint',
-    'run:tsdoc-treatWarningsAsErrors',
+    'parallel:all-checks',
   ]);
   registerTaskAndAddToHelp('unittest', 'Just run unittests', [
     'run:unittest',
