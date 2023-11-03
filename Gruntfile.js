@@ -4,6 +4,8 @@
 
 const timer = require('grunt-timer');
 
+const kAllSuites = ['webgpu', 'stress', 'manual', 'unittests', 'demo'];
+
 module.exports = function (grunt) {
   timer.init(grunt);
 
@@ -12,7 +14,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['out/', 'out-wpt/', 'out-node/'],
+      out: ['gen/', 'out/', 'out-wpt/', 'out-node/'],
     },
 
     run: {
@@ -21,28 +23,29 @@ module.exports = function (grunt) {
         args: ['tools/gen_version'],
       },
       'generate-listings': {
-        // Overwrites the listings.js files in out/. Must run before copy:out-wpt-generated;
-        // must not run before run:build-out (if it is run).
         cmd: 'node',
-        args: ['tools/gen_listings', 'out/', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+        args: ['tools/gen_listings', 'gen/', ...kAllSuites.map(s => 'src/' + s)],
       },
       validate: {
         cmd: 'node',
-        args: ['tools/validate', 'src/webgpu', 'src/stress', 'src/manual', 'src/unittests', 'src/demo'],
+        args: ['tools/validate', ...kAllSuites.map(s => 'src/' + s)],
       },
       'validate-cache': {
         cmd: 'node',
         args: ['tools/gen_cache', 'out', 'src/webgpu', '--validate'],
       },
-      'generate-wpt-cts-html': {
+      'write-out-wpt-cts-html': {
+        // Note this generates directly into the out-wpt/ directory rather than the gen/ directory.
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_unchunked.json'],
       },
-      'generate-wpt-cts-html-chunked2sec': {
+      'write-out-wpt-cts-html-chunked2sec': {
+        // Note this generates directly into the out-wpt/ directory rather than the gen/ directory.
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_chunked2sec.json'],
       },
       'generate-cache': {
+        // Note this generates directly into the out/ directory rather than the gen/ directory.
         cmd: 'node',
         args: ['tools/gen_cache', 'out', 'src/webgpu'],
       },
@@ -51,7 +54,6 @@ module.exports = function (grunt) {
         args: ['tools/run_node', 'unittests:*'],
       },
       'build-out': {
-        // Must run before run:generate-listings, which will overwrite some files.
         cmd: 'node',
         args: [
           'node_modules/@babel/cli/bin/babel',
@@ -59,6 +61,9 @@ module.exports = function (grunt) {
           '--source-maps=true',
           '--out-dir=out/',
           'src/',
+          // These files will be generated, instead of compiled from TypeScript.
+          '--ignore=src/common/internal/version.ts',
+          '--ignore=src/*/listing.ts',
         ],
       },
       'build-out-wpt': {
@@ -75,7 +80,7 @@ module.exports = function (grunt) {
           '--only=src/webgpu/',
           // These files will be generated, instead of compiled from TypeScript.
           '--ignore=src/common/internal/version.ts',
-          '--ignore=src/webgpu/listing.ts',
+          '--ignore=src/*/listing.ts',
           // These files are only used by non-WPT builds.
           '--ignore=src/common/runtime/cmdline.ts',
           '--ignore=src/common/runtime/server.ts',
@@ -139,16 +144,24 @@ module.exports = function (grunt) {
     },
 
     copy: {
-      'out-wpt-generated': {
+      'gen-to-out': {
+        // Must run after generate-common and run:build-out.
         files: [
-          // Must run after run:generate-version and run:generate-listings.
-          { expand: true, cwd: 'out', src: 'common/internal/version.js', dest: 'out-wpt/' },
-          { expand: true, cwd: 'out', src: 'webgpu/listing.js', dest: 'out-wpt/' },
+          { expand: true, dest: 'out/', cwd: 'gen', src: 'common/internal/version.js' },
+          { expand: true, dest: 'out/', cwd: 'gen', src: '*/listing.js' },
         ],
       },
-      'out-wpt-htmlfiles': {
+      'gen-to-out-wpt': {
+        // Must run after generate-common and run:build-out-wpt.
         files: [
-          { expand: true, cwd: 'src', src: 'webgpu/**/*.html', dest: 'out-wpt/' },
+          { expand: true, dest: 'out-wpt/', cwd: 'gen', src: 'common/internal/version.js' },
+          { expand: true, dest: 'out-wpt/', cwd: 'gen', src: 'webgpu/listing.js' },
+        ],
+      },
+      'htmlfiles-to-out-wpt': {
+        // Must run after run:build-out-wpt.
+        files: [
+          { expand: true, dest: 'out-wpt/', cwd: 'src', src: 'webgpu/**/*.html' },
         ],
       },
     },
@@ -177,20 +190,23 @@ module.exports = function (grunt) {
     helpMessageTasks.push({ name, desc });
   }
 
-  grunt.registerTask('build-standalone', 'Build out/ (no listings, no checks, no WPT)', [
+  grunt.registerTask('generate-common', 'Generate files into gen/', [
+    'run:generate-version',
+    'run:generate-listings',
+  ]);
+  grunt.registerTask('build-standalone', 'Build out/ (no checks; run after generate-common)', [
     'run:build-out',
     'run:copy-assets',
-    'run:generate-version',
+    'copy:gen-to-out',
   ]);
-  grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-listings)', [
+  grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-common)', [
     'run:build-out-wpt',
     'run:copy-assets-wpt',
     'run:autoformat-out-wpt',
-    'run:generate-version',
-    'copy:out-wpt-generated',
-    'copy:out-wpt-htmlfiles',
-    'run:generate-wpt-cts-html',
-    'run:generate-wpt-cts-html-chunked2sec',
+    'copy:gen-to-out-wpt',
+    'copy:htmlfiles-to-out-wpt',
+    'run:write-out-wpt-cts-html',
+    'run:write-out-wpt-cts-html-chunked2sec',
   ]);
   grunt.registerTask('build-done-message', () => {
     process.stderr.write('\nBuild completed! Running checks/tests');
@@ -198,27 +214,28 @@ module.exports = function (grunt) {
 
   registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
     'clean',
-    'run:validate',
-    'run:validate-cache',
+    'generate-common',
+    // None of the steps below have interdependencies.
     'build-standalone',
-    'run:generate-listings',
     'build-wpt',
     'run:build-out-node',
     'build-done-message',
     'ts:check',
+    'run:validate',
+    'run:validate-cache',
     'run:unittest',
     'run:lint',
     'run:tsdoc-treatWarningsAsErrors',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
+    'generate-common',
     'build-standalone',
-    'run:generate-listings',
     'build-done-message',
     'run:validate',
     'ts:check',
   ]);
   registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'run:generate-listings',
+    'generate-common',
     'build-wpt',
     'build-done-message',
     'run:validate',
@@ -235,7 +252,7 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('serve', 'Serve out/ on 127.0.0.1:8080 (does NOT compile source)', ['run:serve']);
   registerTaskAndAddToHelp('fix', 'Fix lint and formatting', ['run:fix']);
 
-  addExistingTaskToHelp('clean', 'Clean out/ and out-wpt/');
+  addExistingTaskToHelp('clean', 'Delete built and generated files');
 
   grunt.registerTask('default', '', () => {
     console.error('\nAvailable tasks (see grunt --help for info):');
