@@ -5,7 +5,8 @@ Unit tests for TestGroup.
 
 import { Fixture } from '../common/framework/fixture.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
-import { makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
+import { TestQueryMultiFile } from '../common/internal/query/query.js';
+import { kQueryMaxLength, makeTestGroupForUnitTesting } from '../common/internal/test_group.js';
 import { assert } from '../common/util/util.js';
 
 import { TestGroupTest } from './test_group_test.js';
@@ -89,7 +90,7 @@ g.test('no_fn').fn(t => {
   g.test('missing');
 
   t.shouldThrow('Error', () => {
-    g.validate();
+    g.validate(new TestQueryMultiFile('s', ['f']));
   });
 });
 
@@ -108,13 +109,13 @@ g.test('duplicate_test_params,none').fn(() => {
     g.test('abc')
       .paramsSimple([])
       .fn(() => {});
-    g.validate();
+    g.validate(new TestQueryMultiFile('s', ['f']));
   }
 
   {
     const g = makeTestGroupForUnitTesting(UnitTest);
     g.test('abc').fn(() => {});
-    g.validate();
+    g.validate(new TestQueryMultiFile('s', ['f']));
   }
 
   {
@@ -124,7 +125,7 @@ g.test('duplicate_test_params,none').fn(() => {
         { a: 1 }, //
       ])
       .fn(() => {});
-    g.validate();
+    g.validate(new TestQueryMultiFile('s', ['f']));
   }
 });
 
@@ -137,7 +138,7 @@ g.test('duplicate_test_params,basic').fn(t => {
         { a: 1 }, //
         { a: 1 },
       ]);
-      g.validate();
+      g.validate(new TestQueryMultiFile('s', ['f']));
     });
   }
   {
@@ -151,7 +152,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       )
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.validate();
+      g.validate(new TestQueryMultiFile('s', ['f']));
     });
   }
   {
@@ -163,7 +164,7 @@ g.test('duplicate_test_params,basic').fn(t => {
       ])
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.validate();
+      g.validate(new TestQueryMultiFile('s', ['f']));
     });
   }
 });
@@ -190,7 +191,7 @@ g.test('duplicate_test_params,with_different_private_params').fn(t => {
       )
       .fn(() => {});
     t.shouldThrow('Error', () => {
-      g.validate();
+      g.validate(new TestQueryMultiFile('s', ['f']));
     });
   }
 });
@@ -209,6 +210,67 @@ g.test('invalid_test_name').fn(t => {
       { message: name }
     );
   }
+});
+
+g.test('long_test_query,long_test_name').fn(t => {
+  const g = makeTestGroupForUnitTesting(UnitTest);
+
+  const long = Array(kQueryMaxLength - 5).join('a');
+
+  const fileQuery = new TestQueryMultiFile('s', ['f']);
+  g.test(long).unimplemented();
+  g.validate(fileQuery);
+
+  g.test(long + 'a').unimplemented();
+  t.shouldThrow(
+    'Error',
+    () => {
+      g.validate(fileQuery);
+    },
+    { message: long }
+  );
+});
+
+g.test('long_case_query,long_test_name').fn(t => {
+  const g = makeTestGroupForUnitTesting(UnitTest);
+
+  const long = Array(kQueryMaxLength - 5).join('a');
+
+  const fileQuery = new TestQueryMultiFile('s', ['f']);
+  g.test(long).fn(() => {});
+  g.validate(fileQuery);
+
+  g.test(long + 'a').fn(() => {});
+  t.shouldThrow(
+    'Error',
+    () => {
+      g.validate(fileQuery);
+    },
+    { message: long }
+  );
+});
+
+g.test('long_case_query,long_case_name').fn(t => {
+  const g = makeTestGroupForUnitTesting(UnitTest);
+
+  const long = Array(kQueryMaxLength - 9).join('a');
+
+  const fileQuery = new TestQueryMultiFile('s', ['f']);
+  g.test('t')
+    .paramsSimple([{ x: long }])
+    .fn(() => {});
+  g.validate(fileQuery);
+
+  g.test('u')
+    .paramsSimple([{ x: long + 'a' }])
+    .fn(() => {});
+  t.shouldThrow(
+    'Error',
+    () => {
+      g.validate(fileQuery);
+    },
+    { message: long }
+  );
 });
 
 g.test('param_value,valid').fn(() => {

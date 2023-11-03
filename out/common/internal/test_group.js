@@ -19,7 +19,12 @@ import { globalTestConfig } from '../framework/test_config.js';
 import { TestCaseRecorder } from '../internal/logging/test_case_recorder.js';
 import { extractPublicParams, mergeParams } from '../internal/params_utils.js';
 import { compareQueries, Ordering } from '../internal/query/compare.js';
-import { TestQuerySingleCase } from '../internal/query/query.js';
+import {
+
+  TestQueryMultiTest,
+  TestQuerySingleCase } from
+
+'../internal/query/query.js';
 import { kPathSeparator } from '../internal/query/separators.js';
 import {
   stringifyPublicParams,
@@ -80,6 +85,9 @@ fixture)
   return new TestGroup(fixture);
 }
 
+/** The maximum allowed length of a test query string. Checked by tools/validate. */
+export const kQueryMaxLength = 375;
+
 /** Parameter name for batch number (see also TestBuilder.batch). */
 const kBatchParamName = 'batch__';
 
@@ -130,9 +138,14 @@ export class TestGroup {
     return test;
   }
 
-  validate() {
+  validate(fileQuery) {
     for (const test of this.tests) {
-      test.validate();
+      const testQuery = new TestQueryMultiTest(
+        fileQuery.suite,
+        fileQuery.filePathParts,
+        test.testPath
+      );
+      test.validate(testQuery);
     }
   }
 
@@ -287,7 +300,7 @@ class TestBuilder {
   }
 
   /** Perform various validation/"lint" chenks. */
-  validate() {
+  validate(testQuery) {
     const testPathString = this.testPath.join(kPathSeparator);
     assert(this.testFn !== undefined, () => {
       let s = `Test is missing .fn(): ${testPathString}`;
@@ -297,12 +310,30 @@ class TestBuilder {
       return s;
     });
 
+    assert(
+      testQuery.toString().length <= kQueryMaxLength,
+      () =>
+      `Test query ${testQuery} is too long. Max length is ${kQueryMaxLength} characters. Please shorten names or reduce parameters.`
+    );
+
     if (this.testCases === undefined) {
       return;
     }
 
     const seen = new Set();
     for (const [caseParams, subcases] of builderIterateCasesWithSubcases(this.testCases, null)) {
+      const caseQuery = new TestQuerySingleCase(
+        testQuery.suite,
+        testQuery.filePathParts,
+        testQuery.testPathParts,
+        caseParams
+      ).toString();
+      assert(
+        caseQuery.length <= kQueryMaxLength,
+        () =>
+        `Case query ${caseQuery} is too long. Max length is ${kQueryMaxLength} characters. Please shorten names or reduce parameters.`
+      );
+
       for (const subcaseParams of subcases ?? [{}]) {
         const params = mergeParams(caseParams, subcaseParams);
         assert(this.batchSize === 0 || !(kBatchParamName in params));
@@ -319,7 +350,7 @@ class TestBuilder {
         const testcaseStringUnique = stringifyPublicParamsUniquely(params);
         assert(
           !seen.has(testcaseStringUnique),
-          `Duplicate public test case params for test ${testPathString}: ${testcaseString}`
+          `Duplicate public test case+subcase params for test ${testPathString}: ${testcaseString}`
         );
         seen.add(testcaseStringUnique);
       }
