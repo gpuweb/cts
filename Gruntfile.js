@@ -212,7 +212,9 @@ module.exports = function (grunt) {
     process.stderr.write('\nBuild completed! Running checks/tests');
   });
 
-  registerTaskAndAddToHelp('pre', 'Run all presubmit checks: standalone+wpt+typecheck+unittest+lint', [
+  grunt.registerTask('pre', ['all']);
+
+  registerTaskAndAddToHelp('all', 'Run all builds and checks', [
     'clean',
     'generate-common',
     // None of the steps below have interdependencies.
@@ -220,6 +222,19 @@ module.exports = function (grunt) {
     'build-wpt',
     'run:build-out-node',
     'build-done-message',
+    'checks',
+  ]);
+  registerTaskAndAddToHelp('standalone', 'Build standalone (out/) (no checks)', [
+    'generate-common',
+    'build-standalone',
+    'build-done-message',
+  ]);
+  registerTaskAndAddToHelp('wpt', 'Build for WPT (out-wpt/) (no checks)', [
+    'generate-common',
+    'build-wpt',
+    'build-done-message',
+  ]);
+  registerTaskAndAddToHelp('checks', 'Run all checks (and build tsdoc)', [
     'ts:check',
     'run:validate',
     'run:validate-cache',
@@ -227,38 +242,26 @@ module.exports = function (grunt) {
     'run:lint',
     'run:tsdoc-treatWarningsAsErrors',
   ]);
-  registerTaskAndAddToHelp('standalone', 'Build standalone and typecheck', [
-    'generate-common',
-    'build-standalone',
-    'build-done-message',
-    'run:validate',
-    'ts:check',
-  ]);
-  registerTaskAndAddToHelp('wpt', 'Build for WPT and typecheck', [
-    'generate-common',
-    'build-wpt',
-    'build-done-message',
-    'run:validate',
-    'ts:check',
-  ]);
-  registerTaskAndAddToHelp('unittest', 'Build standalone, typecheck, and unittest', [
-    'standalone',
+  registerTaskAndAddToHelp('unittest', 'Just run unittests', [
     'run:unittest',
   ]);
-  registerTaskAndAddToHelp('check', 'Just typecheck', [
+  registerTaskAndAddToHelp('typecheck', 'Just typecheck', [
     'ts:check',
   ]);
+  registerTaskAndAddToHelp('tsdoc', 'Just build tsdoc', [
+    'run:tsdoc',
+  ]);
 
-  registerTaskAndAddToHelp('serve', 'Serve out/ on 127.0.0.1:8080 (does NOT compile source)', ['run:serve']);
+  registerTaskAndAddToHelp('serve', 'Serve out/ (without building anything)', ['run:serve']);
   registerTaskAndAddToHelp('fix', 'Fix lint and formatting', ['run:fix']);
 
   addExistingTaskToHelp('clean', 'Delete built and generated files');
 
   grunt.registerTask('default', '', () => {
-    console.error('\nAvailable tasks (see grunt --help for info):');
+    console.error('\nRecommended tasks:');
+    let nameColumnSize = Math.max(...helpMessageTasks.map(({ name }) => name.length));
     for (const { name, desc } of helpMessageTasks) {
-      console.error(`$ grunt ${name}`);
-      console.error(`  ${desc}`);
+      console.error(`$ grunt ${name.padEnd(nameColumnSize)}  # ${desc}`);
     }
   });
 };
