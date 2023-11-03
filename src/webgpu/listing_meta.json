@@ -9,6 +9,7 @@
   "webgpu:api,operation,adapter,requestDevice:features,unknown:*": { "subcaseMS": 13.600 },
   "webgpu:api,operation,adapter,requestDevice:invalid:*": { "subcaseMS": 27.801 },
   "webgpu:api,operation,adapter,requestDevice:limit,better_than_supported:*": { "subcaseMS": 3.614 },
+  "webgpu:api,operation,adapter,requestDevice:limit,out_of_range:*": { "subcaseMS": 1.000 },
   "webgpu:api,operation,adapter,requestDevice:limit,worse_than_default:*": { "subcaseMS": 6.711 },
   "webgpu:api,operation,adapter,requestDevice:limits,supported:*": { "subcaseMS": 4.579 },
   "webgpu:api,operation,adapter,requestDevice:limits,unknown:*": { "subcaseMS": 0.601 },

@@ -2056,6 +2056,7 @@ export function isPowerOfTwo(n: number): boolean {
   if (!Number.isInteger(n)) {
     return false;
   }
+  assert((n | 0) === n, 'isPowerOfTwo only supports 32-bit numbers');
   return n !== 0 && (n & (n - 1)) === 0;
 }
 
