@@ -323,6 +323,7 @@ g.test('limit,out_of_range')
       .combine('limit', kLimits)
       .beginSubcases()
       .expand('value', function* () {
+        yield -(2 ** 64);
         yield Number.MIN_SAFE_INTEGER - 3;
         yield Number.MIN_SAFE_INTEGER - 1;
         yield Number.MIN_SAFE_INTEGER;
@@ -337,7 +338,6 @@ g.test('limit,out_of_range')
         yield Number.MAX_SAFE_INTEGER;
         yield Number.MAX_SAFE_INTEGER + 1;
         yield Number.MAX_SAFE_INTEGER + 3;
-        yield 2 ** 64 - 1;
         yield 2 ** 64;
         yield Number.MAX_VALUE;
       })
