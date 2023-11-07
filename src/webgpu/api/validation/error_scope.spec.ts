@@ -13,6 +13,8 @@ import { getGPU } from '../../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kErrorScopeFilters, kGeneratableErrorScopeFilters } from '../../capability_info.js';
 
+import { getDefaultLimitForAdapter } from './capability_checks/limits/limit_utils.js';
+
 class ErrorScopeTests extends Fixture {
   _device: GPUDevice | undefined = undefined;
 
@@ -26,7 +28,17 @@ class ErrorScopeTests extends Fixture {
     const gpu = getGPU(this.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice();
+
+    // We need to max out the adapter limits related to texture dimensions to more reliably cause an
+    // OOM error when asked for it, so set that on the device now.
+    const device = this.trackForCleanup(
+      await adapter.requestDevice({
+        requiredLimits: {
+          ['maxTextureDimension2D']: getDefaultLimitForAdapter(adapter, 'maxTextureDimension2D'),
+          ['maxTextureArrayLayers']: getDefaultLimitForAdapter(adapter, 'maxTextureArrayLayers'),
+        },
+      })
+    );
     assert(device !== null);
     this._device = device;
   }
