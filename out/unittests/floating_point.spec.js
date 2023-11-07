@@ -3536,19 +3536,27 @@ const kRoundIntervalCases = {
   f32: [
   { input: 2 ** 30, expected: 2 ** 30 },
   { input: -(2 ** 30), expected: -(2 ** 30) },
-  { input: 0x80000000, expected: 0x80000000 } // https://github.com/gpuweb/cts/issues/2766
+  { input: 0x8000_0000, expected: 0x8000_0000 } // https://github.com/gpuweb/cts/issues/2766
   ],
   f16: [
   { input: 2 ** 14, expected: 2 ** 14 },
   { input: -(2 ** 14), expected: -(2 ** 14) },
   { input: 0x8000, expected: 0x8000 } // https://github.com/gpuweb/cts/issues/2766
+  ],
+  abstract: [
+  { input: 2 ** 62, expected: 2 ** 62 },
+  { input: -(2 ** 62), expected: -(2 ** 62) },
+  {
+    input: 0x8000_0000_0000_0000,
+    expected: 0x8000_0000_0000_0000
+  } // https://github.com/gpuweb/cts/issues/2766
   ]
 };
 
 g.test('roundInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
@@ -3579,7 +3587,7 @@ expandWithParams((p) => {
   { input: constants.negative.max, expected: 0 },
   ...kRoundIntervalCases[p.trait],
 
-  // 32-bit subnormals
+  // Subnormals
   { input: constants.positive.subnormal.max, expected: 0 },
   { input: constants.positive.subnormal.min, expected: 0 },
   { input: constants.negative.subnormal.min, expected: 0 },
