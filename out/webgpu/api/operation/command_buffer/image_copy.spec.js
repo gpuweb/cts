@@ -1413,6 +1413,7 @@ expandWithParams((p) => {
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1510,6 +1511,7 @@ combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textur
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1590,6 +1592,7 @@ unless((p) => p.dimension === '1d' && p.coordinateToTest !== 0)
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
@@ -1790,6 +1793,7 @@ expand('textureSize', generateTestTextureSizes)
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
   t.skipIfTextureFormatNotSupported(t.params.format);
+  t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
   t.selectDeviceOrSkipTestCase(info.feature);
 }).
 fn((t) => {
