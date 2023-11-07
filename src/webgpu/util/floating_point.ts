@@ -5108,7 +5108,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly remainderInterval = (x: number, y: number): FPInterval => {
     return this.toInterval(kF32Traits.remainderInterval(x, y));
   };
-  public readonly roundInterval = this.unimplementedScalarToInterval.bind(this, 'roundInterval');
+  public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);
   public readonly sinInterval = this.unimplementedScalarToInterval.bind(this, 'sinInterval');
