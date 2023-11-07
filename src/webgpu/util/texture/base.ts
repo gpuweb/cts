@@ -183,7 +183,7 @@ export function effectiveViewDimensionForDimension(
 
 /** Returns the effective view dimension for a given texture */
 export function effectiveViewDimensionForTexture(
-  texture: Readonly<GPUTexture>,
+  texture: GPUTexture,
   viewDimension: GPUTextureViewDimension | undefined
 ) {
   return effectiveViewDimensionForDimension(

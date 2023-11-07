@@ -13,11 +13,9 @@ import { CompatibilityTest } from '../../compatibility_test.js';
 export const g = makeTestGroup(CompatibilityTest);
 
 function isTextureBindingViewDimensionCompatibleWithDimension(
-  dimension?: GPUTextureDimension,
-  textureBindingViewDimension?: GPUTextureViewDimension
+  dimension: GPUTextureDimension = '2d',
+  textureBindingViewDimension: GPUTextureViewDimension = '2d'
 ) {
-  dimension = dimension || '2d';
-  textureBindingViewDimension = textureBindingViewDimension || '2d';
   return getTextureDimensionFromView(textureBindingViewDimension) === dimension;
 }
 
@@ -101,7 +99,7 @@ function getEffectiveTextureBindingViewDimension(
   }
 }
 
-g.test('dimension_matches_textureBindingViewDimension')
+g.test('viewDimension_matches_textureBindingViewDimension')
   .desc(
     `
     Tests that, in compat mode, the dimension of a view is compatible with a texture's textureBindingViewDimension
@@ -117,6 +115,7 @@ g.test('dimension_matches_textureBindingViewDimension')
       .filter(
         ({ dimension, textureBindingViewDimension, depthOrArrayLayers, viewDimension }) =>
           textureBindingViewDimension !== 'cube-array' &&
+          viewDimension !== 'cube-array' &&
           isTextureBindingViewDimensionCompatibleWithDimension(
             dimension,
             textureBindingViewDimension
@@ -165,12 +164,13 @@ g.test('dimension_matches_textureBindingViewDimension')
       ],
     });
 
+    const resource = texture.createView({ dimension: viewDimension });
     const shouldError = effectiveTextureBindingViewDimension !== effectiveViewDimension;
 
     t.expectValidationError(() => {
       t.device.createBindGroup({
         layout,
-        entries: [{ binding: 0, resource: texture.createView({ dimension: viewDimension }) }],
+        entries: [{ binding: 0, resource }],
       });
     }, shouldError);
   });
