@@ -267,6 +267,10 @@ export async function getVideoFrameFromVideoElement(
  *
  */
 export function getVideoElement(t: GPUTest, videoName: VideoName): HTMLVideoElement {
+  if (typeof HTMLVideoElement === 'undefined') {
+    t.skip('HTMLVideoElement not available');
+  }
+
   const videoElement = document.createElement('video');
   const videoInfo = kVideoInfo[videoName];
 
