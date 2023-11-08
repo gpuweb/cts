@@ -267,6 +267,10 @@ video)
  *
  */
 export function getVideoElement(t, videoName) {
+  if (typeof HTMLVideoElement === 'undefined') {
+    t.skip('HTMLVideoElement not available');
+  }
+
   const videoElement = document.createElement('video');
   const videoInfo = kVideoInfo[videoName];
 
