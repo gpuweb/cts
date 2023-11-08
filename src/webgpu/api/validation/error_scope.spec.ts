@@ -13,8 +13,6 @@ import { getGPU } from '../../../common/util/navigator_gpu.js';
 import { assert, raceWithRejectOnTimeout } from '../../../common/util/util.js';
 import { kErrorScopeFilters, kGeneratableErrorScopeFilters } from '../../capability_info.js';
 
-import { getDefaultLimitForAdapter } from './capability_checks/limits/limit_utils.js';
-
 class ErrorScopeTests extends Fixture {
   _device: GPUDevice | undefined = undefined;
 
@@ -35,7 +33,6 @@ class ErrorScopeTests extends Fixture {
       await adapter.requestDevice({
         requiredLimits: {
           ['maxTextureDimension2D']: adapter.limits.maxTextureDimension2D,
-          ['maxTextureArrayLayers']: adapter.limits.maxTextureArrayLayers,
         },
       })
     );
