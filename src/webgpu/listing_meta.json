@@ -517,7 +517,6 @@
   "webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachmentBytesPerSample,unaligned:*": { "subcaseMS": 0.750 },
   "webgpu:api,validation,encoding,createRenderBundleEncoder:attachment_state,limits,maxColorAttachments:*": { "subcaseMS": 0.145 },
   "webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly:*": { "subcaseMS": 1.804 },
-  "webgpu:api,validation,encoding,createRenderBundleEncoder:depth_stencil_readonly_with_undefined_depth:*": { "subcaseMS": 14.825 },
   "webgpu:api,validation,encoding,createRenderBundleEncoder:valid_texture_formats:*": { "subcaseMS": 2.130 },
   "webgpu:api,validation,encoding,encoder_open_state:compute_pass_commands:*": { "subcaseMS": 4.208 },
   "webgpu:api,validation,encoding,encoder_open_state:non_pass_commands:*": { "subcaseMS": 26.191 },

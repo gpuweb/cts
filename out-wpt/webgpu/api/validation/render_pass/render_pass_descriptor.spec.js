@@ -909,10 +909,8 @@ fn((t) => {
   const hasDepth = info.depth;
   const hasStencil = info.stencil;
 
-  const goodAspectCombo =
-  (hasDepth && hasStencil ? !depthReadOnly === !stencilReadOnly : true) && (
-  hasDepthSettings ? hasDepth : true) && (
-  hasStencilSettings ? hasStencil : true);
+  const goodAspectSettingsPresent =
+  (hasDepthSettings ? hasDepth : true) && (hasStencilSettings ? hasStencil : true);
 
   const hasBothDepthOps = !!depthLoadOp && !!depthStoreOp;
   const hasBothStencilOps = !!stencilLoadOp && !!stencilStoreOp;
@@ -923,7 +921,7 @@ fn((t) => {
   const goodStencilCombo =
   hasStencil && !stencilReadOnly ? hasBothStencilOps : hasNeitherStencilOps;
 
-  const shouldError = !goodAspectCombo || !goodDepthCombo || !goodStencilCombo;
+  const shouldError = !goodAspectSettingsPresent || !goodDepthCombo || !goodStencilCombo;
 
   t.expectValidationError(() => {
     encoder.finish();
