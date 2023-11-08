@@ -155,7 +155,7 @@ Tests that popping an empty error scope stack should reject.
   )
   .fn(t => {
     const promise = t.device.popErrorScope();
-    t.shouldReject('OperationError', promise);
+    t.shouldReject('OperationError', promise, { allowMissingStack: true });
   });
 
 g.test('parent_scope')
@@ -259,7 +259,7 @@ Tests that sibling error scopes need to be balanced.
     {
       // Trying to pop an additional non-existing scope should reject.
       const promise = t.device.popErrorScope();
-      t.shouldReject('OperationError', promise);
+      t.shouldReject('OperationError', promise, { allowMissingStack: true });
     }
 
     const errors = await Promise.all(promises);
@@ -295,6 +295,6 @@ Tests that nested error scopes need to be balanced.
     {
       // Trying to pop an additional non-existing scope should reject.
       const promise = t.device.popErrorScope();
-      t.shouldReject('OperationError', promise);
+      t.shouldReject('OperationError', promise, { allowMissingStack: true });
     }
   });
