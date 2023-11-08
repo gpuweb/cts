@@ -29,6 +29,7 @@ export interface CTSOptions {
   debug: boolean;
   compatibility: boolean;
   unrollConstEvalLoops: boolean;
+  noRaceWithRejectOnTimeout: boolean;
   powerPreference?: GPUPowerPreference | '';
 }
 
@@ -37,6 +38,7 @@ export const kDefaultCTSOptions: CTSOptions = {
   debug: true,
   compatibility: false,
   unrollConstEvalLoops: false,
+  noRaceWithRejectOnTimeout: false,
   powerPreference: '',
 };
 
@@ -63,6 +65,7 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
   debug: { description: 'show more info' },
   compatibility: { description: 'run in compatibility mode' },
   unrollConstEvalLoops: { description: 'unroll const eval loops in WGSL' },
+  noRaceWithRejectOnTimeout: { description: 'turn off race timeout' },
   powerPreference: {
     description: 'set default powerPreference for some tests',
     parser: optionString,
