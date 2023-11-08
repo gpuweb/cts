@@ -1060,7 +1060,7 @@ fn((t) => {
   // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
   if (!info.color?.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
   if (
-  (!info.renderable || appliedDimension !== '2d') &&
+  (!info.renderable || appliedDimension !== '2d' && appliedDimension !== '3d') &&
   (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0)
 
   success = false;
