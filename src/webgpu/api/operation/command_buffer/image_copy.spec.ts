@@ -1413,6 +1413,7 @@ bytes in copy works for every format.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1510,6 +1511,7 @@ works for every format with 2d and 2d-array textures.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1590,6 +1592,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1790,6 +1793,7 @@ TODO: Make a variant for depth-stencil formats.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
