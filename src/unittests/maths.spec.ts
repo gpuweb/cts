@@ -25,9 +25,6 @@ import {
   fullF16Range,
   fullF32Range,
   fullI32Range,
-  reinterpretU16AsF16,
-  reinterpretU32AsF32,
-  reinterpretU64AsF64,
   lerp,
   linearRange,
   nextAfterF16,
@@ -40,6 +37,11 @@ import {
   lerpBigInt,
   linearRangeBigInt,
 } from '../webgpu/util/math.js';
+import {
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU64AsF64,
+} from '../webgpu/util/reinterpret.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -70,8 +72,8 @@ function withinOneULPF32(got: number, expected: number, mode: FlushMode): boolea
  *              FTZ occur during comparison
  **/
 function compareArrayOfNumbersF32(
-  got: Array<number>,
-  expect: Array<number>,
+  got: readonly number[],
+  expect: readonly number[],
   mode: FlushMode = 'flush'
 ): boolean {
   return (

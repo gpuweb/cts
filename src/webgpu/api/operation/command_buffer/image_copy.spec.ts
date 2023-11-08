@@ -1088,16 +1088,19 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
       // Check the valid data in outputStagingBuffer once per row.
       for (let y = 0; y < copyFromOutputTextureLayout.mipSize[1]; ++y) {
+        const dataStart =
+          expectedStencilTextureDataOffset +
+          expectedStencilTextureDataBytesPerRow *
+            expectedStencilTextureDataRowsPerImage *
+            stencilTextureLayer +
+          expectedStencilTextureDataBytesPerRow * y;
         this.expectGPUBufferValuesEqual(
           outputStagingBuffer,
           expectedStencilTextureData.slice(
-            expectedStencilTextureDataOffset +
-              expectedStencilTextureDataBytesPerRow *
-                expectedStencilTextureDataRowsPerImage *
-                stencilTextureLayer +
-              expectedStencilTextureDataBytesPerRow * y,
-            copyFromOutputTextureLayout.mipSize[0]
-          )
+            dataStart,
+            dataStart + copyFromOutputTextureLayout.mipSize[0]
+          ),
+          copyFromOutputTextureLayout.bytesPerRow * y
         );
       }
     }
@@ -1410,6 +1413,7 @@ bytes in copy works for every format.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1507,6 +1511,7 @@ works for every format with 2d and 2d-array textures.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1587,6 +1592,7 @@ for all formats. We pass origin and copyExtent as [number, number, number].`
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -1787,6 +1793,7 @@ TODO: Make a variant for depth-stencil formats.
   .beforeAllSubcases(t => {
     const info = kTextureFormatInfo[t.params.format];
     t.skipIfTextureFormatNotSupported(t.params.format);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(t.params.format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
@@ -2048,15 +2055,8 @@ copyTextureToBuffer() with depth aspect.
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const {
-      format,
-      copyMethod,
-      aspect,
-      offsetInBlocks,
-      dataPaddingInBytes,
-      copyDepth,
-      mipLevel,
-    } = t.params;
+    const { format, copyMethod, aspect, offsetInBlocks, dataPaddingInBytes, copyDepth, mipLevel } =
+      t.params;
     const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
     const initialDataOffset = offsetInBlocks * bytesPerBlock;
     const copySize = [3, 3, copyDepth] as const;

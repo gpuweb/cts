@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for non-matrix AbstractFloat subtraction expression
+Execution Tests for non-matrix abstract float remainder expression
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -12,12 +12,12 @@ import { onlyConstInputSource, run } from '../expression.js';
 
 import { abstractBinary } from './binary.js';
 
-const subtractionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
-  return FP.abstract.toVector(v.map(e => FP.abstract.subtractionInterval(e, s)));
+const remainderVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
+  return FP.abstract.toVector(v.map(e => FP.abstract.remainderInterval(e, s)));
 };
 
-const subtractionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
-  return FP.abstract.toVector(v.map(e => FP.abstract.subtractionInterval(s, e)));
+const remainderScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
+  return FP.abstract.toVector(v.map(e => FP.abstract.remainderInterval(s, e)));
 };
 
 export const g = makeTestGroup(GPUTest);
@@ -28,7 +28,7 @@ const scalar_cases = {
       sparseF64Range(),
       sparseF64Range(),
       'finite',
-      FP.abstract.subtractionInterval
+      FP.abstract.remainderInterval
     );
   },
 };
@@ -40,7 +40,7 @@ const vector_scalar_cases = ([2, 3, 4] as const)
         sparseVectorF64Range(dim),
         sparseF64Range(),
         'finite',
-        subtractionVectorScalarInterval
+        remainderVectorScalarInterval
       );
     },
   }))
@@ -53,13 +53,13 @@ const scalar_vector_cases = ([2, 3, 4] as const)
         sparseF64Range(),
         sparseVectorF64Range(dim),
         'finite',
-        subtractionScalarVectorInterval
+        remainderScalarVectorInterval
       );
     },
   }))
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('binary/af_subtraction', {
+export const d = makeCaseCache('binary/af_remainder', {
   ...scalar_cases,
   ...vector_scalar_cases,
   ...scalar_vector_cases,
@@ -69,8 +69,8 @@ g.test('scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x - y, where x and y are scalars
-Accuracy: Correctly rounded
+Expression: x % y, where x and y are scalars
+Accuracy: Derived from x - y * trunc(x/y)
 `
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
@@ -78,7 +78,7 @@ Accuracy: Correctly rounded
     const cases = await d.get('scalar');
     await run(
       t,
-      abstractBinary('-'),
+      abstractBinary('%'),
       [TypeAbstractFloat, TypeAbstractFloat],
       TypeAbstractFloat,
       t.params,
@@ -90,8 +90,8 @@ g.test('vector')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x - y, where x and y are vectors
-Accuracy: Correctly rounded
+Expression: x % y, where x and y are vectors
+Accuracy: Derived from x - y * trunc(x/y)
 `
   )
   .params(u =>
@@ -101,7 +101,7 @@ Accuracy: Correctly rounded
     const cases = await d.get('scalar'); // Using vectorize to generate vector cases based on scalar cases
     await run(
       t,
-      abstractBinary('-'),
+      abstractBinary('%'),
       [TypeAbstractFloat, TypeAbstractFloat],
       TypeAbstractFloat,
       t.params,
@@ -113,7 +113,7 @@ g.test('vector_scalar')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x - y, where x is a vector and y is a scalar
+Expression: x % y, where x is a vector and y is a scalar
 Accuracy: Correctly rounded
 `
   )
@@ -123,7 +123,7 @@ Accuracy: Correctly rounded
     const cases = await d.get(`vec${dim}_scalar`);
     await run(
       t,
-      abstractBinary('-'),
+      abstractBinary('%'),
       [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
       TypeVec(dim, TypeAbstractFloat),
       t.params,
@@ -135,7 +135,7 @@ g.test('scalar_vector')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-evaluation')
   .desc(
     `
-Expression: x - y, where x is a scalar and y is a vector
+Expression: x % y, where x is a scalar and y is a vector
 Accuracy: Correctly rounded
 `
   )
@@ -145,7 +145,7 @@ Accuracy: Correctly rounded
     const cases = await d.get(`scalar_vec${dim}`);
     await run(
       t,
-      abstractBinary('-'),
+      abstractBinary('%'),
       [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
       TypeVec(dim, TypeAbstractFloat),
       t.params,

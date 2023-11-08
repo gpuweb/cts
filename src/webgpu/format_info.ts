@@ -53,7 +53,7 @@ function formatTableWithDefaults<Defaults extends {}, Table extends { readonly [
       ? Table[F][K]
       : K extends keyof Defaults
       ? Defaults[K]
-      : typeof kFormatUniversalDefaults[K];
+      : (typeof kFormatUniversalDefaults)[K];
   };
 } {
   return Object.fromEntries(
@@ -1255,7 +1255,7 @@ export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 /**
  * Given an array of texture formats return the number of bytes per sample.
  */
-export function computeBytesPerSampleFromFormats(formats: GPUTextureFormat[]) {
+export function computeBytesPerSampleFromFormats(formats: readonly GPUTextureFormat[]) {
   let bytesPerSample = 0;
   for (const format of formats) {
     const info = kTextureFormatInfo[format];

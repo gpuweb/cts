@@ -84,7 +84,7 @@ dataCache.setStore({
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
-    return await response.text();
+    return new Uint8Array(await response.arrayBuffer());
   },
 });
 
@@ -427,11 +427,20 @@ function makeTreeNodeHeaderHTML(
     .attr('alt', runtext)
     .attr('title', runtext)
     .on('click', async () => {
+      if (runDepth > 0) {
+        showInfo('tests are already running');
+        return;
+      }
+      showInfo('');
       console.log(`Starting run for ${n.query}`);
+      // turn off all run buttons
+      $('#resultsVis').addClass('disable-run');
       const startTime = performance.now();
       await runSubtree();
       const dt = performance.now() - startTime;
       const dtMinutes = dt / 1000 / 60;
+      // turn on all run buttons
+      $('#resultsVis').removeClass('disable-run');
       console.log(`Finished run: ${dt.toFixed(1)} ms = ${dtMinutes.toFixed(1)} min`);
     })
     .appendTo(header);
@@ -528,7 +537,7 @@ function prepareParams(params: Record<string, ParamValue>): string {
 
 // This is just a cast in one place.
 export function optionsToRecord(options: CTSOptions) {
-  return (options as unknown) as Record<string, boolean | string>;
+  return options as unknown as Record<string, boolean | string>;
 }
 
 /**

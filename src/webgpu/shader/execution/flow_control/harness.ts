@@ -49,7 +49,7 @@ interface FlowControlTestBuilder {
 /**
  * Builds, runs then checks the output of a flow control shader test.
  *
- * @p build_wgsl is a function that's called to build the WGSL shader.
+ * `build_wgsl` is a function that's called to build the WGSL shader.
  * This function takes a FlowControlTestBuilder as the single argument, and
  * returns either a string which is embedded into the WGSL entrypoint function,
  * or an object of the signature `{ entrypoint: string; extra: string }` which
@@ -221,9 +221,8 @@ ${main_wgsl.extra}
 
         // returns a string that shows the outputted values to help understand the whole trace.
         const print_output_value = () => {
-          return `Output values (length: ${outputCount}): ${outputs.data
-            .slice(1, outputCount + 1)
-            .join(', ')}`;
+          const subarray = outputs.data.subarray(1, outputCount + 1);
+          return `Output values (length: ${outputCount}): ${subarray.join(', ')}`;
         };
 
         // returns a colorized string of the expect_order() call, highlighting

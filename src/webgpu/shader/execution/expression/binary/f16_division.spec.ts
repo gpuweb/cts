@@ -12,11 +12,11 @@ import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
-const divisionVectorScalarInterval = (v: number[], s: number): FPVector => {
+const divisionVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.f16.toVector(v.map(e => FP.f16.divisionInterval(e, s)));
 };
 
-const divisionScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const divisionScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.f16.toVector(v.map(e => FP.f16.divisionInterval(s, e)));
 };
 

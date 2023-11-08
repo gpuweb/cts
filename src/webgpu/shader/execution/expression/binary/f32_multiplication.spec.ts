@@ -12,11 +12,11 @@ import { allInputSources, run } from '../expression.js';
 
 import { binary, compoundBinary } from './binary.js';
 
-const multiplicationVectorScalarInterval = (v: number[], s: number): FPVector => {
+const multiplicationVectorScalarInterval = (v: readonly number[], s: number): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.multiplicationInterval(e, s)));
 };
 
-const multiplicationScalarVectorInterval = (s: number, v: number[]): FPVector => {
+const multiplicationScalarVectorInterval = (s: number, v: readonly number[]): FPVector => {
   return FP.f32.toVector(v.map(e => FP.f32.multiplicationInterval(s, e)));
 };
 

@@ -97,7 +97,7 @@ function generateIntegerTestCases(
 }
 
 function generateFloatTestCases(
-  test_values: Array<number>,
+  test_values: readonly number[],
   trait: 'f32' | 'f16' | 'abstract',
   stage: 'const' | 'non-const'
 ): Array<Case> {
