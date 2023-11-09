@@ -26,7 +26,16 @@ class ErrorScopeTests extends Fixture {
     const gpu = getGPU(this.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
-    const device = await adapter.requestDevice();
+
+    // We need to max out the adapter limits related to texture dimensions to more reliably cause an
+    // OOM error when asked for it, so set that on the device now.
+    const device = this.trackForCleanup(
+      await adapter.requestDevice({
+        requiredLimits: {
+          maxTextureDimension2D: adapter.limits.maxTextureDimension2D
+        }
+      })
+    );
     assert(device !== null);
     this._device = device;
   }
@@ -146,7 +155,7 @@ Tests that popping an empty error scope stack should reject.
 ).
 fn((t) => {
   const promise = t.device.popErrorScope();
-  t.shouldReject('OperationError', promise);
+  t.shouldReject('OperationError', promise, { allowMissingStack: true });
 });
 
 g.test('parent_scope').
@@ -250,7 +259,7 @@ fn(async (t) => {
   {
     // Trying to pop an additional non-existing scope should reject.
     const promise = t.device.popErrorScope();
-    t.shouldReject('OperationError', promise);
+    t.shouldReject('OperationError', promise, { allowMissingStack: true });
   }
 
   const errors = await Promise.all(promises);
@@ -286,6 +295,6 @@ fn(async (t) => {
   {
     // Trying to pop an additional non-existing scope should reject.
     const promise = t.device.popErrorScope();
-    t.shouldReject('OperationError', promise);
+    t.shouldReject('OperationError', promise, { allowMissingStack: true });
   }
 });
