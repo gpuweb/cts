@@ -1601,6 +1601,16 @@ export const listing = [
       "api",
       "validation",
       "encoding",
+      "cmds",
+      "copyTextureToTexture"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
+      "encoding",
       "programmable",
       "pipeline_bind_group_compat"
     ]
