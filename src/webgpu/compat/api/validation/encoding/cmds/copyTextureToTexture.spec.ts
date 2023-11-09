@@ -32,7 +32,7 @@ g.test('compressed')
     const dstTexture = t.device.createTexture({
       size: [blockWidth, blockHeight, 1],
       format,
-      usage: GPUTextureUsage.COPY_SRC,
+      usage: GPUTextureUsage.COPY_DST,
     });
     t.trackForCleanup(dstTexture);
 
