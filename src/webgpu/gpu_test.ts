@@ -1237,8 +1237,10 @@ export interface TextureTestMixinType {
   ): Generator<Required<GPUOrigin3DDict>>;
 }
 
+type PipelineType = '2d' | '2d-array';
+
 type ImageCopyTestResources = {
-  pipeline: GPURenderPipeline;
+  pipelineByPipelineType: Map<PipelineType, GPURenderPipeline>;
 };
 
 const s_deviceToResourcesMap = new WeakMap<GPUDevice, ImageCopyTestResources>();
@@ -1246,13 +1248,32 @@ const s_deviceToResourcesMap = new WeakMap<GPUDevice, ImageCopyTestResources>();
 /**
  * Gets a (cached) pipeline to render a texture to an rgba8unorm texture
  */
-function getPipelineToRenderTextureToRGB8UnormTexture(device: GPUDevice) {
+function getPipelineToRenderTextureToRGB8UnormTexture(
+  device: GPUDevice,
+  texture: GPUTexture,
+  isCompatibility: boolean
+) {
   if (!s_deviceToResourcesMap.has(device)) {
+    s_deviceToResourcesMap.set(device, {
+      pipelineByPipelineType: new Map<PipelineType, GPURenderPipeline>(),
+    });
+  }
+
+  const { pipelineByPipelineType } = s_deviceToResourcesMap.get(device)!;
+  const pipelineType: PipelineType =
+    isCompatibility && texture.depthOrArrayLayers > 1 ? '2d-array' : '2d';
+  if (!pipelineByPipelineType.get(pipelineType)) {
+    const [textureType, layerCode] =
+      pipelineType === '2d' ? ['texture_2d', ''] : ['texture_2d_array', ', uni.baseArrayLayer'];
     const module = device.createShaderModule({
       code: `
         struct VSOutput {
           @builtin(position) position: vec4f,
           @location(0) texcoord: vec2f,
+        };
+
+        struct Uniforms {
+          baseArrayLayer: u32,
         };
 
         @vertex fn vs(
@@ -1275,10 +1296,11 @@ function getPipelineToRenderTextureToRGB8UnormTexture(device: GPUDevice) {
          }
 
          @group(0) @binding(0) var ourSampler: sampler;
-         @group(0) @binding(1) var ourTexture: texture_2d<f32>;
+         @group(0) @binding(1) var ourTexture: ${textureType}<f32>;
+         @group(0) @binding(2) var<uniform> uni: Uniforms;
 
          @fragment fn fs(fsInput: VSOutput) -> @location(0) vec4f {
-            return textureSample(ourTexture, ourSampler, fsInput.texcoord);
+            return textureSample(ourTexture, ourSampler, fsInput.texcoord${layerCode});
          }
       `,
     });
@@ -1294,10 +1316,10 @@ function getPipelineToRenderTextureToRGB8UnormTexture(device: GPUDevice) {
         targets: [{ format: 'rgba8unorm' }],
       },
     });
-    s_deviceToResourcesMap.set(device, { pipeline });
+    pipelineByPipelineType.set(pipelineType, pipeline);
   }
-  const { pipeline } = s_deviceToResourcesMap.get(device)!;
-  return pipeline;
+  const pipeline = pipelineByPipelineType.get(pipelineType)!;
+  return { pipelineType, pipeline };
 }
 
 type LinearCopyParameters = {
@@ -1441,7 +1463,11 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
       // Render every layer of both textures at mipLevel to an rgba8unorm texture
       // that matches the size of the mipLevel. After each render, copy the
       // result to a buffer and expect the results from both textures to match.
-      const pipeline = getPipelineToRenderTextureToRGB8UnormTexture(this.device);
+      const { pipelineType, pipeline } = getPipelineToRenderTextureToRGB8UnormTexture(
+        this.device,
+        actualTexture,
+        this.isCompatibility
+      );
       const readbackPromisesPerTexturePerLayer = [actualTexture, expectedTexture].map(
         (texture, ndx) => {
           const attachmentSize = virtualMipSize('2d', [texture.width, texture.height, 1], mipLevel);
@@ -1457,23 +1483,44 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
 
           const numLayers = texture.depthOrArrayLayers;
           const readbackPromisesPerLayer = [];
+
+          const uniformBuffer = this.device.createBuffer({
+            size: 4,
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+          });
+          this.trackForCleanup(uniformBuffer);
+
           for (let layer = 0; layer < numLayers; ++layer) {
+            const viewDescriptor: GPUTextureViewDescriptor = {
+              baseMipLevel: mipLevel,
+              mipLevelCount: 1,
+              ...(!this.isCompatibility && {
+                baseArrayLayer: layer,
+                arrayLayerCount: 1,
+              }),
+              dimension: pipelineType,
+            };
+
             const bindGroup = this.device.createBindGroup({
               layout: pipeline.getBindGroupLayout(0),
               entries: [
                 { binding: 0, resource: sampler },
                 {
                   binding: 1,
-                  resource: texture.createView({
-                    baseMipLevel: mipLevel,
-                    mipLevelCount: 1,
-                    baseArrayLayer: layer,
-                    arrayLayerCount: 1,
-                    dimension: '2d',
-                  }),
+                  resource: texture.createView(viewDescriptor),
                 },
+                ...(pipelineType === '2d-array'
+                  ? [
+                      {
+                        binding: 2,
+                        resource: { buffer: uniformBuffer },
+                      },
+                    ]
+                  : []),
               ],
             });
+
+            this.device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array([layer]));
 
             const encoder = this.device.createCommandEncoder();
             const pass = encoder.beginRenderPass({
