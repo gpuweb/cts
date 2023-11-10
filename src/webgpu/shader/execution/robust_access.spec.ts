@@ -62,35 +62,43 @@ fn main() {
 
   t.debug(source);
   const module = t.device.createShaderModule({ code: source });
-  const pipeline = await t.device.createComputePipelineAsync({
-    layout,
-    compute: { module, entryPoint: 'main' },
-  });
 
-  const group = t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(1),
-    entries: [
-      { binding: 0, resource: { buffer: constantsBuffer } },
-      { binding: 1, resource: { buffer: resultBuffer } },
-    ],
-  });
+  try {
+    const pipeline = await t.device.createComputePipelineAsync({
+      layout,
+      compute: { module, entryPoint: 'main' },
+    });
 
-  const testGroup = t.device.createBindGroup({
-    layout: pipeline.getBindGroupLayout(0),
-    entries: testBindings,
-  });
+    const group = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(1),
+      entries: [
+        { binding: 0, resource: { buffer: constantsBuffer } },
+        { binding: 1, resource: { buffer: resultBuffer } },
+      ],
+    });
 
-  const encoder = t.device.createCommandEncoder();
-  const pass = encoder.beginComputePass();
-  pass.setPipeline(pipeline);
-  pass.setBindGroup(0, testGroup, dynamicOffsets);
-  pass.setBindGroup(1, group);
-  pass.dispatchWorkgroups(1);
-  pass.end();
+    const testGroup = t.device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: testBindings,
+    });
 
-  t.queue.submit([encoder.finish()]);
+    const encoder = t.device.createCommandEncoder();
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, testGroup, dynamicOffsets);
+    pass.setBindGroup(1, group);
+    pass.dispatchWorkgroups(1);
+    pass.end();
 
-  t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
+    t.queue.submit([encoder.finish()]);
+    t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
+  } catch (err) {
+    if (err instanceof GPUPipelineError) {
+      t.fail(`Pipeline Creation Error, ${err.reason}: ${err.message}`);
+    } else {
+      throw err;
+    }
+  }
 }
 
 /** Fill an ArrayBuffer with sentinel values, except clear a region to zero. */

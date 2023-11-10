@@ -220,12 +220,12 @@ type PipelineCache = Map<String, GPUComputePipeline>;
  * @param create the function used to construct a value, if not found in the cache
  * @returns the value, either fetched from the cache, or newly built.
  */
-function getOrCreate<K, V>(map: Map<K, V>, key: K, create: () => V) {
+async function getOrCreate<K, V>(map: Map<K, V>, key: K, create: () => Promise<V>) {
   const existing = map.get(key);
   if (existing !== undefined) {
     return existing;
   }
-  const value = create();
+  const value = await create();
   map.set(key, value);
   return value;
 }
@@ -307,16 +307,24 @@ export async function run(
   };
 
   const processBatch = async (batchCases: CaseList) => {
-    const checkBatch = await submitBatch(
-      t,
-      shaderBuilder,
-      parameterTypes,
-      resultType,
-      batchCases,
-      cfg.inputSource,
-      pipelineCache
-    );
-    checkBatch();
+    try {
+      const checkBatch = await submitBatch(
+        t,
+        shaderBuilder,
+        parameterTypes,
+        resultType,
+        batchCases,
+        cfg.inputSource,
+        pipelineCache
+      );
+      checkBatch();
+    } catch (err) {
+      if (err instanceof GPUPipelineError) {
+        t.fail(`Pipeline Creation Error, ${err.reason}: ${err.message}`);
+      } else {
+        throw err;
+      }
+    }
     void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   };
 
@@ -993,6 +1001,7 @@ async function buildPipeline(
       const module = t.device.createShaderModule({ code: source });
 
       // build the pipeline
+
       const pipeline = await t.device.createComputePipelineAsync({
         layout: 'auto',
         compute: { module, entryPoint: 'main' },
@@ -1037,12 +1046,12 @@ async function buildPipeline(
       }
 
       // build the compute pipeline, if the shader hasn't been compiled already.
-      const pipeline = getOrCreate(pipelineCache, source, () => {
+      const pipeline = await getOrCreate(pipelineCache, source, () => {
         // build the shader module
         const module = t.device.createShaderModule({ code: source });
 
         // build the pipeline
-        return t.device.createComputePipeline({
+        return t.device.createComputePipelineAsync({
           layout: 'auto',
           compute: { module, entryPoint: 'main' },
         });

@@ -446,101 +446,118 @@ g.test('compute,zero_init')
         ],
       });
 
-      const fillPipeline = await t.device.createComputePipelineAsync({
-        layout: t.device.createPipelineLayout({ bindGroupLayouts: [fillLayout] }),
-        label: 'Workgroup Fill Pipeline',
+      try {
+        const fillPipeline = await t.device.createComputePipelineAsync({
+          layout: t.device.createPipelineLayout({ bindGroupLayouts: [fillLayout] }),
+          label: 'Workgroup Fill Pipeline',
+          compute: {
+            module: t.device.createShaderModule({
+              code: wgsl,
+            }),
+            entryPoint: 'fill',
+          },
+        });
+
+        const inputBuffer = t.makeBufferWithContents(
+          new Uint32Array([...iterRange(wg_memory_limits / 4, _i => 0xdeadbeef)]),
+          GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
+        );
+        t.trackForCleanup(inputBuffer);
+        const outputBuffer = t.device.createBuffer({
+          size: wg_memory_limits,
+          usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+        });
+        t.trackForCleanup(outputBuffer);
+
+        const bg = t.device.createBindGroup({
+          layout: fillPipeline.getBindGroupLayout(0),
+          entries: [
+            {
+              binding: 0,
+              resource: {
+                buffer: inputBuffer,
+              },
+            },
+            {
+              binding: 1,
+              resource: {
+                buffer: outputBuffer,
+              },
+            },
+          ],
+        });
+
+        const e = t.device.createCommandEncoder();
+        const p = e.beginComputePass();
+        p.setPipeline(fillPipeline);
+        p.setBindGroup(0, bg);
+        p.dispatchWorkgroups(1);
+        p.end();
+        t.queue.submit([e.finish()]);
+      } catch (err) {
+        if (err instanceof GPUPipelineError) {
+          t.fail(`Pipeline Creation Error, ${err.reason}: ${err.message}`);
+          return;
+        } else {
+          throw err;
+        }
+      }
+    }
+
+    try {
+      const pipeline = await t.device.createComputePipelineAsync({
+        layout: 'auto',
         compute: {
           module: t.device.createShaderModule({
             code: wgsl,
           }),
-          entryPoint: 'fill',
+          entryPoint: 'main',
         },
       });
 
-      const inputBuffer = t.makeBufferWithContents(
-        new Uint32Array([...iterRange(wg_memory_limits / 4, _i => 0xdeadbeef)]),
-        GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-      );
-      t.trackForCleanup(inputBuffer);
-      const outputBuffer = t.device.createBuffer({
-        size: wg_memory_limits,
+      const resultBuffer = t.device.createBuffer({
+        size: 4,
         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
       });
-      t.trackForCleanup(outputBuffer);
+      t.trackForCleanup(resultBuffer);
 
-      const bg = t.device.createBindGroup({
-        layout: fillPipeline.getBindGroupLayout(0),
+      const zeroBuffer = t.device.createBuffer({
+        size: 4,
+        usage: GPUBufferUsage.UNIFORM,
+      });
+      t.trackForCleanup(zeroBuffer);
+
+      const bindGroup = t.device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
         entries: [
           {
             binding: 0,
             resource: {
-              buffer: inputBuffer,
+              buffer: resultBuffer,
             },
           },
           {
             binding: 1,
             resource: {
-              buffer: outputBuffer,
+              buffer: zeroBuffer,
             },
           },
         ],
       });
 
-      const e = t.device.createCommandEncoder();
-      const p = e.beginComputePass();
-      p.setPipeline(fillPipeline);
-      p.setBindGroup(0, bg);
-      p.dispatchWorkgroups(1);
-      p.end();
-      t.queue.submit([e.finish()]);
+      const encoder = t.device.createCommandEncoder();
+      const pass = encoder.beginComputePass();
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.dispatchWorkgroups(1);
+      pass.end();
+      t.queue.submit([encoder.finish()]);
+      t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
+    } catch (err) {
+      if (err instanceof GPUPipelineError) {
+        t.fail(`Pipeline Creation Error, ${err.reason}: ${err.message}`);
+      } else {
+        throw err;
+      }
     }
-
-    const pipeline = await t.device.createComputePipelineAsync({
-      layout: 'auto',
-      compute: {
-        module: t.device.createShaderModule({
-          code: wgsl,
-        }),
-        entryPoint: 'main',
-      },
-    });
-
-    const resultBuffer = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    });
-    t.trackForCleanup(resultBuffer);
-
-    const zeroBuffer = t.device.createBuffer({
-      size: 4,
-      usage: GPUBufferUsage.UNIFORM,
-    });
-    t.trackForCleanup(zeroBuffer);
-
-    const bindGroup = t.device.createBindGroup({
-      layout: pipeline.getBindGroupLayout(0),
-      entries: [
-        {
-          binding: 0,
-          resource: {
-            buffer: resultBuffer,
-          },
-        },
-        {
-          binding: 1,
-          resource: {
-            buffer: zeroBuffer,
-          },
-        },
-      ],
-    });
-
-    const encoder = t.device.createCommandEncoder();
-    const pass = encoder.beginComputePass();
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, bindGroup);
-    pass.dispatchWorkgroups(1);
-    pass.end();
-    t.queue.submit([encoder.finish()]);
-    t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
   });
