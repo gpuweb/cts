@@ -1260,7 +1260,7 @@ function getPipelineToRenderTextureToRGB8UnormTexture(
   }
 
   const { pipelineByPipelineType } = s_deviceToResourcesMap.get(device)!;
-  const pipelineType = isCompatibility && texture.depthOrArrayLayers > 1 ? '2d-array' : '2d';
+  const pipelineType: PipelineType = isCompatibility && texture.depthOrArrayLayers > 1 ? '2d-array' : '2d';
   if (!pipelineByPipelineType.get(pipelineType)) {
     const [textureType, layerCode] =
       pipelineType === '2d' ? ['texture_2d', ''] : ['texture_2d_array', ', uni.baseArrayLayer'];
