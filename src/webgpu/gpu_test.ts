@@ -1504,7 +1504,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
                       baseArrayLayer: layer,
                       arrayLayerCount: 1,
                     }),
-                    dimension: pipelineType as GPUTextureViewDimension,
+                    dimension: pipelineType,
                   }),
                 },
                 ...(pipelineType === '2d-array'
