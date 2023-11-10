@@ -1260,7 +1260,8 @@ function getPipelineToRenderTextureToRGB8UnormTexture(
   }
 
   const { pipelineByPipelineType } = s_deviceToResourcesMap.get(device)!;
-  const pipelineType: PipelineType = isCompatibility && texture.depthOrArrayLayers > 1 ? '2d-array' : '2d';
+  const pipelineType: PipelineType =
+    isCompatibility && texture.depthOrArrayLayers > 1 ? '2d-array' : '2d';
   if (!pipelineByPipelineType.get(pipelineType)) {
     const [textureType, layerCode] =
       pipelineType === '2d' ? ['texture_2d', ''] : ['texture_2d_array', ', uni.baseArrayLayer'];
@@ -1488,24 +1489,25 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
           });
           this.trackForCleanup(uniformBuffer);
-          const uniformData = new Uint32Array(1);
 
           for (let layer = 0; layer < numLayers; ++layer) {
+            const viewDescriptor: GPUTextureViewDescriptor = {
+              baseMipLevel: mipLevel,
+              mipLevelCount: 1,
+              ...(!this.isCompatibility && {
+                baseArrayLayer: layer,
+                arrayLayerCount: 1,
+              }),
+              dimension: pipelineType,
+            };
+
             const bindGroup = this.device.createBindGroup({
               layout: pipeline.getBindGroupLayout(0),
               entries: [
                 { binding: 0, resource: sampler },
                 {
                   binding: 1,
-                  resource: texture.createView({
-                    baseMipLevel: mipLevel,
-                    mipLevelCount: 1,
-                    ...(!this.isCompatibility && {
-                      baseArrayLayer: layer,
-                      arrayLayerCount: 1,
-                    }),
-                    dimension: pipelineType,
-                  }),
+                  resource: texture.createView(viewDescriptor),
                 },
                 ...(pipelineType === '2d-array'
                   ? [
@@ -1518,8 +1520,7 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
               ],
             });
 
-            uniformData[0] = layer;
-            this.device.queue.writeBuffer(uniformBuffer, 0, uniformData);
+            this.device.queue.writeBuffer(uniformBuffer, 0, new Uint32Array([layer]));
 
             const encoder = this.device.createCommandEncoder();
             const pass = encoder.beginRenderPass({
