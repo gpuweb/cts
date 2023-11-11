@@ -14,7 +14,7 @@ module.exports = function (grunt) {
     pkg: grunt.file.readJSON('package.json'),
 
     clean: {
-      out: ['gen/', 'out/', 'out-wpt/', 'out-node/'],
+      out: ['gen/', 'out/', 'out-wpt/'],
     },
 
     run: {
@@ -87,14 +87,6 @@ module.exports = function (grunt) {
           '--ignore=src/common/runtime/standalone.ts',
           '--ignore=src/common/runtime/helper/sys.ts',
           '--ignore=src/common/tools',
-        ],
-      },
-      'build-out-node': {
-        cmd: 'node',
-        args: [
-          'node_modules/typescript/lib/tsc.js',
-          '--project', 'node.tsconfig.json',
-          '--outDir', 'out-node/',
         ],
       },
       'copy-assets': {
@@ -188,7 +180,6 @@ module.exports = function (grunt) {
         tasks: [
           'build-standalone',
           'build-wpt',
-          'run:build-out-node',
         ],
       },
       'all-checks': {

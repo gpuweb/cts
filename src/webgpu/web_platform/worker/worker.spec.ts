@@ -27,7 +27,6 @@ g.test('worker')
     // is using commonjs which doesn't support import.meta. Further,
     // we need to put the url in a string add pass the string to import
     // otherwise typescript tries to parse the file which again, fails.
-    // worker_launcher.js is excluded in node.tsconfig.json.
     const url = './worker_launcher.js';
     const { launchWorker } = await import(url);
     const result = await launchWorker();

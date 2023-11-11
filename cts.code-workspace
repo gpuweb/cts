@@ -26,7 +26,6 @@
       "deploy_key.enc": true,
       "node_modules": true,
       "out": true,
-      "out-node": true,
       "out-wpt": true,
       "docs/tsdoc": true,
       "package-lock.json": true
