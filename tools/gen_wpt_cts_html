@@ -35,5 +35,5 @@
 //   ?q=webgpu:a/bar:bar1={"x":3} <- [ Mac ]
 //   ?q=webgpu:a/bar:bar2~
 
-require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/commonjs/setup-ts-in-node.js');
 require('../src/common/tools/gen_wpt_cts_html.ts');

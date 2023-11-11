@@ -1,8 +1,8 @@
 /* eslint no-process-exit: "off" */
 /* eslint @typescript-eslint/no-namespace: "off" */
 
-function node() {
-  const { existsSync } = require('fs');
+async function node() {
+  const { existsSync } = await import('fs');
 
   return {
     type: 'node',
@@ -41,6 +41,6 @@ function deno() {
   };
 }
 
-const sys = typeof globalThis.process !== 'undefined' ? node() : deno();
+const sys = typeof globalThis.process !== 'undefined' ? await node() : deno();
 
 export default sys;

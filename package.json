@@ -2,6 +2,7 @@
   "name": "@webgpu/cts",
   "version": "0.1.0",
   "description": "WebGPU Conformance Test Suite",
+  "type": "module",
   "scripts": {
     "test": "grunt all",
     "all": "grunt all",

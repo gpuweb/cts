@@ -3,7 +3,7 @@ const path = require('path');
 // Automatically transpile .ts imports
 require('ts-node').register({
   // Specify the project file so ts-node doesn't try to find it itself based on the CWD.
-  project: path.resolve(__dirname, '../../../tsconfig.json'),
+  project: path.resolve(__dirname, '../../../../tsconfig.json'),
   compilerOptions: {
     module: 'commonjs',
   },
