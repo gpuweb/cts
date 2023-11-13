@@ -4,6 +4,7 @@ import { extractImportantStackTrace } from '../stack.js';
 export class LogMessageWithStack extends Error {
   readonly extra: unknown;
 
+  private showStar: boolean = true;
   private stackHiddenMessage: string | undefined = undefined;
 
   constructor(name: string, ex: Error | ErrorWithExtra) {
@@ -16,19 +17,20 @@ export class LogMessageWithStack extends Error {
     }
   }
 
-  /** Set a flag so the stack is not printed in toJSON(). */
-  setStackHidden(stackHiddenMessage: string) {
-    this.stackHiddenMessage ??= stackHiddenMessage;
+  /** Set a flag so the stack is not printed in toJSON(), and important messages are starred. */
+  setPrintOptions(showStar: boolean, stackHiddenMessage: string) {
+    this.showStar = showStar;
+    this.stackHiddenMessage = stackHiddenMessage;
   }
 
   toJSON(): string {
-    let m = this.name;
+    let m = (this.showStar ? '☆ ' : '  ') + this.name;
     if (this.message) m += ': ' + this.message;
     if (this.stack) {
       if (this.stackHiddenMessage === undefined) {
         m += '\n' + extractImportantStackTrace(this);
       } else if (this.stackHiddenMessage) {
-        m += `\n  at (elided: ${this.stackHiddenMessage})`;
+        m += `\n    at (elided: ${this.stackHiddenMessage})`;
       }
     }
     return m;
