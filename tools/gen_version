@@ -5,7 +5,7 @@
 
 /* eslint-disable no-console */
 
-require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/commonjs/setup-ts-in-node.js');
 const fs = require('fs');
 
 const myself = 'tools/gen_version';
@@ -14,7 +14,7 @@ if (!fs.existsSync(myself)) {
   process.exit(1);
 }
 
-const { version } = require('../src/common/tools/version.ts');
+const { version } = require('../src/common/tools/version.ts'); // FIXME doesn't work because in order to require the placeholder version.ts it needs to be commonjs, but we can't configure that for a single file
 
 fs.mkdirSync('./gen/common/internal', { recursive: true });
 // This will be copied into the various other build directories.

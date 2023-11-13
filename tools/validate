@@ -2,5 +2,5 @@
 
 // Validate several properties of test files and the tests in them.
 
-require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/commonjs/setup-ts-in-node.js');
 require('../src/common/tools/validate.ts');

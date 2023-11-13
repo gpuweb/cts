@@ -3,5 +3,5 @@
 // Crawl a suite directory (e.g. src/webgpu/) to generate a listing.js containing
 // the listing of test files in the suite.
 
-require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/commonjs/setup-ts-in-node.js');
 require('../src/common/tools/gen_listings.ts');

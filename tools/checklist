@@ -7,5 +7,5 @@
 // and every query in it is valid (e.g. renames have been applied, and new tests added
 // to the spreadsheet have also been added to the CTS).
 
-require('../src/common/tools/setup-ts-in-node.js');
+require('../src/common/tools/commonjs/setup-ts-in-node.js');
 require('../src/common/tools/checklist.ts');
