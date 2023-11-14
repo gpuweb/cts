@@ -175,16 +175,14 @@ module.exports = function (grunt) {
       },
     },
 
-    parallel: {
+    concurrent: {
       'write-out-wpt-cts-html-all': {
-        options: { grunt: true },
         tasks: [
           'run:write-out-wpt-cts-html',
           'run:write-out-wpt-cts-html-chunked2sec',
         ],
       },
       'all-builds': {
-        options: { grunt: true },
         tasks: [
           'build-standalone',
           'build-wpt',
@@ -192,7 +190,6 @@ module.exports = function (grunt) {
         ],
       },
       'all-checks': {
-        options: { grunt: true },
         tasks: [
           'ts:check',
           'run:validate',
@@ -203,10 +200,9 @@ module.exports = function (grunt) {
         ],
       },
       'all-builds-and-checks': {
-        options: { grunt: true },
         tasks: [
-          'build-all', // Internally parallel
-          'parallel:all-checks',
+          'build-all', // Internally concurrent
+          'concurrent:all-checks',
         ],
       },
     },
@@ -214,7 +210,7 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-parallel');
+  grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
 
@@ -241,11 +237,11 @@ module.exports = function (grunt) {
     'run:copy-assets-wpt',
     'copy:gen-to-out-wpt',
     'copy:htmlfiles-to-out-wpt',
-    'parallel:write-out-wpt-cts-html-all',
+    'concurrent:write-out-wpt-cts-html-all',
     'run:autoformat-out-wpt',
   ]);
   grunt.registerTask('build-all', 'Build out*/ (no checks; run after generate-common)', [
-    'parallel:all-builds',
+    'concurrent:all-builds',
     'build-done-message',
   ]);
   grunt.registerTask('build-done-message', () => {
@@ -260,7 +256,7 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('all', 'Run all builds and checks', [
     'clean',
     'generate-common',
-    'parallel:all-builds-and-checks',
+    'concurrent:all-builds-and-checks',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone (out/) (no checks)', [
     'generate-common',
@@ -273,7 +269,7 @@ module.exports = function (grunt) {
     'build-done-message',
   ]);
   registerTaskAndAddToHelp('checks', 'Run all checks (and build tsdoc)', [
-    'parallel:all-checks',
+    'concurrent:all-checks',
   ]);
   registerTaskAndAddToHelp('unittest', 'Just run unittests', [
     'run:unittest',
