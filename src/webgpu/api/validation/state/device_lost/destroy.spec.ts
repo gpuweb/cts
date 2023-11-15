@@ -902,7 +902,7 @@ Tests encoding and finishing a writeTimestamp command on destroyed device.
       try {
         maker.encoder.writeTimestamp(querySet, 0);
       } catch (ex) {
-        t.skip('writeTimestamp is actually not available');
+        t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
       }
       return maker;
     });

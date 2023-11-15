@@ -45,7 +45,7 @@ Tests that use a destroyed query set in writeTimestamp on {non-pass, compute, re
     try {
       encoder.encoder.writeTimestamp(querySet, 0);
     } catch (ex) {
-      t.skip('writeTimestamp is actually not available');
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
     encoder.validateFinishAndSubmitGivenState(t.params.querySetState);
   });

@@ -265,7 +265,7 @@ g.test('non_pass_commands')
           try {
             encoder.writeTimestamp(querySet, 0);
           } catch (ex) {
-            t.skip('writeTimestamp is actually not available');
+            t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
           }
           break;
         case 'resolveQuerySet':

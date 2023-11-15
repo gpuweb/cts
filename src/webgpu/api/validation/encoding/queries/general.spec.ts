@@ -106,7 +106,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
     try {
       encoder.encoder.writeTimestamp(querySet, queryIndex);
     } catch (ex) {
-      t.skip('writeTimestamp is actually not available');
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
     encoder.validateFinish(type === 'timestamp' && queryIndex < count);
   });
@@ -136,7 +136,7 @@ Tests that write timestamp to a invalid query set that failed during creation:
     try {
       encoder.encoder.writeTimestamp(querySet, 0);
     } catch (ex) {
-      t.skip('writeTimestamp is actually not available');
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
     encoder.validateFinish(querySetState !== 'invalid');
   });
@@ -167,7 +167,7 @@ g.test('writeTimestamp,device_mismatch')
     try {
       encoder.encoder.writeTimestamp(querySet, 0);
     } catch (ex) {
-      t.skip('writeTimestamp is actually not available');
+      t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
     encoder.validateFinish(!mismatched);
   });
