@@ -1,7 +1,7 @@
 export const description = `copyTextureToTexture operation tests`;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, memcpy, unreachable } from '../../../../common/util/util.js';
+import { assert, ErrorWithExtra, memcpy, unreachable } from '../../../../common/util/util.js';
 import {
   kBufferSizeAlignment,
   kMinDynamicBufferOffsetAlignment,
@@ -21,11 +21,12 @@ import {
 } from '../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { makeBufferWithContents } from '../../../util/buffer.js';
-import { checkElementsEqual, checkElementsEqualEither } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 import { physicalMipSize } from '../../../util/texture/base.js';
 import { DataArrayGenerator } from '../../../util/texture/data_generation.js';
 import { kBytesPerRowAlignment, dataBytesForCopyOrFail } from '../../../util/texture/layout.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { findFailedPixels } from '../../../util/texture/texture_ok.js';
 
 const dataGenerator = new DataArrayGenerator();
 
@@ -304,6 +305,7 @@ class F extends TextureTestMixin(GPUTest) {
       y: appliedDstOffset.y / blockHeight,
       z: appliedDstOffset.z,
     };
+    const bytesInRow = appliedCopyBlocksPerRow * bytesPerBlock;
 
     for (let z = 0; z < appliedCopyDepth; ++z) {
       const srcOffsetZ = srcCopyOffsetInBlocks.z + z;
@@ -321,7 +323,6 @@ class F extends TextureTestMixin(GPUTest) {
             (srcBlockRowsPerImage * srcOffsetZ + srcOffsetYInBlocks) +
           srcCopyOffsetInBlocks.x * bytesPerBlock;
 
-        const bytesInRow = appliedCopyBlocksPerRow * bytesPerBlock;
         memcpy(
           { src: expectedUint8Data, start: expectedDataOffset, length: bytesInRow },
           { dst: expectedUint8DataWithPadding, start: expectedDataWithPaddingOffset }
@@ -357,18 +358,58 @@ class F extends TextureTestMixin(GPUTest) {
     }
 
     // Verify the content of the whole subresource of dstTexture at dstCopyLevel (in dstBuffer) is expected.
-    this.expectGPUBufferValuesPassCheck(
-      dstBuffer,
-      alternateExpectedData === expectedUint8DataWithPadding
-        ? vals => checkElementsEqual(vals, expectedUint8DataWithPadding)
-        : vals =>
-            checkElementsEqualEither(vals, [expectedUint8DataWithPadding, alternateExpectedData]),
-      {
-        srcByteOffset: 0,
-        type: Uint8Array,
-        typedLength: expectedUint8DataWithPadding.length,
+    const checkByTextureFormat = (actual: Uint8Array) => {
+      const zero = { x: 0, y: 0, z: 0 };
+
+      const dataLayout = {
+        offset: 0,
+        bytesPerRow: bytesInRow,
+        rowsPerImage: dstBlockRowsPerImage,
+      };
+
+      const actTexelView = TexelView.fromTextureDataByReference(dstFormat, actual, {
+        bytesPerRow: dataLayout.bytesPerRow,
+        rowsPerImage: dataLayout.rowsPerImage,
+        subrectOrigin: zero,
+        subrectSize: dstTextureSizeAtLevel,
+      });
+      const expTexelView = TexelView.fromTextureDataByReference(
+        dstFormat,
+        expectedUint8DataWithPadding,
+        {
+          bytesPerRow: dataLayout.bytesPerRow,
+          rowsPerImage: dataLayout.rowsPerImage,
+          subrectOrigin: zero,
+          subrectSize: dstTextureSizeAtLevel,
+        }
+      );
+
+      const failedPixelsMessage = findFailedPixels(
+        dstFormat,
+        zero,
+        dstTextureSizeAtLevel,
+        { actTexelView, expTexelView },
+        {
+          maxFractionalDiff: 0,
+        }
+      );
+
+      if (failedPixelsMessage !== undefined) {
+        const msg = 'Texture level had unexpected contents:\n' + failedPixelsMessage;
+        return new ErrorWithExtra(msg, () => ({
+          expTexelView,
+          actTexelView,
+        }));
       }
-    );
+
+      return undefined;
+    };
+
+    this.expectGPUBufferValuesPassCheck(dstBuffer, checkByTextureFormat, {
+      srcByteOffset: 0,
+      type: Uint8Array,
+      typedLength: expectedUint8DataWithPadding.length,
+    });
   }
 
   InitializeStencilAspect(
