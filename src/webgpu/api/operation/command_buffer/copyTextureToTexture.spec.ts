@@ -361,15 +361,9 @@ class F extends TextureTestMixin(GPUTest) {
     const checkByTextureFormat = (actual: Uint8Array) => {
       const zero = { x: 0, y: 0, z: 0 };
 
-      const dataLayout = {
-        offset: 0,
+      const actTexelView = TexelView.fromTextureDataByReference(dstFormat, actual, {
         bytesPerRow: bytesInRow,
         rowsPerImage: dstBlockRowsPerImage,
-      };
-
-      const actTexelView = TexelView.fromTextureDataByReference(dstFormat, actual, {
-        bytesPerRow: dataLayout.bytesPerRow,
-        rowsPerImage: dataLayout.rowsPerImage,
         subrectOrigin: zero,
         subrectSize: dstTextureSizeAtLevel,
       });
@@ -377,8 +371,8 @@ class F extends TextureTestMixin(GPUTest) {
         dstFormat,
         expectedUint8DataWithPadding,
         {
-          bytesPerRow: dataLayout.bytesPerRow,
-          rowsPerImage: dataLayout.rowsPerImage,
+          bytesPerRow: bytesInRow,
+          rowsPerImage: dstBlockRowsPerImage,
           subrectOrigin: zero,
           subrectSize: dstTextureSizeAtLevel,
         }
