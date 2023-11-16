@@ -1250,6 +1250,10 @@ export function isCompressedTextureFormat(format) {
   return format in kCompressedTextureFormatInfo;
 }
 
+export function isEncodableTextureformat(format) {
+  return format in kEncodableTextureFormatInfo;
+}
+
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 
 /**

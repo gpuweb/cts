@@ -1250,6 +1250,10 @@ export function isCompressedTextureFormat(format: GPUTextureFormat) {
   return format in kCompressedTextureFormatInfo;
 }
 
+export function isEncodableTextureformat(format: GPUTextureFormat) {
+  return format in kEncodableTextureFormatInfo;
+}
+
 export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
 
 /**
