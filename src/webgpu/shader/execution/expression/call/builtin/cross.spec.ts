@@ -10,7 +10,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseVectorF64Range, vectorF16Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -18,47 +17,31 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+const cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([true, false] as const).map(nonConst => ({
+      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP[trait].generateVectorPairToVectorCases(
+          FP[trait].vectorRange(3),
+          FP[trait].vectorRange(3),
+          nonConst ? 'unfiltered' : 'finite',
+          FP[trait].crossInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('cross', {
-  f32_const: () => {
-    return FP.f32.generateVectorPairToVectorCases(
-      vectorF32Range(3),
-      vectorF32Range(3),
-      'finite',
-      FP.f32.crossInterval
-    );
-  },
-  f32_non_const: () => {
-    return FP.f32.generateVectorPairToVectorCases(
-      vectorF32Range(3),
-      vectorF32Range(3),
-      'unfiltered',
-      FP.f32.crossInterval
-    );
-  },
-  f16_const: () => {
-    return FP.f16.generateVectorPairToVectorCases(
-      vectorF16Range(3),
-      vectorF16Range(3),
-      'finite',
-      FP.f16.crossInterval
-    );
-  },
-  f16_non_const: () => {
-    return FP.f16.generateVectorPairToVectorCases(
-      vectorF16Range(3),
-      vectorF16Range(3),
-      'unfiltered',
-      FP.f16.crossInterval
-    );
-  },
   abstract: () => {
     return FP.abstract.generateVectorPairToVectorCases(
-      sparseVectorF64Range(3),
-      sparseVectorF64Range(3),
+      FP.abstract.sparseVectorRange(3),
+      FP.abstract.sparseVectorRange(3),
       'finite',
       FP.abstract.crossInterval
     );
   },
+  ...cases,
 });
 
 g.test('abstract_float')

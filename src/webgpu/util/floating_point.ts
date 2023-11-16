@@ -23,6 +23,7 @@ import {
   correctlyRoundedF16,
   correctlyRoundedF32,
   correctlyRoundedF64,
+  every2DArray,
   flatten2DArray,
   FlushMode,
   flushSubnormalNumberF16,
@@ -38,8 +39,13 @@ import {
   oneULPF32,
   quantizeToF32,
   quantizeToF16,
+  sparseVectorF16Range,
+  sparseVectorF32Range,
+  sparseVectorF64Range,
   unflatten2DArray,
-  every2DArray,
+  vectorF16Range,
+  vectorF32Range,
+  vectorF64Range,
 } from './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
@@ -1081,6 +1087,10 @@ export abstract class FPTraits {
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
   /** @returns a builder for converting numbers to Scalars */
   public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a range of dim element vectors for testing */
+  public abstract vectorRange(dim: number): ROArrayArray<number>;
+  /** @returns a reduced range of dim element vectors for testing */
+  public abstract sparseVectorRange(dim: number): ROArrayArray<number>;
 
   // Framework - Cases
 
@@ -4520,6 +4530,8 @@ class F32Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF32;
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
+  public readonly vectorRange = vectorF32Range;
+  public readonly sparseVectorRange = sparseVectorF32Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
@@ -4992,6 +5004,8 @@ class FPAbstractTraits extends FPTraits {
     unreachable(`'FPAbstractTraits.oneULP should never be called`);
   };
   public readonly scalarBuilder = abstractFloat;
+  public readonly vectorRange = vectorF64Range;
+  public readonly sparseVectorRange = sparseVectorF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -5324,6 +5338,8 @@ class F16Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF16;
   public readonly oneULP = oneULPF16;
   public readonly scalarBuilder = f16;
+  public readonly vectorRange = vectorF16Range;
+  public readonly sparseVectorRange = sparseVectorF16Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);

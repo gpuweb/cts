@@ -27,13 +27,7 @@ import {
   Vector,
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  frexp,
-  fullF16Range,
-  fullF32Range,
-  vectorF16Range,
-  vectorF32Range,
-} from '../../../../../util/math.js';
+import { frexp, fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
@@ -111,6 +105,26 @@ function makeVectorCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'):
   return { input: toInput(v), expected: toOutput(fs) };
 }
 
+const fract_vec_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([2, 3, 4] as const).map(dim => ({
+      [`${trait}_vec${dim}_fract`]: () => {
+        return FP[trait].vectorRange(dim).map(v => makeVectorCaseFract(v, trait));
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+const exp_vec_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([2, 3, 4] as const).map(dim => ({
+      [`${trait}_vec${dim}_exp`]: () => {
+        return FP[trait].vectorRange(dim).map(v => makeVectorCaseExp(v, trait));
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('frexp', {
   f32_fract: () => {
     return fullF32Range().map(v => makeVectorCaseFract(v, 'f32'));
@@ -118,48 +132,14 @@ export const d = makeCaseCache('frexp', {
   f32_exp: () => {
     return fullF32Range().map(v => makeVectorCaseExp(v, 'f32'));
   },
-  f32_vec2_fract: () => {
-    return vectorF32Range(2).map(v => makeVectorCaseFract(v, 'f32'));
-  },
-  f32_vec2_exp: () => {
-    return vectorF32Range(2).map(v => makeVectorCaseExp(v, 'f32'));
-  },
-  f32_vec3_fract: () => {
-    return vectorF32Range(3).map(v => makeVectorCaseFract(v, 'f32'));
-  },
-  f32_vec3_exp: () => {
-    return vectorF32Range(3).map(v => makeVectorCaseExp(v, 'f32'));
-  },
-  f32_vec4_fract: () => {
-    return vectorF32Range(4).map(v => makeVectorCaseFract(v, 'f32'));
-  },
-  f32_vec4_exp: () => {
-    return vectorF32Range(4).map(v => makeVectorCaseExp(v, 'f32'));
-  },
   f16_fract: () => {
     return fullF16Range().map(v => makeVectorCaseFract(v, 'f16'));
   },
   f16_exp: () => {
     return fullF16Range().map(v => makeVectorCaseExp(v, 'f16'));
   },
-  f16_vec2_fract: () => {
-    return vectorF16Range(2).map(v => makeVectorCaseFract(v, 'f16'));
-  },
-  f16_vec2_exp: () => {
-    return vectorF16Range(2).map(v => makeVectorCaseExp(v, 'f16'));
-  },
-  f16_vec3_fract: () => {
-    return vectorF16Range(3).map(v => makeVectorCaseFract(v, 'f16'));
-  },
-  f16_vec3_exp: () => {
-    return vectorF16Range(3).map(v => makeVectorCaseExp(v, 'f16'));
-  },
-  f16_vec4_fract: () => {
-    return vectorF16Range(4).map(v => makeVectorCaseFract(v, 'f16'));
-  },
-  f16_vec4_exp: () => {
-    return vectorF16Range(4).map(v => makeVectorCaseExp(v, 'f16'));
-  },
+  ...fract_vec_cases,
+  ...exp_vec_cases,
 });
 
 g.test('f32_fract')
