@@ -27,6 +27,11 @@ export const listing = [
   },
   {
     "file": [
+      "crc32"
+    ]
+  },
+  {
+    "file": [
       "floating_point"
     ]
   },
@@ -58,6 +63,11 @@ export const listing = [
   {
     "file": [
       "params_builder_toplevel"
+    ]
+  },
+  {
+    "file": [
+      "parse_imports"
     ]
   },
   {

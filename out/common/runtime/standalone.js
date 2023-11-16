@@ -2,7 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/ // Implements the standalone test runner (see also: /standalone/index.html).
 import { dataCache } from '../framework/data_cache.js';
-import { setBaseResourcePath } from '../framework/resources.js';
+import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -80,7 +80,7 @@ if (powerPreference || compatibility) {
 
 dataCache.setStore({
   load: async (path) => {
-    const response = await fetch(`data/${path}`);
+    const response = await fetch(getResourcePath(`cache/${path}`));
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
