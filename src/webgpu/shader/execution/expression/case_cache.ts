@@ -137,7 +137,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * @param builders a Record of case-list name to case-list builder.
    */
   constructor(name: string, builders: Record<string, CaseListBuilder>) {
-    this.path = `webgpu/shader/execution/case-cache/${name}.bin`;
+    this.path = `webgpu/shader/execution/${name}.bin`;
     this.builders = builders;
   }
 
@@ -164,7 +164,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * serialize() implements the Cacheable.serialize interface.
    * @returns the serialized data.
    */
-  serialize(data: Record<string, CaseList>): Uint8Array {
+  async serialize(data: Record<string, CaseList>): Promise<Uint8Array> {
     const maxSize = 32 << 20; // 32MB - max size for a file
     const stream = new BinaryStream(new ArrayBuffer(maxSize));
     stream.writeU32(Object.keys(data).length);
@@ -172,15 +172,17 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
       stream.writeString(name);
       stream.writeArray(data[name], serializeCase);
     }
-    return stream.buffer();
+    const compressed = this.compress('gzip', stream.buffer());
+    return compressed;
   }
 
   /**
    * deserialize() implements the Cacheable.deserialize interface.
    * @returns the deserialize data.
    */
-  deserialize(array: Uint8Array): Record<string, CaseList> {
-    const s = new BinaryStream(array.buffer);
+  async deserialize(array: Uint8Array): Promise<Record<string, CaseList>> {
+    const decompressed = await this.decompress('gzip', array);
+    const s = new BinaryStream(decompressed);
     const casesByName: Record<string, CaseList> = {};
     const numRecords = s.readU32();
     for (let i = 0; i < numRecords; i++) {
@@ -189,6 +191,26 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
       casesByName[name] = cases;
     }
     return casesByName;
+  }
+
+  /**
+   * Compresses a Uint8Array using using the given CompressionFormat
+   */
+  private async compress(format: CompressionFormat, data: Uint8Array): Promise<Uint8Array> {
+    const stream = new Blob([data]).stream();
+    const compressedStream = stream.pipeThrough(new CompressionStream(format));
+    const blob = await new Response(compressedStream).blob();
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+
+  /**
+   * Decompresses a Uint8Array using using gzip
+   */
+  private async decompress(format: CompressionFormat, data: Uint8Array): Promise<ArrayBuffer> {
+    const stream = new Blob([data]).stream();
+    const decompressedStream = stream.pipeThrough(new DecompressionStream(format));
+    const blob = await new Response(decompressedStream).blob();
+    return await blob.arrayBuffer();
   }
 
   public readonly path: string;
