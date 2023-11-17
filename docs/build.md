@@ -1,16 +1,41 @@
 # Building
 
 Building the project is not usually needed for local development.
-However, for exports to WPT, or deployment (https://gpuweb.github.io/cts/),
+However, for exports to WPT, NodeJS, [or deployment](https://gpuweb.github.io/cts/),
 files can be pre-generated.
 
-The project builds into two directories:
+## Build types
 
-- `out/`: Built framework and test files, needed to run standalone or command line.
-- `out-wpt/`: Build directory for export into WPT. Contains:
-    - An adapter for running WebGPU CTS tests under WPT
-    - A copy of the needed files from `out/`
-    - A copy of any `.html` test cases from `src/`
+The project can be built three different ways, each with a different output directory:
+
+### 1. `out` directory
+
+**Built with**: `npm run standalone`
+
+**Used by**: The standalone CTS runner. Build and run with: `npx grunt serve`.
+
+### 2. `out-wpt` directory
+
+**Built with**: `npm run wpt`
+
+**Used by**: Web Testing Platform.
+
+Contains:
+
+- An adapter for running WebGPU CTS tests under WPT
+- A copy of the needed files from `out/`
+- A copy of any `.html` test cases from `src/`
+
+### 3. `out-node` directory
+
+**Built with**: `npm run node`
+
+**Used by**: NodeJS test runners:
+
+- [`src/common/runtime/cmdline.ts`](../src/common/runtime/cmdline.ts) - A command line interface test runner
+- [`src/common/runtime/server.ts`](../src/common/runtime/server.ts) - An HTTP server for executing CTS tests with a REST interface
+
+## Testing
 
 To build and run all pre-submit checks (including type and lint checks and
 unittests), use:
@@ -23,12 +48,6 @@ For checks only:
 
 ```sh
 npm run check
-```
-
-For a quicker iterative build:
-
-```sh
-npm run standalone
 ```
 
 ## Run
