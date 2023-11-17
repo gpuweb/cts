@@ -71,7 +71,6 @@ const kEncoderCommandInfo: {
   insertDebugMarker: {},
   popDebugGroup: {},
   pushDebugGroup: {},
-  writeTimestamp: {},
   resolveQuerySet: {},
 };
 const kEncoderCommands = keysOf(kEncoderCommandInfo);
@@ -156,13 +155,6 @@ g.test('non_pass_commands')
       .beginSubcases()
       .combine('finishBeforeCommand', [false, true])
   )
-  .beforeAllSubcases(t => {
-    switch (t.params.command) {
-      case 'writeTimestamp':
-        t.selectDeviceOrSkipTestCase('timestamp-query');
-        break;
-    }
-  })
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
@@ -189,7 +181,7 @@ g.test('non_pass_commands')
     });
 
     const querySet = t.device.createQuerySet({
-      type: command === 'writeTimestamp' ? 'timestamp' : 'occlusion',
+      type: 'occlusion',
       count: 1,
     });
 
@@ -259,13 +251,6 @@ g.test('non_pass_commands')
         case 'popDebugGroup':
           {
             encoder.popDebugGroup();
-          }
-          break;
-        case 'writeTimestamp':
-          try {
-            encoder.writeTimestamp(querySet, 0);
-          } catch (ex) {
-            t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
           }
           break;
         case 'resolveQuerySet':
