@@ -428,6 +428,11 @@ fn((t) => {
     _resourceSuccess
   } = t.params;
 
+  t.skipIf(
+    t.isCompatibility,
+    'multiple views of the same texture in a single draw/dispatch are not supported in compat, nor are sub ranges of layers'
+  );
+
   const texture = t.createTexture({
     arrayLayerCount: TOTAL_LAYERS,
     mipLevelCount: TOTAL_LEVELS,
@@ -652,6 +657,8 @@ fn((t) => {
     _resourceSuccess,
     _usageSuccess
   } = t.params;
+
+  t.skipIf(t.isCompatibility, 'sub ranges of layers are not supported in compat mode');
 
   const texture = t.createTexture({
     arrayLayerCount: TOTAL_LAYERS,
