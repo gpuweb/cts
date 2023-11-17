@@ -24,6 +24,11 @@ output, and compares this hash to the hash stored in
 [`src/resources/cache/hashes.json`](`../src/resources/cache/hashes.json`). Only
 those cache files with differing hashes are rebuilt.
 
+Since source changes will sometimes change the hash without changing the generated cache,
+sometimes the cache will be regenerated unnecessarily. **This is OK, but try to avoid committing
+no-op regenerations - this will happen if your version of Node produces different gzip outputs
+than the original committer's Node did for the same input.**
+
 The cache files are copied from [`src/resources/cache`](../src/resources/cache)
 to the `resources/cache` subdirectory of the
 [`out` and `out-node` build directories](build.md#build-types), so the runner

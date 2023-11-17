@@ -6,19 +6,26 @@ files can be pre-generated.
 
 ## Build types
 
-The project can be built three different ways, each with a different output directory:
+The project can be built several different ways, each with a different output directory:
+
+### 0. on-the-fly builds (no output directory)
+
+Use `npm run start` to launch a server that live-compiles everything as needed.
+Use `tools/run_node` and other tools to run under `ts-node` which compiles at runtime.
 
 ### 1. `out` directory
 
 **Built with**: `npm run standalone`
 
-**Used by**: The standalone CTS runner. Build and run with: `npx grunt serve`.
+**Serve locally with**: `npx grunt serve`
+
+**Used for**: Static deployment of the CTS, primarily for [gpuweb.github.io/cts](https://gpuweb.github.io/cts/).
 
 ### 2. `out-wpt` directory
 
 **Built with**: `npm run wpt`
 
-**Used by**: Web Testing Platform.
+**Used for**: Deploying into [Web Platform Tests](https://web-platform-tests.org/). See [below](#export-to-wpt) for more information.
 
 Contains:
 
@@ -30,10 +37,10 @@ Contains:
 
 **Built with**: `npm run node`
 
-**Used by**: NodeJS test runners:
+**Used for**: Running NodeJS tools, if you want to specifically avoid the live-compilation overhead of the `tools/` versions, or are running on a deployment which no longer has access to `ts-node` (which is a build-time dependency). For example:
 
-- [`src/common/runtime/cmdline.ts`](../src/common/runtime/cmdline.ts) - A command line interface test runner
-- [`src/common/runtime/server.ts`](../src/common/runtime/server.ts) - An HTTP server for executing CTS tests with a REST interface
+- `node out-node/common/runtime/cmdline.js` ([source](../src/common/runtime/cmdline.ts)) - A command line interface test runner
+- `node out-node/common/runtime/server.js` ([source](../src/common/runtime/server.ts)) - An HTTP server for executing CTS tests with a REST interface
 
 ## Testing
 
@@ -50,9 +57,6 @@ For checks only:
 npm run check
 ```
 
-## Run
-
-To serve the built files (rather than using the dev server), run `npx grunt serve`.
 
 ## Export to WPT
 
