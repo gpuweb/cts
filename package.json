@@ -7,6 +7,7 @@
     "all": "grunt all",
     "standalone": "grunt standalone",
     "wpt": "grunt wpt",
+    "node": "grunt node",
     "checks": "grunt checks",
     "unittest": "grunt unittest",
     "typecheck": "grunt typecheck",
