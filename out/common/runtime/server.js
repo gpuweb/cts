@@ -21,7 +21,7 @@ import sys from './helper/sys.js';
 
 function usage(rc) {
   console.log(`Usage:
-  tools/run_${sys.type} [OPTIONS...]
+  tools/server [OPTIONS...]
 Options:
   --colors                  Enable ANSI colors in output.
   --compat                  Run tests in compatibility mode.
@@ -33,8 +33,10 @@ Options:
   --u                       Flag to set on the gpu-provider as <flag>=<value>
 
 Provides an HTTP server used for running tests via an HTTP RPC interface
-To run a test, perform an HTTP GET or POST at the URL:
-  http://localhost:port/run?<test-name>
+First, load some tree or subtree of tests:
+  http://localhost:port/load?unittests:basic:*
+To run a single test case, perform an HTTP GET or POST at the URL:
+  http://localhost:port/run?unittests:basic:test,sync
 To shutdown the server perform an HTTP GET or POST at the URL:
   http://localhost:port/terminate
 `);
