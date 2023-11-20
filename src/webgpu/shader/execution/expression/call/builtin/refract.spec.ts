@@ -15,7 +15,6 @@ import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
-import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
@@ -95,8 +94,7 @@ const cases = (['f32', 'f16'] as const)
             trait,
             FP[trait].sparseVectorRange(dim),
             FP[trait].sparseVectorRange(dim),
-            // NB: Refactor this when adding scalar ranges to FPTrait API
-            trait === 'f32' ? sparseF32Range() : sparseF16Range(),
+            FP[trait].sparseScalarRange(),
             nonConst ? 'unfiltered' : 'finite'
           );
         },

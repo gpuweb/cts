@@ -27,7 +27,7 @@ import {
   Vector,
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { frexp, fullF16Range, fullF32Range } from '../../../../../util/math.js';
+import { frexp } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   allInputSources,
@@ -50,7 +50,7 @@ function expBuilder(): ShaderBuilder {
 }
 
 /* @returns a fract Case for a given scalar or vector input */
-function makeVectorCaseFract(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
+function makeCaseFract(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
   const fp = FP[trait];
   let toInput: (n: readonly number[]) => Scalar | Vector;
   let toOutput: (n: readonly number[]) => Scalar | Vector;
@@ -78,7 +78,7 @@ function makeVectorCaseFract(v: number | readonly number[], trait: 'f32' | 'f16'
 }
 
 /* @returns an exp Case for a given scalar or vector input */
-function makeVectorCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
+function makeCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
   const fp = FP[trait];
   let toInput: (n: readonly number[]) => Scalar | Vector;
   let toOutput: (n: readonly number[]) => Scalar | Vector;
@@ -104,6 +104,7 @@ function makeVectorCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'):
 
   return { input: toInput(v), expected: toOutput(fs) };
 }
+
 // Cases: [f32|f16]_vecN_[exp|whole]
 const vec_cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
@@ -112,28 +113,28 @@ const vec_cases = (['f32', 'f16'] as const)
         [`${trait}_vec${dim}_${portion}`]: () => {
           return FP[trait]
             .vectorRange(dim)
-            .map(v =>
-              portion === 'exp' ? makeVectorCaseExp(v, trait) : makeVectorCaseFract(v, trait)
-            );
+            .map(v => (portion === 'exp' ? makeCaseExp(v, trait) : makeCaseFract(v, trait)));
         },
       }))
     )
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
+// Cases: [f32|f16]_[exp|whole]
+const scalar_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    (['exp', 'fract'] as const).map(portion => ({
+      [`${trait}_${portion}`]: () => {
+        return FP[trait]
+          .scalarRange()
+          .map(v => (portion === 'exp' ? makeCaseExp(v, trait) : makeCaseFract(v, trait)));
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('frexp', {
-  f32_fract: () => {
-    return fullF32Range().map(v => makeVectorCaseFract(v, 'f32'));
-  },
-  f32_exp: () => {
-    return fullF32Range().map(v => makeVectorCaseExp(v, 'f32'));
-  },
-  f16_fract: () => {
-    return fullF16Range().map(v => makeVectorCaseFract(v, 'f16'));
-  },
-  f16_exp: () => {
-    return fullF16Range().map(v => makeVectorCaseExp(v, 'f16'));
-  },
+  ...scalar_cases,
   ...vec_cases,
 });
 

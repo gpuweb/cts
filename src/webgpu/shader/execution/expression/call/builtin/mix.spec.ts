@@ -18,13 +18,29 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeVec, TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+// Cases: [f32|f16]_[non_]const
+const scalar_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([true, false] as const).map(nonConst => ({
+      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return FP[trait].generateScalarTripleToIntervalCases(
+          FP[trait].sparseScalarRange(),
+          FP[trait].sparseScalarRange(),
+          FP[trait].sparseScalarRange(),
+          nonConst ? 'unfiltered' : 'finite',
+          ...FP[trait].mixIntervals
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: [f32|f16]_vecN_scalar_[non_]const
 const vec_scalar_cases = (['f32', 'f16'] as const)
@@ -35,8 +51,7 @@ const vec_scalar_cases = (['f32', 'f16'] as const)
           return FP[trait].generateVectorPairScalarToVectorComponentWiseCase(
             FP[trait].sparseVectorRange(dim),
             FP[trait].sparseVectorRange(dim),
-            // NB: Refactor this when adding scalar ranges to FPTrait API
-            trait === 'f32' ? sparseF32Range() : sparseF16Range(),
+            FP[trait].sparseScalarRange(),
             nonConst ? 'unfiltered' : 'finite',
             ...FP[trait].mixIntervals
           );
@@ -47,42 +62,7 @@ const vec_scalar_cases = (['f32', 'f16'] as const)
   .reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('mix', {
-  f32_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      sparseF32Range(),
-      'finite',
-      ...FP.f32.mixIntervals
-    );
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      sparseF32Range(),
-      'unfiltered',
-      ...FP.f32.mixIntervals
-    );
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarTripleToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      sparseF16Range(),
-      'finite',
-      ...FP.f16.mixIntervals
-    );
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarTripleToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      sparseF16Range(),
-      'unfiltered',
-      ...FP.f16.mixIntervals
-    );
-  },
+  ...scalar_cases,
   ...vec_scalar_cases,
 });
 

@@ -46,6 +46,12 @@ import {
   vectorF16Range,
   vectorF32Range,
   vectorF64Range,
+  scalarF32Range,
+  sparseScalarF32Range,
+  scalarF64Range,
+  sparseScalarF64Range,
+  scalarF16Range,
+  sparseScalarF16Range,
 } from './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
@@ -1087,6 +1093,10 @@ export abstract class FPTraits {
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
   /** @returns a builder for converting numbers to Scalars */
   public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a range of scalars for testing */
+  public abstract scalarRange(): readonly number[];
+  /** @returns a reduced range of scalars for testing */
+  public abstract sparseScalarRange(): readonly number[];
   /** @returns a range of dim element vectors for testing */
   public abstract vectorRange(dim: number): ROArrayArray<number>;
   /** @returns a reduced range of dim element vectors for testing */
@@ -4530,6 +4540,8 @@ class F32Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF32;
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
+  public readonly scalarRange = scalarF32Range;
+  public readonly sparseScalarRange = sparseScalarF32Range;
   public readonly vectorRange = vectorF32Range;
   public readonly sparseVectorRange = sparseVectorF32Range;
 
@@ -5004,6 +5016,8 @@ class FPAbstractTraits extends FPTraits {
     unreachable(`'FPAbstractTraits.oneULP should never be called`);
   };
   public readonly scalarBuilder = abstractFloat;
+  public readonly scalarRange = scalarF64Range;
+  public readonly sparseScalarRange = sparseScalarF64Range;
   public readonly vectorRange = vectorF64Range;
   public readonly sparseVectorRange = sparseVectorF64Range;
 
@@ -5338,6 +5352,8 @@ class F16Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF16;
   public readonly oneULP = oneULPF16;
   public readonly scalarBuilder = f16;
+  public readonly scalarRange = scalarF16Range;
+  public readonly sparseScalarRange = sparseScalarF16Range;
   public readonly vectorRange = vectorF16Range;
   public readonly sparseVectorRange = sparseVectorF16Range;
 
