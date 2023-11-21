@@ -75,6 +75,7 @@ Tests that write timestamp to all types of query set on all possible encoders:
 - type {occlusion, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
+
 TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
 `
   )
@@ -118,6 +119,7 @@ g.test('writeTimestamp,invalid_query_set')
     `
 Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} encoder
+
 TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
 `
   )
@@ -148,8 +150,9 @@ TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
 g.test('writeTimestamp,device_mismatch')
   .desc(
     `Tests writeTimestamp cannot be called with a query set created from another device
-TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
-`
+
+  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+  `
   )
   .paramsSubcasesOnly(u => u.combine('mismatched', [true, false]))
   .beforeAllSubcases(t => {
