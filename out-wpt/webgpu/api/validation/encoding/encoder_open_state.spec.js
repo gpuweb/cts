@@ -57,6 +57,9 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
+// MAINTENANCE_TODO: Remove writeTimestamp from here once it's (hopefully) added back to the spec.
+
+
 
 const kEncoderCommandInfo =
 
@@ -263,6 +266,7 @@ fn((t) => {
         break;
       case 'writeTimestamp':
         try {
+
           encoder.writeTimestamp(querySet, 0);
         } catch (ex) {
           t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');

@@ -900,7 +900,8 @@ Tests encoding and finishing a writeTimestamp command on destroyed device.
     const querySet = t.device.createQuerySet({ type, count: 2 });
     await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', maker => {
       try {
-        maker.encoder.writeTimestamp(querySet, 0);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (maker.encoder as any).writeTimestamp(querySet, 0);
       } catch (ex) {
         t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
       }

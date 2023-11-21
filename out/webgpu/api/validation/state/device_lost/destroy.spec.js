@@ -900,6 +900,7 @@ fn(async (t) => {
   const querySet = t.device.createQuerySet({ type, count: 2 });
   await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', (maker) => {
     try {
+
       maker.encoder.writeTimestamp(querySet, 0);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');

@@ -76,8 +76,8 @@ Tests that write timestamp to all types of query set on all possible encoders:
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
 
-  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
-  `
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
 ).
 params((u) =>
 u.
@@ -104,6 +104,7 @@ fn((t) => {
 
   const encoder = t.createEncoder('non-pass');
   try {
+
     encoder.encoder.writeTimestamp(querySet, queryIndex);
   } catch (ex) {
     t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
@@ -117,8 +118,8 @@ desc(
 Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} encoder
 
-  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
-  `
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
 ).
 paramsSubcasesOnly((u) => u.combine('querySetState', ['valid', 'invalid'])).
 beforeAllSubcases((t) => {
@@ -134,6 +135,7 @@ fn((t) => {
 
   const encoder = t.createEncoder('non-pass');
   try {
+
     encoder.encoder.writeTimestamp(querySet, 0);
   } catch (ex) {
     t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
@@ -165,6 +167,7 @@ fn((t) => {
 
   const encoder = t.createEncoder('non-pass');
   try {
+
     encoder.encoder.writeTimestamp(querySet, 0);
   } catch (ex) {
     t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');

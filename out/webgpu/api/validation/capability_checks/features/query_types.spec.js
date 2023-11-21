@@ -78,6 +78,7 @@ fn((t) => {
 
     const encoder = t.createEncoder('non-pass');
     t.shouldThrow(expected, () => {
+
       encoder.encoder.writeTimestamp(querySet, 0);
     });
     encoder.finish();

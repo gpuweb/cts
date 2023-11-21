@@ -78,7 +78,8 @@ g.test('timestamp')
 
       const encoder = t.createEncoder('non-pass');
       t.shouldThrow(expected, () => {
-        encoder.encoder.writeTimestamp(querySet, 0);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (encoder.encoder as any).writeTimestamp(querySet, 0);
       });
       encoder.finish();
     }
