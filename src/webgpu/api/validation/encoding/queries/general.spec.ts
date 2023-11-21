@@ -104,10 +104,8 @@ TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
 
     const encoder = t.createEncoder('non-pass');
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-      // TypeError is expected for the call.
-      encoder.encoder.writeTimestamp(querySet, queryIndex);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, queryIndex);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
@@ -137,10 +135,8 @@ TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
 
     const encoder = t.createEncoder('non-pass');
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-      // TypeError is expected for the call.
-      encoder.encoder.writeTimestamp(querySet, 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
@@ -171,10 +167,8 @@ g.test('writeTimestamp,device_mismatch')
 
     const encoder = t.createEncoder('non-pass');
     try {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-      // TypeError is expected for the call.
-      encoder.encoder.writeTimestamp(querySet, 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }

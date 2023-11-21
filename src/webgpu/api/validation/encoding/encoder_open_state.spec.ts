@@ -57,7 +57,10 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-type EncoderCommands = keyof Omit<GPUCommandEncoder, '__brand' | 'label' | 'finish'>;
+// MAINTENANCE_TODO: Remove writeTimestamp from here once it's (hopefully) added back to the spec.
+type EncoderCommands =
+  | keyof Omit<GPUCommandEncoder, '__brand' | 'label' | 'finish'>
+  | 'writeTimestamp';
 const kEncoderCommandInfo: {
   readonly [k in EncoderCommands]: {};
 } = {
@@ -71,9 +74,6 @@ const kEncoderCommandInfo: {
   insertDebugMarker: {},
   popDebugGroup: {},
   pushDebugGroup: {},
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-  // TypeError is expected for the call.
   writeTimestamp: {},
   resolveQuerySet: {},
 };
@@ -161,8 +161,7 @@ g.test('non_pass_commands')
   )
   .beforeAllSubcases(t => {
     switch (t.params.command) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      case 'writeTimestamp' as any:
+      case 'writeTimestamp':
         t.selectDeviceOrSkipTestCase('timestamp-query');
         break;
     }
@@ -193,8 +192,7 @@ g.test('non_pass_commands')
     });
 
     const querySet = t.device.createQuerySet({
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      type: command === ('writeTimestamp' as any) ? 'timestamp' : 'occlusion',
+      type: command === 'writeTimestamp' ? 'timestamp' : 'occlusion',
       count: 1,
     });
 
@@ -266,13 +264,10 @@ g.test('non_pass_commands')
             encoder.popDebugGroup();
           }
           break;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        case 'writeTimestamp' as any:
+        case 'writeTimestamp':
           try {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-            // TypeError is expected for the call.
-            encoder.writeTimestamp(querySet, 0);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (encoder as any).writeTimestamp(querySet, 0);
           } catch (ex) {
             t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
           }

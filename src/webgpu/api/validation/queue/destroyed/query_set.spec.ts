@@ -44,10 +44,8 @@ Tests that use a destroyed query set in timestamp query on {non-pass, compute, r
     {
       const encoder = t.createEncoder('non-pass');
       try {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
-        // TypeError is expected for the call.
-        encoder.encoder.writeTimestamp(querySet, 0);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (encoder.encoder as any).writeTimestamp(querySet, 0);
       } catch (ex) {
         t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
       }
