@@ -24,11 +24,13 @@ Tests that use a destroyed query set in occlusion query on render pass encoder.
     encoder.validateFinishAndSubmitGivenState(t.params.querySetState);
   });
 
-g.test('timestampWrites')
+g.test('timestamps')
   .desc(
     `
-Tests that use a destroyed query set in timestampWrites on {compute, render} encoder.
+Tests that use a destroyed query set in timestamp query on {non-pass, compute, render} encoder.
 - x= {destroyed, not destroyed (control case)}
+
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
   `
   )
   .params(u => u.beginSubcases().combine('querySetState', ['valid', 'destroyed'] as const))
@@ -38,6 +40,19 @@ Tests that use a destroyed query set in timestampWrites on {compute, render} enc
       type: 'timestamp',
       count: 2,
     });
+
+    {
+      const encoder = t.createEncoder('non-pass');
+      try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
+        // TypeError is expected for the call.
+        encoder.encoder.writeTimestamp(querySet, 0);
+      } catch (ex) {
+        t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+      }
+      encoder.validateFinishAndSubmitGivenState(t.params.querySetState);
+    }
 
     {
       const encoder = t.createEncoder('non-pass');

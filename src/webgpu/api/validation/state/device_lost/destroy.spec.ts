@@ -869,6 +869,48 @@ Tests encoding and finishing a clearBuffer command on destroyed device.
     });
   });
 
+g.test('command,writeTimestamp')
+  .desc(
+    `
+Tests encoding and finishing a writeTimestamp command on destroyed device.
+  - Tests finishing encoding on destroyed device
+  - Tests submitting command on destroyed device
+  `
+  )
+  .params(u =>
+    u
+      .combine('type', kQueryTypes)
+
+      .combine('stage', kCommandValidationStages)
+      .combine('awaitLost', [true, false])
+  )
+  .beforeAllSubcases(t => {
+    const { type } = t.params;
+
+    // writeTimestamp is only available for devices that enable the 'timestamp-query' feature.
+    const queryTypes: GPUQueryType[] = ['timestamp'];
+    if (type !== 'timestamp') {
+      queryTypes.push(type);
+    }
+
+    t.selectDeviceForQueryTypeOrSkipTestCase(queryTypes);
+  })
+  .fn(async t => {
+    const { type, stage, awaitLost } = t.params;
+    const querySet = t.device.createQuerySet({ type, count: 2 });
+    await t.executeCommandsAfterDestroy(stage, awaitLost, 'non-pass', maker => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
+        // TypeError is expected for the call.
+        maker.encoder.writeTimestamp(querySet, 0);
+      } catch (ex) {
+        t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
+      }
+      return maker;
+    });
+  });
+
 g.test('command,resolveQuerySet')
   .desc(
     `

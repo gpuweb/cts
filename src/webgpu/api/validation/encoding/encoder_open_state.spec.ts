@@ -71,6 +71,10 @@ const kEncoderCommandInfo: {
   insertDebugMarker: {},
   popDebugGroup: {},
   pushDebugGroup: {},
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
+  // TypeError is expected for the call.
+  writeTimestamp: {},
   resolveQuerySet: {},
 };
 const kEncoderCommands = keysOf(kEncoderCommandInfo);
@@ -155,6 +159,14 @@ g.test('non_pass_commands')
       .beginSubcases()
       .combine('finishBeforeCommand', [false, true])
   )
+  .beforeAllSubcases(t => {
+    switch (t.params.command) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      case 'writeTimestamp' as any:
+        t.selectDeviceOrSkipTestCase('timestamp-query');
+        break;
+    }
+  })
   .fn(t => {
     const { command, finishBeforeCommand } = t.params;
 
@@ -181,7 +193,8 @@ g.test('non_pass_commands')
     });
 
     const querySet = t.device.createQuerySet({
-      type: 'occlusion',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      type: command === ('writeTimestamp' as any) ? 'timestamp' : 'occlusion',
       count: 1,
     });
 
@@ -251,6 +264,17 @@ g.test('non_pass_commands')
         case 'popDebugGroup':
           {
             encoder.popDebugGroup();
+          }
+          break;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        case 'writeTimestamp' as any:
+          try {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore compilation error since writeTimestamp is removed from GPUCommandEncoder,
+            // TypeError is expected for the call.
+            encoder.writeTimestamp(querySet, 0);
+          } catch (ex) {
+            t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
           }
           break;
         case 'resolveQuerySet':
