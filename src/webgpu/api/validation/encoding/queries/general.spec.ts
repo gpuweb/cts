@@ -76,8 +76,8 @@ Tests that write timestamp to all types of query set on all possible encoders:
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
 
-  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
-  `
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
   )
   .params(u =>
     u
@@ -104,7 +104,8 @@ Tests that write timestamp to all types of query set on all possible encoders:
 
     const encoder = t.createEncoder('non-pass');
     try {
-      encoder.encoder.writeTimestamp(querySet, queryIndex);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, queryIndex);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
@@ -117,8 +118,8 @@ g.test('writeTimestamp,invalid_query_set')
 Tests that write timestamp to a invalid query set that failed during creation:
 - x= {non-pass} encoder
 
-  TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
-  `
+TODO: writeTimestamp is removed from the spec so it's skipped if it TypeErrors.
+`
   )
   .paramsSubcasesOnly(u => u.combine('querySetState', ['valid', 'invalid'] as const))
   .beforeAllSubcases(t => {
@@ -134,7 +135,8 @@ Tests that write timestamp to a invalid query set that failed during creation:
 
     const encoder = t.createEncoder('non-pass');
     try {
-      encoder.encoder.writeTimestamp(querySet, 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }
@@ -165,7 +167,8 @@ g.test('writeTimestamp,device_mismatch')
 
     const encoder = t.createEncoder('non-pass');
     try {
-      encoder.encoder.writeTimestamp(querySet, 0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (encoder.encoder as any).writeTimestamp(querySet, 0);
     } catch (ex) {
       t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
     }

@@ -57,7 +57,10 @@ class F extends ValidationTest {
 
 export const g = makeTestGroup(F);
 
-type EncoderCommands = keyof Omit<GPUCommandEncoder, '__brand' | 'label' | 'finish'>;
+// MAINTENANCE_TODO: Remove writeTimestamp from here once it's (hopefully) added back to the spec.
+type EncoderCommands =
+  | keyof Omit<GPUCommandEncoder, '__brand' | 'label' | 'finish'>
+  | 'writeTimestamp';
 const kEncoderCommandInfo: {
   readonly [k in EncoderCommands]: {};
 } = {
@@ -263,7 +266,8 @@ g.test('non_pass_commands')
           break;
         case 'writeTimestamp':
           try {
-            encoder.writeTimestamp(querySet, 0);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (encoder as any).writeTimestamp(querySet, 0);
           } catch (ex) {
             t.skipIf(ex instanceof TypeError, 'writeTimestamp is actually not available');
           }

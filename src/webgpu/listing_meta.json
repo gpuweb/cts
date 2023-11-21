@@ -629,7 +629,7 @@
   "webgpu:api,validation,queue,destroyed,buffer:writeBuffer:*": { "subcaseMS": 2.151 },
   "webgpu:api,validation,queue,destroyed,query_set:beginOcclusionQuery:*": { "subcaseMS": 17.401 },
   "webgpu:api,validation,queue,destroyed,query_set:resolveQuerySet:*": { "subcaseMS": 16.401 },
-  "webgpu:api,validation,queue,destroyed,query_set:writeTimestamp:*": { "subcaseMS": 0.901 },
+  "webgpu:api,validation,queue,destroyed,query_set:timestamps:*": { "subcaseMS": 0.901 },
   "webgpu:api,validation,queue,destroyed,texture:beginRenderPass:*": { "subcaseMS": 0.350 },
   "webgpu:api,validation,queue,destroyed,texture:copyBufferToTexture:*": { "subcaseMS": 16.550 },
   "webgpu:api,validation,queue,destroyed,texture:copyTextureToBuffer:*": { "subcaseMS": 15.900 },
