@@ -10,7 +10,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseVectorF32Range, vectorF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -27,8 +26,8 @@ const cases = (['f32', 'f16'] as const)
           // vec3 and vec4 require calculating all possible permutations, so their runtime is much
           // longer per test, so only using sparse vectors for them.
           return FP[trait].generateVectorPairToIntervalCases(
-            N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
-            N === 2 ? vectorF32Range(2) : sparseVectorF32Range(N),
+            N === 2 ? FP[trait].vectorRange(2) : FP[trait].sparseVectorRange(N),
+            N === 2 ? FP[trait].vectorRange(2) : FP[trait].sparseVectorRange(N),
             nonConst ? 'unfiltered' : 'finite',
             FP[trait].dotInterval
           );

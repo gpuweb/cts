@@ -15,12 +15,7 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  sparseVectorF32Range,
-  sparseVectorF16Range,
-  sparseF32Range,
-  sparseF16Range } from
-'../../../../../util/math.js';
+import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -90,44 +85,27 @@ check)
   filter((c) => c !== undefined);
 }
 
-// Cases: f32_vecN_[non_]const
-const f32_vec_cases = [2, 3, 4].
-flatMap((n) =>
+// Cases: [f32|f16]_vecN_[non_]const
+const cases = ['f32', 'f16'].
+flatMap((trait) =>
+[2, 3, 4].flatMap((dim) =>
 [true, false].map((nonConst) => ({
-  [`f32_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
+  [`${trait}_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
     return generateCases(
-      'f32',
-      sparseVectorF32Range(n),
-      sparseVectorF32Range(n),
-      sparseF32Range(),
+      trait,
+      FP[trait].sparseVectorRange(dim),
+      FP[trait].sparseVectorRange(dim),
+      // NB: Refactor this when adding scalar ranges to FPTrait API
+      trait === 'f32' ? sparseF32Range() : sparseF16Range(),
       nonConst ? 'unfiltered' : 'finite'
     );
   }
 }))
+)
 ).
 reduce((a, b) => ({ ...a, ...b }), {});
 
-// Cases: f16_vecN_[non_]const
-const f16_vec_cases = [2, 3, 4].
-flatMap((n) =>
-[true, false].map((nonConst) => ({
-  [`f16_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return generateCases(
-      'f16',
-      sparseVectorF16Range(n),
-      sparseVectorF16Range(n),
-      sparseF16Range(),
-      nonConst ? 'unfiltered' : 'finite'
-    );
-  }
-}))
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('refract', {
-  ...f32_vec_cases,
-  ...f16_vec_cases
-});
+export const d = makeCaseCache('refract', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

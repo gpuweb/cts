@@ -23,6 +23,7 @@ import {
   correctlyRoundedF16,
   correctlyRoundedF32,
   correctlyRoundedF64,
+  every2DArray,
   flatten2DArray,
 
   flushSubnormalNumberF16,
@@ -38,8 +39,13 @@ import {
   oneULPF32,
   quantizeToF32,
   quantizeToF16,
+  sparseVectorF16Range,
+  sparseVectorF32Range,
+  sparseVectorF64Range,
   unflatten2DArray,
-  every2DArray } from
+  vectorF16Range,
+  vectorF32Range,
+  vectorF64Range } from
 './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */var
@@ -1080,6 +1086,10 @@ export class FPTraits {
   /** @returns 1 * ULP: (number) */
 
   /** @returns a builder for converting numbers to Scalars */
+
+  /** @returns a range of dim element vectors for testing */
+
+  /** @returns a reduced range of dim element vectors for testing */
 
 
   // Framework - Cases
@@ -4520,6 +4530,8 @@ class F32Traits extends FPTraits {
   flushSubnormal = flushSubnormalNumberF32;
   oneULP = oneULPF32;
   scalarBuilder = f32;
+  vectorRange = vectorF32Range;
+  sparseVectorRange = sparseVectorF32Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
@@ -4992,6 +5004,8 @@ class FPAbstractTraits extends FPTraits {
     unreachable(`'FPAbstractTraits.oneULP should never be called`);
   };
   scalarBuilder = abstractFloat;
+  vectorRange = vectorF64Range;
+  sparseVectorRange = sparseVectorF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -5324,6 +5338,8 @@ class F16Traits extends FPTraits {
   flushSubnormal = flushSubnormalNumberF16;
   oneULP = oneULPF16;
   scalarBuilder = f16;
+  vectorRange = vectorF16Range;
+  sparseVectorRange = sparseVectorF16Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);

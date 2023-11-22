@@ -18,12 +18,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeVec, TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  sparseF32Range,
-  sparseF16Range,
-  sparseVectorF32Range,
-  sparseVectorF16Range,
-} from '../../../../../util/math.js';
+import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -31,37 +26,23 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-// Cases: f32_vecN_scalar_[non_]const
-const f32_vec_scalar_cases = ([2, 3, 4] as const)
-  .flatMap(n =>
-    ([true, false] as const).map(nonConst => ({
-      [`f32_vec${n}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f32.generateVectorPairScalarToVectorComponentWiseCase(
-          sparseVectorF32Range(n),
-          sparseVectorF32Range(n),
-          sparseF32Range(),
-          nonConst ? 'unfiltered' : 'finite',
-          ...FP.f32.mixIntervals
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: f16_vecN_scalar_[non_]const
-const f16_vec_scalar_cases = ([2, 3, 4] as const)
-  .flatMap(n =>
-    ([true, false] as const).map(nonConst => ({
-      [`f16_vec${n}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f16.generateVectorPairScalarToVectorComponentWiseCase(
-          sparseVectorF16Range(n),
-          sparseVectorF16Range(n),
-          sparseF16Range(),
-          nonConst ? 'unfiltered' : 'finite',
-          ...FP.f16.mixIntervals
-        );
-      },
-    }))
+// Cases: [f32|f16]_vecN_scalar_[non_]const
+const vec_scalar_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([2, 3, 4] as const).flatMap(dim =>
+      ([true, false] as const).map(nonConst => ({
+        [`${trait}_vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
+          return FP[trait].generateVectorPairScalarToVectorComponentWiseCase(
+            FP[trait].sparseVectorRange(dim),
+            FP[trait].sparseVectorRange(dim),
+            // NB: Refactor this when adding scalar ranges to FPTrait API
+            trait === 'f32' ? sparseF32Range() : sparseF16Range(),
+            nonConst ? 'unfiltered' : 'finite',
+            ...FP[trait].mixIntervals
+          );
+        },
+      }))
+    )
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
@@ -84,7 +65,6 @@ export const d = makeCaseCache('mix', {
       ...FP.f32.mixIntervals
     );
   },
-  ...f32_vec_scalar_cases,
   f16_const: () => {
     return FP.f16.generateScalarTripleToIntervalCases(
       sparseF16Range(),
@@ -103,7 +83,7 @@ export const d = makeCaseCache('mix', {
       ...FP.f16.mixIntervals
     );
   },
-  ...f16_vec_scalar_cases,
+  ...vec_scalar_cases,
 });
 
 g.test('abstract_float_matching')

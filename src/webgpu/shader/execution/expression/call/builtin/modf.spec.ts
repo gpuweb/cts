@@ -26,14 +26,7 @@ import {
   TypeVec,
 } from '../../../../../util/conversion.js';
 import { FP, FPKind } from '../../../../../util/floating_point.js';
-import {
-  fullF16Range,
-  fullF32Range,
-  fullF64Range,
-  vectorF16Range,
-  vectorF32Range,
-  vectorF64Range,
-} from '../../../../../util/math.js';
+import { fullF16Range, fullF32Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import {
   abstractFloatShaderBuilder,
@@ -113,24 +106,6 @@ const scalar_range = {
   abstract: fullF64Range(),
 };
 
-const vector_range = {
-  f32: {
-    2: vectorF32Range(2),
-    3: vectorF32Range(3),
-    4: vectorF32Range(4),
-  },
-  f16: {
-    2: vectorF16Range(2),
-    3: vectorF16Range(3),
-    4: vectorF16Range(4),
-  },
-  abstract: {
-    2: vectorF64Range(2),
-    3: vectorF64Range(3),
-    4: vectorF64Range(4),
-  },
-};
-
 // Cases: [f32|f16|abstract]_[fract|whole]
 const scalar_cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(kind =>
@@ -150,7 +125,7 @@ const vec_cases = (['f32', 'f16', 'abstract'] as const)
       (['whole', 'fract'] as const).map(portion => ({
         [`${kind}_vec${n}_${portion}`]: () => {
           const makeCase = portion === 'whole' ? makeVectorCaseWhole : makeVectorCaseFract;
-          return vector_range[kind][n].map(makeCase.bind(null, kind));
+          return FP[kind].vectorRange(n).map(makeCase.bind(null, kind));
         },
       }))
     )
