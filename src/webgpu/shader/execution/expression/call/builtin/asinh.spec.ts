@@ -21,6 +21,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Cases: [f32|f16]
 const cases = (['f32', 'f16'] as const)
   .map(trait => ({
     [`${trait}`]: () => {

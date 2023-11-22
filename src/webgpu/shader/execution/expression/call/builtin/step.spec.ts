@@ -43,6 +43,7 @@ const makeCase = (trait: 'f32' | 'f16', edge: number, x: number): Case => {
   };
 };
 
+// Cases: [f32|f16]
 const cases = (['f32', 'f16'] as const)
   .map(trait => ({
     [`${trait}`]: () => {

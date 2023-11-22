@@ -1606,7 +1606,7 @@ const kSparseVectorF16Values = {
  * This is an even more stripped down version of `vectorF16Range` for when
  * pairs of vectors are being tested.
  * All of the interesting floats from sparseScalarF16 are guaranteed to be
- * tested, butnot in every position.
+ * tested, but not in every position.
  */
 export function sparseVectorF16Range(dim: number): ROArrayArray<number> {
   assert(

@@ -55,6 +55,7 @@ const makeCase = (trait: 'f32' | 'f16', e1: number, e2: number): Case => {
   return { input: [FPTrait.scalarBuilder(e1), i32(e2)], expected };
 };
 
+// Cases: [f32|f16]_[non_]const
 const cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({
@@ -63,15 +64,15 @@ const cases = (['f32', 'f16'] as const)
           return FP[trait]
             .sparseScalarRange()
             .flatMap(e1 => sparseI32Range().map(e2 => makeCase(trait, e1, e2)));
-        } else {
-          return FP[trait]
-            .sparseScalarRange()
-            .flatMap(e1 =>
-              biasedRange(-bias[trait] - 10, bias[trait] + 1, 10).flatMap(e2 =>
-                FP[trait].isFinite(e1 * 2 ** quantizeToI32(e2)) ? makeCase(trait, e1, e2) : []
-              )
-            );
         }
+        // const
+        return FP[trait]
+          .sparseScalarRange()
+          .flatMap(e1 =>
+            biasedRange(-bias[trait] - 10, bias[trait] + 1, 10).flatMap(e2 =>
+              FP[trait].isFinite(e1 * 2 ** quantizeToI32(e2)) ? makeCase(trait, e1, e2) : []
+            )
+          );
       },
     }))
   )

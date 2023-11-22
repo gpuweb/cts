@@ -21,6 +21,7 @@ export const g = makeTestGroup(GPUTest);
 
 const known_values = [-Math.sqrt(3), -1, -1 / Math.sqrt(3), 0, 1, 1 / Math.sqrt(3), Math.sqrt(3)];
 
+// Cases: [f32|f16]_[non_]const
 const cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({

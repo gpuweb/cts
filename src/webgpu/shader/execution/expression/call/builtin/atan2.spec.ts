@@ -19,6 +19,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Cases: [f32|f16]_[non_]const
 const cases = (['f32', 'f16'] as const)
   .flatMap(kind =>
     ([true, false] as const).map(nonConst => ({

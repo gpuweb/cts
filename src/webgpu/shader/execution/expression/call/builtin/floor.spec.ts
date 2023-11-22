@@ -27,7 +27,8 @@ const kIssue2766Value = {
   f16: 0x8000,
 };
 
-const cases = (['f32', 'f16'] as const)
+// Cases: [f32|f16|abstract]
+const cases = (['f32', 'f16', 'abstract'] as const)
   .map(trait => ({
     [`${trait}`]: () => {
       return FP[trait].generateScalarToIntervalCases(
@@ -39,20 +40,7 @@ const cases = (['f32', 'f16'] as const)
   }))
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('floor', {
-  ...cases,
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      [
-        ...kSmallMagnitudeTestValues,
-        ...FP['abstract'].scalarRange(),
-        kIssue2766Value['abstract'], // https://github.com/gpuweb/cts/issues/2766
-      ],
-      'unfiltered',
-      FP.abstract.floorInterval
-    );
-  },
-});
+export const d = makeCaseCache('floor', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

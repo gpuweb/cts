@@ -48,6 +48,7 @@ function generateTestCases(
   return cases;
 }
 
+// Cases: [f32|f16|abstract]
 const cases = (['f32', 'f16', 'abstract'] as const)
   .map(trait => ({
     [`${trait}`]: () => {

@@ -20,6 +20,7 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
+// Cases: [f32|f16]_[non_]const
 const cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({

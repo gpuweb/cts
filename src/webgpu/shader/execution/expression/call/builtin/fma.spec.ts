@@ -18,6 +18,8 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and not used
 const cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({

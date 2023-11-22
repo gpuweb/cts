@@ -88,6 +88,8 @@ function generateFloatTestCases(
   );
 }
 
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and unused
 const fp_cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({

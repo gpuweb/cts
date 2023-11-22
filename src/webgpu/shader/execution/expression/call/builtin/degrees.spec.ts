@@ -18,10 +18,15 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const cases = (['f32', 'f16'] as const)
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and not used
+const cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({
       [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        if (trait === 'abstract' && nonConst) {
+          return [];
+        }
         return FP[trait].generateScalarToIntervalCases(
           FP[trait].scalarRange(),
           nonConst ? 'unfiltered' : 'finite',
@@ -32,16 +37,7 @@ const cases = (['f32', 'f16'] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('degrees', {
-  ...cases,
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      FP.abstract.scalarRange(),
-      'finite',
-      FP.abstract.degreesInterval
-    );
-  },
-});
+export const d = makeCaseCache('degrees', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

@@ -27,6 +27,7 @@ const kIssue2766Value = {
   f16: 0x8000,
 };
 
+// Cases: [f32|f16]
 const cases = (['f32', 'f16'] as const)
   .map(trait => ({
     [`${trait}`]: () => {

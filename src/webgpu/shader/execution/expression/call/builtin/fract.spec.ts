@@ -47,6 +47,7 @@ const kTraitSpecificValues = {
   ],
 };
 
+// Cases: [f32|f16]
 const cases = (['f32', 'f16'] as const)
   .map(trait => ({
     [`${trait}`]: () => {
@@ -60,6 +61,7 @@ const cases = (['f32', 'f16'] as const)
   .reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('fract', cases);
+
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`abstract float tests`)
