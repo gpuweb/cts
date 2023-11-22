@@ -1,4 +1,5 @@
 {
+  "runtime": "v20.10.0",
   "webgpu/shader/execution/binary/af_addition.bin": "8e47fc86",
   "webgpu/shader/execution/binary/af_logical.bin": "348bc279",
   "webgpu/shader/execution/binary/af_division.bin": "82029c55",

@@ -179,6 +179,20 @@ async function build(suiteDir: string) {
     fileHashes = JSON.parse(json);
   }
 
+  // Check generator runtime
+  if (
+    mode === 'emit' &&
+    !forceRebuild &&
+    fileHashes.runtime !== undefined &&
+    fileHashes.runtime !== process.version
+  ) {
+    console.error(`attempting to regenerate cache with a different JavaScript runtime.
+Cache currently built with '${fileHashes.runtime}', you are using '${process.version}'.
+This may result in a no-op change of all the cache files, bloating the CTS repo.
+If you intended to do this, use --force`);
+    process.exit(1);
+  }
+
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
   const filesToEnumerate = glob(suiteDir, specFileSuffix)
     .map(p => `${suiteDir}/${p}`)
@@ -250,6 +264,7 @@ and
       switch (mode) {
         case 'emit':
           fs.rmSync(file);
+          delete fileHashes[file];
           break;
         case 'validate':
           errors.push(
@@ -262,6 +277,7 @@ and
 
   // Update hashes.json
   if (mode === 'emit') {
+    fileHashes.runtime = process.version;
     const json = JSON.stringify(fileHashes, undefined, '  ');
     fs.writeFileSync(fileHashJsonPath, json, { encoding: 'utf8' });
   }
