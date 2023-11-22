@@ -12,12 +12,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  fullF32Range,
-  fullF16Range,
-  sparseVectorF32Range,
-  sparseVectorF16Range,
-} from '../../../../../util/math.js';
+import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -25,35 +20,21 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-// Cases: f32_vecN_[non_]const
-const f32_vec_cases = ([2, 3, 4] as const)
-  .flatMap(n =>
-    ([true, false] as const).map(nonConst => ({
-      [`f32_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f32.generateVectorPairToIntervalCases(
-          sparseVectorF32Range(n),
-          sparseVectorF32Range(n),
-          nonConst ? 'unfiltered' : 'finite',
-          FP.f32.distanceInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: f16_vecN_[non_]const
-const f16_vec_cases = ([2, 3, 4] as const)
-  .flatMap(n =>
-    ([true, false] as const).map(nonConst => ({
-      [`f16_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP.f16.generateVectorPairToIntervalCases(
-          sparseVectorF16Range(n),
-          sparseVectorF16Range(n),
-          nonConst ? 'unfiltered' : 'finite',
-          FP.f16.distanceInterval
-        );
-      },
-    }))
+// Cases: [f32|f16]_vecN_[non_]const
+const vec_cases = (['f32', 'f16'] as const)
+  .flatMap(trait =>
+    ([2, 3, 4] as const).flatMap(dim =>
+      ([true, false] as const).map(nonConst => ({
+        [`${trait}_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
+          return FP[trait].generateVectorPairToIntervalCases(
+            FP[trait].sparseVectorRange(dim),
+            FP[trait].sparseVectorRange(dim),
+            nonConst ? 'unfiltered' : 'finite',
+            FP[trait].distanceInterval
+          );
+        },
+      }))
+    )
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
@@ -74,7 +55,6 @@ export const d = makeCaseCache('distance', {
       FP.f32.distanceInterval
     );
   },
-  ...f32_vec_cases,
   f16_const: () => {
     return FP.f16.generateScalarPairToIntervalCases(
       fullF16Range(),
@@ -91,7 +71,7 @@ export const d = makeCaseCache('distance', {
       FP.f16.distanceInterval
     );
   },
-  ...f16_vec_cases,
+  ...vec_cases,
 });
 
 g.test('abstract_float')
