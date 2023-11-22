@@ -38,7 +38,7 @@ const vec_scalar_cases = (['f32', 'f16'] as const)
             // NB: Refactor this when adding scalar ranges to FPTrait API
             trait === 'f32' ? sparseF32Range() : sparseF16Range(),
             nonConst ? 'unfiltered' : 'finite',
-            ...FP.f32.mixIntervals
+            ...FP[trait].mixIntervals
           );
         },
       }))
