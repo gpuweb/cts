@@ -65,7 +65,7 @@
   "webgpu/shader/execution/log2.bin": "8493434a",
   "webgpu/shader/execution/max.bin": "b3ac49b0",
   "webgpu/shader/execution/min.bin": "7e92bdf4",
-  "webgpu/shader/execution/mix.bin": "aac0c060",
+  "webgpu/shader/execution/mix.bin": "a242b580",
   "webgpu/shader/execution/modf.bin": "60c1b4c2",
   "webgpu/shader/execution/normalize.bin": "d1c8e8ce",
   "webgpu/shader/execution/pack2x16float.bin": "acd2d4cc",
