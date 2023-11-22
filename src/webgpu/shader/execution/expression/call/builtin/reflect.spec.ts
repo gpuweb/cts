@@ -19,7 +19,7 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 // Cases: [f32|f16]_vecN_[non_]const
-const vec_cases = (['f32', 'f16'] as const)
+const cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
     ([2, 3, 4] as const).flatMap(dim =>
       ([true, false] as const).map(nonConst => ({
@@ -36,9 +36,7 @@ const vec_cases = (['f32', 'f16'] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('reflect', {
-  ...vec_cases,
-});
+export const d = makeCaseCache('reflect', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

@@ -26,6 +26,7 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Cases: [f32|f16]_vecN_scalar_[non_]const
 const vec_scalar_cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
     ([2, 3, 4] as const).flatMap(dim =>

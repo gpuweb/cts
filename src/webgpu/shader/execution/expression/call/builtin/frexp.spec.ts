@@ -104,24 +104,20 @@ function makeVectorCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'):
 
   return { input: toInput(v), expected: toOutput(fs) };
 }
-
-const fract_vec_cases = (['f32', 'f16'] as const)
+// Cases: [f32|f16]_vecN_[exp|whole]
+const vec_cases = (['f32', 'f16'] as const)
   .flatMap(trait =>
-    ([2, 3, 4] as const).map(dim => ({
-      [`${trait}_vec${dim}_fract`]: () => {
-        return FP[trait].vectorRange(dim).map(v => makeVectorCaseFract(v, trait));
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-const exp_vec_cases = (['f32', 'f16'] as const)
-  .flatMap(trait =>
-    ([2, 3, 4] as const).map(dim => ({
-      [`${trait}_vec${dim}_exp`]: () => {
-        return FP[trait].vectorRange(dim).map(v => makeVectorCaseExp(v, trait));
-      },
-    }))
+    ([2, 3, 4] as const).flatMap(dim =>
+      (['exp', 'fract'] as const).map(portion => ({
+        [`${trait}_vec${dim}_${portion}`]: () => {
+          return FP[trait]
+            .vectorRange(dim)
+            .map(v =>
+              portion === 'exp' ? makeVectorCaseExp(v, trait) : makeVectorCaseFract(v, trait)
+            );
+        },
+      }))
+    )
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
@@ -138,8 +134,7 @@ export const d = makeCaseCache('frexp', {
   f16_exp: () => {
     return fullF16Range().map(v => makeVectorCaseExp(v, 'f16'));
   },
-  ...fract_vec_cases,
-  ...exp_vec_cases,
+  ...vec_cases,
 });
 
 g.test('f32_fract')

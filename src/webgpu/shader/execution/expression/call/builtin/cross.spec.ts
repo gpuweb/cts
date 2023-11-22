@@ -17,10 +17,15 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const cases = (['f32', 'f16'] as const)
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and not used
+const cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({
       [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        if (trait === 'abstract' && nonConst) {
+          return [];
+        }
         return FP[trait].generateVectorPairToVectorCases(
           FP[trait].vectorRange(3),
           FP[trait].vectorRange(3),
@@ -32,24 +37,14 @@ const cases = (['f32', 'f16'] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('cross', {
-  abstract: () => {
-    return FP.abstract.generateVectorPairToVectorCases(
-      FP.abstract.sparseVectorRange(3),
-      FP.abstract.sparseVectorRange(3),
-      'finite',
-      FP.abstract.crossInterval
-    );
-  },
-  ...cases,
-});
+export const d = makeCaseCache('cross', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(`abstract float tests`)
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract');
+    const cases = await d.get('abstract_const');
     await run(
       t,
       abstractBuiltin('cross'),
