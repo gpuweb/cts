@@ -12,7 +12,6 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
@@ -44,14 +43,18 @@ const makeCase = (trait: 'f32' | 'f16', edge: number, x: number): Case => {
   };
 };
 
-export const d = makeCaseCache('step', {
-  f32: () => {
-    return fullF32Range().flatMap(edge => fullF32Range().map(x => makeCase('f32', edge, x)));
-  },
-  f16: () => {
-    return fullF16Range().flatMap(edge => fullF16Range().map(x => makeCase('f16', edge, x)));
-  },
-});
+// Cases: [f32|f16]
+const cases = (['f32', 'f16'] as const)
+  .map(trait => ({
+    [`${trait}`]: () => {
+      return FP[trait]
+        .scalarRange()
+        .flatMap(edge => FP[trait].scalarRange().map(x => makeCase(trait, edge, x)));
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('step', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
