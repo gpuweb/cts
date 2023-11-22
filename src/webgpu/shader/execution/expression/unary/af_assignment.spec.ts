@@ -7,7 +7,11 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { kValue } from '../../../../util/constants.js';
 import { abstractFloat, TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { filteredF64Range, fullF64Range, isSubnormalNumberF64 } from '../../../../util/math.js';
+import {
+  limitedScalarF64Range,
+  scalarF64Range,
+  isSubnormalNumberF64,
+} from '../../../../util/math.js';
 import { reinterpretU64AsF64 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
@@ -48,7 +52,7 @@ export const d = makeCaseCache('unary/af_assignment', {
       reinterpretU64AsF64(0xffef_ffff_ffff_ffffn), // largest magnitude negative normal
       reinterpretU64AsF64(0x7fef_ffff_ffff_ffffn), // largest magnitude positive normal
       // WebGPU implementation stressing values
-      ...fullF64Range(),
+      ...scalarF64Range(),
     ];
     return inputs.map(f => {
       return {
@@ -58,12 +62,12 @@ export const d = makeCaseCache('unary/af_assignment', {
     });
   },
   f32: () => {
-    return filteredF64Range(kValue.f32.negative.min, kValue.f32.positive.max).map(f => {
+    return limitedScalarF64Range(kValue.f32.negative.min, kValue.f32.positive.max).map(f => {
       return { input: abstractFloat(f), expected: FP.f32.correctlyRoundedInterval(f) };
     });
   },
   f16: () => {
-    return filteredF64Range(kValue.f16.negative.min, kValue.f16.positive.max).map(f => {
+    return limitedScalarF64Range(kValue.f16.negative.min, kValue.f16.positive.max).map(f => {
       return { input: abstractFloat(f), expected: FP.f16.correctlyRoundedInterval(f) };
     });
   },

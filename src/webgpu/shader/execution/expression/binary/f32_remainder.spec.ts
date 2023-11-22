@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeVec } from '../../../../util/conversion.js';
 import { FP, FPVector } from '../../../../util/floating_point.js';
-import { sparseF32Range, sparseVectorF32Range } from '../../../../util/math.js';
+import { sparseScalarF32Range, sparseVectorF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -26,8 +26,8 @@ const scalar_cases = ([true, false] as const)
   .map(nonConst => ({
     [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
       return FP.f32.generateScalarPairToIntervalCases(
-        sparseF32Range(),
-        sparseF32Range(),
+        sparseScalarF32Range(),
+        sparseScalarF32Range(),
         nonConst ? 'unfiltered' : 'finite',
         FP.f32.remainderInterval
       );
@@ -41,7 +41,7 @@ const vector_scalar_cases = ([2, 3, 4] as const)
       [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
         return FP.f32.generateVectorScalarToVectorCases(
           sparseVectorF32Range(dim),
-          sparseF32Range(),
+          sparseScalarF32Range(),
           nonConst ? 'unfiltered' : 'finite',
           remainderVectorScalarInterval
         );
@@ -55,7 +55,7 @@ const scalar_vector_cases = ([2, 3, 4] as const)
     ([true, false] as const).map(nonConst => ({
       [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
         return FP.f32.generateScalarVectorToVectorCases(
-          sparseF32Range(),
+          sparseScalarF32Range(),
           sparseVectorF32Range(dim),
           nonConst ? 'unfiltered' : 'finite',
           remainderScalarVectorInterval

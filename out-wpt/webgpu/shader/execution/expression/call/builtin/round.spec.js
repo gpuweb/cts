@@ -14,7 +14,6 @@ Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeAbstractFloat } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -22,38 +21,27 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('round', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      [
-      0x80000000, // https://github.com/gpuweb/cts/issues/2766,
-      ...fullF32Range()],
+// See https://github.com/gpuweb/cts/issues/2766 for details
+const kIssue2766Value = {
+  abstract: 0x8000_0000_0000_0000,
+  f32: 0x8000_0000,
+  f16: 0x8000
+};
 
+// Cases: [f32|f16|abstract]
+const cases = ['f32', 'f16', 'abstract'].
+map((trait) => ({
+  [`${trait}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
+      [kIssue2766Value[trait], ...FP[trait].scalarRange()],
       'unfiltered',
-      FP.f32.roundInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      [
-      0x8000, // https://github.com/gpuweb/cts/issues/2766
-      ...fullF16Range()],
-
-      'unfiltered',
-      FP.f16.roundInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      [
-      0x8000_0000_0000_0000, // https://github.com/gpuweb/cts/issues/2766
-      ...fullF64Range()],
-
-      'unfiltered',
-      FP.abstract.roundInterval
+      FP[trait].roundInterval
     );
   }
-});
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('round', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -19,8 +19,8 @@ import {
 '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
 import {
-  fullF32Range,
-  fullF16Range,
+  scalarF32Range,
+  scalarF16Range,
   fullI32Range,
   fullU32Range,
   sparseMatrixF32Range,
@@ -87,13 +87,13 @@ export const d = makeCaseCache('unary/f32_conversion', {
     });
   },
   f32: () => {
-    return fullF32Range().map((f) => {
+    return scalarF32Range().map((f) => {
       return { input: f32(f), expected: FP.f32.correctlyRoundedInterval(f) };
     });
   },
   // All f16 values are exactly representable in f32.
   f16: () => {
-    return fullF16Range().map((f) => {
+    return scalarF16Range().map((f) => {
       return { input: f16(f), expected: FP.f32.correctlyRoundedInterval(f) };
     });
   },

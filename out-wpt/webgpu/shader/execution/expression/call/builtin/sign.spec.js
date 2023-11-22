@@ -17,12 +17,7 @@ import {
   TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  fullF32Range,
-  fullF16Range,
-  fullI32Range,
-  fullF64Range } from
-'../../../../../util/math.js';
+import { fullI32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -30,20 +25,21 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('sign', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'unfiltered', FP.f32.signInterval);
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.signInterval);
-  },
-  abstract_float: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      fullF64Range(),
+// Cases: [f32|f16|abstract]
+const fp_cases = ['f32', 'f16', 'abstract'].
+map((trait) => ({
+  [`${trait}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
+      FP[trait].scalarRange(),
       'unfiltered',
-      FP.abstract.signInterval
+      FP[trait].signInterval
     );
-  },
+  }
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('sign', {
+  ...fp_cases,
   i32: () =>
   fullI32Range().map((i) => {
     const signFunc = (i) => i < 0 ? -1 : i > 0 ? 1 : 0;
@@ -60,7 +56,7 @@ combine('inputSource', onlyConstInputSource).
 combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
-  const cases = await d.get('abstract_float');
+  const cases = await d.get('abstract');
   await run(t, abstractBuiltin('sign'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
 });
 

@@ -11,13 +11,25 @@ Returns the length of e (e.g. abs(e) if T is a scalar, or sqrt(e[0]^2 + e[1]^2 +
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+// Cases: [f32|f16]_[non_]const
+const scalar_cases = ['f32', 'f16'].
+map((trait) => ({
+  [`${trait}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
+      FP[trait].scalarRange(),
+      'unfiltered',
+      FP[trait].lengthInterval
+    );
+  }
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: [f32|f16]_vecN_[non_]const
 const vec_cases = ['f32', 'f16'].
@@ -37,20 +49,7 @@ flatMap((trait) =>
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('length', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.lengthInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.lengthInterval
-    );
-  },
+  ...scalar_cases,
   ...vec_cases
 });
 

@@ -6,7 +6,7 @@ Execution Tests for AbstractFloat arithmetic unary expression operations
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeAbstractFloat } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { fullF64Range } from '../../../../util/math.js';
+import { scalarF64Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
@@ -17,7 +17,7 @@ export const g = makeTestGroup(GPUTest);
 export const d = makeCaseCache('unary/af_arithmetic', {
   negation: () => {
     return FP.abstract.generateScalarToIntervalCases(
-      fullF64Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
+      scalarF64Range({ neg_norm: 250, neg_sub: 20, pos_sub: 20, pos_norm: 250 }),
       'unfiltered',
       FP.abstract.negationInterval
     );

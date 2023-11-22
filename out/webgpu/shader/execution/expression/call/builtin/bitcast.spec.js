@@ -40,10 +40,10 @@ import {
 '../../../../../util/conversion.js';
 import { FPInterval, FP } from '../../../../../util/floating_point.js';
 import {
-  fullF32Range,
+  scalarF32Range,
   fullI32Range,
   fullU32Range,
-  fullF16Range,
+  scalarF16Range,
   linearRange,
   isSubnormalNumberF32,
   isSubnormalNumberF16,
@@ -92,11 +92,11 @@ const f32ZerosInterval = new FPInterval('f32', -0.0, 0.0);
 
 // f32FiniteRange is a list of finite f32s. fullF32Range() already
 // has +0, we only need to add -0.
-const f32FiniteRange = [...fullF32Range(), kValue.f32.negative.zero];
+const f32FiniteRange = [...scalarF32Range(), kValue.f32.negative.zero];
 const f32RangeWithInfAndNaN = [...f32FiniteRange, ...f32InfAndNaNInF32];
 
 // F16 values, finite, Inf/NaN, and zeros. Represented in float and u16.
-const f16FiniteInF16 = [...fullF16Range(), kValue.f16.negative.zero];
+const f16FiniteInF16 = [...scalarF16Range(), kValue.f16.negative.zero];
 const f16FiniteInU16 = f16FiniteInF16.map((u) => reinterpretF16AsU16(u));
 
 const f16InfAndNaNInU16 = [

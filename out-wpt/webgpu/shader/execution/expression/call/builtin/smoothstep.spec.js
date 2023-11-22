@@ -13,7 +13,6 @@ For scalar T, the result is t * t * (3.0 - 2.0 * t), where t = clamp((x - low) /
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -21,44 +20,24 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('smoothstep', {
-  f32_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      sparseF32Range(),
-      'finite',
-      FP.f32.smoothStepInterval
-    );
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarTripleToIntervalCases(
-      sparseF32Range(),
-      sparseF32Range(),
-      sparseF32Range(),
-      'unfiltered',
-      FP.f32.smoothStepInterval
-    );
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarTripleToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      sparseF16Range(),
-      'finite',
-      FP.f16.smoothStepInterval
-    );
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarTripleToIntervalCases(
-      sparseF16Range(),
-      sparseF16Range(),
-      sparseF16Range(),
-      'unfiltered',
-      FP.f16.smoothStepInterval
+// Cases: [f32|f16]_[non_]const
+const cases = ['f32', 'f16'].
+flatMap((trait) =>
+[true, false].map((nonConst) => ({
+  [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+    return FP[trait].generateScalarTripleToIntervalCases(
+      FP[trait].sparseScalarRange(),
+      FP[trait].sparseScalarRange(),
+      FP[trait].sparseScalarRange(),
+      nonConst ? 'unfiltered' : 'finite',
+      FP[trait].smoothStepInterval
     );
   }
-});
+}))
+).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('smoothstep', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

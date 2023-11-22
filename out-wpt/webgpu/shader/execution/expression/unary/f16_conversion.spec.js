@@ -18,8 +18,8 @@ import {
 '../../../../util/conversion.js';
 import { FP, FPInterval } from '../../../../util/floating_point.js';
 import {
-  fullF32Range,
-  fullF16Range,
+  scalarF32Range,
+  scalarF16Range,
   fullI32Range,
   fullU32Range,
   sparseMatrixF32Range,
@@ -108,21 +108,21 @@ export const d = makeCaseCache('unary/f16_conversion', {
   // Note that f32 values may be not exactly representable in f16 and/or out of range.
   f32_non_const: () => {
     return FP.f32.generateScalarToIntervalCases(
-      [...fullF32Range(), 65535.996, -65535.996],
+      [...scalarF32Range(), 65535.996, -65535.996],
       'unfiltered',
       FP.f16.correctlyRoundedInterval
     );
   },
   f32_const: () => {
     return FP.f32.generateScalarToIntervalCases(
-      [...fullF32Range(), 65535.996, -65535.996],
+      [...scalarF32Range(), 65535.996, -65535.996],
       'finite',
       FP.f16.correctlyRoundedInterval
     );
   },
   // All f16 values are exactly representable in f16.
   f16: () => {
-    return fullF16Range().map((f) => {
+    return scalarF16Range().map((f) => {
       return { input: f16(f), expected: FP.f16.correctlyRoundedInterval(f) };
     });
   },

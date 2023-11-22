@@ -45,7 +45,13 @@ import {
   unflatten2DArray,
   vectorF16Range,
   vectorF32Range,
-  vectorF64Range } from
+  vectorF64Range,
+  scalarF32Range,
+  sparseScalarF32Range,
+  scalarF64Range,
+  sparseScalarF64Range,
+  scalarF16Range,
+  sparseScalarF16Range } from
 './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */var
@@ -1086,6 +1092,10 @@ export class FPTraits {
   /** @returns 1 * ULP: (number) */
 
   /** @returns a builder for converting numbers to Scalars */
+
+  /** @returns a range of scalars for testing */
+
+  /** @returns a reduced range of scalars for testing */
 
   /** @returns a range of dim element vectors for testing */
 
@@ -4530,6 +4540,8 @@ class F32Traits extends FPTraits {
   flushSubnormal = flushSubnormalNumberF32;
   oneULP = oneULPF32;
   scalarBuilder = f32;
+  scalarRange = scalarF32Range;
+  sparseScalarRange = sparseScalarF32Range;
   vectorRange = vectorF32Range;
   sparseVectorRange = sparseVectorF32Range;
 
@@ -5004,6 +5016,8 @@ class FPAbstractTraits extends FPTraits {
     unreachable(`'FPAbstractTraits.oneULP should never be called`);
   };
   scalarBuilder = abstractFloat;
+  scalarRange = scalarF64Range;
+  sparseScalarRange = sparseScalarF64Range;
   vectorRange = vectorF64Range;
   sparseVectorRange = sparseVectorF64Range;
 
@@ -5338,6 +5352,8 @@ class F16Traits extends FPTraits {
   flushSubnormal = flushSubnormalNumberF16;
   oneULP = oneULPF16;
   scalarBuilder = f16;
+  scalarRange = scalarF16Range;
+  sparseScalarRange = sparseScalarF16Range;
   vectorRange = vectorF16Range;
   sparseVectorRange = sparseVectorF16Range;
 

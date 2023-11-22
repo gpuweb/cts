@@ -6,7 +6,7 @@ Execution Tests for non-matrix AbstractFloat addition expression
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeVec } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { sparseF64Range, sparseVectorF64Range } from '../../../../util/math.js';
+import { sparseScalarF64Range, sparseVectorF64Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
@@ -25,8 +25,8 @@ export const g = makeTestGroup(GPUTest);
 const scalar_cases = {
   ['scalar']: () => {
     return FP.abstract.generateScalarPairToIntervalCases(
-      sparseF64Range(),
-      sparseF64Range(),
+      sparseScalarF64Range(),
+      sparseScalarF64Range(),
       'finite',
       FP.abstract.additionInterval
     );
@@ -38,7 +38,7 @@ map((dim) => ({
   [`vec${dim}_scalar`]: () => {
     return FP.abstract.generateVectorScalarToVectorCases(
       sparseVectorF64Range(dim),
-      sparseF64Range(),
+      sparseScalarF64Range(),
       'finite',
       additionVectorScalarInterval
     );
@@ -50,7 +50,7 @@ const scalar_vector_cases = [2, 3, 4].
 map((dim) => ({
   [`scalar_vec${dim}`]: () => {
     return FP.abstract.generateScalarVectorToVectorCases(
-      sparseF64Range(),
+      sparseScalarF64Range(),
       sparseVectorF64Range(dim),
       'finite',
       additionScalarVectorInterval

@@ -18,8 +18,8 @@ import {
   u32 } from
 '../../../../util/conversion.js';
 import {
-  fullF32Range,
-  fullF16Range,
+  scalarF32Range,
+  scalarF16Range,
   fullI32Range,
   fullU32Range,
   quantizeToF32,
@@ -51,7 +51,7 @@ export const d = makeCaseCache('unary/u32_conversion', {
     });
   },
   f32: () => {
-    return fullF32Range().map((f) => {
+    return scalarF32Range().map((f) => {
       // Handles zeros, subnormals, and negatives
       if (f < 1.0) {
         return { input: f32(f), expected: u32(0) };
@@ -77,7 +77,7 @@ export const d = makeCaseCache('unary/u32_conversion', {
   },
   f16: () => {
     // Note that all positive finite f16 values are in range of u32.
-    return fullF16Range().map((f) => {
+    return scalarF16Range().map((f) => {
       // Handles zeros, subnormals, and negatives
       if (f < 1.0) {
         return { input: f16(f), expected: u32(0) };

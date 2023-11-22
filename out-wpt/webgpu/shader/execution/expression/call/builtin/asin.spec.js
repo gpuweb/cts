@@ -11,7 +11,7 @@ Returns the arc sine of e. Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { linearRange, fullF32Range, fullF16Range } from '../../../../../util/math.js';
+import { linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -19,30 +19,22 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-const f32_inputs = [
-...linearRange(-1, 1, 100), // asin is defined on [-1, 1]
-...fullF32Range()];
-
-
-const f16_inputs = [
-...linearRange(-1, 1, 100), // asin is defined on [-1, 1]
-...fullF16Range()];
-
-
-export const d = makeCaseCache('asin', {
-  f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'finite', FP.f32.asinInterval);
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'unfiltered', FP.f32.asinInterval);
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'finite', FP.f16.asinInterval);
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'unfiltered', FP.f16.asinInterval);
+// Cases: [f32|f16]_[non_]const
+const cases = ['f32', 'f16'].
+flatMap((trait) =>
+[true, false].map((nonConst) => ({
+  [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
+      [...linearRange(-1, 1, 100), ...FP[trait].scalarRange()], // asin is defined on [-1, 1]
+      nonConst ? 'unfiltered' : 'finite',
+      FP[trait].asinInterval
+    );
   }
-});
+}))
+).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('asin', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

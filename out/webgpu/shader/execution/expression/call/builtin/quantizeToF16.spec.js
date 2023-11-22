@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { kValue } from '../../../../../util/constants.js';
 import { TypeF32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
+import { scalarF16Range, scalarF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -33,7 +33,7 @@ export const d = makeCaseCache('quantizeToF16', {
       kValue.f16.positive.subnormal.max,
       kValue.f16.positive.min,
       kValue.f16.positive.max,
-      ...fullF16Range()],
+      ...scalarF16Range()],
 
       'finite',
       FP.f32.quantizeToF16Interval
@@ -50,7 +50,7 @@ export const d = makeCaseCache('quantizeToF16', {
       kValue.f16.positive.subnormal.max,
       kValue.f16.positive.min,
       kValue.f16.positive.max,
-      ...fullF32Range()],
+      ...scalarF32Range()],
 
       'unfiltered',
       FP.f32.quantizeToF16Interval

@@ -12,13 +12,28 @@ Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
+
+// Cases: [f32|f16]_[non_]const
+const scalar_cases = ['f32', 'f16'].
+flatMap((trait) =>
+[true, false].map((nonConst) => ({
+  [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+    return FP[trait].generateScalarPairToIntervalCases(
+      FP[trait].scalarRange(),
+      FP[trait].scalarRange(),
+      nonConst ? 'unfiltered' : 'finite',
+      FP[trait].distanceInterval
+    );
+  }
+}))
+).
+reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: [f32|f16]_vecN_[non_]const
 const vec_cases = ['f32', 'f16'].
@@ -39,38 +54,7 @@ flatMap((trait) =>
 reduce((a, b) => ({ ...a, ...b }), {});
 
 export const d = makeCaseCache('distance', {
-  f32_const: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
-      'finite',
-      FP.f32.distanceInterval
-    );
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.distanceInterval
-    );
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      fullF16Range(),
-      fullF16Range(),
-      'finite',
-      FP.f16.distanceInterval
-    );
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      fullF16Range(),
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.distanceInterval
-    );
-  },
+  ...scalar_cases,
   ...vec_cases
 });
 

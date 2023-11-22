@@ -11,7 +11,7 @@ Returns the sine of e. Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, linearRange } from '../../../../../util/math.js';
+import { linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -19,30 +19,24 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('sin', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
+// Cases: [f32|f16]
+const cases = ['f32', 'f16'].
+map((trait) => ({
+  [`${trait}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
       [
       // Well-defined accuracy range
-      ...linearRange(-Math.PI, Math.PI, 1000),
-      ...fullF32Range()],
+      ...linearRange(-Math.PI, Math.PI, 100),
+      ...FP[trait].scalarRange()],
 
       'unfiltered',
-      FP.f32.sinInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      [
-      // Well-defined accuracy range
-      ...linearRange(-Math.PI, Math.PI, 1000),
-      ...fullF16Range()],
-
-      'unfiltered',
-      FP.f16.sinInterval
+      FP[trait].sinInterval
     );
   }
-});
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('sin', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

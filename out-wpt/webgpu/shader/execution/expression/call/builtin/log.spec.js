@@ -9,10 +9,9 @@ T is S or vecN<S>
 Returns the natural logarithm of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { kValue } from '../../../../../util/constants.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { biasedRange, fullF32Range, fullF16Range, linearRange } from '../../../../../util/math.js';
+import { biasedRange, linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -21,33 +20,27 @@ import { builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 // log's accuracy is defined in three regions { [0, 0.5), [0.5, 2.0], (2.0, +∞] }
-const f32_inputs = [
-...linearRange(kValue.f32.positive.min, 0.5, 20),
-...linearRange(0.5, 2.0, 20),
-...biasedRange(2.0, 2 ** 32, 1000),
-...fullF32Range()];
+// Cases: [f32|f16]_[non_]const
+const cases = ['f32', 'f16'].
+flatMap((trait) =>
+[true, false].map((nonConst) => ({
+  [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+    return FP[trait].generateScalarToIntervalCases(
+      [
+      ...linearRange(FP[trait].constants().positive.min, 0.5, 20),
+      ...linearRange(0.5, 2.0, 20),
+      ...biasedRange(2.0, 2 ** 32, 1000),
+      ...FP[trait].scalarRange()],
 
-const f16_inputs = [
-...linearRange(kValue.f16.positive.min, 0.5, 20),
-...linearRange(0.5, 2.0, 20),
-...biasedRange(2.0, 2 ** 32, 1000),
-...fullF16Range()];
-
-
-export const d = makeCaseCache('log', {
-  f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'finite', FP.f32.logInterval);
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(f32_inputs, 'unfiltered', FP.f32.logInterval);
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'finite', FP.f16.logInterval);
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarToIntervalCases(f16_inputs, 'unfiltered', FP.f16.logInterval);
+      nonConst ? 'unfiltered' : 'finite',
+      FP[trait].logInterval
+    );
   }
-});
+}))
+).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('log', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

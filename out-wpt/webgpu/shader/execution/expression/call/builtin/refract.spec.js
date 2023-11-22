@@ -15,7 +15,6 @@ vector e3*e1- (e3* dot(e2,e1) + sqrt(k)) *e2.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseF32Range, sparseF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -95,8 +94,7 @@ flatMap((trait) =>
       trait,
       FP[trait].sparseVectorRange(dim),
       FP[trait].sparseVectorRange(dim),
-      // NB: Refactor this when adding scalar ranges to FPTrait API
-      trait === 'f32' ? sparseF32Range() : sparseF16Range(),
+      FP[trait].sparseScalarRange(),
       nonConst ? 'unfiltered' : 'finite'
     );
   }

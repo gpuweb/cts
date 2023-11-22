@@ -27,40 +27,12 @@ import {
   TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, sparseF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
-
-export const d = makeCaseCache('min', {
-  f32: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.minInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      fullF16Range(),
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.minInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarPairToIntervalCases(
-      sparseF64Range(),
-      sparseF64Range(),
-      'unfiltered',
-      FP.abstract.minInterval
-    );
-  }
-});
 
 /** Generate set of min test cases from list of interesting values */
 function generateTestCases(
@@ -75,6 +47,22 @@ makeCase)
   });
   return cases;
 }
+
+// Cases: [f32|f16|abstract]
+const cases = ['f32', 'f16', 'abstract'].
+map((trait) => ({
+  [`${trait}`]: () => {
+    return FP[trait].generateScalarPairToIntervalCases(
+      FP[trait].scalarRange(),
+      FP[trait].scalarRange(),
+      'unfiltered',
+      FP[trait].minInterval
+    );
+  }
+})).
+reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('min', cases);
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
