@@ -84,7 +84,7 @@
   "webgpu/shader/execution/step.bin": "8268c823",
   "webgpu/shader/execution/tan.bin": "af3ecb02",
   "webgpu/shader/execution/tanh.bin": "c22b8364",
-  "webgpu/shader/execution/transpose.bin": "eda7332f",
+  "webgpu/shader/execution/transpose.bin": "f8663cd3",
   "webgpu/shader/execution/trunc.bin": "b532e654",
   "webgpu/shader/execution/unpack2x16float.bin": "67d0b480",
   "webgpu/shader/execution/unpack2x16snorm.bin": "be8c0687",

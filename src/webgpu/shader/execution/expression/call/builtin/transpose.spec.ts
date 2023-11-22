@@ -18,6 +18,7 @@ import { abstractBuiltin, builtin } from './builtin.js';
 export const g = makeTestGroup(GPUTest);
 
 // Cases: [f32|f16|abstract]_matCxR_[non_]const
+// abstract_matCxR_non_const is empty and not used
 const cases = (['f32', 'f16', 'abstract'] as const)
   .flatMap(trait =>
     ([2, 3, 4] as const).flatMap(cols =>
@@ -39,9 +40,7 @@ const cases = (['f32', 'f16', 'abstract'] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
-export const d = makeCaseCache('transpose', {
-  ...cases,
-});
+export const d = makeCaseCache('transpose', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions')
