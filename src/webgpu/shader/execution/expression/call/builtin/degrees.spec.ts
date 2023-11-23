@@ -11,7 +11,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF16Range, fullF32Range, fullF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -19,35 +18,26 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('degrees', {
-  f32_const: () => {
-    return FP.f32.generateScalarToIntervalCases(fullF32Range(), 'finite', FP.f32.degreesInterval);
-  },
-  f32_non_const: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.degreesInterval
-    );
-  },
-  f16_const: () => {
-    return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'finite', FP.f16.degreesInterval);
-  },
-  f16_non_const: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.degreesInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      fullF64Range(),
-      'finite',
-      FP.abstract.degreesInterval
-    );
-  },
-});
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and not used
+const cases = (['f32', 'f16', 'abstract'] as const)
+  .flatMap(trait =>
+    ([true, false] as const).map(nonConst => ({
+      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        if (trait === 'abstract' && nonConst) {
+          return [];
+        }
+        return FP[trait].generateScalarToIntervalCases(
+          FP[trait].scalarRange(),
+          nonConst ? 'unfiltered' : 'finite',
+          FP[trait].degreesInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('degrees', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

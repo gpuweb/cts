@@ -19,8 +19,8 @@ import {
   u32,
 } from '../../../../util/conversion.js';
 import {
-  fullF32Range,
-  fullF16Range,
+  scalarF32Range,
+  scalarF16Range,
   fullI32Range,
   fullU32Range,
   isSubnormalNumberF32,
@@ -51,7 +51,7 @@ export const d = makeCaseCache('unary/bool_conversion', {
     });
   },
   f32: () => {
-    return fullF32Range().map(f => {
+    return scalarF32Range().map(f => {
       const expected: Scalar[] = [];
       if (f !== 0) {
         expected.push(bool(true));
@@ -63,7 +63,7 @@ export const d = makeCaseCache('unary/bool_conversion', {
     });
   },
   f16: () => {
-    return fullF16Range().map(f => {
+    return scalarF16Range().map(f => {
       const expected: Scalar[] = [];
       if (f !== 0) {
         expected.push(bool(true));
