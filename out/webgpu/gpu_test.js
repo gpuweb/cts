@@ -9,6 +9,7 @@
 
 '../common/framework/fixture.js';
 import { globalTestConfig } from '../common/framework/test_config.js';
+import { getGPU } from '../common/util/navigator_gpu.js';
 import {
   assert,
   makeValueTestVariant,
@@ -20,7 +21,12 @@ import {
   unreachable } from
 '../common/util/util.js';
 
-import { getDefaultLimits, kQueryTypeInfo } from './capability_info.js';
+import {
+  getDefaultLimits,
+
+  kQueryTypeInfo } from
+
+'./capability_info.js';
 import {
   kTextureFormatInfo,
   kEncodableTextureFormats,
@@ -417,6 +423,22 @@ export class GPUTestBase extends Fixture {
           this.skip(`copyTextureToTexture with ${format} is not supported`);
         }
       }
+    }
+  }
+
+  /** Skips this test case if the `langFeature` is *not* supported. */
+  requireLanguageFeatureOrSkipTestCase(langFeature) {
+    const lf = getGPU(this.rec).wgslLanguageFeatures;
+    if (lf === undefined || !lf.has(langFeature)) {
+      this.skip(`WGSL language feature '${langFeature}' is not supported`);
+    }
+  }
+
+  /** Skips this test case if the `langFeature` is supported. */
+  skipIfLanguageFeatureSupported(langFeature) {
+    const lf = getGPU(this.rec).wgslLanguageFeatures;
+    if (lf !== undefined && lf.has(langFeature)) {
+      this.skip(`WGSL language feature '${langFeature}' is supported`);
     }
   }
 

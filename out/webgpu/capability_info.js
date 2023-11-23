@@ -790,4 +790,10 @@ export const kFeatureNameInfo =
 };
 /** List of all GPUFeatureName values. */
 export const kFeatureNames = keysOf(kFeatureNameInfo);
+
+/** List of all known WGSL language features */
+export const kKnownWGSLLanguageFeatures = [
+'readonly_and_readwrite_storage_textures',
+'packed_4x8_integer_dot_product',
+'unrestricted_pointer_parameters'];
 //# sourceMappingURL=capability_info.js.map
