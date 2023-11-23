@@ -37,21 +37,24 @@ import {
   map2DArray,
   oneULPF16,
   oneULPF32,
-  quantizeToF32,
   quantizeToF16,
+  quantizeToF32,
+  scalarF16Range,
+  scalarF32Range,
+  scalarF64Range,
+  sparseMatrixF16Range,
+  sparseMatrixF32Range,
+  sparseMatrixF64Range,
+  sparseScalarF16Range,
+  sparseScalarF32Range,
+  sparseScalarF64Range,
   sparseVectorF16Range,
   sparseVectorF32Range,
   sparseVectorF64Range,
   unflatten2DArray,
   vectorF16Range,
   vectorF32Range,
-  vectorF64Range,
-  scalarF32Range,
-  sparseScalarF32Range,
-  scalarF64Range,
-  sparseScalarF64Range,
-  scalarF16Range,
-  sparseScalarF16Range } from
+  vectorF64Range } from
 './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */var
@@ -1100,6 +1103,12 @@ export class FPTraits {
   /** @returns a range of dim element vectors for testing */
 
   /** @returns a reduced range of dim element vectors for testing */
+
+  /** @returns a reduced range of cols x rows matrices for testing
+   *
+   * A non-sparse version of this generator is intentionally not provided due to
+   * runtime issues with more dense ranges.
+   */
 
 
   // Framework - Cases
@@ -4544,6 +4553,7 @@ class F32Traits extends FPTraits {
   sparseScalarRange = sparseScalarF32Range;
   vectorRange = vectorF32Range;
   sparseVectorRange = sparseVectorF32Range;
+  sparseMatrixRange = sparseMatrixF32Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
@@ -5020,6 +5030,7 @@ class FPAbstractTraits extends FPTraits {
   sparseScalarRange = sparseScalarF64Range;
   vectorRange = vectorF64Range;
   sparseVectorRange = sparseVectorF64Range;
+  sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -5356,6 +5367,7 @@ class F16Traits extends FPTraits {
   sparseScalarRange = sparseScalarF16Range;
   vectorRange = vectorF16Range;
   sparseVectorRange = sparseVectorF16Range;
+  sparseMatrixRange = sparseMatrixF16Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);

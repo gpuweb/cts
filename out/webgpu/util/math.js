@@ -1963,16 +1963,16 @@ const kSparseMatrixF64Values = {
  * All the interesting floats from sparseScalarF64 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseMatrixF64Range(c, r) {
+export function sparseMatrixF64Range(cols, rows) {
   assert(
-    c === 2 || c === 3 || c === 4,
+    cols === 2 || cols === 3 || cols === 4,
     'sparseMatrixF64Range only accepts column counts of 2, 3, and 4'
   );
   assert(
-    r === 2 || r === 3 || r === 4,
+    rows === 2 || rows === 3 || rows === 4,
     'sparseMatrixF64Range only accepts row counts of 2, 3, and 4'
   );
-  return kSparseMatrixF64Values[c][r];
+  return kSparseMatrixF64Values[cols][rows];
 }
 
 /**

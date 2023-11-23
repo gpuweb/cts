@@ -37,8 +37,17 @@ import {
   map2DArray,
   oneULPF16,
   oneULPF32,
-  quantizeToF32,
   quantizeToF16,
+  quantizeToF32,
+  scalarF16Range,
+  scalarF32Range,
+  scalarF64Range,
+  sparseMatrixF16Range,
+  sparseMatrixF32Range,
+  sparseMatrixF64Range,
+  sparseScalarF16Range,
+  sparseScalarF32Range,
+  sparseScalarF64Range,
   sparseVectorF16Range,
   sparseVectorF32Range,
   sparseVectorF64Range,
@@ -46,12 +55,6 @@ import {
   vectorF16Range,
   vectorF32Range,
   vectorF64Range,
-  scalarF32Range,
-  sparseScalarF32Range,
-  scalarF64Range,
-  sparseScalarF64Range,
-  scalarF16Range,
-  sparseScalarF16Range,
 } from './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
@@ -1101,6 +1104,12 @@ export abstract class FPTraits {
   public abstract vectorRange(dim: number): ROArrayArray<number>;
   /** @returns a reduced range of dim element vectors for testing */
   public abstract sparseVectorRange(dim: number): ROArrayArray<number>;
+  /** @returns a reduced range of cols x rows matrices for testing
+   *
+   * A non-sparse version of this generator is intentionally not provided due to
+   * runtime issues with more dense ranges.
+   */
+  public abstract sparseMatrixRange(cols: number, rows: number): ROArrayArrayArray<number>;
 
   // Framework - Cases
 
@@ -4544,6 +4553,7 @@ class F32Traits extends FPTraits {
   public readonly sparseScalarRange = sparseScalarF32Range;
   public readonly vectorRange = vectorF32Range;
   public readonly sparseVectorRange = sparseVectorF32Range;
+  public readonly sparseMatrixRange = sparseMatrixF32Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
@@ -5020,6 +5030,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly sparseScalarRange = sparseScalarF64Range;
   public readonly vectorRange = vectorF64Range;
   public readonly sparseVectorRange = sparseVectorF64Range;
+  public readonly sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -5356,6 +5367,7 @@ class F16Traits extends FPTraits {
   public readonly sparseScalarRange = sparseScalarF16Range;
   public readonly vectorRange = vectorF16Range;
   public readonly sparseVectorRange = sparseVectorF16Range;
+  public readonly sparseMatrixRange = sparseMatrixF16Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);

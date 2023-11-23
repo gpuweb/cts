@@ -10,11 +10,6 @@ Returns the transpose of e.
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import {
-  sparseMatrixF16Range,
-  sparseMatrixF32Range,
-  sparseMatrixF64Range } from
-'../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -22,60 +17,30 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-// Cases: f32_matCxR_[non_]const
-const f32_cases = [2, 3, 4].
-flatMap((cols) =>
+// Cases: [f32|f16|abstract]_matCxR_[non_]const
+// abstract_matCxR_non_const is empty and not used
+const cases = ['f32', 'f16', 'abstract'].
+flatMap((trait) =>
+[2, 3, 4].flatMap((cols) =>
 [2, 3, 4].flatMap((rows) =>
 [true, false].map((nonConst) => ({
-  [`f32_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(cols, rows),
+  [`${trait}_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
+    if (trait === 'abstract' && nonConst) {
+      return [];
+    }
+    return FP[trait].generateMatrixToMatrixCases(
+      FP[trait].sparseMatrixRange(cols, rows),
       nonConst ? 'unfiltered' : 'finite',
-      FP.f32.transposeInterval
+      FP[trait].transposeInterval
     );
   }
 }))
 )
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: f16_matCxR_[non_]const
-const f16_cases = [2, 3, 4].
-flatMap((cols) =>
-[2, 3, 4].flatMap((rows) =>
-[true, false].map((nonConst) => ({
-  [`f16_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(cols, rows),
-      nonConst ? 'unfiltered' : 'finite',
-      FP.f16.transposeInterval
-    );
-  }
-}))
 )
 ).
 reduce((a, b) => ({ ...a, ...b }), {});
 
-// Cases: abstract_matCxR
-const abstract_cases = [2, 3, 4].
-flatMap((cols) =>
-[2, 3, 4].map((rows) => ({
-  [`abstract_mat${cols}x${rows}`]: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(cols, rows),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  }
-}))
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('transpose', {
-  ...f32_cases,
-  ...f16_cases,
-  ...abstract_cases
-});
+export const d = makeCaseCache('transpose', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#matrix-builtin-functions').
@@ -89,7 +54,7 @@ combine('rows', [2, 3, 4])
 fn(async (t) => {
   const cols = t.params.cols;
   const rows = t.params.rows;
-  const cases = await d.get(`abstract_mat${cols}x${rows}`);
+  const cases = await d.get(`abstract_mat${cols}x${rows}_const`);
   await run(
     t,
     abstractBuiltin('transpose'),
