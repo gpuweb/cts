@@ -163,9 +163,9 @@ g.test('visibility,VERTEX_shader_stage_storage_texture_access')
   .fn(t => {
     const { shaderStage, access } = t.params;
 
-    const appliedSuccess = access ?? 'write-only';
+    const appliedAccess = access ?? 'write-only';
     const success = !(
-      (appliedSuccess === 'write-only' || appliedSuccess === 'read-write') &&
+      (appliedAccess === 'write-only' || appliedAccess === 'read-write') &&
       shaderStage & GPUShaderStage.VERTEX
     );
 
@@ -444,7 +444,9 @@ g.test('storage_texture,formats')
   `
   )
   .params(u =>
-    u.combine('format', kAllTextureFormats).combine('access', kStorageTextureAccessValues)
+    u //
+      .combine('format', kAllTextureFormats) //
+      .combine('access', kStorageTextureAccessValues)
   )
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
