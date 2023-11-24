@@ -165,8 +165,8 @@ g.test('visibility,VERTEX_shader_stage_storage_texture_access')
 
     const appliedAccess = access ?? 'write-only';
     const success = !(
-      (appliedAccess === 'write-only' || appliedAccess === 'read-write') &&
-      shaderStage & GPUShaderStage.VERTEX
+      // If visibility includes VERETX, storageTexture.access must be "read-only"
+      shaderStage & GPUShaderStage.VERTEX && appliedAccess !== 'read-only'
     );
 
     t.expectValidationError(() => {
