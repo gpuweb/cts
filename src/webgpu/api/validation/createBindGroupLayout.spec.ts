@@ -455,10 +455,8 @@ g.test('storage_texture,formats')
     const { format, access } = t.params;
     const info = kTextureFormatInfo[format];
 
-    let success = info.color?.storage;
-    if (access === 'read-write' && !info.color?.readWriteStorage) {
-      success = false;
-    }
+    const success =
+      info.color?.storage && !(access === 'read-write' && !info.color?.readWriteStorage);
 
     t.expectValidationError(() => {
       t.device.createBindGroupLayout({
