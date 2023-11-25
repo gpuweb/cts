@@ -490,7 +490,7 @@ export function storageTextureBindingTypeInfo(d) {
   };
 }
 /** List of all GPUStorageTextureAccess values. */
-export const kStorageTextureAccessValues = ['write-only'];
+export const kStorageTextureAccessValues = ['read-only', 'read-write', 'write-only'];
 assertTypeTrue();
 
 /** GPUBindGroupLayoutEntry, but only the "union" fields, not the common fields. */
