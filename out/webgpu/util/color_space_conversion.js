@@ -143,12 +143,7 @@ function XYZ_to_lin_P3(XYZ) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function displayP3ToSrgb(pixel)
-
-
-
-
-{
+export function displayP3ToSrgb(pixel) {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -161,11 +156,7 @@ export function displayP3ToSrgb(pixel)
   rgbVec = [rgbMatrix[0][0], rgbMatrix[1][0], rgbMatrix[2][0]];
   rgbVec = gam_sRGB(rgbVec);
 
-  pixel.R = rgbVec[0];
-  pixel.G = rgbVec[1];
-  pixel.B = rgbVec[2];
-
-  return pixel;
+  return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
 /**
  * @returns the converted pixels in `{R: number, G: number, B: number, A: number}`.
@@ -174,12 +165,7 @@ export function displayP3ToSrgb(pixel)
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function srgbToDisplayP3(pixel)
-
-
-
-
-{
+export function srgbToDisplayP3(pixel) {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -192,12 +178,9 @@ export function srgbToDisplayP3(pixel)
   rgbVec = [rgbMatrix[0][0], rgbMatrix[1][0], rgbMatrix[2][0]];
   rgbVec = gam_P3(rgbVec);
 
-  pixel.R = rgbVec[0];
-  pixel.G = rgbVec[1];
-  pixel.B = rgbVec[2];
-
-  return pixel;
+  return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
+
 
 
 

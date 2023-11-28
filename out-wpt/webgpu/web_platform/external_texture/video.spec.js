@@ -3,18 +3,21 @@
 **/export const description = `
 Tests for external textures from HTMLVideoElement (and other video-type sources?).
 
-- videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), color spaces
-  (bt.601, bt.709, bt.2020)
+- videos with various encodings/formats (webm vp8, webm vp9, ogg theora, mp4), video color spaces
+  (bt.601, bt.709, bt.2020) and dst color spaces(display-p3, srgb)
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
+TODO(#3193): Test video in BT.2020 color space
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest, TextureTestMixin } from '../../gpu_test.js';
 import {
   startPlayingAndWaitForVideo,
   getVideoFrameFromVideoElement,
   getVideoElement,
-  kVideoExpectations,
-  kVideoRotationExpectations } from
+  convertToUnorm8,
+  kPredefinedColorSpace,
+  kVideoNames,
+  kVideoInfo } from
 '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -73,13 +76,14 @@ function createExternalTextureSamplingTestBindGroup(
 t,
 checkNonStandardIsZeroCopy,
 source,
-pipeline)
+pipeline,
+dstColorSpace)
 {
   const linearSampler = t.device.createSampler();
 
   const externalTexture = t.device.importExternalTexture({
-
-    source: source
+    source,
+    colorSpace: dstColorSpace
   });
 
   if (checkNonStandardIsZeroCopy) {
@@ -133,22 +137,24 @@ g.test('importExternalTexture,sample').
 desc(
   `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sample from it
-for several combinations of video format and color space.
+for several combinations of video format, video color spaces and dst color spaces.
 `
 ).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combine('videoName', kVideoNames).
 combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoExpectations)
+combine('dstColorSpace', kPredefinedColorSpace)
 ).
 fn(async (t) => {
-  const sourceType = t.params.sourceType;
+  const { videoName, sourceType, dstColorSpace } = t.params;
+
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
     t.skip('WebCodec is not supported');
   }
 
-  const videoElement = getVideoElement(t, t.params.videoName);
+  const videoElement = getVideoElement(t, videoName);
 
   await startPlayingAndWaitForVideo(videoElement, async () => {
     const source =
@@ -167,7 +173,8 @@ fn(async (t) => {
       t,
       t.params.checkNonStandardIsZeroCopy,
       source,
-      pipeline
+      pipeline,
+      dstColorSpace
     );
 
     const commandEncoder = t.device.createCommandEncoder();
@@ -187,84 +194,31 @@ fn(async (t) => {
     passEncoder.end();
     t.device.queue.submit([commandEncoder.finish()]);
 
-    // For validation, we sample a few pixels away from the edges to avoid compression
-    // artifacts.
-    t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
-    // Top-left should be yellow.
-    { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._yellowExpectation },
-    // Top-right should be red.
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._redExpectation },
-    // Bottom-left should be blue.
-    { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._blueExpectation },
-    // Bottom-right should be green.
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._greenExpectation }]
-    );
-
-    if (sourceType === 'VideoFrame') source.close();
-  });
-});
-
-g.test('importExternalTexture,sampleWithRotationMetadata').
-desc(
-  `
-Tests that when importing an HTMLVideoElement/VideoFrame into a GPUExternalTexture, sampling from
-it will honor rotation metadata.
-`
-).
-params((u) =>
-u //
-.combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
-combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoRotationExpectations)
-).
-fn(async (t) => {
-  const sourceType = t.params.sourceType;
-  const videoElement = getVideoElement(t, t.params.videoName);
-
-  await startPlayingAndWaitForVideo(videoElement, async () => {
-    const source =
-    sourceType === 'VideoFrame' ?
-    await getVideoFrameFromVideoElement(t, videoElement) :
-    videoElement;
-
-    const colorAttachment = t.device.createTexture({
-      format: kFormat,
-      size: { width: kWidth, height: kHeight, depthOrArrayLayers: 1 },
-      usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT
-    });
-
-    const pipeline = createExternalTextureSamplingTestPipeline(t);
-    const bindGroup = createExternalTextureSamplingTestBindGroup(
-      t,
-      t.params.checkNonStandardIsZeroCopy,
-      source,
-      pipeline
-    );
-
-    const commandEncoder = t.device.createCommandEncoder();
-    const passEncoder = commandEncoder.beginRenderPass({
-      colorAttachments: [
-      {
-        view: colorAttachment.createView(),
-        clearValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-        loadOp: 'clear',
-        storeOp: 'store'
-      }]
-
-    });
-    passEncoder.setPipeline(pipeline);
-    passEncoder.setBindGroup(0, bindGroup);
-    passEncoder.draw(6);
-    passEncoder.end();
-    t.device.queue.submit([commandEncoder.finish()]);
+    const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
 
     // For validation, we sample a few pixels away from the edges to avoid compression
     // artifacts.
     t.expectSinglePixelComparisonsAreOkInTexture({ texture: colorAttachment }, [
-    { coord: { x: kWidth * 0.25, y: kHeight * 0.25 }, exp: t.params._topLeftExpectation },
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.25 }, exp: t.params._topRightExpectation },
-    { coord: { x: kWidth * 0.25, y: kHeight * 0.75 }, exp: t.params._bottomLeftExpectation },
-    { coord: { x: kWidth * 0.75, y: kHeight * 0.75 }, exp: t.params._bottomRightExpectation }]
+    // Top-left.
+    {
+      coord: { x: kWidth * 0.25, y: kHeight * 0.25 },
+      exp: convertToUnorm8(expect.topLeftColor)
+    },
+    // Top-right.
+    {
+      coord: { x: kWidth * 0.75, y: kHeight * 0.25 },
+      exp: convertToUnorm8(expect.topRightColor)
+    },
+    // Bottom-left.
+    {
+      coord: { x: kWidth * 0.25, y: kHeight * 0.75 },
+      exp: convertToUnorm8(expect.bottomLeftColor)
+    },
+    // Bottom-right.
+    {
+      coord: { x: kWidth * 0.75, y: kHeight * 0.75 },
+      exp: convertToUnorm8(expect.bottomRightColor)
+    }]
     );
 
     if (sourceType === 'VideoFrame') source.close();
@@ -281,10 +235,13 @@ parameters are present.
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
-combineWithParams(kVideoExpectations)
+combine('videoName', kVideoNames).
+combine('dstColorSpace', kPredefinedColorSpace)
 ).
 fn(async (t) => {
-  const videoElement = getVideoElement(t, t.params.videoName);
+  const { videoName, dstColorSpace } = t.params;
+
+  const videoElement = getVideoElement(t, videoName);
 
   await startPlayingAndWaitForVideo(videoElement, async () => {
     const source = await getVideoFrameFromVideoElement(t, videoElement);
@@ -294,13 +251,16 @@ fn(async (t) => {
     // is sampled from each corner of the cropped image.
     const srcVideoHeight = 240;
     const srcVideoWidth = 320;
+
+    const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+
     const cropParams = [
-    // Top left (yellow)
+    // Top left
     {
       subRect: { x: 0, y: 0, width: srcVideoWidth / 2, height: srcVideoHeight / 2 },
-      color: t.params._yellowExpectation
+      color: convertToUnorm8(expect.topLeftColor)
     },
-    // Top right (red)
+    // Top right
     {
       subRect: {
         x: srcVideoWidth / 2,
@@ -308,9 +268,9 @@ fn(async (t) => {
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
-      color: t.params._redExpectation
+      color: convertToUnorm8(expect.topRightColor)
     },
-    // Bottom left (blue)
+    // Bottom left
     {
       subRect: {
         x: 0,
@@ -318,9 +278,9 @@ fn(async (t) => {
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
-      color: t.params._blueExpectation
+      color: convertToUnorm8(expect.bottomLeftColor)
     },
-    // Bottom right (green)
+    // Bottom right
     {
       subRect: {
         x: srcVideoWidth / 2,
@@ -328,13 +288,11 @@ fn(async (t) => {
         width: srcVideoWidth / 2,
         height: srcVideoHeight / 2
       },
-      color: t.params._greenExpectation
+      color: convertToUnorm8(expect.bottomRightColor)
     }];
 
 
     for (const cropParam of cropParams) {
-      // MAINTENANCE_TODO: remove cast with TypeScript 4.9.6+.
-
       const subRect = new VideoFrame(source, { visibleRect: cropParam.subRect });
 
       const colorAttachment = t.device.createTexture({
@@ -348,7 +306,8 @@ fn(async (t) => {
         t,
         t.params.checkNonStandardIsZeroCopy,
         subRect,
-        pipeline
+        pipeline,
+        dstColorSpace
       );
 
       const commandEncoder = t.device.createCommandEncoder();
@@ -387,22 +346,24 @@ g.test('importExternalTexture,compute').
 desc(
   `
 Tests that we can import an HTMLVideoElement/VideoFrame into a GPUExternalTexture and use it in a
-compute shader, for several combinations of video format and color space.
+compute shader, for several combinations of video format, video color spaces and dst color spaces.
 `
 ).
 params((u) =>
 u //
 .combineWithParams(checkNonStandardIsZeroCopyIfAvailable()).
+combine('videoName', kVideoNames).
 combine('sourceType', ['VideoElement', 'VideoFrame']).
-combineWithParams(kVideoExpectations)
+combine('dstColorSpace', kPredefinedColorSpace)
 ).
 fn(async (t) => {
-  const sourceType = t.params.sourceType;
+  const { videoName, sourceType, dstColorSpace } = t.params;
+
   if (sourceType === 'VideoFrame' && typeof VideoFrame === 'undefined') {
     t.skip('WebCodec is not supported');
   }
 
-  const videoElement = getVideoElement(t, t.params.videoName);
+  const videoElement = getVideoElement(t, videoName);
 
   await startPlayingAndWaitForVideo(videoElement, async () => {
     const source =
@@ -410,8 +371,8 @@ fn(async (t) => {
     await getVideoFrameFromVideoElement(t, videoElement) :
     videoElement;
     const externalTexture = t.device.importExternalTexture({
-
-      source: source
+      source,
+      colorSpace: dstColorSpace
     });
     if (t.params.checkNonStandardIsZeroCopy) {
       expectZeroCopyNonStandard(t, externalTexture);
@@ -464,15 +425,17 @@ fn(async (t) => {
     pass.end();
     t.device.queue.submit([encoder.finish()]);
 
+    const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+
     t.expectSinglePixelComparisonsAreOkInTexture({ texture: outputTexture }, [
-    // Top-left should be yellow.
-    { coord: { x: 0, y: 0 }, exp: t.params._yellowExpectation },
-    // Top-right should be red.
-    { coord: { x: 0, y: 1 }, exp: t.params._redExpectation },
-    // Bottom-left should be blue.
-    { coord: { x: 1, y: 0 }, exp: t.params._blueExpectation },
-    // Bottom-right should be green.
-    { coord: { x: 1, y: 1 }, exp: t.params._greenExpectation }]
+    // Top-left.
+    { coord: { x: 0, y: 0 }, exp: convertToUnorm8(expect.topLeftColor) },
+    // Top-right.
+    { coord: { x: 0, y: 1 }, exp: convertToUnorm8(expect.topRightColor) },
+    // Bottom-left.
+    { coord: { x: 1, y: 0 }, exp: convertToUnorm8(expect.bottomLeftColor) },
+    // Bottom-right.
+    { coord: { x: 1, y: 1 }, exp: convertToUnorm8(expect.bottomRightColor) }]
     );
 
     if (sourceType === 'VideoFrame') source.close();
