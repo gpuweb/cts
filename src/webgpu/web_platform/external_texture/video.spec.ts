@@ -5,6 +5,7 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
   (bt.601, bt.709, bt.2020) and dst color spaces(display-p3, srgb)
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
+TODO: Test video in BT.2020 color space
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
@@ -81,8 +82,7 @@ function createExternalTextureSamplingTestBindGroup(
   const linearSampler = t.device.createSampler();
 
   const externalTexture = t.device.importExternalTexture({
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    source: source as any,
+    source,
     colorSpace: dstColorSpace,
   });
 
@@ -293,9 +293,7 @@ parameters are present.
       ];
 
       for (const cropParam of cropParams) {
-        // MAINTENANCE_TODO: remove cast with TypeScript 4.9.6+.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const subRect = new VideoFrame(source as any, { visibleRect: cropParam.subRect });
+        const subRect = new VideoFrame(source, { visibleRect: cropParam.subRect });
 
         const colorAttachment = t.device.createTexture({
           format: kFormat,
@@ -373,8 +371,8 @@ compute shader, for several combinations of video format, video color spaces and
           ? await getVideoFrameFromVideoElement(t, videoElement)
           : videoElement;
       const externalTexture = t.device.importExternalTexture({
-        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        source: source as any,
+        source,
+        colorSpace: dstColorSpace,
       });
       if (t.params.checkNonStandardIsZeroCopy) {
         expectZeroCopyNonStandard(t, externalTexture);

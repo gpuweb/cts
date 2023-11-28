@@ -165,7 +165,7 @@ export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: num
   pixel.G = rgbVec[1];
   pixel.B = rgbVec[2];
 
-  return pixel;
+  return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
 /**
  * @returns the converted pixels in `{R: number, G: number, B: number, A: number}`.
@@ -192,11 +192,7 @@ export function srgbToDisplayP3(pixel: { R: number; G: number; B: number; A: num
   rgbVec = [rgbMatrix[0][0], rgbMatrix[1][0], rgbMatrix[2][0]];
   rgbVec = gam_P3(rgbVec);
 
-  pixel.R = rgbVec[0];
-  pixel.G = rgbVec[1];
-  pixel.B = rgbVec[2];
-
-  return pixel;
+  return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
 
 type InPlaceColorConversion = (rgba: {

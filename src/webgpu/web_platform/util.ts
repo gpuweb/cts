@@ -4,6 +4,7 @@ import { keysOf } from '../../common/util/data_tables.js';
 import { timeout } from '../../common/util/timeout.js';
 import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
+import { srgbToDisplayP3 } from '../util/color_space_conversion.js';
 
 declare global {
   interface HTMLMediaElement {
@@ -31,19 +32,13 @@ export function convertToUnorm8(expectation: {
   return new Uint8Array(rgba8Unorm.buffer);
 }
 
-// MAINTENANCE_TODO: Add document to describe how to get these magic numbers.
+// MAINTENANCE_TODO: Add helper function for BT.601 and BT.709 to remove all magic numbers.
 // Expectation values about converting video contents to sRGB color space.
 // Source video color space affects expected values.
 // The process to calculate these expected pixel values can be found:
 // https://github.com/gpuweb/cts/pull/2242#issuecomment-1430382811
 // and https://github.com/gpuweb/cts/pull/2242#issuecomment-1463273434
 const kBt601PixelValue = {
-  displayP3: {
-    red: { R: 0.894192705847254, G: 0.243671200178642, B: 0.132706713001254, A: 1.0 },
-    green: { R: 0.498521961972036, G: 0.971040256815059, B: 0.286694021461098, A: 1.0 },
-    blue: { R: 0.108297853706575, G: 0.134448468828998, B: 0.962798268696141, A: 1.0 },
-    yellow: { R: 0.994991952943137, G: 0.992827230430229, B: 0.318417391806334, A: 1.0 },
-  },
   srgb: {
     red: { R: 0.972945567233341, G: 0.141794376683341, B: -0.0209589916711088, A: 1.0 },
     green: { R: 0.248234279433399, G: 0.984810378661784, B: -0.0564701319494314, A: 1.0 },
@@ -53,12 +48,6 @@ const kBt601PixelValue = {
 };
 
 const kBt709PixelValue = {
-  displayP3: {
-    red: { R: 0.917522190548533, G: 0.200307878409863, B: 0.13860420691359, A: 1.0 },
-    green: { R: 0.458329787229903, G: 0.985255869269063, B: 0.298345835592774, A: 1.0 },
-    blue: { R: -0.0000827756941124, G: -0.0000284371289164, B: 0.959637561951994, A: 1.0 },
-    yellow: { R: 1.00000470900876, G: 0.999994346502453, B: 0.330959103516173, A: 1.0 },
-  },
   srgb: {
     red: { R: 1.0, G: 0.0, B: 0.0, A: 1.0 },
     green: { R: 0.0, G: 1.0, B: 0.0, A: 1.0 },
@@ -82,30 +71,23 @@ function videoTable<Table extends { readonly [K: string]: {} }>({
   ) as any;
 }
 
+// MAINTENANCE_TODO: Add BT.2020 video in table.
 export const kVideoInfo = videoTable({
   table: {
     'four-colors-vp8-bt601.webm': {
       mimeType: 'video/webm; codecs=vp8',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: kBt601PixelValue.srgb.yellow,
+          topRightColor: kBt601PixelValue.srgb.red,
+          bottomLeftColor: kBt601PixelValue.srgb.blue,
+          bottomRightColor: kBt601PixelValue.srgb.green,
         },
       },
     },
@@ -113,24 +95,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/ogg; codecs=theora',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: kBt601PixelValue.srgb.yellow,
+          topRightColor: kBt601PixelValue.srgb.red,
+          bottomLeftColor: kBt601PixelValue.srgb.blue,
+          bottomRightColor: kBt601PixelValue.srgb.green,
         },
       },
     },
@@ -138,24 +112,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/mp4; codecs=avc1.4d400c',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: kBt601PixelValue.srgb.yellow,
+          topRightColor: kBt601PixelValue.srgb.red,
+          bottomLeftColor: kBt601PixelValue.srgb.blue,
+          bottomRightColor: kBt601PixelValue.srgb.green,
         },
       },
     },
@@ -163,24 +129,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/webm; codecs=vp9',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: kBt601PixelValue.srgb.yellow,
+          topRightColor: kBt601PixelValue.srgb.red,
+          bottomLeftColor: kBt601PixelValue.srgb.blue,
+          bottomRightColor: kBt601PixelValue.srgb.green,
         },
       },
     },
@@ -188,24 +146,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/webm; codecs=vp9',
       presentColors: {
         'display-p3': {
-          red: kBt709PixelValue.displayP3.red,
-          green: kBt709PixelValue.displayP3.green,
-          blue: kBt709PixelValue.displayP3.blue,
-          yellow: kBt709PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.yellow),
+          topRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.red),
+          bottomLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.blue),
+          bottomRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.green),
         },
         srgb: {
-          red: kBt709PixelValue.srgb.red,
-          green: kBt709PixelValue.srgb.green,
-          blue: kBt709PixelValue.srgb.blue,
-          yellow: kBt709PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get topRightColor() { return this.red; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.green; },
+          topLeftColor: kBt709PixelValue.srgb.yellow,
+          topRightColor: kBt709PixelValue.srgb.red,
+          bottomLeftColor: kBt709PixelValue.srgb.blue,
+          bottomRightColor: kBt709PixelValue.srgb.green,
         },
       },
     },
@@ -213,24 +163,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/mp4; codecs=avc1.4d400c',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.red; },
-          /*prettier-ignore*/ get topRightColor() { return this.green; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.blue; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.red; },
-          /*prettier-ignore*/ get topRightColor() { return this.green; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.yellow; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.blue; },
+          topLeftColor: kBt601PixelValue.srgb.red,
+          topRightColor: kBt601PixelValue.srgb.green,
+          bottomLeftColor: kBt601PixelValue.srgb.yellow,
+          bottomRightColor: kBt601PixelValue.srgb.blue,
         },
       },
     },
@@ -238,24 +180,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/mp4; codecs=avc1.4d400c',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.green; },
-          /*prettier-ignore*/ get topRightColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.red; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.yellow; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.green; },
-          /*prettier-ignore*/ get topRightColor() { return this.blue; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.red; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.yellow; },
+          topLeftColor: kBt601PixelValue.srgb.green,
+          topRightColor: kBt601PixelValue.srgb.blue,
+          bottomLeftColor: kBt601PixelValue.srgb.red,
+          bottomRightColor: kBt601PixelValue.srgb.yellow,
         },
       },
     },
@@ -263,24 +197,16 @@ export const kVideoInfo = videoTable({
       mimeType: 'video/mp4; codecs=avc1.4d400c',
       presentColors: {
         'display-p3': {
-          red: kBt601PixelValue.displayP3.red,
-          green: kBt601PixelValue.displayP3.green,
-          blue: kBt601PixelValue.displayP3.blue,
-          yellow: kBt601PixelValue.displayP3.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get topRightColor() { return this.yellow; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.green; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.red; },
+          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
+          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
         },
         srgb: {
-          red: kBt601PixelValue.srgb.red,
-          green: kBt601PixelValue.srgb.green,
-          blue: kBt601PixelValue.srgb.blue,
-          yellow: kBt601PixelValue.srgb.yellow,
-          /*prettier-ignore*/ get topLeftColor() { return this.blue; },
-          /*prettier-ignore*/ get topRightColor() { return this.yellow; },
-          /*prettier-ignore*/ get bottomLeftColor() { return this.green; },
-          /*prettier-ignore*/ get bottomRightColor() { return this.red; },
+          topLeftColor: kBt601PixelValue.srgb.blue,
+          topRightColor: kBt601PixelValue.srgb.yellow,
+          bottomLeftColor: kBt601PixelValue.srgb.green,
+          bottomRightColor: kBt601PixelValue.srgb.red,
         },
       },
     },
