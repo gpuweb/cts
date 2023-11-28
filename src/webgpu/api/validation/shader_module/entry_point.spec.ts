@@ -210,7 +210,7 @@ an undefined entryPoint is valid if there's an extra shader stage.
   .params(u =>
     u
       .combine('isAsync', [true, false])
-      .combine('extraShaderModuleStage', ['vertex', 'fragment'] as const)
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
   )
   .fn(t => {
     const { isAsync, extraShaderModuleStage } = t.params;
@@ -227,7 +227,9 @@ an undefined entryPoint is valid if there's an extra shader stage.
         entryPoint: undefined,
       },
     };
-    t.doCreateComputePipelineTest(isAsync, true, descriptor);
+
+    const success = extraShaderModuleStage !== 'compute';
+    t.doCreateComputePipelineTest(isAsync, success, descriptor);
   });
 
 g.test('vertex_undefined_entry_point_and_extra_stage')
@@ -240,7 +242,7 @@ an undefined entryPoint is valid if there's an extra shader stage.
   .params(u =>
     u
       .combine('isAsync', [true, false])
-      .combine('extraShaderModuleStage', ['compute', 'fragment'] as const)
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
   )
   .fn(t => {
     const { isAsync, extraShaderModuleStage } = t.params;
@@ -257,7 +259,9 @@ an undefined entryPoint is valid if there's an extra shader stage.
         entryPoint: undefined,
       },
     };
-    t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+
+    const success = extraShaderModuleStage !== 'vertex';
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });
 
 g.test('fragment_undefined_entry_point_and_extra_stage')
@@ -270,7 +274,7 @@ an undefined entryPoint is valid if there's an extra shader stage.
   .params(u =>
     u
       .combine('isAsync', [true, false])
-      .combine('extraShaderModuleStage', ['compute', 'vertex'] as const)
+      .combine('extraShaderModuleStage', ['compute', 'vertex', 'fragment'] as const)
   )
   .fn(t => {
     const { isAsync, extraShaderModuleStage } = t.params;
@@ -293,5 +297,7 @@ an undefined entryPoint is valid if there's an extra shader stage.
         targets: [{ format: 'rgba8unorm' }],
       },
     };
-    t.doCreateRenderPipelineTest(isAsync, true, descriptor);
+
+    const success = extraShaderModuleStage !== 'fragment';
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });
