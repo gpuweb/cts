@@ -2000,8 +2000,7 @@
   "webgpu:web_platform,copyToTexture,image:from_image:*": { "subcaseMS": 21.869 },
   "webgpu:web_platform,copyToTexture,video:copy_from_video:*": { "subcaseMS": 25.101 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,compute:*": { "subcaseMS": 36.270 },
-  "webgpu:web_platform,external_texture,video:importExternalTexture,sample:*": { "subcaseMS": 33.380 },
-  "webgpu:web_platform,external_texture,video:importExternalTexture,sampleWithRotationMetadata:*": { "subcaseMS": 34.968 },
+  "webgpu:web_platform,external_texture,video:importExternalTexture,sample:*": { "subcaseMS": 34.968 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,sampleWithVideoFrameWithVisibleRectParam:*": { "subcaseMS": 29.160 },
   "webgpu:web_platform,worker,worker:worker:*": { "subcaseMS": 245.901 },
   "_end": ""
