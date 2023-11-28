@@ -1,5 +1,6 @@
 import { GPUTest } from '../../../gpu_test';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
+import { align } from '../../../util/math.js';
 
 /* All buffer sizes are counted in units of 4-byte words. */
 
@@ -275,12 +276,12 @@ export class MemoryModelTester {
 
     // Combine 3 arrays into 1 buffer as we need to keep the number of storage buffers to 4 for compat.
     const falseSharingAvoidanceQuantum = 4096;
-    const barrierSize = Math.max(bytesPerWord, falseSharingAvoidanceQuantum);
-    const scratchpadSize = Math.max(
+    const barrierSize = align(bytesPerWord, falseSharingAvoidanceQuantum);
+    const scratchpadSize = align(
       this.params.scratchMemorySize * bytesPerWord,
       falseSharingAvoidanceQuantum
     );
-    const scratchMemoryLocationsSize = Math.max(
+    const scratchMemoryLocationsSize = align(
       this.params.maxWorkgroups * bytesPerWord,
       falseSharingAvoidanceQuantum
     );
