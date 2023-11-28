@@ -689,7 +689,7 @@ const [kLimitInfoKeys, kLimitInfoDefaults, kLimitInfoData] =
   'maxVertexAttributes':                       [           ,        16,              16,                          ],
   'maxVertexBufferArrayStride':                [           ,      2048,            2048,                          ],
   'maxInterStageShaderComponents':             [           ,        60,              60,                          ],
-  'maxInterStageShaderVariables':              [           ,        16,              16,                          ],
+  'maxInterStageShaderVariables':              [           ,        16,              15,                          ],
 
   'maxColorAttachments':                       [           ,         8,               4,                          ],
   'maxColorAttachmentBytesPerSample':          [           ,        32,              32,                          ],
