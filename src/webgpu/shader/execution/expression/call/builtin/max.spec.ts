@@ -28,7 +28,6 @@ import {
   TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, sparseF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, onlyConstInputSource, run } from '../../expression.js';
 
@@ -50,32 +49,21 @@ function generateTestCases(
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('max', {
-  f32: () => {
-    return FP.f32.generateScalarPairToIntervalCases(
-      fullF32Range(),
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.maxInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarPairToIntervalCases(
-      fullF16Range(),
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.maxInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarPairToIntervalCases(
-      sparseF64Range(),
-      sparseF64Range(),
-      'unfiltered',
-      FP.abstract.maxInterval
-    );
-  },
-});
+// Cases: [f32|f16|abstract]
+const cases = (['f32', 'f16', 'abstract'] as const)
+  .map(trait => ({
+    [`${trait}`]: () => {
+      return FP[trait].generateScalarPairToIntervalCases(
+        FP[trait].scalarRange(),
+        FP[trait].scalarRange(),
+        'unfiltered',
+        FP[trait].maxInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('max', cases);
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')

@@ -12,7 +12,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run } from '../../expression.js';
 
@@ -20,54 +19,48 @@ import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('fract', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      [
-        0.5, // 0.5 -> 0.5
-        0.9, // ~0.9 -> ~0.9
-        1, // 1 -> 0
-        2, // 2 -> 0
-        1.11, // ~1.11 -> ~0.11
-        10.0001, // ~10.0001 -> ~0.0001
-        -0.1, // ~-0.1 -> ~0.9
-        -0.5, // -0.5 -> 0.5
-        -0.9, // ~-0.9 -> ~0.1
-        -1, // -1 -> 0
-        -2, // -2 -> 0
-        -1.11, // ~-1.11 -> ~0.89
-        -10.0001, // -10.0001 -> ~0.9999
-        0x80000000, // https://github.com/gpuweb/cts/issues/2766
-        ...fullF32Range(),
-      ],
-      'unfiltered',
-      FP.f32.fractInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      [
-        0.5, // 0.5 -> 0.5
-        0.9, // ~0.9 -> ~0.9
-        1, // 1 -> 0
-        2, // 2 -> 0
-        1.11, // ~1.11 -> ~0.11
-        10.0078125, // 10.0078125 -> 0.0078125
-        -0.1, // ~-0.1 -> ~0.9
-        -0.5, // -0.5 -> 0.5
-        -0.9, // ~-0.9 -> ~0.1
-        -1, // -1 -> 0
-        -2, // -2 -> 0
-        -1.11, // ~-1.11 -> ~0.89
-        -10.0078125, // -10.0078125 -> 0.9921875
-        658.5, // 658.5 -> 0.5
-        ...fullF16Range(),
-      ],
-      'unfiltered',
-      FP.f16.fractInterval
-    );
-  },
-});
+const kCommonValues = [
+  0.5, // 0.5 -> 0.5
+  0.9, // ~0.9 -> ~0.9
+  1, // 1 -> 0
+  2, // 2 -> 0
+  1.11, // ~1.11 -> ~0.11
+  -0.1, // ~-0.1 -> ~0.9
+  -0.5, // -0.5 -> 0.5
+  -0.9, // ~-0.9 -> ~0.1
+  -1, // -1 -> 0
+  -2, // -2 -> 0
+  -1.11, // ~-1.11 -> ~0.89
+];
+
+const kTraitSpecificValues = {
+  f32: [
+    10.0001, // ~10.0001 -> ~0.0001
+    -10.0001, // -10.0001 -> ~0.9999
+    0x8000_0000, // https://github.com/gpuweb/cts/issues/2766
+  ],
+  f16: [
+    10.0078125, // 10.0078125 -> 0.0078125
+    -10.0078125, // -10.0078125 -> 0.9921875
+    658.5, // 658.5 -> 0.5
+    0x8000, // https://github.com/gpuweb/cts/issues/2766
+  ],
+};
+
+// Cases: [f32|f16]
+const cases = (['f32', 'f16'] as const)
+  .map(trait => ({
+    [`${trait}`]: () => {
+      return FP[trait].generateScalarToIntervalCases(
+        [...kCommonValues, ...kTraitSpecificValues[trait], ...FP[trait].scalarRange()],
+        'unfiltered',
+        FP[trait].fractInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('fract', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
