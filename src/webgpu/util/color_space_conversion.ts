@@ -143,12 +143,7 @@ function XYZ_to_lin_P3(XYZ: Array<Array<number>>) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: number }): {
-  R: number;
-  G: number;
-  B: number;
-  A: number;
-} {
+export function displayP3ToSrgb(pixel: Readonly<RGBA>): RGBA {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -161,10 +156,6 @@ export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: num
   rgbVec = [rgbMatrix[0][0], rgbMatrix[1][0], rgbMatrix[2][0]];
   rgbVec = gam_sRGB(rgbVec);
 
-  pixel.R = rgbVec[0];
-  pixel.G = rgbVec[1];
-  pixel.B = rgbVec[2];
-
   return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
 /**
@@ -174,12 +165,7 @@ export function displayP3ToSrgb(pixel: { R: number; G: number; B: number; A: num
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function srgbToDisplayP3(pixel: { R: number; G: number; B: number; A: number }): {
-  R: number;
-  G: number;
-  B: number;
-  A: number;
-} {
+export function srgbToDisplayP3(pixel: Readonly<RGBA>): RGBA {
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -195,6 +181,7 @@ export function srgbToDisplayP3(pixel: { R: number; G: number; B: number; A: num
   return { R: rgbVec[0], G: rgbVec[1], B: rgbVec[2], A: pixel.A };
 }
 
+export type RGBA = { R: number; G: number; B: number; A: number };
 type InPlaceColorConversion = (rgba: {
   R: number;
   G: number;

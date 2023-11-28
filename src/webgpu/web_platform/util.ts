@@ -4,7 +4,7 @@ import { keysOf } from '../../common/util/data_tables.js';
 import { timeout } from '../../common/util/timeout.js';
 import { ErrorWithExtra, raceWithRejectOnTimeout } from '../../common/util/util.js';
 import { GPUTest } from '../gpu_test.js';
-import { srgbToDisplayP3 } from '../util/color_space_conversion.js';
+import { RGBA, srgbToDisplayP3 } from '../util/color_space_conversion.js';
 
 declare global {
   interface HTMLMediaElement {
@@ -17,12 +17,7 @@ declare global {
 // MAINTENANCE_TODO: Uses raw floats as expectation in external_texture related cases has some diffs.
 // Remove this conversion utils and uses raw float data as expectation in external_textrue
 // related cases when resolve this.
-export function convertToUnorm8(expectation: {
-  R: number;
-  G: number;
-  B: number;
-  A: number;
-}): Uint8Array {
+export function convertToUnorm8(expectation: Readonly<RGBA>): Uint8Array {
   const rgba8Unorm = new Uint8ClampedArray(4);
   rgba8Unorm[0] = Math.round(expectation.R * 255.0);
   rgba8Unorm[1] = Math.round(expectation.G * 255.0);
@@ -45,7 +40,7 @@ const kBt601PixelValue = {
     blue: { R: 0.10159735826538, G: 0.135451122863674, B: 1.00262982899724, A: 1.0 },
     yellow: { R: 0.995470750775951, G: 0.992742114518355, B: -0.0701036235167653, A: 1.0 },
   },
-};
+} as const;
 
 const kBt709PixelValue = {
   srgb: {
@@ -54,7 +49,7 @@ const kBt709PixelValue = {
     blue: { R: 0.0, G: 0.0, B: 1.0, A: 1.0 },
     yellow: { R: 1.0, G: 1.0, B: 0.0, A: 1.0 },
   },
-};
+} as const;
 
 function videoTable<Table extends { readonly [K: string]: {} }>({
   table,
@@ -211,7 +206,7 @@ export const kVideoInfo = videoTable({
       },
     },
   },
-});
+} as const);
 
 type VideoName = keyof typeof kVideoInfo;
 export const kVideoNames: readonly VideoName[] = keysOf(kVideoInfo);
