@@ -5,7 +5,7 @@ Tests for external textures from HTMLVideoElement (and other video-type sources?
   (bt.601, bt.709, bt.2020) and dst color spaces(display-p3, srgb)
 
 TODO: consider whether external_texture and copyToTexture video tests should be in the same file
-TODO: Test video in BT.2020 color space
+TODO(#3193): Test video in BT.2020 color space
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
