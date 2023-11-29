@@ -9,35 +9,12 @@ Returns the cross product of e1 and e2.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './cross.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]_[non_]const
-// abstract_non_const is empty and not used
-const cases = (['f32', 'f16', 'abstract'] as const)
-  .flatMap(trait =>
-    ([true, false] as const).map(nonConst => ({
-      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        if (trait === 'abstract' && nonConst) {
-          return [];
-        }
-        return FP[trait].generateVectorPairToVectorCases(
-          FP[trait].vectorRange(3),
-          FP[trait].vectorRange(3),
-          nonConst ? 'unfiltered' : 'finite',
-          FP[trait].crossInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('cross', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

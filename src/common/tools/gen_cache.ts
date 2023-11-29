@@ -89,7 +89,7 @@ dataCache.setStore({
 });
 setIsBuildingDataCache();
 
-const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
+const cacheFileSuffix = __filename.endsWith('.ts') ? '.cache.ts' : '.cache.js';
 
 /**
  * @returns a list of all the files under 'dir' that has the given extension
@@ -105,6 +105,7 @@ function glob(dir: string, ext: string) {
         files.push(`${file}/${child}`);
       }
     }
+
     if (path.endsWith(ext) && fs.statSync(path).isFile()) {
       files.push(file);
     }
@@ -180,7 +181,7 @@ async function build(suiteDir: string) {
   }
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
-  const filesToEnumerate = glob(suiteDir, specFileSuffix)
+  const filesToEnumerate = glob(suiteDir, cacheFileSuffix)
     .map(p => `${suiteDir}/${p}`)
     .sort();
 

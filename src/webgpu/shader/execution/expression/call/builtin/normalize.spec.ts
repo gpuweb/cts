@@ -8,33 +8,13 @@ Returns a unit vector in the same direction as e.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './normalize.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]_vecN_[non_]const
-const cases = (['f32', 'f16'] as const)
-  .flatMap(trait =>
-    ([2, 3, 4] as const).flatMap(dim =>
-      ([true, false] as const).map(nonConst => ({
-        [`${trait}_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
-          return FP[trait].generateVectorToVectorCases(
-            FP[trait].vectorRange(dim),
-            nonConst ? 'unfiltered' : 'finite',
-            FP[trait].normalizeInterval
-          );
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('normalize', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

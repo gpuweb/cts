@@ -9,37 +9,13 @@ Returns e1 * e2 + e3. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeAbstractFloat } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './fma.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]_[non_]const
-// abstract_non_const is empty and not used
-const cases = (['f32', 'f16', 'abstract'] as const)
-  .flatMap(trait =>
-    ([true, false] as const).map(nonConst => ({
-      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        if (trait === 'abstract' && nonConst) {
-          return [];
-        }
-        return FP[trait].generateScalarTripleToIntervalCases(
-          FP[trait].sparseScalarRange(),
-          FP[trait].sparseScalarRange(),
-          FP[trait].sparseScalarRange(),
-          nonConst ? 'unfiltered' : 'finite',
-          FP[trait].fmaInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('fma', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
