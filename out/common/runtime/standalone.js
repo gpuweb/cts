@@ -223,6 +223,12 @@ function makeCaseHTML(t) {
 
         if (caseResult.logs) {
           caselogs.empty();
+          // Show exceptions at the top since they are often unexpected can point out an error in the test itself vs the WebGPU implementation.
+          caseResult.logs.
+          filter((l) => l.name === 'EXCEPTION').
+          forEach((l) => {
+            $('<pre>').addClass('testcaselogtext').text(l.toJSON()).appendTo(caselogs);
+          });
           for (const l of caseResult.logs) {
             const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
             $('<button>').
