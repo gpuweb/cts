@@ -114,6 +114,19 @@ function glob(dir: string, ext: string) {
 }
 
 /**
+ * Exception type thrown by SourceHasher.hashFile() when a file annotated with
+ * MUST_NOT_BE_IMPORTED_BY_DATA_CACHE is transitively imported by a .cache.ts file.
+ */
+class InvalidImportException {
+  constructor(path: string) {
+    this.stack = [path];
+  }
+  toString(): string {
+    return `invalid transitive import for cache:\n  ${this.stack.join('\n  ')}`;
+  }
+  readonly stack: string[];
+}
+/**
  * SourceHasher is a utility for producing a hash of a source .ts file and its imported source files.
  */
 class SourceHasher {
@@ -142,8 +155,19 @@ class SourceHasher {
     const normalized = content.replace('\r\n', '\n');
     let hash = crc32(normalized);
     for (const importPath of parseImports(path, normalized)) {
-      const importHash = this.hashFile(importPath);
-      hash = this.hashCombine(hash, importHash);
+      try {
+        const importHash = this.hashFile(importPath);
+        hash = this.hashCombine(hash, importHash);
+      } catch (ex) {
+        if (ex instanceof InvalidImportException) {
+          ex.stack.push(path);
+          throw ex;
+        }
+      }
+    }
+
+    if (content.includes('MUST_NOT_BE_IMPORTED_BY_DATA_CACHE')) {
+      throw new InvalidImportException(path);
     }
 
     this.hashes.set(path, hash);

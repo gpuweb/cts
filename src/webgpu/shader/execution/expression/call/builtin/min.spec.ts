@@ -26,7 +26,8 @@ import {
   i32,
   u32,
 } from '../../../../../util/conversion.js';
-import { Case, allInputSources, onlyConstInputSource, run } from '../../expression.js';
+import { Case } from '../../case.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
 import { d } from './min.cache.js';

@@ -1,8 +1,8 @@
 import { kValue } from '../../../../../util/constants.js';
 import { ScalarType, TypeI32, TypeU32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
+import { Case } from '../../case.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { Case } from '../../expression.js';
 
 const u32Values = [0, 1, 2, 3, 0x70000000, 0x80000000, kValue.u32.max];
 

@@ -1,7 +1,7 @@
 import { bool, i32 } from '../../../../util/conversion.js';
 import { vectorI32Range } from '../../../../util/math.js';
+import { Case } from '../case.js';
 import { makeCaseCache } from '../case_cache.js';
-import { Case } from '../expression.js';
 
 /**
  * @returns a test case for the provided left hand & right hand values and

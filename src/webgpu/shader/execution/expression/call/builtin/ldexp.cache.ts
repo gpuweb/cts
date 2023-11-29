@@ -3,8 +3,8 @@ import { anyOf } from '../../../../../util/compare.js';
 import { i32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { biasedRange, quantizeToI32, sparseI32Range } from '../../../../../util/math.js';
+import { Case } from '../../case.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { Case } from '../../expression.js';
 
 const bias = {
   f32: 127,

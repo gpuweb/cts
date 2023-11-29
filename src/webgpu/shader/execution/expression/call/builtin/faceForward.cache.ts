@@ -3,8 +3,9 @@ import { anyOf } from '../../../../../util/compare.js';
 import { toVector } from '../../../../../util/conversion.js';
 import { FP, FPKind, FPVector } from '../../../../../util/floating_point.js';
 import { cartesianProduct } from '../../../../../util/math.js';
+import { Case } from '../../case.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { Case, IntervalFilter } from '../../expression.js';
+import { IntervalFilter } from '../../interval_filter.js';
 
 // Using a bespoke implementation of make*Case and generate*Cases here
 // since faceForwardIntervals is the only builtin with the API signature

@@ -3,21 +3,22 @@ import { unreachable } from '../../../../common/util/util.js';
 import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Scalar,
-  Vector,
-  serializeValue,
-  deserializeValue,
   Matrix,
+  Scalar,
   Value,
+  Vector,
+  deserializeValue,
+  serializeValue,
 } from '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
   FPInterval,
+  deserializeFPInterval,
   serializeFPInterval,
 } from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { Case, CaseList, Expectation, isComparator } from './expression.js';
+import { Case, CaseList } from './case.js';
+import { Expectation, isComparator } from './expectation.js';
 
 enum SerializedExpectationKind {
   Value,

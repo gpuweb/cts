@@ -2,8 +2,8 @@ import { skipUndefined } from '../../../../../util/compare.js';
 import { Scalar, Vector, i32, toVector } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { frexp } from '../../../../../util/math.js';
+import { Case } from '../../case.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { Case } from '../../expression.js';
 
 /* @returns a fract Case for a given scalar or vector input */
 function makeCaseFract(v: number | readonly number[], trait: 'f32' | 'f16'): Case {

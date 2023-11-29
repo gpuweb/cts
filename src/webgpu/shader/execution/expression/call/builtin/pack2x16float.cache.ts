@@ -1,8 +1,8 @@
 import { anyOf, skipUndefined } from '../../../../../util/compare.js';
 import { f32, pack2x16float, u32, vec2 } from '../../../../../util/conversion.js';
 import { cartesianProduct, quantizeToF32, scalarF32Range } from '../../../../../util/math.js';
+import { Case } from '../../case.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { Case } from '../../expression.js';
 
 // pack2x16float has somewhat unusual behaviour, specifically around how it is
 // supposed to behave when values go OOB and when they are considered to have

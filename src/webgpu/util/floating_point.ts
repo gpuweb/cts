@@ -1,7 +1,8 @@
 import { ROArrayArray, ROArrayArrayArray } from '../../common/util/types.js';
 import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
-import { Case, IntervalFilter } from '../shader/execution/expression/expression.js';
+import { Case } from '../shader/execution/expression/case.js';
+import { IntervalFilter } from '../shader/execution/expression/interval_filter.js';
 
 import BinaryStream from './binary_stream.js';
 import { anyOf } from './compare.js';

@@ -24,6 +24,12 @@ output, and compares this hash to the hash stored in
 [`src/resources/cache/hashes.json`](`../src/resources/cache/hashes.json`). Only
 those cache files with differing hashes are rebuilt.
 
+Transitive imports easily grow, and these can cause unnecessary rebuilds of the cache.
+To help avoid unnecessary rebuilds, files that are known to not be used by the cache can be
+annotated with a `MUST_NOT_BE_IMPORTED_BY_DATA_CACHE` comment anywhere in the file. If a file with
+this comment is transitively imported by a `.cache.ts` file, then the cache generation tool will
+error with a trace of the imports from the `.cache.ts` file to the file with this comment.
+
 The cache files are copied from [`src/resources/cache`](../src/resources/cache)
 to the `resources/cache` subdirectory of the
 [`out` and `out-node` build directories](build.md#build-types), so the runner
