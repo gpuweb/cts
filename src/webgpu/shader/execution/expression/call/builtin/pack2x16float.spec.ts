@@ -16,7 +16,7 @@ import {
   u32,
   vec2,
 } from '../../../../../util/conversion.js';
-import { cartesianProduct, fullF32Range, quantizeToF32 } from '../../../../../util/math.js';
+import { cartesianProduct, scalarF32Range, quantizeToF32 } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, run } from '../../expression.js';
 
@@ -67,10 +67,10 @@ function generateCases(param0s: number[], param1s: number[], filter_undefined: b
 
 export const d = makeCaseCache('pack2x16float', {
   f32_const: () => {
-    return generateCases(fullF32Range(), fullF32Range(), true);
+    return generateCases(scalarF32Range(), scalarF32Range(), true);
   },
   f32_non_const: () => {
-    return generateCases(fullF32Range(), fullF32Range(), false);
+    return generateCases(scalarF32Range(), scalarF32Range(), false);
   },
 });
 

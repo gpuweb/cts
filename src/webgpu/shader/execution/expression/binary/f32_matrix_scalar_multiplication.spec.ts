@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF32, TypeMat } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { sparseF32Range, sparseMatrixF32Range } from '../../../../util/math.js';
+import { sparseScalarF32Range, sparseMatrixF32Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -22,7 +22,7 @@ const mat_scalar_cases = ([2, 3, 4] as const)
         [`mat${cols}x${rows}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
           return FP.f32.generateMatrixScalarToMatrixCases(
             sparseMatrixF32Range(cols, rows),
-            sparseF32Range(),
+            sparseScalarF32Range(),
             nonConst ? 'unfiltered' : 'finite',
             FP.f32.multiplicationMatrixScalarInterval
           );
@@ -39,7 +39,7 @@ const scalar_mat_cases = ([2, 3, 4] as const)
       ([true, false] as const).map(nonConst => ({
         [`scalar_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
           return FP.f32.generateScalarMatrixToMatrixCases(
-            sparseF32Range(),
+            sparseScalarF32Range(),
             sparseMatrixF32Range(cols, rows),
             nonConst ? 'unfiltered' : 'finite',
             FP.f32.multiplicationScalarMatrixInterval

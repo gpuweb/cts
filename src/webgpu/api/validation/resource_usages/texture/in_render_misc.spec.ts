@@ -155,6 +155,9 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
       format: 'depth24plus-stencil8',
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT,
       size: [kTextureSize, kTextureSize, 1],
+      ...(t.isCompatibility && {
+        textureBindingViewDimension: '2d-array',
+      }),
     });
 
     const conflictedToNonReadOnlyAttachmentBindGroup = t.createBindGroupForTest(
@@ -170,6 +173,9 @@ g.test('subresources,set_bind_group_on_same_index_depth_stencil_texture')
       format: 'rgba8unorm',
       usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.STORAGE_BINDING,
       size: [kTextureSize, kTextureSize, 1],
+      ...(t.isCompatibility && {
+        textureBindingViewDimension: '2d-array',
+      }),
     });
     const validBindGroup = t.createBindGroupForTest(
       colorTexture.createView({

@@ -6,7 +6,7 @@ import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeF16, TypeVec } from '../../../../util/conversion.js';
 import { FP, FPVector } from '../../../../util/floating_point.js';
-import { sparseF16Range, sparseVectorF16Range } from '../../../../util/math.js';
+import { sparseScalarF16Range, sparseVectorF16Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -26,8 +26,8 @@ const scalar_cases = ([true, false] as const)
   .map(nonConst => ({
     [`scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
       return FP.f16.generateScalarPairToIntervalCases(
-        sparseF16Range(),
-        sparseF16Range(),
+        sparseScalarF16Range(),
+        sparseScalarF16Range(),
         nonConst ? 'unfiltered' : 'finite',
         FP.f16.additionInterval
       );
@@ -41,7 +41,7 @@ const vector_scalar_cases = ([2, 3, 4] as const)
       [`vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
         return FP.f16.generateVectorScalarToVectorCases(
           sparseVectorF16Range(dim),
-          sparseF16Range(),
+          sparseScalarF16Range(),
           nonConst ? 'unfiltered' : 'finite',
           additionVectorScalarInterval
         );
@@ -55,7 +55,7 @@ const scalar_vector_cases = ([2, 3, 4] as const)
     ([true, false] as const).map(nonConst => ({
       [`scalar_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
         return FP.f16.generateScalarVectorToVectorCases(
-          sparseF16Range(),
+          sparseScalarF16Range(),
           sparseVectorF16Range(dim),
           nonConst ? 'unfiltered' : 'finite',
           additionScalarVectorInterval

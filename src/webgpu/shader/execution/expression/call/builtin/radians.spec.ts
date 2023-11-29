@@ -12,7 +12,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF16Range, fullF32Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -20,29 +19,20 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
-export const d = makeCaseCache('radians', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      fullF32Range(),
-      'unfiltered',
-      FP.f32.radiansInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      fullF16Range(),
-      'unfiltered',
-      FP.f16.radiansInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      fullF16Range(),
-      'unfiltered',
-      FP.abstract.radiansInterval
-    );
-  },
-});
+// Cases: [f32|f16|abstract]
+const cases = (['f32', 'f16', 'abstract'] as const)
+  .map(trait => ({
+    [`${trait}`]: () => {
+      return FP[trait].generateScalarToIntervalCases(
+        FP[trait].scalarRange(),
+        'unfiltered',
+        FP[trait].radiansInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('radians', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

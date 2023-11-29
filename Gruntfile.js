@@ -30,9 +30,14 @@ module.exports = function (grunt) {
         cmd: 'node',
         args: ['tools/validate', ...kAllSuites.map(s => 'src/' + s)],
       },
+      'generate-cache': {
+        // Note this generates files into the src/ directory (not the gen/ directory).
+        cmd: 'node',
+        args: ['tools/gen_cache', 'src/webgpu'],
+      },
       'validate-cache': {
         cmd: 'node',
-        args: ['tools/gen_cache', 'out', 'src/webgpu', '--validate'],
+        args: ['tools/gen_cache', 'src/webgpu', '--validate'],
       },
       'write-out-wpt-cts-html': {
         // Note this generates directly into the out-wpt/ directory rather than the gen/ directory.
@@ -43,11 +48,6 @@ module.exports = function (grunt) {
         // Note this generates directly into the out-wpt/ directory rather than the gen/ directory.
         cmd: 'node',
         args: ['tools/gen_wpt_cts_html', 'tools/gen_wpt_cfg_chunked2sec.json'],
-      },
-      'generate-cache': {
-        // Note this generates directly into the out/ directory rather than the gen/ directory.
-        cmd: 'node',
-        args: ['tools/gen_cache', 'out', 'src/webgpu'],
       },
       unittest: {
         cmd: 'node',
@@ -115,6 +115,15 @@ module.exports = function (grunt) {
           '--copy-files'
         ],
       },
+      'copy-assets-node': {
+        cmd: 'node',
+        args: [
+          'node_modules/@babel/cli/bin/babel',
+          'src/resources/',
+          '--out-dir=out-node/resources/',
+          '--copy-files'
+        ],
+      },
       lint: {
         cmd: 'node',
         args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--max-warnings=0'],
@@ -175,16 +184,14 @@ module.exports = function (grunt) {
       },
     },
 
-    parallel: {
+    concurrent: {
       'write-out-wpt-cts-html-all': {
-        options: { grunt: true },
         tasks: [
           'run:write-out-wpt-cts-html',
           'run:write-out-wpt-cts-html-chunked2sec',
         ],
       },
       'all-builds': {
-        options: { grunt: true },
         tasks: [
           'build-standalone',
           'build-wpt',
@@ -192,7 +199,6 @@ module.exports = function (grunt) {
         ],
       },
       'all-checks': {
-        options: { grunt: true },
         tasks: [
           'ts:check',
           'run:validate',
@@ -203,10 +209,9 @@ module.exports = function (grunt) {
         ],
       },
       'all-builds-and-checks': {
-        options: { grunt: true },
         tasks: [
-          'build-all', // Internally parallel
-          'parallel:all-checks',
+          'build-all', // Internally concurrent
+          'concurrent:all-checks',
         ],
       },
     },
@@ -214,7 +219,7 @@ module.exports = function (grunt) {
 
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
-  grunt.loadNpmTasks('grunt-parallel');
+  grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-run');
   grunt.loadNpmTasks('grunt-ts');
 
@@ -227,9 +232,10 @@ module.exports = function (grunt) {
     helpMessageTasks.push({ name, desc });
   }
 
-  grunt.registerTask('generate-common', 'Generate files into gen/', [
+  grunt.registerTask('generate-common', 'Generate files into gen/ and src/', [
     'run:generate-version',
     'run:generate-listings',
+    'run:generate-cache',
   ]);
   grunt.registerTask('build-standalone', 'Build out/ (no checks; run after generate-common)', [
     'run:build-out',
@@ -241,11 +247,15 @@ module.exports = function (grunt) {
     'run:copy-assets-wpt',
     'copy:gen-to-out-wpt',
     'copy:htmlfiles-to-out-wpt',
-    'parallel:write-out-wpt-cts-html-all',
+    'concurrent:write-out-wpt-cts-html-all',
     'run:autoformat-out-wpt',
   ]);
+  grunt.registerTask('build-node', 'Build out-node/ (no checks; run after generate-common)', [
+    'run:build-out-node',
+    'run:copy-assets-node',
+  ]);
   grunt.registerTask('build-all', 'Build out*/ (no checks; run after generate-common)', [
-    'parallel:all-builds',
+    'concurrent:all-builds',
     'build-done-message',
   ]);
   grunt.registerTask('build-done-message', () => {
@@ -260,7 +270,7 @@ module.exports = function (grunt) {
   registerTaskAndAddToHelp('all', 'Run all builds and checks', [
     'clean',
     'generate-common',
-    'parallel:all-builds-and-checks',
+    'concurrent:all-builds-and-checks',
   ]);
   registerTaskAndAddToHelp('standalone', 'Build standalone (out/) (no checks)', [
     'generate-common',
@@ -272,8 +282,13 @@ module.exports = function (grunt) {
     'build-wpt',
     'build-done-message',
   ]);
+  registerTaskAndAddToHelp('node', 'Build node (out-node/) (no checks)', [
+    'generate-common',
+    'build-node',
+    'build-done-message',
+  ]);
   registerTaskAndAddToHelp('checks', 'Run all checks (and build tsdoc)', [
-    'parallel:all-checks',
+    'concurrent:all-checks',
   ]);
   registerTaskAndAddToHelp('unittest', 'Just run unittests', [
     'run:unittest',

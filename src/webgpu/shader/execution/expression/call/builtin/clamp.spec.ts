@@ -25,7 +25,6 @@ import {
   TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { sparseF32Range, sparseF16Range, sparseF64Range } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, onlyConstInputSource, run } from '../../expression.js';
 
@@ -48,41 +47,11 @@ const i32Values = [
   kValue.i32.positive.max,
 ];
 
-export const d = makeCaseCache('clamp', {
-  u32_non_const: () => {
-    return generateIntegerTestCases(u32Values, TypeU32, 'non-const');
-  },
-  u32_const: () => {
-    return generateIntegerTestCases(u32Values, TypeU32, 'const');
-  },
-  i32_non_const: () => {
-    return generateIntegerTestCases(i32Values, TypeI32, 'non-const');
-  },
-  i32_const: () => {
-    return generateIntegerTestCases(i32Values, TypeI32, 'const');
-  },
-  f32_const: () => {
-    return generateFloatTestCases(sparseF32Range(), 'f32', 'const');
-  },
-  f32_non_const: () => {
-    return generateFloatTestCases(sparseF32Range(), 'f32', 'non-const');
-  },
-  f16_const: () => {
-    return generateFloatTestCases(sparseF16Range(), 'f16', 'const');
-  },
-  f16_non_const: () => {
-    return generateFloatTestCases(sparseF16Range(), 'f16', 'non-const');
-  },
-  abstract: () => {
-    return generateFloatTestCases(sparseF64Range(), 'abstract', 'const');
-  },
-});
-
 /** @returns a set of clamp test cases from an ascending list of integer values */
 function generateIntegerTestCases(
   test_values: Array<number>,
   type: ScalarType,
-  stage: 'const' | 'non-const'
+  stage: 'const' | 'non_const'
 ): Array<Case> {
   return test_values.flatMap(low =>
     test_values.flatMap(high =>
@@ -99,7 +68,7 @@ function generateIntegerTestCases(
 function generateFloatTestCases(
   test_values: readonly number[],
   trait: 'f32' | 'f16' | 'abstract',
-  stage: 'const' | 'non-const'
+  stage: 'const' | 'non_const'
 ): Array<Case> {
   return test_values.flatMap(low =>
     test_values.flatMap(high =>
@@ -118,6 +87,41 @@ function generateFloatTestCases(
     )
   );
 }
+
+// Cases: [f32|f16|abstract]_[non_]const
+// abstract_non_const is empty and unused
+const fp_cases = (['f32', 'f16', 'abstract'] as const)
+  .flatMap(trait =>
+    ([true, false] as const).map(nonConst => ({
+      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        if (trait === 'abstract' && nonConst) {
+          return [];
+        }
+        return generateFloatTestCases(
+          FP[trait].sparseScalarRange(),
+          trait,
+          nonConst ? 'non_const' : 'const'
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+export const d = makeCaseCache('clamp', {
+  u32_non_const: () => {
+    return generateIntegerTestCases(u32Values, TypeU32, 'non_const');
+  },
+  u32_const: () => {
+    return generateIntegerTestCases(u32Values, TypeU32, 'const');
+  },
+  i32_non_const: () => {
+    return generateIntegerTestCases(i32Values, TypeI32, 'non_const');
+  },
+  i32_const: () => {
+    return generateIntegerTestCases(i32Values, TypeI32, 'const');
+  },
+  ...fp_cases,
+});
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
@@ -158,7 +162,7 @@ g.test('abstract_float')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract');
+    const cases = await d.get('abstract_const');
     await run(
       t,
       abstractBuiltin('clamp'),

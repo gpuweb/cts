@@ -313,6 +313,19 @@ g.test('texture_must_have_correct_dimension')
     });
 
     t.skipIfTextureViewDimensionNotSupported(viewDimension, dimension);
+    if (t.isCompatibility && texture.dimension === '2d') {
+      if (depthOrArrayLayers === 1) {
+        t.skipIf(
+          viewDimension !== '2d',
+          '1 layer 2d textures default to textureBindingViewDimension: "2d" in compat mode'
+        );
+      } else {
+        t.skipIf(
+          viewDimension !== '2d-array',
+          '> 1 layer 2d textures default to textureBindingViewDimension "2d-array" in compat mode'
+        );
+      }
+    }
 
     const shouldError = viewDimension !== dimension;
     const textureView = texture.createView({ dimension });
