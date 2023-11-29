@@ -172,7 +172,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
       stream.writeString(name);
       stream.writeArray(data[name], serializeCase);
     }
-    const compressed = this.compress('gzip', stream.buffer());
+    const compressed = this.compress('deflate', stream.buffer());
     return compressed;
   }
 
@@ -181,7 +181,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * @returns the deserialize data.
    */
   async deserialize(array: Uint8Array): Promise<Record<string, CaseList>> {
-    const decompressed = await this.decompress('gzip', array);
+    const decompressed = await this.decompress('deflate', array);
     const s = new BinaryStream(decompressed);
     const casesByName: Record<string, CaseList> = {};
     const numRecords = s.readU32();
