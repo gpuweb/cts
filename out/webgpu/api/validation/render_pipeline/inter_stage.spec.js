@@ -3,7 +3,7 @@
 **/export const description = `
 Interface matching between vertex and fragment shader validation for createRenderPipeline.
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { range } from '../../../../common/util/util.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
 
@@ -251,9 +251,6 @@ fn((t) => {
 
   const numVec4 = Math.floor(numScalarComponents / 4);
   const numTrailingScalars = numScalarComponents % 4;
-  const numUserDefinedInterStageVariables = numTrailingScalars > 0 ? numVec4 + 1 : numVec4;
-
-  assert(numUserDefinedInterStageVariables <= t.device.limits.maxInterStageShaderVariables);
 
   const outputs = range(numVec4, (i) => `@location(${i}) vout${i}: vec4<f32>`);
   const inputs = range(numVec4, (i) => `@location(${i}) fin${i}: vec4<f32>`);
@@ -294,9 +291,6 @@ fn((t) => {
 
   const numVec4 = Math.floor(numScalarComponents / 4);
   const numTrailingScalars = numScalarComponents % 4;
-  const numUserDefinedInterStageVariables = numTrailingScalars > 0 ? numVec4 + 1 : numVec4;
-
-  assert(numUserDefinedInterStageVariables <= t.device.limits.maxInterStageShaderVariables);
 
   const outputs = range(numVec4, (i) => `@location(${i}) vout${i}: vec4<f32>`);
   const inputs = range(numVec4, (i) => `@location(${i}) fin${i}: vec4<f32>`);
