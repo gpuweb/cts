@@ -9,38 +9,13 @@ Returns the floor of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeAbstractFloat } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './floor.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-const kSmallMagnitudeTestValues = [0.1, 0.9, 1.0, 1.1, 1.9, -0.1, -0.9, -1.0, -1.1, -1.9];
-
-// See https://github.com/gpuweb/cts/issues/2766 for details
-const kIssue2766Value = {
-  abstract: 0x8000_0000_0000_0000,
-  f32: 0x8000_0000,
-  f16: 0x8000,
-};
-
-// Cases: [f32|f16|abstract]
-const cases = (['f32', 'f16', 'abstract'] as const)
-  .map(trait => ({
-    [`${trait}`]: () => {
-      return FP[trait].generateScalarToIntervalCases(
-        [...kSmallMagnitudeTestValues, kIssue2766Value[trait], ...FP[trait].scalarRange()],
-        'unfiltered',
-        FP[trait].floorInterval
-      );
-    },
-  }))
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('floor', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

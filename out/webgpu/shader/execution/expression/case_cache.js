@@ -3,21 +3,22 @@
 **/import { dataCache } from '../../../../common/framework/data_cache.js';import { unreachable } from '../../../../common/util/util.js';import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
+  Matrix,
   Scalar,
-  Vector,
-  serializeValue,
-  deserializeValue,
-  Matrix } from
 
+  Vector,
+  deserializeValue,
+  serializeValue } from
 '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
   FPInterval,
+  deserializeFPInterval,
   serializeFPInterval } from
 '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { isComparator } from './expression.js';var
+
+import { isComparator } from './expectation.js';var
 
 SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {SerializedExpectationKind[SerializedExpectationKind["Value"] = 0] = "Value";SerializedExpectationKind[SerializedExpectationKind["Interval"] = 1] = "Interval";SerializedExpectationKind[SerializedExpectationKind["Interval1DArray"] = 2] = "Interval1DArray";SerializedExpectationKind[SerializedExpectationKind["Interval2DArray"] = 3] = "Interval2DArray";SerializedExpectationKind[SerializedExpectationKind["Array"] = 4] = "Array";SerializedExpectationKind[SerializedExpectationKind["Comparator"] = 5] = "Comparator";return SerializedExpectationKind;}(SerializedExpectationKind || {});
 
@@ -164,7 +165,7 @@ export class CaseCache {
    * serialize() implements the Cacheable.serialize interface.
    * @returns the serialized data.
    */
-  async serialize(data) {
+  serialize(data) {
     const maxSize = 32 << 20; // 32MB - max size for a file
     const stream = new BinaryStream(new ArrayBuffer(maxSize));
     stream.writeU32(Object.keys(data).length);
@@ -172,17 +173,15 @@ export class CaseCache {
       stream.writeString(name);
       stream.writeArray(data[name], serializeCase);
     }
-    const compressed = this.compress('gzip', stream.buffer());
-    return compressed;
+    return stream.buffer();
   }
 
   /**
    * deserialize() implements the Cacheable.deserialize interface.
    * @returns the deserialize data.
    */
-  async deserialize(array) {
-    const decompressed = await this.decompress('gzip', array);
-    const s = new BinaryStream(decompressed);
+  deserialize(array) {
+    const s = new BinaryStream(array.buffer);
     const casesByName = {};
     const numRecords = s.readU32();
     for (let i = 0; i < numRecords; i++) {
@@ -191,26 +190,6 @@ export class CaseCache {
       casesByName[name] = cases;
     }
     return casesByName;
-  }
-
-  /**
-   * Compresses a Uint8Array using using the given CompressionFormat
-   */
-  async compress(format, data) {
-    const stream = new Blob([data]).stream();
-    const compressedStream = stream.pipeThrough(new CompressionStream(format));
-    const blob = await new Response(compressedStream).blob();
-    return new Uint8Array(await blob.arrayBuffer());
-  }
-
-  /**
-   * Decompresses a Uint8Array using using gzip
-   */
-  async decompress(format, data) {
-    const stream = new Blob([data]).stream();
-    const decompressedStream = stream.pipeThrough(new DecompressionStream(format));
-    const blob = await new Response(decompressedStream).blob();
-    return await blob.arrayBuffer();
   }
 
 

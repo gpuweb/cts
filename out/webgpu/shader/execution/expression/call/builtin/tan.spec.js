@@ -9,34 +9,13 @@ T is S or vecN<S>
 Returns the tangent of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { linearRange } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './tan.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]
-const cases = ['f32', 'f16'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarToIntervalCases(
-      [
-      // Well-defined accuracy range
-      ...linearRange(-Math.PI, Math.PI, 100),
-      ...FP[trait].scalarRange()],
-
-      'unfiltered',
-      FP[trait].tanInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('tan', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

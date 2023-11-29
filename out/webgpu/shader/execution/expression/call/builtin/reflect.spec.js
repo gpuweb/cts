@@ -9,34 +9,13 @@ For the incident vector e1 and surface orientation e2, returns the reflection
 direction e1-2*dot(e2,e1)*e2.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './reflect.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]_vecN_[non_]const
-const cases = ['f32', 'f16'].
-flatMap((trait) =>
-[2, 3, 4].flatMap((dim) =>
-[true, false].map((nonConst) => ({
-  [`${trait}_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP[trait].generateVectorPairToVectorCases(
-      FP[trait].sparseVectorRange(dim),
-      FP[trait].sparseVectorRange(dim),
-      nonConst ? 'unfiltered' : 'finite',
-      FP[trait].reflectInterval
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('reflect', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -9,43 +9,13 @@ T is S or vecN<S>
 Returns the sign of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import {
-  i32,
-  TypeF32,
-  TypeF16,
-  TypeI32,
-  TypeAbstractFloat } from
-'../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { fullI32Range } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeAbstractFloat, TypeF16, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './sign.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]
-const fp_cases = ['f32', 'f16', 'abstract'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarToIntervalCases(
-      FP[trait].scalarRange(),
-      'unfiltered',
-      FP[trait].signInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('sign', {
-  ...fp_cases,
-  i32: () =>
-  fullI32Range().map((i) => {
-    const signFunc = (i) => i < 0 ? -1 : i > 0 ? 1 : 0;
-    return { input: [i32(i)], expected: i32(signFunc(i)) };
-  })
-});
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#sign-builtin').

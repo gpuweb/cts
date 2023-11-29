@@ -16,55 +16,13 @@ Same as mix(e1,e2,T2(e3)).
 
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeVec, TypeF32, TypeF16 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './mix.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]_[non_]const
-const scalar_cases = ['f32', 'f16'].
-flatMap((trait) =>
-[true, false].map((nonConst) => ({
-  [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP[trait].generateScalarTripleToIntervalCases(
-      FP[trait].sparseScalarRange(),
-      FP[trait].sparseScalarRange(),
-      FP[trait].sparseScalarRange(),
-      nonConst ? 'unfiltered' : 'finite',
-      ...FP[trait].mixIntervals
-    );
-  }
-}))
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: [f32|f16]_vecN_scalar_[non_]const
-const vec_scalar_cases = ['f32', 'f16'].
-flatMap((trait) =>
-[2, 3, 4].flatMap((dim) =>
-[true, false].map((nonConst) => ({
-  [`${trait}_vec${dim}_scalar_${nonConst ? 'non_const' : 'const'}`]: () => {
-    return FP[trait].generateVectorPairScalarToVectorComponentWiseCase(
-      FP[trait].sparseVectorRange(dim),
-      FP[trait].sparseVectorRange(dim),
-      FP[trait].sparseScalarRange(),
-      nonConst ? 'unfiltered' : 'finite',
-      ...FP[trait].mixIntervals
-    );
-  }
-}))
-)
-).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('mix', {
-  ...scalar_cases,
-  ...vec_scalar_cases
-});
 
 g.test('abstract_float_matching').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

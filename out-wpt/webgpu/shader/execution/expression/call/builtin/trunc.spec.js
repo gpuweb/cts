@@ -11,28 +11,12 @@ Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './trunc.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]
-const cases = ['f32', 'f16', 'abstract'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarToIntervalCases(
-      FP[trait].scalarRange(),
-      'unfiltered',
-      FP[trait].truncInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('trunc', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

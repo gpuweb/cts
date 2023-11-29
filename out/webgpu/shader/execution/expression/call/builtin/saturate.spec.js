@@ -10,29 +10,12 @@ Returns clamp(e, 0.0, 1.0). Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { linearRange } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './saturate.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]
-const cases = ['f32', 'f16', 'abstract'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarToIntervalCases(
-      [...linearRange(0.0, 1.0, 20), ...FP[trait].scalarRange()],
-      'unfiltered',
-      FP[trait].saturateInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('saturate', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

@@ -89,7 +89,7 @@ dataCache.setStore({
 });
 setIsBuildingDataCache();
 
-const specFileSuffix = __filename.endsWith('.ts') ? '.spec.ts' : '.spec.js';
+const cacheFileSuffix = __filename.endsWith('.ts') ? '.cache.ts' : '.cache.js';
 
 /**
  * @returns a list of all the files under 'dir' that has the given extension
@@ -105,6 +105,7 @@ function glob(dir, ext) {
         files.push(`${file}/${child}`);
       }
     }
+
     if (path.endsWith(ext) && fs.statSync(path).isFile()) {
       files.push(file);
     }
@@ -112,6 +113,19 @@ function glob(dir, ext) {
   return files;
 }
 
+/**
+ * Exception type thrown by SourceHasher.hashFile() when a file annotated with
+ * MUST_NOT_BE_IMPORTED_BY_DATA_CACHE is transitively imported by a .cache.ts file.
+ */
+class InvalidImportException {
+  constructor(path) {
+    this.stack = [path];
+  }
+  toString() {
+    return `invalid transitive import for cache:\n  ${this.stack.join('\n  ')}`;
+  }
+
+}
 /**
  * SourceHasher is a utility for producing a hash of a source .ts file and its imported source files.
  */
@@ -141,8 +155,19 @@ class SourceHasher {
     const normalized = content.replace('\r\n', '\n');
     let hash = crc32(normalized);
     for (const importPath of parseImports(path, normalized)) {
-      const importHash = this.hashFile(importPath);
-      hash = this.hashCombine(hash, importHash);
+      try {
+        const importHash = this.hashFile(importPath);
+        hash = this.hashCombine(hash, importHash);
+      } catch (ex) {
+        if (ex instanceof InvalidImportException) {
+          ex.stack.push(path);
+          throw ex;
+        }
+      }
+    }
+
+    if (content.includes('MUST_NOT_BE_IMPORTED_BY_DATA_CACHE')) {
+      throw new InvalidImportException(path);
     }
 
     this.hashes.set(path, hash);
@@ -180,7 +205,7 @@ async function build(suiteDir) {
   }
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
-  const filesToEnumerate = glob(suiteDir, specFileSuffix).
+  const filesToEnumerate = glob(suiteDir, cacheFileSuffix).
   map((p) => `${suiteDir}/${p}`).
   sort();
 
@@ -221,7 +246,7 @@ and
             }
             console.log(`building '${outPath}'`);
             const data = await cacheable.build();
-            const serialized = await cacheable.serialize(data);
+            const serialized = cacheable.serialize(data);
             fs.mkdirSync(path.dirname(outPath), { recursive: true });
             fs.writeFileSync(outPath, serialized, 'binary');
             fileHashes[cacheable.path] = fileHash;

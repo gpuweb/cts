@@ -9,6 +9,9 @@ import {
 '../../common/util/util.js';
 import { getDefaultLimits, kLimits } from '../capability_info.js';
 
+// MUST_NOT_BE_IMPORTED_BY_DATA_CACHE
+// This file should not be transitively imported by .cache.ts files
+
 
 
 

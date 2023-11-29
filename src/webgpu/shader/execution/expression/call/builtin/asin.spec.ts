@@ -9,32 +9,13 @@ Returns the arc sine of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { linearRange } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
+import { d } from './asin.cache.js';
 import { builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]_[non_]const
-const cases = (['f32', 'f16'] as const)
-  .flatMap(trait =>
-    ([true, false] as const).map(nonConst => ({
-      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP[trait].generateScalarToIntervalCases(
-          [...linearRange(-1, 1, 100), ...FP[trait].scalarRange()], // asin is defined on [-1, 1]
-          nonConst ? 'unfiltered' : 'finite',
-          FP[trait].asinInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('asin', cases);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

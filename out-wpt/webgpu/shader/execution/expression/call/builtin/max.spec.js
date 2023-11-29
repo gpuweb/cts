@@ -19,19 +19,19 @@ Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
-  i32,
-  TypeF32,
+  TypeAbstractFloat,
   TypeF16,
+  TypeF32,
   TypeI32,
   TypeU32,
-  u32,
-  TypeAbstractFloat } from
+  i32,
+  u32 } from
 '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './max.cache.js';
 
 /** Generate set of max test cases from list of interesting values */
 function generateTestCases(
@@ -48,22 +48,6 @@ makeCase)
 }
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16|abstract]
-const cases = ['f32', 'f16', 'abstract'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarPairToIntervalCases(
-      FP[trait].scalarRange(),
-      FP[trait].scalarRange(),
-      'unfiltered',
-      FP[trait].maxInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('max', cases);
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').

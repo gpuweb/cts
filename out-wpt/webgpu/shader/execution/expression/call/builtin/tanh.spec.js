@@ -9,29 +9,13 @@ T is S or vecN<S>
 Returns the hyperbolic tangent of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './tanh.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]
-const cases = ['f32', 'f16'].
-map((trait) => ({
-  [`${trait}`]: () => {
-    return FP[trait].generateScalarToIntervalCases(
-      FP[trait].scalarRange(),
-      'unfiltered',
-      FP[trait].tanhInterval
-    );
-  }
-})).
-reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('tanh', cases);
 
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
