@@ -47,7 +47,7 @@
   "webgpu/shader/execution/cos.bin": "13305519",
   "webgpu/shader/execution/cosh.bin": "20965093",
   "webgpu/shader/execution/cross.bin": "3cfeb2a1",
-  "webgpu/shader/execution/degrees.bin": "6ac880fa",
+  "webgpu/shader/execution/degrees.bin": "6d9b3197",
   "webgpu/shader/execution/determinant.bin": "d09e35b7",
   "webgpu/shader/execution/distance.bin": "790d45ea",
   "webgpu/shader/execution/dot.bin": "5f7aa2bc",
