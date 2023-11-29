@@ -221,7 +221,7 @@ and
           }
           console.log(`building '${outPath}'`);
           const data = await cacheable.build();
-          const serialized = await cacheable.serialize(data);
+          const serialized = cacheable.serialize(data);
           fs.mkdirSync(path.dirname(outPath), { recursive: true });
           fs.writeFileSync(outPath, serialized, 'binary');
           fileHashes[cacheable.path] = fileHash;
