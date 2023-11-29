@@ -3,21 +3,22 @@ import { unreachable } from '../../../../common/util/util.js';
 import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Scalar,
-  Vector,
-  serializeValue,
-  deserializeValue,
   Matrix,
+  Scalar,
   Value,
+  Vector,
+  deserializeValue,
+  serializeValue,
 } from '../../../util/conversion.js';
 import {
-  deserializeFPInterval,
   FPInterval,
+  deserializeFPInterval,
   serializeFPInterval,
 } from '../../../util/floating_point.js';
 import { flatten2DArray, unflatten2DArray } from '../../../util/math.js';
 
-import { Case, CaseList, Expectation, isComparator } from './expression.js';
+import { Case, CaseList } from './case.js';
+import { Expectation, isComparator } from './expectation.js';
 
 enum SerializedExpectationKind {
   Value,
@@ -164,7 +165,7 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
    * serialize() implements the Cacheable.serialize interface.
    * @returns the serialized data.
    */
-  async serialize(data: Record<string, CaseList>): Promise<Uint8Array> {
+  serialize(data: Record<string, CaseList>): Uint8Array {
     const maxSize = 32 << 20; // 32MB - max size for a file
     const stream = new BinaryStream(new ArrayBuffer(maxSize));
     stream.writeU32(Object.keys(data).length);
@@ -172,17 +173,15 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
       stream.writeString(name);
       stream.writeArray(data[name], serializeCase);
     }
-    const compressed = this.compress('gzip', stream.buffer());
-    return compressed;
+    return stream.buffer();
   }
 
   /**
    * deserialize() implements the Cacheable.deserialize interface.
    * @returns the deserialize data.
    */
-  async deserialize(array: Uint8Array): Promise<Record<string, CaseList>> {
-    const decompressed = await this.decompress('gzip', array);
-    const s = new BinaryStream(decompressed);
+  deserialize(array: Uint8Array): Record<string, CaseList> {
+    const s = new BinaryStream(array.buffer);
     const casesByName: Record<string, CaseList> = {};
     const numRecords = s.readU32();
     for (let i = 0; i < numRecords; i++) {
@@ -191,26 +190,6 @@ export class CaseCache implements Cacheable<Record<string, CaseList>> {
       casesByName[name] = cases;
     }
     return casesByName;
-  }
-
-  /**
-   * Compresses a Uint8Array using using the given CompressionFormat
-   */
-  private async compress(format: CompressionFormat, data: Uint8Array): Promise<Uint8Array> {
-    const stream = new Blob([data]).stream();
-    const compressedStream = stream.pipeThrough(new CompressionStream(format));
-    const blob = await new Response(compressedStream).blob();
-    return new Uint8Array(await blob.arrayBuffer());
-  }
-
-  /**
-   * Decompresses a Uint8Array using using gzip
-   */
-  private async decompress(format: CompressionFormat, data: Uint8Array): Promise<ArrayBuffer> {
-    const stream = new Blob([data]).stream();
-    const decompressedStream = stream.pipeThrough(new DecompressionStream(format));
-    const blob = await new Response(decompressedStream).blob();
-    return await blob.arrayBuffer();
   }
 
   public readonly path: string;

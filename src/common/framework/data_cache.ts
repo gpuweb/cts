@@ -187,11 +187,11 @@ export interface Cacheable<Data> {
   /**
    * serialize() encodes `data` to a binary representation so that it can be stored in a cache file.
    */
-  serialize(data: Data): Promise<Uint8Array>;
+  serialize(data: Data): Uint8Array;
 
   /**
    * deserialize() is the inverse of serialize(), decoding the binary representation back to a Data
    * object.
    */
-  deserialize(binary: Uint8Array): Promise<Data>;
+  deserialize(binary: Uint8Array): Data;
 }

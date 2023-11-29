@@ -10,53 +10,13 @@ Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
+import { d } from './distance.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-// Cases: [f32|f16]_[non_]const
-const scalar_cases = (['f32', 'f16'] as const)
-  .flatMap(trait =>
-    ([true, false] as const).map(nonConst => ({
-      [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        return FP[trait].generateScalarPairToIntervalCases(
-          FP[trait].scalarRange(),
-          FP[trait].scalarRange(),
-          nonConst ? 'unfiltered' : 'finite',
-          FP[trait].distanceInterval
-        );
-      },
-    }))
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-// Cases: [f32|f16]_vecN_[non_]const
-const vec_cases = (['f32', 'f16'] as const)
-  .flatMap(trait =>
-    ([2, 3, 4] as const).flatMap(dim =>
-      ([true, false] as const).map(nonConst => ({
-        [`${trait}_vec${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
-          return FP[trait].generateVectorPairToIntervalCases(
-            FP[trait].sparseVectorRange(dim),
-            FP[trait].sparseVectorRange(dim),
-            nonConst ? 'unfiltered' : 'finite',
-            FP[trait].distanceInterval
-          );
-        },
-      }))
-    )
-  )
-  .reduce((a, b) => ({ ...a, ...b }), {});
-
-export const d = makeCaseCache('distance', {
-  ...scalar_cases,
-  ...vec_cases,
-});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
