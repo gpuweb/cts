@@ -841,6 +841,7 @@
   "webgpu:compat,api,validation,render_pipeline,fragment_state:colorState:*": { "subcaseMS": 32.604 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:sample_mask:*": { "subcaseMS": 14.801 },
   "webgpu:compat,api,validation,render_pipeline,vertex_state:maxVertexAttributesVertexIndexInstanceIndex:*": { "subcaseMS": 3.700 },
+  "webgpu:compat,api,validation,texture,createTexture:depthOrArrayLayers_incompatible_with_textureBindingViewDimension:*": { "subcaseMS": 12.712 },
   "webgpu:compat,api,validation,texture,createTexture:invalidTextureBindingViewDimension:*": { "subcaseMS": 6.022 },
   "webgpu:compat,api,validation,texture,createTexture:unsupportedTextureFormats:*": { "subcaseMS": 0.700 },
   "webgpu:compat,api,validation,texture,createTexture:unsupportedTextureViewFormats:*": { "subcaseMS": 0.601 },
