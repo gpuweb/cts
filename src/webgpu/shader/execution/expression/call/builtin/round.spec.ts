@@ -12,48 +12,13 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16, TypeAbstractFloat } from '../../../../../util/conversion.js';
-import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, fullF64Range } from '../../../../../util/math.js';
-import { makeCaseCache } from '../../case_cache.js';
+import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractBuiltin, builtin } from './builtin.js';
+import { d } from './round.cache.js';
 
 export const g = makeTestGroup(GPUTest);
-
-export const d = makeCaseCache('round', {
-  f32: () => {
-    return FP.f32.generateScalarToIntervalCases(
-      [
-        0x80000000, // https://github.com/gpuweb/cts/issues/2766,
-        ...fullF32Range(),
-      ],
-      'unfiltered',
-      FP.f32.roundInterval
-    );
-  },
-  f16: () => {
-    return FP.f16.generateScalarToIntervalCases(
-      [
-        0x8000, // https://github.com/gpuweb/cts/issues/2766
-        ...fullF16Range(),
-      ],
-      'unfiltered',
-      FP.f16.roundInterval
-    );
-  },
-  abstract: () => {
-    return FP.abstract.generateScalarToIntervalCases(
-      [
-        0x8000_0000_0000_0000, // https://github.com/gpuweb/cts/issues/2766
-        ...fullF64Range(),
-      ],
-      'unfiltered',
-      FP.abstract.roundInterval
-    );
-  },
-});
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')

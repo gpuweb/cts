@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 export const description = `
 Tests that you can not use bgra8unorm-srgb in compat mode.
 Tests that textureBindingViewDimension must compatible with texture dimension
@@ -70,3 +71,36 @@ g.test('invalidTextureBindingViewDimension')
       shouldError
     );
   });
+
+g.test('depthOrArrayLayers_incompatible_with_textureBindingViewDimension')
+  .desc(
+    `Tests
+    * if textureBindingViewDimension is '2d' then depthOrArrayLayers must be 1
+    * if textureBindingViewDimension is 'cube' then depthOrArrayLayers must be 6
+    `
+  )
+  .params(u =>
+    u //
+      .combine('textureBindingViewDimension', ['2d', 'cube'])
+      .combine('depthOrArrayLayers', [1, 3, 6, 12])
+  )
+  .fn(t => {
+    const { textureBindingViewDimension, depthOrArrayLayers } = t.params;
+    const shouldError =
+      (textureBindingViewDimension === '2d' && depthOrArrayLayers !== 1) ||
+      (textureBindingViewDimension === 'cube' && depthOrArrayLayers !== 6);
+    t.expectGPUError(
+      'validation',
+      () => {
+        const texture = t.device.createTexture({
+          size: [1, 1, depthOrArrayLayers],
+          format: 'rgba8unorm',
+          usage: GPUTextureUsage.TEXTURE_BINDING,
+          textureBindingViewDimension,
+        } as GPUTextureDescriptor); // MAINTENANCE_TODO: remove cast once textureBindingViewDimension is added to IDL
+        t.trackForCleanup(texture);
+      },
+      shouldError
+    );
+  });
+

@@ -2,7 +2,7 @@
 /* eslint no-console: "off" */
 
 import { dataCache } from '../framework/data_cache.js';
-import { setBaseResourcePath } from '../framework/resources.js';
+import { getResourcePath, setBaseResourcePath } from '../framework/resources.js';
 import { globalTestConfig } from '../framework/test_config.js';
 import { DefaultTestFileLoader } from '../internal/file_loader.js';
 import { Logger } from '../internal/logging/logger.js';
@@ -80,7 +80,7 @@ if (powerPreference || compatibility) {
 
 dataCache.setStore({
   load: async (path: string) => {
-    const response = await fetch(`data/${path}`);
+    const response = await fetch(getResourcePath(`cache/${path}`));
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
@@ -223,6 +223,12 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 
         if (caseResult.logs) {
           caselogs.empty();
+          // Show exceptions at the top since they are often unexpected can point out an error in the test itself vs the WebGPU implementation.
+          caseResult.logs
+            .filter(l => l.name === 'EXCEPTION')
+            .forEach(l => {
+              $('<pre>').addClass('testcaselogtext').text(l.toJSON()).appendTo(caselogs);
+            });
           for (const l of caseResult.logs) {
             const caselog = $('<div>').addClass('testcaselog').appendTo(caselogs);
             $('<button>')

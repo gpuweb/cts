@@ -1,7 +1,8 @@
 import { ROArrayArray, ROArrayArrayArray } from '../../common/util/types.js';
 import { assert, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
-import { Case, IntervalFilter } from '../shader/execution/expression/expression.js';
+import { Case } from '../shader/execution/expression/case.js';
+import { IntervalFilter } from '../shader/execution/expression/interval_filter.js';
 
 import BinaryStream from './binary_stream.js';
 import { anyOf } from './compare.js';
@@ -23,6 +24,7 @@ import {
   correctlyRoundedF16,
   correctlyRoundedF32,
   correctlyRoundedF64,
+  every2DArray,
   flatten2DArray,
   FlushMode,
   flushSubnormalNumberF16,
@@ -36,10 +38,24 @@ import {
   map2DArray,
   oneULPF16,
   oneULPF32,
-  quantizeToF32,
   quantizeToF16,
+  quantizeToF32,
+  scalarF16Range,
+  scalarF32Range,
+  scalarF64Range,
+  sparseMatrixF16Range,
+  sparseMatrixF32Range,
+  sparseMatrixF64Range,
+  sparseScalarF16Range,
+  sparseScalarF32Range,
+  sparseScalarF64Range,
+  sparseVectorF16Range,
+  sparseVectorF32Range,
+  sparseVectorF64Range,
   unflatten2DArray,
-  every2DArray,
+  vectorF16Range,
+  vectorF32Range,
+  vectorF64Range,
 } from './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
@@ -1081,6 +1097,20 @@ export abstract class FPTraits {
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
   /** @returns a builder for converting numbers to Scalars */
   public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a range of scalars for testing */
+  public abstract scalarRange(): readonly number[];
+  /** @returns a reduced range of scalars for testing */
+  public abstract sparseScalarRange(): readonly number[];
+  /** @returns a range of dim element vectors for testing */
+  public abstract vectorRange(dim: number): ROArrayArray<number>;
+  /** @returns a reduced range of dim element vectors for testing */
+  public abstract sparseVectorRange(dim: number): ROArrayArray<number>;
+  /** @returns a reduced range of cols x rows matrices for testing
+   *
+   * A non-sparse version of this generator is intentionally not provided due to
+   * runtime issues with more dense ranges.
+   */
+  public abstract sparseMatrixRange(cols: number, rows: number): ROArrayArrayArray<number>;
 
   // Framework - Cases
 
@@ -4520,6 +4550,11 @@ class F32Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF32;
   public readonly oneULP = oneULPF32;
   public readonly scalarBuilder = f32;
+  public readonly scalarRange = scalarF32Range;
+  public readonly sparseScalarRange = sparseScalarF32Range;
+  public readonly vectorRange = vectorF32Range;
+  public readonly sparseVectorRange = sparseVectorF32Range;
+  public readonly sparseMatrixRange = sparseMatrixF32Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
@@ -4992,6 +5027,11 @@ class FPAbstractTraits extends FPTraits {
     unreachable(`'FPAbstractTraits.oneULP should never be called`);
   };
   public readonly scalarBuilder = abstractFloat;
+  public readonly scalarRange = scalarF64Range;
+  public readonly sparseScalarRange = sparseScalarF64Range;
+  public readonly vectorRange = vectorF64Range;
+  public readonly sparseVectorRange = sparseVectorF64Range;
+  public readonly sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
@@ -5324,6 +5364,11 @@ class F16Traits extends FPTraits {
   public readonly flushSubnormal = flushSubnormalNumberF16;
   public readonly oneULP = oneULPF16;
   public readonly scalarBuilder = f16;
+  public readonly scalarRange = scalarF16Range;
+  public readonly sparseScalarRange = sparseScalarF16Range;
+  public readonly vectorRange = vectorF16Range;
+  public readonly sparseVectorRange = sparseVectorF16Range;
+  public readonly sparseMatrixRange = sparseMatrixF16Range;
 
   // Framework - Fundamental Error Intervals - Overrides
   public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
