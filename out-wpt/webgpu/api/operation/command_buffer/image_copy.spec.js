@@ -1216,7 +1216,7 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
           binding: 0,
           resource: inputTexture.createView({
             dimension: use2DArray ? '2d-array' : '2d',
-            ...(use2DArray && {
+            ...(!use2DArray && {
               baseArrayLayer: z,
               arrayLayerCount: 1
             }),
