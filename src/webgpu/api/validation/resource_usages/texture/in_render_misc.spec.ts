@@ -361,6 +361,9 @@ g.test('subresources,texture_usages_in_copy_and_render_pass')
         GPUTextureUsage.STORAGE_BINDING |
         GPUTextureUsage.RENDER_ATTACHMENT,
       size: [kTextureSize, kTextureSize, 1],
+      ...(t.isCompatibility && {
+        textureBindingViewDimension: '2d-array',
+      }),
     });
 
     const UseTextureOnCommandEncoder = (
