@@ -360,7 +360,10 @@ fn((t) => {
     GPUTextureUsage.TEXTURE_BINDING |
     GPUTextureUsage.STORAGE_BINDING |
     GPUTextureUsage.RENDER_ATTACHMENT,
-    size: [kTextureSize, kTextureSize, 1]
+    size: [kTextureSize, kTextureSize, 1],
+    ...(t.isCompatibility && {
+      textureBindingViewDimension: '2d-array'
+    })
   });
 
   const UseTextureOnCommandEncoder = (
