@@ -55,12 +55,13 @@ g.test('invalidTextureBindingViewDimension')
   )
   .fn(t => {
     const { dimension, textureBindingViewDimension } = t.params;
+    const depthOrArrayLayers = textureBindingViewDimension === '1d' || textureBindingViewDimension === '2d' ? 1 : 6;
     const shouldError = getTextureDimensionFromView(textureBindingViewDimension) !== dimension;
     t.expectGPUError(
       'validation',
       () => {
         const texture = t.device.createTexture({
-          size: [1, 1, dimension === '1d' ? 1 : 6],
+          size: [1, 1, depthOrArrayLayers],
           format: 'rgba8unorm',
           usage: GPUTextureUsage.TEXTURE_BINDING,
           dimension,
