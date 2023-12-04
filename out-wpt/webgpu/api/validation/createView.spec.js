@@ -55,6 +55,8 @@ fn((t) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[textureFormat];
 
   t.skipIfTextureFormatNotSupported(textureFormat, viewFormat);
+  // Compatibility mode does not support format reinterpretation.
+  t.skipIf(t.isCompatibility && viewFormat !== undefined && viewFormat !== textureFormat);
 
   const compatible = viewFormat === undefined || viewCompatible(textureFormat, viewFormat);
 
