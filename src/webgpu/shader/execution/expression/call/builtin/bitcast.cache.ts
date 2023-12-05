@@ -207,8 +207,8 @@ const anyI32 = alwaysPass('any i32');
 const anyU32 = alwaysPass('any u32');
 
 // Unbounded FPInterval
-const f32UnboundedInterval = FP.f32.constants().unboundedInterval;
-const f16UnboundedInterval = FP.f16.constants().unboundedInterval;
+const f32InfiniteInterval = FP.f32.constants().infiniteInterval;
+const f16InfiniteInterval = FP.f16.constants().infiniteInterval;
 
 // i32 and u32 cases for bitcasting to f32.
 // i32 cases for bitcasting to f32 finite, zeros, Inf, and NaN.
@@ -302,7 +302,7 @@ function bitcastU32ToF32Comparator(u: number): Comparator {
 function generateF16ExpectationIntervals(bitcastedF16Value: number): FPInterval[] {
   // If the bitcasted f16 value is inf or nan, the result is unbounded
   if (!isFiniteF16(bitcastedF16Value)) {
-    return [f16UnboundedInterval];
+    return [f16InfiniteInterval];
   }
   // If the casted f16 value is +/-0.0, the result can be one of both. Note that in JS -0.0 === 0.0.
   if (bitcastedF16Value === 0.0) {
@@ -318,7 +318,7 @@ function generateF16ExpectationIntervals(bitcastedF16Value: number): FPInterval[
  * bitcast conversion from f16.
  */
 function bitcastF16ToF16Comparator(f: number): Comparator {
-  if (!isFiniteF16(f)) return anyOf(f16UnboundedInterval);
+  if (!isFiniteF16(f)) return anyOf(f16InfiniteInterval);
   return anyOf(...generateF16ExpectationIntervals(f));
 }
 
@@ -358,7 +358,7 @@ function bitcastF32ToVec2F16Comparator(f: number): Comparator {
   // If input f32 is not finite, it can be evaluated to any value and thus any result f16 vec2 is
   // possible.
   if (!isFiniteF32(f)) {
-    return anyOf([f16UnboundedInterval, f16UnboundedInterval]);
+    return anyOf([f16InfiniteInterval, f16InfiniteInterval]);
   }
   const bitcastedVec2F16InU16x2 = u32ToU16x2(reinterpretF32AsU32(f)).map(reinterpretU16AsF16);
   // Generate expection for vec2 f16 result, by generating expected intervals for each elements and
@@ -469,7 +469,7 @@ function possible32BitScalarIntervalsFromF16x2(
     expectationsForValue = x => {
       // Handle the possible Inf/NaN/zeros and subnormal cases for f32 result.
       if (!isFiniteF32(x)) {
-        return [f32UnboundedInterval];
+        return [f32InfiniteInterval];
       }
       // If the casted f16 value is +/-0.0, the result can be one of both. Note that in JS -0.0 === 0.0.
       if (x === 0.0) {
@@ -479,7 +479,7 @@ function possible32BitScalarIntervalsFromF16x2(
       // If the casted f16 value is subnormal, it also may be flushed to +/-0.0.
       return [exactInterval, ...(isSubnormalNumberF32(x) ? [f32ZerosInterval] : [])];
     };
-    unboundedExpectations = [f32UnboundedInterval];
+    unboundedExpectations = [f32InfiniteInterval];
   }
   // Return unbounded expection if f16 Inf/NaN occurs
   if (
