@@ -129,7 +129,7 @@ g.test('format_reinterpretation')
   })
   .fn(t => {
     const { format } = t.params;
-    const info = kTextureFormatInfo[t.params.format];
+    const info = kTextureFormatInfo[format];
 
     const formatPairs = [
       { format, viewFormats: [info.baseFormat!] },
