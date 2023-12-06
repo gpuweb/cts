@@ -317,7 +317,8 @@ export class ValidationTest extends GPUTest {
 
   /** Return a GPURenderPipeline with default options and no-op vertex and fragment shaders. */
   createNoOpRenderPipeline(
-    layout: GPUPipelineLayout | GPUAutoLayoutMode = 'auto'
+    layout: GPUPipelineLayout | GPUAutoLayoutMode = 'auto',
+    colorFormat: GPUTextureFormat = 'rgba8unorm'
   ): GPURenderPipeline {
     return this.device.createRenderPipeline({
       layout,
@@ -332,7 +333,7 @@ export class ValidationTest extends GPUTest {
           code: this.getNoOpShaderCode('FRAGMENT'),
         }),
         entryPoint: 'main',
-        targets: [{ format: 'rgba8unorm', writeMask: 0 }],
+        targets: [{ format: colorFormat, writeMask: 0 }],
       },
       primitive: { topology: 'triangle-list' },
     });
