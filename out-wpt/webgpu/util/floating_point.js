@@ -99,10 +99,10 @@ export function deserializeFPKind(s) {
 // Containers
 
 /**
- * Representation of bounds for an interval as an array with either one or two
- * elements. Single element indicates that the interval is a single point. For
- * two elements, the first is the lower bound of the interval and the second is
- * the upper bound.
+ * Representation of endpoints for an interval as an array with either one or
+ * two elements. Single element indicates that the interval is a single point.
+ * For two elements, the first is the lower edges of the interval and the
+ * second is the upper edge, i.e. e[0] <= e[1], where e is an IntervalEndpoints
  */
 
 
@@ -118,15 +118,18 @@ export class FPInterval {
    * `FPTraits.toInterval` is the preferred way to create FPIntervals
    *
    * @param kind the floating point number type this is an interval for
-   * @param bounds beginning and end of the interval
+   * @param endpoints beginning and end of the interval
    */
-  constructor(kind, ...bounds) {
+  constructor(kind, ...endpoints) {
     this.kind = kind;
 
-    const begin = bounds[0];
-    const end = bounds.length === 2 ? bounds[1] : bounds[0];
-    assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
-    assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
+    const begin = endpoints[0];
+    const end = endpoints.length === 2 ? endpoints[1] : endpoints[0];
+    assert(!Number.isNaN(begin) && !Number.isNaN(end), `endpoints need to be non-NaN`);
+    assert(
+      begin <= end,
+      `endpoints[0] (${begin}) must be less than or equal to endpoints[1]  (${end})`
+    );
 
     this.begin = begin;
     this.end = end;
@@ -138,7 +141,7 @@ export class FPInterval {
   }
 
   /** @returns begin and end if non-point interval, otherwise just begin */
-  bounds() {
+  endpoints() {
     return this.isPoint() ? [this.begin] : [this.begin, this.end];
   }
 
@@ -179,7 +182,7 @@ export class FPInterval {
 
   /** @returns a string representation for logging purposes */
   toString() {
-    return `{ '${this.kind}', [${this.bounds().map(this.traits().scalarBuilder)}] }`;
+    return `{ '${this.kind}', [${this.endpoints().map(this.traits().scalarBuilder)}] }`;
   }
 }
 
@@ -572,7 +575,7 @@ function addFlushedIfNeededF16(values) {
 // Traits
 
 /**
- * Typed structure containing all the limits/constants defined for each
+ * Typed structure containing all the constants defined for each
  * WGSL floating point kind
  */
 
@@ -677,7 +680,7 @@ export class FPTraits {
         return this.constants().unboundedInterval;
       }
 
-      return new FPInterval(this.kind, ...n.bounds());
+      return new FPInterval(this.kind, ...n.endpoints());
     }
 
     if (n instanceof Array) {
@@ -712,7 +715,7 @@ export class FPTraits {
   }
 
   /**
-   * @returns an interval with the tightest bounds that includes all provided
+   * @returns an interval with the tightest endpoints that includes all provided
    *          intervals
    */
   spanIntervals(...intervals) {
@@ -2282,7 +2285,7 @@ export class FPTraits {
     }
 
     const result = this.spanIntervals(
-      ...x.bounds().map((b) => this.roundAndFlushScalarToInterval(b, op))
+      ...x.endpoints().map((b) => this.roundAndFlushScalarToInterval(b, op))
     );
     return result.isFinite() ? result : this.constants().unboundedInterval;
   }
@@ -2312,8 +2315,8 @@ export class FPTraits {
     }
 
     const outputs = new Set();
-    x.bounds().forEach((inner_x) => {
-      y.bounds().forEach((inner_y) => {
+    x.endpoints().forEach((inner_x) => {
+      y.endpoints().forEach((inner_y) => {
         outputs.add(this.roundAndFlushScalarPairToInterval(inner_x, inner_y, op));
       });
     });
@@ -2342,9 +2345,9 @@ export class FPTraits {
     }
 
     const outputs = new Set();
-    x.bounds().forEach((inner_x) => {
-      y.bounds().forEach((inner_y) => {
-        z.bounds().forEach((inner_z) => {
+    x.endpoints().forEach((inner_x) => {
+      y.endpoints().forEach((inner_y) => {
+        z.endpoints().forEach((inner_z) => {
           outputs.add(this.roundAndFlushScalarTripleToInterval(inner_x, inner_y, inner_z, op));
         });
       });
@@ -2367,7 +2370,7 @@ export class FPTraits {
       return this.constants().unboundedInterval;
     }
 
-    const x_values = cartesianProduct(...x.map((e) => e.bounds()));
+    const x_values = cartesianProduct(...x.map((e) => e.endpoints()));
 
     const outputs = new Set();
     x_values.forEach((inner_x) => {
@@ -2396,8 +2399,8 @@ export class FPTraits {
       return this.constants().unboundedInterval;
     }
 
-    const x_values = cartesianProduct(...x.map((e) => e.bounds()));
-    const y_values = cartesianProduct(...y.map((e) => e.bounds()));
+    const x_values = cartesianProduct(...x.map((e) => e.endpoints()));
+    const y_values = cartesianProduct(...y.map((e) => e.endpoints()));
 
     const outputs = new Set();
     x_values.forEach((inner_x) => {
@@ -2423,7 +2426,7 @@ export class FPTraits {
       return this.constants().unboundedVector[x.length];
     }
 
-    const x_values = cartesianProduct(...x.map((e) => e.bounds()));
+    const x_values = cartesianProduct(...x.map((e) => e.endpoints()));
 
     const outputs = new Set();
     x_values.forEach((inner_x) => {
@@ -2467,8 +2470,8 @@ export class FPTraits {
       return this.constants().unboundedVector[x.length];
     }
 
-    const x_values = cartesianProduct(...x.map((e) => e.bounds()));
-    const y_values = cartesianProduct(...y.map((e) => e.bounds()));
+    const x_values = cartesianProduct(...x.map((e) => e.endpoints()));
+    const y_values = cartesianProduct(...y.map((e) => e.endpoints()));
 
     const outputs = new Set();
     x_values.forEach((inner_x) => {
@@ -2530,7 +2533,9 @@ export class FPTraits {
     }
 
     const m_flat = flatten2DArray(m);
-    const m_values = cartesianProduct(...m_flat.map((e) => e.bounds()));
+    const m_values = cartesianProduct(
+      ...m_flat.map((e) => e.endpoints())
+    );
 
     const outputs = new Set();
     m_values.forEach((inner_m) => {
@@ -3571,9 +3576,9 @@ export class FPTraits {
       if (e2 > bias + 1) {
         return this.constants().unboundedInterval;
       }
-      // The spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, and the accuracy is correctly
-      // rounded to the true value, so the inheritance framework does not need to be invoked to
-      // determine bounds.
+      // The spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, and the
+      // accuracy is correctly rounded to the true value, so the inheritance
+      // framework does not need to be invoked to determine endpoints.
       // Instead, the value at a higher precision is calculated and passed to
       // correctlyRoundedInterval.
       const result = e1 * 2 ** e2;
@@ -4721,7 +4726,7 @@ class F32Traits extends FPTraits {
   unpack2x16floatIntervalImpl(n) {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16floatInterval only accepts values on the bounds of u32'
+      'unpack2x16floatInterval only accepts valid u32 values'
     );
     this.unpackDataU32[0] = n;
     if (this.unpackDataF16.some((f) => !isFiniteF16(f))) {
@@ -4745,7 +4750,7 @@ class F32Traits extends FPTraits {
   unpack2x16snormIntervalImpl(n) {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16snormInterval only accepts values on the bounds of u32'
+      'unpack2x16snormInterval only accepts valid u32 values'
     );
     const op = (n) => {
       return this.ulpInterval(Math.max(n / 32767, -1), 3);
@@ -4761,7 +4766,7 @@ class F32Traits extends FPTraits {
   unpack2x16unormIntervalImpl(n) {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16unormInterval only accepts values on the bounds of u32'
+      'unpack2x16unormInterval only accepts valid u32 values'
     );
     const op = (n) => {
       return this.ulpInterval(n / 65535, 3);
@@ -4777,7 +4782,7 @@ class F32Traits extends FPTraits {
   unpack4x8snormIntervalImpl(n) {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8snormInterval only accepts values on the bounds of u32'
+      'unpack4x8snormInterval only accepts valid u32 values'
     );
     const op = (n) => {
       return this.ulpInterval(Math.max(n / 127, -1), 3);
@@ -4797,7 +4802,7 @@ class F32Traits extends FPTraits {
   unpack4x8unormIntervalImpl(n) {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8unormInterval only accepts values on the bounds of u32'
+      'unpack4x8unormInterval only accepts valid u32 values'
     );
     const op = (n) => {
       return this.ulpInterval(n / 255, 3);
