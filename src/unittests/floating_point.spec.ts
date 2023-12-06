@@ -32,7 +32,7 @@ const kFPTraitForULP = {
   f16: 'f16',
 } as const;
 
-/** endpoints indicating an expectation of unbounded error */
+/** Endpoints indicating an expectation of unbounded error */
 const kUnboundedEndpoints: IntervalEndpoints = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
 
 /** Interval from kUnboundedEndpoints */
@@ -2299,7 +2299,7 @@ g.test('acosInterval')
           // because  sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of
           // inverseqrt.
           // The acceptance interval @ x = 0 is kUnboundedEndpoints, because atan2
-          // is not  well-defined/implemented at 0.
+          // is not well-defined/implemented at 0.
           { input: constants.negative.infinity, expected: kUnboundedEndpoints },
           { input: constants.negative.min, expected: kUnboundedEndpoints },
           { input: -1, expected: kUnboundedEndpoints },
@@ -2444,10 +2444,10 @@ g.test('asinInterval')
         // prettier-ignore
         return [
           // The acceptance interval @ x = -1 and 1 is kUnboundedEndpoints,
-          // because  sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of
+          // because sqrt(1 - x*x) = sqrt(0), and sqrt is defined in terms of
           // inversqrt.
           // The acceptance interval @ x = 0 is kUnboundedEndpoints, because
-          // atan2 is not  well-defined/implemented at 0.
+          // atan2 is not well-defined/implemented at 0.
           { input: constants.negative.infinity, expected: kUnboundedEndpoints },
           { input: constants.negative.min, expected: kUnboundedEndpoints },
           { input: -1, expected: kUnboundedEndpoints },

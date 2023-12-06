@@ -3586,7 +3586,7 @@ export abstract class FPTraits {
         // Overflowed TS's number type, so definitely out of bounds for f32/f16
         return this.constants().unboundedInterval;
       }
-      // The result may be zero if e2 + bias <= 0, but we can't simply span the nterval to 0.0.
+      // The result may be zero if e2 + bias <= 0, but we can't simply span the interval to 0.0.
       // For example, for f32 input e1 = 2**120 and e2 = -130, e2 + bias = -3 <= 0, but
       // e1 * 2 ** e2 = 2**-10, so the valid result is 2**-10 or 0.0, instead of [0.0, 2**-10].
       // Always return the correctly-rounded interval, and special examination should be taken when
