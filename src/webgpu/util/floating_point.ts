@@ -99,12 +99,12 @@ export function deserializeFPKind(s: BinaryStream): FPKind {
 // Containers
 
 /**
- * Representation of bounds for an interval as an array with either one or two
- * elements. Single element indicates that the interval is a single point. For
- * two elements, the first is the lower bound of the interval and the second is
- * the upper bound.
+ * Representation of endpoints for an interval as an array with either one or
+ * two elements. Single element indicates that the interval is a single point.
+ * For two elements, the first is the lower edges of the interval and the
+ * second is the upper edge, i.e. e[0] <= e[1], where e is an IntervalEndpoints
  */
-export type IntervalBounds = readonly [number] | readonly [number, number];
+export type IntervalEndpoints = readonly [number] | readonly [number, number];
 
 /** Represents a closed interval of floating point numbers */
 export class FPInterval {
@@ -118,15 +118,18 @@ export class FPInterval {
    * `FPTraits.toInterval` is the preferred way to create FPIntervals
    *
    * @param kind the floating point number type this is an interval for
-   * @param bounds beginning and end of the interval
+   * @param endpoints beginning and end of the interval
    */
-  public constructor(kind: FPKind, ...bounds: IntervalBounds) {
+  public constructor(kind: FPKind, ...endpoints: IntervalEndpoints) {
     this.kind = kind;
 
-    const begin = bounds[0];
-    const end = bounds.length === 2 ? bounds[1] : bounds[0];
-    assert(!Number.isNaN(begin) && !Number.isNaN(end), `bounds need to be non-NaN`);
-    assert(begin <= end, `bounds[0] (${begin}) must be less than or equal to bounds[1]  (${end})`);
+    const begin = endpoints[0];
+    const end = endpoints.length === 2 ? endpoints[1] : endpoints[0];
+    assert(!Number.isNaN(begin) && !Number.isNaN(end), `endpoints need to be non-NaN`);
+    assert(
+      begin <= end,
+      `endpoints[0] (${begin}) must be less than or equal to endpoints[1]  (${end})`
+    );
 
     this.begin = begin;
     this.end = end;
@@ -138,7 +141,7 @@ export class FPInterval {
   }
 
   /** @returns begin and end if non-point interval, otherwise just begin */
-  public bounds(): IntervalBounds {
+  public endpoints(): IntervalEndpoints {
     return this.isPoint() ? [this.begin] : [this.begin, this.end];
   }
 
@@ -179,7 +182,7 @@ export class FPInterval {
 
   /** @returns a string representation for logging purposes */
   public toString(): string {
-    return `{ '${this.kind}', [${this.bounds().map(this.traits().scalarBuilder)}] }`;
+    return `{ '${this.kind}', [${this.endpoints().map(this.traits().scalarBuilder)}] }`;
   }
 }
 
@@ -328,7 +331,7 @@ interface ScalarToIntervalOp {
    * occur and returns a span of those points to be used as the domain instead.
    *
    * Used by this.runScalarToIntervalOp before invoking impl.
-   * If not defined, the bounds of the existing domain are assumed to be the
+   * If not defined, the endpoints of the existing domain are assumed to be the
    * extrema.
    *
    * This is only implemented for operations that meet all the following
@@ -359,10 +362,10 @@ interface ScalarPairToIntervalOp {
    * occur and returns spans of those points to be used as the domain instead.
    *
    * Used by runScalarPairToIntervalOp before invoking impl.
-   * If not defined, the bounds of the existing domain are assumed to be the
+   * If not defined, the endpoints of the existing domain are assumed to be the
    * extrema.
    *
-   * This is only implemented for functions that meet all of the following
+   * This is only implemented for functions that meet all the following
    * criteria:
    *   a) non-monotonic
    *   b) used in inherited accuracy calculations
@@ -572,7 +575,7 @@ export interface VectorMatrixToVector {
 // Traits
 
 /**
- * Typed structure containing all the limits/constants defined for each
+ * Typed structure containing all the constants defined for each
  * WGSL floating point kind
  */
 interface FPConstants {
@@ -651,7 +654,7 @@ interface FPConstants {
 /** A representation of an FPInterval for a case param */
 export type FPIntervalParam = {
   kind: FPKind;
-  interval: number | IntervalBounds;
+  interval: number | IntervalEndpoints;
 };
 
 /** Abstract base class for all floating-point traits */
@@ -666,7 +669,7 @@ export abstract class FPTraits {
   // Utilities - Implemented
 
   /** @returns an interval containing the point or the original interval */
-  public toInterval(n: number | IntervalBounds | FPInterval): FPInterval {
+  public toInterval(n: number | IntervalEndpoints | FPInterval): FPInterval {
     if (n instanceof FPInterval) {
       if (n.kind === this.kind) {
         return n;
@@ -677,7 +680,7 @@ export abstract class FPTraits {
         return this.constants().unboundedInterval;
       }
 
-      return new FPInterval(this.kind, ...n.bounds());
+      return new FPInterval(this.kind, ...n.endpoints());
     }
 
     if (n instanceof Array) {
@@ -690,7 +693,7 @@ export abstract class FPTraits {
   /**
    * Makes a param that can be turned into an interval
    */
-  public toParam(n: number | IntervalBounds): FPIntervalParam {
+  public toParam(n: number | IntervalEndpoints): FPIntervalParam {
     return {
       kind: this.kind,
       interval: n,
@@ -701,18 +704,18 @@ export abstract class FPTraits {
    * Converts p into an FPInterval if it is an FPIntervalPAram
    */
   public fromParam(
-    p: number | IntervalBounds | FPIntervalParam
-  ): number | IntervalBounds | FPInterval {
+    p: number | IntervalEndpoints | FPIntervalParam
+  ): number | IntervalEndpoints | FPInterval {
     const param = p as FPIntervalParam;
     if (param.interval && param.kind) {
       assert(param.kind === this.kind);
       return this.toInterval(param.interval);
     }
-    return p as number | IntervalBounds;
+    return p as number | IntervalEndpoints;
   }
 
   /**
-   * @returns an interval with the tightest bounds that includes all provided
+   * @returns an interval with the tightest endpoints that includes all provided
    *          intervals
    */
   public spanIntervals(...intervals: readonly FPInterval[]): FPInterval {
@@ -731,7 +734,7 @@ export abstract class FPTraits {
   }
 
   /** Narrow an array of values to FPVector if possible */
-  public isVector(v: ReadonlyArray<number | IntervalBounds | FPInterval>): v is FPVector {
+  public isVector(v: ReadonlyArray<number | IntervalEndpoints | FPInterval>): v is FPVector {
     if (v.every(e => e instanceof FPInterval && e.kind === this.kind)) {
       return v.length === 2 || v.length === 3 || v.length === 4;
     }
@@ -739,7 +742,7 @@ export abstract class FPTraits {
   }
 
   /** @returns an FPVector representation of an array of values if possible */
-  public toVector(v: ReadonlyArray<number | IntervalBounds | FPInterval>): FPVector {
+  public toVector(v: ReadonlyArray<number | IntervalEndpoints | FPInterval>): FPVector {
     if (this.isVector(v) && v.every(e => e.kind === this.kind)) {
       return v;
     }
@@ -778,7 +781,7 @@ export abstract class FPTraits {
   }
 
   /** Narrow an array of an array of values to FPMatrix if possible */
-  public isMatrix(m: Array2D<number | IntervalBounds | FPInterval> | FPVector[]): m is FPMatrix {
+  public isMatrix(m: Array2D<number | IntervalEndpoints | FPInterval> | FPVector[]): m is FPMatrix {
     if (!m.every(c => c.every(e => e instanceof FPInterval && e.kind === this.kind))) {
       return false;
     }
@@ -803,7 +806,7 @@ export abstract class FPTraits {
   }
 
   /** @returns an FPMatrix representation of an array of an array of values if possible */
-  public toMatrix(m: Array2D<number | IntervalBounds | FPInterval> | FPVector[]): FPMatrix {
+  public toMatrix(m: Array2D<number | IntervalEndpoints | FPInterval> | FPVector[]): FPMatrix {
     if (
       this.isMatrix(m) &&
       every2DArray(m, (e: FPInterval) => {
@@ -2282,7 +2285,7 @@ export abstract class FPTraits {
     }
 
     const result = this.spanIntervals(
-      ...x.bounds().map(b => this.roundAndFlushScalarToInterval(b, op))
+      ...x.endpoints().map(b => this.roundAndFlushScalarToInterval(b, op))
     );
     return result.isFinite() ? result : this.constants().unboundedInterval;
   }
@@ -2312,8 +2315,8 @@ export abstract class FPTraits {
     }
 
     const outputs = new Set<FPInterval>();
-    x.bounds().forEach(inner_x => {
-      y.bounds().forEach(inner_y => {
+    x.endpoints().forEach(inner_x => {
+      y.endpoints().forEach(inner_y => {
         outputs.add(this.roundAndFlushScalarPairToInterval(inner_x, inner_y, op));
       });
     });
@@ -2342,9 +2345,9 @@ export abstract class FPTraits {
     }
 
     const outputs = new Set<FPInterval>();
-    x.bounds().forEach(inner_x => {
-      y.bounds().forEach(inner_y => {
-        z.bounds().forEach(inner_z => {
+    x.endpoints().forEach(inner_x => {
+      y.endpoints().forEach(inner_y => {
+        z.endpoints().forEach(inner_z => {
           outputs.add(this.roundAndFlushScalarTripleToInterval(inner_x, inner_y, inner_z, op));
         });
       });
@@ -2367,7 +2370,7 @@ export abstract class FPTraits {
       return this.constants().unboundedInterval;
     }
 
-    const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
+    const x_values = cartesianProduct<number>(...x.map(e => e.endpoints()));
 
     const outputs = new Set<FPInterval>();
     x_values.forEach(inner_x => {
@@ -2396,8 +2399,8 @@ export abstract class FPTraits {
       return this.constants().unboundedInterval;
     }
 
-    const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
-    const y_values = cartesianProduct<number>(...y.map(e => e.bounds()));
+    const x_values = cartesianProduct<number>(...x.map(e => e.endpoints()));
+    const y_values = cartesianProduct<number>(...y.map(e => e.endpoints()));
 
     const outputs = new Set<FPInterval>();
     x_values.forEach(inner_x => {
@@ -2423,7 +2426,7 @@ export abstract class FPTraits {
       return this.constants().unboundedVector[x.length];
     }
 
-    const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
+    const x_values = cartesianProduct<number>(...x.map(e => e.endpoints()));
 
     const outputs = new Set<FPVector>();
     x_values.forEach(inner_x => {
@@ -2467,8 +2470,8 @@ export abstract class FPTraits {
       return this.constants().unboundedVector[x.length];
     }
 
-    const x_values = cartesianProduct<number>(...x.map(e => e.bounds()));
-    const y_values = cartesianProduct<number>(...y.map(e => e.bounds()));
+    const x_values = cartesianProduct<number>(...x.map(e => e.endpoints()));
+    const y_values = cartesianProduct<number>(...y.map(e => e.endpoints()));
 
     const outputs = new Set<FPVector>();
     x_values.forEach(inner_x => {
@@ -2530,7 +2533,9 @@ export abstract class FPTraits {
     }
 
     const m_flat: readonly FPInterval[] = flatten2DArray(m);
-    const m_values: ROArrayArray<number> = cartesianProduct<number>(...m_flat.map(e => e.bounds()));
+    const m_values: ROArrayArray<number> = cartesianProduct<number>(
+      ...m_flat.map(e => e.endpoints())
+    );
 
     const outputs = new Set<FPMatrix>();
     m_values.forEach(inner_m => {
@@ -3571,9 +3576,9 @@ export abstract class FPTraits {
       if (e2 > bias + 1) {
         return this.constants().unboundedInterval;
       }
-      // The spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, and the accuracy is correctly
-      // rounded to the true value, so the inheritance framework does not need to be invoked to
-      // determine bounds.
+      // The spec says the result of ldexp(e1, e2) = e1 * 2 ^ e2, and the
+      // accuracy is correctly rounded to the true value, so the inheritance
+      // framework does not need to be invoked to determine endpoints.
       // Instead, the value at a higher precision is calculated and passed to
       // correctlyRoundedInterval.
       const result = e1 * 2 ** e2;
@@ -4721,7 +4726,7 @@ class F32Traits extends FPTraits {
   private unpack2x16floatIntervalImpl(n: number): FPVector {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16floatInterval only accepts values on the bounds of u32'
+      'unpack2x16floatInterval only accepts valid u32 values'
     );
     this.unpackDataU32[0] = n;
     if (this.unpackDataF16.some(f => !isFiniteF16(f))) {
@@ -4745,7 +4750,7 @@ class F32Traits extends FPTraits {
   private unpack2x16snormIntervalImpl(n: number): FPVector {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16snormInterval only accepts values on the bounds of u32'
+      'unpack2x16snormInterval only accepts valid u32 values'
     );
     const op = (n: number): FPInterval => {
       return this.ulpInterval(Math.max(n / 32767, -1), 3);
@@ -4761,7 +4766,7 @@ class F32Traits extends FPTraits {
   private unpack2x16unormIntervalImpl(n: number): FPVector {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack2x16unormInterval only accepts values on the bounds of u32'
+      'unpack2x16unormInterval only accepts valid u32 values'
     );
     const op = (n: number): FPInterval => {
       return this.ulpInterval(n / 65535, 3);
@@ -4777,7 +4782,7 @@ class F32Traits extends FPTraits {
   private unpack4x8snormIntervalImpl(n: number): FPVector {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8snormInterval only accepts values on the bounds of u32'
+      'unpack4x8snormInterval only accepts valid u32 values'
     );
     const op = (n: number): FPInterval => {
       return this.ulpInterval(Math.max(n / 127, -1), 3);
@@ -4797,7 +4802,7 @@ class F32Traits extends FPTraits {
   private unpack4x8unormIntervalImpl(n: number): FPVector {
     assert(
       n >= kValue.u32.min && n <= kValue.u32.max,
-      'unpack4x8unormInterval only accepts values on the bounds of u32'
+      'unpack4x8unormInterval only accepts valid u32 values'
     );
     const op = (n: number): FPInterval => {
       return this.ulpInterval(n / 255, 3);

@@ -68,6 +68,8 @@ function isValidViewDimensionForDepthOrArrayLayers(
   depthOrArrayLayers: number
 ) {
   switch (viewDimension) {
+    case '2d':
+      return depthOrArrayLayers === 1;
     case 'cube':
       return depthOrArrayLayers === 6;
     case 'cube-array':
