@@ -4259,7 +4259,7 @@ export abstract class FPTraits {
    * [0, 0] and [1, 1] indicate that the correct answer in point they encapsulate.
    * [0, 1] should not be treated as a span, i.e. 0.1 is acceptable, but instead
    * indicate either 0.0 or 1.0 are acceptable answers.
-   * [-∞, +∞] is treated as unbounded interval, since an out of bounds or
+   * [-∞, +∞], i.e. infinite interval, will be returned when an out-of-bound or
    * infinite value was passed in.
    */
   public abstract readonly stepInterval: (edge: number, x: number) => FPInterval;
