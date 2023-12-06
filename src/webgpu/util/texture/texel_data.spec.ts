@@ -297,9 +297,9 @@ TODO: Test NaN, Infinity, -Infinity [1]`
 g.test('ufloat_texel_data_in_shader')
   .desc(
     `
-Test values that are known representatble by rg11b10ufloat and rgb9e5ufloat.
+Note: this uses values that are representable by both rg11b10ufloat and rgb9e5ufloat.
 
-TODO: Test NaN, Infinity [1]`
+TODO: Test NaN, Infinity`
   )
   .params(u =>
     u
@@ -313,8 +313,6 @@ TODO: Test NaN, Infinity [1]`
         return [
           // Test extrema
           makeParam(format, () => 0),
-
-          // [1]: Test NaN, Infinity
 
           // Test some values
           makeParam(format, () => 128),
