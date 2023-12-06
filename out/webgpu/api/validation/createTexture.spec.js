@@ -1096,7 +1096,9 @@ fn((t) => {
 
   t.skipIfTextureFormatNotSupported(format, viewFormat);
 
-  const compatible = viewCompatible(format, viewFormat);
+  const compatible = t.isCompatibility ?
+  viewFormat === format :
+  viewCompatible(format, viewFormat);
 
   // Test the viewFormat in the list.
   t.expectValidationError(() => {
