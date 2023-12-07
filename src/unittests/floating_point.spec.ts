@@ -27,7 +27,7 @@ export const g = makeTestGroup(UnitTest);
  * for expectations.
  */
 const kFPTraitForULP = {
-  abstract: 'f32',
+  abstract_float: 'f32',
   f32: 'f32',
   f16: 'f16',
 } as const;
@@ -39,7 +39,7 @@ const kUnboundedEndpoints: IntervalEndpoints = [Number.NEGATIVE_INFINITY, Number
 const kUnboundedInterval = {
   f32: FP.f32.toParam(kUnboundedEndpoints),
   f16: FP.f16.toParam(kUnboundedEndpoints),
-  abstract: FP.abstract.toParam(kUnboundedEndpoints),
+  abstract_float: FP.abstract_float.toParam(kUnboundedEndpoints),
 };
 
 /** @returns a number N * ULP greater than the provided number */
@@ -50,7 +50,7 @@ const kPlusNULPFunctions = {
   f16: (x: number, n: number) => {
     return x + n * oneULPF16(x);
   },
-  abstract: (x: number, n: number) => {
+  abstract_float: (x: number, n: number) => {
     return x + n * oneULPF64(x);
   },
 };
@@ -63,8 +63,8 @@ const kPlusOneULPFunctions = {
   f16: (x: number): number => {
     return kPlusNULPFunctions['f16'](x, 1);
   },
-  abstract: (x: number): number => {
-    return kPlusNULPFunctions['abstract'](x, 1);
+  abstract_float: (x: number): number => {
+    return kPlusNULPFunctions['abstract_float'](x, 1);
   },
 };
 
@@ -76,7 +76,7 @@ const kMinusNULPFunctions = {
   f16: (x: number, n: number) => {
     return x - n * oneULPF16(x);
   },
-  abstract: (x: number, n: number) => {
+  abstract_float: (x: number, n: number) => {
     return x - n * oneULPF64(x);
   },
 };
@@ -89,8 +89,8 @@ const kMinusOneULPFunctions = {
   f16: (x: number): number => {
     return kMinusNULPFunctions['f16'](x, 1);
   },
-  abstract: (x: number): number => {
-    return kMinusNULPFunctions['abstract'](x, 1);
+  abstract_float: (x: number): number => {
+    return kMinusNULPFunctions['abstract_float'](x, 1);
   },
 };
 
@@ -140,7 +140,7 @@ interface ConstructorCase {
 g.test('constructor')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ConstructorCase>(p => {
         const constants = FP[p.trait].constants();
@@ -171,7 +171,7 @@ g.test('constructor')
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
         // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
         // otherwise the testing framework will consider them duplicated.
-        if (p.trait !== 'abstract') {
+        if (p.trait !== 'abstract_float') {
           // prettier-ignore
           cases.push(...[
             // Out of range
@@ -201,7 +201,7 @@ interface ContainsNumberCase {
 g.test('contains_number')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ContainsNumberCase>(p => {
         const constants = FP[p.trait].constants();
@@ -297,7 +297,7 @@ g.test('contains_number')
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
         // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
         // otherwise the testing framework will consider them duplicated.
-        if (p.trait !== 'abstract') {
+        if (p.trait !== 'abstract_float') {
           // prettier-ignore
           cases.push(...[
             // Out of range high
@@ -340,7 +340,7 @@ interface ContainsIntervalCase {
 g.test('contains_interval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ContainsIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -406,7 +406,7 @@ g.test('contains_interval')
         // Note: Out of range values are limited to infinities for abstract float, due to abstract
         // float and 'number' both being f64. So there are no separate OOR tests for abstract float,
         // otherwise the testing framework will consider them duplicated.
-        if (p.trait !== 'abstract') {
+        if (p.trait !== 'abstract_float') {
           // prettier-ignore
           cases.push(...[
             // Out of range high
@@ -452,7 +452,7 @@ interface SpanIntervalsCase {
 g.test('spanIntervals')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<SpanIntervalsCase>(p => {
         const constants = FP[p.trait].constants();
@@ -506,7 +506,7 @@ interface isVectorCase {
 g.test('isVector')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<isVectorCase>(p => {
         const trait = FP[p.trait];
@@ -612,7 +612,7 @@ interface toVectorCase {
 g.test('toVector')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<toVectorCase>(p => {
         const trait = FP[p.trait];
@@ -734,7 +734,7 @@ interface isMatrixCase {
 g.test('isMatrix')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<isMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -1169,7 +1169,7 @@ interface toMatrixCase {
 g.test('toMatrix')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<toMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -2091,7 +2091,7 @@ const kULPErrorValue = {
 g.test('ulpInterval')
   .params(u =>
     u
-      .combine('trait', ['abstract', 'f32', 'f16'] as const)
+      .combine('trait', ['abstract_float', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ULPCase>(p => {
         const trait = kFPTraitForULP[p.trait];
@@ -2196,7 +2196,7 @@ const kConstantCorrectlyRoundedExpectation = {
   } as { [value in ConstantNumberFrequentlyUsedInCases]: IntervalEndpoints },
   // Since abstract is actually f64 and JS number is also f64, the JS number value will map to
   // identical abstracty value without rounded.
-  abstract: {
+  abstract_float: {
     '0.1': 0.1,
     '-0.1': -0.1,
     '1.9': 1.9,
@@ -2212,7 +2212,7 @@ interface ScalarToIntervalCase {
 g.test('absInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -2850,16 +2850,16 @@ const kDegreesIntervalCases = {
     { input: kValue.f16.positive.pi.three_quarters, expected: [kMinusOneULPFunctions['f16'](135), 135] },
     { input: kValue.f16.positive.pi.whole, expected: [kMinusOneULPFunctions['f16'](180), 180] },
   ] as ScalarToIntervalCase[],
-  abstract: [
+  abstract_float: [
     { input: kValue.f64.negative.pi.whole, expected: -180 },
     { input: kValue.f64.negative.pi.three_quarters, expected: -135 },
     { input: kValue.f64.negative.pi.half, expected: -90 },
-    { input: kValue.f64.negative.pi.third, expected: kPlusOneULPFunctions['abstract'](-60) },
+    { input: kValue.f64.negative.pi.third, expected: kPlusOneULPFunctions['abstract_float'](-60) },
     { input: kValue.f64.negative.pi.quarter, expected: -45 },
-    { input: kValue.f64.negative.pi.sixth, expected: kPlusOneULPFunctions['abstract'](-30) },
-    { input: kValue.f64.positive.pi.sixth, expected: kMinusOneULPFunctions['abstract'](30) },
+    { input: kValue.f64.negative.pi.sixth, expected: kPlusOneULPFunctions['abstract_float'](-30) },
+    { input: kValue.f64.positive.pi.sixth, expected: kMinusOneULPFunctions['abstract_float'](30) },
     { input: kValue.f64.positive.pi.quarter, expected: 45 },
-    { input: kValue.f64.positive.pi.third, expected: kMinusOneULPFunctions['abstract'](60) },
+    { input: kValue.f64.positive.pi.third, expected: kMinusOneULPFunctions['abstract_float'](60) },
     { input: kValue.f64.positive.pi.half, expected: 90 },
     { input: kValue.f64.positive.pi.three_quarters, expected: 135 },
     { input: kValue.f64.positive.pi.whole, expected: 180 },
@@ -2869,7 +2869,7 @@ const kDegreesIntervalCases = {
 g.test('degreesInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = p.trait;
@@ -3026,7 +3026,7 @@ const kFloorIntervalCases = {
     { input: -(2 ** 14), expected: -(2 ** 14) },
     { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
-  abstract: [
+  abstract_float: [
     { input: 2 ** 62, expected: 2 ** 62 },
     { input: -(2 ** 62), expected: -(2 ** 62) },
     {
@@ -3039,7 +3039,7 @@ const kFloorIntervalCases = {
 g.test('floorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -3386,7 +3386,7 @@ g.test('log2Interval')
 g.test('negationInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -3495,7 +3495,7 @@ const kRadiansIntervalCases = {
     { input: 135, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.three_quarters), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.three_quarters)] },
     { input: 180, expected: [kMinusOneULPFunctions['f16'](kValue.f16.positive.pi.whole), kPlusOneULPFunctions['f16'](kValue.f16.positive.pi.whole)] },
   ] as ScalarToIntervalCase[],
-  abstract: [
+  abstract_float: [
     { input: -180, expected: kValue.f64.negative.pi.whole },
     { input: -135, expected: kValue.f64.negative.pi.three_quarters },
     { input: -90, expected: kValue.f64.negative.pi.half },
@@ -3514,7 +3514,7 @@ const kRadiansIntervalCases = {
 g.test('radiansInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = p.trait;
@@ -3550,7 +3550,7 @@ const kRoundIntervalCases = {
     { input: -(2 ** 14), expected: -(2 ** 14) },
     { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
-  abstract: [
+  abstract_float: [
     { input: 2 ** 62, expected: 2 ** 62 },
     { input: -(2 ** 62), expected: -(2 ** 62) },
     {
@@ -3563,7 +3563,7 @@ const kRoundIntervalCases = {
 g.test('roundInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -3615,7 +3615,7 @@ g.test('roundInterval')
 g.test('saturateInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -3660,7 +3660,7 @@ g.test('saturateInterval')
 g.test('signInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -3995,7 +3995,7 @@ g.test('tanhInterval')
 g.test('truncInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4072,7 +4072,7 @@ const kAdditionInterval64BitsNormalCases = {
     // -0.1+0.1 expect f16 interval [0xAE67+0x2E66, 0xAE66+0x2E67]
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67)+reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0xae66)+reinterpretU16AsF16(0x2e67)] },  // ~0.0
   ] as ScalarPairToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
@@ -4088,7 +4088,7 @@ const kAdditionInterval64BitsNormalCases = {
 g.test('additionInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4386,12 +4386,12 @@ const kDivisionInterval64BitsNormalCases = {
 g.test('divisionInterval')
   .params(u =>
     u
-      .combine('trait', ['abstract', 'f32', 'f16'] as const)
+      .combine('trait', ['abstract_float', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         // This is a ULP based interval, so abstract should behave like f32, so
         // swizzling the trait as needed.
-        const trait = p.trait === 'abstract' ? 'f32' : p.trait;
+        const trait = p.trait === 'abstract_float' ? 'f32' : p.trait;
         const fp = FP[trait];
         const constants = fp.constants();
         // prettier-ignore
@@ -4427,7 +4427,7 @@ g.test('divisionInterval')
   .fn(t => {
     // This is a ULP based interval, so abstract should behave like f32, so
     // swizzling the trait as needed for calculating the expected result.
-    const trait = t.params.trait === 'abstract' ? 'f32' : t.params.trait;
+    const trait = t.params.trait === 'abstract_float' ? 'f32' : t.params.trait;
     const fp = FP[trait];
 
     const error = (n: number): number => {
@@ -4546,7 +4546,7 @@ g.test('ldexpInterval')
 g.test('maxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4612,7 +4612,7 @@ g.test('maxInterval')
 g.test('minInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4699,7 +4699,7 @@ const kMultiplicationInterval64BitsNormalCases = {
     { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
   ] as ScalarPairToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
@@ -4714,7 +4714,7 @@ const kMultiplicationInterval64BitsNormalCases = {
 g.test('multiplicationInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4863,7 +4863,7 @@ const kRemainderCases = {
 g.test('remainderInterval')
   .params(u =>
     u
-      .combine('trait', ['abstract', 'f32', 'f16'] as const)
+      .combine('trait', ['abstract_float', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = kFPTraitForULP[p.trait];
@@ -5023,7 +5023,7 @@ const kSubtractionInterval64BitsNormalCases = {
     // Expect f16 interval [0xAE67-0x2E67, 0xAE66-0x2E66]
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67)-reinterpretU16AsF16(0x2e67), reinterpretU16AsF16(0xae66)-reinterpretU16AsF16(0x2e66)] },
   ] as ScalarPairToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
@@ -5039,7 +5039,7 @@ const kSubtractionInterval64BitsNormalCases = {
 g.test('subtractionInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5105,7 +5105,7 @@ interface ScalarTripleToIntervalCase {
 g.test('clampMedianInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5163,7 +5163,7 @@ g.test('clampMedianInterval')
 g.test('clampMinMaxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5255,7 +5255,7 @@ const kFmaIntervalCases = {
     // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
     // maximum case: -0.0 + -0.0 = 0.
     { input: [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] },  ] as ScalarTripleToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // These operations break down in the CTS, because `number` is a f64 under the hood, so precision is sometimes lost
     // if intermediate results are  closer to 0 than the smallest subnormal will be precisely 0.
     // See https://github.com/gpuweb/cts/issues/2993 for details
@@ -5269,7 +5269,7 @@ const kFmaIntervalCases = {
 g.test('fmaInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5384,13 +5384,13 @@ const kMixImpreciseIntervalCases = {
     { input: [kValue.f16.negative.min,  10.0, 0.5], expected: kUnboundedEndpoints },
     { input: [kValue.f16.negative.min, -10.0, 0.5], expected: [-32768.0, -32752.0] },
   ] as ScalarTripleToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // [0.0, 1.0] cases
     { input: [0.0, 1.0, 0.1], expected: 0.1 },
     { input: [0.0, 1.0, 0.9], expected: 0.9 },
     // [1.0, 0.0] cases
     { input: [1.0, 0.0, 0.1], expected: 0.9 },
-    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
+    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract_float'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
     // [0.0, 10.0] cases
     { input: [0.0, 10.0, 0.1], expected: 1 },
     { input: [0.0, 10.0, 0.9], expected: 9 },
@@ -5417,7 +5417,7 @@ const kMixImpreciseIntervalCases = {
 g.test('mixImpreciseInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5546,13 +5546,13 @@ const kMixPreciseIntervalCases = {
     // Intermediate OOB
     { input: [1.0, 2.0,  kPlusOneULPFunctions['f16'](kValue.f16.positive.max / 2)], expected: kUnboundedEndpoints },
   ] as ScalarTripleToIntervalCase[],
-  abstract: [
+  abstract_float: [
     // [0.0, 1.0] cases
     { input: [0.0, 1.0, 0.1], expected: 0.1 },
     { input: [0.0, 1.0, 0.9], expected: 0.9 },
     // [1.0, 0.0] cases
     { input: [1.0, 0.0, 0.1], expected: 0.9 },
-    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
+    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract_float'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
     // [0.0, 10.0] cases
     { input: [0.0, 10.0, 0.1], expected: 1 },
     { input: [0.0, 10.0, 0.9], expected: 9 },
@@ -5572,14 +5572,14 @@ const kMixPreciseIntervalCases = {
     { input: [kValue.f64.negative.min, -10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
 
     // Intermediate OOB
-    { input: [1.0, 2.0,  kPlusOneULPFunctions['abstract'](kValue.f64.positive.max / 2)], expected: kUnboundedEndpoints },
+    { input: [1.0, 2.0,  kPlusOneULPFunctions['abstract_float'](kValue.f64.positive.max / 2)], expected: kUnboundedEndpoints },
   ] as ScalarTripleToIntervalCase[],
 } as const;
 
 g.test('mixPreciseInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -6311,7 +6311,7 @@ const kCrossIntervalCases = {
       ]
     },
   ] as VectorPairToVectorCase[],
-  abstract: [
+  abstract_float: [
     { input: [
         [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.max, kValue.f64.negative.subnormal.min],
         [kValue.f64.negative.subnormal.min, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max]
@@ -6334,7 +6334,7 @@ const kCrossIntervalCases = {
 g.test('crossInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<VectorPairToVectorCase>(p => {
         const trait = FP[p.trait];
@@ -6579,7 +6579,7 @@ interface MatrixToMatrixCase {
 g.test('transposeInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<MatrixToMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -6733,7 +6733,7 @@ interface MatrixPairToMatrixCase {
 g.test('additionMatrixMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .combineWithParams<MatrixPairToMatrixCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -6930,7 +6930,7 @@ g.test('additionMatrixMatrixInterval')
 g.test('subtractionMatrixMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .combineWithParams<MatrixPairToMatrixCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -8181,7 +8181,7 @@ interface ModfCase {
 g.test('modfInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract_float'] as const)
       .beginSubcases()
       .expandWithParams<ModfCase>(p => {
         const constants = FP[p.trait].constants();

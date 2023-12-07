@@ -7,11 +7,11 @@ const mat_cases = ([2, 3, 4] as const)
   .flatMap(cols =>
     ([2, 3, 4] as const).map(rows => ({
       [`mat${cols}x${rows}`]: () => {
-        return FP.abstract.generateMatrixPairToMatrixCases(
+        return FP.abstract_float.generateMatrixPairToMatrixCases(
           sparseMatrixF64Range(cols, rows),
           sparseMatrixF64Range(cols, rows),
           'finite',
-          FP.abstract.additionMatrixMatrixInterval
+          FP.abstract_float.additionMatrixMatrixInterval
         );
       },
     }))

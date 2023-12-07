@@ -28,7 +28,7 @@ g.test('abstract_float')
   .fn(async t => {
     const cols = t.params.cols;
     const rows = t.params.rows;
-    const cases = await d.get(`abstract_mat${cols}x${rows}_const`);
+    const cases = await d.get(`abstract_float_mat${cols}x${rows}_const`);
     await run(
       t,
       abstractBuiltin('transpose'),

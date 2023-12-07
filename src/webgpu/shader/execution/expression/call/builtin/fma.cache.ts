@@ -3,11 +3,11 @@ import { makeCaseCache } from '../../case_cache.js';
 
 // Cases: [f32|f16|abstract]_[non_]const
 // abstract_non_const is empty and not used
-const cases = (['f32', 'f16', 'abstract'] as const)
+const cases = (['f32', 'f16', 'abstract_float'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({
       [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        if (trait === 'abstract' && nonConst) {
+        if (trait === 'abstract_float' && nonConst) {
           return [];
         }
         return FP[trait].generateScalarTripleToIntervalCases(

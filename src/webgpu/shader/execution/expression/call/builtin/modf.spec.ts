@@ -364,7 +364,7 @@ struct __modf_result_vec4_f16 {
     await run(t, wholeBuilder(), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
   });
 
-g.test('abstract_fract')
+g.test('abstract_float_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -378,11 +378,11 @@ struct __modf_result_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_fract');
+    const cases = await d.get('abstract_float_fract');
     await run(t, abstractFractBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
   });
 
-g.test('abstract_whole')
+g.test('abstract_float_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -396,11 +396,11 @@ struct __modf_result_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_whole');
+    const cases = await d.get('abstract_float_whole');
     await run(t, abstractWholeBuilder(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
   });
 
-g.test('abstract_vec2_fract')
+g.test('abstract_float_vec2_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -414,7 +414,7 @@ struct __modf_result_vec2_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec2_fract');
+    const cases = await d.get('abstract_float_vec2_fract');
     await run(
       t,
       abstractFractBuilder(),
@@ -425,7 +425,7 @@ struct __modf_result_vec2_abstract {
     );
   });
 
-g.test('abstract_vec2_whole')
+g.test('abstract_float_vec2_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -439,7 +439,7 @@ struct __modf_result_vec2_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec2_whole');
+    const cases = await d.get('abstract_float_vec2_whole');
     await run(
       t,
       abstractWholeBuilder(),
@@ -450,7 +450,7 @@ struct __modf_result_vec2_abstract {
     );
   });
 
-g.test('abstract_vec3_fract')
+g.test('abstract_float_vec3_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -464,7 +464,7 @@ struct __modf_result_vec3_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec3_fract');
+    const cases = await d.get('abstract_float_vec3_fract');
     await run(
       t,
       abstractFractBuilder(),
@@ -475,7 +475,7 @@ struct __modf_result_vec3_abstract {
     );
   });
 
-g.test('abstract_vec3_whole')
+g.test('abstract_float_vec3_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -489,7 +489,7 @@ struct __modf_result_vec3_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec3_whole');
+    const cases = await d.get('abstract_float_vec3_whole');
     await run(
       t,
       abstractWholeBuilder(),
@@ -500,7 +500,7 @@ struct __modf_result_vec3_abstract {
     );
   });
 
-g.test('abstract_vec4_fract')
+g.test('abstract_float_vec4_fract')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -514,7 +514,7 @@ struct __modf_result_vec4_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec4_fract');
+    const cases = await d.get('abstract_float_vec4_fract');
     await run(
       t,
       abstractFractBuilder(),
@@ -525,7 +525,7 @@ struct __modf_result_vec4_abstract {
     );
   });
 
-g.test('abstract_vec4_whole')
+g.test('abstract_float_vec4_whole')
   .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
   .desc(
     `
@@ -539,7 +539,7 @@ struct __modf_result_vec4_abstract {
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec4_whole');
+    const cases = await d.get('abstract_float_vec4_whole');
     await run(
       t,
       abstractWholeBuilder(),

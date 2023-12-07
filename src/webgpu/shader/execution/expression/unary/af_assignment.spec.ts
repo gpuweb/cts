@@ -25,7 +25,7 @@ function abstract_assignment(): ShaderBuilder {
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('abstract')
+g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#floating-point-conversion')
   .desc(
     `
@@ -34,7 +34,7 @@ testing that extracting abstract floats works
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract');
+    const cases = await d.get('abstract_float');
     await run(t, abstract_assignment(), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases, 1);
   });
 

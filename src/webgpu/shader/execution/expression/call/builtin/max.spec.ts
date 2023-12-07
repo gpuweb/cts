@@ -100,7 +100,7 @@ g.test('abstract_float')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract');
+    const cases = await d.get('abstract_float');
     await run(
       t,
       abstractBuiltin('max'),

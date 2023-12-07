@@ -3,7 +3,7 @@ import { linearRange } from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 
 // Cases: [f32|f16|abstract]
-const cases = (['f32', 'f16', 'abstract'] as const)
+const cases = (['f32', 'f16', 'abstract_float'] as const)
   .map(trait => ({
     [`${trait}`]: () => {
       return FP[trait].generateScalarToIntervalCases(

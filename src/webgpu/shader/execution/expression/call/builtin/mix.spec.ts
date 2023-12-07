@@ -33,7 +33,7 @@ g.test('abstract_float_matching')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract_const');
+    const cases = await d.get('abstract_float_const');
     await run(
       t,
       abstractBuiltin('mix'),
@@ -49,7 +49,7 @@ g.test('abstract_float_nonmatching_vec2')
   .desc(`abstract_float tests with two vec2<abstract_float> params and scalar third param`)
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec2_scalar_const');
+    const cases = await d.get('abstract_float_vec2_scalar_const');
     await run(
       t,
       abstractBuiltin('mix'),
@@ -65,7 +65,7 @@ g.test('abstract_float_nonmatching_vec3')
   .desc(`abstract_float tests with two vec3<abstract_float> params and scalar third param`)
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec3_scalar_const');
+    const cases = await d.get('abstract_float_vec3_scalar_const');
     await run(
       t,
       abstractBuiltin('mix'),
@@ -81,7 +81,7 @@ g.test('abstract_float_nonmatching_vec4')
   .desc(`abstract_float tests with two vec4<abstract_float> params and scalar third param`)
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_vec4_scalar_const');
+    const cases = await d.get('abstract_float_vec4_scalar_const');
     await run(
       t,
       abstractBuiltin('mix'),

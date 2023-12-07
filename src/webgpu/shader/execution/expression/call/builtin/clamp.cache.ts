@@ -39,7 +39,7 @@ function generateIntegerTestCases(
 
 function generateFloatTestCases(
   test_values: readonly number[],
-  trait: 'f32' | 'f16' | 'abstract',
+  trait: 'f32' | 'f16' | 'abstract_float',
   stage: 'const' | 'non_const'
 ): Array<Case> {
   return test_values.flatMap(low =>
@@ -62,11 +62,11 @@ function generateFloatTestCases(
 
 // Cases: [f32|f16|abstract]_[non_]const
 // abstract_non_const is empty and unused
-const fp_cases = (['f32', 'f16', 'abstract'] as const)
+const fp_cases = (['f32', 'f16', 'abstract_float'] as const)
   .flatMap(trait =>
     ([true, false] as const).map(nonConst => ({
       [`${trait}_${nonConst ? 'non_const' : 'const'}`]: () => {
-        if (trait === 'abstract' && nonConst) {
+        if (trait === 'abstract_float' && nonConst) {
           return [];
         }
         return generateFloatTestCases(

@@ -68,7 +68,7 @@ g.test('abstract_float')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract_const');
+    const cases = await d.get('abstract_float_const');
     await run(
       t,
       abstractBuiltin('clamp'),

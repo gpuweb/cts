@@ -10,7 +10,7 @@ import { reinterpretU64AsF64 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 
 export const d = makeCaseCache('unary/af_assignment', {
-  abstract: () => {
+  abstract_float: () => {
     const inputs = [
       // Values that are useful for debugging the underlying framework/shader code, since it cannot be directly unit tested.
       0,

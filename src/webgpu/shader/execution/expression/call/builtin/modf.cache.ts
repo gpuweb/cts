@@ -44,7 +44,7 @@ function makeVectorCaseWhole(kind: FPKind, v: readonly number[]): Case {
 }
 
 // Cases: [f32|f16|abstract]_[fract|whole]
-const scalar_cases = (['f32', 'f16', 'abstract'] as const)
+const scalar_cases = (['f32', 'f16', 'abstract_float'] as const)
   .flatMap(kind =>
     (['whole', 'fract'] as const).map(portion => ({
       [`${kind}_${portion}`]: () => {
@@ -56,7 +56,7 @@ const scalar_cases = (['f32', 'f16', 'abstract'] as const)
   .reduce((a, b) => ({ ...a, ...b }), {});
 
 // Cases: [f32|f16|abstract]_vecN_[fract|whole]
-const vec_cases = (['f32', 'f16', 'abstract'] as const)
+const vec_cases = (['f32', 'f16', 'abstract_float'] as const)
   .flatMap(kind =>
     ([2, 3, 4] as const).flatMap(n =>
       (['whole', 'fract'] as const).map(portion => ({

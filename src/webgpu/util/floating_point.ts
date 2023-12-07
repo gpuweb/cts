@@ -59,10 +59,10 @@ import {
 } from './math.js';
 
 /** Indicate the kind of WGSL floating point numbers being operated on */
-export type FPKind = 'f32' | 'f16' | 'abstract';
+export type FPKind = 'f32' | 'f16' | 'abstract_float';
 
 enum SerializedFPIntervalKind {
-  Abstract,
+  AbstractFloat,
   F32,
   F16,
 }
@@ -70,8 +70,8 @@ enum SerializedFPIntervalKind {
 /** serializeFPKind() serializes a FPKind to a BinaryStream */
 export function serializeFPKind(s: BinaryStream, value: FPKind) {
   switch (value) {
-    case 'abstract':
-      s.writeU8(SerializedFPIntervalKind.Abstract);
+    case 'abstract_float':
+      s.writeU8(SerializedFPIntervalKind.AbstractFloat);
       break;
     case 'f16':
       s.writeU8(SerializedFPIntervalKind.F16);
@@ -86,8 +86,8 @@ export function serializeFPKind(s: BinaryStream, value: FPKind) {
 export function deserializeFPKind(s: BinaryStream): FPKind {
   const kind = s.readU8();
   switch (kind) {
-    case SerializedFPIntervalKind.Abstract:
-      return 'abstract';
+    case SerializedFPIntervalKind.AbstractFloat:
+      return 'abstract_float';
     case SerializedFPIntervalKind.F16:
       return 'f16';
     case SerializedFPIntervalKind.F32:
@@ -194,7 +194,7 @@ export function serializeFPInterval(s: BinaryStream, i: FPInterval) {
     if_true: () => {
       // Bounded
       switch (i.kind) {
-        case 'abstract':
+        case 'abstract_float':
           s.writeF64(i.begin);
           s.writeF64(i.end);
           break;
@@ -225,7 +225,7 @@ export function deserializeFPInterval(s: BinaryStream): FPInterval {
     if_true: () => {
       // Bounded
       switch (kind) {
-        case 'abstract':
+        case 'abstract_float':
           return new FPInterval(traits.kind, s.readF64(), s.readF64());
         case 'f32':
           return new FPInterval(traits.kind, s.readF32(), s.readF32());
@@ -3314,7 +3314,7 @@ export abstract class FPTraits {
     const constants = this.constants();
     const domain_x = [this.toInterval([constants.negative.min, constants.positive.max])];
     const domain_y =
-      this.kind === 'f32' || this.kind === 'abstract'
+      this.kind === 'f32' || this.kind === 'abstract_float'
         ? [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])]
         : [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
     return {
@@ -4828,11 +4828,11 @@ const kF32Traits = new F32Traits();
 // Pre-defined values that get used multiple times in _constants' initializers. Cannot use FPTraits members, since this
 // executes before they are defined.
 const kAbstractUnboundedInterval = new FPInterval(
-  'abstract',
+  'abstract_float',
   Number.NEGATIVE_INFINITY,
   Number.POSITIVE_INFINITY
 );
-const kAbstractZeroInterval = new FPInterval('abstract', 0);
+const kAbstractZeroInterval = new FPInterval('abstract_float', 0);
 
 // This is implementation is incomplete
 class FPAbstractTraits extends FPTraits {
@@ -4881,16 +4881,16 @@ class FPAbstractTraits extends FPTraits {
     // Have to use the constants.ts values here, because values defined in the
     // initializer cannot be referenced in the initializer
     negPiToPiInterval: new FPInterval(
-      'abstract',
+      'abstract_float',
       kValue.f64.negative.pi.whole,
       kValue.f64.positive.pi.whole
     ),
     greaterThanZeroInterval: new FPInterval(
-      'abstract',
+      'abstract_float',
       kValue.f64.positive.subnormal.min,
       kValue.f64.positive.max
     ),
-    negOneToOneInterval: new FPInterval('abstract', -1, 1),
+    negOneToOneInterval: new FPInterval('abstract_float', -1, 1),
 
     zeroVector: {
       2: [kAbstractZeroInterval, kAbstractZeroInterval],
@@ -5013,7 +5013,7 @@ class FPAbstractTraits extends FPTraits {
   };
 
   public constructor() {
-    super('abstract');
+    super('abstract_float');
   }
 
   public constants(): FPConstants {
@@ -5459,14 +5459,14 @@ class F16Traits extends FPTraits {
 export const FP = {
   f32: kF32Traits,
   f16: new F16Traits(),
-  abstract: new FPAbstractTraits(),
+  abstract_float: new FPAbstractTraits(),
 };
 
 /** @returns the floating-point traits for `type` */
 export function fpTraitsFor(type: ScalarType): FPTraits {
   switch (type.kind) {
     case 'abstract-float':
-      return FP.abstract;
+      return FP.abstract_float;
     case 'f32':
       return FP.f32;
     case 'f16':

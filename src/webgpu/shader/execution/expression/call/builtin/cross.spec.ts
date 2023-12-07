@@ -21,7 +21,7 @@ g.test('abstract_float')
   .desc(`abstract float tests`)
   .params(u => u.combine('inputSource', onlyConstInputSource))
   .fn(async t => {
-    const cases = await d.get('abstract_const');
+    const cases = await d.get('abstract_float_const');
     await run(
       t,
       abstractBuiltin('cross'),
