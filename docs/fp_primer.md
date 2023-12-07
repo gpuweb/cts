@@ -39,7 +39,8 @@ A floating point number system defines
 - Arithmetic operations on those representatives, trying to approximate the
   ideal operations on real numbers.
 
-The cardinality mismatch alone implies that any floating point number system necessarily loses information.
+The cardinality mismatch alone implies that any floating point number system
+necessarily loses information.
 
 This means that not all numbers in the bounds can be exactly represented as a
 floating point value.
@@ -114,7 +115,7 @@ Implementations may assume that infinities are not present. When an evaluation
 at runtime would produce an infinity, an indeterminate value is produced
 instead.
 
-When a value goes out of bounds for a specific precision there are special
+When a value goes out-of-bounds for a specific precision there are special
 rounding rules that apply. If it is 'near' the edge of finite values for that
 precision, it is considered to be near-overflowing, and the implementation may
 choose to round it to the edge value or the appropriate infinity. If it is not
@@ -163,7 +164,7 @@ the rules for compile time execution will be discussed below.)
 
 Signaling NaNs are treated as quiet NaNs in the WGSL spec. And quiet NaNs have
 the same "may-convert-to-indeterminate-value" behaviour that infinities have, so
-for the purpose of the CTS they are handled by the infinite/out of bounds logic
+for the purpose of the CTS they are handled by the infinite/out-of-bounds logic
 normally.
 
 ## Notation/Terminology
@@ -231,14 +232,20 @@ referred to as the beginning of the interval and `b` as the end of the interval.
 
 When talking about intervals, this doc and the code endeavours to avoid using
 the term **range** to refer to the span of values that an interval covers,
-instead using the term bounds to avoid confusion of terminology around output of
-operations.
+instead using the term **endpoints** to avoid confusion of terminology around
+output of operations.
+
+The term **endpoints** is generally used to refer to the conceptual numeric
+spaces, i.e. f32 or abstract float.
+
+Thus a specific interval can have **endpoints** that are either in or out of
+bounds for a specific floating point precision.
 
 ## Accuracy
 
 As mentioned above floating point numbers are not able to represent all the
-possible values over their bounds, but instead represent discrete values in that
-interval, and approximate the remainder.
+possible values over their range, but instead represent discrete values in that
+space, and approximate the remainder.
 
 Additionally, floating point numbers are not evenly distributed over the real
 number line, but instead are more densely clustered around zero, with the space
@@ -398,7 +405,7 @@ That would be very inefficient though and make your reviewer sad to read.
 
 For mapping intervals to intervals the key insight is that we only need to be
 concerned with the extrema of the operation in the interval, since the
-acceptance interval is the bounds of the possible outputs.
+acceptance interval is defined by largest and smallest of the possible outputs.
 
 In more precise terms:
 ```
@@ -652,7 +659,7 @@ the theoretical world that the intervals being used for testing are infinitely
 precise, when in actuality they are implemented by the ECMAScript `number` type,
 which is implemented as a f64 value.
 
-For the vast majority of cases, even out of bounds and overflow, this is
+For the vast majority of cases, even out-of-bounds and overflow, this is
 sufficient. There is one small slice where this breaks down. Specifically if
 the result just outside the finite range by less than 1 f64 ULP of the edge
 value. An example of this is `2 ** -11 + f32.max`. This will be between `f32.max`
@@ -752,7 +759,7 @@ const_assert upper > foo(x) // Result was above the acceptance interval
 ```
 
 where lower and upper would actually be string replaced with literals for the
-bounds of the acceptance interval when generating the shader text.
+endpoints of the acceptance interval when generating the shader text.
 
 This approach has a number of limitations that made it unacceptable for the CTS.
 First, how errors are reported is a pain to debug. Someone working with the CTS

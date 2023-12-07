@@ -6,6 +6,7 @@ Tests that textureBindingViewDimension must compatible with texture dimension
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { kTextureDimensions, kTextureViewDimensions } from '../../../../capability_info.js';
+import { kColorTextureFormats, kTextureFormatInfo } from '../../../../format_info.js';
 import { getTextureDimensionFromView } from '../../../../util/texture/base.js';
 import { CompatibilityTest } from '../../../compatibility_test.js';
 
@@ -105,3 +106,50 @@ g.test('depthOrArrayLayers_incompatible_with_textureBindingViewDimension')
     );
   });
 
+g.test('format_reinterpretation')
+  .desc(
+    `
+    Tests that you can not request different view formats when creating a texture.
+    For example, rgba8unorm can not be viewed as rgba8unorm-srgb
+  `
+  )
+  .params(u =>
+    u //
+      .combine('format', kColorTextureFormats as GPUTextureFormat[])
+      .filter(
+        ({ format }) =>
+          !!kTextureFormatInfo[format].baseFormat &&
+          kTextureFormatInfo[format].baseFormat !== format
+      )
+  )
+  .beforeAllSubcases(t => {
+    const info = kTextureFormatInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+
+    const formatPairs = [
+      { format, viewFormats: [info.baseFormat!] },
+      { format: info.baseFormat!, viewFormats: [format] },
+      { format, viewFormats: [format, info.baseFormat!] },
+      { format: info.baseFormat!, viewFormats: [format, info.baseFormat!] },
+    ];
+    for (const { format, viewFormats } of formatPairs) {
+      t.expectGPUError(
+        'validation',
+        () => {
+          const texture = t.device.createTexture({
+            size: [info.blockWidth, info.blockHeight],
+            format,
+            viewFormats,
+            usage: GPUTextureUsage.TEXTURE_BINDING,
+          });
+          t.trackForCleanup(texture);
+        },
+        true
+      );
+    }
+  });
