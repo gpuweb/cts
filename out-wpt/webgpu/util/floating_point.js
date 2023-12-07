@@ -344,11 +344,26 @@ function addFlushedIfNeededF16(values) {
 
 
 
+
+
+
+
+
+
+
+
 /**
  * A function that converts a pair of points to an acceptance interval.
  * This is the public facing API for builtin implementations that is called
  * from tests.
  */
+
+
+
+
+/** Domain for a ScalarPairToInterval implementation */
+
+
 
 
 
@@ -374,7 +389,8 @@ function addFlushedIfNeededF16(values) {
 
 
 
-/** Domain for a ScalarPairToInterval implementation */
+
+
 
 
 
@@ -578,6 +594,7 @@ function addFlushedIfNeededF16(values) {
  * Typed structure containing all the constants defined for each
  * WGSL floating point kind
  */
+
 
 
 
@@ -857,48 +874,6 @@ export class FPTraits {
     const subnormals = values.filter(this.isSubnormal);
     const needs_zero = subnormals.length > 0 && subnormals.every((s) => s !== 0);
     return needs_zero ? values.concat(0) : values;
-  }
-
-  /**
-   * Restrict the inputs to an ScalarToInterval operation
-   *
-   * Only used for operations that have tighter domain requirements than 'must
-   * be finite'.
-   *
-   * @param domain interval to restrict inputs to
-   * @param impl operation implementation to run if input is within the required domain
-   * @returns a ScalarToInterval that calls impl if domain contains the input,
-   *          otherwise it returns an unbounded interval */
-  limitScalarToIntervalDomain(
-  domain,
-  impl)
-  {
-    return (n) => {
-      return domain.contains(n) ? impl(n) : this.constants().unboundedInterval;
-    };
-  }
-
-  /**
-   * Restrict the inputs to a ScalarPairToInterval
-   *
-   * Only used for operations that have tighter domain requirements than 'must be
-   * finite'.
-   *
-   * @param domain set of intervals to restrict inputs to
-   * @param impl operation implementation to run if input is within the required domain
-   * @returns a ScalarPairToInterval that calls impl if domain contains the input,
-   *          otherwise it returns an unbounded interval */
-  limitScalarPairToIntervalDomain(
-  domain,
-  impl)
-  {
-    return (x, y) => {
-      if (!domain.x.some((d) => d.contains(x)) || !domain.y.some((d) => d.contains(y))) {
-        return this.constants().unboundedInterval;
-      }
-
-      return impl(x, y);
-    };
   }
 
   /** Stub for scalar to interval generator */
@@ -2006,6 +1981,15 @@ export class FPTraits {
     assert(!Number.isNaN(n), `flush not defined for NaN`);
     const values = this.correctlyRounded(n);
     const inputs = this.addFlushedIfNeeded(values);
+
+    if (op.domain !== undefined) {
+      // Cannot invoke op.domain() directly in the .some, because the narrowing doesn't propegate.
+      const domain = op.domain();
+      if (inputs.some((i) => !domain.contains(i))) {
+        return this.constants().unboundedInterval;
+      }
+    }
+
     const results = new Set(inputs.map(op.impl));
     return this.spanIntervals(...results);
   }
@@ -2031,10 +2015,25 @@ export class FPTraits {
   {
     assert(!Number.isNaN(x), `flush not defined for NaN`);
     assert(!Number.isNaN(y), `flush not defined for NaN`);
+
     const x_values = this.correctlyRounded(x);
     const y_values = this.correctlyRounded(y);
     const x_inputs = this.addFlushedIfNeeded(x_values);
     const y_inputs = this.addFlushedIfNeeded(y_values);
+
+    if (op.domain !== undefined) {
+      // Cannot invoke op.domain() directly in the .some, because the narrowing doesn't propegate.
+      const domain = op.domain();
+
+      if (x_inputs.some((i) => !domain.x.some((e) => e.contains(i)))) {
+        return this.constants().unboundedInterval;
+      }
+
+      if (y_inputs.some((j) => !domain.y.some((e) => e.contains(j)))) {
+        return this.constants().unboundedInterval;
+      }
+    }
+
     const intervals = new Set();
     x_inputs.forEach((inner_x) => {
       y_inputs.forEach((inner_y) => {
@@ -2708,7 +2707,7 @@ export class FPTraits {
 
   // This op is implemented differently for f32 and f16.
   AcosIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+    impl: (n) => {
       assert(this.kind === 'f32' || this.kind === 'f16');
       // acos(n) = atan2(sqrt(1.0 - n * n), n) or a polynomial approximation with absolute error
       const y = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
@@ -2717,7 +2716,10 @@ export class FPTraits {
         this.atan2Interval(y, n),
         this.absoluteErrorInterval(Math.acos(n), approx_abs_error)
       );
-    })
+    },
+    domain: () => {
+      return this.constants().negOneToOneInterval;
+    }
   };
 
   acosIntervalImpl(n) {
@@ -2801,7 +2803,7 @@ export class FPTraits {
 
   // This op is implemented differently for f32 and f16.
   AsinIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(this.toInterval([-1.0, 1.0]), (n) => {
+    impl: (n) => {
       assert(this.kind === 'f32' || this.kind === 'f16');
       // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
       const x = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
@@ -2810,7 +2812,10 @@ export class FPTraits {
         this.atan2Interval(n, x),
         this.absoluteErrorInterval(Math.asin(n), approx_abs_error)
       );
-    })
+    },
+    domain: () => {
+      return this.constants().negOneToOneInterval;
+    }
   };
 
   /** Calculate an acceptance interval for asin(n) */
@@ -2871,29 +2876,23 @@ export class FPTraits {
     [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
     const ulp_error = this.kind === 'f32' ? 4096 : 5;
     return {
-      impl: this.limitScalarPairToIntervalDomain(
-        {
-          x: domain_x,
-          y: domain_y
-        },
-        (y, x) => {
-          // Accurate result in f64
-          let atan_yx = Math.atan(y / x);
-          // Offset by +/-pi according to the definition. Use pi value in f64 because we are
-          // handling accurate result.
-          if (x < 0) {
-            // x < 0, y > 0, result is atan(y/x) + π
-            if (y > 0) {
-              atan_yx = atan_yx + kValue.f64.positive.pi.whole;
-            } else {
-              // x < 0, y < 0, result is atan(y/x) - π
-              atan_yx = atan_yx - kValue.f64.positive.pi.whole;
-            }
+      impl: (y, x) => {
+        // Accurate result in f64
+        let atan_yx = Math.atan(y / x);
+        // Offset by +/-pi according to the definition. Use pi value in f64 because we are
+        // handling accurate result.
+        if (x < 0) {
+          // x < 0, y > 0, result is atan(y/x) + π
+          if (y > 0) {
+            atan_yx = atan_yx + kValue.f64.positive.pi.whole;
+          } else {
+            // x < 0, y < 0, result is atan(y/x) - π
+            atan_yx = atan_yx - kValue.f64.positive.pi.whole;
           }
-
-          return this.ulpInterval(atan_yx, ulp_error);
         }
-      ),
+
+        return this.ulpInterval(atan_yx, ulp_error);
+      },
       extrema: (y, x) => {
         // There is discontinuity, which generates an unbounded result, at y/x = 0 that will dominate the accuracy
         if (y.contains(0)) {
@@ -2903,6 +2902,9 @@ export class FPTraits {
           return [this.toInterval(0), x];
         }
         return [y, x];
+      },
+      domain: () => {
+        return { x: domain_x, y: domain_y };
       }
     };
   }
@@ -3019,14 +3021,14 @@ export class FPTraits {
 
 
   CosIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(
-      this.constants().negPiToPiInterval,
-      (n) => {
-        assert(this.kind === 'f32' || this.kind === 'f16');
-        const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
-        return this.absoluteErrorInterval(Math.cos(n), abs_error);
-      }
-    )
+    impl: (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+      return this.absoluteErrorInterval(Math.cos(n), abs_error);
+    },
+    domain: () => {
+      return this.constants().negPiToPiInterval;
+    }
   };
 
   cosIntervalImpl(n) {
@@ -3316,24 +3318,21 @@ export class FPTraits {
     [this.toInterval([-(2 ** 126), -(2 ** -126)]), this.toInterval([2 ** -126, 2 ** 126])] :
     [this.toInterval([-(2 ** 14), -(2 ** -14)]), this.toInterval([2 ** -14, 2 ** 14])];
     return {
-      impl: this.limitScalarPairToIntervalDomain(
-        {
-          x: domain_x,
-          y: domain_y
-        },
-        (x, y) => {
-          if (y === 0) {
-            return constants.unboundedInterval;
-          }
-          return this.ulpInterval(x / y, 2.5);
+      impl: (x, y) => {
+        if (y === 0) {
+          return constants.unboundedInterval;
         }
-      ),
+        return this.ulpInterval(x / y, 2.5);
+      },
       extrema: (x, y) => {
         // division has a discontinuity at y = 0.
         if (y.contains(0)) {
           y = this.toInterval(0);
         }
         return [x, y];
+      },
+      domain: () => {
+        return { x: domain_x, y: domain_y };
       }
     };
   }
@@ -3552,12 +3551,12 @@ export class FPTraits {
 
 
   InverseSqrtIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(
-      this.constants().greaterThanZeroInterval,
-      (n) => {
-        return this.ulpInterval(1 / Math.sqrt(n), 2);
-      }
-    )
+    impl: (n) => {
+      return this.ulpInterval(1 / Math.sqrt(n), 2);
+    },
+    domain: () => {
+      return this.constants().greaterThanZeroInterval;
+    }
   };
 
   inverseSqrtIntervalImpl(n) {
@@ -3641,17 +3640,17 @@ export class FPTraits {
 
 
   LogIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(
-      this.constants().greaterThanZeroInterval,
-      (n) => {
-        assert(this.kind === 'f32' || this.kind === 'f16');
-        const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
-        if (n >= 0.5 && n <= 2.0) {
-          return this.absoluteErrorInterval(Math.log(n), abs_error);
-        }
-        return this.ulpInterval(Math.log(n), 3);
+    impl: (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
+      if (n >= 0.5 && n <= 2.0) {
+        return this.absoluteErrorInterval(Math.log(n), abs_error);
       }
-    )
+      return this.ulpInterval(Math.log(n), 3);
+    },
+    domain: () => {
+      return this.constants().greaterThanZeroInterval;
+    }
   };
 
   logIntervalImpl(x) {
@@ -3662,17 +3661,17 @@ export class FPTraits {
 
 
   Log2IntervalOp = {
-    impl: this.limitScalarToIntervalDomain(
-      this.constants().greaterThanZeroInterval,
-      (n) => {
-        assert(this.kind === 'f32' || this.kind === 'f16');
-        const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
-        if (n >= 0.5 && n <= 2.0) {
-          return this.absoluteErrorInterval(Math.log2(n), abs_error);
-        }
-        return this.ulpInterval(Math.log2(n), 3);
+    impl: (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -21 : 2 ** -7;
+      if (n >= 0.5 && n <= 2.0) {
+        return this.absoluteErrorInterval(Math.log2(n), abs_error);
       }
-    )
+      return this.ulpInterval(Math.log2(n), 3);
+    },
+    domain: () => {
+      return this.constants().greaterThanZeroInterval;
+    }
   };
 
   log2IntervalImpl(x) {
@@ -4151,14 +4150,14 @@ export class FPTraits {
 
 
   SinIntervalOp = {
-    impl: this.limitScalarToIntervalDomain(
-      this.constants().negPiToPiInterval,
-      (n) => {
-        assert(this.kind === 'f32' || this.kind === 'f16');
-        const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
-        return this.absoluteErrorInterval(Math.sin(n), abs_error);
-      }
-    )
+    impl: (n) => {
+      assert(this.kind === 'f32' || this.kind === 'f16');
+      const abs_error = this.kind === 'f32' ? 2 ** -11 : 2 ** -7;
+      return this.absoluteErrorInterval(Math.sin(n), abs_error);
+    },
+    domain: () => {
+      return this.constants().negPiToPiInterval;
+    }
   };
 
   sinIntervalImpl(n) {
@@ -4424,6 +4423,7 @@ class F32Traits extends FPTraits {
       kValue.f32.positive.subnormal.min,
       kValue.f32.positive.max
     ),
+    negOneToOneInterval: new FPInterval('f32', -1, 1),
     zeroVector: {
       2: [kF32ZeroInterval, kF32ZeroInterval],
       3: [kF32ZeroInterval, kF32ZeroInterval, kF32ZeroInterval],
@@ -4890,6 +4890,8 @@ class FPAbstractTraits extends FPTraits {
       kValue.f64.positive.subnormal.min,
       kValue.f64.positive.max
     ),
+    negOneToOneInterval: new FPInterval('abstract', -1, 1),
+
     zeroVector: {
       2: [kAbstractZeroInterval, kAbstractZeroInterval],
       3: [kAbstractZeroInterval, kAbstractZeroInterval, kAbstractZeroInterval],
@@ -5232,6 +5234,8 @@ class F16Traits extends FPTraits {
       kValue.f16.positive.subnormal.min,
       kValue.f16.positive.max
     ),
+    negOneToOneInterval: new FPInterval('f16', -1, 1),
+
     zeroVector: {
       2: [kF16ZeroInterval, kF16ZeroInterval],
       3: [kF16ZeroInterval, kF16ZeroInterval, kF16ZeroInterval],
