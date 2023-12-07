@@ -5107,14 +5107,8 @@ class FPAbstractTraits extends FPTraits {
   log2Interval = this.unimplementedScalarToInterval.bind(this, 'log2Interval');
   maxInterval = this.maxIntervalImpl.bind(this);
   minInterval = this.minIntervalImpl.bind(this);
-  mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(
-    this,
-    'mixImpreciseInterval'
-  );
-  mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(
-    this,
-    'mixPreciseInterval'
-  );
+  mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
+  mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   modfInterval = this.modfIntervalImpl.bind(this);
   multiplicationInterval = this.multiplicationIntervalImpl.bind(this);

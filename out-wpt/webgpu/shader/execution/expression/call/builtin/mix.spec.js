@@ -16,10 +16,10 @@ Same as mix(e1,e2,T2(e3)).
 
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { allInputSources, run } from '../../expression.js';
+import { TypeAbstractFloat, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 import { d } from './mix.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -28,27 +28,69 @@ g.test('abstract_float_matching').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract_float test with matching third param`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+u.
+combine('inputSource', onlyConstInputSource).
+combine('vectorize', [undefined, 2, 3, 4])
 ).
-unimplemented();
+fn(async (t) => {
+  const cases = await d.get('abstract_const');
+  await run(
+    t,
+    abstractBuiltin('mix'),
+    [TypeAbstractFloat, TypeAbstractFloat, TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
+});
 
 g.test('abstract_float_nonmatching_vec2').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract_float tests with two vec2<abstract_float> params and scalar third param`).
-params((u) => u.combine('inputSource', allInputSources)).
-unimplemented();
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec2_scalar_const');
+  await run(
+    t,
+    abstractBuiltin('mix'),
+    [TypeVec(2, TypeAbstractFloat), TypeVec(2, TypeAbstractFloat), TypeAbstractFloat],
+    TypeVec(2, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
 g.test('abstract_float_nonmatching_vec3').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract_float tests with two vec3<abstract_float> params and scalar third param`).
-params((u) => u.combine('inputSource', allInputSources)).
-unimplemented();
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec3_scalar_const');
+  await run(
+    t,
+    abstractBuiltin('mix'),
+    [TypeVec(3, TypeAbstractFloat), TypeVec(3, TypeAbstractFloat), TypeAbstractFloat],
+    TypeVec(3, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
 g.test('abstract_float_nonmatching_vec4').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract_float tests with two vec4<abstract_float> params and scalar third param`).
-params((u) => u.combine('inputSource', allInputSources)).
-unimplemented();
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec4_scalar_const');
+  await run(
+    t,
+    abstractBuiltin('mix'),
+    [TypeVec(4, TypeAbstractFloat), TypeVec(4, TypeAbstractFloat), TypeAbstractFloat],
+    TypeVec(4, TypeAbstractFloat),
+    t.params,
+    cases
+  );
+});
 
 g.test('f32_matching').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').

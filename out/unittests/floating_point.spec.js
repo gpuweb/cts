@@ -5344,13 +5344,16 @@ const kMixImpreciseIntervalCases = {
   { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] }, // ~0.8
 
   // Showing how precise and imprecise versions diff
-  // Note that this expectation is 0 only in f32 as 10.0 is much smaller that f32.negative.min,
-  // So that 10 - f32.negative.min == f32.negative.min even in f64. But for f16, there is not
-  // a exactly-represenatble f16 value v that make v - f16.negative.min == f16.negative.min
-  // in f64, in fact that require v being smaller than 2**-37.
+  // Note that this expectation is 0 in f32 as |10.0| is much smaller than
+  // |f32.negative.min|.
+  // So that 10 - f32.negative.min == -f32.negative.min even in f64.
   { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 },
   // -10.0 is the same, much smaller than f32.negative.min
-  { input: [kValue.f32.negative.min, -10.0, 1.0], expected: 0.0 }],
+  { input: [kValue.f32.negative.min, -10.0, 1.0], expected: 0.0 },
+  { input: [kValue.f32.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f32.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f32.negative.min, 10.0, 0.5], expected: reinterpretU32AsF32(0xfeffffff) },
+  { input: [kValue.f32.negative.min, -10.0, 0.5], expected: reinterpretU32AsF32(0xfeffffff) }],
 
   f16: [
   // [0.0, 1.0] cases
@@ -5375,14 +5378,46 @@ const kMixImpreciseIntervalCases = {
   { input: [kValue.f16.negative.min, 10.0, 1.0], expected: kUnboundedEndpoints },
   // (y - x) * 1.0, where y = -10 and x = -65504, the result is 65494 rounded to 65472 or 65504.
   // The result is -65504 + 65472 = -32 or -65504 + 65504 = 0.
-  { input: [kValue.f16.negative.min, -10.0, 1.0], expected: [-32, 0] }]
+  { input: [kValue.f16.negative.min, -10.0, 1.0], expected: [-32, 0] },
+  { input: [kValue.f16.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f16.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f16.negative.min, 10.0, 0.5], expected: kUnboundedEndpoints },
+  { input: [kValue.f16.negative.min, -10.0, 0.5], expected: [-32768.0, -32752.0] }],
+
+  abstract: [
+  // [0.0, 1.0] cases
+  { input: [0.0, 1.0, 0.1], expected: 0.1 },
+  { input: [0.0, 1.0, 0.9], expected: 0.9 },
+  // [1.0, 0.0] cases
+  { input: [1.0, 0.0, 0.1], expected: 0.9 },
+  { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
+  // [0.0, 10.0] cases
+  { input: [0.0, 10.0, 0.1], expected: 1 },
+  { input: [0.0, 10.0, 0.9], expected: 9 },
+  // [2.0, 10.0] cases
+  { input: [2.0, 10.0, 0.1], expected: 2.8 },
+  { input: [2.0, 10.0, 0.9], expected: 9.2 },
+  // [-1.0, 1.0] cases
+  { input: [-1.0, 1.0, 0.1], expected: -0.8 },
+  { input: [-1.0, 1.0, 0.9], expected: 0.8 },
+
+  // Showing how precise and imprecise versions diff
+  // Note that this expectation is 0 in f64 as |10.0| is much smaller than
+  // |f64.negative.min|, so that 10 - f64.negative.min == -f64.negative.min
+  { input: [kValue.f64.negative.min, 10.0, 1.0], expected: 0 },
+  // -10.0 is the same, much smaller than f64.negative.min
+  { input: [kValue.f64.negative.min, -10.0, 1.0], expected: 0 },
+  { input: [kValue.f64.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, 10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
+  { input: [kValue.f64.negative.min, -10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) }]
 
 };
 
 g.test('mixImpreciseInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -5436,11 +5471,8 @@ expandWithParams((p) => {
   { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedEndpoints },
   { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedEndpoints },
   { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedEndpoints },
-  { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedEndpoints }
+  { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedEndpoints }];
 
-  // The [negative.min, +/-10.0, 1.0] cases has different result for different trait on
-  // imprecise version.
-  ];
 })
 ).
 fn((t) => {
@@ -5473,8 +5505,19 @@ const kMixPreciseIntervalCases = {
   { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] }, // ~9.2
   // [-1.0, 1.0] cases
   { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] }, // ~-0.8
-  { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] } // ~0.8
-  ],
+  { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] }, // ~0.8
+
+  // Showing how precise and imprecise versions diff
+  { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10 },
+  { input: [kValue.f32.negative.min, -10.0, 1.0], expected: -10 },
+  { input: [kValue.f32.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f32.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f32.negative.min, 10.0, 0.5], expected: reinterpretU32AsF32(0xfeffffff) },
+  { input: [kValue.f32.negative.min, -10.0, 0.5], expected: reinterpretU32AsF32(0xfeffffff) },
+
+  // Intermediate OOB
+  { input: [1.0, 2.0, kPlusOneULPFunctions['f32'](kValue.f32.positive.max / 2)], expected: kUnboundedEndpoints }],
+
   f16: [
   // [0.0, 1.0] cases
   { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9800_0000_0000n), reinterpretU64AsF64(0x3fb9_9c00_0000_0000n)] }, // ~0.1
@@ -5490,14 +5533,53 @@ const kMixPreciseIntervalCases = {
   { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6000_0000_0000n), reinterpretU64AsF64(0x4022_6c00_0000_0000n)] }, // ~9.2
   // [-1.0, 1.0] cases
   { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_a000_0000_0000n), reinterpretU64AsF64(0xbfe9_9800_0000_0000n)] }, // ~-0.8
-  { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] } // ~0.8
-  ]
+  { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] }, // ~0.8
+
+  // Showing how precise and imprecise versions diff
+  { input: [kValue.f64.negative.min, 10.0, 1.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, -10.0, 1.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, 10.0, 0.5], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, -10.0, 0.5], expected: kUnboundedEndpoints },
+
+  // Intermediate OOB
+  { input: [1.0, 2.0, kPlusOneULPFunctions['f16'](kValue.f16.positive.max / 2)], expected: kUnboundedEndpoints }],
+
+  abstract: [
+  // [0.0, 1.0] cases
+  { input: [0.0, 1.0, 0.1], expected: 0.1 },
+  { input: [0.0, 1.0, 0.9], expected: 0.9 },
+  // [1.0, 0.0] cases
+  { input: [1.0, 0.0, 0.1], expected: 0.9 },
+  { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
+  // [0.0, 10.0] cases
+  { input: [0.0, 10.0, 0.1], expected: 1 },
+  { input: [0.0, 10.0, 0.9], expected: 9 },
+  // [2.0, 10.0] cases
+  { input: [2.0, 10.0, 0.1], expected: 2.8 },
+  { input: [2.0, 10.0, 0.9], expected: 9.2 },
+  // [-1.0, 1.0] cases
+  { input: [-1.0, 1.0, 0.1], expected: -0.8 },
+  { input: [-1.0, 1.0, 0.9], expected: 0.8 },
+
+  // Showing how precise and imprecise versions diff
+  { input: [kValue.f64.negative.min, 10.0, 1.0], expected: 10.0 },
+  { input: [kValue.f64.negative.min, -10.0, 1.0], expected: -10.0 },
+  { input: [kValue.f64.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
+  { input: [kValue.f64.negative.min, 10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
+  { input: [kValue.f64.negative.min, -10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
+
+  // Intermediate OOB
+  { input: [1.0, 2.0, kPlusOneULPFunctions['abstract'](kValue.f64.positive.max / 2)], expected: kUnboundedEndpoints }]
+
 };
 
 g.test('mixPreciseInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -5551,11 +5633,7 @@ expandWithParams((p) => {
   { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedEndpoints },
   { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedEndpoints },
   { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedEndpoints },
-  { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedEndpoints },
-
-  // Showing how precise and imprecise versions diff
-  { input: [constants.negative.min, 10.0, 1.0], expected: 10.0 },
-  { input: [constants.negative.min, -10.0, 1.0], expected: -10.0 }];
+  { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedEndpoints }];
 
 })
 ).
