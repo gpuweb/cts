@@ -612,7 +612,7 @@ g.test('bgl_resource_type_mismatch')
   )
   .params(
     kCompatTestParams
-      //.beginSubcases()
+      .beginSubcases()
       .combine('bgResourceType', kResourceTypes)
       .combine('plResourceType', kResourceTypes)
       .expand('useU32Array', p => (p.bgResourceType === 'uniformBuf' ? [true, false] : [false]))
