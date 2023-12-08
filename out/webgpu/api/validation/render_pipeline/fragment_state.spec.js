@@ -366,7 +366,7 @@ fn((t) => {
 g.test('pipeline_output_targets,blend').
 desc(
   `On top of requirements from pipeline_output_targets, when blending is enabled and alpha channel is read indicated by any blend factor, an extra requirement is added:
-  - fragment output must have an alpha channel (i.e. it must be vec4), otherwise writeMask must be 0.
+  - fragment output must be vec4.
   `
 ).
 params((u) =>
@@ -381,15 +381,7 @@ beginSubcases()
 ...u.combine('colorDstFactor', kBlendFactors),
 ...u.combine('alphaSrcFactor', kBlendFactors),
 ...u.combine('alphaDstFactor', kBlendFactors)]
-).
-expand('writeMask', function* (p) {
-  yield 0;
-  for (let i = 0; i < p.componentCount; i++) {
-    yield 1 << i;
-  }
-  // default full mask
-  yield 0xf;
-})
+)
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
@@ -405,8 +397,7 @@ fn((t) => {
     colorSrcFactor,
     colorDstFactor,
     alphaSrcFactor,
-    alphaDstFactor,
-    writeMask
+    alphaDstFactor
   } = t.params;
   const info = kTextureFormatInfo[format];
 
@@ -417,8 +408,7 @@ fn((t) => {
       blend: {
         color: { srcFactor: colorSrcFactor, dstFactor: colorDstFactor },
         alpha: { srcFactor: alphaSrcFactor, dstFactor: alphaDstFactor }
-      },
-      writeMask
+      }
     }],
 
     fragmentShaderCode: getFragmentShaderCodeWithOutput([
@@ -431,8 +421,8 @@ fn((t) => {
   const meetsExtraBlendingRequirement = !colorBlendReadsSrcAlpha || componentCount === 4;
   const _success =
   info.color.type === sampleType &&
-  componentCount >= kTexelRepresentationInfo[format].componentOrder.length && (
-  meetsExtraBlendingRequirement || writeMask === 0);
+  componentCount >= kTexelRepresentationInfo[format].componentOrder.length &&
+  meetsExtraBlendingRequirement;
   t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
 });
 //# sourceMappingURL=fragment_state.spec.js.map
