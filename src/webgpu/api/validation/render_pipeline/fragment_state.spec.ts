@@ -384,12 +384,11 @@ g.test('pipeline_output_targets,blend')
       ] as const)
       .expand('writeMask', function* (p) {
         yield 0;
-        for (let i = 1; i <= p.componentCount; i++) {
-          yield (1 << i) - 1;
+        for (let i = 0; i < p.componentCount; i++) {
+          yield 1 << i;
         }
-        if (p.componentCount < 4) {
-          yield 0xf;
-        }
+        // default full mask
+        yield 0xf;
       })
   )
   .beforeAllSubcases(t => {
