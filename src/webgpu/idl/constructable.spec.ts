@@ -2,25 +2,23 @@ export const description = `
 Test that constructable WebGPU objects are actually constructable.
 `;
 
-import { keysOf } from '../../common/util/data_tables.js';
-
 import { makeTestGroup } from './../../common/framework/test_group.js';
 import { IDLTest } from './idl_test.js';
 
 export const g = makeTestGroup(IDLTest);
 
-const errors = {
-  GPUInternalError: globalThis.GPUInternalError,
-  GPUOutOfMemoryError: globalThis.GPUOutOfMemoryError,
-  GPUValidationError: globalThis.GPUValidationError,
-};
-
 g.test('gpu_errors')
   .desc('tests that GPUErrors are constructable')
-  .params(u => u.combine('errorType', keysOf(errors)))
+  .params(u =>
+    u.combine('errorType', [
+      'GPUInternalError',
+      'GPUOutOfMemoryError',
+      'GPUValidationError',
+    ] as const)
+  )
   .fn(t => {
     const { errorType } = t.params;
-    const Ctor = errors[errorType];
+    const Ctor = globalThis[errorType];
     const msg = 'this is a test';
     const error = new Ctor(msg);
     t.expect(error.message === msg);
