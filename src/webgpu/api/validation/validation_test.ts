@@ -293,7 +293,6 @@ export class ValidationTest extends GPUTest {
         return this.getDeviceMismatchedSampledTexture(4).createView();
       case 'readonlyStorageTex':
       case 'writeonlyStorageTex':
-        return this.getDeviceMismatchedStorageTexture('rgba8unorm').createView();
       case 'readwriteStorageTex':
         return this.getDeviceMismatchedStorageTexture('r32float').createView();
     }
