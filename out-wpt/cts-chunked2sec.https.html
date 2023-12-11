@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8534 variants generated from 2005 tests in 448 files -->
+<!-- Prefix: "?q="; 8543 variants generated from 2005 tests in 448 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -2048,8 +2048,8 @@
 <meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits,workgroup_storage_size:*'><!-- estimated: 21.600 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_count_mismatch:*'><!-- estimated: 16.398 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_be_present_in_layout:*'><!-- estimated: 29.799 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_contain_resource_defined_in_layout:*'><!-- estimated: 33.660 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture_binding_must_have_correct_usage:*'><!-- estimated: 16.100 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_must_contain_resource_defined_in_layout:*'><!-- estimated: 48.620 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture_binding_must_have_correct_usage:*'><!-- estimated: 27.600 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture_must_have_correct_component_type:*'><!-- estimated: 32.301 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture_must_have_correct_dimension:*'><!-- estimated: 197.280 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:multisampled_validation:*'><!-- estimated: 53.300 ms -->
@@ -2060,9 +2060,9 @@
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:buffer,resource_offset:*'><!-- estimated: 54.696 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:buffer,resource_binding_size:*'><!-- estimated: 7.605 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:buffer,effective_buffer_binding_size:*'><!-- estimated: 12.624 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture,resource_state:*'><!-- estimated: 30.504 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:texture,resource_state:*'><!-- estimated: 45.756 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:bind_group_layout,device_mismatch:*'><!-- estimated: 31.600 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_resources,device_mismatch:*'><!-- estimated: 58.200 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_resources,device_mismatch:*'><!-- estimated: 87.300 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,usage:*'><!-- estimated: 95.425 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,mip_level_count:*'><!-- estimated: 33.704 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:storage_texture,format:*'><!-- estimated: 1291.520 ms -->
@@ -2070,13 +2070,13 @@
 <meta name=variant content='?q=webgpu:api,validation,createBindGroup:sampler,compare_function_with_binding_type:*'><!-- estimated: 18.954 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:duplicate_bindings:*'><!-- estimated: 2.400 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:maximum_binding_limit:*'><!-- estimated: 2.400 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility:*'><!-- estimated: 138.672 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility:*'><!-- estimated: 169.488 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility,VERTEX_shader_stage_buffer_type:*'><!-- estimated: 32.208 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:visibility,VERTEX_shader_stage_storage_texture_access:*'><!-- estimated: 140.608 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:multisampled_validation:*'><!-- estimated: 18.984 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_dynamic_buffers:*'><!-- estimated: 33.600 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_resources_per_stage,in_bind_group_layout:*'><!-- estimated: 210.450 ms -->
-<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_resources_per_stage,in_pipeline_layout:*'><!-- estimated: 156.860 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_resources_per_stage,in_bind_group_layout:*'><!-- estimated: 236.070 ms -->
+<meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:max_resources_per_stage,in_pipeline_layout:*'><!-- estimated: 175.956 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:storage_texture,layout_dimension:*'><!-- estimated: 26.803 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createBindGroupLayout:storage_texture,formats:*'><!-- estimated: 1423.860 ms -->
 <meta name=variant content='?q=webgpu:api,validation,createPipelineLayout:number_of_dynamic_buffers_exceeds_the_maximum_value:*'><!-- estimated: 31.896 ms -->
@@ -2831,7 +2831,7 @@
 <meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:sampler_binding,render_pipeline:*'><!-- estimated: 94.707 ms -->
 <meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_binding_mismatch:*'><!-- estimated: 312.240 ms -->
 <meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_visibility_mismatch:*'><!-- estimated: 505.856 ms -->
-<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_resource_type_mismatch:*'><!-- estimated: 390.800 ms -->
+<meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:bgl_resource_type_mismatch:*'><!-- estimated: 820.680 ms -->
 <meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,compute_pass:*'><!-- estimated: 9.300 ms -->
 <meta name=variant content='?q=webgpu:api,validation,encoding,programmable,pipeline_bind_group_compat:empty_bind_group_layouts_requires_empty_bind_groups,render_pass:*'><!-- estimated: 86.704 ms -->
 <meta name=variant content='?q=webgpu:api,validation,encoding,queries,begin_end:occlusion_query,begin_end_balance:*'><!-- estimated: 4.100 ms -->
@@ -5767,9 +5767,18 @@
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,compressed_format:format="astc-12x12-unorm";*'><!-- estimated: 156.896 ms -->
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,compressed_format:format="astc-12x12-unorm-srgb";*'><!-- estimated: 156.896 ms -->
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createSampler:*'><!-- estimated: 62.802 ms -->
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroupLayout:*'><!-- estimated: 413.712 ms -->
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:*'><!-- estimated: 1831.500 ms -->
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createPipelineLayout:*'><!-- estimated: 398.610 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroupLayout:*'><!-- estimated: 505.648 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="uniformBuf";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="storageBuf";*'><!-- estimated: 366.300 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="filtSamp";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="nonFiltSamp";*'><!-- estimated: 366.300 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="compareSamp";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="sampledTex";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="sampledTexMS";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="readonlyStorageTex";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="writeonlyStorageTex";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:resourceType="readwriteStorageTex";*'><!-- estimated: 183.150 ms -->
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createPipelineLayout:*'><!-- estimated: 487.190 ms -->
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createShaderModule:*'><!-- estimated: 118.500 ms -->
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createComputePipeline:*'><!-- estimated: 79.500 ms -->
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createRenderPipeline:*'><!-- estimated: 78.900 ms -->

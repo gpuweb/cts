@@ -38,7 +38,9 @@ const kResourceTypes: ValidBindableResource[] = [
   'uniformBuf',
   'filtSamp',
   'sampledTex',
-  'storageTex',
+  'readonlyStorageTex',
+  'writeonlyStorageTex',
+  'readwriteStorageTex',
 ];
 
 function getTestCmds(
@@ -75,7 +77,17 @@ class F extends ValidationTest {
     if (entry.buffer !== undefined) return 'uniformBuf';
     if (entry.sampler !== undefined) return 'filtSamp';
     if (entry.texture !== undefined) return 'sampledTex';
-    if (entry.storageTexture !== undefined) return 'storageTex';
+    if (entry.storageTexture !== undefined) {
+      switch (entry.storageTexture.access) {
+        case undefined:
+        case 'write-only':
+          return 'writeonlyStorageTex';
+        case 'read-only':
+          return 'readonlyStorageTex';
+        case 'read-write':
+          return 'readwriteStorageTex';
+      }
+    }
     unreachable();
   }
 
@@ -208,8 +220,14 @@ class F extends ValidationTest {
       case 'sampledTex':
         entry.texture = {}; // default sampleType: float
         break;
-      case 'storageTex':
-        entry.storageTexture = { access: 'write-only', format: 'rgba8unorm' };
+      case 'readonlyStorageTex':
+        entry.storageTexture = { access: 'read-only', format: 'r32float' };
+        break;
+      case 'writeonlyStorageTex':
+        entry.storageTexture = { access: 'write-only', format: 'r32float' };
+        break;
+      case 'readwriteStorageTex':
+        entry.storageTexture = { access: 'read-write', format: 'r32float' };
         break;
     }
 

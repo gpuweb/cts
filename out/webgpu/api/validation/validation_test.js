@@ -152,11 +152,11 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE_BINDING` usage. */
-  getStorageTexture() {
+  getStorageTexture(format) {
     return this.trackForCleanup(
       this.device.createTexture({
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
-        format: 'rgba8unorm',
+        format,
         usage: GPUTextureUsage.STORAGE_BINDING
       })
     );
@@ -220,8 +220,10 @@ export class ValidationTest extends GPUTest {
         return this.getSampledTexture(1).createView();
       case 'sampledTexMS':
         return this.getSampledTexture(4).createView();
-      case 'storageTex':
-        return this.getStorageTexture().createView();
+      case 'readonlyStorageTex':
+      case 'writeonlyStorageTex':
+      case 'readwriteStorageTex':
+        return this.getStorageTexture('r32float').createView();
     }
   }
 
@@ -255,10 +257,10 @@ export class ValidationTest extends GPUTest {
   }
 
   /** Return an arbitrarily-configured GPUTexture with the `STORAGE` usage from mismatched device. */
-  getDeviceMismatchedStorageTexture() {
+  getDeviceMismatchedStorageTexture(format) {
     return this.getDeviceMismatchedTexture({
       size: { width: 4, height: 4, depthOrArrayLayers: 1 },
-      format: 'rgba8unorm',
+      format,
       usage: GPUTextureUsage.STORAGE_BINDING
     });
   }
@@ -289,8 +291,10 @@ export class ValidationTest extends GPUTest {
         return this.getDeviceMismatchedSampledTexture(1).createView();
       case 'sampledTexMS':
         return this.getDeviceMismatchedSampledTexture(4).createView();
-      case 'storageTex':
-        return this.getDeviceMismatchedStorageTexture().createView();
+      case 'readonlyStorageTex':
+      case 'writeonlyStorageTex':
+      case 'readwriteStorageTex':
+        return this.getDeviceMismatchedStorageTexture('r32float').createView();
     }
   }
 
