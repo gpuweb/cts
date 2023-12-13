@@ -14,7 +14,8 @@ import {
   kFeaturesForFormats,
   filterFormatsByFeature,
   viewCompatible,
-  textureDimensionAndFormatCompatible } from
+  textureDimensionAndFormatCompatible,
+  isTextureFormatUsableAsStorageFormat } from
 '../../format_info.js';
 import { maxMipLevelCount } from '../../util/texture/base.js';
 
@@ -372,8 +373,12 @@ fn((t) => {
     usage
   };
 
+  const satisfyWithStorageUsageRequirement =
+  (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0 ||
+  isTextureFormatUsableAsStorageFormat(format, t.isCompatibility);
+
   const success =
-  sampleCount === 1 ||
+  sampleCount === 1 && satisfyWithStorageUsageRequirement ||
   sampleCount === 4 && (
   dimension === '2d' || dimension === undefined) &&
   kTextureFormatInfo[format].multisample &&
@@ -1058,7 +1063,11 @@ fn((t) => {
   // Note that we unconditionally test copy usages for all formats. We don't check copySrc/copyDst in kTextureFormatInfo in capability_info.js
   // if (!info.copySrc && (usage & GPUTextureUsage.COPY_SRC) !== 0) success = false;
   // if (!info.copyDst && (usage & GPUTextureUsage.COPY_DST) !== 0) success = false;
-  if (!info.color?.storage && (usage & GPUTextureUsage.STORAGE_BINDING) !== 0) success = false;
+  if (
+  (usage & GPUTextureUsage.STORAGE_BINDING) !== 0 &&
+  !isTextureFormatUsableAsStorageFormat(format, t.isCompatibility))
+
+  success = false;
   if (
   (!info.renderable || appliedDimension !== '2d' && appliedDimension !== '3d') &&
   (usage & GPUTextureUsage.RENDER_ATTACHMENT) !== 0)

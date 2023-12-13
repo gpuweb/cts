@@ -33,8 +33,9 @@ import {
   resolvePerAspectFormat,
 
 
-  isCompressedTextureFormat } from
+  isCompressedTextureFormat,
 
+  isTextureFormatUsableAsStorageFormat } from
 './format_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
 import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
@@ -248,6 +249,14 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
         if (dimension === 'cube-array') {
           this.skip(`texture view dimension '${dimension}' is not supported`);
         }
+      }
+    }
+  }
+
+  skipIfTextureFormatNotUsableAsStorageTexture(...formats) {
+    for (const format of formats) {
+      if (format && !isTextureFormatUsableAsStorageFormat(format, this.isCompatibility)) {
+        this.skip(`Texture with ${format} is not usable as a storage texture`);
       }
     }
   }

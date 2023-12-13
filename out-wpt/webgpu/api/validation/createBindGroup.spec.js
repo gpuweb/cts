@@ -815,6 +815,10 @@ u //
 .combine('storageTextureFormat', kStorageTextureFormats).
 combine('resourceFormat', kStorageTextureFormats)
 ).
+beforeAllSubcases((t) => {
+  const { resourceFormat } = t.params;
+  t.skipIfTextureFormatNotUsableAsStorageTexture(resourceFormat);
+}).
 fn((t) => {
   const { storageTextureFormat, resourceFormat } = t.params;
 

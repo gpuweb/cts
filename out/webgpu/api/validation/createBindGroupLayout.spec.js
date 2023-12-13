@@ -450,6 +450,7 @@ u //
 ).
 beforeAllSubcases((t) => {
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
 }).
 fn((t) => {
   const { format, access } = t.params;

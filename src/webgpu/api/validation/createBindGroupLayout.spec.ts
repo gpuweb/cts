@@ -450,6 +450,7 @@ g.test('storage_texture,formats')
   )
   .beforeAllSubcases(t => {
     t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
   })
   .fn(t => {
     const { format, access } = t.params;
