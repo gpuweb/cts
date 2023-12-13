@@ -373,20 +373,19 @@ g.test('sampleCount,valid_sampleCount_with_other_parameter_varies')
       usage,
     };
 
-    const usableWithStorageUsage =
+    const satisfyWithStorageUsageRequirement =
       (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0 ||
       isTextureFormatUsableAsStorageFormat(format, t.isCompatibility);
 
     const success =
-      usableWithStorageUsage &&
-      (sampleCount === 1 ||
-        (sampleCount === 4 &&
-          (dimension === '2d' || dimension === undefined) &&
-          kTextureFormatInfo[format].multisample &&
-          mipLevelCount === 1 &&
-          arrayLayerCount === 1 &&
-          (usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
-          (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0));
+      (sampleCount === 1 && satisfyWithStorageUsageRequirement) ||
+      (sampleCount === 4 &&
+        (dimension === '2d' || dimension === undefined) &&
+        kTextureFormatInfo[format].multisample &&
+        mipLevelCount === 1 &&
+        arrayLayerCount === 1 &&
+        (usage & GPUConst.TextureUsage.RENDER_ATTACHMENT) !== 0 &&
+        (usage & GPUConst.TextureUsage.STORAGE_BINDING) === 0);
 
     t.expectValidationError(() => {
       t.device.createTexture(descriptor);

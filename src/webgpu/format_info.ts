@@ -1943,7 +1943,7 @@ export function isTextureFormatUsableAsStorageFormat(
         return false;
     }
   }
-  return kTextureFormatInfo[format].color?.storage;
+  return !!kTextureFormatInfo[format].color?.storage;
 }
 
 export function isEncodableTextureformat(format: GPUTextureFormat) {
