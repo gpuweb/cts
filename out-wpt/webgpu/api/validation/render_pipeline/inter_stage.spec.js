@@ -159,20 +159,27 @@ u.combine('isAsync', [false, true]).combineWithParams([
 { output: '@interpolate(linear)', input: '@interpolate(perspective)' },
 { output: '@interpolate(flat)', input: '@interpolate(perspective)' },
 { output: '@interpolate(linear)', input: '@interpolate(flat)' },
-{ output: '@interpolate(linear, center)', input: '@interpolate(linear, center)' }]
+{
+  output: '@interpolate(linear, center)',
+  input: '@interpolate(linear, center)',
+  _compat_success: false
+}]
 )
 ).
 fn((t) => {
-  const { isAsync, output, input, _success } = t.params;
+  const { isAsync, output, input, _success, _compat_success } = t.params;
 
   const descriptor = t.getDescriptorWithStates(
     t.getVertexStateWithOutputs([`@location(0) ${output} vout0: f32`]),
     t.getFragmentStateWithInputs([`@location(0) ${input} fin0: f32`])
   );
 
-  t.doCreateRenderPipelineTest(isAsync, _success ?? output === input, descriptor);
-});
+  const shouldSucceed =
+  (_success ?? output === input) && (!t.isCompatibility || _compat_success !== false);
 
+  t.doCreateRenderPipelineTest(isAsync, shouldSucceed, descriptor);
+});
+1;
 g.test('interpolation_sampling').
 desc(
   `Tests that validation should fail when interpolation sampling of vertex output and fragment input at the same location doesn't match.`
@@ -186,7 +193,12 @@ u.combine('isAsync', [false, true]).combineWithParams([
   input: '@interpolate(perspective, center)',
   _success: true
 },
-{ output: '@interpolate(linear, center)', input: '@interpolate(linear)', _success: true },
+{
+  output: '@interpolate(linear, center)',
+  input: '@interpolate(linear)',
+  _success: true,
+  _compat_success: false
+},
 { output: '@interpolate(flat)', input: '@interpolate(flat)' },
 { output: '@interpolate(perspective)', input: '@interpolate(perspective, sample)' },
 { output: '@interpolate(perspective, center)', input: '@interpolate(perspective, sample)' },
@@ -198,14 +210,17 @@ u.combine('isAsync', [false, true]).combineWithParams([
 )
 ).
 fn((t) => {
-  const { isAsync, output, input, _success } = t.params;
+  const { isAsync, output, input, _success, _compat_success } = t.params;
 
   const descriptor = t.getDescriptorWithStates(
     t.getVertexStateWithOutputs([`@location(0) ${output} vout0: f32`]),
     t.getFragmentStateWithInputs([`@location(0) ${input} fin0: f32`])
   );
 
-  t.doCreateRenderPipelineTest(isAsync, _success ?? output === input, descriptor);
+  const shouldSucceed =
+  (_success ?? output === input) && (!t.isCompatibility || _compat_success !== false);
+
+  t.doCreateRenderPipelineTest(isAsync, shouldSucceed, descriptor);
 });
 
 g.test('max_shader_variable_location').
