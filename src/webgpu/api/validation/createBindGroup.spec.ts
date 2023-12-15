@@ -816,8 +816,8 @@ g.test('storage_texture,format')
       .combine('resourceFormat', kStorageTextureFormats)
   )
   .beforeAllSubcases(t => {
-    const { resourceFormat } = t.params;
-    t.skipIfTextureFormatNotUsableAsStorageTexture(resourceFormat);
+    const { storageTextureFormat, resourceFormat } = t.params;
+    t.skipIfTextureFormatNotUsableAsStorageTexture(storageTextureFormat, resourceFormat);
   })
   .fn(t => {
     const { storageTextureFormat, resourceFormat } = t.params;
