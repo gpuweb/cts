@@ -1640,6 +1640,8 @@
   "webgpu:shader,execution,robust_access:linear_memory:*": { "subcaseMS": 5.293 },
   "webgpu:shader,execution,robust_access_vertex:vertex_buffer_access:*": { "subcaseMS": 6.487 },
   "webgpu:shader,execution,shader_io,compute_builtins:inputs:*": { "subcaseMS": 19.342 },
+  "webgpu:shader,execution,shader_io,fragment_builtins:inputs,interStage:*": { "subcaseMS": 1.001 },
+  "webgpu:shader,execution,shader_io,fragment_builtins:inputs,position:*": { "subcaseMS": 1.001 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_between_stages:*": { "subcaseMS": 9.601 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_buffer:*": { "subcaseMS": 20.701 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_non_entry_point_function:*": { "subcaseMS": 6.801 },
