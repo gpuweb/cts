@@ -3667,6 +3667,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "dot4I8Packed"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "dot4U8Packed"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "exp"
     ]
   },
@@ -3728,6 +3748,46 @@ export const listing = [
       "call",
       "builtin",
       "modf"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "pack4xI8"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "pack4xI8Clamp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "pack4xU8"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "pack4xU8Clamp"
     ]
   },
   {
@@ -3808,6 +3868,26 @@ export const listing = [
       "call",
       "builtin",
       "tan"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "unpack4xI8"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "unpack4xU8"
     ]
   },
   {
