@@ -19,7 +19,9 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { TypedArrayBufferView, range, unreachable } from '../../../../common/util/util.js';
 import { InterpolationSampling, InterpolationType } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { getMultisampleFragmentOffsets } from '../../../multisample_info.js';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
+import { dotProduct, subtractVectors } from '../../../util/math.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -72,6 +74,9 @@ function getCopyMultisamplePipelineForDevice(device: GPUDevice, texture: GPUText
           let offset = (id.y * dimensions.x + tx) * numSamples + sampleIndex;
           let v = vec4u(textureLoad(texture, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
 
+          // expand rgba8unorm values back to their byte form, add them together
+          // and cast them to an f32 so we can recover the f32 values we encoded
+          // in the rgba8unorm texture.
           buffer[offset] = bitcast<f32>(dot(v, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
         }
       `,
@@ -97,7 +102,10 @@ function getCopyMultisamplePipelineForDevice(device: GPUDevice, texture: GPUText
  * @param texture texture to copy
  * @returns buffer with copy of texture, mip level 0, array layer 0.
  */
-function copyTextureToBufferIncludingMultisampledTextures(t: GPUTest, texture: GPUTexture) {
+function copyRGBA8EncodedFloatTextureToBufferIncludingMultisampledTextures(
+  t: GPUTest,
+  texture: GPUTexture
+) {
   const copyBuffer = t.device.createBuffer({
     size: texture.width * texture.height * texture.sampleCount * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
@@ -143,20 +151,6 @@ const kW = 3;
  */
 function getColumn(values: readonly number[][], colNum: number) {
   return values.map(v => v[colNum]);
-}
-
-/**
- * Subtracts 2 vectors
- */
-function subtractVectors(v1: readonly number[], v2: readonly number[]) {
-  return v1.map((v, i) => v - v2[i]);
-}
-
-/**
- * Computes the dot product of 2 vectors
- */
-function dotProduct(v1: readonly number[], v2: readonly number[]) {
-  return v1.reduce((a, v, i) => a + v * v2[i], 0);
 }
 
 /**
@@ -279,12 +273,12 @@ function generateFragmentInputs({
   const windowPoints = ndcPoints.map(p => ndcToWindow(p, viewport));
   const windowPoints2D = windowPoints.map(p => p.slice(0, 2));
 
-  const multisampleTable = kMultisamplingTables.get(sampleCount)!;
+  const fragmentOffsets = getMultisampleFragmentOffsets(sampleCount)!;
   for (let y = 0; y < height; ++y) {
     for (let x = 0; x < width; ++x) {
       for (let s = 0; s < sampleCount; ++s) {
         const fragmentPoint = [x + 0.5, y + 0.5];
-        const multisampleOffset = multisampleTable[s];
+        const multisampleOffset = fragmentOffsets[s];
         const sampleFragmentPoint = [x + multisampleOffset[0], y + multisampleOffset[1]];
         const fragmentBarycentricCoords = calcBarycentricCoordinates(windowPoints2D, fragmentPoint);
         const sampleBarycentricCoords = calcBarycentricCoordinates(
@@ -330,63 +324,6 @@ function computeFragmentPosition({
       ),
   ];
 }
-
-const kMultisamplingTables = new Map<number, readonly number[][]>([
-  [1, [[8 / 16, 8 / 16]]],
-  [
-    2,
-    [
-      [4 / 16, 4 / 16],
-      [12 / 16, 12 / 16],
-    ],
-  ],
-  [
-    4,
-    [
-      [6 / 16, 2 / 16],
-      [14 / 16, 6 / 16],
-      [2 / 16, 10 / 16],
-      [10 / 16, 14 / 16],
-    ],
-  ],
-  [
-    8,
-    [
-      [9 / 16, 5 / 16],
-      [7 / 16, 11 / 16],
-      [13 / 16, 9 / 16],
-      [5 / 16, 3 / 16],
-      [3 / 16, 13 / 16],
-      [1 / 16, 7 / 16],
-      [11 / 16, 15 / 16],
-      [15 / 16, 1 / 16],
-    ],
-  ],
-  [
-    16,
-    [
-      [9 / 16, 9 / 16],
-      [7 / 16, 5 / 16],
-      [5 / 16, 10 / 16],
-      [12 / 16, 7 / 16],
-
-      [3 / 16, 6 / 16],
-      [10 / 16, 13 / 16],
-      [13 / 16, 11 / 16],
-      [11 / 16, 3 / 16],
-
-      [6 / 16, 14 / 16],
-      [8 / 16, 1 / 16],
-      [4 / 16, 2 / 16],
-      [2 / 16, 12 / 16],
-
-      [0 / 16, 8 / 16],
-      [15 / 16, 4 / 16],
-      [14 / 16, 15 / 16],
-      [1 / 16, 0 / 16],
-    ],
-  ],
-]);
 
 /**
  * Creates a function that will compute the interpolation of an inter-stage variable.
@@ -435,10 +372,11 @@ function createInterStageInterpolationFn(
  *
  * Note: We could try to store the output to an vec4f storage buffer.
  * Unfortunately, using a storage buffer has the issue that we need to compute
- * an index with the very thing we're trying to test. Similarly for a storage
- * texture. Also, using a storage buffer seems to affect certain backends like
- * M1 Mac so it seems better to stick to rgba8unorm here and test using a
- * storage buffer in a fragment shader separately.
+ * an index with the very thing we're trying to test. Similarly, if we used a
+ * storage texture we would need to compute texture locations with the things
+ * we're trying to test. Also, using a storage buffer seems to affect certain
+ * backends like M1 Mac so it seems better to stick to rgba8unorm here and test
+ * using a storage buffer in a fragment shader separately.
  *
  * We can't use rgba32float because it's optional. We can't use rgba16float
  * because it's optional in compat. We can't we use rgba32uint as that can't be
@@ -558,13 +496,12 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
     },
   });
 
-  const texture0 = textures[0];
   const uniformBuffer = t.device.createBuffer({
     size: 8,
     usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
   });
   t.trackForCleanup(uniformBuffer);
-  t.device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([texture0.width, texture0.height]));
+  t.device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([width, height]));
 
   const viewport = [0, 0, width, height, ...nearFar] as const;
 
@@ -590,7 +527,7 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
 
   const buffers = await Promise.all(
     textures.map(async texture => {
-      const buffer = copyTextureToBufferIncludingMultisampledTextures(t, texture);
+      const buffer = copyRGBA8EncodedFloatTextureToBufferIncludingMultisampledTextures(t, texture);
       await buffer.mapAsync(GPUMapMode.READ);
       return new Float32Array(buffer.getMappedRange());
     })
@@ -773,5 +710,6 @@ g.test('inputs,interStage')
       interpolateFn: createInterStageInterpolationFn(interStagePoints, type, sampling),
     });
 
+    // MAINTENANCE_TODO: Change this comparison to use TexelView
     t.expectOK(checkElementsApproximatelyEqual(actual, expected, 0.00001));
   });
