@@ -167,6 +167,12 @@ module.exports = function (grunt) {
           { expand: true, dest: 'out-wpt/', cwd: 'gen', src: 'webgpu/listing.js' },
         ],
       },
+      'htmlfiles-to-out': {
+        // Must run after run:build-out.
+        files: [
+          { expand: true, dest: 'out/', cwd: 'src', src: 'webgpu/**/*.html' },
+        ],
+      },
       'htmlfiles-to-out-wpt': {
         // Must run after run:build-out-wpt.
         files: [
@@ -241,6 +247,7 @@ module.exports = function (grunt) {
     'run:build-out',
     'run:copy-assets',
     'copy:gen-to-out',
+    'copy:htmlfiles-to-out',
   ]);
   grunt.registerTask('build-wpt', 'Build out-wpt/ (no checks; run after generate-common)', [
     'run:build-out-wpt',
