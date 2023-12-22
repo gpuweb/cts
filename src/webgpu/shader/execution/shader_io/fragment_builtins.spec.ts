@@ -16,12 +16,13 @@ TODO:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { TypedArrayBufferView, range, unreachable } from '../../../../common/util/util.js';
+import { ErrorWithExtra, assert, range, unreachable } from '../../../../common/util/util.js';
 import { InterpolationSampling, InterpolationType } from '../../../constants.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { getMultisampleFragmentOffsets } from '../../../multisample_info.js';
-import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 import { dotProduct, subtractVectors } from '../../../util/math.js';
+import { TexelView } from '../../../util/texture/texel_view.js';
+import { findFailedPixels } from '../../../util/texture/texture_ok.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -53,31 +54,45 @@ function getPipelinesForDevice(device: GPUDevice) {
  * @param texture texture the pipeline is needed for.
  * @returns A GPUComputePipeline
  */
-function getCopyMultisamplePipelineForDevice(device: GPUDevice, texture: GPUTexture) {
-  const pipelineType = texture.sampleCount > 1 ? 'texture_multisampled_2d' : 'texture_2d';
+function getCopyMultisamplePipelineForDevice(device: GPUDevice, textures: GPUTexture[]) {
+  assert(textures.length === 4);
+  assert(textures[0].sampleCount === textures[1].sampleCount);
+  assert(textures[0].sampleCount === textures[2].sampleCount);
+  assert(textures[0].sampleCount === textures[3].sampleCount);
+
+  const pipelineType = textures[0].sampleCount > 1 ? 'texture_multisampled_2d' : 'texture_2d';
   const pipelines = getPipelinesForDevice(device);
   let pipeline = pipelines[pipelineType];
   if (!pipeline) {
     const isMultisampled = pipelineType === 'texture_multisampled_2d';
-    const numSamples = isMultisampled ? 'textureNumSamples(texture)' : '1u';
+    const numSamples = isMultisampled ? 'textureNumSamples(texture0)' : '1u';
     const sampleIndex = isMultisampled ? 'sampleIndex' : '0';
     const module = device.createShaderModule({
       code: `
-        @group(0) @binding(0) var texture: ${pipelineType}<f32>;
-        @group(0) @binding(1) var<storage, read_write> buffer: array<f32>;
+        @group(0) @binding(0) var texture0: ${pipelineType}<f32>;
+        @group(0) @binding(1) var texture1: ${pipelineType}<f32>;
+        @group(0) @binding(2) var texture2: ${pipelineType}<f32>;
+        @group(0) @binding(3) var texture3: ${pipelineType}<f32>;
+        @group(0) @binding(4) var<storage, read_write> buffer: array<f32>;
 
         @compute @workgroup_size(1) fn cs(@builtin(global_invocation_id) id: vec3u) {
           let numSamples = ${numSamples};
-          let dimensions = textureDimensions(texture);
+          let dimensions = textureDimensions(texture0);
           let sampleIndex = id.x % numSamples;
           let tx = id.x / numSamples;
-          let offset = (id.y * dimensions.x + tx) * numSamples + sampleIndex;
-          let v = vec4u(textureLoad(texture, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
+          let offset = ((id.y * dimensions.x + tx) * numSamples + sampleIndex) * 4;
+          let r = vec4u(textureLoad(texture0, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
+          let g = vec4u(textureLoad(texture1, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
+          let b = vec4u(textureLoad(texture2, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
+          let a = vec4u(textureLoad(texture3, vec2u(tx, id.y), ${sampleIndex}) * 255.0);
 
           // expand rgba8unorm values back to their byte form, add them together
           // and cast them to an f32 so we can recover the f32 values we encoded
           // in the rgba8unorm texture.
-          buffer[offset] = bitcast<f32>(dot(v, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
+          buffer[offset + 0] = bitcast<f32>(dot(r, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
+          buffer[offset + 1] = bitcast<f32>(dot(g, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
+          buffer[offset + 2] = bitcast<f32>(dot(b, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
+          buffer[offset + 3] = bitcast<f32>(dot(a, vec4u(0x1000000, 0x10000, 0x100, 0x1)));
         }
       `,
     });
@@ -96,18 +111,33 @@ function getCopyMultisamplePipelineForDevice(device: GPUDevice, texture: GPUText
   return pipeline;
 }
 
+function isTextureSameDimensions(a: GPUTexture, b: GPUTexture) {
+  return (
+    a.sampleCount === b.sampleCount &&
+    a.width === b.width &&
+    a.height === b.height &&
+    a.depthOrArrayLayers === b.depthOrArrayLayers
+  );
+}
+
 /**
  * Copies a texture (even if multisampled) to a buffer
  * @param t a gpu test
  * @param texture texture to copy
  * @returns buffer with copy of texture, mip level 0, array layer 0.
  */
-function copyRGBA8EncodedFloatTextureToBufferIncludingMultisampledTextures(
+function copyRGBA8EncodedFloatTexturesToBufferIncludingMultisampledTextures(
   t: GPUTest,
-  texture: GPUTexture
+  textures: GPUTexture[]
 ) {
+  assert(textures.length === 4);
+  assert(isTextureSameDimensions(textures[0], textures[1]));
+  assert(isTextureSameDimensions(textures[0], textures[2]));
+  assert(isTextureSameDimensions(textures[0], textures[3]));
+  const { width, height, sampleCount } = textures[0];
+
   const copyBuffer = t.device.createBuffer({
-    size: texture.width * texture.height * texture.sampleCount * 4,
+    size: width * height * sampleCount * 4 * 4,
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
   });
   t.trackForCleanup(copyBuffer);
@@ -118,21 +148,22 @@ function copyRGBA8EncodedFloatTextureToBufferIncludingMultisampledTextures(
   });
   t.trackForCleanup(buffer);
 
-  const pipeline = getCopyMultisamplePipelineForDevice(t.device, texture);
+  const pipeline = getCopyMultisamplePipelineForDevice(t.device, textures);
   const encoder = t.device.createCommandEncoder();
+
+  const textureEntries = textures.map(
+    (texture, i) => ({ binding: i, resource: texture.createView() }) as GPUBindGroupEntry
+  );
 
   const bindGroup = t.device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
-    entries: [
-      { binding: 0, resource: texture.createView() },
-      { binding: 1, resource: { buffer: copyBuffer } },
-    ],
+    entries: [...textureEntries, { binding: 4, resource: { buffer: copyBuffer } }],
   });
 
   const pass = encoder.beginComputePass();
   pass.setPipeline(pipeline);
   pass.setBindGroup(0, bindGroup);
-  pass.dispatchWorkgroups(texture.width * texture.sampleCount, texture.height);
+  pass.dispatchWorkgroups(width * sampleCount, height);
   pass.end();
 
   encoder.copyBufferToBuffer(copyBuffer, 0, buffer, 0, buffer.size);
@@ -525,46 +556,64 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
   pass.end();
   t.queue.submit([encoder.finish()]);
 
-  const buffers = await Promise.all(
-    textures.map(async texture => {
-      const buffer = copyRGBA8EncodedFloatTextureToBufferIncludingMultisampledTextures(t, texture);
-      await buffer.mapAsync(GPUMapMode.READ);
-      return new Float32Array(buffer.getMappedRange());
-    })
-  );
-  const numElements = buffers[0].length;
-  const data = new Float32Array(numElements * 4);
-  for (let i = 0; i < numElements; ++i) {
-    const offset = i * 4;
-    data[offset + 0] = buffers[0][i];
-    data[offset + 1] = buffers[1][i];
-    data[offset + 2] = buffers[2][i];
-    data[offset + 3] = buffers[3][i];
-  }
-  return data;
+  const buffer = copyRGBA8EncodedFloatTexturesToBufferIncludingMultisampledTextures(t, textures);
+  await buffer.mapAsync(GPUMapMode.READ);
+  return new Float32Array(buffer.getMappedRange());
 }
 
-/**
- * Check whether two TypeArrays are approximately equal
- * Returns `undefined` if the check passes, or an `Error` if not.
- */
-function checkElementsApproximatelyEqual(
-  actual: TypedArrayBufferView,
-  expected: TypedArrayBufferView,
-  maxDiff = 0.000001
-) {
-  return checkElementsPassPredicate(
-    actual,
-    (index, value) => Math.abs(value - expected[index]) <= maxDiff,
-    {
-      predicatePrinter: [
-        {
-          leftHeader: 'expected ==',
-          getValueForCell: i => expected[i],
-        },
-      ],
-    }
+function checkSampleRectsApproximatelyEqual({
+  width,
+  height,
+  sampleCount,
+  actual,
+  expected,
+  maxFractionalDiff,
+}: {
+  width: number;
+  height: number;
+  sampleCount: number;
+  actual: Float32Array;
+  expected: Float32Array;
+  maxFractionalDiff: number;
+}) {
+  const subrectOrigin = [0, 0, 0];
+  const subrectSize = [width, height, 1];
+  const areaDesc = {
+    bytesPerRow: width * sampleCount * 4 * 4,
+    rowsPerImage: height,
+    subrectOrigin,
+    subrectSize,
+  };
+
+  const format = 'rgba32float';
+  const actTexelView = TexelView.fromTextureDataByReference(
+    format,
+    new Uint8Array(actual.buffer),
+    areaDesc
   );
+  const expTexelView = TexelView.fromTextureDataByReference(
+    format,
+    new Uint8Array(expected.buffer),
+    areaDesc
+  );
+
+  const failedPixelsMessage = findFailedPixels(
+    format,
+    { x: 0, y: 0, z: 0 },
+    { width, height, depthOrArrayLayers: 1 },
+    { actTexelView, expTexelView },
+    { maxFractionalDiff }
+  );
+
+  if (failedPixelsMessage !== undefined) {
+    const msg = 'Texture level had unexpected contents:\n' + failedPixelsMessage;
+    return new ErrorWithExtra(msg, () => ({
+      expTexelView,
+      actTexelView,
+    }));
+  }
+
+  return undefined;
 }
 
 g.test('inputs,position')
@@ -637,7 +686,16 @@ g.test('inputs,position')
       interpolateFn: computeFragmentPosition,
     });
 
-    t.expectOK(checkElementsApproximatelyEqual(actual, expected));
+    t.expectOK(
+      checkSampleRectsApproximatelyEqual({
+        width,
+        height,
+        sampleCount,
+        actual,
+        expected,
+        maxFractionalDiff: 0.000001,
+      })
+    );
   });
 
 g.test('inputs,interStage')
@@ -710,6 +768,14 @@ g.test('inputs,interStage')
       interpolateFn: createInterStageInterpolationFn(interStagePoints, type, sampling),
     });
 
-    // MAINTENANCE_TODO: Change this comparison to use TexelView
-    t.expectOK(checkElementsApproximatelyEqual(actual, expected, 0.00001));
+    t.expectOK(
+      checkSampleRectsApproximatelyEqual({
+        width,
+        height,
+        sampleCount,
+        actual,
+        expected,
+        maxFractionalDiff: 0.00001,
+      })
+    );
   });
