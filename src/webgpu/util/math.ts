@@ -2246,3 +2246,17 @@ export function every2DArray<T>(m: ROArrayArray<T>, op: (input: T) => boolean): 
   );
   return m.every(col => col.every(el => op(el)));
 }
+
+/**
+ * Subtracts 2 vectors
+ */
+export function subtractVectors(v1: readonly number[], v2: readonly number[]) {
+  return v1.map((v, i) => v - v2[i]);
+}
+
+/**
+ * Computes the dot product of 2 vectors
+ */
+export function dotProduct(v1: readonly number[], v2: readonly number[]) {
+  return v1.reduce((a, v, i) => a + v * v2[i], 0);
+}

@@ -2246,4 +2246,18 @@ export function every2DArray(m, op) {
   );
   return m.every((col) => col.every((el) => op(el)));
 }
+
+/**
+ * Subtracts 2 vectors
+ */
+export function subtractVectors(v1, v2) {
+  return v1.map((v, i) => v - v2[i]);
+}
+
+/**
+ * Computes the dot product of 2 vectors
+ */
+export function dotProduct(v1, v2) {
+  return v1.reduce((a, v, i) => a + v * v2[i], 0);
+}
 //# sourceMappingURL=math.js.map

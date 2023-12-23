@@ -3419,6 +3419,14 @@ export const listing = [
       "shader",
       "execution",
       "shader_io",
+      "fragment_builtins"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "shader_io",
       "shared_structs"
     ]
   },
