@@ -20,6 +20,7 @@ class F extends ValidationTest {
   createTexture(
     options: {
       format?: GPUTextureFormat;
+      dimension?: GPUTextureDimension;
       width?: number;
       height?: number;
       arrayLayerCount?: number;
@@ -30,6 +31,7 @@ class F extends ValidationTest {
   ): GPUTexture {
     const {
       format = 'rgba8unorm',
+      dimension = '2d',
       width = 16,
       height = 16,
       arrayLayerCount = 1,
@@ -41,6 +43,7 @@ class F extends ValidationTest {
     return this.device.createTexture({
       size: { width, height, depthOrArrayLayers: arrayLayerCount },
       format,
+      dimension,
       mipLevelCount,
       sampleCount,
       usage,
@@ -276,6 +279,154 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
       computeBytesPerSampleFromFormats(formats) <= t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.tryRenderPass(success, { colorAttachments });
+  });
+
+g.test('color_attachments,depthSlice,base')
+  .desc(
+    `
+  Test that depthSlice must be set correctly in color attachments.
+    - must be undefined for 2d color attachments.
+    - must be defined for 3d color attachments and less than the depthOrArrayLayers of texture's subresource.
+  `
+  )
+  .params(u =>
+    u
+      .combine('depthSlice', [undefined, 0, 1, 0xffffffff])
+      .beginSubcases()
+      .combine('dimension', ['2d', '3d'] as GPUTextureDimension[])
+      .expand('mipLevel', ({ depthSlice, dimension }) => {
+        // Only need to test defined depthSlice with non-zero mipLevel for 3d color attachments
+        return depthSlice !== undefined && dimension === '3d' ? [0, 1] : [0];
+      })
+  )
+  .fn(t => {
+    const { depthSlice, dimension, mipLevel } = t.params;
+    const arrayLayerCount = 2;
+    const texture = t.createTexture({
+      arrayLayerCount,
+      dimension,
+      mipLevelCount: mipLevel + 1,
+    });
+
+    const viewDescriptor: GPUTextureViewDescriptor = {
+      dimension,
+      baseMipLevel: mipLevel,
+      mipLevelCount: 1,
+      baseArrayLayer: 0,
+      arrayLayerCount: 1,
+    };
+
+    const colorAttachment = t.getColorAttachment(texture, viewDescriptor);
+    if (depthSlice !== undefined) {
+      colorAttachment.depthSlice = depthSlice;
+    }
+
+    const passDescriptor: GPURenderPassDescriptor = {
+      colorAttachments: [colorAttachment],
+    };
+
+    const success =
+      (dimension === '2d' && depthSlice === undefined) ||
+      (dimension === '3d' && depthSlice !== undefined && depthSlice < arrayLayerCount >> mipLevel);
+
+    t.tryRenderPass(success, passDescriptor);
+  });
+
+g.test('color_attachments,depthSlice,overlaps,same_miplevel')
+  .desc(
+    `
+  Test that the depth slices of 3d color attachments have no overlaps for same texture in a render
+  pass.
+  - Succeed if the depth slices are different, or from different textures, or on different render
+    passes.
+  - Fail if same depth slice from same texture's same mip level is overwritten in a render pass.
+  `
+  )
+  .params(u =>
+    u
+      .combine('sameDepthSlice', [true, false])
+      .beginSubcases()
+      .combine('sameTexture', [true, false])
+      .combine('samePass', [true, false])
+  )
+  .fn(t => {
+    const { sameDepthSlice, sameTexture, samePass } = t.params;
+    const arrayLayerCount = 4;
+
+    const texDescriptor = {
+      dimension: '3d' as GPUTextureDimension,
+      arrayLayerCount,
+    };
+    const texture = t.createTexture(texDescriptor);
+
+    const colorAttachments = [];
+    for (let i = 0; i < arrayLayerCount; i++) {
+      const colorAttachment = t.getColorAttachment(
+        sameTexture ? texture : t.createTexture(texDescriptor)
+      );
+      colorAttachment.depthSlice = sameDepthSlice ? 0 : i;
+      colorAttachments.push(colorAttachment);
+    }
+
+    const encoder = t.createEncoder('non-pass');
+    if (samePass) {
+      const pass = encoder.encoder.beginRenderPass({ colorAttachments });
+      pass.end();
+    } else {
+      for (let i = 0; i < arrayLayerCount; i++) {
+        const pass = encoder.encoder.beginRenderPass({ colorAttachments: [colorAttachments[i]] });
+        pass.end();
+      }
+    }
+
+    const success = !sameDepthSlice || !sameTexture || !samePass;
+
+    encoder.validateFinish(success);
+  });
+
+g.test('color_attachments,depthSlice,overlaps,diff_miplevel')
+  .desc(
+    `
+  Test that the same depth slice from different mip levels of a 3d texture with size [1, 1, N] can
+  be set in a render pass's color attachments.
+  `
+  )
+  .params(u => u.combine('sameMipLevel', [true, false]))
+  .fn(t => {
+    const { sameMipLevel } = t.params;
+    const mipLevelCount = 4;
+
+    const texDescriptor = {
+      dimension: '3d' as GPUTextureDimension,
+      width: 1,
+      height: 1,
+      arrayLayerCount: 1 << mipLevelCount,
+      mipLevelCount,
+    };
+    const texture = t.createTexture(texDescriptor);
+
+    const viewDescriptor: GPUTextureViewDescriptor = {
+      baseMipLevel: 0,
+      mipLevelCount: 1,
+      baseArrayLayer: 0,
+      arrayLayerCount: 1,
+    };
+
+    const colorAttachments = [];
+    for (let i = 0; i < mipLevelCount; i++) {
+      if (!sameMipLevel) {
+        viewDescriptor.baseMipLevel = i;
+      }
+      const colorAttachment = t.getColorAttachment(texture, viewDescriptor);
+      colorAttachment.depthSlice = 0;
+      colorAttachments.push(colorAttachment);
+    }
+
+    const encoder = t.createEncoder('non-pass');
+    const pass = encoder.encoder.beginRenderPass({ colorAttachments });
+    pass.end();
+
+    encoder.validateFinish(!sameMipLevel);
   });
 
 g.test('attachments,same_size')
