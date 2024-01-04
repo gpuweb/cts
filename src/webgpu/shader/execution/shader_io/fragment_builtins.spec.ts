@@ -8,10 +8,9 @@ This means they render to all pixels in the textures. To fully test centroid int
 probably requires drawing various triangles that only cover certain samples. That is TBD.
 
 TODO:
-* test sample interpolation
-* test centroid interpolation
+* test sample interpolation (see MAINTENANCE_TODOs below)
+* test centroid interpolation (see MAINTENANCE_TODOs below)
 * test front_facing
-* test sample_index
 * test frag_depth
 `;
 
@@ -271,6 +270,7 @@ type FragData = {
   clipSpacePoints: readonly number[][];
   ndcPoints: readonly number[][];
   windowPoints: readonly number[][];
+  sampleIndex: number;
 };
 
 /**
@@ -324,6 +324,7 @@ function generateFragmentInputs({
           clipSpacePoints,
           ndcPoints,
           windowPoints,
+          sampleIndex: s,
         });
 
         const offset = ((y * width + x) * sampleCount + s) * 4;
@@ -396,6 +397,13 @@ function createInterStageInterpolationFn(
 }
 
 /**
+ * Computes 'builtin(sample_index)'
+ */
+function computeFragmentSampleIndex({ sampleIndex }: FragData) {
+  return [sampleIndex, 0, 0, 0];
+}
+
+/**
  * Renders float32 fragment shader inputs values to 4 rgba8unorm textures that
  * can be multisampled textures. It stores each of the channels, r, g, b, a of
  * the shader input to a separate texture, doing the math required to store the
@@ -448,19 +456,25 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
 
       @group(0) @binding(0) var<uniform> uni: Uniforms;
 
-      struct Vertex {
+      struct VertexOut {
         @builtin(position) position: vec4f,
         @location(0) @interpolate(${interpolate}) interpolatedValue: vec4f,
       };
 
-      @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> Vertex {
+      struct VertexIn {
+        @builtin(position) position: vec4f,
+        @location(0) @interpolate(${interpolate}) interpolatedValue: vec4f,
+        @builtin(sample_index) sampleIndex: u32,
+      };
+
+      @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> VertexOut {
         let pos = array(
           ${clipSpacePoints.map(p => `vec4f(${p.join(', ')})`).join(', ')}
         );
         let interStage = array(
           ${interStagePoints.map(p => `vec4f(${p.join(', ')})`).join(', ')}
         );
-        var v: Vertex;
+        var v: VertexOut;
         v.position = pos[vNdx];
         v.interpolatedValue = interStage[vNdx];
         _ = uni;
@@ -483,7 +497,7 @@ async function renderFragmentShaderInputsTo4TexturesAndReadbackValues(
         );
       }
 
-      @fragment fn fs(vin: Vertex) -> FragOut {
+      @fragment fn fs(vin: VertexIn) -> FragOut {
         var f: FragOut;
         let v = ${outputCode};
         let u = bitcast<vec4u>(v);
@@ -766,6 +780,86 @@ g.test('inputs,interStage')
       sampleCount,
       clipSpacePoints,
       interpolateFn: createInterStageInterpolationFn(interStagePoints, type, sampling),
+    });
+
+    t.expectOK(
+      checkSampleRectsApproximatelyEqual({
+        width,
+        height,
+        sampleCount,
+        actual,
+        expected,
+        maxFractionalDiff: 0.00001,
+      })
+    );
+  });
+
+g.test('inputs,sample_index')
+  .desc(
+    `
+    Test fragment shader builtin(sample_index) values.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('nearFar', [[0, 1] as const, [0.25, 0.75] as const] as const)
+      .combine('sampleCount', [1, 4] as const)
+      .combine('interpolation', [
+        { type: 'perspective', sampling: 'center' },
+        { type: 'perspective', sampling: 'centroid' },
+        { type: 'perspective', sampling: 'sample' },
+        { type: 'linear', sampling: 'center' },
+        { type: 'linear', sampling: 'centroid' },
+        { type: 'linear', sampling: 'sample' },
+        { type: 'flat' },
+      ] as const)
+  )
+  .beforeAllSubcases(t => {
+    const {
+      interpolation: { type, sampling },
+    } = t.params;
+    t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+  })
+  .fn(async t => {
+    const {
+      nearFar,
+      sampleCount,
+      interpolation: { type, sampling },
+    } = t.params;
+    // prettier-ignore
+    const clipSpacePoints = [       // ndc values
+      [0.333, 0.333, 0.333, 0.333],  //  1,  1, 1
+      [ 1.0,  -3.0,   0.25, 1.0  ],  //  1, -3, 0.25
+      [-1.5,   0.5,   0.25, 0.5  ],  // -3,  1, 0.5
+    ];
+
+    const interStagePoints = [
+      [1, 2, 3, 4],
+      [5, 6, 7, 8],
+      [9, 10, 11, 12],
+    ];
+
+    const width = 4;
+    const height = 4;
+    const actual = await renderFragmentShaderInputsTo4TexturesAndReadbackValues(t, {
+      interpolationType: type,
+      interpolationSampling: sampling,
+      sampleCount,
+      width,
+      height,
+      nearFar,
+      clipSpacePoints,
+      interStagePoints,
+      outputCode: 'vec4f(f32(vin.sampleIndex), 0, 0, 0)',
+    });
+
+    const expected = generateFragmentInputs({
+      width,
+      height,
+      nearFar,
+      sampleCount,
+      clipSpacePoints,
+      interpolateFn: computeFragmentSampleIndex,
     });
 
     t.expectOK(
