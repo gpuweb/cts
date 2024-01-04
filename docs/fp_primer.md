@@ -545,6 +545,65 @@ This algorithmically looks something like this:
     Return division result
 ```
 
+### Out of Bounds
+When calculating inherited intervals, if a intermediate calculation goes out of
+bounds this will flow through to later calculations, even if a later calculation
+would pull the result back inbounds.
+
+For example, `fp.positive.max + fp.positive.max - fp.positive.max` could be
+simplified to just `fp.positive.max` before execution, but it would also be
+valid for an implementation to naively perform left to right evaluation. Thus
+the addition would produce an intermediate value of `2 * fp.positive.max`. Again
+the implementation may hoist intermediate calculation to a higher precision to
+avoid overflow here, but is not required to. So a conforming implementation at
+this point may just return any value since the calculation when out of bounds.
+Thus the execution tests in the CTS should accept any value returned, so the
+case is just effectively confirming the computation completes.
+
+When looking at validation tests there is some subtleties about out of bounds
+behaviour, specifically how far out of bounds the value went that will influence
+the expected results, which will be discussed in more detail below.
+
+#### Vectors and Matrices
+The above discussion about inheritance of out of bounds intervals assumed scalar
+calculations, so all the result intervals were dependent on the input intervals,
+so if an out-of-bounds input occurred naturally all the output values were
+effectively out of bounds.
+
+For vector and matrix operations, this is not always true. Operations on these
+data structures can either define an element-wise mapping, where for each output
+element the result is calculated by executing a scalar operation on a input
+element (sometimes referred to as component-wise), or where the operation is
+defined such the output elements are dependent on the entire input.
+
+For concrete examples, constant scaling (`c * vec` of `c * mat`) is an
+element-wise operation, because one can define a simple mapping
+`o[i]` = `c * i[i]`, where the ith output only depends on the ith input.
+
+A non-element-wise operation would be something like cross product of vectors
+or the determinant of a matrix, where each output element is dependent on
+multiple input elements.
+
+For component-wise operations, out of bounds-ness flows through per element,
+i.e. if the ith input element was considered to be have gone out of bounds, then
+the ith output is considered to have too also regardless of the operation
+performed. Thus an input may be a mixture of out of bounds elements & inbounds
+elements, and produce another mixture, assuming the operation being performed
+itself does not push elements out of bounds.
+
+For non-component-wise operations, out of bounds-ness flows through the entire
+operation, i.e. if any of the input elements is out of bounds, then all the
+output elements are considered to be out of bounds. Additionally, if the
+calculation for any of the elements in output goes out of bounds, then the
+entire output is considered to have gone out of bounds, even if other individual
+elements stayed inbounds.
+
+For some non-element-wise operations one could define mappings for individual
+output elements that do not depend on all the input elements and consider only
+if those inputs that are used, but for the purposes of WGSL and the CTS, OOB
+inheritance is not so finely defined as to consider the difference between using
+some and all the input elements for non-element-wise operations.
+
 ## Compile vs Run Time Evaluation
 
 The above discussions have been primarily agnostic to when and where a
@@ -560,14 +619,14 @@ These are compile vs run time, and CPU vs GPU. Broadly speaking compile time
 execution happens on the host CPU, and run time evaluation occurs on a dedicated
 GPU.
 
-(Software graphics implementations like WARP and SwiftShader technically break this by
-being a software emulation of a GPU that runs on the CPU, but conceptually one can
-think of these implementations being a type of GPU in this context, since it has 
-similar constraints when it comes to precision, etc.)
+(Software graphics implementations like WARP and SwiftShader technically break
+this by being a software emulation of a GPU that runs on the CPU, but
+conceptually one can think of these implementations being a type of GPU in this
+context, since it has similar constraints when it comes to precision, etc.)
 
 Compile time evaluation is execution that occurs when setting up a shader
 module, i.e. when compiling WGSL to a platform specific shading language. It is
-part of resolving values for things like constants, and occurs once before the
+part of resolving values for things like constants, and occurs once, before the
 shader is run by the caller. It includes constant evaluation and override
 evaluation. All AbstractFloat operations are compile time evaluated.
 
@@ -630,7 +689,7 @@ near-overflow vs far-overflow behaviour. Thankfully this can be broken down into
 a case by case basis based on where an interval falls.
 
 Assuming `X`, is the well-defined result of an operation, i.e. not indeterminate
-due to the operation isn't defined for the inputs:
+due to the operation not being defined for the inputs:
 
 | Region                       |                                                      | Result                         |
 |------------------------------|------------------------------------------------------|--------------------------------|
@@ -650,7 +709,9 @@ behaviour in this region as rigorously defined nor tested, so fully testing
 here would likely find lots of issues that would just need to be mitigated in
 the CTS.
 
-Currently, we choose to avoid testing validation of near-overflow scenarios.
+Currently, we have chosen to not test validation of near-overflow scenarios to
+avoid this complexity. If this becomes a significant source of bugs and/or
+incompatibility between implementations this can be revisited in the future.
 
 ### Additional Technical Limitations
 
