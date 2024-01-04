@@ -602,6 +602,7 @@
   "webgpu:api,validation,image_copy,texture_related:texture,device_mismatch:*": { "subcaseMS": 5.417 },
   "webgpu:api,validation,image_copy,texture_related:usage:*": { "subcaseMS": 1.224 },
   "webgpu:api,validation,image_copy,texture_related:valid:*": { "subcaseMS": 3.678 },
+  "webgpu:api,validation,layout_shader_compat:pipeline_layout_shader_exact_match:*": { "subcaseMS": 2.00 },
   "webgpu:api,validation,query_set,create:count:*": { "subcaseMS": 0.967 },
   "webgpu:api,validation,query_set,destroy:invalid_queryset:*": { "subcaseMS": 0.801 },
   "webgpu:api,validation,query_set,destroy:twice:*": { "subcaseMS": 0.700 },
