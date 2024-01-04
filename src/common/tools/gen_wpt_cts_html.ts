@@ -71,6 +71,8 @@ interface ConfigJSON {
     /** The prefix to trim from every line of the expectations_file. */
     prefix: string;
   };
+  /*No long path assert */
+  noLongPathAssert?: boolean;
 }
 
 interface Config {
@@ -79,6 +81,7 @@ interface Config {
   template: string;
   maxChunkTimeMS: number;
   argumentsPrefixes: string[];
+  noLongPathAssert: boolean;
   expectations?: {
     file: string;
     prefix: string;
@@ -101,6 +104,7 @@ let config: Config;
         template: path.resolve(jsonFileDir, configJSON.template),
         maxChunkTimeMS: configJSON.maxChunkTimeMS ?? Infinity,
         argumentsPrefixes: configJSON.argumentsPrefixes ?? ['?q='],
+        noLongPathAssert: configJSON.noLongPathAssert ?? false,
       };
       if (configJSON.expectations) {
         config.expectations = {
@@ -130,6 +134,7 @@ let config: Config;
         suite,
         maxChunkTimeMS: Infinity,
         argumentsPrefixes: ['?q='],
+        noLongPathAssert: false,
       };
       if (process.argv.length >= 7) {
         config.argumentsPrefixes = (await fs.readFile(argsPrefixesFile, 'utf8'))
@@ -199,19 +204,21 @@ let config: Config;
       alwaysExpandThroughLevel,
     })) {
       assert(query instanceof TestQueryMultiCase);
-      const queryString = query.toString();
-      // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
-      // path must be <= 259. Leave room for e.g.:
-      // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
-      assert(
-        queryString.length < 185,
-        `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
+      if (!config.noLongPathAssert) {
+        const queryString = query.toString();
+        // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
+        // path must be <= 259. Leave room for e.g.:
+        // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
+        assert(
+          queryString.length < 185,
+          `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
 - Reduce the length of the parts of the test query
 - Reduce the parameterization of the test
 - Make the test function faster and regenerate the listing_meta entry
 - Reduce the specificity of test expectations (if you're using them)
 ${queryString}`
-      );
+        );
+      }
 
       lines.push({
         urlQueryString: prefix + query.toString(), // "?worker=0&q=..."
