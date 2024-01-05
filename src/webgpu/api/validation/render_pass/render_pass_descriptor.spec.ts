@@ -93,6 +93,7 @@ class F extends ValidationTest {
 }
 
 export const g = makeTestGroup(F);
+const kArrayLayerCount = 4;
 
 g.test('attachments,one_color_attachment')
   .desc(`Test that a render pass works with only one color attachment.`)
@@ -284,32 +285,57 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
 g.test('color_attachments,depthSlice,definedness')
   .desc(
     `
-  Test that depthSlice must be set correctly in color attachments.
-    - must be undefined for 2d color attachments.
-    - must be defined for 3d color attachments and less than the depthOrArrayLayers of texture's subresource.
+  Test that depthSlice must be undefined for 2d color attachments and defined for 3d color attachments."
   `
   )
   .params(u =>
     u
-      .combine('depthSlice', [undefined, 0, 1, 0xffffffff])
-      .beginSubcases()
       .combine('dimension', ['2d', '3d'] as GPUTextureDimension[])
-      .expand('mipLevel', ({ depthSlice, dimension }) => {
-        // Only need to test defined depthSlice with non-zero mipLevel for 3d color attachments
-        return depthSlice !== undefined && dimension === '3d' ? [0, 1] : [0];
-      })
+      .beginSubcases()
+      .combine('depthSlice', [undefined, 0])
   )
   .fn(t => {
-    const { depthSlice, dimension, mipLevel } = t.params;
-    const arrayLayerCount = 2;
+    const { dimension, depthSlice } = t.params;
+    const texture = t.createTexture({ dimension });
+
+    const colorAttachment = t.getColorAttachment(texture);
+    if (depthSlice !== undefined) {
+      colorAttachment.depthSlice = depthSlice;
+    }
+
+    const descriptor: GPURenderPassDescriptor = {
+      colorAttachments: [colorAttachment],
+    };
+
+    const success =
+      (dimension === '2d' && depthSlice === undefined) ||
+      (dimension === '3d' && depthSlice !== undefined);
+
+    t.tryRenderPass(success, descriptor);
+  });
+
+g.test('color_attachments,depthSlice,bound_check')
+  .desc(
+    `
+  Test that depthSlice must be less than the depthOrArrayLayers of 3d texture's subresource at mip levels.
+  `
+  )
+  .params(u =>
+    u
+      .combine('mipLevel', [0, 1, 2])
+      .beginSubcases()
+      .combine('depthSlice', [0, 1, kArrayLayerCount - 1, kArrayLayerCount, 0xffffffff])
+  )
+  .fn(t => {
+    const { mipLevel, depthSlice } = t.params;
+
     const texture = t.createTexture({
-      arrayLayerCount,
-      dimension,
-      mipLevelCount: mipLevel + 1,
+      dimension: '3d',
+      arrayLayerCount: kArrayLayerCount,
+      mipLevelCount: 3,
     });
 
     const viewDescriptor: GPUTextureViewDescriptor = {
-      dimension,
       baseMipLevel: mipLevel,
       mipLevelCount: 1,
       baseArrayLayer: 0,
@@ -317,17 +343,13 @@ g.test('color_attachments,depthSlice,definedness')
     };
 
     const colorAttachment = t.getColorAttachment(texture, viewDescriptor);
-    if (depthSlice !== undefined) {
-      colorAttachment.depthSlice = depthSlice;
-    }
+    colorAttachment.depthSlice = depthSlice;
 
     const passDescriptor: GPURenderPassDescriptor = {
       colorAttachments: [colorAttachment],
     };
 
-    const success =
-      (dimension === '2d' && depthSlice === undefined) ||
-      (dimension === '3d' && depthSlice !== undefined && depthSlice < arrayLayerCount >> mipLevel);
+    const success = depthSlice < kArrayLayerCount >> mipLevel;
 
     t.tryRenderPass(success, passDescriptor);
   });
