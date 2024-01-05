@@ -1590,6 +1590,14 @@ export const listing = [
       "compat",
       "api",
       "validation",
+      "createBindGroupLayout"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
       "encoding",
       "cmds",
       "copyTextureToBuffer"

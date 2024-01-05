@@ -1931,16 +1931,19 @@ export function isCompressedTextureFormat(format: GPUTextureFormat) {
   return format in kCompressedTextureFormatInfo;
 }
 
+export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFormat[] = [
+  'rg32float',
+  'rg32sint',
+  'rg32uint',
+] as const;
+
 export function isTextureFormatUsableAsStorageFormat(
   format: GPUTextureFormat,
   isCompatibilityMode: boolean
 ) {
   if (isCompatibilityMode) {
-    switch (format) {
-      case 'rg32float':
-      case 'rg32sint':
-      case 'rg32uint':
-        return false;
+    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
+      return false;
     }
   }
   return !!kTextureFormatInfo[format].color?.storage;

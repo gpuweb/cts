@@ -3,6 +3,7 @@
 **/export const description = `
 Tests limitations of createRenderPipeline related to shader modules in compat mode.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { kCompatModeUnsupportedStorageTextureFormats } from '../../../../format_info.js';
 import { CompatibilityTest } from '../../../compatibility_test.js';
 
 export const g = makeTestGroup(CompatibilityTest);
@@ -151,4 +152,71 @@ fn((t) => {
     () => t.device.createRenderPipeline(pipelineDescriptor),
     !isValid
   );
+});
+
+g.test('unsupportedStorageTextureFormats,computePipeline').
+desc(
+  `
+Tests that you can not create a compute pipeline with unsupported storage texture formats in compat mode.
+    `
+).
+params((u) =>
+u //
+.combine('format', kCompatModeUnsupportedStorageTextureFormats).
+combine('async', [false, true])
+).
+fn((t) => {
+  const { format, async } = t.params;
+
+  const module = t.device.createShaderModule({
+    code: `
+        @group(0) @binding(0) var s: texture_storage_2d<${format}, read>;
+        @compute @workgroup_size(1) fn cs() {
+            _ = textureLoad(s, vec2u(0));
+        }
+      `
+  });
+
+  const pipelineDescriptor = {
+    layout: 'auto',
+    compute: {
+      module,
+      entryPoint: 'cs'
+    }
+  };
+  t.doCreateComputePipelineTest(async, false, pipelineDescriptor);
+});
+
+g.test('unsupportedStorageTextureFormats,renderPipeline').
+desc(
+  `
+Tests that you can not create a render pipeline with unsupported storage texture formats in compat mode.
+    `
+).
+params((u) =>
+u //
+.combine('format', kCompatModeUnsupportedStorageTextureFormats).
+combine('async', [false, true])
+).
+fn((t) => {
+  const { format, async } = t.params;
+
+  const module = t.device.createShaderModule({
+    code: `
+        @group(0) @binding(0) var s: texture_storage_2d<${format}, read>;
+        @vertex fn vs() -> @builtin(position) vec4f {
+            _ = textureLoad(s, vec2u(0));
+            return vec4f(0);
+        }
+      `
+  });
+
+  const pipelineDescriptor = {
+    layout: 'auto',
+    vertex: {
+      module,
+      entryPoint: 'vs'
+    }
+  };
+  t.doCreateRenderPipelineTest(async, false, pipelineDescriptor);
 });
