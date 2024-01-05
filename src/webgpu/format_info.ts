@@ -1942,7 +1942,7 @@ export function isTextureFormatUsableAsStorageFormat(
   isCompatibilityMode: boolean
 ) {
   if (isCompatibilityMode) {
-    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format)) {
+    if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
       return false;
     }
   }
