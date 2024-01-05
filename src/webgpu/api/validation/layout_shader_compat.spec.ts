@@ -30,132 +30,83 @@ const kBindableResources = [
   'readwriteStorageTex',
 ] as const;
 
+const bindGroupLayoutEntryContents = {
+  compareSamp: {
+    sampler: {
+      type: 'comparison',
+    },
+  },
+  filtSamp: {
+    sampler: {
+      type: 'filtering',
+    },
+  },
+  nonFiltSamp: {
+    sampler: {
+      type: 'non-filtering',
+    },
+  },
+  sampledTex: {
+    texture: {
+      sampleType: 'unfilterable-float',
+    },
+  },
+  sampledTexMS: {
+    texture: {
+      sampleType: 'unfilterable-float',
+      multisampled: true,
+    },
+  },
+  storageBuf: {
+    buffer: {
+      type: 'storage',
+    },
+  },
+  readonlyStorageBuf: {
+    buffer: {
+      type: 'read-only-storage',
+    },
+  },
+  uniformBuf: {
+    buffer: {
+      type: 'uniform',
+    },
+  },
+  readonlyStorageTex: {
+    storageTexture: {
+      format: 'r32float',
+      access: 'read-only',
+    },
+  },
+  writeonlyStorageTex: {
+    storageTexture: {
+      format: 'r32float',
+      access: 'write-only',
+    },
+  },
+  readwriteStorageTex: {
+    storageTexture: {
+      format: 'r32float',
+      access: 'read-write',
+    },
+  },
+} as const;
+
 class F extends ValidationTest {
   createPipelineLayout(
     bindingInPipelineLayout: BindableResourceType,
     visibility: number
   ): GPUPipelineLayout {
-    let bindGroupLayoutEntry: GPUBindGroupLayoutEntry;
-    switch (bindingInPipelineLayout) {
-      case 'compareSamp': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          sampler: {
-            type: 'comparison',
-          },
-        };
-        break;
-      }
-      case 'filtSamp': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          sampler: {
-            type: 'filtering',
-          },
-        };
-        break;
-      }
-      case 'nonFiltSamp': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          sampler: {
-            type: 'non-filtering',
-          },
-        };
-        break;
-      }
-      case 'sampledTex': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          texture: {
-            sampleType: 'unfilterable-float',
-          },
-        };
-        break;
-      }
-      case 'sampledTexMS': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          texture: {
-            sampleType: 'unfilterable-float',
-            multisampled: true,
-          },
-        };
-        break;
-      }
-      case 'storageBuf': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          buffer: {
-            type: 'storage',
-          },
-        };
-        break;
-      }
-      case 'readonlyStorageBuf': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          buffer: {
-            type: 'read-only-storage',
-          },
-        };
-        break;
-      }
-      case 'uniformBuf': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          buffer: {
-            type: 'uniform',
-          },
-        };
-        break;
-      }
-      case 'readonlyStorageTex': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          storageTexture: {
-            format: 'r32float',
-            access: 'read-only',
-          },
-        };
-        break;
-      }
-      case 'writeonlyStorageTex': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          storageTexture: {
-            format: 'r32float',
-            access: 'write-only',
-          },
-        };
-        break;
-      }
-      case 'readwriteStorageTex': {
-        bindGroupLayoutEntry = {
-          binding: 0,
-          visibility,
-          storageTexture: {
-            format: 'r32float',
-            access: 'read-write',
-          },
-        };
-        break;
-      }
-    }
     return this.device.createPipelineLayout({
       bindGroupLayouts: [
         this.device.createBindGroupLayout({
-          entries: [bindGroupLayoutEntry],
+          entries: [
+            {
+              binding: 0,
+              visibility,
+              ...bindGroupLayoutEntryContents[bindingInPipelineLayout],
+            },
+          ],
         }),
       ],
     });
@@ -188,6 +139,23 @@ class F extends ValidationTest {
   }
 }
 
+const BindingResourceCompatibleWithShaderStages = function (
+  bindingResource: BindableResourceType,
+  shaderStages: number
+): boolean {
+  if ((shaderStages & GPUConst.ShaderStage.VERTEX) > 0) {
+    switch (bindingResource) {
+      case 'writeonlyStorageTex':
+      case 'readwriteStorageTex':
+      case 'storageBuf':
+        return false;
+      default:
+        break;
+    }
+  }
+  return true;
+};
+
 export const g = makeTestGroup(F);
 
 g.test('pipeline_layout_shader_exact_match')
@@ -211,14 +179,11 @@ g.test('pipeline_layout_shader_exact_match')
           // We don't test using non-filtering sampler in shader because it has the same declaration
           // as filtering sampler.
           p.bindingInShader === 'nonFiltSamp' ||
-          ((p.bindingInPipelineLayout === 'writeonlyStorageTex' ||
-            p.bindingInPipelineLayout === 'readwriteStorageTex' ||
-            p.bindingInPipelineLayout === 'storageBuf') &&
-            (p.pipelineLayoutVisibility & GPUConst.ShaderStage.VERTEX) > 0) ||
-          ((p.bindingInShader === 'writeonlyStorageTex' ||
-            p.bindingInShader === 'readwriteStorageTex' ||
-            p.bindingInPipelineLayout === 'storageBuf') &&
-            p.shaderStageWithBinding === GPUConst.ShaderStage.VERTEX)
+          !BindingResourceCompatibleWithShaderStages(
+            p.bindingInPipelineLayout,
+            p.pipelineLayoutVisibility
+          ) ||
+          !BindingResourceCompatibleWithShaderStages(p.bindingInShader, p.shaderStageWithBinding)
       )
   )
   .fn(t => {
@@ -236,13 +201,23 @@ g.test('pipeline_layout_shader_exact_match')
     )}`;
     const staticallyUseBinding = isBindingStaticallyUsed ? '_ = tmp; ' : '';
     const isAsync = false;
-    const success =
-      !isBindingStaticallyUsed ||
-      ((pipelineLayoutVisibility & shaderStageWithBinding) > 0 &&
-        (bindingInPipelineLayout === bindingInShader ||
-          (bindingInPipelineLayout === 'nonFiltSamp' && bindingInShader === 'filtSamp') ||
-          (bindingInPipelineLayout === 'readwriteStorageTex' &&
-            bindingInShader === 'writeonlyStorageTex')));
+
+    let success = true;
+    if (isBindingStaticallyUsed) {
+      success = bindingInPipelineLayout === bindingInShader;
+
+      // Filtering and non-filtering both have the same shader declaration.
+      success ||= bindingInPipelineLayout === 'nonFiltSamp' && bindingInShader === 'filtSamp';
+
+      // Promoting storage textures that are read-write in the layout can be readonly in the shader.
+      success ||=
+        bindingInPipelineLayout === 'readwriteStorageTex' &&
+        bindingInShader === 'writeonlyStorageTex';
+
+      // The shader using the resource must be included in the visibility in the layout.
+      success &&= (pipelineLayoutVisibility & shaderStageWithBinding) > 0;
+    }
+
     switch (shaderStageWithBinding) {
       case GPUConst.ShaderStage.COMPUTE: {
         const computeShader = `
