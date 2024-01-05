@@ -373,16 +373,15 @@ g.test('color_attachments,depthSlice,overlaps,same_miplevel')
   )
   .fn(t => {
     const { sameDepthSlice, sameTexture, samePass } = t.params;
-    const arrayLayerCount = 4;
 
     const texDescriptor = {
       dimension: '3d' as GPUTextureDimension,
-      arrayLayerCount,
+      arrayLayerCount: kArrayLayerCount,
     };
     const texture = t.createTexture(texDescriptor);
 
     const colorAttachments = [];
-    for (let i = 0; i < arrayLayerCount; i++) {
+    for (let i = 0; i < kArrayLayerCount; i++) {
       const colorAttachment = t.getColorAttachment(
         sameTexture ? texture : t.createTexture(texDescriptor)
       );
@@ -395,7 +394,7 @@ g.test('color_attachments,depthSlice,overlaps,same_miplevel')
       const pass = encoder.encoder.beginRenderPass({ colorAttachments });
       pass.end();
     } else {
-      for (let i = 0; i < arrayLayerCount; i++) {
+      for (let i = 0; i < kArrayLayerCount; i++) {
         const pass = encoder.encoder.beginRenderPass({ colorAttachments: [colorAttachments[i]] });
         pass.end();
       }
