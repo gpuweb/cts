@@ -281,7 +281,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
     t.tryRenderPass(success, { colorAttachments });
   });
 
-g.test('color_attachments,depthSlice,base')
+g.test('color_attachments,depthSlice,definedness')
   .desc(
     `
   Test that depthSlice must be set correctly in color attachments.
