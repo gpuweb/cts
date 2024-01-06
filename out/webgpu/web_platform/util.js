@@ -330,6 +330,7 @@ video)
       const transformer = new TransformStream({
         transform(videoFrame, _controller) {
           videoTrack.stop();
+          test.trackForCleanup(videoFrame);
           resolve(videoFrame);
         },
         flush(controller) {

@@ -220,8 +220,6 @@ for several combinations of video format, video color spaces and dst color space
           exp: convertToUnorm8(expect.bottomRightColor),
         },
       ]);
-
-      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
     });
   });
 
@@ -437,7 +435,5 @@ compute shader, for several combinations of video format, video color spaces and
         // Bottom-right.
         { coord: { x: 1, y: 1 }, exp: convertToUnorm8(expect.bottomRightColor) },
       ]);
-
-      if (sourceType === 'VideoFrame') (source as VideoFrame).close();
     });
   });

@@ -220,8 +220,6 @@ fn(async (t) => {
       exp: convertToUnorm8(expect.bottomRightColor)
     }]
     );
-
-    if (sourceType === 'VideoFrame') source.close();
   });
 });
 
@@ -437,8 +435,6 @@ fn(async (t) => {
     // Bottom-right.
     { coord: { x: 1, y: 1 }, exp: convertToUnorm8(expect.bottomRightColor) }]
     );
-
-    if (sourceType === 'VideoFrame') source.close();
   });
 });
 //# sourceMappingURL=video.spec.js.map
