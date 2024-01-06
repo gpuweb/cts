@@ -330,6 +330,7 @@ export async function getVideoFrameFromVideoElement(
       const transformer: TransformStream = new TransformStream({
         transform(videoFrame, _controller) {
           videoTrack.stop();
+          test.trackForCleanup(videoFrame);
           resolve(videoFrame);
         },
         flush(controller) {
