@@ -704,10 +704,7 @@ Tests import external texture on destroyed device. Tests valid combinations of:
           entries: [
             {
               binding: 0,
-              resource: t.device.importExternalTexture({
-                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                source: source as any,
-              }),
+              resource: t.device.importExternalTexture({ source }),
             },
           ],
         });
