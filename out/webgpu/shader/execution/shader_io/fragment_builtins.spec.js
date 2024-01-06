@@ -3,16 +3,16 @@
 **/export const description = `Test fragment shader builtin variables and inter-stage variables
 
 * test builtin(position)
-* test interpolation
+* test @interpolate
+* test builtin(sample_index)
+* test builtin(front_facing)
 
-The current tests draw a single triangle with clip space coordinates [1, 1], [-3, 1], [1, -3].
-This means they render to all pixels in the textures. To fully test centroid interpolation
-probably requires drawing various triangles that only cover certain samples. That is TBD.
+Note: @interpolate settings and sample_index affect whether or not the fragment shader
+is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
+@builtin(sample_index) the fragment shader should be executed per-sample.
 
 TODO:
-* test sample interpolation (see MAINTENANCE_TODOs below)
 * test centroid interpolation (see MAINTENANCE_TODOs below)
-* test front_facing
 * test frag_depth
 `;import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { ErrorWithExtra, assert, range, unreachable } from '../../../../common/util/util.js';
@@ -173,6 +173,8 @@ textures)
 }
 
 /* column constants */
+const kX = 0;
+const kY = 1;
 const kZ = 2;
 const kW = 3;
 
@@ -263,6 +265,33 @@ function calcBarycentricCoordinates(trianglePoints, p) {
   return [u, v, w];
 }
 
+/**
+ * Returns true if point is inside triangle
+ */
+function isInsideTriangle(barycentricCoords) {
+  for (const v of barycentricCoords) {
+    if (v < 0 || v > 1) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Returns true if windowPoints define a clockwise triangle
+ */
+function isTriangleClockwise(windowPoints) {
+  let sum = 0;
+  for (let i = 0; i < 3; ++i) {
+    const p0 = windowPoints[i];
+    const p1 = windowPoints[(i + 1) % 3];
+    sum += p0[kX] * p1[kY] - p1[kX] * p0[kY];
+  }
+  return sum >= 0;
+}
+
+
+
 
 
 
@@ -286,8 +315,10 @@ function generateFragmentInputs({
   height,
   nearFar,
   sampleCount,
+  frontFace,
   clipSpacePoints,
   interpolateFn
+
 
 
 
@@ -300,35 +331,49 @@ function generateFragmentInputs({
 
   const viewport = [0, 0, width, height, ...nearFar];
 
-  const ndcPoints = clipSpacePoints.map(clipSpaceToNDC);
-  const windowPoints = ndcPoints.map((p) => ndcToWindow(p, viewport));
-  const windowPoints2D = windowPoints.map((p) => p.slice(0, 2));
+  // For each triangle
+  for (let vertexIndex = 0; vertexIndex < clipSpacePoints.length; vertexIndex += 3) {
+    const ndcPoints = clipSpacePoints.slice(vertexIndex, vertexIndex + 3).map(clipSpaceToNDC);
+    const windowPoints = ndcPoints.map((p) => ndcToWindow(p, viewport));
+    const windowPoints2D = windowPoints.map((p) => p.slice(0, 2));
 
-  const fragmentOffsets = getMultisampleFragmentOffsets(sampleCount);
-  for (let y = 0; y < height; ++y) {
-    for (let x = 0; x < width; ++x) {
-      for (let s = 0; s < sampleCount; ++s) {
-        const fragmentPoint = [x + 0.5, y + 0.5];
-        const multisampleOffset = fragmentOffsets[s];
-        const sampleFragmentPoint = [x + multisampleOffset[0], y + multisampleOffset[1]];
-        const fragmentBarycentricCoords = calcBarycentricCoordinates(windowPoints2D, fragmentPoint);
-        const sampleBarycentricCoords = calcBarycentricCoordinates(
-          windowPoints2D,
-          sampleFragmentPoint
-        );
+    const cw = isTriangleClockwise(windowPoints2D);
+    const frontFacing = frontFace === 'cw' ? cw : !cw;
+    const fragmentOffsets = getMultisampleFragmentOffsets(sampleCount);
 
-        const output = interpolateFn({
-          fragmentPoint,
-          fragmentBarycentricCoords,
-          sampleBarycentricCoords,
-          clipSpacePoints,
-          ndcPoints,
-          windowPoints,
-          sampleIndex: s
-        });
+    for (let y = 0; y < height; ++y) {
+      for (let x = 0; x < width; ++x) {
+        for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
+          const fragmentPoint = [x + 0.5, y + 0.5];
+          const multisampleOffset = fragmentOffsets[sampleIndex];
+          const sampleFragmentPoint = [x + multisampleOffset[0], y + multisampleOffset[1]];
+          const fragmentBarycentricCoords = calcBarycentricCoordinates(
+            windowPoints2D,
+            fragmentPoint
+          );
+          const sampleBarycentricCoords = calcBarycentricCoordinates(
+            windowPoints2D,
+            sampleFragmentPoint
+          );
 
-        const offset = ((y * width + x) * sampleCount + s) * 4;
-        expected.set(output, offset);
+          const inside = isInsideTriangle(sampleBarycentricCoords);
+          if (inside) {
+            const output = interpolateFn({
+              baseVertexIndex: vertexIndex,
+              fragmentPoint,
+              fragmentBarycentricCoords,
+              sampleBarycentricCoords,
+              clipSpacePoints,
+              ndcPoints,
+              windowPoints,
+              sampleIndex,
+              frontFacing
+            });
+
+            const offset = ((y * width + x) * sampleCount + sampleIndex) * 4;
+            expected.set(output, offset);
+          }
+        }
       }
     }
   }
@@ -366,29 +411,31 @@ type,
 sampling)
 {
   return function ({
+    baseVertexIndex,
     fragmentBarycentricCoords,
     sampleBarycentricCoords,
     clipSpacePoints
   }) {
+    const triangleInterStagePoints = interStagePoints.slice(baseVertexIndex, baseVertexIndex + 3);
     const barycentricCoords =
     sampling === 'center' ? fragmentBarycentricCoords : sampleBarycentricCoords;
     switch (type) {
       case 'perspective':
-        return interStagePoints[0].map((_, colNum) =>
+        return triangleInterStagePoints[0].map((_, colNum) =>
         perspectiveInterpolation(
           barycentricCoords,
           clipSpacePoints,
-          getColumn(interStagePoints, colNum)
+          getColumn(triangleInterStagePoints, colNum)
         )
         );
         break;
       case 'linear':
-        return interStagePoints[0].map((_, colNum) =>
-        linearInterpolation(barycentricCoords, getColumn(interStagePoints, colNum))
+        return triangleInterStagePoints[0].map((_, colNum) =>
+        linearInterpolation(barycentricCoords, getColumn(triangleInterStagePoints, colNum))
         );
         break;
       case 'flat':
-        return interStagePoints[0];
+        return triangleInterStagePoints[0];
         break;
       default:
         unreachable();
@@ -401,6 +448,13 @@ sampling)
  */
 function computeFragmentSampleIndex({ sampleIndex }) {
   return [sampleIndex, 0, 0, 0];
+}
+
+/**
+ * Computes 'builtin(front_facing)'
+ */
+function computeFragmentFrontFacing({ frontFacing }) {
+  return [frontFacing ? 1 : 0, 0, 0, 0];
 }
 
 /**
@@ -430,9 +484,13 @@ t,
   width,
   height,
   nearFar,
+  frontFace,
   clipSpacePoints,
   interStagePoints,
+  fragInCode,
   outputCode
+
+
 
 
 
@@ -461,12 +519,6 @@ t,
         @location(0) @interpolate(${interpolate}) interpolatedValue: vec4f,
       };
 
-      struct VertexIn {
-        @builtin(position) position: vec4f,
-        @location(0) @interpolate(${interpolate}) interpolatedValue: vec4f,
-        @builtin(sample_index) sampleIndex: u32,
-      };
-
       @vertex fn vs(@builtin(vertex_index) vNdx: u32) -> VertexOut {
         let pos = array(
           ${clipSpacePoints.map((p) => `vec4f(${p.join(', ')})`).join(', ')}
@@ -480,6 +532,12 @@ t,
         _ = uni;
         return v;
       }
+
+      struct FragmentIn {
+        @builtin(position) position: vec4f,
+        @location(0) @interpolate(${interpolate}) interpolatedValue: vec4f,
+        ${fragInCode}
+      };
 
       struct FragOut {
         @location(0) out0: vec4f,
@@ -497,7 +555,7 @@ t,
         );
       }
 
-      @fragment fn fs(vin: VertexIn) -> FragOut {
+      @fragment fn fs(fin: FragmentIn) -> FragOut {
         var f: FragOut;
         let v = ${outputCode};
         let u = bitcast<vec4u>(v);
@@ -505,7 +563,7 @@ t,
         f.out1 = u32ToRGBAUnorm(u[1]);
         f.out2 = u32ToRGBAUnorm(u[2]);
         f.out3 = u32ToRGBAUnorm(u[3]);
-        _ = vin.interpolatedValue;
+        _ = fin.interpolatedValue;
         return f;
       }
     `
@@ -536,6 +594,11 @@ t,
       entryPoint: 'fs',
       targets: textures.map(() => ({ format: 'rgba8unorm' }))
     },
+    ...(frontFace && {
+      primitive: {
+        frontFace
+      }
+    }),
     multisample: {
       count: sampleCount
     }
@@ -581,7 +644,7 @@ function checkSampleRectsApproximatelyEqual({
   sampleCount,
   actual,
   expected,
-  maxFractionalDiff
+  maxDiffULPsForFloatFormat
 
 
 
@@ -591,7 +654,7 @@ function checkSampleRectsApproximatelyEqual({
 
 }) {
   const subrectOrigin = [0, 0, 0];
-  const subrectSize = [width, height, 1];
+  const subrectSize = [width * sampleCount, height, 1];
   const areaDesc = {
     bytesPerRow: width * sampleCount * 4 * 4,
     rowsPerImage: height,
@@ -614,9 +677,9 @@ function checkSampleRectsApproximatelyEqual({
   const failedPixelsMessage = findFailedPixels(
     format,
     { x: 0, y: 0, z: 0 },
-    { width, height, depthOrArrayLayers: 1 },
+    { width: width * sampleCount, height, depthOrArrayLayers: 1 },
     { actTexelView, expTexelView },
-    { maxFractionalDiff }
+    { maxDiffULPsForFloatFormat }
   );
 
   if (failedPixelsMessage !== undefined) {
@@ -634,6 +697,8 @@ g.test('inputs,position').
 desc(
   `
     Test fragment shader builtin(position) values.
+
+    Note: @builtin(position) is always a fragment position, never a sample position.
   `
 ).
 params((u) =>
@@ -642,13 +707,11 @@ u //
 combine('sampleCount', [1, 4]).
 combine('interpolation', [
 { type: 'perspective', sampling: 'center' },
-// MAINTENANCE_TODO: enable these tests.
-// { type: 'perspective', sampling: 'centroid' },
-// { type: 'perspective', sampling: 'sample' },
+{ type: 'perspective', sampling: 'centroid' },
+{ type: 'perspective', sampling: 'sample' },
 { type: 'linear', sampling: 'center' },
-// MAINTENANCE_TODO: enable these tests.
-// { type: 'linear', sampling: 'centroid' },
-// { type: 'linear', sampling: 'sample' },
+{ type: 'linear', sampling: 'centroid' },
+{ type: 'linear', sampling: 'sample' },
 { type: 'flat' }]
 )
 ).
@@ -688,7 +751,8 @@ fn(async (t) => {
     nearFar,
     clipSpacePoints,
     interStagePoints,
-    outputCode: 'vin.position'
+    fragInCode: '',
+    outputCode: 'fin.position'
   });
 
   const expected = generateFragmentInputs({
@@ -700,6 +764,12 @@ fn(async (t) => {
     interpolateFn: computeFragmentPosition
   });
 
+  // Since @builtin(position) is always a fragment position, never a sample position, check
+  // the first coordinate. It should be 0.5, 0.5 always. This is just to double check
+  // that computeFragmentPosition is generating the correct values.
+  assert(expected[0] === 0.5);
+  assert(expected[1] === 0.5);
+
   t.expectOK(
     checkSampleRectsApproximatelyEqual({
       width,
@@ -707,7 +777,7 @@ fn(async (t) => {
       sampleCount,
       actual,
       expected,
-      maxFractionalDiff: 0.000001
+      maxDiffULPsForFloatFormat: 2
     })
   );
 });
@@ -726,11 +796,11 @@ combine('interpolation', [
 { type: 'perspective', sampling: 'center' },
 // MAINTENANCE_TODO: enable these tests.
 // { type: 'perspective', sampling: 'centroid' },
-// { type: 'perspective', sampling: 'sample' },
+{ type: 'perspective', sampling: 'sample' },
 { type: 'linear', sampling: 'center' },
 // MAINTENANCE_TODO: enable these tests.
 // { type: 'linear', sampling: 'centroid' },
-// { type: 'linear', sampling: 'sample' },
+{ type: 'linear', sampling: 'sample' },
 { type: 'flat' }]
 )
 ).
@@ -770,7 +840,8 @@ fn(async (t) => {
     nearFar,
     clipSpacePoints,
     interStagePoints,
-    outputCode: 'vin.interpolatedValue'
+    fragInCode: '',
+    outputCode: 'fin.interpolatedValue'
   });
 
   const expected = generateFragmentInputs({
@@ -789,7 +860,7 @@ fn(async (t) => {
       sampleCount,
       actual,
       expected,
-      maxFractionalDiff: 0.00001
+      maxDiffULPsForFloatFormat: 3
     })
   );
 });
@@ -850,7 +921,8 @@ fn(async (t) => {
     nearFar,
     clipSpacePoints,
     interStagePoints,
-    outputCode: 'vec4f(f32(vin.sampleIndex), 0, 0, 0)'
+    fragInCode: `@builtin(sample_index) sampleIndex: u32,`,
+    outputCode: 'vec4f(f32(fin.sampleIndex), 0, 0, 0)'
   });
 
   const expected = generateFragmentInputs({
@@ -869,7 +941,124 @@ fn(async (t) => {
       sampleCount,
       actual,
       expected,
-      maxFractionalDiff: 0.00001
+      maxDiffULPsForFloatFormat: 1
+    })
+  );
+});
+
+g.test('inputs,front_facing').
+desc(
+  `
+    Test fragment shader builtin(front_facing) values.
+
+    Draws a quad from 2 triangles that entirely cover clip space. (see diagram below in code)
+    One triangle is clockwise, the other is counter clockwise. The triangles
+    bisect pixels so that different samples are covered by each triangle so that some
+    samples should get different values for front_facing for the same fragment.
+  `
+).
+params((u) =>
+u //
+.combine('nearFar', [[0, 1], [0.25, 0.75]]).
+combine('sampleCount', [1, 4]).
+combine('frontFace', ['cw', 'ccw']).
+combine('interpolation', [
+{ type: 'perspective', sampling: 'center' },
+{ type: 'perspective', sampling: 'centroid' },
+{ type: 'perspective', sampling: 'sample' },
+{ type: 'linear', sampling: 'center' },
+{ type: 'linear', sampling: 'centroid' },
+{ type: 'linear', sampling: 'sample' },
+{ type: 'flat' }]
+)
+).
+beforeAllSubcases((t) => {
+  const {
+    interpolation: { type, sampling }
+  } = t.params;
+  t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+}).
+fn(async (t) => {
+  const {
+    nearFar,
+    sampleCount,
+    frontFace,
+    interpolation: { type, sampling }
+  } = t.params;
+  //
+  // We're drawing 2 triangles starting at y = -2 to y = +2
+  //
+  //  -1   0   1
+  //   +===+===+  2
+  //   |\  |   |
+  //   +---+---+  1  <---
+  //   |  \|   |       |
+  //   +---+---+  0    | viewport
+  //   |   |\  |       |
+  //   +---+---+ -1  <---
+  //   |   |  \|
+  //   +===+===+ -2
+
+
+  const clipSpacePoints = [
+  // ccw
+  [-1, -2, 0, 1],
+  [1, -2, 0, 1],
+  [-1, 2, 0, 1],
+
+  // cw
+  [1, -2, 0, 1],
+  [-1, 2, 0, 1],
+  [1, 2, 0, 1]];
+
+
+  const interStagePoints = [
+  [1, 2, 3, 4],
+  [5, 6, 7, 8],
+  [9, 10, 11, 12],
+
+  [13, 14, 15, 16],
+  [17, 18, 19, 20],
+  [21, 22, 23, 24]];
+
+
+  const width = 4;
+  const height = 4;
+  const actual = await renderFragmentShaderInputsTo4TexturesAndReadbackValues(t, {
+    interpolationType: type,
+    interpolationSampling: sampling,
+    frontFace,
+    sampleCount,
+    width,
+    height,
+    nearFar,
+    clipSpacePoints,
+    interStagePoints,
+    fragInCode: '@builtin(front_facing) frontFacing: bool,',
+    outputCode: 'vec4f(select(0.0, 1.0, fin.frontFacing), 0, 0, 0)'
+  });
+
+  const expected = generateFragmentInputs({
+    width,
+    height,
+    nearFar,
+    sampleCount,
+    clipSpacePoints,
+    frontFace,
+    interpolateFn: computeFragmentFrontFacing
+  });
+
+  // Double check, first corner should be different than last based on the triangles we are drawing.
+  assert(expected[0] !== expected[expected.length - 4]);
+
+  t.expectOK(
+    checkSampleRectsApproximatelyEqual({
+      width,
+      height,
+      sampleCount,
+      actual,
+      expected,
+      maxDiffULPsForFloatFormat: 0
     })
   );
 });
