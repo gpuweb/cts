@@ -5,7 +5,7 @@ export const description = `Test fragment shader builtin variables and inter-sta
 * test builtin(sample_index)
 * test builtin(front_facing)
 
-Note: @interpolate settings and sample_index effect whether or not the fragment shader
+Note: @interpolate settings and sample_index affect whether or not the fragment shader
 is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
 @builtin(sample_index) the fragment shader should be executed per-sample.
 
@@ -287,7 +287,7 @@ function isTriangleClockwise(windowPoints: readonly number[][]) {
     const p1 = windowPoints[(i + 1) % 3];
     sum += p0[kX] * p1[kY] - p1[kX] * p0[kY];
   }
-  return sum < 0;
+  return sum >= 0;
 }
 
 type FragData = {
@@ -454,7 +454,7 @@ function computeFragmentSampleIndex({ sampleIndex }: FragData) {
  * Computes 'builtin(front_facing)'
  */
 function computeFragmentFrontFacing({ frontFacing }: FragData) {
-  return [frontFacing ? 0 : 1, 0, 0, 0];
+  return [frontFacing ? 1 : 0, 0, 0, 0];
 }
 
 /**
@@ -990,23 +990,23 @@ g.test('inputs,front_facing')
     //
     //  -1   0   1
     //   +===+===+  2
-    //   |   |  /|
+    //   |\  |   |
     //   +---+---+  1  <---
-    //   |   |/  |       |
+    //   |  \|   |       |
     //   +---+---+  0    | viewport
-    //   |  /|   |       |
+    //   |   |\  |       |
     //   +---+---+ -1  <---
-    //   |/  |   |
+    //   |   |  \|
     //   +===+===+ -2
 
     // prettier-ignore
     const clipSpacePoints = [
-      // cw
+      // ccw
       [-1, -2, 0, 1],
       [ 1, -2, 0, 1],
       [-1,  2, 0, 1],
 
-      // ccw
+      // cw
       [ 1, -2, 0, 1],
       [-1,  2, 0, 1],
       [ 1,  2, 0, 1],
