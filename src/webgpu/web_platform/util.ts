@@ -51,7 +51,7 @@ const kBt709PixelValue = {
   },
 } as const;
 
-function videoTable<Table extends { readonly [K: string]: {} }>({
+function makeTable<Table extends { readonly [K: string]: {} }>({
   table,
 }: {
   table: Table;
@@ -67,142 +67,87 @@ function videoTable<Table extends { readonly [K: string]: {} }>({
 }
 
 // MAINTENANCE_TODO: Add BT.2020 video in table.
-export const kVideoInfo = videoTable({
+// Test videos meta infos, including mimeType to check browser compatibility
+// and video color space.
+export const kVideoInfo = makeTable({
   table: {
     'four-colors-vp8-bt601.webm': {
       mimeType: 'video/webm; codecs=vp8',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.yellow,
-          topRightColor: kBt601PixelValue.srgb.red,
-          bottomLeftColor: kBt601PixelValue.srgb.blue,
-          bottomRightColor: kBt601PixelValue.srgb.green,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-theora-bt601.ogv': {
       mimeType: 'video/ogg; codecs=theora',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.yellow,
-          topRightColor: kBt601PixelValue.srgb.red,
-          bottomLeftColor: kBt601PixelValue.srgb.blue,
-          bottomRightColor: kBt601PixelValue.srgb.green,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-h264-bt601.mp4': {
       mimeType: 'video/mp4; codecs=avc1.4d400c',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.yellow,
-          topRightColor: kBt601PixelValue.srgb.red,
-          bottomLeftColor: kBt601PixelValue.srgb.blue,
-          bottomRightColor: kBt601PixelValue.srgb.green,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-vp9-bt601.webm': {
       mimeType: 'video/webm; codecs=vp9',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.yellow,
-          topRightColor: kBt601PixelValue.srgb.red,
-          bottomLeftColor: kBt601PixelValue.srgb.blue,
-          bottomRightColor: kBt601PixelValue.srgb.green,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-vp9-bt709.webm': {
       mimeType: 'video/webm; codecs=vp9',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.yellow),
-          topRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.red),
-          bottomLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.blue),
-          bottomRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.green),
-        },
-        srgb: {
-          topLeftColor: kBt709PixelValue.srgb.yellow,
-          topRightColor: kBt709PixelValue.srgb.red,
-          bottomLeftColor: kBt709PixelValue.srgb.blue,
-          bottomRightColor: kBt709PixelValue.srgb.green,
-        },
-      },
+      colorSpace: 'bt709',
     },
     'four-colors-h264-bt601-rotate-90.mp4': {
       mimeType: 'video/mp4; codecs=avc1.4d400c',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.red,
-          topRightColor: kBt601PixelValue.srgb.green,
-          bottomLeftColor: kBt601PixelValue.srgb.yellow,
-          bottomRightColor: kBt601PixelValue.srgb.blue,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-h264-bt601-rotate-180.mp4': {
       mimeType: 'video/mp4; codecs=avc1.4d400c',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.green,
-          topRightColor: kBt601PixelValue.srgb.blue,
-          bottomLeftColor: kBt601PixelValue.srgb.red,
-          bottomRightColor: kBt601PixelValue.srgb.yellow,
-        },
-      },
+      colorSpace: 'bt601',
     },
     'four-colors-h264-bt601-rotate-270.mp4': {
       mimeType: 'video/mp4; codecs=avc1.4d400c',
-      presentColors: {
-        'display-p3': {
-          topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-          topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-          bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
-          bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-        },
-        srgb: {
-          topLeftColor: kBt601PixelValue.srgb.blue,
-          topRightColor: kBt601PixelValue.srgb.yellow,
-          bottomLeftColor: kBt601PixelValue.srgb.green,
-          bottomRightColor: kBt601PixelValue.srgb.red,
-        },
+      colorSpace: 'bt601',
+    },
+    'four-colors-vp9-bt601-rotate-90.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+    },
+    'four-colors-vp9-bt601-rotate-180.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+    },
+    'four-colors-vp9-bt601-rotate-270.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+    },
+  },
+} as const);
+
+// Video expected pixel value table. Finding expected pixel value
+// with video color space and dst color space.
+export const kVideoExpectedColors = makeTable({
+  table: {
+    bt601: {
+      'display-p3': {
+        topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+        topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+        bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+        bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
+      },
+      srgb: {
+        topLeftColor: kBt601PixelValue.srgb.yellow,
+        topRightColor: kBt601PixelValue.srgb.red,
+        bottomLeftColor: kBt601PixelValue.srgb.blue,
+        bottomRightColor: kBt601PixelValue.srgb.green,
+      },
+    },
+    bt709: {
+      'display-p3': {
+        topLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.yellow),
+        topRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.red),
+        bottomLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.blue),
+        bottomRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.green),
+      },
+      srgb: {
+        topLeftColor: kBt709PixelValue.srgb.yellow,
+        topRightColor: kBt709PixelValue.srgb.red,
+        bottomLeftColor: kBt709PixelValue.srgb.blue,
+        bottomRightColor: kBt709PixelValue.srgb.green,
       },
     },
   },

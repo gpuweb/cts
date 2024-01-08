@@ -18,6 +18,7 @@ import {
   kPredefinedColorSpace,
   kVideoNames,
   kVideoInfo,
+  kVideoExpectedColors,
 } from '../../web_platform/util.js';
 
 const kHeight = 16;
@@ -194,7 +195,8 @@ for several combinations of video format, video color spaces and dst color space
       passEncoder.end();
       t.device.queue.submit([commandEncoder.finish()]);
 
-      const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+      const srcColorSpace = kVideoInfo[videoName].colorSpace;
+      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
 
       // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
@@ -250,7 +252,8 @@ parameters are present.
       const srcVideoHeight = 240;
       const srcVideoWidth = 320;
 
-      const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+      const srcColorSpace = kVideoInfo[videoName].colorSpace;
+      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
 
       const cropParams = [
         // Top left
@@ -381,23 +384,48 @@ compute shader, for several combinations of video format, video color spaces and
         usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.STORAGE_BINDING,
       });
 
+      // Use display size of VideoFrame and video size of HTMLVideoElement as frame size. These sizes are presenting size which
+      // apply transformation in video metadata if any.
+      const frameWidth =
+        sourceType === 'VideoFrame'
+          ? (source as VideoFrame).displayWidth
+          : (source as HTMLVideoElement).videoWidth;
+      const frameHeight =
+        sourceType === 'VideoFrame'
+          ? (source as VideoFrame).displayHeight
+          : (source as HTMLVideoElement).videoHeight;
+
+      // Pick pixels from centers of color chunks.
+      const coordTopLeft =
+        'vec2<i32>(' + Math.floor(frameWidth / 4) + ', ' + Math.floor(frameHeight / 4) + ')';
+      const coordTopRight =
+        'vec2<i32>(' + Math.floor((frameWidth / 4) * 3) + ', ' + Math.floor(frameHeight / 4) + ')';
+      const coordBottomLeft =
+        'vec2<i32>(' + Math.floor(frameWidth / 4) + ', ' + Math.floor((frameHeight / 4) * 3) + ')';
+      const coordBottomRight =
+        'vec2<i32>(' +
+        Math.floor((frameWidth / 4) * 3) +
+        ', ' +
+        Math.floor((frameHeight / 4) * 3) +
+        ')';
+
       const pipeline = t.device.createComputePipeline({
         layout: 'auto',
         compute: {
-          // Shader loads 4 pixels near each corner, and then store them in a storage texture.
+          // Shader loads 4 pixels, and then store them in a storage texture.
           module: t.device.createShaderModule({
             code: `
               @group(0) @binding(0) var t : texture_external;
               @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
               @compute @workgroup_size(1) fn main() {
-                var yellow : vec4<f32> = textureLoad(t, vec2<i32>(80, 60));
+                var yellow : vec4<f32> = textureLoad(t, ${coordTopLeft});
                 textureStore(outImage, vec2<i32>(0, 0), yellow);
-                var red : vec4<f32> = textureLoad(t, vec2<i32>(240, 60));
+                var red : vec4<f32> = textureLoad(t, ${coordTopRight});
                 textureStore(outImage, vec2<i32>(0, 1), red);
-                var blue : vec4<f32> = textureLoad(t, vec2<i32>(80, 180));
+                var blue : vec4<f32> = textureLoad(t, ${coordBottomLeft});
                 textureStore(outImage, vec2<i32>(1, 0), blue);
-                var green : vec4<f32> = textureLoad(t, vec2<i32>(240, 180));
+                var green : vec4<f32> = textureLoad(t, ${coordBottomRight});
                 textureStore(outImage, vec2<i32>(1, 1), green);
                 return;
               }
@@ -423,7 +451,8 @@ compute shader, for several combinations of video format, video color spaces and
       pass.end();
       t.device.queue.submit([encoder.finish()]);
 
-      const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+      const srcColorSpace = kVideoInfo[videoName].colorSpace;
+      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
 
       t.expectSinglePixelComparisonsAreOkInTexture({ texture: outputTexture }, [
         // Top-left.

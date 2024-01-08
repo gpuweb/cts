@@ -17,6 +17,7 @@ import {
   kPredefinedColorSpace,
   kVideoNames,
   kVideoInfo,
+  kVideoExpectedColors,
 } from '../../web_platform/util.js';
 
 const kFormat = 'rgba8unorm';
@@ -93,7 +94,8 @@ It creates HTMLVideoElement with videos under Resource folder.
         { width, height, depthOrArrayLayers: 1 }
       );
 
-      const expect = kVideoInfo[videoName].presentColors[dstColorSpace];
+      const srcColorSpace = kVideoInfo[videoName].colorSpace;
+      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
 
       if (srcDoFlipYDuringCopy) {
         t.expectSinglePixelComparisonsAreOkInTexture({ texture: dstTexture }, [
