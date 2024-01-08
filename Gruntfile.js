@@ -4,6 +4,7 @@
 
 const timer = require('grunt-timer');
 const { spawnSync } = require('child_process');
+const path = require('path');
 
 const kAllSuites = ['webgpu', 'stress', 'manual', 'unittests', 'demo'];
 
@@ -230,7 +231,7 @@ module.exports = function (grunt) {
   }
 
   grunt.registerTask('ts-check', function() {
-    spawnSync('node_modules/.bin/tsc', [
+    spawnSync(path.join('node_modules', '.bin', 'tsc'), [
       '--project',
       'tsconfig.json',
       '--noEmit',
