@@ -70,6 +70,8 @@ interface ConfigJSON {
     file: string;
     /** The prefix to trim from every line of the expectations_file. */
     prefix: string;
+    /** Expend all subtrees for provided expectations */
+    expandAll?: boolean;
   };
   /*No long path assert */
   noLongPathAssert?: boolean;
@@ -85,6 +87,7 @@ interface Config {
   expectations?: {
     file: string;
     prefix: string;
+    expandAll: boolean;
   };
 }
 
@@ -110,6 +113,7 @@ let config: Config;
         config.expectations = {
           file: path.resolve(jsonFileDir, configJSON.expectations.file),
           prefix: configJSON.expectations.prefix,
+          expandAll: configJSON.expectations.expandAll ?? false,
         };
       }
       break;
@@ -143,6 +147,7 @@ let config: Config;
         config.expectations = {
           file: expectationsFile,
           prefix: expectationsPrefix,
+          expandAll: false,
         };
       }
       break;
@@ -188,6 +193,7 @@ let config: Config;
     const rootQuery = new TestQueryMultiFile(config.suite, []);
     const tree = await loader.loadTree(rootQuery, {
       subqueriesToExpand: expectations.get(prefix),
+      expandAll: config.expectations?.expandAll,
       maxChunkTime: config.maxChunkTimeMS,
     });
 

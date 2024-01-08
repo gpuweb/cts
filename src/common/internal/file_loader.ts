@@ -73,8 +73,9 @@ export abstract class TestFileLoader extends EventTarget {
     query: TestQuery,
     {
       subqueriesToExpand = [],
+      expandAll = false,
       maxChunkTime = Infinity,
-    }: { subqueriesToExpand?: string[]; maxChunkTime?: number } = {}
+    }: { subqueriesToExpand?: string[]; expandAll?: boolean; maxChunkTime?: number } = {}
   ): Promise<TestTree> {
     const tree = await loadTreeForQuery(this, query, {
       subqueriesToExpand: subqueriesToExpand.map(s => {
@@ -82,6 +83,7 @@ export abstract class TestFileLoader extends EventTarget {
         assert(q.level >= 2, () => `subqueriesToExpand entries should not be multi-file:\n  ${q}`);
         return q;
       }),
+      expandAll,
       maxChunkTime,
     });
     this.dispatchEvent(new MessageEvent<void>('finish'));
