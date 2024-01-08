@@ -6198,47 +6198,47 @@ interface VectorToVectorCase {
 const kNormalizeIntervalCases = {
   f32: [
     // vec2
-    {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-    {input: [0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
-    {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-    {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)], [reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
+    { input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+    { input: [0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
+    { input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+    { input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)], [reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
 
     // vec3
-    {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-    {input: [0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
-    {input: [0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
-    {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-    {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+    { input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+    { input: [0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
+    { input: [0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+    { input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+    { input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
 
     // vec4
-    {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-    {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
-    {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
-    {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
-    {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-    {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+    { input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    { input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+    { input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+    { input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+    { input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    { input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
   ] as VectorToVectorCase[],
   f16: [
     // vec2
-    {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
-    {input: [0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~1.0]
-    {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
-    {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)], [reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)]] },  // [ ~1/√2, ~1/√2]
+    { input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
+    { input: [0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~1.0]
+    { input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
+    { input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)], [reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)]] },  // [ ~1/√2, ~1/√2]
 
     // vec3
-    {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
-    {input: [0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0]
-    {input: [0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
-    {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
-    {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+    { input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
+    { input: [0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0]
+    { input: [0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+    { input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
+    { input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
 
     // vec4
-    {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-    {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
-    {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
-    {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
-    {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-    {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+    { input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    { input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+    { input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+    { input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+    { input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    { input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
   ] as VectorToVectorCase[],
 } as const;
 
@@ -6247,7 +6247,20 @@ g.test('normalizeInterval')
     u
       .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
-      .expandWithParams<VectorToVectorCase>(p => kNormalizeIntervalCases[p.trait])
+      .expandWithParams<VectorToVectorCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kNormalizeIntervalCases[p.trait],
+
+          // Very small vectors go OOB due to division
+          { input: [constants.positive.subnormal.max, constants.positive.subnormal.max], expected: [kUnboundedEndpoints, kUnboundedEndpoints], },
+
+          // Very large vectors go OOB due to overflow
+          { input: [constants.positive.max, constants.positive.max], expected: [kUnboundedEndpoints, kUnboundedEndpoints], },
+        ];
+      })
   )
   .fn(t => {
     const x = t.params.input;
@@ -6354,6 +6367,9 @@ g.test('crossInterval')
           { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
           { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
           ...kCrossIntervalCases[p.trait],
+
+          // OOB
+          { input: [[constants.positive.max, 1.0, 1.0], [1.0, constants.positive.max, -1.0]], expected: [kUnboundedEndpoints, kUnboundedEndpoints, kUnboundedEndpoints] },
         ];
       })
   )
@@ -6413,6 +6429,7 @@ g.test('reflectInterval')
           { input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
           { input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
           { input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
+
           // vec3s
           { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
           { input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
@@ -6421,6 +6438,7 @@ g.test('reflectInterval')
           { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
           { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
           { input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
+
           // vec4s
           { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
           { input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
@@ -6430,6 +6448,7 @@ g.test('reflectInterval')
           { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
           { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
           { input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
+
           // Test that dot going OOB in the intermediate calculations propagates
           { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedEndpoints, kUnboundedEndpoints, kUnboundedEndpoints] },
           { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedEndpoints, kUnboundedEndpoints, kUnboundedEndpoints] },
@@ -6735,184 +6754,205 @@ g.test('additionMatrixMatrixInterval')
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
-      .combineWithParams<MatrixPairToMatrixCase>([
-        // Only testing that different shapes of matrices are handled correctly
-        // here, to reduce test duplication.
-        // additionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
-        // so the testing for additionInterval covers the actual interval
-        // calculations.
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
+      .expandWithParams<MatrixPairToMatrixCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        return [
+          // Only testing that different shapes of matrices are handled correctly
+          // here, to reduce test duplication.
+          // additionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
+          // so the testing for additionInterval covers the actual interval
+          // calculations.
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+              ],
+              [
+                [10, 20],
+                [30, 40],
+              ],
             ],
-            [
-              [10, 20],
-              [30, 40],
+            expected: [
+              [11, 22],
+              [33, 44],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
-              [5, 6],
+          },
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+              ],
+              [
+                [10, 20],
+                [30, 40],
+                [50, 60],
+              ],
             ],
-            [
-              [10, 20],
-              [30, 40],
-              [50, 60],
+            expected: [
+              [11, 22],
+              [33, 44],
+              [55, 66],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-            [55, 66],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
-              [5, 6],
-              [7, 8],
+          },
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8],
+              ],
+              [
+                [10, 20],
+                [30, 40],
+                [50, 60],
+                [70, 80],
+              ],
             ],
-            [
-              [10, 20],
-              [30, 40],
-              [50, 60],
-              [70, 80],
+            expected: [
+              [11, 22],
+              [33, 44],
+              [55, 66],
+              [77, 88],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-            [55, 66],
-            [77, 88],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+              ],
+              [
+                [10, 20, 30],
+                [40, 50, 60],
+              ],
             ],
-            [
-              [10, 20, 30],
-              [40, 50, 60],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+              ],
+              [
+                [10, 20, 30],
+                [40, 50, 60],
+                [70, 80, 90],
+              ],
             ],
-            [
-              [10, 20, 30],
-              [40, 50, 60],
-              [70, 80, 90],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
+              [77, 88, 99],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
-              [10, 11, 12],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+                [10, 11, 12],
+              ],
+              [
+                [10, 20, 30],
+                [40, 50, 60],
+                [70, 80, 90],
+                [1000, 1100, 1200],
+              ],
             ],
-            [
-              [10, 20, 30],
-              [40, 50, 60],
-              [70, 80, 90],
-              [1000, 1100, 1200],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
+              [77, 88, 99],
+              [1010, 1111, 1212],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
-            [1010, 1111, 1212],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+              ],
+              [
+                [10, 20, 30, 40],
+                [50, 60, 70, 80],
+              ],
             ],
-            [
-              [10, 20, 30, 40],
-              [50, 60, 70, 80],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+              ],
+              [
+                [10, 20, 30, 40],
+                [50, 60, 70, 80],
+                [90, 1000, 1100, 1200],
+              ],
             ],
-            [
-              [10, 20, 30, 40],
-              [50, 60, 70, 80],
-              [90, 1000, 1100, 1200],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
+              [99, 1010, 1111, 1212],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
-              [13, 14, 15, 16],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+                [13, 14, 15, 16],
+              ],
+              [
+                [10, 20, 30, 40],
+                [50, 60, 70, 80],
+                [90, 1000, 1100, 1200],
+                [1300, 1400, 1500, 1600],
+              ],
             ],
-            [
-              [10, 20, 30, 40],
-              [50, 60, 70, 80],
-              [90, 1000, 1100, 1200],
-              [1300, 1400, 1500, 1600],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
+              [99, 1010, 1111, 1212],
+              [1313, 1414, 1515, 1616],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
-            [1313, 1414, 1515, 1616],
-          ],
-        },
-      ])
+          },
+          // Test the OOB is handled component-wise
+          {
+            input: [
+              [
+                [constants.positive.max, 2],
+                [3, 4],
+              ],
+              [
+                [constants.positive.max, 20],
+                [30, 40],
+              ],
+            ],
+            expected: [
+              [kUnboundedEndpoints, 22],
+              [33, 44],
+            ],
+          },
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
@@ -6932,184 +6972,205 @@ g.test('subtractionMatrixMatrixInterval')
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
-      .combineWithParams<MatrixPairToMatrixCase>([
-        // Only testing that different shapes of matrices are handled correctly
-        // here, to reduce test duplication.
-        // subtractionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
-        // so the testing for subtractionInterval covers the actual interval
-        // calculations.
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
+      .expandWithParams<MatrixPairToMatrixCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        return [
+          // Only testing that different shapes of matrices are handled correctly
+          // here, to reduce test duplication.
+          // subtractionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
+          // so the testing for subtractionInterval covers the actual interval
+          // calculations.
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+              ],
+              [
+                [-10, -20],
+                [-30, -40],
+              ],
             ],
-            [
-              [-10, -20],
-              [-30, -40],
+            expected: [
+              [11, 22],
+              [33, 44],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
-              [5, 6],
+          },
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+              ],
+              [
+                [-10, -20],
+                [-30, -40],
+                [-50, -60],
+              ],
             ],
-            [
-              [-10, -20],
-              [-30, -40],
-              [-50, -60],
+            expected: [
+              [11, 22],
+              [33, 44],
+              [55, 66],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-            [55, 66],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2],
-              [3, 4],
-              [5, 6],
-              [7, 8],
+          },
+          {
+            input: [
+              [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8],
+              ],
+              [
+                [-10, -20],
+                [-30, -40],
+                [-50, -60],
+                [-70, -80],
+              ],
             ],
-            [
-              [-10, -20],
-              [-30, -40],
-              [-50, -60],
-              [-70, -80],
+            expected: [
+              [11, 22],
+              [33, 44],
+              [55, 66],
+              [77, 88],
             ],
-          ],
-          expected: [
-            [11, 22],
-            [33, 44],
-            [55, 66],
-            [77, 88],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+              ],
+              [
+                [-10, -20, -30],
+                [-40, -50, -60],
+              ],
             ],
-            [
-              [-10, -20, -30],
-              [-40, -50, -60],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+              ],
+              [
+                [-10, -20, -30],
+                [-40, -50, -60],
+                [-70, -80, -90],
+              ],
             ],
-            [
-              [-10, -20, -30],
-              [-40, -50, -60],
-              [-70, -80, -90],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
+              [77, 88, 99],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3],
-              [4, 5, 6],
-              [7, 8, 9],
-              [10, 11, 12],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3],
+                [4, 5, 6],
+                [7, 8, 9],
+                [10, 11, 12],
+              ],
+              [
+                [-10, -20, -30],
+                [-40, -50, -60],
+                [-70, -80, -90],
+                [-1000, -1100, -1200],
+              ],
             ],
-            [
-              [-10, -20, -30],
-              [-40, -50, -60],
-              [-70, -80, -90],
-              [-1000, -1100, -1200],
+            expected: [
+              [11, 22, 33],
+              [44, 55, 66],
+              [77, 88, 99],
+              [1010, 1111, 1212],
             ],
-          ],
-          expected: [
-            [11, 22, 33],
-            [44, 55, 66],
-            [77, 88, 99],
-            [1010, 1111, 1212],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+              ],
+              [
+                [-10, -20, -30, -40],
+                [-50, -60, -70, -80],
+              ],
             ],
-            [
-              [-10, -20, -30, -40],
-              [-50, -60, -70, -80],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+              ],
+              [
+                [-10, -20, -30, -40],
+                [-50, -60, -70, -80],
+                [-90, -1000, -1100, -1200],
+              ],
             ],
-            [
-              [-10, -20, -30, -40],
-              [-50, -60, -70, -80],
-              [-90, -1000, -1100, -1200],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
+              [99, 1010, 1111, 1212],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
-          ],
-        },
-        {
-          input: [
-            [
-              [1, 2, 3, 4],
-              [5, 6, 7, 8],
-              [9, 10, 11, 12],
-              [13, 14, 15, 16],
+          },
+          {
+            input: [
+              [
+                [1, 2, 3, 4],
+                [5, 6, 7, 8],
+                [9, 10, 11, 12],
+                [13, 14, 15, 16],
+              ],
+              [
+                [-10, -20, -30, -40],
+                [-50, -60, -70, -80],
+                [-90, -1000, -1100, -1200],
+                [-1300, -1400, -1500, -1600],
+              ],
             ],
-            [
-              [-10, -20, -30, -40],
-              [-50, -60, -70, -80],
-              [-90, -1000, -1100, -1200],
-              [-1300, -1400, -1500, -1600],
+            expected: [
+              [11, 22, 33, 44],
+              [55, 66, 77, 88],
+              [99, 1010, 1111, 1212],
+              [1313, 1414, 1515, 1616],
             ],
-          ],
-          expected: [
-            [11, 22, 33, 44],
-            [55, 66, 77, 88],
-            [99, 1010, 1111, 1212],
-            [1313, 1414, 1515, 1616],
-          ],
-        },
-      ])
+          },
+          // Test the OOB is handled component-wise
+          {
+            input: [
+              [
+                [constants.positive.max, 2],
+                [3, 4],
+              ],
+              [
+                [constants.negative.min, -20],
+                [-30, -40],
+              ],
+            ],
+            expected: [
+              [kUnboundedEndpoints, 22],
+              [33, 44],
+            ],
+          },
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
@@ -7710,6 +7771,8 @@ g.test('multiplicationMatrixScalarInterval')
       .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<MatrixScalarToMatrixCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
         // Primarily testing that different shapes of matrices are handled correctly
         // here, to reduce test duplication. Additional testing for edge case
         // discovered in https://github.com/gpuweb/cts/issues/3044.
@@ -7836,6 +7899,18 @@ g.test('multiplicationMatrixScalarInterval')
             ],
           },
           ...kMultiplicationMatrixScalarIntervalCases[p.trait],
+          // Test that OOB is component-wise
+          {
+            matrix: [
+              [1, 2],
+              [constants.positive.max, 4],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20],
+              [kUnboundedEndpoints, 40],
+            ],
+          },
         ];
       })
   )
