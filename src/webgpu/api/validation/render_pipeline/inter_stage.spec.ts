@@ -292,17 +292,20 @@ g.test('max_components_count,input')
   .params(u =>
     u.combine('isAsync', [false, true]).combineWithParams([
       // Number of user-defined input scalar components in test shader = device.limits.maxInterStageShaderComponents + numScalarDelta.
-      { numScalarDelta: 0, useExtraBuiltinInputs: false, _success: true },
-      { numScalarDelta: 1, useExtraBuiltinInputs: false, _success: false },
-      { numScalarDelta: 0, useExtraBuiltinInputs: true, _success: false },
-      { numScalarDelta: -3, useExtraBuiltinInputs: true, _success: true },
-      { numScalarDelta: -2, useExtraBuiltinInputs: true, _success: false },
+      { numScalarDelta: 0, useExtraBuiltinInputs: false },
+      { numScalarDelta: 1, useExtraBuiltinInputs: false },
+      { numScalarDelta: 0, useExtraBuiltinInputs: true },
+      { numScalarDelta: -3, useExtraBuiltinInputs: true },
+      { numScalarDelta: -2, useExtraBuiltinInputs: true },
     ] as const)
   )
   .fn(t => {
-    const { isAsync, numScalarDelta, useExtraBuiltinInputs, _success } = t.params;
+    const { isAsync, numScalarDelta, useExtraBuiltinInputs } = t.params;
 
     const numScalarComponents = t.device.limits.maxInterStageShaderComponents + numScalarDelta;
+    const numExtraComponents = useExtraBuiltinInputs ? (t.isCompatibility ? 2 : 3) : 0;
+    const numUsedComponents = numScalarComponents + numExtraComponents;
+    const success = numUsedComponents <= t.device.limits.maxInterStageShaderComponents;
 
     const numVec4 = Math.floor(numScalarComponents / 4);
     const numTrailingScalars = numScalarComponents % 4;
@@ -319,9 +322,11 @@ g.test('max_components_count,input')
     if (useExtraBuiltinInputs) {
       inputs.push(
         '@builtin(front_facing) front_facing_in: bool',
-        '@builtin(sample_index) sample_index_in: u32',
         '@builtin(sample_mask) sample_mask_in: u32'
       );
+      if (!t.isCompatibility) {
+        inputs.push('@builtin(sample_index) sample_index_in: u32');
+      }
     }
 
     const descriptor = t.getDescriptorWithStates(
@@ -329,5 +334,5 @@ g.test('max_components_count,input')
       t.getFragmentStateWithInputs(inputs, true)
     );
 
-    t.doCreateRenderPipelineTest(isAsync, _success, descriptor);
+    t.doCreateRenderPipelineTest(isAsync, success, descriptor);
   });
