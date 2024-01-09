@@ -386,28 +386,6 @@ compute shader, for several combinations of video format, video color spaces and
 
       // Use display size of VideoFrame and video size of HTMLVideoElement as frame size. These sizes are presenting size which
       // apply transformation in video metadata if any.
-      const frameWidth =
-        sourceType === 'VideoFrame'
-          ? (source as VideoFrame).displayWidth
-          : (source as HTMLVideoElement).videoWidth;
-      const frameHeight =
-        sourceType === 'VideoFrame'
-          ? (source as VideoFrame).displayHeight
-          : (source as HTMLVideoElement).videoHeight;
-
-      // Pick pixels from centers of color chunks.
-      const coordTopLeft =
-        'vec2<i32>(' + Math.floor(frameWidth / 4) + ', ' + Math.floor(frameHeight / 4) + ')';
-      const coordTopRight =
-        'vec2<i32>(' + Math.floor((frameWidth / 4) * 3) + ', ' + Math.floor(frameHeight / 4) + ')';
-      const coordBottomLeft =
-        'vec2<i32>(' + Math.floor(frameWidth / 4) + ', ' + Math.floor((frameHeight / 4) * 3) + ')';
-      const coordBottomRight =
-        'vec2<i32>(' +
-        Math.floor((frameWidth / 4) * 3) +
-        ', ' +
-        Math.floor((frameHeight / 4) * 3) +
-        ')';
 
       const pipeline = t.device.createComputePipeline({
         layout: 'auto',
@@ -415,23 +393,42 @@ compute shader, for several combinations of video format, video color spaces and
           // Shader loads 4 pixels, and then store them in a storage texture.
           module: t.device.createShaderModule({
             code: `
+              override frameWidth : i32 = 0;
+              override frameHeight : i32 = 0;
               @group(0) @binding(0) var t : texture_external;
               @group(0) @binding(1) var outImage : texture_storage_2d<rgba8unorm, write>;
 
               @compute @workgroup_size(1) fn main() {
-                var yellow : vec4<f32> = textureLoad(t, ${coordTopLeft});
+                let coordTopLeft = vec2<i32>(frameWidth / 4, frameHeight / 4);
+                let coordTopRight = vec2<i32>(frameWidth / 4 * 3, frameHeight / 4);
+                let coordBottomLeft = vec2<i32>(frameWidth / 4, frameHeight / 4 * 3);
+                let coordBottomRight = vec2<i32>(frameWidth / 4 * 3, frameHeight / 4 * 3);
+                var yellow : vec4<f32> = textureLoad(t, coordTopLeft);
                 textureStore(outImage, vec2<i32>(0, 0), yellow);
-                var red : vec4<f32> = textureLoad(t, ${coordTopRight});
+                var red : vec4<f32> = textureLoad(t, coordTopRight);
                 textureStore(outImage, vec2<i32>(0, 1), red);
-                var blue : vec4<f32> = textureLoad(t, ${coordBottomLeft});
+                var blue : vec4<f32> = textureLoad(t, coordBottomLeft);
                 textureStore(outImage, vec2<i32>(1, 0), blue);
-                var green : vec4<f32> = textureLoad(t, ${coordBottomRight});
+                var green : vec4<f32> = textureLoad(t, coordBottomRight);
                 textureStore(outImage, vec2<i32>(1, 1), green);
                 return;
               }
             `,
           }),
           entryPoint: 'main',
+
+          // Use display size of VideoFrame and video size of HTMLVideoElement as frame size. These sizes are presenting size which
+          // apply transformation in video metadata if any.
+          constants: {
+            frameWidth:
+              sourceType === 'VideoFrame'
+                ? (source as VideoFrame).displayWidth
+                : (source as HTMLVideoElement).videoWidth,
+            frameHeight:
+              sourceType === 'VideoFrame'
+                ? (source as VideoFrame).displayHeight
+                : (source as HTMLVideoElement).videoHeight,
+          },
         },
       });
 
