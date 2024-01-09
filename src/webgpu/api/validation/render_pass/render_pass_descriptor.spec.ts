@@ -93,7 +93,7 @@ class F extends ValidationTest {
 }
 
 export const g = makeTestGroup(F);
-const kArrayLayerCount = 4;
+const kArrayLayerCount = 10;
 
 g.test('attachments,one_color_attachment')
   .desc(`Test that a render pass works with only one color attachment.`)
@@ -286,13 +286,14 @@ g.test('color_attachments,depthSlice,definedness')
   .desc(
     `
   Test that depthSlice must be undefined for 2d color attachments and defined for 3d color attachments."
+  - The special value '0xFFFFFFFF' is not treated as 'undefined'.
   `
   )
   .params(u =>
     u
       .combine('dimension', ['2d', '3d'] as GPUTextureDimension[])
       .beginSubcases()
-      .combine('depthSlice', [undefined, 0])
+      .combine('depthSlice', [undefined, 0, 0xffffffff])
   )
   .fn(t => {
     const { dimension, depthSlice } = t.params;
@@ -308,8 +309,7 @@ g.test('color_attachments,depthSlice,definedness')
     };
 
     const success =
-      (dimension === '2d' && depthSlice === undefined) ||
-      (dimension === '3d' && depthSlice !== undefined);
+      (dimension === '2d' && depthSlice === undefined) || (dimension === '3d' && depthSlice === 0);
 
     t.tryRenderPass(success, descriptor);
   });
@@ -318,21 +318,30 @@ g.test('color_attachments,depthSlice,bound_check')
   .desc(
     `
   Test that depthSlice must be less than the depthOrArrayLayers of 3d texture's subresource at mip levels.
+  - Check depth bounds with 3d texture size [16, 1, 10], which has 5 mip levels with depth [10, 5, 2, 1, 1]
+    for testing more mip level size computation.
+  - Failed if depthSlice >= the depth of each mip level.
   `
   )
   .params(u =>
     u
-      .combine('mipLevel', [0, 1, 2])
+      .combine('mipLevel', [0, 1, 2, 3, 4])
       .beginSubcases()
-      .combine('depthSlice', [0, 1, kArrayLayerCount - 1, kArrayLayerCount, 0xffffffff])
+      .expand('depthSlice', ({ mipLevel }) => {
+        const depthAtMipLevel = Math.max(kArrayLayerCount >> mipLevel, 1);
+        // Use Set() to exclude duplicates when the depthAtMipLevel is 1 and 2
+        return [...new Set([0, 1, depthAtMipLevel - 1, depthAtMipLevel])];
+      })
   )
   .fn(t => {
     const { mipLevel, depthSlice } = t.params;
 
     const texture = t.createTexture({
       dimension: '3d',
+      width: 16,
+      height: 1,
       arrayLayerCount: kArrayLayerCount,
-      mipLevelCount: 3,
+      mipLevelCount: mipLevel + 1,
     });
 
     const viewDescriptor: GPUTextureViewDescriptor = {
@@ -349,7 +358,7 @@ g.test('color_attachments,depthSlice,bound_check')
       colorAttachments: [colorAttachment],
     };
 
-    const success = depthSlice < kArrayLayerCount >> mipLevel;
+    const success = depthSlice < Math.max(kArrayLayerCount >> mipLevel, 1);
 
     t.tryRenderPass(success, passDescriptor);
   });
@@ -373,15 +382,16 @@ g.test('color_attachments,depthSlice,overlaps,same_miplevel')
   )
   .fn(t => {
     const { sameDepthSlice, sameTexture, samePass } = t.params;
+    const arrayLayerCount = 4;
 
     const texDescriptor = {
       dimension: '3d' as GPUTextureDimension,
-      arrayLayerCount: kArrayLayerCount,
+      arrayLayerCount,
     };
     const texture = t.createTexture(texDescriptor);
 
     const colorAttachments = [];
-    for (let i = 0; i < kArrayLayerCount; i++) {
+    for (let i = 0; i < arrayLayerCount; i++) {
       const colorAttachment = t.getColorAttachment(
         sameTexture ? texture : t.createTexture(texDescriptor)
       );
@@ -394,7 +404,7 @@ g.test('color_attachments,depthSlice,overlaps,same_miplevel')
       const pass = encoder.encoder.beginRenderPass({ colorAttachments });
       pass.end();
     } else {
-      for (let i = 0; i < kArrayLayerCount; i++) {
+      for (let i = 0; i < arrayLayerCount; i++) {
         const pass = encoder.encoder.beginRenderPass({ colorAttachments: [colorAttachments[i]] });
         pass.end();
       }
