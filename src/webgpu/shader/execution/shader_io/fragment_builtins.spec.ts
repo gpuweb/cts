@@ -444,8 +444,8 @@ function createInterStageInterpolationFn(
 
 /**
  * Creates a function that will compute the interpolation of an inter-stage variable
- * and then return 1,0,0,0 if all interpolated values are between 0.0 and 1.0 inclusive
- * or [0, 0, 0, 0] otherwise.
+ * and then return [1, 0, 0, 0] if all interpolated values are between 0.0 and 1.0 inclusive
+ * or [-1, 0, 0, 0] otherwise.
  */
 function createInterStageInterpolationBetween0And1TestFn(
   interStagePoints: number[][],
