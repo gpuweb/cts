@@ -1522,8 +1522,9 @@ works for every format with 2d and 2d-array textures.
 
   Covers spceial cases for OpenGL Compat:
     offset % 4 > 0 while:
-      - padding bytes at end of each row: bytesPerRow % 256 > 0
+      - padding bytes at end of each row / layer: bytesPerRow % 256 > 0 || rowsPerImage > copyDepth
       - rows/layers are compact: bytesPerRow % 256 == 0 && rowsPerImage == copyDepth
+      - padding bytes at front and end of the same 4-byte word: format == 'r8snorm' && copyWidth <= 2
 
   TODO: Cover the special code paths for 3D textures in D3D12.
   TODO: Make a variant for depth-stencil formats.
@@ -1539,7 +1540,7 @@ works for every format with 2d and 2d-array textures.
       .beginSubcases()
       .combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings)
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
-      .combine('copyWidth', [3, 128, 256] as const)
+      .combine('copyWidth', [1, 2, 3, 127, 128, 255, 256] as const)
       .combine('rowsPerImageEqualsCopyHeight', [true, false] as const)
       .unless(p => p.dimension === '1d' && p.copyDepth !== 1)
   )
