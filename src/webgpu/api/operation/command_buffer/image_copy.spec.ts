@@ -1540,6 +1540,7 @@ works for every format with 2d and 2d-array textures.
       .combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings)
       .combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
       .combine('copyWidth', [3, 128, 256] as const)
+      .combine('rowsPerImageEqualsCopyHeight', [true, false] as const)
       .unless(p => p.dimension === '1d' && p.copyDepth !== 1)
   )
   .beforeAllSubcases(t => {
@@ -1557,6 +1558,7 @@ works for every format with 2d and 2d-array textures.
       initMethod,
       checkMethod,
       copyWidth,
+      rowsPerImageEqualsCopyHeight,
     } = t.params;
     const info = kTextureFormatInfo[format];
 
@@ -1568,7 +1570,7 @@ works for every format with 2d and 2d-array textures.
       depthOrArrayLayers: copyDepth,
     };
     let textureHeight = 4 * info.blockHeight;
-    let rowsPerImage = copyHeight;
+    let rowsPerImage = rowsPerImageEqualsCopyHeight ? copyHeight : copyHeight + 1;
     const bytesPerRow = Math.max(256, align(copyWidth * info.bytesPerBlock, 256));
 
     if (dimension === '1d') {
