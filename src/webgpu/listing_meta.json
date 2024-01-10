@@ -850,6 +850,7 @@
   "webgpu:compat,api,validation,render_pipeline,depth_stencil_state:depthBiasClamp:*": { "subcaseMS": 1.604 },
   "webgpu:compat,api,validation,render_pipeline,fragment_state:colorState:*": { "subcaseMS": 32.604 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:interpolate:*": { "subcaseMS": 1.502 },
+  "webgpu:compat,api,validation,render_pipeline,shader_module:sample_index:*": { "subcaseMS": 1.502 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:sample_mask:*": { "subcaseMS": 14.801 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:unsupportedStorageTextureFormats,computePipeline:*": { "subcaseMS": 0.601 },
   "webgpu:compat,api,validation,render_pipeline,shader_module:unsupportedStorageTextureFormats,renderPipeline:*": { "subcaseMS": 0.601 },
