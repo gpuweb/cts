@@ -1576,7 +1576,8 @@ works for every format with 2d and 2d-array textures.
       textureHeight = info.blockHeight;
       rowsPerImage = 1;
     }
-    const textureSize = [copyWidth * info.blockWidth, textureHeight, copyDepth] as const;
+    // Add textureWidth by 1 to make sure we are doing a partial copy.
+    const textureSize = [(copyWidth + 1) * info.blockWidth, textureHeight, copyDepth] as const;
 
     const minDataSize = dataBytesForCopyOrFail({
       layout: { offset, bytesPerRow, rowsPerImage },
@@ -1586,7 +1587,7 @@ works for every format with 2d and 2d-array textures.
     });
     const dataSize = minDataSize + dataPaddingInBytes;
 
-    // We're copying a (copyWidth x 3 x copyDepth) (in texel blocks) part of a (align(copyDepth, 4) x 4 x copyDepth)
+    // We're copying a (copyWidth x 3 x copyDepth) (in texel blocks) part of a copyWidth x 4 x copyDepth)
     // (in texel blocks) texture with no origin.
     t.uploadTextureAndVerifyCopy({
       textureDataLayout: { offset, bytesPerRow, rowsPerImage },
