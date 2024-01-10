@@ -1629,6 +1629,15 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
+      "depth_stencil_state"
+    ]
+  },
+  {
+    "file": [
+      "compat",
+      "api",
+      "validation",
+      "render_pipeline",
       "fragment_state"
     ]
   },
