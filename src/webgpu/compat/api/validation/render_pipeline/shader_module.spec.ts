@@ -74,6 +74,65 @@ Tests that you can not create a render pipeline with a shader module that uses s
     );
   });
 
+g.test('sample_index')
+  .desc(
+    `
+Tests that you can not create a render pipeline with a shader module that uses sample_index in compat mode.
+
+- Test that a pipeline with a shader that uses sample_index fails.
+- Test that a pipeline that references a module that has a shader that uses sample_index
+  but the pipeline does not reference that shader succeeds.
+    `
+  )
+  .params(u =>
+    u.combine('entryPoint', ['fsWithoutSampleIndexUsage', 'fsWithSampleIndexUsage'] as const)
+  )
+  .fn(t => {
+    const { entryPoint } = t.params;
+
+    const module = t.device.createShaderModule({
+      code: `
+        @vertex fn vs() -> @builtin(position) vec4f {
+            return vec4f(1);
+        }
+        @fragment fn fsWithoutSampleIndexUsage() -> @location(0) vec4f {
+            return vec4f(0);
+        }
+        @fragment fn fsWithSampleIndexUsage(@builtin(sample_index) sampleIndex: u32) -> @location(0) vec4f {
+            _ = sampleIndex;
+            return vec4f(0);
+        }
+      `,
+    });
+
+    const pipelineDescriptor: GPURenderPipelineDescriptor = {
+      layout: 'auto',
+      vertex: {
+        module,
+        entryPoint: 'vs',
+      },
+      fragment: {
+        module,
+        entryPoint,
+        targets: [
+          {
+            format: 'rgba8unorm',
+          },
+        ],
+      },
+      multisample: {
+        count: 4,
+      },
+    };
+
+    const isValid = entryPoint === 'fsWithoutSampleIndexUsage';
+    t.expectGPUError(
+      'validation',
+      () => t.device.createRenderPipeline(pipelineDescriptor),
+      !isValid
+    );
+  });
+
 g.test('interpolate')
   .desc(
     `
