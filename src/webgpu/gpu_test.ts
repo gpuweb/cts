@@ -459,7 +459,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   }
 
   /** Skips this test case if the `langFeature` is *not* supported. */
-  requireLanguageFeatureOrSkipTestCase(langFeature: WGSLLanguageFeature) {
+  skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
     const lf = getGPU(this.rec).wgslLanguageFeatures;
     if (lf === undefined || !lf.has(langFeature)) {
       this.skip(`WGSL language feature '${langFeature}' is not supported`);
