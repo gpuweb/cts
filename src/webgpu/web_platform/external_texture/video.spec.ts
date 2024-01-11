@@ -196,7 +196,10 @@ for several combinations of video format, video color spaces and dst color space
       t.device.queue.submit([commandEncoder.finish()]);
 
       const srcColorSpace = kVideoInfo[videoName].colorSpace;
-      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+      const presentColors = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+
+      // visible rect is whole frame, no clipping.
+      const expect = kVideoInfo[videoName].display;
 
       // For validation, we sample a few pixels away from the edges to avoid compression
       // artifacts.
@@ -204,22 +207,22 @@ for several combinations of video format, video color spaces and dst color space
         // Top-left.
         {
           coord: { x: kWidth * 0.25, y: kHeight * 0.25 },
-          exp: convertToUnorm8(expect.topLeftColor),
+          exp: convertToUnorm8(presentColors[expect.topLeftColor]),
         },
         // Top-right.
         {
           coord: { x: kWidth * 0.75, y: kHeight * 0.25 },
-          exp: convertToUnorm8(expect.topRightColor),
+          exp: convertToUnorm8(presentColors[expect.topRightColor]),
         },
         // Bottom-left.
         {
           coord: { x: kWidth * 0.25, y: kHeight * 0.75 },
-          exp: convertToUnorm8(expect.bottomLeftColor),
+          exp: convertToUnorm8(presentColors[expect.bottomLeftColor]),
         },
         // Bottom-right.
         {
           coord: { x: kWidth * 0.75, y: kHeight * 0.75 },
-          exp: convertToUnorm8(expect.bottomRightColor),
+          exp: convertToUnorm8(presentColors[expect.bottomRightColor]),
         },
       ]);
     });
@@ -249,17 +252,22 @@ parameters are present.
       // All tested videos are derived from an image showing yellow, red, blue or green in each
       // quadrant. In this test we crop the video to each quadrant and check that desired color
       // is sampled from each corner of the cropped image.
-      const srcVideoHeight = 240;
-      const srcVideoWidth = 320;
+      // visible rect clip applies on raw decoded frame, which defines based on video frame coded size.
+      const srcVideoHeight = source.codedHeight;
+      const srcVideoWidth = source.codedWidth;
 
       const srcColorSpace = kVideoInfo[videoName].colorSpace;
-      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+      const presentColors = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+
+      // The test crops raw decoded videos first and then apply transform. Expectation should
+      // use coded colors as reference.
+      const expect = kVideoInfo[videoName].coded;
 
       const cropParams = [
         // Top left
         {
           subRect: { x: 0, y: 0, width: srcVideoWidth / 2, height: srcVideoHeight / 2 },
-          color: convertToUnorm8(expect.topLeftColor),
+          color: convertToUnorm8(presentColors[expect.topLeftColor]),
         },
         // Top right
         {
@@ -269,7 +277,7 @@ parameters are present.
             width: srcVideoWidth / 2,
             height: srcVideoHeight / 2,
           },
-          color: convertToUnorm8(expect.topRightColor),
+          color: convertToUnorm8(presentColors[expect.topRightColor]),
         },
         // Bottom left
         {
@@ -279,7 +287,7 @@ parameters are present.
             width: srcVideoWidth / 2,
             height: srcVideoHeight / 2,
           },
-          color: convertToUnorm8(expect.bottomLeftColor),
+          color: convertToUnorm8(presentColors[expect.bottomLeftColor]),
         },
         // Bottom right
         {
@@ -289,7 +297,7 @@ parameters are present.
             width: srcVideoWidth / 2,
             height: srcVideoHeight / 2,
           },
-          color: convertToUnorm8(expect.bottomRightColor),
+          color: convertToUnorm8(presentColors[expect.bottomRightColor]),
         },
       ];
 
@@ -449,17 +457,20 @@ compute shader, for several combinations of video format, video color spaces and
       t.device.queue.submit([encoder.finish()]);
 
       const srcColorSpace = kVideoInfo[videoName].colorSpace;
-      const expect = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+      const presentColors = kVideoExpectedColors[srcColorSpace][dstColorSpace];
+
+      // visible rect is whole frame, no clipping.
+      const expect = kVideoInfo[videoName].display;
 
       t.expectSinglePixelComparisonsAreOkInTexture({ texture: outputTexture }, [
         // Top-left.
-        { coord: { x: 0, y: 0 }, exp: convertToUnorm8(expect.topLeftColor) },
+        { coord: { x: 0, y: 0 }, exp: convertToUnorm8(presentColors[expect.topLeftColor]) },
         // Top-right.
-        { coord: { x: 0, y: 1 }, exp: convertToUnorm8(expect.topRightColor) },
+        { coord: { x: 0, y: 1 }, exp: convertToUnorm8(presentColors[expect.topRightColor]) },
         // Bottom-left.
-        { coord: { x: 1, y: 0 }, exp: convertToUnorm8(expect.bottomLeftColor) },
+        { coord: { x: 1, y: 0 }, exp: convertToUnorm8(presentColors[expect.bottomLeftColor]) },
         // Bottom-right.
-        { coord: { x: 1, y: 1 }, exp: convertToUnorm8(expect.bottomRightColor) },
+        { coord: { x: 1, y: 1 }, exp: convertToUnorm8(presentColors[expect.bottomRightColor]) },
       ]);
     });
   });

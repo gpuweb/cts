@@ -66,88 +66,233 @@ function makeTable<Table extends { readonly [K: string]: {} }>({
   ) as any;
 }
 
-// MAINTENANCE_TODO: Add BT.2020 video in table.
-// Test videos meta infos, including mimeType to check browser compatibility
-// and video color space.
-export const kVideoInfo = makeTable({
-  table: {
-    'four-colors-vp8-bt601.webm': {
-      mimeType: 'video/webm; codecs=vp8',
-      colorSpace: 'bt601',
-    },
-    'four-colors-theora-bt601.ogv': {
-      mimeType: 'video/ogg; codecs=theora',
-      colorSpace: 'bt601',
-    },
-    'four-colors-h264-bt601.mp4': {
-      mimeType: 'video/mp4; codecs=avc1.4d400c',
-      colorSpace: 'bt601',
-    },
-    'four-colors-vp9-bt601.webm': {
-      mimeType: 'video/webm; codecs=vp9',
-      colorSpace: 'bt601',
-    },
-    'four-colors-vp9-bt709.webm': {
-      mimeType: 'video/webm; codecs=vp9',
-      colorSpace: 'bt709',
-    },
-    'four-colors-h264-bt601-rotate-90.mp4': {
-      mimeType: 'video/mp4; codecs=avc1.4d400c',
-      colorSpace: 'bt601',
-    },
-    'four-colors-h264-bt601-rotate-180.mp4': {
-      mimeType: 'video/mp4; codecs=avc1.4d400c',
-      colorSpace: 'bt601',
-    },
-    'four-colors-h264-bt601-rotate-270.mp4': {
-      mimeType: 'video/mp4; codecs=avc1.4d400c',
-      colorSpace: 'bt601',
-    },
-    'four-colors-vp9-bt601-rotate-90.mp4': {
-      mimeType: 'video/mp4; codecs=vp09.00.10.08',
-      colorSpace: 'bt601',
-    },
-    'four-colors-vp9-bt601-rotate-180.mp4': {
-      mimeType: 'video/mp4; codecs=vp09.00.10.08',
-      colorSpace: 'bt601',
-    },
-    'four-colors-vp9-bt601-rotate-270.mp4': {
-      mimeType: 'video/mp4; codecs=vp09.00.10.08',
-      colorSpace: 'bt601',
-    },
-  },
-} as const);
-
 // Video expected pixel value table. Finding expected pixel value
 // with video color space and dst color space.
 export const kVideoExpectedColors = makeTable({
   table: {
     bt601: {
       'display-p3': {
-        topLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
-        topRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.red),
-        bottomLeftColor: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
-        bottomRightColor: srgbToDisplayP3(kBt601PixelValue.srgb.green),
+        yellow: srgbToDisplayP3(kBt601PixelValue.srgb.yellow),
+        red: srgbToDisplayP3(kBt601PixelValue.srgb.red),
+        blue: srgbToDisplayP3(kBt601PixelValue.srgb.blue),
+        green: srgbToDisplayP3(kBt601PixelValue.srgb.green),
       },
       srgb: {
-        topLeftColor: kBt601PixelValue.srgb.yellow,
-        topRightColor: kBt601PixelValue.srgb.red,
-        bottomLeftColor: kBt601PixelValue.srgb.blue,
-        bottomRightColor: kBt601PixelValue.srgb.green,
+        yellow: kBt601PixelValue.srgb.yellow,
+        red: kBt601PixelValue.srgb.red,
+        blue: kBt601PixelValue.srgb.blue,
+        green: kBt601PixelValue.srgb.green,
       },
     },
     bt709: {
       'display-p3': {
-        topLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.yellow),
-        topRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.red),
-        bottomLeftColor: srgbToDisplayP3(kBt709PixelValue.srgb.blue),
-        bottomRightColor: srgbToDisplayP3(kBt709PixelValue.srgb.green),
+        yellow: srgbToDisplayP3(kBt709PixelValue.srgb.yellow),
+        red: srgbToDisplayP3(kBt709PixelValue.srgb.red),
+        blue: srgbToDisplayP3(kBt709PixelValue.srgb.blue),
+        green: srgbToDisplayP3(kBt709PixelValue.srgb.green),
       },
       srgb: {
-        topLeftColor: kBt709PixelValue.srgb.yellow,
-        topRightColor: kBt709PixelValue.srgb.red,
-        bottomLeftColor: kBt709PixelValue.srgb.blue,
-        bottomRightColor: kBt709PixelValue.srgb.green,
+        yellow: kBt709PixelValue.srgb.yellow,
+        red: kBt709PixelValue.srgb.red,
+        blue: kBt709PixelValue.srgb.blue,
+        green: kBt709PixelValue.srgb.green,
+      },
+    },
+  },
+} as const);
+
+// MAINTENANCE_TODO: Add BT.2020 video in table.
+// Video container and codec defines several transform ops to apply to raw decoded frame to display.
+// Our test cases covers 'visible rect' and 'rotation'.
+// 'visible rect' is associated with the
+// video bitstream and should apply to the raw decoded frames before any transformation.
+// 'rotation' is associated with the track or presentation and should transform
+// the whole visible rect (e.g. 90-degree rotate makes visible rect of vertical video to horizontal)
+// The order to apply these transformations is below:
+
+// [raw decoded frame] ----visible rect clipping ---->[visible frame] ---rotation  ---> present
+//      ^                                                                   ^
+//      |                                                                   |
+// coded size                                                           display size
+// The table holds test videos meta infos, including mimeType to check browser compatibility
+// video color space, raw frame content layout and the frame displayed layout.
+export const kVideoInfo = makeTable({
+  table: {
+    'four-colors-vp8-bt601.webm': {
+      mimeType: 'video/webm; codecs=vp8',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-theora-bt601.ogv': {
+      mimeType: 'video/ogg; codecs=theora',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-h264-bt601.mp4': {
+      mimeType: 'video/mp4; codecs=avc1.4d400c',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt601.webm': {
+      mimeType: 'video/webm; codecs=vp9',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt709.webm': {
+      mimeType: 'video/webm; codecs=vp9',
+      colorSpace: 'bt709',
+      coded: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    // video coded content has been rotate
+    'four-colors-h264-bt601-rotate-90.mp4': {
+      mimeType: 'video/mp4; codecs=avc1.4d400c',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'red',
+        topRightColor: 'green',
+        bottomLeftColor: 'yellow',
+        bottomRightColor: 'blue',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-h264-bt601-rotate-180.mp4': {
+      mimeType: 'video/mp4; codecs=avc1.4d400c',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'green',
+        topRightColor: 'blue',
+        bottomLeftColor: 'red',
+        bottomRightColor: 'yellow',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-h264-bt601-rotate-270.mp4': {
+      mimeType: 'video/mp4; codecs=avc1.4d400c',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'blue',
+        topRightColor: 'yellow',
+        bottomLeftColor: 'green',
+        bottomRightColor: 'red',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt601-rotate-90.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'red',
+        topRightColor: 'green',
+        bottomLeftColor: 'yellow',
+        bottomRightColor: 'blue',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt601-rotate-180.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'green',
+        topRightColor: 'blue',
+        bottomLeftColor: 'red',
+        bottomRightColor: 'yellow',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
+      },
+    },
+    'four-colors-vp9-bt601-rotate-270.mp4': {
+      mimeType: 'video/mp4; codecs=vp09.00.10.08',
+      colorSpace: 'bt601',
+      coded: {
+        topLeftColor: 'blue',
+        topRightColor: 'yellow',
+        bottomLeftColor: 'green',
+        bottomRightColor: 'red',
+      },
+      display: {
+        topLeftColor: 'yellow',
+        topRightColor: 'red',
+        bottomLeftColor: 'blue',
+        bottomRightColor: 'green',
       },
     },
   },
