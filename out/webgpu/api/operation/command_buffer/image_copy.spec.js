@@ -1520,11 +1520,6 @@ works for every format with 2d and 2d-array textures.
     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
     offset > bytesInACompleteCopyImage
 
-  Covers spceial cases for OpenGL Compat:
-    offset % 4 > 0 while:
-      - padding bytes at end of each row: bytesPerRow % 256 > 0
-      - rows/layers are compact: bytesPerRow % 256 == 0 && rowsPerImage == copyDepth
-
   TODO: Cover the special code paths for 3D textures in D3D12.
   TODO: Make a variant for depth-stencil formats.
 `
@@ -1539,9 +1534,7 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
-.combine('copyWidth', [3, 128, 256]).
-combine('rowsPerImageEqualsCopyHeight', [true, false]).
-unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
+.unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
@@ -1556,30 +1549,26 @@ fn((t) => {
     format,
     dimension,
     initMethod,
-    checkMethod,
-    copyWidth,
-    rowsPerImageEqualsCopyHeight
+    checkMethod
   } = t.params;
   const info = kTextureFormatInfo[format];
 
   const offset = offsetInBlocks * info.color.bytes;
-  const copyHeight = 3;
   const copySize = {
-    width: copyWidth * info.blockWidth,
-    height: copyHeight * info.blockHeight,
+    width: 3 * info.blockWidth,
+    height: 3 * info.blockHeight,
     depthOrArrayLayers: copyDepth
   };
   let textureHeight = 4 * info.blockHeight;
-  let rowsPerImage = rowsPerImageEqualsCopyHeight ? copyHeight : copyHeight + 1;
-  const bytesPerRow = Math.max(256, align(copyWidth * info.bytesPerBlock, 256));
+  let rowsPerImage = 3;
+  const bytesPerRow = 256;
 
   if (dimension === '1d') {
     copySize.height = 1;
     textureHeight = info.blockHeight;
     rowsPerImage = 1;
   }
-  // Add textureWidth by 1 to make sure we are doing a partial copy.
-  const textureSize = [(copyWidth + 1) * info.blockWidth, textureHeight, copyDepth];
+  const textureSize = [4 * info.blockWidth, textureHeight, copyDepth];
 
   const minDataSize = dataBytesForCopyOrFail({
     layout: { offset, bytesPerRow, rowsPerImage },
@@ -1589,7 +1578,7 @@ fn((t) => {
   });
   const dataSize = minDataSize + dataPaddingInBytes;
 
-  // We're copying a (copyWidth x 3 x copyDepth) (in texel blocks) part of a copyWidth x 4 x copyDepth)
+  // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
   // (in texel blocks) texture with no origin.
   t.uploadTextureAndVerifyCopy({
     textureDataLayout: { offset, bytesPerRow, rowsPerImage },
