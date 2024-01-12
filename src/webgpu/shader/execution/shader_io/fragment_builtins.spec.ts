@@ -10,7 +10,6 @@ is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
 @builtin(sample_index) the fragment shader should be executed per-sample.
 
 TODO:
-* test centroid interpolation (see MAINTENANCE_TODOs below)
 * test frag_depth
 `;
 
@@ -444,6 +443,24 @@ function createInterStageInterpolationFn(
 }
 
 /**
+ * Creates a function that will compute the interpolation of an inter-stage variable
+ * and then return [1, 0, 0, 0] if all interpolated values are between 0.0 and 1.0 inclusive
+ * or [-1, 0, 0, 0] otherwise.
+ */
+function createInterStageInterpolationBetween0And1TestFn(
+  interStagePoints: number[][],
+  type: InterpolationType,
+  sampling: InterpolationSampling | undefined
+) {
+  const interpolateFn = createInterStageInterpolationFn(interStagePoints, type, sampling);
+  return function (fragData: FragData) {
+    const interpolatedValues = interpolateFn(fragData);
+    const allTrue = interpolatedValues.reduce((all, v) => all && v >= 0 && v <= 1, true);
+    return [allTrue ? 1 : -1, 0, 0, 0];
+  };
+}
+
+/**
  * Computes 'builtin(sample_index)'
  */
 function computeFragmentSampleIndex({ sampleIndex }: FragData) {
@@ -785,7 +802,7 @@ g.test('inputs,position')
 g.test('inputs,interStage')
   .desc(
     `
-    Test fragment shader inter-stage variable values.
+    Test fragment shader inter-stage variable values except for centroid interpolation.
   `
   )
   .params(u =>
@@ -794,12 +811,8 @@ g.test('inputs,interStage')
       .combine('sampleCount', [1, 4] as const)
       .combine('interpolation', [
         { type: 'perspective', sampling: 'center' },
-        // MAINTENANCE_TODO: enable these tests.
-        // { type: 'perspective', sampling: 'centroid' },
         { type: 'perspective', sampling: 'sample' },
         { type: 'linear', sampling: 'center' },
-        // MAINTENANCE_TODO: enable these tests.
-        // { type: 'linear', sampling: 'centroid' },
         { type: 'linear', sampling: 'sample' },
         { type: 'flat' },
       ] as const)
@@ -865,6 +878,144 @@ g.test('inputs,interStage')
     );
   });
 
+g.test('inputs,interStage,centroid')
+  .desc(
+    `
+    Test fragment shader inter-stage variable values in centroid sampling mode.
+
+    Centroid sampling mode is trying to solve the following issue
+
+    +-------------+
+    |....s1|/     |
+    |......|      |
+    |...../|   s2 |
+    +------C------+
+    |s3./  |      |
+    |../   |      |
+    |./    |s4    |
+    +-------------+
+
+    Above is a diagram of a texel where s1, s2, s3, s4 are sample points,
+    C is the center of the texel and the diagonal line is some edge of
+    a triangle. s1 and s3 are inside the triangle. In sampling = 'center'
+    modes, the interpolated value will be relative to C. The problem is,
+    C is outside of the triangle. In sample = 'centroid' mode, the
+    interpolated value will be computed relative to some point inside the
+    portion of the triangle inside the texel. While ideally it would be
+    the actual centroid, the specs from the various APIs suggest the only
+    guarantee is it's inside the triangle.
+
+    So, we set the interStage values to barycentric coords. We expect
+    that when sampling mode is 'center', some interpolated values
+    will be outside of the triangle (ie, one or more of their values will
+    be outside the 0 to 1 range). In sampling mode = 'centroid' mode, none
+    of the values will be outside of the 0 to 1 range.
+
+    Note: generateFragmentInputs below generates "expected". Values not
+    rendered to will be 0. Values rendered to outside the triangle will
+    be -1. Values rendered to inside the triangle will be 1. Manually
+    checking, "expected" for sampling = 'center' should have a couple of
+    -1 values where as "expected" for sampling = 'centroid' should not.
+    This was verified with manual testing.
+
+    Since we only care about inside vs outside of the triangle, having
+    createInterStageInterpolationFn use the interpolated value relative
+    to the sample point when sampling = 'centroid' will give us a value
+    inside the triangle, which is good enough for our test.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('nearFar', [[0, 1] as const, [0.25, 0.75] as const] as const)
+      .combine('sampleCount', [1, 4] as const)
+      .combine('interpolation', [
+        { type: 'perspective', sampling: 'center' },
+        { type: 'perspective', sampling: 'centroid' },
+        { type: 'linear', sampling: 'center' },
+        { type: 'linear', sampling: 'centroid' },
+      ] as const)
+  )
+  .beforeAllSubcases(t => {
+    const {
+      interpolation: { type, sampling },
+    } = t.params;
+    t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+  })
+  .fn(async t => {
+    const {
+      nearFar,
+      sampleCount,
+      interpolation: { type, sampling },
+    } = t.params;
+    //
+    // We're drawing 1 triangle that cut the viewport
+    //
+    //  -1   0   1
+    //   +===+===+  2
+    //   |\..|...|
+    //   +---+---+  1  <---
+    //   |  \|...|       |
+    //   +---+---+  0    | viewport
+    //   |   |\..|       |
+    //   +---+---+ -1  <---
+    //   |   |  \|
+    //   +===+===+ -2
+
+    // prettier-ignore
+    const clipSpacePoints = [       // ndc values
+      [ 1, -2, 0, 1],
+      [-1,  2, 0, 1],
+      [ 1,  2, 0, 1],
+    ];
+
+    // prettier-ignore
+    const interStagePoints = [
+      [ 1, 0, 0, 0],
+      [ 0, 1, 0, 0],
+      [ 0, 0, 1, 0],
+    ];
+
+    const width = 4;
+    const height = 4;
+    const actual = await renderFragmentShaderInputsTo4TexturesAndReadbackValues(t, {
+      interpolationType: type,
+      interpolationSampling: sampling,
+      sampleCount,
+      width,
+      height,
+      nearFar,
+      clipSpacePoints,
+      interStagePoints,
+      fragInCode: '',
+      outputCode:
+        'vec4f(select(-1.0, 1.0, all(fin.interpolatedValue >= vec4f(0)) && all(fin.interpolatedValue <= vec4f(1))), 0, 0, 0)',
+    });
+
+    const expected = generateFragmentInputs({
+      width,
+      height,
+      nearFar,
+      sampleCount,
+      clipSpacePoints,
+      interpolateFn: createInterStageInterpolationBetween0And1TestFn(
+        interStagePoints,
+        type,
+        sampling
+      ),
+    });
+
+    t.expectOK(
+      checkSampleRectsApproximatelyEqual({
+        width,
+        height,
+        sampleCount,
+        actual,
+        expected,
+        maxDiffULPsForFloatFormat: 3,
+      })
+    );
+  });
+
 g.test('inputs,sample_index')
   .desc(
     `
@@ -886,10 +1037,7 @@ g.test('inputs,sample_index')
       ] as const)
   )
   .beforeAllSubcases(t => {
-    const {
-      interpolation: { type, sampling },
-    } = t.params;
-    t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+    t.skipIf(t.isCompatibility, 'sample_index is not supported in compatibility mode');
   })
   .fn(async t => {
     const {

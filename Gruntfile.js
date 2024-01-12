@@ -3,6 +3,8 @@
 /* eslint-disable no-console */
 
 const timer = require('grunt-timer');
+const { spawnSync } = require('child_process');
+const path = require('path');
 
 const kAllSuites = ['webgpu', 'stress', 'manual', 'unittests', 'demo'];
 
@@ -181,15 +183,6 @@ module.exports = function (grunt) {
       },
     },
 
-    ts: {
-      check: {
-        tsconfig: {
-          tsconfig: 'tsconfig.json',
-          passThrough: true,
-        },
-      },
-    },
-
     concurrent: {
       'write-out-wpt-cts-html-all': {
         tasks: [
@@ -206,7 +199,7 @@ module.exports = function (grunt) {
       },
       'all-checks': {
         tasks: [
-          'ts:check',
+          'ts-check',
           'run:validate',
           'run:validate-cache',
           'run:unittest',
@@ -227,7 +220,6 @@ module.exports = function (grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-run');
-  grunt.loadNpmTasks('grunt-ts');
 
   const helpMessageTasks = [];
   function registerTaskAndAddToHelp(name, desc, deps) {
@@ -237,6 +229,17 @@ module.exports = function (grunt) {
   function addExistingTaskToHelp(name, desc) {
     helpMessageTasks.push({ name, desc });
   }
+
+  grunt.registerTask('ts-check', function() {
+    spawnSync(path.join('node_modules', '.bin', 'tsc'), [
+      '--project',
+      'tsconfig.json',
+      '--noEmit',
+    ], {
+      shell: true,
+      stdio: 'inherit',
+    });
+  });
 
   grunt.registerTask('generate-common', 'Generate files into gen/ and src/', [
     'run:generate-version',
@@ -301,7 +304,7 @@ module.exports = function (grunt) {
     'run:unittest',
   ]);
   registerTaskAndAddToHelp('typecheck', 'Just typecheck', [
-    'ts:check',
+    'ts-check',
   ]);
   registerTaskAndAddToHelp('tsdoc', 'Just build tsdoc', [
     'run:tsdoc',
