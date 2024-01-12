@@ -460,18 +460,22 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   /** Skips this test case if the `langFeature` is *not* supported. */
   skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
-    const lf = getGPU(this.rec).wgslLanguageFeatures;
-    if (lf === undefined || !lf.has(langFeature)) {
+    if (!this.hasLanguageFeature(langFeature)) {
       this.skip(`WGSL language feature '${langFeature}' is not supported`);
     }
   }
 
   /** Skips this test case if the `langFeature` is supported. */
   skipIfLanguageFeatureSupported(langFeature: WGSLLanguageFeature) {
-    const lf = getGPU(this.rec).wgslLanguageFeatures;
-    if (lf !== undefined && lf.has(langFeature)) {
+    if (this.hasLanguageFeature(langFeature)) {
       this.skip(`WGSL language feature '${langFeature}' is supported`);
     }
+  }
+
+  /** returns true iff the `langFeature` is supported  */
+  hasLanguageFeature(langFeature: WGSLLanguageFeature) {
+    const lf = getGPU(this.rec).wgslLanguageFeatures;
+    return lf !== undefined && lf.has(langFeature);
   }
 
   /**
