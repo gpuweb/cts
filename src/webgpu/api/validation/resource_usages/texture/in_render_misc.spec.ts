@@ -238,7 +238,7 @@ g.test('subresources,set_unused_bind_group')
       textureUsage0 === 'readwrite-storage-texture' ||
       textureUsage1 === 'readwrite-storage-texture'
     ) {
-      t.requireLanguageFeatureOrSkipTestCase('readonly_and_readwrite_storage_textures');
+      t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
     }
 
     const texture0 = t.device.createTexture({
