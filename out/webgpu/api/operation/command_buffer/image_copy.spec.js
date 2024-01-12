@@ -1520,6 +1520,12 @@ works for every format with 2d and 2d-array textures.
     offset + bytesInCopyExtentPerRow { ==, > } bytesPerRow
     offset > bytesInACompleteCopyImage
 
+  Covers spceial cases for OpenGL Compat:
+    offset % 4 > 0 while:
+      - padding bytes at end of each row/layer: bytesPerRow % 256 > 0 || rowsPerImage > copyDepth
+      - rows/layers are compact: bytesPerRow % 256 == 0 && rowsPerImage == copyDepth
+      - padding bytes at front and end of the same 4-byte word: format == 'r8snorm' && copyWidth <= 2
+
   TODO: Cover the special code paths for 3D textures in D3D12.
   TODO: Make a variant for depth-stencil formats.
 `
@@ -1534,7 +1540,19 @@ filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension,
 beginSubcases().
 combineWithParams(kOffsetsAndSizesParams.offsetsAndPaddings).
 combine('copyDepth', kOffsetsAndSizesParams.copyDepth) // 2d and 2d-array textures
-.unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
+.combine('copyWidth', [3, 1, 2, 127, 128, 255, 256]) // copyWidth === 3 is the default. Others covers special cases for r8snorm and rg8snorm on compatiblity mode.
+.filter(({ format, copyWidth }) => {
+  switch (format) {
+    case 'r8snorm':
+    case 'rg8snorm':
+      return true;
+    default:
+      // Restrict test parameters to save run time.
+      return copyWidth === 3;
+  }
+}).
+combine('rowsPerImageEqualsCopyHeight', [true, false]).
+unless((p) => p.dimension === '1d' && p.copyDepth !== 1)
 ).
 beforeAllSubcases((t) => {
   const info = kTextureFormatInfo[t.params.format];
@@ -1549,26 +1567,44 @@ fn((t) => {
     format,
     dimension,
     initMethod,
-    checkMethod
+    checkMethod,
+    copyWidth,
+    rowsPerImageEqualsCopyHeight
   } = t.params;
+
+  // Skip test cases designed for special cases coverage on compatibility mode to save run time.
+  if (!(t.isCompatibility && (format === 'r8snorm' || format === 'rg8snorm'))) {
+    if (rowsPerImageEqualsCopyHeight === false) {
+      t.skip(
+        'rowsPerImageEqualsCopyHeight === false is only for r8snorm and rg8snorm on compatibility mode'
+      );
+    }
+
+    if (copyWidth !== 3) {
+      t.skip('copyWidth !== 3 is only for r8snorm and rg8snorm on compatibility mode');
+    }
+  }
+
   const info = kTextureFormatInfo[format];
 
   const offset = offsetInBlocks * info.color.bytes;
+  const copyHeight = 3;
   const copySize = {
-    width: 3 * info.blockWidth,
-    height: 3 * info.blockHeight,
+    width: copyWidth * info.blockWidth,
+    height: copyHeight * info.blockHeight,
     depthOrArrayLayers: copyDepth
   };
   let textureHeight = 4 * info.blockHeight;
-  let rowsPerImage = 3;
-  const bytesPerRow = 256;
+  let rowsPerImage = rowsPerImageEqualsCopyHeight ? copyHeight : copyHeight + 1;
+  const bytesPerRow = align(copyWidth * info.bytesPerBlock, 256);
 
   if (dimension === '1d') {
     copySize.height = 1;
     textureHeight = info.blockHeight;
     rowsPerImage = 1;
   }
-  const textureSize = [4 * info.blockWidth, textureHeight, copyDepth];
+  // Add textureWidth by 1 to make sure we are doing a partial copy.
+  const textureSize = [(copyWidth + 1) * info.blockWidth, textureHeight, copyDepth];
 
   const minDataSize = dataBytesForCopyOrFail({
     layout: { offset, bytesPerRow, rowsPerImage },
@@ -1578,7 +1614,7 @@ fn((t) => {
   });
   const dataSize = minDataSize + dataPaddingInBytes;
 
-  // We're copying a (3 x 3 x copyDepth) (in texel blocks) part of a (4 x 4 x copyDepth)
+  // We're copying a (copyWidth x 3 x copyDepth) (in texel blocks) part of a ((copyWidth + 1) x 4 x copyDepth)
   // (in texel blocks) texture with no origin.
   t.uploadTextureAndVerifyCopy({
     textureDataLayout: { offset, bytesPerRow, rowsPerImage },
