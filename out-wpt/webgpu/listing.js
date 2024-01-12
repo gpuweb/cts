@@ -3163,6 +3163,16 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "call",
+      "user",
+      "ptr_params"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "unary",
       "af_arithmetic"
     ]

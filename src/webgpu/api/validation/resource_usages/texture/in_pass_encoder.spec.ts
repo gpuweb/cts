@@ -1230,7 +1230,7 @@ g.test('unused_bindings_in_pipeline')
       callDrawOrDispatch,
     } = t.params;
     if (writableUsage === 'readwrite-storage-texture') {
-      t.requireLanguageFeatureOrSkipTestCase('readonly_and_readwrite_storage_textures');
+      t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
     }
 
     const view = t
