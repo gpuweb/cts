@@ -70,8 +70,11 @@ interface ConfigJSON {
     file: string;
     /** The prefix to trim from every line of the expectations_file. */
     prefix: string;
-    /** Expend all subtrees for provided expectations */
-    expandAll?: boolean;
+  };
+  /** Expend all subtrees for provided queries */
+  fullyExpandSubtrees?: {
+    file: string;
+    prefix: string;
   };
   /*No long path assert */
   noLongPathAssert?: boolean;
@@ -87,7 +90,10 @@ interface Config {
   expectations?: {
     file: string;
     prefix: string;
-    expandAll: boolean;
+  };
+  fullyExpandSubtrees?: {
+    file: string;
+    prefix: string;
   };
 }
 
@@ -113,7 +119,12 @@ let config: Config;
         config.expectations = {
           file: path.resolve(jsonFileDir, configJSON.expectations.file),
           prefix: configJSON.expectations.prefix,
-          expandAll: configJSON.expectations.expandAll ?? false,
+        };
+      }
+      if (configJSON.fullyExpandSubtrees) {
+        config.fullyExpandSubtrees = {
+          file: path.resolve(jsonFileDir, configJSON.fullyExpandSubtrees.file),
+          prefix: configJSON.fullyExpandSubtrees.prefix,
         };
       }
       break;
@@ -147,7 +158,6 @@ let config: Config;
         config.expectations = {
           file: expectationsFile,
           prefix: expectationsPrefix,
-          expandAll: false,
         };
       }
       break;
@@ -163,29 +173,16 @@ let config: Config;
   config.argumentsPrefixes.sort((a, b) => b.length - a.length);
 
   // Load expectations (if any)
-  let expectationLines = new Set<string>();
-  if (config.expectations) {
-    expectationLines = new Set(
-      (await fs.readFile(config.expectations.file, 'utf8')).split(/\r?\n/).filter(l => l.length)
-    );
-  }
+  const expectations: Map<string, string[]> = await loadQueryFile(
+    config.argumentsPrefixes,
+    config.expectations
+  );
 
-  const expectations: Map<string, string[]> = new Map();
-  for (const prefix of config.argumentsPrefixes) {
-    expectations.set(prefix, []);
-  }
-
-  expLoop: for (const exp of expectationLines) {
-    // Take each expectation for the longest prefix it matches.
-    for (const argsPrefix of config.argumentsPrefixes) {
-      const prefix = config.expectations!.prefix + argsPrefix;
-      if (exp.startsWith(prefix)) {
-        expectations.get(argsPrefix)!.push(exp.substring(prefix.length));
-        continue expLoop;
-      }
-    }
-    console.log('note: ignored expectation: ' + exp);
-  }
+  // Load expectations (if any)
+  const fullyExpand: Map<string, string[]> = await loadQueryFile(
+    config.argumentsPrefixes,
+    config.fullyExpandSubtrees
+  );
 
   const loader = new DefaultTestFileLoader();
   const lines = [];
@@ -193,7 +190,7 @@ let config: Config;
     const rootQuery = new TestQueryMultiFile(config.suite, []);
     const tree = await loader.loadTree(rootQuery, {
       subqueriesToExpand: expectations.get(prefix),
-      expandAll: config.expectations?.expandAll,
+      fullyExpandSubtrees: fullyExpand.get(prefix),
       maxChunkTime: config.maxChunkTimeMS,
     });
 
@@ -244,6 +241,39 @@ ${queryString}`
   console.log(ex.stack ?? ex.toString());
   process.exit(1);
 });
+
+async function loadQueryFile(
+  argumentsPrefixes: string[],
+  queryFile?: {
+    file: string;
+    prefix: string;
+  }
+): Promise<Map<string, string[]>> {
+  let lines = new Set<string>();
+  if (queryFile) {
+    lines = new Set(
+      (await fs.readFile(queryFile.file, 'utf8')).split(/\r?\n/).filter(l => l.length)
+    );
+  }
+
+  const result: Map<string, string[]> = new Map();
+  for (const prefix of argumentsPrefixes) {
+    result.set(prefix, []);
+  }
+
+  expLoop: for (const exp of lines) {
+    // Take each expectation for the longest prefix it matches.
+    for (const argsPrefix of argumentsPrefixes) {
+      const prefix = queryFile!.prefix + argsPrefix;
+      if (exp.startsWith(prefix)) {
+        result.get(argsPrefix)!.push(exp.substring(prefix.length));
+        continue expLoop;
+      }
+    }
+    console.log('note: ignored expectation: ' + exp);
+  }
+  return result;
+}
 
 async function generateFile(
   lines: Array<{ urlQueryString?: string; comment?: string } | undefined>

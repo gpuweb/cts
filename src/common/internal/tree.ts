@@ -286,9 +286,9 @@ export async function loadTreeForQuery(
   queryToLoad: TestQuery,
   {
     subqueriesToExpand,
-    expandAll = false,
+    fullyExpandSubtrees = [],
     maxChunkTime = Infinity,
-  }: { subqueriesToExpand: TestQuery[]; expandAll?: boolean; maxChunkTime?: number }
+  }: { subqueriesToExpand: TestQuery[]; fullyExpandSubtrees?: TestQuery[]; maxChunkTime?: number }
 ): Promise<TestTree> {
   const suite = queryToLoad.suite;
   const specs = await loader.listing(suite);
@@ -303,8 +303,11 @@ export async function loadTreeForQuery(
 
       // If toExpand == subquery, no expansion is needed (but it's still "seen").
       if (ordering === Ordering.Equal) seenSubqueriesToExpand[i] = true;
-      if (expandAll) return ordering === Ordering.Unordered;
       return ordering !== Ordering.StrictSubset;
+    }) &&
+    fullyExpandSubtrees.every(toExpand => {
+      const ordering = compareQueries(toExpand, subquery);
+      return ordering === Ordering.Unordered;
     });
 
   // L0 = suite-level, e.g. suite:*
