@@ -667,10 +667,10 @@ const kPointerCases: Record<string, PointerCase> = {
 
   // The following cases require the 'pointer_composite_access' language feature.
   contents_lhs_pointer_deref2: {
-    code: `(&func_array)[nonuniform_value] = uniform_value;
+    code: `(&func_array)[uniform_value] = uniform_value;
     let test_val = func_array[0];`,
     check: `contents`,
-    uniform: false,
+    uniform: true,
     needs_deref_sugar: true,
   },
   contents_lhs_pointer_deref2a: {
