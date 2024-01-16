@@ -7,7 +7,7 @@ TODO:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert } from '../../../../common/util/util.js';
+import { assert, unreachable } from '../../../../common/util/util.js';
 import { kColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
@@ -57,6 +57,7 @@ class F extends GPUTest {
       case 'r32float':
         return new Float32Array(arrayBuffer);
       default:
+        unreachable();
         return new Uint8Array(arrayBuffer);
     }
   }
