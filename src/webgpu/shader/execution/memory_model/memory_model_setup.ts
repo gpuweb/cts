@@ -1,4 +1,4 @@
-import { GPUTest } from '../../../gpu_test';
+import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
 

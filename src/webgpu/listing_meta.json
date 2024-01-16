@@ -94,6 +94,7 @@
   "webgpu:api,operation,memory_sync,buffer,single_buffer:two_draws_in_the_same_render_pass:*": { "subcaseMS": 4.925 },
   "webgpu:api,operation,memory_sync,buffer,single_buffer:wr:*": { "subcaseMS": 18.296 },
   "webgpu:api,operation,memory_sync,buffer,single_buffer:ww:*": { "subcaseMS": 18.802 },
+  "webgpu:api,operation,memory_sync,texture,readonly_depth_stencil:sampling_while_testing:*": { "subcaseMS": 50.000 },
   "webgpu:api,operation,memory_sync,texture,same_subresource:rw,single_pass,load_resolve:*": { "subcaseMS": 1.200 },
   "webgpu:api,operation,memory_sync,texture,same_subresource:rw,single_pass,load_store:*": { "subcaseMS": 14.200 },
   "webgpu:api,operation,memory_sync,texture,same_subresource:rw:*": { "subcaseMS": 10.908 },
