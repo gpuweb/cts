@@ -499,6 +499,14 @@ export const listing = [
     "file": [
       "api",
       "operation",
+      "storage_texture",
+      "read_write"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
       "texture_view",
       "format_reinterpretation"
     ]
