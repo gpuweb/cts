@@ -88,12 +88,15 @@ class F extends GPUTest {
           const expectedIndex = z * itemsPerRow * height + y * itemsPerRow + x;
           switch (shaderStage) {
             case 'compute': {
+              // In the compute shader we flip the texture along the diagonal.
               const initialIndex =
                 (arrayLayers - 1 - z) * width * height + (height - 1 - y) * width + (width - 1 - x);
               expectedTypedData[expectedIndex] = initialTypedData[initialIndex];
               break;
             }
             case 'fragment': {
+              // In the fragment shader we double the original texel value of the read-write storage
+              // texture.
               const initialIndex = z * width * height + y * width + x;
               expectedTypedData[expectedIndex] = initialTypedData[initialIndex] * 2;
               break;
