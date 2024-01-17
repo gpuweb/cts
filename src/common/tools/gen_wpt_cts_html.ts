@@ -178,7 +178,7 @@ let config: Config;
     config.expectations
   );
 
-  // Load expectations (if any)
+  // Load fullyExpandSubtrees queries (if any)
   const fullyExpand: Map<string, string[]> = await loadQueryFile(
     config.argumentsPrefixes,
     config.fullyExpandSubtrees
