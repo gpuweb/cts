@@ -85,6 +85,18 @@ and myexpectations.txt is a file containing a list of WPT paths to suppress, e.g
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 let config;
 
 (async () => {
@@ -100,12 +112,19 @@ let config;
           out: path.resolve(jsonFileDir, configJSON.out),
           template: path.resolve(jsonFileDir, configJSON.template),
           maxChunkTimeMS: configJSON.maxChunkTimeMS ?? Infinity,
-          argumentsPrefixes: configJSON.argumentsPrefixes ?? ['?q=']
+          argumentsPrefixes: configJSON.argumentsPrefixes ?? ['?q='],
+          noLongPathAssert: configJSON.noLongPathAssert ?? false
         };
         if (configJSON.expectations) {
           config.expectations = {
             file: path.resolve(jsonFileDir, configJSON.expectations.file),
             prefix: configJSON.expectations.prefix
+          };
+        }
+        if (configJSON.fullyExpandSubtrees) {
+          config.fullyExpandSubtrees = {
+            file: path.resolve(jsonFileDir, configJSON.fullyExpandSubtrees.file),
+            prefix: configJSON.fullyExpandSubtrees.prefix
           };
         }
         break;
@@ -129,7 +148,8 @@ let config;
           template: templateFile,
           suite,
           maxChunkTimeMS: Infinity,
-          argumentsPrefixes: ['?q=']
+          argumentsPrefixes: ['?q='],
+          noLongPathAssert: false
         };
         if (process.argv.length >= 7) {
           config.argumentsPrefixes = (await fs.readFile(argsPrefixesFile, 'utf8')).
@@ -153,29 +173,16 @@ let config;
   config.argumentsPrefixes.sort((a, b) => b.length - a.length);
 
   // Load expectations (if any)
-  let expectationLines = new Set();
-  if (config.expectations) {
-    expectationLines = new Set(
-      (await fs.readFile(config.expectations.file, 'utf8')).split(/\r?\n/).filter((l) => l.length)
-    );
-  }
+  const expectations = await loadQueryFile(
+    config.argumentsPrefixes,
+    config.expectations
+  );
 
-  const expectations = new Map();
-  for (const prefix of config.argumentsPrefixes) {
-    expectations.set(prefix, []);
-  }
-
-  expLoop: for (const exp of expectationLines) {
-    // Take each expectation for the longest prefix it matches.
-    for (const argsPrefix of config.argumentsPrefixes) {
-      const prefix = config.expectations.prefix + argsPrefix;
-      if (exp.startsWith(prefix)) {
-        expectations.get(argsPrefix).push(exp.substring(prefix.length));
-        continue expLoop;
-      }
-    }
-    console.log('note: ignored expectation: ' + exp);
-  }
+  // Load fullyExpandSubtrees queries (if any)
+  const fullyExpand = await loadQueryFile(
+    config.argumentsPrefixes,
+    config.fullyExpandSubtrees
+  );
 
   const loader = new DefaultTestFileLoader();
   const lines = [];
@@ -183,6 +190,7 @@ let config;
     const rootQuery = new TestQueryMultiFile(config.suite, []);
     const tree = await loader.loadTree(rootQuery, {
       subqueriesToExpand: expectations.get(prefix),
+      fullyExpandSubtrees: fullyExpand.get(prefix),
       maxChunkTime: config.maxChunkTimeMS
     });
 
@@ -199,19 +207,21 @@ let config;
       alwaysExpandThroughLevel
     })) {
       assert(query instanceof TestQueryMultiCase);
-      const queryString = query.toString();
-      // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
-      // path must be <= 259. Leave room for e.g.:
-      // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
-      assert(
-        queryString.length < 185,
-        `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
+      if (!config.noLongPathAssert) {
+        const queryString = query.toString();
+        // Check for a safe-ish path length limit. Filename must be <= 255, and on Windows the whole
+        // path must be <= 259. Leave room for e.g.:
+        // 'c:\b\s\w\xxxxxxxx\layout-test-results\external\wpt\webgpu\cts_worker=0_q=...-actual.txt'
+        assert(
+          queryString.length < 185,
+          `Generated test variant would produce too-long -actual.txt filename. Possible solutions:
 - Reduce the length of the parts of the test query
 - Reduce the parameterization of the test
 - Make the test function faster and regenerate the listing_meta entry
 - Reduce the specificity of test expectations (if you're using them)
 ${queryString}`
-      );
+        );
+      }
 
       lines.push({
         urlQueryString: prefix + query.toString(), // "?worker=0&q=..."
@@ -231,6 +241,39 @@ ${queryString}`
   console.log(ex.stack ?? ex.toString());
   process.exit(1);
 });
+
+async function loadQueryFile(
+argumentsPrefixes,
+queryFile)
+
+
+
+{
+  let lines = new Set();
+  if (queryFile) {
+    lines = new Set(
+      (await fs.readFile(queryFile.file, 'utf8')).split(/\r?\n/).filter((l) => l.length)
+    );
+  }
+
+  const result = new Map();
+  for (const prefix of argumentsPrefixes) {
+    result.set(prefix, []);
+  }
+
+  expLoop: for (const exp of lines) {
+    // Take each expectation for the longest prefix it matches.
+    for (const argsPrefix of argumentsPrefixes) {
+      const prefix = queryFile.prefix + argsPrefix;
+      if (exp.startsWith(prefix)) {
+        result.get(argsPrefix).push(exp.substring(prefix.length));
+        continue expLoop;
+      }
+    }
+    console.log('note: ignored expectation: ' + exp);
+  }
+  return result;
+}
 
 async function generateFile(
 lines)
