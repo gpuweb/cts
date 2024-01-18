@@ -313,11 +313,7 @@ g.test('basic')
       .combine('shaderStage', kShaderStagesForReadWriteStorageTexture)
       .combine('textureDimension', kTextureDimensions)
       .combine('depthOrArrayLayers', [1, 2] as const)
-      .unless(
-        p =>
-          (p.textureDimension === '1d' && p.depthOrArrayLayers > 1) ||
-          (p.textureDimension === '3d' && p.depthOrArrayLayers === 1)
-      )
+      .unless(p => p.textureDimension === '1d' && p.depthOrArrayLayers > 1)
   )
   .fn(t => {
     const { format, shaderStage, textureDimension, depthOrArrayLayers } = t.params;
