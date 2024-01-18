@@ -14,7 +14,12 @@ The contents of A and B should match.
 
 TODO: implement all canvas types, see TODO on kCanvasTypes.
 `;import { makeTestGroup } from '../../../common/framework/test_group.js';
-import { assert, raceWithRejectOnTimeout, unreachable } from '../../../common/util/util.js';
+import {
+  ErrorWithExtra,
+  assert,
+  raceWithRejectOnTimeout,
+  unreachable } from
+'../../../common/util/util.js';
 import {
   kCanvasAlphaModes,
   kCanvasColorSpaces,
@@ -28,6 +33,8 @@ import {
   createCanvas,
   createOnscreenCanvas } from
 '../../util/create_elements.js';
+import { TexelView } from '../../util/texture/texel_view.js';
+import { findFailedPixels } from '../../util/texture/texture_ok.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -180,9 +187,40 @@ t,
 ctx,
 expect)
 {
-  const actual = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height).data;
+  const { width, height } = ctx.canvas;
+  const actual = ctx.getImageData(0, 0, width, height).data;
 
-  t.expectOK(checkElementsEqual(actual, expect));
+  const subrectOrigin = [0, 0, 0];
+  const subrectSize = [width, height, 1];
+
+  const areaDesc = {
+    bytesPerRow: width * 4,
+    rowsPerImage: height,
+    subrectOrigin,
+    subrectSize
+  };
+
+  const format = 'rgba8unorm';
+  const actTexelView = TexelView.fromTextureDataByReference(format, actual, areaDesc);
+  const expTexelView = TexelView.fromTextureDataByReference(format, expect, areaDesc);
+
+  const failedPixelsMessage = findFailedPixels(
+    format,
+    { x: 0, y: 0, z: 0 },
+    { width, height, depthOrArrayLayers: 1 },
+    { actTexelView, expTexelView },
+    { maxFractionalDiff: 0 }
+  );
+
+  if (failedPixelsMessage !== undefined) {
+    const msg = 'Canvas had unexpected contents:\n' + failedPixelsMessage;
+    t.expectOK(
+      new ErrorWithExtra(msg, () => ({
+        expTexelView,
+        actTexelView
+      }))
+    );
+  }
 }
 
 g.test('onscreenCanvas,snapshot').
