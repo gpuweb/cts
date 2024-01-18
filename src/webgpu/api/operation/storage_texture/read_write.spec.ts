@@ -322,11 +322,11 @@ g.test('basic')
 
     const kWidth = 16;
     const height = textureDimension === '1d' ? 1 : 8;
-    const kTextureSize = [kWidth, height, depthOrArrayLayers] as const;
+    const textureSize = [kWidth, height, depthOrArrayLayers] as const;
     const storageTexture = t.device.createTexture({
       format,
       dimension: textureDimension,
-      size: kTextureSize,
+      size: textureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
     });
 
@@ -339,7 +339,7 @@ g.test('basic')
         bytesPerRow: bytesPerBlock * kWidth,
         rowsPerImage: height,
       },
-      kTextureSize
+      textureSize
     );
 
     const commandEncoder = t.device.createCommandEncoder();
@@ -361,7 +361,7 @@ g.test('basic')
         bytesPerRow,
         rowsPerImage: height,
       },
-      kTextureSize
+      textureSize
     );
     t.queue.submit([commandEncoder.finish()]);
 
