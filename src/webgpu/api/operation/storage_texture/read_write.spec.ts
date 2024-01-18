@@ -24,10 +24,10 @@ class F extends GPUTest {
 
     const width = storageTexture.width;
     const height = storageTexture.height;
-    const arrayLayers = storageTexture.depthOrArrayLayers;
-    const initialData = new ArrayBuffer(bytesPerBlock * width * height * arrayLayers);
+    const depthOrArrayLayers = storageTexture.depthOrArrayLayers;
+    const initialData = new ArrayBuffer(bytesPerBlock * width * height * depthOrArrayLayers);
     const initialTypedData = this.GetTypedArrayBuffer(initialData, format);
-    for (let z = 0; z < arrayLayers; ++z) {
+    for (let z = 0; z < depthOrArrayLayers; ++z) {
       for (let y = 0; y < height; ++y) {
         for (let x = 0; x < width; ++x) {
           const index = z * width * height + y * width + x;
@@ -73,16 +73,16 @@ class F extends GPUTest {
 
     const width = storageTexture.width;
     const height = storageTexture.height;
-    const arrayLayers = storageTexture.depthOrArrayLayers;
+    const depthOrArrayLayers = storageTexture.depthOrArrayLayers;
     const bytesPerRowAlignment = align(bytesPerBlock * width, 256);
     const itemsPerRow = bytesPerRowAlignment / bytesPerBlock;
 
     const expectedData = new ArrayBuffer(
-      bytesPerRowAlignment * (height * arrayLayers - 1) + bytesPerBlock * width
+      bytesPerRowAlignment * (height * depthOrArrayLayers - 1) + bytesPerBlock * width
     );
     const expectedTypedData = this.GetTypedArrayBuffer(expectedData, format);
     const initialTypedData = this.GetTypedArrayBuffer(initialData, format);
-    for (let z = 0; z < arrayLayers; ++z) {
+    for (let z = 0; z < depthOrArrayLayers; ++z) {
       for (let y = 0; y < height; ++y) {
         for (let x = 0; x < width; ++x) {
           const expectedIndex = z * itemsPerRow * height + y * itemsPerRow + x;
@@ -90,7 +90,9 @@ class F extends GPUTest {
             case 'compute': {
               // In the compute shader we flip the texture along the diagonal.
               const initialIndex =
-                (arrayLayers - 1 - z) * width * height + (height - 1 - y) * width + (width - 1 - x);
+                (depthOrArrayLayers - 1 - z) * width * height +
+                (height - 1 - y) * width +
+                (width - 1 - x);
               expectedTypedData[expectedIndex] = initialTypedData[initialIndex];
               break;
             }
