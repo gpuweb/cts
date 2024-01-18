@@ -3,11 +3,11 @@ Tests for the behavior of read-write storage textures.
 
 TODO:
 - Test resource usage transitions with read-write storage textures
-- Test 1D and 3D textures
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
+import { kTextureDimensions } from '../../../capability_info.js';
 import { kColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
@@ -114,10 +114,21 @@ class F extends GPUTest {
     commandEncoder: GPUCommandEncoder,
     rwTexture: GPUTexture
   ) {
-    const isArray = rwTexture.depthOrArrayLayers > 1;
+    let declaration = '';
+    switch (rwTexture.dimension) {
+      case '1d':
+        declaration = 'texture_storage_1d';
+        break;
+      case '2d':
+        declaration =
+          rwTexture.depthOrArrayLayers > 1 ? 'texture_storage_2d_array' : 'texture_storage_2d';
+        break;
+      case '3d':
+        declaration = 'texture_storage_3d';
+        break;
+    }
     const textureDeclaration = `
-    @group(0) @binding(0) var rwTexture:
-    texture_storage_2d${isArray ? '_array' : ''}<${rwTexture.format}, read_write>;
+    @group(0) @binding(0) var rwTexture: ${declaration}<${rwTexture.format}, read_write>;
     `;
 
     switch (shaderStage) {
@@ -135,16 +146,29 @@ class F extends GPUTest {
             return vec4f(pos[VertexIndex], 0.0, 1.0);
         }
         `;
+        let textureLoadStoreCoord = '';
+        switch (rwTexture.dimension) {
+          case '1d':
+            textureLoadStoreCoord = 'textureCoord.x';
+            break;
+          case '2d':
+            textureLoadStoreCoord =
+              rwTexture.depthOrArrayLayers > 1 ? 'textureCoord, z' : 'textureCoord';
+            break;
+          case '3d':
+            textureLoadStoreCoord = 'vec3u(textureCoord, z)';
+            break;
+        }
         const fragmentShader = `
         ${textureDeclaration}
         @fragment
         fn main(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
           let textureCoord = vec2u(fragCoord.xy);
 
-          for (var z = 0; z < ${rwTexture.depthOrArrayLayers}; z++) {
-            let initialValue = textureLoad(rwTexture, textureCoord${isArray ? ', z' : ''});
+          for (var z = 0u; z < ${rwTexture.depthOrArrayLayers}; z++) {
+            let initialValue = textureLoad(rwTexture, ${textureLoadStoreCoord});
             let outputValue = initialValue * 2;
-            textureStore(rwTexture, textureCoord, ${isArray ? 'z, ' : ''}outputValue);
+            textureStore(rwTexture, ${textureLoadStoreCoord}, outputValue);
           }
 
           return vec4f(0.0, 1.0, 0.0, 1.0);
@@ -205,6 +229,32 @@ class F extends GPUTest {
         break;
       }
       case 'compute': {
+        let textureLoadCoord = '';
+        let textureStoreCoord = '';
+        switch (rwTexture.dimension) {
+          case '1d':
+            textureLoadCoord = 'dimension - 1u - invocationID.x';
+            textureStoreCoord = 'invocationID.x';
+            break;
+          case '2d':
+            textureLoadCoord =
+              rwTexture.depthOrArrayLayers > 1
+                ? `vec2u(dimension.x - 1u - invocationID.x, dimension.y - 1u - invocationID.y),
+                   textureNumLayers(rwTexture) - 1u - invocationID.z`
+                : `vec2u(dimension.x - 1u - invocationID.x, dimension.y - 1u - invocationID.y)`;
+            textureStoreCoord =
+              rwTexture.depthOrArrayLayers > 1
+                ? 'invocationID.xy, invocationID.z'
+                : 'invocationID.xy';
+            break;
+          case '3d':
+            textureLoadCoord = `
+              vec3u(dimension.x - 1u - invocationID.x, dimension.y - 1u - invocationID.y,
+                    dimension.z - 1u - invocationID.z)`;
+            textureStoreCoord = 'invocationID';
+            break;
+        }
+
         const computeShader = `
         ${textureDeclaration}
         @compute
@@ -212,17 +262,10 @@ class F extends GPUTest {
         fn main(@builtin(local_invocation_id) invocationID: vec3u) {
           let dimension = textureDimensions(rwTexture);
 
-          let initialIndex = vec2u(
-            dimension.x - 1u - invocationID.x, dimension.y - 1u - invocationID.y);
-          let initialValue = textureLoad(
-            rwTexture,
-            initialIndex${isArray ? ', textureNumLayers(rwTexture) - 1u - invocationID.z' : ''});
-
+          let initialValue = textureLoad(rwTexture, ${textureLoadCoord});
           textureBarrier();
 
-          textureStore(rwTexture, invocationID.xy, ${
-            isArray ? 'invocationID.z, ' : ''
-          }initialValue);
+          textureStore(rwTexture, ${textureStoreCoord}, initialValue);
         }`;
 
         const computePipeline = device.createComputePipeline({
@@ -266,16 +309,23 @@ g.test('basic')
       .combine('format', kColorTextureFormats)
       .filter(p => kTextureFormatInfo[p.format].color?.readWriteStorage === true)
       .combine('shaderStage', kShaderStagesForReadWriteStorageTexture)
-      .combine('arrayLayers', [1, 2] as const)
+      .combine('textureDimension', kTextureDimensions)
+      .combine('depthOrArrayLayers', [1, 2] as const)
+      .unless(
+        p =>
+          (p.textureDimension === '1d' && p.depthOrArrayLayers > 1) ||
+          (p.textureDimension === '3d' && p.depthOrArrayLayers === 1)
+      )
   )
   .fn(t => {
-    const { format, shaderStage, arrayLayers } = t.params;
+    const { format, shaderStage, textureDimension, depthOrArrayLayers } = t.params;
 
     const kWidth = 16;
-    const kHeight = 8;
-    const kTextureSize = [kWidth, kHeight, arrayLayers] as const;
+    const height = textureDimension === '1d' ? 1 : 8;
+    const kTextureSize = [kWidth, height, depthOrArrayLayers] as const;
     const storageTexture = t.device.createTexture({
       format,
+      dimension: textureDimension,
       size: kTextureSize,
       usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.COPY_DST | GPUTextureUsage.STORAGE_BINDING,
     });
@@ -287,7 +337,7 @@ g.test('basic')
       initialData,
       {
         bytesPerRow: bytesPerBlock * kWidth,
-        rowsPerImage: kHeight,
+        rowsPerImage: height,
       },
       kTextureSize
     );
@@ -309,7 +359,7 @@ g.test('basic')
       {
         buffer: readbackBuffer,
         bytesPerRow,
-        rowsPerImage: kHeight,
+        rowsPerImage: height,
       },
       kTextureSize
     );
