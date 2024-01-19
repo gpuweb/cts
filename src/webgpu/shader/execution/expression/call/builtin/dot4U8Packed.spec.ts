@@ -9,6 +9,7 @@ unsigned integer dot product of these two vectors.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeU32, u32 } from '../../../../../util/conversion.js';
+import { Case } from '../../case.js';
 import { allInputSources, Config, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -25,14 +26,34 @@ g.test('basic')
   .params(u => u.combine('inputSource', allInputSources))
   .fn(async t => {
     const cfg: Config = t.params;
-    await run(t, builtin('dot4U8Packed'), [TypeU32, TypeU32], TypeU32, cfg, [
-      // dot({0u, 0u, 0u, 0u}, {0u, 0u, 0u, 0u})
-      { input: [u32(0), u32(0)], expected: u32(0) },
+
+    const dot4U8Packed = (e1: number, e2: number) => {
+      let result = 0;
+      for (let i = 0; i < 4; ++i) {
+        const e1_i = (e1 >> (i * 8)) & 0xff;
+        const e2_i = (e2 >> (i * 8)) & 0xff;
+        result += e1_i * e2_i;
+      }
+      return result;
+    };
+
+    const testInputs = [
+      // dot({0, 0, 0, 0}, {0, 0, 0, 0})
+      [0, 0],
       // dot({255u, 255u, 255u, 255u}, {255u, 255u, 255u, 255u})
-      { input: [u32(0xffffffff), u32(0xffffffff)], expected: u32(260100) },
+      [0xffffffff, 0xffffffff],
       // dot({1u, 2u, 3u, 4u}, {5u, 6u, 7u, 8u})
-      { input: [u32(0x01020304), u32(0x05060708)], expected: u32(70) },
+      [0x01020304, 0x05060708],
       // dot({120u, 90u, 60u, 30u}, {50u, 100u, 150u, 200u})
-      { input: [u32(0x785a3c1e), u32(0x326496c8)], expected: u32(30000) },
-    ]);
+      [0x785a3c1e, 0x326496c8],
+    ] as const;
+
+    const makeCase = (x: number, y: number): Case => {
+      return { input: [u32(x), u32(y)], expected: u32(dot4U8Packed(x, y)) };
+    };
+    const cases: Array<Case> = testInputs.flatMap(v => {
+      return [makeCase(...(v as [number, number]))];
+    });
+
+    await run(t, builtin('dot4U8Packed'), [TypeU32, TypeU32], TypeU32, cfg, cases);
   });
