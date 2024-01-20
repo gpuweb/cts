@@ -1,3 +1,4 @@
+import { timeout } from '../../../common/util/timeout.js';
 import { takeScreenshotDelayed } from '../../../common/util/wpt_reftest_wait.js';
 
 function assert(condition: boolean, msg?: string | (() => string)): asserts condition {
@@ -17,15 +18,15 @@ function assert(condition: boolean, msg?: string | (() => string)): asserts cond
   const device = await adapter.requestDevice();
   assert(device !== null);
 
-  const canvas = document.getElementById("cvs0") as HTMLCanvasElement;
+  const canvas = document.getElementById('cvs0') as HTMLCanvasElement;
   const ctx = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
   ctx.configure({
-    device: device,
+    device,
     format: navigator.gpu.getPreferredCanvasFormat(),
-    alphaMode: 'premultiplied'
+    alphaMode: 'premultiplied',
   });
 
-  setTimeout(() => {
+  timeout(() => {
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass({
       colorAttachments: [
@@ -41,5 +42,5 @@ function assert(condition: boolean, msg?: string | (() => string)): asserts cond
     device.queue.submit([encoder.finish()]);
 
     takeScreenshotDelayed(50);
-  }, 500);
+  }, 100);
 })();
