@@ -7,7 +7,7 @@ function assert(condition: boolean, msg?: string | (() => string)): asserts cond
   }
 }
 
-(async () => {
+void (async () => {
   assert(
     typeof navigator !== 'undefined' && navigator.gpu !== undefined,
     'No WebGPU implementation found'
