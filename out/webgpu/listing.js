@@ -254,6 +254,15 @@ export const listing = [
       "operation",
       "memory_sync",
       "texture",
+      "readonly_depth_stencil"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "memory_sync",
+      "texture",
       "same_subresource"
     ]
   },
