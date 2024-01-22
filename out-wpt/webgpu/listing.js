@@ -2423,6 +2423,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "dot4I8Packed"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
+      "dot4U8Packed"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
+      "builtin",
       "dpdx"
     ]
   },
