@@ -46,6 +46,7 @@ testing while the other one is used for sampling.
       format,
       usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
     });
+    t.trackForCleanup(ds);
 
     // Fill the texture along the X axis with stencil values 1, 2, 3 and along the Y axis depth
     // values 0.1, 0.2, 0.3. The depth value is written using @builtin(frag_depth) while the
@@ -76,18 +77,14 @@ testing while the other one is used for sampling.
       },
       depthStencil: {
         format,
-        ...(hasDepth
-          ? {
-              depthWriteEnabled: true,
-              depthCompare: 'always',
-            }
-          : {}),
-        ...(hasStencil
-          ? {
-              stencilBack: { compare: 'always', passOp: 'replace' },
-              stencilFront: { compare: 'always', passOp: 'replace' },
-            }
-          : {}),
+        ...(hasDepth && {
+          depthWriteEnabled: true,
+          depthCompare: 'always',
+        }),
+        ...(hasStencil && {
+          stencilBack: { compare: 'always', passOp: 'replace' },
+          stencilFront: { compare: 'always', passOp: 'replace' },
+        }),
       },
       primitive: { topology: 'point-list' },
     });
@@ -98,20 +95,16 @@ testing while the other one is used for sampling.
       colorAttachments: [],
       depthStencilAttachment: {
         view: ds.createView(),
-        ...(hasDepth
-          ? {
-              depthStoreOp: 'store',
-              depthLoadOp: 'clear',
-              depthClearValue: 0,
-            }
-          : {}),
-        ...(hasStencil
-          ? {
-              stencilStoreOp: 'store',
-              stencilLoadOp: 'clear',
-              stencilClearValue: 0,
-            }
-          : {}),
+        ...(hasDepth && {
+          depthStoreOp: 'store',
+          depthLoadOp: 'clear',
+          depthClearValue: 0,
+        }),
+        ...(hasStencil && {
+          stencilStoreOp: 'store',
+          stencilLoadOp: 'clear',
+          stencilClearValue: 0,
+        }),
       },
     });
     initPass.setPipeline(initPipeline);
@@ -156,14 +149,18 @@ testing while the other one is used for sampling.
             let texel = vec2u(floor(pos.xy));
 
             // The current values in the framebuffer.
-            var stencil = texel.x + 1;
-            var depth = f32(texel.y + 1) / 10.0;
+            let initStencil = texel.x + 1;
+            let initDepth = f32(texel.y + 1) / 10.0;
 
-            let stencilTestPasses = !${hasStencil} || ${kStencilRef} <= stencil;
-            let depthTestPasses = !${hasDepth} || ${kFragDepth} <= depth;
+            // Expected results of the test_texture step.
+            let stencilTestPasses = !${hasStencil} || ${kStencilRef} <= initStencil;
+            let depthTestPasses = !${hasDepth} || ${kFragDepth} <= initDepth;
+            let fsDiscards = (${!!stencilReadOnly} && initStencil > 2) ||
+                             (${!!depthReadOnly} && initDepth > 0.21);
 
-            let fsDiscards = (${!!stencilReadOnly} && stencil > 2) ||
-                             (${!!depthReadOnly} && depth > 0.21);
+            // Compute the values that should be in the framebuffer.
+            var stencil = initStencil;
+            var depth = initDepth;
 
             // When the fragments aren't discarded, fragment output operations happen.
             if depthTestPasses && stencilTestPasses && !fsDiscards {
@@ -192,24 +189,20 @@ testing while the other one is used for sampling.
       fragment: { module: testAndCheckModule, entryPoint: 'test_texture', targets: [] },
       depthStencil: {
         format,
-        ...(hasDepth
-          ? {
-              depthCompare: 'less-equal',
-              depthWriteEnabled: !depthReadOnly,
-            }
-          : {}),
-        ...(hasStencil
-          ? {
-              stencilBack: {
-                compare: 'less-equal',
-                passOp: stencilReadOnly ? 'keep' : 'increment-clamp',
-              },
-              stencilFront: {
-                compare: 'less-equal',
-                passOp: stencilReadOnly ? 'keep' : 'increment-clamp',
-              },
-            }
-          : {}),
+        ...(hasDepth && {
+          depthCompare: 'less-equal',
+          depthWriteEnabled: !depthReadOnly,
+        }),
+        ...(hasStencil && {
+          stencilBack: {
+            compare: 'less-equal',
+            passOp: stencilReadOnly ? 'keep' : 'increment-clamp',
+          },
+          stencilFront: {
+            compare: 'less-equal',
+            passOp: stencilReadOnly ? 'keep' : 'increment-clamp',
+          },
+        }),
       },
       primitive: { topology: 'triangle-list' },
     });
@@ -221,12 +214,14 @@ testing while the other one is used for sampling.
       size: [1, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
+    t.trackForCleanup(fakeStencil);
     const fakeDepth = t.device.createTexture({
       label: 'fakeDepth',
       format: 'r32float',
       size: [1, 1],
       usage: GPUTextureUsage.TEXTURE_BINDING,
     });
+    t.trackForCleanup(fakeDepth);
     const stencilView = stencilReadOnly
       ? ds.createView({ aspect: 'stencil-only' })
       : fakeStencil.createView();
@@ -246,22 +241,20 @@ testing while the other one is used for sampling.
       colorAttachments: [],
       depthStencilAttachment: {
         view: ds.createView(),
-        ...(hasDepth
-          ? depthReadOnly
+        ...(hasDepth &&
+          (depthReadOnly
             ? { depthReadOnly: true }
             : {
                 depthStoreOp: 'store',
                 depthLoadOp: 'load',
-              }
-          : {}),
-        ...(hasStencil
-          ? stencilReadOnly
+              })),
+        ...(hasStencil &&
+          (stencilReadOnly
             ? { stencilReadOnly: true }
             : {
                 stencilStoreOp: 'store',
                 stencilLoadOp: 'load',
-              }
-          : {}),
+              })),
       },
     });
     testPass.setPipeline(testPipeline);
