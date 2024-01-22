@@ -3785,6 +3785,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "floor"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "inverseSqrt"
     ]
   },
