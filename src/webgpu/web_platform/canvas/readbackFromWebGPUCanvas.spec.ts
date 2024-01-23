@@ -68,6 +68,26 @@ const expect = {
   ]),
 };
 
+/**
+ * Given 4 pixels in rgba8unorm format, puts them into an ImageData
+ * of the specified color space and then puts them into an srgb color space
+ * canvas (the default). If the color space is different there will be a
+ * conversion. Returns the resulting 4 pixels in rgba8unorm format.
+ */
+function convertRGBA8UnormBytesToColorSpace(
+  expected: Uint8ClampedArray,
+  srcColorSpace: PredefinedColorSpace,
+  dstColorSpace: PredefinedColorSpace
+) {
+  const srcImgData = new ImageData(2, 2, { colorSpace: srcColorSpace });
+  srcImgData.data.set(expected);
+  const dstCanvas = new OffscreenCanvas(2, 2);
+  const dstCtx = dstCanvas.getContext('2d', { colorSpace: dstColorSpace });
+  assert(dstCtx !== null);
+  dstCtx.putImageData(srcImgData, 0, 0);
+  return dstCtx.getImageData(0, 0, 2, 2).data;
+}
+
 function initWebGPUCanvasContent<T extends CanvasType>(
   t: GPUTest,
   format: GPUTextureFormat,
@@ -154,22 +174,13 @@ function checkImageResultWithDifferentColorSpaceCanvas(
   // draw the WebGPU derived data into a canvas
   const fromWebGPUCtx = drawImageSourceIntoCanvas(t, image, destinationColorSpace);
 
-  // create a 2D canvas with the same source data in the same color space as the WebGPU
-  // canvas
-  const source2DCanvas: HTMLCanvasElement = createOnscreenCanvas(t, 2, 2);
-  const source2DCtx = source2DCanvas.getContext('2d', { colorSpace: sourceColorSpace });
-  assert(source2DCtx !== null);
-  const imgData = source2DCtx.getImageData(0, 0, 2, 2);
-  imgData.data.set(sourceData);
-  source2DCtx.putImageData(imgData, 0, 0);
+  const expect = convertRGBA8UnormBytesToColorSpace(
+    sourceData,
+    sourceColorSpace,
+    destinationColorSpace
+  );
 
-  // draw the source 2D canvas into another 2D canvas with the destination color space and
-  // then pull out the data. This result should be the same as the WebGPU derived data
-  // written to a 2D canvas of the same destination color space.
-  const from2DCtx = drawImageSourceIntoCanvas(t, source2DCanvas, destinationColorSpace);
-  const expect = from2DCtx.getImageData(0, 0, 2, 2).data;
-
-  readPixelsFrom2DCanvasAndCompare(t, fromWebGPUCtx, expect);
+  readPixelsFrom2DCanvasAndCompare(t, fromWebGPUCtx, expect, 2);
 }
 
 function checkImageResult(
@@ -185,7 +196,8 @@ function checkImageResult(
 function readPixelsFrom2DCanvasAndCompare(
   t: GPUTest,
   ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
-  expect: Uint8ClampedArray
+  expect: Uint8ClampedArray,
+  maxDiffULPsForNormFormat = 0
 ) {
   const { width, height } = ctx.canvas;
   const actual = ctx.getImageData(0, 0, width, height).data;
@@ -209,7 +221,7 @@ function readPixelsFrom2DCanvasAndCompare(
     { x: 0, y: 0, z: 0 },
     { width, height, depthOrArrayLayers: 1 },
     { actTexelView, expTexelView },
-    { maxFractionalDiff: 0 }
+    { maxDiffULPsForNormFormat }
   );
 
   if (failedPixelsMessage !== undefined) {
@@ -234,6 +246,13 @@ g.test('onscreenCanvas,snapshot')
 
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
+
+    check 1:
+      canvas(colorSpace)->img(colorSpace)->canvas(colorSpace).drawImage->canvas(colorSpace).getImageData->actual
+      hard coded data->expected
+    check 2:
+      canvas(colorSpace)->img(colorSpace)->canvas(diffColorSpace).drawImage->canvas(diffColorSpace).getImageData->actual
+      hard coded data->ImageData(colorSpace)->canvas(diffColorSpace).putImageData->canvas(diffColorSpace).getImageData->expected
     `
   )
   .params(u =>
@@ -421,6 +440,19 @@ g.test('drawTo2DCanvas')
     - colorSpace = {"srgb", "display-p3"}
     - WebGPU canvas type = {"onscreen", "offscreen"}
     - 2d canvas type = {"onscreen", "offscreen"}
+
+
+    * makes a webgpu canvas with the given colorSpace and puts data in via copy convoluted
+      copy process
+    * makes a 2d canvas with 'srgb' colorSpace (the default)
+    * draws the webgpu canvas into the 2d canvas so if the color spaces do not match
+      there will be a conversion.
+    * gets the pixels from the 2d canvas via getImageData
+    * compares them to hard coded values that are converted to expected values by copying
+      to an ImageData of the given color space, and then using putImageData into an srgb canvas.
+
+      canvas(colorSpace) -> canvas(srgb).drawImage -> canvas(srgb).getImageData -> actual
+      ImageData(colorSpace) -> canvas(srgb).putImageData -> canvas(srgb).getImageData -> expected
     `
   )
   .params(u =>
@@ -444,7 +476,12 @@ g.test('drawTo2DCanvas')
     }
 
     ctx.drawImage(canvas, 0, 0);
-    readPixelsFrom2DCanvasAndCompare(t, ctx, expect[t.params.alphaMode]);
+
+    readPixelsFrom2DCanvasAndCompare(
+      t,
+      ctx,
+      convertRGBA8UnormBytesToColorSpace(expect[t.params.alphaMode], colorSpace, 'srgb')
+    );
   });
 
 g.test('transferToImageBitmap_unconfigured_nonzero_size')
