@@ -32,7 +32,11 @@ import {
   TypeVec,
   TypeAbstractFloat,
   f32,
+  u32,
+  i32,
   abstractFloat,
+  uint32ToFloat32,
+  u32Bits,
 } from '../../../../../util/conversion.js';
 import { scalarF32Range } from '../../../../../util/math.js';
 import { ShaderBuilder, allInputSources, onlyConstInputSource, run } from '../../expression.js';
@@ -494,6 +498,94 @@ g.test('af_to_f32')
     });
 
     await run(t, bitcastBuilder('f32', t.params), [TypeAbstractFloat], TypeF32, t.params, cases);
+  });
+
+g.test('af_to_i32')
+  .specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin')
+  .desc(`bitcast abstract float to i32 tests`)
+  .params(u =>
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .fn(async t => {
+    const values = [
+      0,
+      1,
+      10,
+      256,
+      u32Bits(0b11111111011111111111111111111111).value as number,
+      u32Bits(0b11111111010000000000000000000000).value as number,
+      u32Bits(0b11111110110000000000000000000000).value as number,
+      u32Bits(0b11111101110000000000000000000000).value as number,
+      u32Bits(0b11111011110000000000000000000000).value as number,
+      u32Bits(0b11110111110000000000000000000000).value as number,
+      u32Bits(0b11101111110000000000000000000000).value as number,
+      u32Bits(0b11011111110000000000000000000000).value as number,
+      u32Bits(0b10111111110000000000000000000000).value as number,
+      u32Bits(0b01111111011111111111111111111111).value as number,
+      u32Bits(0b01111111010000000000000000000000).value as number,
+      u32Bits(0b01111110110000000000000000000000).value as number,
+      u32Bits(0b01111101110000000000000000000000).value as number,
+      u32Bits(0b01111011110000000000000000000000).value as number,
+      u32Bits(0b01110111110000000000000000000000).value as number,
+      u32Bits(0b01101111110000000000000000000000).value as number,
+      u32Bits(0b01011111110000000000000000000000).value as number,
+      u32Bits(0b00111111110000000000000000000000).value as number,
+    ];
+
+    const cases = values.map(u => {
+      return {
+        input: abstractFloat(uint32ToFloat32(u)),
+        expected: i32(u),
+      };
+    });
+
+    await run(t, bitcastBuilder('i32', t.params), [TypeAbstractFloat], TypeI32, t.params, cases);
+  });
+
+g.test('af_to_u32')
+  .specURL('https://www.w3.org/TR/WGSL/#bitcast-builtin')
+  .desc(`bitcast abstract float to u32 tests`)
+  .params(u =>
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+  )
+  .fn(async t => {
+    const values = [
+      0,
+      1,
+      10,
+      256,
+      u32Bits(0b11111111011111111111111111111111).value as number,
+      u32Bits(0b11111111010000000000000000000000).value as number,
+      u32Bits(0b11111110110000000000000000000000).value as number,
+      u32Bits(0b11111101110000000000000000000000).value as number,
+      u32Bits(0b11111011110000000000000000000000).value as number,
+      u32Bits(0b11110111110000000000000000000000).value as number,
+      u32Bits(0b11101111110000000000000000000000).value as number,
+      u32Bits(0b11011111110000000000000000000000).value as number,
+      u32Bits(0b10111111110000000000000000000000).value as number,
+      u32Bits(0b01111111011111111111111111111111).value as number,
+      u32Bits(0b01111111010000000000000000000000).value as number,
+      u32Bits(0b01111110110000000000000000000000).value as number,
+      u32Bits(0b01111101110000000000000000000000).value as number,
+      u32Bits(0b01111011110000000000000000000000).value as number,
+      u32Bits(0b01110111110000000000000000000000).value as number,
+      u32Bits(0b01101111110000000000000000000000).value as number,
+      u32Bits(0b01011111110000000000000000000000).value as number,
+      u32Bits(0b00111111110000000000000000000000).value as number,
+    ];
+
+    const cases = values.map(u => {
+      return {
+        input: abstractFloat(uint32ToFloat32(u)),
+        expected: u32(u),
+      };
+    });
+
+    await run(t, bitcastBuilder('u32', t.params), [TypeAbstractFloat], TypeU32, t.params, cases);
   });
 
 g.test('af_to_vec2f16')
