@@ -2084,6 +2084,6 @@
   "webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_u32:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_vec2f16:*": { "subcaseMS": 0 },
-  "webgpu:shader,execution,expression,call,builtin,bitcast:vec2ai_to_vec4f16:": { "subcaseMS": 0 },
+  "webgpu:shader,execution,expression,call,builtin,bitcast:vec2ai_to_vec4f16:*": { "subcaseMS": 0 },
   "_end": ""
 }
