@@ -28,11 +28,11 @@ g.test('basic')
     const cfg: Config = t.params;
 
     const pack4xI8 = (vals: readonly [number, number, number, number]) => {
-      let result = 0;
+      const result = new Uint32Array(1);
       for (let i = 0; i < 4; ++i) {
-        result |= (vals[i] & 0xff) << (i * 8);
+        result[0] |= (vals[i] & 0xff) << (i * 8);
       }
-      return result;
+      return result[0];
     };
 
     const testInputs = [
@@ -54,6 +54,7 @@ g.test('basic')
       [1, -2, -3, -4],
       [-1, -2, -3, -4],
       [127, 128, -128, -129],
+      [128, 128, -128, -128],
       [32767, 32768, -32768, -32769],
     ] as const;
 
