@@ -225,9 +225,9 @@ export function findFailedPixels(
   const repr = kTexelRepresentationInfo[format];
 
   const integerSampleType = info.sampleType === 'uint' || info.sampleType === 'sint';
-  const numberToString = integerSampleType
-    ? (n: number) => n.toFixed()
-    : (n: number) => n.toPrecision(6);
+  const numericToString = integerSampleType
+    ? (n: number | bigint) => (n as number).toFixed()
+    : (n: number | bigint) => (n as number).toPrecision(6);
 
   const componentOrderStr = repr.componentOrder.join(',') + ':';
 
@@ -245,14 +245,14 @@ export function findFailedPixels(
     yield* [' act. colors', '==', componentOrderStr];
     for (const coords of failedPixels) {
       const pixel = actTexelView.color(coords);
-      yield `${repr.componentOrder.map(ch => numberToString(pixel[ch]!)).join(',')}`;
+      yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
     }
   })();
   const printExpectedColors = (function* () {
     yield* [' exp. colors', '==', componentOrderStr];
     for (const coords of failedPixels) {
       const pixel = expTexelView.color(coords);
-      yield `${repr.componentOrder.map(ch => numberToString(pixel[ch]!)).join(',')}`;
+      yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
     }
   })();
   const printActualULPs = (function* () {
@@ -272,7 +272,7 @@ export function findFailedPixels(
 
   const opts = {
     fillToWidth: 120,
-    numberToString,
+    numericToString,
   };
   return `\
  between ${lowerCorner} and ${upperCorner} inclusive:

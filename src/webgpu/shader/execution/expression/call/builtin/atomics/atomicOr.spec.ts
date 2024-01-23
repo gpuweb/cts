@@ -57,7 +57,9 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     let i = map_id(u32(id));
       atomicOr(&output[i / 32], ${scalarType}(1) << i)
     `;
-    const expected = new (typedArrayCtor(scalarType))(bufferNumElements);
+    const expected = new (typedArrayCtor(scalarType))(bufferNumElements) as
+      | Uint32Array
+      | Int32Array;
     for (let id = 0; id < numInvocations; ++id) {
       const i = mapId.f(id, numInvocations);
       expected[Math.floor(i / 32)] |= 1 << i;
@@ -109,7 +111,9 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     let i = map_id(u32(id));
       atomicOr(&wg[i / 32], ${scalarType}(1) << i)
     `;
-    const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize);
+    const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize) as
+      | Uint32Array
+      | Int32Array;
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       for (let id = 0; id < numInvocations; ++id) {
         const wg = expected.subarray(d * wgNumElements);

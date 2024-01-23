@@ -167,9 +167,9 @@ export class TexelView {
     const repr = kTexelRepresentationInfo[this.format];
 
     const integerSampleType = info.sampleType === 'uint' || info.sampleType === 'sint';
-    const numberToString = integerSampleType
-      ? (n: number) => n.toFixed()
-      : (n: number) => n.toPrecision(6);
+    const numericToString = integerSampleType
+      ? (n: number | bigint) => (n as number).toFixed()
+      : (n: number | bigint) => (n as number).toPrecision(6);
 
     const componentOrderStr = repr.componentOrder.join(',') + ':';
     const subrectCoords = [...fullSubrectCoordinates(subrectOrigin, subrectSize)];
@@ -188,13 +188,13 @@ export class TexelView {
       yield* [' act. colors', '==', componentOrderStr];
       for (const coords of subrectCoords) {
         const pixel = t.color(coords);
-        yield `${repr.componentOrder.map(ch => numberToString(pixel[ch]!)).join(',')}`;
+        yield `${repr.componentOrder.map(ch => numericToString(pixel[ch]!)).join(',')}`;
       }
     })(this);
 
     const opts = {
       fillToWidth: 120,
-      numberToString,
+      numericToString,
     };
     return `${generatePrettyTable(opts, [printCoords, printActualBytes, printActualColors])}`;
   }

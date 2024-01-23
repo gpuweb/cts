@@ -48,7 +48,7 @@ fn atomicAnd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 
     // Start with all bits high, then using atomicAnd to set mapped global id bit off.
     // Note: Both WGSL and JS will shift left 1 by id modulo 32.
-    const initValue = 0xffffffff;
+    const initValue: number = 0xffffffff;
 
     const scalarType = t.params.scalarType;
     const mapId = kMapId[t.params.mapId];
@@ -58,7 +58,9 @@ fn atomicAnd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       atomicAnd(&output[i / 32], ~(${scalarType}(1) << i))
     `;
 
-    const expected = new (typedArrayCtor(scalarType))(bufferNumElements).fill(initValue);
+    const expected = (
+      new (typedArrayCtor(scalarType))(bufferNumElements) as Uint32Array | Int32Array
+    ).fill(initValue);
     for (let id = 0; id < numInvocations; ++id) {
       const i = mapId.f(id, numInvocations);
       expected[Math.floor(i / 32)] &= ~(1 << i);
@@ -111,9 +113,11 @@ fn atomicAnd(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       atomicAnd(&wg[i / 32], ~(${scalarType}(1) << i))
     `;
 
-    const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize).fill(
-      initValue
-    );
+    const expected = (
+      new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize) as
+        | Uint32Array
+        | Int32Array
+    ).fill(initValue);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       for (let id = 0; id < numInvocations; ++id) {
         const wg = expected.subarray(d * wgNumElements);

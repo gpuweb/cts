@@ -81,8 +81,10 @@ fn atomicMax(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const initValue = 0;
     const op = `atomicMax(&wg[0], id)`;
 
-    const expected = new (typedArrayCtor(t.params.scalarType))(
-      wgNumElements * t.params.dispatchSize
+    const expected = (
+      new (typedArrayCtor(t.params.scalarType))(wgNumElements * t.params.dispatchSize) as
+        | Uint32Array
+        | Int32Array
     ).fill(initValue);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       const wg = expected.subarray(d * wgNumElements);

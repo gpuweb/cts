@@ -433,7 +433,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(oldValuesBuffer);
     {
-      const data = new arrayType(oldValuesBuffer.getMappedRange());
+      const data = new arrayType(oldValuesBuffer.getMappedRange()) as Uint32Array | Int32Array;
       data.fill(defaultValue);
       oldValuesBuffer.unmap();
     }
@@ -445,7 +445,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(exchangedBuffer);
     {
-      const data = new arrayType(exchangedBuffer.getMappedRange());
+      const data = new arrayType(exchangedBuffer.getMappedRange()) as Uint32Array | Int32Array;
       data.fill(defaultValue);
       exchangedBuffer.unmap();
     }
@@ -474,13 +474,13 @@ struct __atomic_compare_exchange_result<T> {
         type: arrayType,
         typedLength: oldValuesBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data;
+    ).data as Uint32Array | Int32Array;
     const exchangedBufferResult = (
       await t.readGPUBufferRangeTyped(exchangedBuffer, {
         type: arrayType,
         typedLength: exchangedBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data;
+    ).data as Uint32Array | Int32Array;
 
     for (let w = 0; w < numWrites; ++w) {
       const offset = w * numInvocations;
@@ -648,7 +648,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(oldValuesBuffer);
     {
-      const data = new arrayType(oldValuesBuffer.getMappedRange());
+      const data = new arrayType(oldValuesBuffer.getMappedRange()) as Uint32Array | Int32Array;
       data.fill(defaultValue);
       oldValuesBuffer.unmap();
     }
@@ -660,7 +660,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(exchangedBuffer);
     {
-      const data = new arrayType(exchangedBuffer.getMappedRange());
+      const data = new arrayType(exchangedBuffer.getMappedRange()) as Uint32Array | Int32Array;
       data.fill(defaultValue);
       exchangedBuffer.unmap();
     }
@@ -688,13 +688,13 @@ struct __atomic_compare_exchange_result<T> {
         type: arrayType,
         typedLength: oldValuesBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data;
+    ).data as Uint32Array | Int32Array;
     const exchangedBufferResult = (
       await t.readGPUBufferRangeTyped(exchangedBuffer, {
         type: arrayType,
         typedLength: exchangedBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data;
+    ).data as Uint32Array | Int32Array;
 
     for (let w = 0; w < numWrites; ++w) {
       const offset = w * numInvocations;
