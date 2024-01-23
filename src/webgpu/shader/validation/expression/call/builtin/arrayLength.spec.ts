@@ -3,7 +3,6 @@ Validation tests for arrayLength builtins.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kScalarTypes } from '../../../../types.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
