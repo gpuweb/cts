@@ -30,12 +30,12 @@ g.test('basic')
     const cfg: Config = t.params;
 
     const pack4xI8Clamp = (vals: readonly [number, number, number, number]) => {
-      let result = 0;
+      const result = new Uint32Array(1);
       for (let i = 0; i < 4; ++i) {
         const clampedValue = clamp(vals[i], { min: -128, max: 127 });
-        result |= (clampedValue & 0xff) << (i * 8);
+        result[0] |= (clampedValue & 0xff) << (i * 8);
       }
-      return result;
+      return result[0];
     };
 
     const testInputs = [
