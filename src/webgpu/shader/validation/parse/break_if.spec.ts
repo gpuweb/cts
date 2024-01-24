@@ -16,6 +16,10 @@ const kTests = {
     pass: false,
   },
   continuing_break_if: {
+    src: 'loop { continuing { break if true; } }',
+    pass: true,
+  },
+  continuing_break_if_parens: {
     src: 'loop { continuing { break if (true); } }',
     pass: true,
   },
