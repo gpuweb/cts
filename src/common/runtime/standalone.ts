@@ -47,9 +47,17 @@ const { queries: qs, options } = parseSearchParamLikeWithOptions(
   kStandaloneOptionsInfos,
   window.location.search || rootQuerySpec
 );
-const { runnow, debug, unrollConstEvalLoops, powerPreference, compatibility } = options;
+const {
+  runnow,
+  debug,
+  unrollConstEvalLoops,
+  powerPreference,
+  compatibility,
+  noRaceWithRejectOnTimeout,
+} = options;
 globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.noRaceWithRejectOnTimeout = noRaceWithRejectOnTimeout;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();
