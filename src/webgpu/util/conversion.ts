@@ -1031,33 +1031,15 @@ export interface ScalarBuilder {
 /** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
  * The working data array *must* be an alias of `workingData`.
  */
-function scalarFromValue(
+function scalarFromValue<A extends TypedArrayBufferView>(
   type: ScalarType,
-  workingDataArray: TypedArrayBufferView,
-  value: number | bigint
+  workingDataArray: A,
+  value: ArrayElementType<A>
 ): Scalar {
   // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
   workingDataU32[0] = 0;
-  if (workingDataArray instanceof BigInt64Array) {
-    if (typeof value === 'bigint') {
-      workingDataArray[0] = value;
-    } else {
-      unreachable(
-        `Mismatch between value type and working data array type, BigInt64Array requires 'bigint'`
-      );
-    }
-  } else {
-    if (typeof value === 'number') {
-      workingDataArray[0] = value;
-    } else {
-      unreachable(
-        `Mismatch between value type and working data array type, non-BigInt64Array requires 'number'`
-      );
-      workingDataArray[0] = value;
-    }
-  }
-
+  workingDataArray[0] = value;
   return new Scalar(type, workingDataArray[0], workingDataU32[1], workingDataU32[0]);
 }
 
