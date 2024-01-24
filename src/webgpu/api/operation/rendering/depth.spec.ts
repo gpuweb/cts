@@ -467,10 +467,8 @@ g.test('reverse_depth')
             @vertex fn main(
               @builtin(vertex_index) VertexIndex : u32,
               @builtin(instance_index) InstanceIndex : u32) -> Output {
-              var zv : array<f32, 4> = array<f32, 4>(
-                  0.2, 0.3, -0.1, 1.1
-              );
-              let z : f32 = zv[InstanceIndex];
+              let zv = array(0.2, 0.3, -0.1, 1.1);
+              let z = zv[InstanceIndex];
 
               var output : Output;
               output.Position = vec4<f32>(0.5, 0.5, z, 1.0);
