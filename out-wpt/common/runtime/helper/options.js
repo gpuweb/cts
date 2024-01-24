@@ -128,6 +128,18 @@ function convertPathLikeToQuery(queryOrPath) {
 }
 
 /**
+ * Convert long suite names (the part before the first colon) to the
+ * shortest last word
+ *    foo.bar.moo:test/subtest/foo -> moo:test/subtest/foo
+ */
+function shortenSuiteName(query) {
+  const parts = query.split(':');
+  // converts foo.bar.moo to moo
+  const suite = parts.shift()?.replace(/.*\.(\w+)$/, '$1');
+  return [suite, ...parts].join(':');
+}
+
+/**
  * Given a test query string in the form of `suite:foo,bar,moo&opt1=val1&opt2=val2
  * returns the query and the options.
  */
@@ -139,7 +151,10 @@ query)
 
 {
   const searchString = query.includes('q=') || query.startsWith('?') ? query : `q=${query}`;
-  const queries = new URLSearchParams(searchString).getAll('q').map(convertPathLikeToQuery);
+  const queries = new URLSearchParams(searchString).
+  getAll('q').
+  map(convertPathLikeToQuery).
+  map(shortenSuiteName);
   const options = getOptionsInfoFromSearchString(optionsInfos, searchString);
   return { queries, options };
 }
