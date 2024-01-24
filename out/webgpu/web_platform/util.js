@@ -386,6 +386,8 @@ callback)
         try {
           await callback();
           resolve();
+          video.src = '';
+          video.srcObject = null;
         } catch (ex) {
           reject(ex);
         }
