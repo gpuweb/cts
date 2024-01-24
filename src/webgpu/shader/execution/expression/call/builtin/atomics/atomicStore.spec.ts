@@ -32,7 +32,7 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -72,7 +72,7 @@ fn atomicStore(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T)
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
@@ -117,7 +117,7 @@ one of the values written.
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -178,11 +178,11 @@ one of the values written.
         type: arrayType,
         typedLength: outputBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
 
     // All invocations wrote to the output[0], so validate that it contains one
     // of the possible computed values.
-    const expected_one_of = new arrayType(numInvocations) as Uint32Array | Int32Array;
+    const expected_one_of = new arrayType(numInvocations);
     expected_one_of.forEach((_, i) => (expected_one_of[i] = mapId.f(i, numInvocations)));
 
     if (!expected_one_of.includes(outputBufferResult[0])) {
@@ -210,7 +210,7 @@ one of the values written.
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;
@@ -283,12 +283,12 @@ one of the values written.
         type: arrayType,
         typedLength: outputBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
 
     // Each dispatch wrote to a single atomic workgroup var that was copied
     // to outputBuffer[dispatch]. Validate that each value in the output buffer
     // is one of the possible computed values.
-    const expected_one_of = new arrayType(numInvocations) as Uint32Array | Int32Array;
+    const expected_one_of = new arrayType(numInvocations);
     expected_one_of.forEach((_, i) => (expected_one_of[i] = mapId.f(i, numInvocations)));
 
     for (let d = 0; d < dispatchSize; d++) {

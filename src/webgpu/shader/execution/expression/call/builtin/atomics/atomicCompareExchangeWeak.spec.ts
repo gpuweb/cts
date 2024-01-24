@@ -48,7 +48,7 @@ struct __atomic_compare_exchange_result<T> {
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -187,7 +187,7 @@ struct __atomic_compare_exchange_result<T> {
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;
@@ -333,7 +333,7 @@ struct __atomic_compare_exchange_result<T> {
   .params(u =>
     u
       .combine('workgroupSize', onlyWorkgroupSizes) //
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;
@@ -433,7 +433,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(oldValuesBuffer);
     {
-      const data = new arrayType(oldValuesBuffer.getMappedRange()) as Uint32Array | Int32Array;
+      const data = new arrayType(oldValuesBuffer.getMappedRange());
       data.fill(defaultValue);
       oldValuesBuffer.unmap();
     }
@@ -445,7 +445,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(exchangedBuffer);
     {
-      const data = new arrayType(exchangedBuffer.getMappedRange()) as Uint32Array | Int32Array;
+      const data = new arrayType(exchangedBuffer.getMappedRange());
       data.fill(defaultValue);
       exchangedBuffer.unmap();
     }
@@ -474,13 +474,13 @@ struct __atomic_compare_exchange_result<T> {
         type: arrayType,
         typedLength: oldValuesBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
     const exchangedBufferResult = (
       await t.readGPUBufferRangeTyped(exchangedBuffer, {
         type: arrayType,
         typedLength: exchangedBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
 
     for (let w = 0; w < numWrites; ++w) {
       const offset = w * numInvocations;
@@ -555,7 +555,7 @@ struct __atomic_compare_exchange_result<T> {
   .params(u =>
     u
       .combine('workgroupSize', onlyWorkgroupSizes) //
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;
@@ -648,7 +648,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(oldValuesBuffer);
     {
-      const data = new arrayType(oldValuesBuffer.getMappedRange()) as Uint32Array | Int32Array;
+      const data = new arrayType(oldValuesBuffer.getMappedRange());
       data.fill(defaultValue);
       oldValuesBuffer.unmap();
     }
@@ -660,7 +660,7 @@ struct __atomic_compare_exchange_result<T> {
     });
     t.trackForCleanup(exchangedBuffer);
     {
-      const data = new arrayType(exchangedBuffer.getMappedRange()) as Uint32Array | Int32Array;
+      const data = new arrayType(exchangedBuffer.getMappedRange());
       data.fill(defaultValue);
       exchangedBuffer.unmap();
     }
@@ -688,13 +688,13 @@ struct __atomic_compare_exchange_result<T> {
         type: arrayType,
         typedLength: oldValuesBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
     const exchangedBufferResult = (
       await t.readGPUBufferRangeTyped(exchangedBuffer, {
         type: arrayType,
         typedLength: exchangedBuffer.size / arrayType.BYTES_PER_ELEMENT,
       })
-    ).data as Uint32Array | Int32Array;
+    ).data;
 
     for (let w = 0; w < numWrites; ++w) {
       const offset = w * numInvocations;

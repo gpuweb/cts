@@ -2,7 +2,6 @@ import {
   assert,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
-  unreachable,
 } from '../../../../../../../common/util/util.js';
 import { GPUTest } from '../../../../../../gpu_test.js';
 
@@ -26,14 +25,15 @@ export const kMapId = {
   },
 };
 
-export function typedArrayCtor(scalarType: string): TypedArrayBufferViewConstructor {
+export function typedArrayCtor(
+  scalarType: 'u32' | 'i32'
+): TypedArrayBufferViewConstructor<Uint32Array | Int32Array> {
   switch (scalarType) {
     case 'u32':
       return Uint32Array;
     case 'i32':
       return Int32Array;
   }
-  unreachable('Atomic variables can only by u32 or i32');
 }
 
 export function runStorageVariableTest({
@@ -91,7 +91,7 @@ export function runStorageVariableTest({
   });
   // Fill with initial value
   t.trackForCleanup(outputBuffer);
-  const data = new arrayType(outputBuffer.getMappedRange()) as Uint32Array | Int32Array;
+  const data = new arrayType(outputBuffer.getMappedRange());
   data.fill(initValue);
   outputBuffer.unmap();
 

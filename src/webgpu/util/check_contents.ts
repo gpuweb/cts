@@ -221,9 +221,13 @@ function failCheckElements({
   const printElementsEnd = Math.min(size, failedElementsLast + 2);
   const printElementsCount = printElementsEnd - printElementsStart;
 
-  const numericToString = printAsFloat
-    ? (n: number | bigint) => (n as number).toPrecision(4)
-    : (n: number | bigint) => intToPaddedHex(n, { byteLength: ctor.BYTES_PER_ELEMENT });
+  const numericToString = (val: number | bigint): string => {
+    if (typeof val === 'number' && printAsFloat) {
+      return val.toPrecision(4);
+    }
+    return intToPaddedHex(val, { byteLength: ctor.BYTES_PER_ELEMENT });
+  };
+
   const numberPrefix = printAsFloat ? '' : '0x:';
 
   const printActual = actual.subarray(printElementsStart, printElementsEnd);
@@ -263,10 +267,11 @@ ${generatePrettyTable(opts, [
 // Helper helpers
 
 /** Convert an integral `number` into a hex string, padded to the specified `byteLength`. */
-function intToPaddedHex(n: number | bigint, { byteLength }: { byteLength: number }) {
-  assert(Number.isInteger(n), 'number must be integer');
-  let s = (n < 0n ? -n : n).toString(16);
-  if (byteLength) s = s.padStart(byteLength * 2, '0');
-  if (n < 0) s = '-' + s;
-  return s;
+function intToPaddedHex(val: number | bigint, { byteLength }: { byteLength: number }) {
+  assert(Number.isInteger(val), 'number must be integer');
+  const is_negative = typeof val === 'number' ? val < 0 : val < 0n;
+  let str = (is_negative ? -val : val).toString(16);
+  if (byteLength) str = str.padStart(byteLength * 2, '0');
+  if (is_negative) str = '-' + str;
+  return str;
 }

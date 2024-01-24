@@ -38,7 +38,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -57,9 +57,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     let i = map_id(u32(id));
       atomicOr(&output[i / 32], ${scalarType}(1) << i)
     `;
-    const expected = new (typedArrayCtor(scalarType))(bufferNumElements) as
-      | Uint32Array
-      | Int32Array;
+    const expected = new (typedArrayCtor(scalarType))(bufferNumElements);
     for (let id = 0; id < numInvocations; ++id) {
       const i = mapId.f(id, numInvocations);
       expected[Math.floor(i / 32)] |= 1 << i;
@@ -92,7 +90,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
@@ -111,9 +109,7 @@ fn atomicOr(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     let i = map_id(u32(id));
       atomicOr(&wg[i / 32], ${scalarType}(1) << i)
     `;
-    const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize) as
-      | Uint32Array
-      | Int32Array;
+    const expected = new (typedArrayCtor(scalarType))(wgNumElements * t.params.dispatchSize);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       for (let id = 0; id < numInvocations; ++id) {
         const wg = expected.subarray(d * wgNumElements);

@@ -35,7 +35,7 @@ fn atomicMin(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     // Allocate one extra element to ensure it doesn't get modified
@@ -43,9 +43,7 @@ fn atomicMin(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 
     const initValue = t.params.scalarType === 'u32' ? 0xffffffff : 0x7fffffff;
     const op = `atomicMin(&output[0], id)`;
-    const expected = (
-      new (typedArrayCtor(t.params.scalarType))(bufferNumElements) as Uint32Array | Int32Array
-    ).fill(initValue);
+    const expected = new (typedArrayCtor(t.params.scalarType))(bufferNumElements).fill(initValue);
     expected[0] = 0;
 
     runStorageVariableTest({
@@ -73,7 +71,7 @@ fn atomicMin(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     u
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     // Allocate one extra element to ensure it doesn't get modified
@@ -82,10 +80,8 @@ fn atomicMin(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
     const initValue = t.params.scalarType === 'u32' ? 0xffffffff : 0x7fffffff;
     const op = `atomicMin(&wg[0], id)`;
 
-    const expected = (
-      new (typedArrayCtor(t.params.scalarType))(wgNumElements * t.params.dispatchSize) as
-        | Uint32Array
-        | Int32Array
+    const expected = new (typedArrayCtor(t.params.scalarType))(
+      wgNumElements * t.params.dispatchSize
     ).fill(initValue);
     for (let d = 0; d < t.params.dispatchSize; ++d) {
       const wg = expected.subarray(d * wgNumElements);

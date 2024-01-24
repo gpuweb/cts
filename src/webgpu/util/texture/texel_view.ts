@@ -1,6 +1,6 @@
 import { assert, memcpy } from '../../../common/util/util.js';
 import { kTextureFormatInfo, EncodableTextureFormat } from '../../format_info.js';
-import { generatePrettyTable } from '../pretty_diff_tables.js';
+import { generatePrettyTable, numericToStringBuilder } from '../pretty_diff_tables.js';
 import { reifyExtent3D, reifyOrigin3D } from '../unions.js';
 
 import { fullSubrectCoordinates } from './base.js';
@@ -166,10 +166,9 @@ export class TexelView {
     const info = kTextureFormatInfo[this.format];
     const repr = kTexelRepresentationInfo[this.format];
 
-    const integerSampleType = info.sampleType === 'uint' || info.sampleType === 'sint';
-    const numericToString = integerSampleType
-      ? (n: number | bigint) => (n as number).toFixed()
-      : (n: number | bigint) => (n as number).toPrecision(6);
+    const numericToString = numericToStringBuilder(
+      info.sampleType === 'uint' || info.sampleType === 'sint'
+    );
 
     const componentOrderStr = repr.componentOrder.join(',') + ':';
     const subrectCoords = [...fullSubrectCoordinates(subrectOrigin, subrectSize)];

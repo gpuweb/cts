@@ -26,7 +26,7 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -125,7 +125,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(t => {
     const numInvocations = t.params.workgroupSize;
@@ -236,7 +236,7 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize * t.params.dispatchSize;
@@ -317,10 +317,7 @@ fn atomicExchange(atomic_ptr: ptr<AS, atomic<T>, read_write>, v: T) -> T
 
     // The one value in the input buffer plus all values in the output buffer
     // should contain initial value 0 plus map_id(0..n), unsorted.
-    const values = new arrayType([
-      ...(inputBufferResult.data as Uint32Array | Int32Array),
-      ...(outputBufferResult.data as Uint32Array | Int32Array),
-    ]) as Uint32Array | Int32Array;
+    const values = new arrayType([...inputBufferResult.data, ...outputBufferResult.data]);
 
     const expected = new arrayType(values.length);
     expected.forEach((_, i) => {
@@ -353,7 +350,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       .combine('workgroupSize', workgroupSizes)
       .combine('dispatchSize', dispatchSizes)
       .combine('mapId', keysOf(kMapId))
-      .combine('scalarType', ['u32', 'i32'])
+      .combine('scalarType', ['u32', 'i32'] as ('u32' | 'i32')[])
   )
   .fn(async t => {
     const numInvocations = t.params.workgroupSize;
@@ -448,7 +445,7 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
     // should contain initial value 0 plus map_id(0..n), unsorted.
 
     // Expected values for each dispatch
-    const expected = new arrayType(numInvocations + 1) as Uint32Array | Int32Array;
+    const expected = new arrayType(numInvocations + 1);
     expected.forEach((_, i) => {
       if (i === 0) {
         expected[0] = 0;
@@ -463,11 +460,8 @@ fn atomicLoad(atomic_ptr: ptr<AS, atomic<T>, read_write>) -> T
       // Get values for this dispatch
       const dispatchOffset = d * numInvocations;
       const values = new arrayType([
-        (wgCopyBufferResult.data as Uint32Array | Int32Array)[d], // Last 'wg' value for this dispatch
-        ...(outputBufferResult.data as Uint32Array | Int32Array).subarray(
-          dispatchOffset,
-          dispatchOffset + numInvocations
-        ), // Rest of the returned values
+        wgCopyBufferResult.data[d], // Last 'wg' value for this dispatch
+        ...outputBufferResult.data.subarray(dispatchOffset, dispatchOffset + numInvocations), // Rest of the returned values
       ]);
 
       values.sort();
