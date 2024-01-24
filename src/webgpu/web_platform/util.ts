@@ -386,6 +386,7 @@ export function startPlayingAndWaitForVideo(
           try {
             await callback();
             resolve();
+            video.src = '';
           } catch (ex) {
             reject(ex);
           }
