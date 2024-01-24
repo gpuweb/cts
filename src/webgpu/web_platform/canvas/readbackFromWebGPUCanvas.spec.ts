@@ -189,7 +189,12 @@ function checkImageResult(
   sourceColorSpace: PredefinedColorSpace,
   expect: Uint8ClampedArray
 ) {
+  // canvas(colorSpace)->img(colorSpace)->canvas(colorSpace).drawImage->canvas(colorSpace).getImageData->actual
+  // hard coded data->expected
   checkImageResultWithSameColorSpaceCanvas(t, image, sourceColorSpace, expect);
+
+  // canvas(colorSpace)->img(colorSpace)->canvas(diffColorSpace).drawImage->canvas(diffColorSpace).getImageData->actual
+  // hard coded data->ImageData(colorSpace)->canvas(diffColorSpace).putImageData->canvas(diffColorSpace).getImageData->expected
   checkImageResultWithDifferentColorSpaceCanvas(t, image, sourceColorSpace, expect);
 }
 
@@ -246,13 +251,6 @@ g.test('onscreenCanvas,snapshot')
 
     TODO: Snapshot canvas to jpeg, webp and other mime type and
           different quality. Maybe we should test them in reftest.
-
-    check 1:
-      canvas(colorSpace)->img(colorSpace)->canvas(colorSpace).drawImage->canvas(colorSpace).getImageData->actual
-      hard coded data->expected
-    check 2:
-      canvas(colorSpace)->img(colorSpace)->canvas(diffColorSpace).drawImage->canvas(diffColorSpace).getImageData->actual
-      hard coded data->ImageData(colorSpace)->canvas(diffColorSpace).putImageData->canvas(diffColorSpace).getImageData->expected
     `
   )
   .params(u =>
@@ -466,16 +464,22 @@ g.test('drawTo2DCanvas')
   .fn(t => {
     const { format, webgpuCanvasType, alphaMode, colorSpace, canvas2DType } = t.params;
 
-    const canvas = initWebGPUCanvasContent(t, format, alphaMode, colorSpace, webgpuCanvasType);
+    const webgpuCanvas = initWebGPUCanvasContent(
+      t,
+      format,
+      alphaMode,
+      colorSpace,
+      webgpuCanvasType
+    );
 
-    const expectCanvas = createCanvas(t, canvas2DType, canvas.width, canvas.height);
-    const ctx = expectCanvas.getContext('2d') as CanvasRenderingContext2D;
+    const actualCanvas = createCanvas(t, canvas2DType, webgpuCanvas.width, webgpuCanvas.height);
+    const ctx = actualCanvas.getContext('2d') as CanvasRenderingContext2D;
     if (ctx === null) {
       t.skip(canvas2DType + ' canvas cannot get 2d context');
       return;
     }
 
-    ctx.drawImage(canvas, 0, 0);
+    ctx.drawImage(webgpuCanvas, 0, 0);
 
     readPixelsFrom2DCanvasAndCompare(
       t,
