@@ -1830,6 +1830,8 @@
   "webgpu:shader,validation,expression,call,builtin,unpack4xU8:must_use:*": { "subcaseMS": 32.800 },
   "webgpu:shader,validation,expression,call,builtin,unpack4xU8:supported:*": { "subcaseMS": 98.501 },
   "webgpu:shader,validation,expression,call,builtin,unpack4xU8:unsupported:*": { "subcaseMS": 346.801 },
+  "webgpu:shader,validation,extension,pointer_composite_access:deref:*": { "subcaseMS": 0.0 },
+  "webgpu:shader,validation,extension,pointer_composite_access:pointer:*": { "subcaseMS": 0.0 },
   "webgpu:shader,validation,functions,alias_analysis:aliasing_inside_function:*": { "subcaseMS": 1.200 },
   "webgpu:shader,validation,functions,alias_analysis:member_accessors:*": { "subcaseMS": 1.656 },
   "webgpu:shader,validation,functions,alias_analysis:one_pointer_one_module_scope:*": { "subcaseMS": 1.598 },

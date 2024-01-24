@@ -4060,6 +4060,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "extension",
+      "pointer_composite_access"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "functions",
       "alias_analysis"
     ]
