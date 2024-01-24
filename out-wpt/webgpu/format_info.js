@@ -1910,8 +1910,12 @@ format)
  *
  * This function may need to be generalized to use `baseFormat` from `kTextureFormatInfo`.
  */
-export function viewCompatible(a, b) {
-  return a === b || a + '-srgb' === b || b + '-srgb' === a;
+export function viewCompatible(
+compatibilityMode,
+a,
+b)
+{
+  return compatibilityMode ? a === b : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
 
 export function getFeaturesForFormats(

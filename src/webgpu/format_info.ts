@@ -1910,8 +1910,12 @@ export function textureDimensionAndFormatCompatible(
  *
  * This function may need to be generalized to use `baseFormat` from `kTextureFormatInfo`.
  */
-export function viewCompatible(a: GPUTextureFormat, b: GPUTextureFormat): boolean {
-  return a === b || a + '-srgb' === b || b + '-srgb' === a;
+export function viewCompatible(
+  compatibilityMode: boolean,
+  a: GPUTextureFormat,
+  b: GPUTextureFormat
+): boolean {
+  return compatibilityMode ? a === b : a === b || a + '-srgb' === b || b + '-srgb' === a;
 }
 
 export function getFeaturesForFormats<T>(
