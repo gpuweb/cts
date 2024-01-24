@@ -2001,6 +2001,7 @@
   "webgpu:shader,validation,shader_io,size:size:*": { "subcaseMS": 1.218 },
   "webgpu:shader,validation,shader_io,size:size_fp16:*": { "subcaseMS": 1.500 },
   "webgpu:shader,validation,shader_io,size:size_non_struct:*": { "subcaseMS": 0.929 },
+  "webgpu:shader,validation,shader_io,size:size_creation_fixed_footprint:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size:*": { "subcaseMS": 1.227 },
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_const:*": { "subcaseMS": 3.400 },
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_fp16:*": { "subcaseMS": 0.700 },
