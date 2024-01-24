@@ -452,4 +452,237 @@ fn foo() {
 `;
   t.expectCompileResult(true, code);
 });
+
+const kAtomicBuiltins = [
+'atomicLoad',
+'atomicStore',
+'atomicAdd',
+'atomicSub',
+'atomicMax',
+'atomicMin',
+'atomicAnd',
+'atomicOr',
+'atomicXor',
+'atomicExchange',
+'atomicCompareExchangeWeak'];
+
+
+
+
+function isWrite(builtin) {
+  switch (builtin) {
+    case 'atomicLoad':
+      return false;
+    case 'atomicAdd':
+    case 'atomicSub':
+    case 'atomicMax':
+    case 'atomicMin':
+    case 'atomicAnd':
+    case 'atomicOr':
+    case 'atomicXor':
+    case 'atomicExchange':
+    case 'atomicCompareExchangeWeak':
+    case 'atomicStore':
+      return true;
+  }
+}
+
+function callAtomicBuiltin(builtin, ptr) {
+  switch (builtin) {
+    case 'atomicLoad':
+      return `i += ${builtin}(${ptr})`;
+    case 'atomicStore':
+      return `${builtin}(${ptr}, 42)`;
+    case 'atomicAdd':
+    case 'atomicSub':
+    case 'atomicMax':
+    case 'atomicMin':
+    case 'atomicAnd':
+    case 'atomicOr':
+    case 'atomicXor':
+    case 'atomicExchange':
+      return `i += ${builtin}(${ptr}, 42)`;
+    case 'atomicCompareExchangeWeak':
+      return `${builtin}(${ptr}, 10, 42)`;
+  }
+}
+
+g.test('two_atomic_pointers').
+desc(`Test aliasing of two atomic pointers passed to a function.`).
+params((u) =>
+u.
+combine('builtin_a', kAtomicBuiltins).
+combine('builtin_b', ['atomicLoad', 'atomicStore']).
+combine('address_space', ['storage', 'workgroup']).
+combine('aliased', [true, false]).
+beginSubcases()
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
+
+  const ptr_atomic_i32 = ptr(t.params.address_space, 'atomic<i32>');
+  const code = `
+${declareModuleScopeVar('x', t.params.address_space, 'atomic<i32>')}
+${declareModuleScopeVar('y', t.params.address_space, 'atomic<i32>')}
+
+fn callee(pa : ${ptr_atomic_i32}, pb : ${ptr_atomic_i32}) {
+  var i : i32;
+  ${callAtomicBuiltin(t.params.builtin_a, 'pa')};
+  ${callAtomicBuiltin(t.params.builtin_b, 'pb')};
+}
+
+fn caller() {
+  callee(&x, &${t.params.aliased ? 'x' : 'y'});
+}
+`;
+  const shouldFail =
+  t.params.aliased && (isWrite(t.params.builtin_a) || isWrite(t.params.builtin_b));
+  t.expectCompileResult(!shouldFail, code);
+});
+
+g.test('two_atomic_pointers_to_array_elements').
+desc(`Test aliasing of two atomic array element pointers passed to a function.`).
+params((u) =>
+u.
+combine('builtin_a', kAtomicBuiltins).
+combine('builtin_b', ['atomicLoad', 'atomicStore']).
+combine('address_space', ['storage', 'workgroup']).
+combine('index', [0, 1]).
+combine('aliased', [true, false]).
+beginSubcases()
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
+
+  const ptr_atomic_i32 = ptr(t.params.address_space, 'atomic<i32>');
+  const code = `
+${declareModuleScopeVar('x', t.params.address_space, 'array<atomic<i32>, 32>')}
+${declareModuleScopeVar('y', t.params.address_space, 'array<atomic<i32>, 32>')}
+
+fn callee(pa : ${ptr_atomic_i32}, pb : ${ptr_atomic_i32}) {
+  var i : i32;
+  ${callAtomicBuiltin(t.params.builtin_a, 'pa')};
+  ${callAtomicBuiltin(t.params.builtin_b, 'pb')};
+}
+
+fn caller() {
+  callee(&x[${t.params.index}], &${t.params.aliased ? 'x' : 'y'}[0]);
+}
+`;
+  const shouldFail =
+  t.params.aliased && (isWrite(t.params.builtin_a) || isWrite(t.params.builtin_b));
+  t.expectCompileResult(!shouldFail, code);
+});
+
+g.test('two_atomic_pointers_to_struct_members').
+desc(`Test aliasing of two struct member atomic pointers passed to a function.`).
+params((u) =>
+u.
+combine('builtin_a', kAtomicBuiltins).
+combine('builtin_b', ['atomicLoad', 'atomicStore']).
+combine('address_space', ['storage', 'workgroup']).
+combine('member', ['a', 'b']).
+combine('aliased', [true, false]).
+beginSubcases()
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
+
+  const ptr_atomic_i32 = ptr(t.params.address_space, 'atomic<i32>');
+  const code = `
+struct S {
+  a : atomic<i32>,
+  b : atomic<i32>,
+}
+
+${declareModuleScopeVar('x', t.params.address_space, 'S')}
+${declareModuleScopeVar('y', t.params.address_space, 'S')}
+
+fn callee(pa : ${ptr_atomic_i32}, pb : ${ptr_atomic_i32}) {
+  var i : i32;
+  ${callAtomicBuiltin(t.params.builtin_a, 'pa')};
+  ${callAtomicBuiltin(t.params.builtin_b, 'pb')};
+}
+
+fn caller() {
+  callee(&x.${t.params.member}, &${t.params.aliased ? 'x' : 'y'}.a);
+}
+`;
+  const shouldFail =
+  t.params.aliased && (isWrite(t.params.builtin_a) || isWrite(t.params.builtin_b));
+  t.expectCompileResult(!shouldFail, code);
+});
+
+g.test('one_atomic_pointer_one_module_scope').
+desc(`Test aliasing of an atomic pointer with a direct access to a module-scope variable.`).
+params((u) =>
+u.
+combine('builtin_a', kAtomicBuiltins).
+combine('builtin_b', ['atomicLoad', 'atomicStore']).
+combine('address_space', ['storage', 'workgroup']).
+combine('aliased', [true, false]).
+beginSubcases()
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
+
+  const ptr_atomic_i32 = ptr(t.params.address_space, 'atomic<i32>');
+  const code = `
+${declareModuleScopeVar('x', t.params.address_space, 'atomic<i32>')}
+${declareModuleScopeVar('y', t.params.address_space, 'atomic<i32>')}
+
+fn callee(p : ${ptr_atomic_i32}) {
+  var i : i32;
+  ${callAtomicBuiltin(t.params.builtin_a, 'p')};
+  ${callAtomicBuiltin(t.params.builtin_b, t.params.aliased ? '&x' : '&y')};
+}
+
+fn caller() {
+  callee(&x);
+}
+`;
+  const shouldFail =
+  t.params.aliased && (isWrite(t.params.builtin_a) || isWrite(t.params.builtin_b));
+  t.expectCompileResult(!shouldFail, code);
+});
+
+g.test('workgroup_uniform_load').
+desc(`Test aliasing via workgroupUniformLoad.`).
+params((u) =>
+u.
+combine('use', ['load', 'store', 'workgroupUniformLoad']).
+combine('aliased', [true, false]).
+beginSubcases()
+).
+fn((t) => {
+  t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
+
+  function emitUse() {
+    switch (t.params.use) {
+      case 'load':
+        return `v = *pa`;
+      case 'store':
+        return `*pa = 1`;
+      case 'workgroupUniformLoad':
+        return `v = workgroupUniformLoad(pa)`;
+    }
+  }
+
+  const code = `
+var<workgroup> x : i32;
+var<workgroup> y : i32;
+
+fn callee(pa : ptr<workgroup, i32>, pb : ptr<workgroup, i32>) -> i32 {
+  var v : i32;
+  ${emitUse()};
+  return v + workgroupUniformLoad(pb);
+}
+
+fn caller() {
+  callee(&x, &${t.params.aliased ? 'x' : 'y'});
+}
+`;
+  const shouldFail = t.params.aliased && t.params.use === 'store';
+  t.expectCompileResult(!shouldFail, code);
+});
 //# sourceMappingURL=alias_analysis.spec.js.map
