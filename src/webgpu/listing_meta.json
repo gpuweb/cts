@@ -2094,6 +2094,8 @@
   "webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_vec2f16:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,expression,call,builtin,bitcast:vec2ai_to_vec4f16:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,break_if:placement:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,break_if:non_bool_param:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:bool_type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:access_mode:*": { "subcaseMS": 0 },
