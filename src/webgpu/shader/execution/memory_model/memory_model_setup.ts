@@ -485,8 +485,8 @@ export class MemoryModelTester {
    * If the weak index's value is not 0, it means the test has observed a behavior disallowed by the memory model and
    * is considered a test failure.
    */
-  protected checkResult(weakIndex: number): (i: number, v: number) => boolean {
-    return function (i: number, v: number): boolean {
+  protected checkResult(weakIndex: number): (i: number, v: number | bigint) => boolean {
+    return function (i: number, v: number | bigint): boolean {
       if (i === weakIndex && v > 0) {
         return false;
       }
@@ -495,7 +495,7 @@ export class MemoryModelTester {
   }
 
   /** Returns a printer function that visualizes the results of checking the test results. */
-  protected resultPrinter(weakIndex: number): (i: number) => string | number {
+  protected resultPrinter(weakIndex: number): (i: number) => string | number | bigint {
     return function (i: number): string | number {
       if (i === weakIndex) {
         return 0;

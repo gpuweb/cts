@@ -304,6 +304,7 @@ const TypedArrayBufferViewInstances = [
   new Float16Array(),
   new Float32Array(),
   new Float64Array(),
+  new BigInt64Array(),
 ] as const;
 
 export type TypedArrayBufferView = (typeof TypedArrayBufferViewInstances)[number];
