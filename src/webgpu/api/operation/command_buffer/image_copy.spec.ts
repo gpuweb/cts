@@ -23,6 +23,8 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
 * copy_with_no_image_or_slice_padding_and_undefined_values: test that when copying a single row we can set any bytesPerRow value and when copying a single\
  slice we can set rowsPerImage to 0. Also test setting offset, rowsPerImage, mipLevel, origin, origin.{x,y,z} to undefined.
 
+Note: more coverage of memory synchronization for different read and write texture methods are in same_subresource.spec.ts.
+
 * TODO:
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - Convert the float32 values in initialData into the ones compatible to the depth aspect of
@@ -85,7 +87,7 @@ type InitMethod = 'WriteTexture' | 'CopyB2T';
  * - PartialCopyT2B: do CopyT2B to check that the part of the texture we copied to with InitMethod
  *   matches the data we were copying and that we don't overwrite any data in the target buffer that
  *   we're not supposed to - that's primarily for testing CopyT2B functionality.
- * - FullCopyT2B: do CopyT2B on the whole texture and check wether the part we copied to matches
+ * - FullCopyT2B: do CopyT2B on the whole texture and check whether the part we copied to matches
  *   the data we were copying and that the nothing else was modified - that's primarily for testing
  *   WriteTexture and CopyB2T.
  *
