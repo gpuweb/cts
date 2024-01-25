@@ -881,6 +881,29 @@ export function biasedRange(a: number, b: number, num_steps: number): readonly n
 }
 
 /**
+ * Version of biasedRange that operates on bigint values
+ *
+ * biasedRange was not made into a generic or to take in (number|bigint),
+ * because that introduces a bunch of complexity overhead related to type
+ * differentiation
+ */
+export function biasedRangeBigInt(a: bigint, b: bigint, num_steps: number): readonly bigint[] {
+  const c = 2;
+  if (num_steps <= 0) {
+    return [];
+  }
+
+  // Avoid division by 0
+  if (num_steps === 1) {
+    return [a];
+  }
+
+  return Array.from(Array(num_steps).keys()).map(i =>
+    lerpBigInt(a, b, Math.trunc(Math.pow(i / (num_steps - 1), c)), num_steps)
+  );
+}
+
+/**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit floats
  *
  * Numbers are divided into 4 regions: negative normals, negative subnormals, positive subnormals & positive normals.
@@ -1286,6 +1309,28 @@ const kInterestingF32Values: readonly number[] = [
   10.0,
   kValue.f32.positive.max,
 ];
+
+/**
+ * @returns an ascending sorted array of numbers spread over the entire range of 64-bit signed ints
+ *
+ * Numbers are divided into 2 regions: negatives, and positives, with their spreads biased towards 0
+ * Zero is included in range.
+ *
+ * @param counts structure param with 2 entries indicating the number of entries to be generated each region, values must be 0 or greater.
+ */
+export function fullI64Range(
+  counts: {
+    negative?: number;
+    positive: number;
+  } = { positive: 50 }
+): Array<bigint> {
+  counts.negative = counts.negative === undefined ? counts.positive : counts.negative;
+  return [
+    ...biasedRangeBigInt(kValue.i64.negative.min, -1n, counts.negative),
+    0n,
+    ...biasedRangeBigInt(1n, kValue.i64.positive.max, counts.positive),
+  ];
+}
 
 /** @returns minimal f32 values that cover the entire range of f32 behaviours
  *
