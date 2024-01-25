@@ -1752,6 +1752,8 @@
   "webgpu:shader,validation,expression,call,builtin,atanh:integer_argument:*": { "subcaseMS": 0.912 },
   "webgpu:shader,validation,expression,call,builtin,atanh:values:*": { "subcaseMS": 0.231 },
   "webgpu:shader,validation,expression,call,builtin,atomics:stage:*": { "subcaseMS": 1.346 },
+  "webgpu:shader,validation,expression,call,builtin,barriers:only_in_compute:*": { "subcaseMS": 1.500 },
+  "webgpu:shader,validation,expression,call,builtin,barriers:no_return_value:*": { "subcaseMS": 1.500 },
   "webgpu:shader,validation,expression,call,builtin,bitcast:bad_const_to_f16:*": { "subcaseMS": 0.753 },
   "webgpu:shader,validation,expression,call,builtin,bitcast:bad_const_to_f32:*": { "subcaseMS": 0.844 },
   "webgpu:shader,validation,expression,call,builtin,bitcast:bad_to_f16:*": { "subcaseMS": 8.518 },
