@@ -21,6 +21,7 @@ const kCollectiveOps = [
   { op: 'fwidthCoarse', stage: 'fragment' },
   { op: 'fwidthFine', stage: 'fragment' },
   { op: 'storageBarrier', stage: 'compute' },
+  { op: 'textureBarrier', stage: 'compute' },
   { op: 'workgroupBarrier', stage: 'compute' },
   { op: 'workgroupUniformLoad', stage: 'compute' },
 ];
@@ -116,6 +117,7 @@ function generateOp(op: string): string {
       return `let x = ${op}(tex_depth, s_comp, vec2(0,0), 0);\n`;
     }
     case 'storageBarrier':
+    case 'textureBarrier':
     case 'workgroupBarrier': {
       return `${op}();\n`;
     }
@@ -187,6 +189,10 @@ g.test('basics')
       .beginSubcases()
   )
   .fn(t => {
+    if (t.params.op === 'textureBarrier') {
+      t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
+    }
+
     let code = `
  @group(0) @binding(0) var s : sampler;
  @group(0) @binding(1) var s_comp : sampler_comparison;
