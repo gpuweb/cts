@@ -31,7 +31,16 @@ filter((p) => {
 })
 ).
 beforeAllSubcases((t) => {
+  const { format } = t.params;
+  const formatInfo = kTextureFormatInfo[format];
+  const hasDepth = formatInfo.depth !== undefined;
+  const hasStencil = formatInfo.stencil !== undefined;
+
   t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  t.skipIf(
+    t.isCompatibility && hasDepth && hasStencil,
+    'compatibility mode does not support different TEXTURE_BINDING views of the same texture in a single draw calls'
+  );
 }).
 fn((t) => {
   const { format, depthReadOnly, stencilReadOnly } = t.params;
