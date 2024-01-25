@@ -24,6 +24,7 @@ T is i32, u32, f32
 import { TestParams } from '../../../../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { anyOf } from '../../../../../util/compare.js';
 import {
   TypeF16,
   TypeF32,
@@ -38,6 +39,7 @@ import {
   uint32ToFloat32,
   u32Bits,
 } from '../../../../../util/conversion.js';
+import { FP } from '../../../../../util/floating_point.js';
 import { scalarF32Range } from '../../../../../util/math.js';
 import { ShaderBuilder, allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
@@ -494,7 +496,13 @@ g.test('af_to_f32')
   )
   .fn(async t => {
     const cases = scalarF32Range().map(u => {
-      return { input: abstractFloat(u), expected: f32(u) };
+      const res = FP['f32'].correctlyRounded(u).map(f => {
+        return f32(f);
+      });
+      return {
+        input: abstractFloat(u),
+        expected: anyOf(...res),
+      };
     });
 
     await run(t, bitcastBuilder('f32', t.params), [TypeAbstractFloat], TypeF32, t.params, cases);
