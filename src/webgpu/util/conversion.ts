@@ -84,6 +84,7 @@ const workingDataI16 = new Int16Array(workingData);
 const workingDataI32 = new Int32Array(workingData);
 const workingDataI8 = new Int8Array(workingData);
 const workingDataF64 = new Float64Array(workingData);
+const workingDataI64 = new BigInt64Array(workingData);
 const workingDataView = new DataView(workingData);
 
 /**
@@ -584,6 +585,7 @@ export type ScalarKind =
   | 'u32'
   | 'u16'
   | 'u8'
+  | 'abstract-int'
   | 'i32'
   | 'i16'
   | 'i8'
@@ -610,31 +612,44 @@ export class ScalarType {
   }
 
   /** Constructs a Scalar of this type with `value` */
-  public create(value: number): Scalar {
-    switch (this.kind) {
-      case 'abstract-float':
-        return abstractFloat(value);
-      case 'f64':
-        return f64(value);
-      case 'f32':
-        return f32(value);
-      case 'f16':
-        return f16(value);
-      case 'u32':
-        return u32(value);
-      case 'u16':
-        return u16(value);
-      case 'u8':
-        return u8(value);
-      case 'i32':
-        return i32(value);
-      case 'i16':
-        return i16(value);
-      case 'i8':
-        return i8(value);
-      case 'bool':
-        return bool(value !== 0);
+  public create(value: number | bigint): Scalar {
+    switch (typeof value) {
+      case 'number':
+        switch (this.kind) {
+          case 'abstract-float':
+            return abstractFloat(value);
+          case 'f64':
+            return f64(value);
+          case 'f32':
+            return f32(value);
+          case 'f16':
+            return f16(value);
+          case 'u32':
+            return u32(value);
+          case 'u16':
+            return u16(value);
+          case 'u8':
+            return u8(value);
+          case 'i32':
+            return i32(value);
+          case 'i16':
+            return i16(value);
+          case 'i8':
+            return i8(value);
+          case 'bool':
+            return bool(value !== 0);
+        }
+        break;
+      case 'bigint':
+        switch (this.kind) {
+          case 'abstract-int':
+            return abstractInt(value);
+          case 'bool':
+            return bool(value !== 0n);
+        }
+        break;
     }
+    unreachable(`Scalar<${this.kind}>.create() does not support ${typeof value}`);
   }
 }
 
@@ -754,14 +769,26 @@ export function TypeMat(cols: number, rows: number, elementType: ScalarType): Ma
 /** Type is a ScalarType, VectorType, or MatrixType. */
 export type Type = ScalarType | VectorType | MatrixType;
 
+/** ArrayElementType infers the element type of the indexable type A */
+type ArrayElementType<A> = A extends { [index: number]: infer T } ? T : never;
+
 /** Copy bytes from `buf` at `offset` into the working data, then read it out using `workingDataOut` */
-function valueFromBytes(workingDataOut: TypedArrayBufferView, buf: Uint8Array, offset: number) {
+function valueFromBytes<A extends TypedArrayBufferView>(
+  workingDataOut: A,
+  buf: Uint8Array,
+  offset: number
+): ArrayElementType<A> {
   for (let i = 0; i < workingDataOut.BYTES_PER_ELEMENT; ++i) {
     workingDataU8[i] = buf[offset + i];
   }
-  return workingDataOut[0];
+  return workingDataOut[0] as ArrayElementType<A>;
 }
 
+export const TypeAbstractInt = new ScalarType(
+  'abstract-int',
+  8,
+  (buf: Uint8Array, offset: number) => abstractInt(valueFromBytes(workingDataI64, buf, offset))
+);
 export const TypeI32 = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
   i32(valueFromBytes(workingDataI32, buf, offset))
 );
@@ -815,6 +842,8 @@ export function scalarType(kind: ScalarKind): ScalarType {
       return TypeU16;
     case 'u8':
       return TypeU8;
+    case 'abstract-int':
+      return TypeAbstractInt;
     case 'i32':
       return TypeI32;
     case 'i16':
@@ -869,7 +898,7 @@ export function scalarTypeOf(ty: Type): ScalarType {
 }
 
 /** ScalarValue is the JS type that can be held by a Scalar */
-type ScalarValue = boolean | number;
+type ScalarValue = boolean | number | bigint;
 
 /** Class that encapsulates a single scalar value of various types. */
 export class Scalar {
@@ -894,6 +923,10 @@ export class Scalar {
    * @param offset the offset in buffer, in units of `buffer`
    */
   public copyTo(buffer: TypedArrayBufferView, offset: number) {
+    assert(
+      this.type.kind !== 'abstract-int',
+      `Copying 'abstract-int' values to/from buffers is yet implemented`
+    );
     assert(this.type.kind !== 'f64', `Copying f64 values to/from buffers is not defined`);
     workingDataU32[1] = this.bits1;
     workingDataU32[0] = this.bits0;
@@ -910,24 +943,34 @@ export class Scalar {
       const str = `${x}`;
       return str.indexOf('.') > 0 || str.indexOf('e') > 0 ? str : `${str}.0`;
     };
-    if (isFinite(this.value as number)) {
-      switch (this.type.kind) {
-        case 'abstract-float':
-          return `${withPoint(this.value as number)}`;
-        case 'f64':
-          return `${withPoint(this.value as number)}`;
-        case 'f32':
-          return `${withPoint(this.value as number)}f`;
-        case 'f16':
-          return `${withPoint(this.value as number)}h`;
-        case 'u32':
-          return `${this.value}u`;
-        case 'i32':
-          return `i32(${this.value})`;
-        case 'bool':
+
+    switch (typeof this.value) {
+      case 'bigint':
+        if (this.type.kind === 'abstract-int') {
           return `${this.value}`;
-      }
+        }
+        break;
+      case 'number':
+        if (!isFinite(this.value)) break;
+        switch (this.type.kind) {
+          case 'abstract-float':
+            return `${withPoint(this.value)}`;
+          case 'f64':
+            return `${withPoint(this.value)}`;
+          case 'f32':
+            return `${withPoint(this.value)}f`;
+          case 'f16':
+            return `${withPoint(this.value)}h`;
+          case 'u32':
+            return `${this.value}u`;
+          case 'i32':
+            return `i32(${this.value})`;
+        }
+        break;
+      case 'boolean':
+        return `${this.value}`;
     }
+
     throw new Error(
       `scalar of value ${this.value} and type ${this.type} has no WGSL representation`
     );
@@ -988,10 +1031,10 @@ export interface ScalarBuilder {
 /** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
  * The working data array *must* be an alias of `workingData`.
  */
-function scalarFromValue(
+function scalarFromValue<A extends TypedArrayBufferView>(
   type: ScalarType,
-  workingDataArray: TypedArrayBufferView,
-  value: number
+  workingDataArray: A,
+  value: ArrayElementType<A>
 ): Scalar {
   // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
@@ -1037,6 +1080,10 @@ export const f32Bits = (bits: number): Scalar =>
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
 export const f16Bits = (bits: number): Scalar =>
   scalarFromBits(TypeF16, workingDataU16, workingDataF16, bits);
+
+/** Create an AbstractInt from a numeric value, a JS `bigint`. */
+export const abstractInt = (value: bigint): Scalar =>
+  scalarFromValue(TypeAbstractInt, workingDataI64, value);
 
 /** Create an i32 from a numeric value, a JS `number`. */
 export const i32 = (value: number): Scalar => scalarFromValue(TypeI32, workingDataI32, value);
@@ -1314,6 +1361,7 @@ enum SerializedScalarKind {
   I16,
   I8,
   Bool,
+  AbstractInt,
 }
 
 /** serializeScalarKind() serializes a ScalarKind to a BinaryStream */
@@ -1340,6 +1388,9 @@ function serializeScalarKind(s: BinaryStream, v: ScalarKind) {
     case 'u8':
       s.writeU8(SerializedScalarKind.U8);
       return;
+    case 'abstract-int':
+      s.writeU8(SerializedScalarKind.AbstractInt);
+      return;
     case 'i32':
       s.writeU8(SerializedScalarKind.I32);
       return;
@@ -1353,6 +1404,7 @@ function serializeScalarKind(s: BinaryStream, v: ScalarKind) {
       s.writeU8(SerializedScalarKind.Bool);
       return;
   }
+  unreachable(`Do not know what to write scalar kind = ${v}`);
 }
 
 /** deserializeScalarKind() deserializes a ScalarKind from a BinaryStream */
@@ -1373,6 +1425,8 @@ function deserializeScalarKind(s: BinaryStream): ScalarKind {
       return 'u16';
     case SerializedScalarKind.U8:
       return 'u8';
+    case SerializedScalarKind.AbstractInt:
+      return 'abstract-int';
     case SerializedScalarKind.I32:
       return 'i32';
     case SerializedScalarKind.I16:
@@ -1395,40 +1449,55 @@ enum SerializedValueKind {
 /** serializeValue() serializes a Value to a BinaryStream */
 export function serializeValue(s: BinaryStream, v: Value) {
   const serializeScalar = (scalar: Scalar, kind: ScalarKind) => {
-    switch (kind) {
-      case 'abstract-float':
-        s.writeF64(scalar.value as number);
-        return;
-      case 'f64':
-        s.writeF64(scalar.value as number);
-        return;
-      case 'f32':
-        s.writeF32(scalar.value as number);
-        return;
-      case 'f16':
-        s.writeF16(scalar.value as number);
-        return;
-      case 'u32':
-        s.writeU32(scalar.value as number);
-        return;
-      case 'u16':
-        s.writeU16(scalar.value as number);
-        return;
-      case 'u8':
-        s.writeU8(scalar.value as number);
-        return;
-      case 'i32':
-        s.writeI32(scalar.value as number);
-        return;
-      case 'i16':
-        s.writeI16(scalar.value as number);
-        return;
-      case 'i8':
-        s.writeI8(scalar.value as number);
-        return;
-      case 'bool':
-        s.writeBool(scalar.value as boolean);
-        return;
+    switch (typeof scalar.value) {
+      case 'number':
+        switch (kind) {
+          case 'abstract-float':
+            s.writeF64(scalar.value);
+            return;
+          case 'f64':
+            s.writeF64(scalar.value);
+            return;
+          case 'f32':
+            s.writeF32(scalar.value);
+            return;
+          case 'f16':
+            s.writeF16(scalar.value);
+            return;
+          case 'u32':
+            s.writeU32(scalar.value);
+            return;
+          case 'u16':
+            s.writeU16(scalar.value);
+            return;
+          case 'u8':
+            s.writeU8(scalar.value);
+            return;
+          case 'i32':
+            s.writeI32(scalar.value);
+            return;
+          case 'i16':
+            s.writeI16(scalar.value);
+            return;
+          case 'i8':
+            s.writeI8(scalar.value);
+            return;
+        }
+        break;
+      case 'bigint':
+        switch (kind) {
+          case 'abstract-int':
+            s.writeI64(scalar.value);
+            return;
+        }
+        break;
+      case 'boolean':
+        switch (kind) {
+          case 'bool':
+            s.writeBool(scalar.value);
+            return;
+        }
+        break;
     }
   };
 
@@ -1481,6 +1550,8 @@ export function deserializeValue(s: BinaryStream): Value {
         return u16(s.readU16());
       case 'u8':
         return u8(s.readU8());
+      case 'abstract-int':
+        return abstractInt(s.readI64());
       case 'i32':
         return i32(s.readI32());
       case 'i16':
@@ -1533,7 +1604,7 @@ export function isFloatValue(v: Value): boolean {
  */
 export function isAbstractType(ty: Type): boolean {
   if (ty instanceof ScalarType) {
-    return ty.kind === 'abstract-float';
+    return ty.kind === 'abstract-float' || ty.kind === 'abstract-int';
   }
   return false;
 }

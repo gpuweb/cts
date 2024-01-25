@@ -788,7 +788,8 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       slice = 0,
       layout,
       generateWarningOnly = false,
-      checkElementsBetweenFn = (act, [a, b]) => checkElementsBetween(act, [i => a[i], i => b[i]]),
+      checkElementsBetweenFn = (act, [a, b]) =>
+        checkElementsBetween(act, [i => a[i] as number, i => b[i] as number]),
     }: {
       exp: [TypedArrayBufferView, TypedArrayBufferView];
       slice?: number;
