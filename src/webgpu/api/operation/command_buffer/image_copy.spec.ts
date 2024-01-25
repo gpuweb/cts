@@ -24,7 +24,6 @@ export const description = `writeTexture + copyBufferToTexture + copyTextureToBu
  slice we can set rowsPerImage to 0. Also test setting offset, rowsPerImage, mipLevel, origin, origin.{x,y,z} to undefined.
 
 * TODO:
-  - add another initMethod which renders the texture [3]
   - test copyT2B with buffer size not divisible by 4 (not done because expectContents 4-byte alignment)
   - Convert the float32 values in initialData into the ones compatible to the depth aspect of
     depthFormats when depth16unorm is supported by the browsers in
@@ -1357,8 +1356,6 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
 /**
  * This is a helper function used for filtering test parameters
- *
- * [3]: Modify this after introducing tests with rendering.
  */
 function formatCanBeTested({ format }: { format: ColorTextureFormat }): boolean {
   return kTextureFormatInfo[format].color.copyDst && kTextureFormatInfo[format].color.copySrc;
