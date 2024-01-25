@@ -184,7 +184,7 @@ function fromStorage(ty: Type, expr: string): string {
     );
     assert(
       ty.elementType.kind !== 'abstract-float',
-      `'abstract'float' values cannot appear in input storage`
+      `'abstract-float' values cannot appear in input storage`
     );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
