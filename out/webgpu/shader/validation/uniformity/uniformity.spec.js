@@ -43,7 +43,9 @@ const kConditions = [
 { cond: 'nonuniform_and1', expectation: false },
 { cond: 'nonuniform_and2', expectation: false },
 { cond: 'uniform_func_var', expectation: true },
-{ cond: 'nonuniform_func_var', expectation: false }];
+{ cond: 'nonuniform_func_var', expectation: false },
+{ cond: 'storage_texture_ro', expectation: true },
+{ cond: 'storage_texture_rw', expectation: false }];
 
 
 function generateCondition(condition) {
@@ -98,6 +100,12 @@ function generateCondition(condition) {
       }
     case 'nonuniform_func_var':{
         return `n_f == 0`;
+      }
+    case 'storage_texture_ro':{
+        return `textureLoad(ro_storage_texture, vec2()).x == 0`;
+      }
+    case 'storage_texture_rw':{
+        return `textureLoad(rw_storage_texture, vec2()).x == 0`;
       }
     default:{
         unreachable(`Unhandled condition`);
@@ -189,7 +197,7 @@ combine('statement', ['if', 'for', 'while', 'switch']).
 beginSubcases()
 ).
 fn((t) => {
-  if (t.params.op === 'textureBarrier') {
+  if (t.params.op === 'textureBarrier' || t.params.cond.startsWith('storage_texture')) {
     t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
   }
 
@@ -202,6 +210,9 @@ fn((t) => {
  @group(1) @binding(0) var<storage, read> ro_buffer : array<f32, 4>;
  @group(1) @binding(1) var<storage, read_write> rw_buffer : array<f32, 4>;
  @group(1) @binding(2) var<uniform> uniform_buffer : vec4<f32>;
+
+ @group(2) @binding(0) var ro_storage_texture : texture_storage_2d<rgba8unorm, read>;
+ @group(2) @binding(1) var rw_storage_texture : texture_storage_2d<rgba8unorm, read_write>;
 
  var<private> priv_var : array<f32, 4> = array(0,0,0,0);
 
