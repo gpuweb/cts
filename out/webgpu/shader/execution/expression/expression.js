@@ -47,6 +47,10 @@ export const onlyConstInputSource = ['const'];
 
 // Helper for returning the stride for a given Type
 function valueStride(ty) {
+  assert(
+    scalarTypeOf(ty).kind !== 'abstract-int',
+    `Outputting 'abstract-int' values currently not supported`
+  );
   // AbstractFloats are passed out of the shader via a struct of 2x u32s and
   // unpacking containers as arrays
   if (scalarTypeOf(ty).kind === 'abstract-float') {
@@ -139,7 +143,7 @@ function valueStride(ty) {
   return 16;
 }
 
-// Helper for summing up all of the stride values for an array of Types
+// Helper for summing up all the stride values for an array of Types
 function valueStrides(tys) {
   return tys.map(valueStride).reduce((sum, c) => sum + c);
 }
@@ -148,6 +152,7 @@ function valueStrides(tys) {
 function storageType(ty) {
   if (ty instanceof ScalarType) {
     assert(ty.kind !== 'f64', `No storage type defined for 'f64' values`);
+    assert(ty.kind !== 'abstract-int', `Storage of 'abstract-int' values not yet implemented`);
     assert(
       ty.kind !== 'abstract-float',
       `Custom handling is implemented for 'abstract-float' values`
@@ -165,7 +170,8 @@ function storageType(ty) {
 // Helper for converting a value of the type 'ty' from the storage type.
 function fromStorage(ty, expr) {
   if (ty instanceof ScalarType) {
-    assert(ty.kind !== 'abstract-float', `AbstractFloat values should not be in input storage`);
+    assert(ty.kind !== 'abstract-int', `'abstract-int' values should not be in input storage`);
+    assert(ty.kind !== 'abstract-float', `'abstract-float' values should not be in input storage`);
     assert(ty.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.kind === 'bool') {
       return `${expr} != 0u`;
@@ -173,8 +179,12 @@ function fromStorage(ty, expr) {
   }
   if (ty instanceof VectorType) {
     assert(
+      ty.elementType.kind !== 'abstract-int',
+      `'abstract-int' values cannot appear in input storage`
+    );
+    assert(
       ty.elementType.kind !== 'abstract-float',
-      `AbstractFloat values cannot appear in input storage`
+      `'abstract-float' values cannot appear in input storage`
     );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
@@ -187,9 +197,10 @@ function fromStorage(ty, expr) {
 // Helper for converting a value of the type 'ty' to the storage type.
 function toStorage(ty, expr) {
   if (ty instanceof ScalarType) {
+    assert(ty.kind !== 'abstract-int', `Storage of 'abstract-int' values not yet implemented`);
     assert(
       ty.kind !== 'abstract-float',
-      `AbstractFloat values have custom code for writing to storage`
+      `'abstract-float' values have custom code for writing to storage`
     );
     assert(ty.kind !== 'f64', `No storage type defined for 'f64' values`);
     if (ty.kind === 'bool') {
@@ -198,8 +209,12 @@ function toStorage(ty, expr) {
   }
   if (ty instanceof VectorType) {
     assert(
+      ty.elementType.kind !== 'abstract-int',
+      `Storage of 'abstract-int' values not yet implemented`
+    );
+    assert(
       ty.elementType.kind !== 'abstract-float',
-      `AbstractFloat values have custom code for writing to storage`
+      `'abstract-float' values have custom code for writing to storage`
     );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
@@ -459,6 +474,10 @@ function map(v, fn) {
  * Helper that returns the WGSL to declare the output storage buffer for a shader
  */
 function wgslOutputs(resultType, count) {
+  assert(
+    scalarTypeOf(resultType).kind !== 'abstract-int',
+    `Outputting 'abstract-int' values not yet implemented`
+  );
   let output_struct = undefined;
   if (scalarTypeOf(resultType).kind !== 'abstract-float') {
     output_struct = `
@@ -568,6 +587,10 @@ resultType,
 cases,
 inputSource)
 {
+  assert(
+    scalarTypeOf(resultType).kind !== 'abstract-int',
+    `Outputting 'abstract-int' values not yet implemented`
+  );
   assert(
     scalarTypeOf(resultType).kind !== 'abstract-float',
     `abstractFloatShaderBuilder should be used when result type is 'abstract-float`
@@ -925,7 +948,7 @@ export function abstractFloatShaderBuilder(expressionBuilder) {
   cases,
   inputSource) =>
   {
-    assert(inputSource === 'const', 'AbstractFloat results are only defined for const-eval');
+    assert(inputSource === 'const', `'abstract-float' results are only defined for const-eval`);
     assert(
       scalarTypeOf(resultType).kind === 'abstract-float',
       `Expected resultType of 'abstract-float', received '${scalarTypeOf(resultType).kind}' instead`

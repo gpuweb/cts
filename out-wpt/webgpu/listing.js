@@ -3289,6 +3289,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "ai_assignment"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "bool_conversion"
     ]
   },
