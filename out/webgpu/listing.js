@@ -3379,6 +3379,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "indirection"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "u32_complement"
     ]
   },
