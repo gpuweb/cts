@@ -318,7 +318,9 @@ g.test('basic')
   .fn(t => {
     const { format, shaderStage, textureDimension, depthOrArrayLayers } = t.params;
 
-    const kWidth = 16;
+    // In compatibility mode the lowest maxComputeInvocationsPerWorkgroup is 128 vs non-compat which is 256
+    // So in non-compat we get 16 * 8 * 2, vs compat where we get 8 * 8 * 2
+    const kWidth = t.isCompatibility ? 8 : 16;
     const height = textureDimension === '1d' ? 1 : 8;
     const textureSize = [kWidth, height, depthOrArrayLayers] as const;
     const storageTexture = t.device.createTexture({
