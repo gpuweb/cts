@@ -44,7 +44,7 @@ function convertPathLikeToQuery(queryOrPath: string) {
 /**
  * Convert long suite names (the part before the first colon) to the
  * shortest last word
- *    foo.bar.moo:test/subtest/foo -> moo:test/subtest/foo
+ *    foo.bar.moo:test,subtest,foo -> moo:test,subtest,foo
  */
 function shortenSuiteName(query: string) {
   const parts = query.split(':');
