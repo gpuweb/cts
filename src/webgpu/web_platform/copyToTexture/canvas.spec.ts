@@ -97,8 +97,7 @@ class F extends CopyToTextureUtils {
     }
 
     const imageData = new ImageData(imagePixels, width, height, { colorSpace });
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    if (typeof (imageData as any).colorSpace === 'undefined') {
+    if (typeof imageData.colorSpace === 'undefined') {
       this.skip('color space attr is not supported for ImageData');
     }
 
