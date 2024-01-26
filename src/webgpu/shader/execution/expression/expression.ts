@@ -32,6 +32,7 @@ export const allInputSources: InputSource[] = ['const', 'uniform', 'storage_r', 
 /** Just constant input source */
 export const onlyConstInputSource: InputSource[] = ['const'];
 
+/** All input sources except const */
 export const allButConstInputSource: InputSource[] = ['uniform', 'storage_r', 'storage_rw'];
 
 /** Configuration for running a expression test */
