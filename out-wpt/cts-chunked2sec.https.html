@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 8745 variants generated from 2121 tests in 482 files -->
+<!-- Prefix: "?q="; 8798 variants generated from 2122 tests in 483 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -8172,6 +8172,7 @@
 <meta name=variant content='?q=webgpu:shader,validation,uniformity,uniformity:binary_expressions:*'><!-- estimated: 1800.192 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,uniformity,uniformity:unary_expressions:*'><!-- estimated: 30.696 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,uniformity,uniformity:functions:*'><!-- estimated: 52.120 ms -->
+<meta name=variant content='?q=webgpu:util,texture,color_space_conversions:util_matches_2d_canvas:*'><!-- estimated: 2.002 ms -->
 <meta name=variant content='?q=webgpu:util,texture,texel_data:unorm_texel_data_in_shader:*'><!-- estimated: 145.012 ms -->
 <meta name=variant content='?q=webgpu:util,texture,texel_data:snorm_texel_data_in_shader:*'><!-- estimated: 83.610 ms -->
 <meta name=variant content='?q=webgpu:util,texture,texel_data:uint_texel_data_in_shader:*'><!-- estimated: 164.240 ms -->
@@ -8678,6 +8679,32 @@
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="srgb";dstColorFormat="rgba16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="srgb";dstColorFormat="rgba32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="srgb";dstColorFormat="rgba32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="r32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rg32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba8unorm-srgb";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba8unorm-srgb";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="bgra8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="bgra8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="bgra8unorm-srgb";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="bgra8unorm-srgb";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgb10a2unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgb10a2unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="srgb";dstColorSpace="display-p3";dstColorFormat="rgba32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="r8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="r8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="r16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
@@ -8704,6 +8731,32 @@
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="rgba16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="rgba32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="srgb";dstColorFormat="rgba32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="r32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rg32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba8unorm-srgb";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba8unorm-srgb";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="bgra8unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="bgra8unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="bgra8unorm-srgb";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="bgra8unorm-srgb";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgb10a2unorm";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgb10a2unorm";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba16float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba16float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba32float";dstPremultiplied=true;*'><!-- estimated: 1108.152 ms -->
+<meta name=variant content='?q=webgpu:web_platform,copyToTexture,canvas:color_space_conversion:srcColorSpace="display-p3";dstColorSpace="display-p3";dstColorFormat="rgba32float";dstPremultiplied=false;*'><!-- estimated: 1108.152 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,image:from_image:srcDoFlipYDuringCopy=true;dstColorFormat="r8unorm";*'><!-- estimated: 1574.568 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,image:from_image:srcDoFlipYDuringCopy=true;dstColorFormat="r16float";*'><!-- estimated: 1574.568 ms -->
 <meta name=variant content='?q=webgpu:web_platform,copyToTexture,image:from_image:srcDoFlipYDuringCopy=true;dstColorFormat="r32float";*'><!-- estimated: 1574.568 ms -->

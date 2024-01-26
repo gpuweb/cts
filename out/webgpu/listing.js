@@ -4416,6 +4416,13 @@ export const listing = [
     "file": [
       "util",
       "texture",
+      "color_space_conversions"
+    ]
+  },
+  {
+    "file": [
+      "util",
+      "texture",
       "texel_data"
     ]
   },
