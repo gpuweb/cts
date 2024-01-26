@@ -24,7 +24,7 @@ function floatToU8(v: number) {
 
 export const g = makeTestGroup(Fixture);
 
-g.test('color_space_conversion')
+g.test('util_matches_2d_canvas')
   .desc(`Test color space conversion helpers matches canvas 2d's color space conversion`)
   .params(u =>
     u.combineWithParams([
