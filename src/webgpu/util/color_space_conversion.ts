@@ -232,7 +232,7 @@ export function makeInPlaceColorConversion({
     if (requireColorSpaceConversion) {
       if (srcColorSpace === 'display-p3' && dstColorSpace === 'srgb') {
         Object.assign(rgba, displayP3ToSrgb(rgba));
-      } else {
+      } else if (srcColorSpace === 'srgb' && dstColorSpace === 'display-p3') {
         Object.assign(rgba, srgbToDisplayP3(rgba));
       }
     }
