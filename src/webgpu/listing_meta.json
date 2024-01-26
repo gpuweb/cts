@@ -1917,6 +1917,7 @@
   "webgpu:shader,validation,parse,must_use:builtin_no_must_use:*": { "subcaseMS": 1.206 },
   "webgpu:shader,validation,parse,must_use:call:*": { "subcaseMS": 1.275 },
   "webgpu:shader,validation,parse,must_use:declaration:*": { "subcaseMS": 1.523 },
+  "webgpu:shader,validation,parse,must_use:ignore_result_of_non_must_use_that_returns_call_of_must_use:*": { "subcaseMS": 0.0 },
   "webgpu:shader,validation,parse,pipeline_stage:compute_parsing:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,parse,pipeline_stage:duplicate_compute_on_function:*": { "subcaseMS": 2.651 },
   "webgpu:shader,validation,parse,pipeline_stage:duplicate_fragment_on_function:*": { "subcaseMS": 1.001 },
