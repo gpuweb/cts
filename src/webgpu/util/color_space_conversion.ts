@@ -234,6 +234,8 @@ export function makeInPlaceColorConversion({
         Object.assign(rgba, displayP3ToSrgb(rgba));
       } else if (srcColorSpace === 'srgb' && dstColorSpace === 'display-p3') {
         Object.assign(rgba, srgbToDisplayP3(rgba));
+      } else {
+        unreachable();
       }
     }
     // Now RGB may also be negative if the src gamut is larger than the dst gamut.
