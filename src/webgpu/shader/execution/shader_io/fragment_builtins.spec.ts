@@ -9,8 +9,15 @@ Note: @interpolate settings and sample_index affect whether or not the fragment 
 is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
 @builtin(sample_index) the fragment shader should be executed per-sample.
 
+* sample_mask output is tested in
+  src/webgpu/api/operation/render_pipeline/sample_mask.spec.ts
+
+* frag_depth output is tested in
+  src/webgpu/api/operation/rendering/depth_clip_clamp.spec.ts
+
 TODO:
-* test frag_depth
+* test sample_mask in
+  Consider extending the sample_mask out test.
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -1210,3 +1217,8 @@ g.test('inputs,front_facing')
       })
     );
   });
+
+// To test sample_mask as a fragment shader output, consider
+// extending the tests in
+// src/webgpu/api/operation/render_pipeline/sample_mask.spec.ts
+g.test('inputs,sample_mask').unimplemented();
