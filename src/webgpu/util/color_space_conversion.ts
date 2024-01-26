@@ -1,4 +1,4 @@
-import { assert } from '../../common/util/util.js';
+import { assert, unreachable } from '../../common/util/util.js';
 
 import { multiplyMatrices } from './math.js';
 
