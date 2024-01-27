@@ -293,28 +293,31 @@ g.test('resize')
       exp: { R: 0, G: 0, B: 0, A: 0 },
     });
 
-    // Ensure canvas goes back to defaults when set to negative numbers.
-    ctx.canvas.width = -1;
-    currentTexture = ctx.getCurrentTexture();
-    t.expect(currentTexture.width === 300);
-    t.expect(currentTexture.height === 4);
+    // HTMLCanvasElement behaves differently than OffscreenCanvas
+    if (t.params.canvasType === 'onscreen') {
+      // Ensure canvas goes back to defaults when set to negative numbers.
+      ctx.canvas.width = -1;
+      currentTexture = ctx.getCurrentTexture();
+      t.expect(currentTexture.width === 300);
+      t.expect(currentTexture.height === 4);
 
-    ctx.canvas.height = -1;
-    currentTexture = ctx.getCurrentTexture();
-    t.expect(currentTexture.width === 300);
-    t.expect(currentTexture.height === 150);
-    prevTexture = currentTexture;
+      ctx.canvas.height = -1;
+      currentTexture = ctx.getCurrentTexture();
+      t.expect(currentTexture.width === 300);
+      t.expect(currentTexture.height === 150);
 
-    // Setting the canvas width and height values to their current values should
-    // still trigger a change in the texture.
-    const { width, height } = ctx.canvas;
-    ctx.canvas.width = width;
-    ctx.canvas.height = height;
+      // Setting the canvas width and height values to their current values should
+      // still trigger a change in the texture.
+      prevTexture = ctx.getCurrentTexture();
+      const { width, height } = ctx.canvas;
+      ctx.canvas.width = width;
+      ctx.canvas.height = height;
 
-    t.expectTextureDestroyed(prevTexture);
+      t.expectTextureDestroyed(prevTexture);
 
-    currentTexture = ctx.getCurrentTexture();
-    t.expect(prevTexture !== currentTexture);
+      currentTexture = ctx.getCurrentTexture();
+      t.expect(prevTexture !== currentTexture);
+    }
   });
 
 g.test('expiry')
