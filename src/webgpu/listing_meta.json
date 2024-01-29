@@ -1647,6 +1647,8 @@
   "webgpu:shader,execution,flow_control,while:while_continue:*": { "subcaseMS": 5.650 },
   "webgpu:shader,execution,flow_control,while:while_nested_break:*": { "subcaseMS": 12.701 },
   "webgpu:shader,execution,flow_control,while:while_nested_continue:*": { "subcaseMS": 5.450 },
+  "webgpu:shader,execution,memory_layout:read_layout:*": { "subcaseMS": 0 },
+  "webgpu:shader,execution,memory_layout:write_layout:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,memory_model,adjacent:f16:*": { "subcaseMS": 23.625 },
   "webgpu:shader,execution,memory_model,atomicity:atomicity:*": { "subcaseMS": 77.201 },
   "webgpu:shader,execution,memory_model,barrier:workgroup_barrier_load_store:*": { "subcaseMS": 65.850 },
