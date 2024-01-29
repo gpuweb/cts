@@ -1692,6 +1692,8 @@
   "webgpu:shader,execution,shadow:loop:*": { "subcaseMS": 4.901 },
   "webgpu:shader,execution,shadow:switch:*": { "subcaseMS": 4.601 },
   "webgpu:shader,execution,shadow:while:*": { "subcaseMS": 7.400 },
+  "webgpu:shader,execution,stage:basic_compute:*": { "subcaseMS": 1.000 },
+  "webgpu:shader,execution,stage:basic_render:*": { "subcaseMS": 1.000 },
   "webgpu:shader,execution,statement,increment_decrement:frexp_exp_increment:*": { "subcaseMS": 4.700 },
   "webgpu:shader,execution,statement,increment_decrement:scalar_i32_decrement:*": { "subcaseMS": 20.301 },
   "webgpu:shader,execution,statement,increment_decrement:scalar_i32_decrement_underflow:*": { "subcaseMS": 4.900 },

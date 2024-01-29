@@ -3598,6 +3598,13 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "stage"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "statement",
       "increment_decrement"
     ]
