@@ -3660,6 +3660,14 @@ export const listing = [
       "shader",
       "validation",
       "decl",
+      "var"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
       "var_access_mode"
     ]
   },
