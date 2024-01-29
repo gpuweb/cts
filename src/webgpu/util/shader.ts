@@ -11,6 +11,7 @@ export const kDefaultFragmentShaderCode = `
   return vec4<f32>(1.0, 1.0, 1.0, 1.0);
 }`;
 
+// MAINTENANCE_TODO(#3344): deduplicate fullscreen quad shader code.
 export const kFullscreenQuadVertexShaderCode = `
   struct VertexOutput {
     @builtin(position) Position : vec4<f32>

@@ -284,6 +284,10 @@ Read values from color array in the shader, and write it to the texture view via
 - x= every texture format
 - x= sampleCount {1, 4} if valid
 - x= every possible view write method (see above)
+
+TODO: Test sampleCount > 1 for 'render-pass-store' after extending copySinglePixelTextureToBufferUsingComputePass
+      to read multiple pixels from multisampled textures. [1]
+TODO: Test rgb10a2uint when TexelRepresentation.numericRange is made per-component. [2]
 `
   )
   .params(u =>
@@ -298,11 +302,20 @@ Read values from color array in the shader, and write it to the texture view via
           return false;
         }
 
+        // [2]
+        if (format === 'rgb10a2uint') {
+          return false;
+        }
+
         switch (method) {
           case 'storage-write-compute':
           case 'storage-write-fragment':
             return info.color?.storage && sampleCount === 1;
           case 'render-pass-store':
+            // [1]
+            if (sampleCount > 1) {
+              return false;
+            }
             return !!info.colorRender;
           case 'render-pass-resolve':
             return !!info.colorRender?.resolve && sampleCount === 1;
@@ -311,17 +324,8 @@ Read values from color array in the shader, and write it to the texture view via
       })
   )
   .beforeAllSubcases(t => {
-    const { format, method, sampleCount } = t.params;
+    const { format, method } = t.params;
     t.skipIfTextureFormatNotSupported(format);
-
-    // MAINTENANCE_TODO: Remove this skipping when TexelRepresentation.numericRange is made per-component.
-    t.skipIf(format === 'rgb10a2uint', 'NumericRange is not per component yet for rgba10a2unit.');
-
-    // MAINTENANCE_TODO: Remove this skipping when copySinglePixelTextureToBufferUsingComputePass is made capable of reading multiple pixels and use that to check texture with sampleCount === 4. [1]
-    t.skipIf(
-      sampleCount === 4,
-      'Helper needed for checking multiple pixels of a multisampled texture.'
-    );
 
     switch (method) {
       case 'storage-write-compute':
