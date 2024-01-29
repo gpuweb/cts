@@ -66,6 +66,13 @@ const workgroupMemoryBarrierStoreLoadTestCode = `
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
 `;
 
+const workgroupUniformLoadMemoryBarrierStoreLoadTestCode = `
+  wg_test_locations[x_0] = 1;
+  _ = workgroupUniformLoad(&placeholder_wg_var);
+  let r0 = u32(wg_test_locations[x_1]);
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
+`;
+
 const storageMemoryBarrierLoadStoreTestCode = `
   let r0 = u32(test_locations.value[x_0]);
   workgroupBarrier();
@@ -76,6 +83,13 @@ const storageMemoryBarrierLoadStoreTestCode = `
 const workgroupMemoryBarrierLoadStoreTestCode = `
   let r0 = u32(wg_test_locations[x_0]);
   workgroupBarrier();
+  wg_test_locations[x_1] = 1;
+  atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
+`;
+
+const workgroupUniformLoadMemoryBarrierLoadStoreTestCode = `
+  let r0 = u32(wg_test_locations[x_0]);
+  _ = workgroupUniformLoad(&placeholder_wg_var);
   wg_test_locations[x_1] = 1;
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
 `;
@@ -94,20 +108,38 @@ const workgroupMemoryBarrierStoreStoreTestCode = `
   test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1] = wg_test_locations[x_1];
 `;
 
-function getTestCode(p: { memType: MemoryType; accessPair: AccessPair }): string {
+const workgroupUniformLoadMemoryBarrierStoreStoreTestCode = `
+  wg_test_locations[x_0] = 1;
+  _ = workgroupUniformLoad(&placeholder_wg_var);
+  wg_test_locations[x_1] = 2;
+  _ = workgroupUniformLoad(&placeholder_wg_var);
+  test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1] = wg_test_locations[x_1];
+`;
+
+function getTestCode(p: {
+  memType: MemoryType;
+  accessPair: AccessPair;
+  normalBarrier: boolean;
+}): string {
   switch (p.accessPair) {
     case 'rw':
       return p.memType === MemoryType.NonAtomicStorageClass
         ? storageMemoryBarrierLoadStoreTestCode
-        : workgroupMemoryBarrierLoadStoreTestCode;
+        : p.normalBarrier
+        ? workgroupMemoryBarrierLoadStoreTestCode
+        : workgroupUniformLoadMemoryBarrierLoadStoreTestCode;
     case 'wr':
       return p.memType === MemoryType.NonAtomicStorageClass
         ? storageMemoryBarrierStoreLoadTestCode
-        : workgroupMemoryBarrierStoreLoadTestCode;
+        : p.normalBarrier
+        ? workgroupMemoryBarrierStoreLoadTestCode
+        : workgroupUniformLoadMemoryBarrierStoreLoadTestCode;
     case 'ww':
       return p.memType === MemoryType.NonAtomicStorageClass
         ? storageMemoryBarrierStoreStoreTestCode
-        : workgroupMemoryBarrierStoreStoreTestCode;
+        : p.normalBarrier
+        ? workgroupMemoryBarrierStoreStoreTestCode
+        : workgroupUniformLoadMemoryBarrierStoreStoreTestCode;
   }
 }
 
@@ -123,11 +155,16 @@ g.test('workgroup_barrier_store_load')
       .combine('accessValueType', kAccessValueTypes)
       .combine('memType', kMemTypes)
       .combine('accessPair', ['wr'] as const)
+      .combine('normalBarrier', [true, false] as const)
   )
   .beforeAllSubcases(t => {
     if (t.params.accessValueType === 'f16') {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
+    t.skipIf(
+      !t.params.normalBarrier && t.params.memType === MemoryType.NonAtomicStorageClass,
+      'workgroupUniformLoad does not have storage memory semantics'
+    );
   })
   .fn(async t => {
     const resultCode = `
@@ -137,11 +174,14 @@ g.test('workgroup_barrier_store_load')
         atomicAdd(&test_results.weak, 1u);
       }
     `;
-    const testShader = buildTestShader(
+    let testShader = buildTestShader(
       getTestCode(t.params),
       t.params.memType,
       TestType.IntraWorkgroup
     );
+    if (!t.params.normalBarrier) {
+      testShader += '\nvar<workgroup> placeholder_wg_var : u32;\n';
+    }
     const resultShader = buildResultShader(
       resultCode,
       TestType.IntraWorkgroup,
@@ -169,11 +209,16 @@ g.test('workgroup_barrier_load_store')
       .combine('accessValueType', kAccessValueTypes)
       .combine('memType', kMemTypes)
       .combine('accessPair', ['rw'] as const)
+      .combine('normalBarrier', [true, false] as const)
   )
   .beforeAllSubcases(t => {
     if (t.params.accessValueType === 'f16') {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
+    t.skipIf(
+      !t.params.normalBarrier && t.params.memType === MemoryType.NonAtomicStorageClass,
+      'workgroupUniformLoad does not have storage memory semantics'
+    );
   })
   .fn(async t => {
     const resultCode = `
@@ -183,11 +228,14 @@ g.test('workgroup_barrier_load_store')
         atomicAdd(&test_results.weak, 1u);
       }
     `;
-    const testShader = buildTestShader(
+    let testShader = buildTestShader(
       getTestCode(t.params),
       t.params.memType,
       TestType.IntraWorkgroup
     );
+    if (!t.params.normalBarrier) {
+      testShader += '\nvar<workgroup> placeholder_wg_var : u32;\n';
+    }
     const resultShader = buildResultShader(
       resultCode,
       TestType.IntraWorkgroup,
@@ -215,11 +263,16 @@ g.test('workgroup_barrier_store_store')
       .combine('accessValueType', kAccessValueTypes)
       .combine('memType', kMemTypes)
       .combine('accessPair', ['ww'] as const)
+      .combine('normalBarrier', [true, false] as const)
   )
   .beforeAllSubcases(t => {
     if (t.params.accessValueType === 'f16') {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
+    t.skipIf(
+      !t.params.normalBarrier && t.params.memType === MemoryType.NonAtomicStorageClass,
+      'workgroupUniformLoad does not have storage memory semantics'
+    );
   })
   .fn(async t => {
     const resultCode = `
@@ -229,11 +282,14 @@ g.test('workgroup_barrier_store_store')
         atomicAdd(&test_results.weak, 1u);
       }
     `;
-    const testShader = buildTestShader(
+    let testShader = buildTestShader(
       getTestCode(t.params),
       t.params.memType,
       TestType.IntraWorkgroup
     );
+    if (!t.params.normalBarrier) {
+      testShader += '\nvar<workgroup> placeholder_wg_var : u32;\n';
+    }
     const resultShader = buildResultShader(
       resultCode,
       TestType.IntraWorkgroup,
