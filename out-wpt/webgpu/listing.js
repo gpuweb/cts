@@ -3491,6 +3491,13 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "memory_layout"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "memory_model",
       "adjacent"
     ]
