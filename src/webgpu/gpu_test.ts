@@ -888,7 +888,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     });
 
     const storageBuffer = this.device.createBuffer({
-      size: sampleCount * type.size * componentCount,
+      size: sampleCount * type.size * componentCount * width * height,
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
     });
     this.trackForCleanup(storageBuffer);
