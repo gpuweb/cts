@@ -855,20 +855,18 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       @group(0) @binding(1) var<storage, read_write> dst : Buffer;
 
       struct Params {
-        origin: vec3u,
-        pad0: u32,
-        extent: vec3u,
-        pad1: u32,
+        origin: vec2u,
+        extent: vec2u,
       };
       @group(0) @binding(2) var<uniform> params : Params;
 
       @compute @workgroup_size(${kWorkgroupSizeX}, ${kWorkgroupSizeY}, 1) fn main(@builtin(global_invocation_id) id : vec3u) {
         let boundary = params.origin + params.extent;
-        let coord = params.origin + id;
+        let coord = params.origin + id.xy;
         if (any(coord >= boundary)) {
           return;
         }
-        let offset = (coord.x + coord.y * params.extent.x) * ${componentCount} * ${sampleCount};
+        let offset = (id.x + id.y * params.extent.x) * ${componentCount} * ${sampleCount};
         for (var sampleIndex = 0u; sampleIndex < ${sampleCount};
           sampleIndex = sampleIndex + 1) {
           let o = offset + sampleIndex * ${componentCount};
@@ -896,7 +894,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     this.trackForCleanup(storageBuffer);
 
     const uniformBuffer = this.makeBufferWithContents(
-      new Uint32Array([origin.x, origin.y, origin.z || 0, 0, width, height, 1, 0]),
+      new Uint32Array([origin.x, origin.y, width, height]),
       GPUBufferUsage.UNIFORM
     );
 
@@ -927,8 +925,8 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     pass.setPipeline(computePipeline);
     pass.setBindGroup(0, uniformBindGroup);
     pass.dispatchWorkgroups(
-      (width + kWorkgroupSizeX - 1) / kWorkgroupSizeX,
-      (height + kWorkgroupSizeY - 1) / kWorkgroupSizeY,
+      Math.floor((width + kWorkgroupSizeX - 1) / kWorkgroupSizeX),
+      Math.floor((height + kWorkgroupSizeY - 1) / kWorkgroupSizeY),
       1
     );
     pass.end();
