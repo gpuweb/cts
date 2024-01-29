@@ -328,3 +328,13 @@ fn((t) => {
 
   t.expectCompileResult(shouldPass, wgsl);
 });
+
+g.test('function_addrspace_at_module_scope').
+desc('Test that the function address space is not allowed at module scope.').
+params((u) => u.combine('addrspace', ['private', 'function'])).
+fn((t) => {
+  t.expectCompileResult(
+    t.params.addrspace === 'private',
+    `var<${t.params.addrspace}> foo : i32;`
+  );
+});

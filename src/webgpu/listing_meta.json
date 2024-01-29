@@ -1730,6 +1730,7 @@
   "webgpu:shader,validation,decl,ptr_spelling:ptr_not_instantiable:*": { "subcaseMS": 1.310 },
   "webgpu:shader,validation,decl,var:module_scope_types:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,var:function_scope_types:*": { "subcaseMS": 1.000 },
+  "webgpu:shader,validation,decl,var:function_addrspace_at_module_scope:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,var_access_mode:explicit_access_mode:*": { "subcaseMS": 1.373 },
   "webgpu:shader,validation,decl,var_access_mode:implicit_access_mode:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,var_access_mode:read_access:*": { "subcaseMS": 1.177 },
