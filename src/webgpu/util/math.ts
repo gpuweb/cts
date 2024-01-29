@@ -2281,3 +2281,8 @@ export function subtractVectors(v1: readonly number[], v2: readonly number[]) {
 export function dotProduct(v1: readonly number[], v2: readonly number[]) {
   return v1.reduce((a, v, i) => a + v * v2[i], 0);
 }
+
+/** @returns the absolute value of a bigint */
+export function absBigInt(v: bigint): bigint {
+  return v < 0n ? -v : v;
+}

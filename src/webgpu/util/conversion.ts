@@ -685,7 +685,7 @@ export class VectorType {
   }
 
   /** Constructs a Vector of this type with the given values */
-  public create(value: number | readonly number[]): Vector {
+  public create(value: (number | bigint) | readonly (number | bigint)[]): Vector {
     if (value instanceof Array) {
       assert(value.length === this.width);
     } else {
@@ -1665,8 +1665,33 @@ export const kAllFloatVectors = [
 /// All floating-point scalar and vector types
 export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors] as const;
 
-/// All integer scalar and vector types
-export const kAllIntegerScalarsAndVectors = [
+/// Abstract integer scalar type
+export const kAbstractIntegerScalar = [TypeAbstractInt] as const;
+
+/// Abstract integer vec2 type
+export const kAbstractIntegerVector2 = [TypeVec(2, TypeAbstractInt)] as const;
+
+/// Abstract integer vec3 type
+export const kAbstractIntegerVector3 = [TypeVec(3, TypeAbstractInt)] as const;
+
+/// Abstract integer vec4 type
+export const kAbstractIntegerVector4 = [TypeVec(4, TypeAbstractInt)] as const;
+
+/// All abstract integer scalar vector types
+export const kAbstractIntegerVectors = [
+  ...kAbstractIntegerVector2,
+  ...kAbstractIntegerVector3,
+  ...kAbstractIntegerVector4,
+] as const;
+
+/// Abstract integer scalar and vector types
+export const kAllAbstractIntegerScalarAndVectors = [
+  ...kAbstractIntegerScalar,
+  ...kAbstractIntegerVectors,
+] as const;
+
+/// All concrete integer scalar and vector types
+export const kAllConcreteIntegerScalarsAndVectors = [
   TypeI32,
   TypeVec(2, TypeI32),
   TypeVec(3, TypeI32),
@@ -1694,9 +1719,9 @@ export const kAllUnsignedIntegerScalarsAndVectors = [
 ] as const;
 
 /// All floating-point and integer scalar and vector types
-export const kAllFloatAndIntegerScalarsAndVectors = [
+export const kAllFloatAndConcreteIntegerScalarsAndVectors = [
   ...kAllFloatScalarsAndVectors,
-  ...kAllIntegerScalarsAndVectors,
+  ...kAllConcreteIntegerScalarsAndVectors,
 ] as const;
 
 /// All floating-point and signed integer scalar and vector types
