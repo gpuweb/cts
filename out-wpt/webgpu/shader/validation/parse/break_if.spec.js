@@ -7,6 +7,10 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kTests = {
+  compound_break: {
+    src: '{ break if true; }',
+    pass: false
+  },
   loop_break: {
     src: 'loop { break if true; }',
     pass: false
