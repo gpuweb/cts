@@ -987,7 +987,7 @@ ${body}
  *                 i.e. '[i]'
  */
 function abstractIntSnippet(expr: string, case_idx: number, accessor: string = ''): string {
-  // AbstractFloats are i64s under the hood. WebGPU does not support
+  // AbstractInts are i64s under the hood. WebGPU does not support
   // putting i64s in buffers, or any 64-bit simple types, so the result needs to
   // be split up into u32 bitfields
   //
