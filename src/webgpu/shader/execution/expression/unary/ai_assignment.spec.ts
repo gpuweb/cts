@@ -5,13 +5,24 @@ Execution Tests for assignment of AbstractInts
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { TypeAbstractInt, TypeI32, TypeU32 } from '../../../../util/conversion.js';
-import { ShaderBuilder, basicExpressionBuilder, onlyConstInputSource, run } from '../expression.js';
+import {
+  ShaderBuilder,
+  abstractIntShaderBuilder,
+  basicExpressionBuilder,
+  onlyConstInputSource,
+  run,
+} from '../expression.js';
 
 import { d } from './ai_assignment.cache.js';
 
 function concrete_assignment(): ShaderBuilder {
   return basicExpressionBuilder(value => `${value}`);
 }
+
+function abstract_assignment(): ShaderBuilder {
+  return abstractIntShaderBuilder(value => `${value}`);
+}
+
 export const g = makeTestGroup(GPUTest);
 
 g.test('abstract')
@@ -22,7 +33,10 @@ testing that extracting abstract ints works
 `
   )
   .params(u => u.combine('inputSource', onlyConstInputSource))
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract');
+    await run(t, abstract_assignment(), [TypeAbstractInt], TypeAbstractInt, t.params, cases, 1);
+  });
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/WGSL/#i32-builtin')

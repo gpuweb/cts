@@ -947,6 +947,14 @@ export class Scalar {
     switch (typeof this.value) {
       case 'bigint':
         if (this.type.kind === 'abstract-int') {
+          // WGSL parses negative numbers as a negated positive.
+          // This means '-9223372036854775808' parses as `-' &
+          // '9223372036854775808', so must be written as
+          // '(-9223372036854775807 - 1)' in WGSL, because '9223372036854775808'
+          // is not a valid AbstractInt.
+          if (this.value === -9223372036854775808n) {
+            return `(-9223372036854775807 - 1)`;
+          }
           return `${this.value}`;
         }
         break;
