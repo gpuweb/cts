@@ -3,7 +3,7 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { range } from '../../../../common/util/util.js';
+import { assert, range } from '../../../../common/util/util.js';
 import {
   kBlendFactors,
   kBlendOperations,
@@ -14,11 +14,14 @@ import {
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
   computeBytesPerSampleFromFormats,
+  kColorTextureFormats,
+  kDepthStencilFormats,
 } from '../../../format_info.js';
 import {
   getFragmentShaderCodeWithOutput,
   getPlainTypeInfo,
   kDefaultFragmentShaderCode,
+  kDefaultVertexShaderCode,
 } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
@@ -49,12 +52,56 @@ g.test('color_target_exists')
     t.doCreateRenderPipelineTest(isAsync, false, badDescriptor);
   });
 
+g.test('targets_format_is_color_format')
+  .desc(
+    `Tests that color target state format must be a color format, regardless of how the
+    fragment shader writes to it.`
+  )
+  .params(u => {
+    assert(kColorTextureFormats.length + kDepthStencilFormats.length === kAllTextureFormats.length);
+    return u //
+      .combine('isAsync', [false, true])
+      .combine('format', ['rgba8unorm', ...kDepthStencilFormats] as const)
+      .beginSubcases()
+      .combine('fragOutType', ['f32', 'u32', 'i32'] as const);
+  })
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(t => {
+    const { isAsync, format, fragOutType } = t.params;
+
+    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
+      { values, plainType: fragOutType, componentCount: 4 },
+    ]);
+
+    const success = format === 'rgba8unorm' && fragOutType === 'f32';
+    t.doCreateRenderPipelineTest(isAsync, success, {
+      vertex: {
+        module: t.device.createShaderModule({ code: kDefaultVertexShaderCode }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({ code: fragmentShaderCode }),
+        entryPoint: 'main',
+        targets: [{ format }],
+      },
+      layout: 'auto',
+    });
+  });
+
 g.test('targets_format_renderable')
-  .desc(`Tests that color target state format must have RENDER_ATTACHMENT capability.`)
+  .desc(
+    `Tests that color target state format must have RENDER_ATTACHMENT capability
+    (tests only color formats).`
+  )
   .params(u =>
     u //
       .combine('isAsync', [false, true])
-      .combine('format', kAllTextureFormats)
+      .combine('format', kColorTextureFormats)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
