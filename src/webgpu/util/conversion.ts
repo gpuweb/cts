@@ -947,12 +947,11 @@ export class Scalar {
     switch (typeof this.value) {
       case 'bigint':
         if (this.type.kind === 'abstract-int') {
-          // Because the WGSL spec has chosen to take the unergonomic option of
-          // making negative integers `-foo` be parsed as `-` applied to `fool`,
-          // one cannot directly write the minimum value of an AbstractInt in
-          // a shader.
-          // So need to substitute '(-9223372036854775807 - 1)' for
-          // '-9223372036854775808'
+          // WGSL parses negative numbers as a negated positive.
+          // This means '-9223372036854775808' parses as `-' &
+          // '9223372036854775808', so must be written as
+          // '(-9223372036854775807 - 1)' in WGSL, because '9223372036854775808'
+          // is not a valid AbstractInt.
           if (this.value === -9223372036854775808n) {
             return `(-9223372036854775807 - 1)`;
           }
