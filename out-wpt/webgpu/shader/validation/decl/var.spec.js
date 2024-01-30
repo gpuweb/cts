@@ -338,3 +338,102 @@ fn((t) => {
     `var<${t.params.addrspace}> foo : i32;`
   );
 });
+
+// A list of resource variable declarations.
+const kResourceDecls = {
+  uniform: 'var<uniform> buffer : vec4f;',
+  storage: 'var<storage> buffer : vec4f;',
+  texture: 'var t : texture_2d<f32>;',
+  sampler: 'var s : sampler;'
+};
+
+g.test('binding_point_on_resources').
+desc('Test that resource variables must have both @group and @binding attributes.').
+params((u) =>
+u.
+combine('decl', keysOf(kResourceDecls)).
+combine('group', ['', '@group(0)']).
+combine('binding', ['', '@binding(0)'])
+).
+fn((t) => {
+  const shouldPass = t.params.group !== '' && t.params.binding !== '';
+  const wgsl = `${t.params.group} ${t.params.binding} ${kResourceDecls[t.params.decl]}`;
+  t.expectCompileResult(shouldPass, wgsl);
+});
+
+g.test('binding_point_on_non_resources').
+desc('Test that non-resource variables cannot have either @group or @binding attributes.').
+params((u) =>
+u.
+combine('addrspace', ['private', 'workgroup']).
+combine('group', ['', '@group(0)']).
+combine('binding', ['', '@binding(0)'])
+).
+fn((t) => {
+  const shouldPass = t.params.group === '' && t.params.binding === '';
+  const wgsl = `${t.params.group} ${t.params.binding} var<${t.params.addrspace}> foo : i32;`;
+  t.expectCompileResult(shouldPass, wgsl);
+});
+
+g.test('binding_point_on_function_var').
+desc('Test that function variables cannot have either @group or @binding attributes.').
+params((u) => u.combine('group', ['', '@group(0)']).combine('binding', ['', '@binding(0)'])).
+fn((t) => {
+  const shouldPass = t.params.group === '' && t.params.binding === '';
+  const wgsl = `
+    fn foo() {
+      ${t.params.group} ${t.params.binding} var bar : i32;
+    }`;
+  t.expectCompileResult(shouldPass, wgsl);
+});
+
+g.test('binding_collisions').
+desc('Test that binding points can collide iff they are not used by the same entry point.').
+params((u) =>
+u.
+combine('a_group', [0, 1]).
+combine('b_group', [0, 1]).
+combine('a_binding', [0, 1]).
+combine('b_binding', [0, 1]).
+combine('b_use', ['same', 'different'])
+).
+fn((t) => {
+  const wgsl = `
+    @group(${t.params.a_group}) @binding(${t.params.a_binding}) var<uniform> a : vec4f;
+    @group(${t.params.b_group}) @binding(${t.params.b_binding}) var<uniform> b : vec4f;
+
+    @fragment
+    fn main1() {
+      _ = a;
+      ${
+  t.params.b_use === 'same' ?
+  '' :
+  `
+      }
+
+    @fragment
+    fn main2() {`
+  }
+      _ = b;
+    }`;
+
+  const collision =
+  t.params.a_group === t.params.b_group && t.params.a_binding === t.params.b_binding;
+  const shouldFail = collision && t.params.b_use === 'same';
+  t.expectCompileResult(!shouldFail, wgsl);
+});
+
+g.test('binding_collision_unused_helper').
+desc('Test that binding points can collide in an unused helper function.').
+fn((t) => {
+  const wgsl = `
+    @group(0) @binding(0) var<uniform> a : vec4f;
+    @group(0) @binding(0) var<uniform> b : vec4f;
+
+    fn foo() {
+      _ = a;
+      _ = b;
+    }`;
+
+  t.expectCompileResult(true, wgsl);
+});
