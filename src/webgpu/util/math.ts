@@ -885,10 +885,16 @@ export function biasedRange(a: number, b: number, num_steps: number): readonly n
  *
  * biasedRange was not made into a generic or to take in (number|bigint),
  * because that introduces a bunch of complexity overhead related to type
- * differentiation
+ * differentiation.
+ *
+ * Scaling is used internally so that the number of possible indices is
+ * significantly larger than num_steps. This is done to avoid duplicate entries
+ * in the resulting range due to quantizing to integers during the calculation.
+ *
+ *  If a and b are close together, such that the number of integers between them
+ *  is close to num_steps, then duplicates will occur regardless of scaling.
  */
 export function biasedRangeBigInt(a: bigint, b: bigint, num_steps: number): readonly bigint[] {
-  const c = 2;
   if (num_steps <= 0) {
     return [];
   }
@@ -898,9 +904,15 @@ export function biasedRangeBigInt(a: bigint, b: bigint, num_steps: number): read
     return [a];
   }
 
-  return Array.from(Array(num_steps).keys()).map(i =>
-    lerpBigInt(a, b, Math.trunc(Math.pow(i / (num_steps - 1), c)), num_steps)
-  );
+  const c = 2;
+  const scaling = 1000;
+  const scaled_num_steps = num_steps * scaling;
+
+  return Array.from(Array(num_steps).keys()).map(i => {
+    const biased_i = Math.pow(i / (num_steps - 1), c); // Floating Point on [0, 1]
+    const scaled_i = Math.trunc((scaled_num_steps - 1) * biased_i); // Integer on [0, scaled_num_steps - 1]
+    return lerpBigInt(a, b, scaled_i, scaled_num_steps);
+  });
 }
 
 /**
