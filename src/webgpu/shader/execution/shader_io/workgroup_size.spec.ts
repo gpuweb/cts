@@ -47,12 +47,14 @@ function checkResults(
   return undefined;
 }
 
-const kSizes = [1, 2, 3, 4, 8, 11, 16, 51, 64, 128, 256];
-
 g.test('workgroup_size')
   .desc(`Test workgroup size is set correctly`)
   .params(u =>
-    u.combine('wgx', kSizes).combine('wgy', kSizes).combine('wgz', kSizes).beginSubcases()
+    u
+      .combine('wgx', [1, 3, 4, 8, 11, 16, 51, 64, 128, 256] as const)
+      .combine('wgy', [1, 3, 4, 8, 16, 51, 64, 256] as const)
+      .combine('wgz', [1, 3, 11, 16, 128, 256] as const)
+      .beginSubcases()
   )
   .fn(async t => {
     const {

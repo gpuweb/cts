@@ -594,6 +594,7 @@ g.test('texture_size,2d_texture,compressed_format')
     u
       .combine('dimension', [undefined, '2d'] as const)
       .combine('format', kCompressedTextureFormats)
+      .beginSubcases()
       .expand('sizeVariant', p => {
         const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
         return [
