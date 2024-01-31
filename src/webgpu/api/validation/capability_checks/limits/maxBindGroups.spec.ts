@@ -23,7 +23,7 @@ type LimitToBindingLayout = {
   entry: BindingLayout;
 };
 
-const kLimitToBindingLayout: LimitToBindingLayout[] = [
+const kLimitToBindingLayout: readonly LimitToBindingLayout[] = [
   {
     name: 'maxSampledTexturesPerShaderStage',
     entry: {
@@ -60,7 +60,7 @@ const kLimitToBindingLayout: LimitToBindingLayout[] = [
       },
     },
   },
-];
+] as const;
 
 /**
  * Yields all possible binding layout entries for a stage.
