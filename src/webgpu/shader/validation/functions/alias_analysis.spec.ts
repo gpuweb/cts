@@ -104,10 +104,10 @@ g.test('two_pointers')
   .params(u =>
     u
       .combine('address_space', kWritableAddressSpaces)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -139,11 +139,11 @@ g.test('two_pointers_to_array_elements')
   .params(u =>
     u
       .combine('address_space', kWritableAddressSpaces)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('index', [0, 1])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -176,11 +176,11 @@ passes the element pointers to another function.`
   .params(u =>
     u
       .combine('address_space', kWritableAddressSpaces)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('index', [0, 1])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -215,11 +215,11 @@ g.test('two_pointers_to_struct_members')
   .params(u =>
     u
       .combine('address_space', kWritableAddressSpaces)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('member', ['a', 'b'])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -257,11 +257,11 @@ structures and then passes the member pointers to another function.`
   .params(u =>
     u
       .combine('address_space', kWritableAddressSpaces)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('member', ['a', 'b'])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -301,10 +301,10 @@ g.test('one_pointer_one_module_scope')
   .params(u =>
     u
       .combine('address_space', ['private', 'storage', 'workgroup'] as const)
-      .combine('a_use', keysOf(kUses))
-      .combine('b_use', keysOf(kUses))
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', keysOf(kUses))
+      .combine('b_use', keysOf(kUses))
   )
   .fn(t => {
     if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -333,10 +333,10 @@ g.test('subcalls')
   .params(u =>
     u
       .combine('address_space', ['private', 'storage', 'workgroup'] as const)
-      .combine('a_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
-      .combine('b_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
+      .combine('b_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
   )
   .fn(t => {
     if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -379,10 +379,10 @@ g.test('member_accessors')
   .params(u =>
     u
       .combine('address_space', ['private', 'storage', 'workgroup'] as const)
-      .combine('a_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
-      .combine('b_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
       .combine('aliased', [true, false])
       .beginSubcases()
+      .combine('a_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
+      .combine('b_use', ['no_access', 'assign', 'binary_lhs'] as UseName[])
   )
   .fn(t => {
     if (requiresUnrestrictedPointerParameters(t.params.address_space)) {

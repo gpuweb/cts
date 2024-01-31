@@ -594,6 +594,7 @@ params((u) =>
 u.
 combine('dimension', [undefined, '2d']).
 combine('format', kCompressedTextureFormats).
+beginSubcases().
 expand('sizeVariant', (p) => {
   const { blockWidth, blockHeight } = kTextureFormatInfo[p.format];
   return [

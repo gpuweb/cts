@@ -429,6 +429,7 @@ unless(
   t.bgUsage0 !== 'sampled-texture' && t.bg0Levels.count > 1 ||
   t.bgUsage1 !== 'sampled-texture' && t.bg1Levels.count > 1
 ).
+beginSubcases().
 combine('inSamePass', [true, false])
 ).
 fn((t) => {

@@ -191,10 +191,10 @@ g.test('basics')
   .desc(`Test collective operations in simple uniform or non-uniform control flow.`)
   .params(u =>
     u
-      .combineWithParams(kCollectiveOps)
-      .combineWithParams(kConditions)
       .combine('statement', ['if', 'for', 'while', 'switch'] as const)
       .beginSubcases()
+      .combineWithParams(kConditions)
+      .combineWithParams(kCollectiveOps)
   )
   .fn(t => {
     if (t.params.op === 'textureBarrier' || t.params.cond.startsWith('storage_texture')) {
@@ -2217,6 +2217,7 @@ g.test('binary_expressions')
     u
       .combine('e1', keysOf(kExpressionCases))
       .combine('e2', keysOf(kExpressionCases))
+      .beginSubcases()
       .combine('op', keysOf(kBinOps))
   )
   .fn(t => {

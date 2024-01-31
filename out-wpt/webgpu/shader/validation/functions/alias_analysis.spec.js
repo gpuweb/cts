@@ -104,10 +104,10 @@ desc(`Test aliasing of two pointers passed to a function.`).
 params((u) =>
 u.
 combine('address_space', kWritableAddressSpaces).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -139,11 +139,11 @@ desc(`Test aliasing of two array element pointers passed to a function.`).
 params((u) =>
 u.
 combine('address_space', kWritableAddressSpaces).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('index', [0, 1]).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -176,11 +176,11 @@ passes the element pointers to another function.`
 params((u) =>
 u.
 combine('address_space', kWritableAddressSpaces).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('index', [0, 1]).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -215,11 +215,11 @@ desc(`Test aliasing of two struct member pointers passed to a function.`).
 params((u) =>
 u.
 combine('address_space', kWritableAddressSpaces).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('member', ['a', 'b']).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -257,11 +257,11 @@ structures and then passes the member pointers to another function.`
 params((u) =>
 u.
 combine('address_space', kWritableAddressSpaces).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('member', ['a', 'b']).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   t.skipIfLanguageFeatureNotSupported('unrestricted_pointer_parameters');
@@ -301,10 +301,10 @@ desc(`Test aliasing of a pointer with a direct access to a module-scope variable
 params((u) =>
 u.
 combine('address_space', ['private', 'storage', 'workgroup']).
-combine('a_use', keysOf(kUses)).
-combine('b_use', keysOf(kUses)).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', keysOf(kUses)).
+combine('b_use', keysOf(kUses))
 ).
 fn((t) => {
   if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -333,10 +333,10 @@ desc(`Test aliasing of two pointers passed to a function, and then passed to oth
 params((u) =>
 u.
 combine('address_space', ['private', 'storage', 'workgroup']).
-combine('a_use', ['no_access', 'assign', 'binary_lhs']).
-combine('b_use', ['no_access', 'assign', 'binary_lhs']).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', ['no_access', 'assign', 'binary_lhs']).
+combine('b_use', ['no_access', 'assign', 'binary_lhs'])
 ).
 fn((t) => {
   if (requiresUnrestrictedPointerParameters(t.params.address_space)) {
@@ -379,10 +379,10 @@ desc(`Test aliasing of two pointers passed to a function and used with member ac
 params((u) =>
 u.
 combine('address_space', ['private', 'storage', 'workgroup']).
-combine('a_use', ['no_access', 'assign', 'binary_lhs']).
-combine('b_use', ['no_access', 'assign', 'binary_lhs']).
 combine('aliased', [true, false]).
-beginSubcases()
+beginSubcases().
+combine('a_use', ['no_access', 'assign', 'binary_lhs']).
+combine('b_use', ['no_access', 'assign', 'binary_lhs'])
 ).
 fn((t) => {
   if (requiresUnrestrictedPointerParameters(t.params.address_space)) {

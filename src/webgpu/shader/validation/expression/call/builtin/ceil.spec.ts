@@ -36,6 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
+      .beginSubcases()
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
