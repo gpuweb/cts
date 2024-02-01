@@ -2,7 +2,7 @@ WebGPU tests that require manual intervention.
 
 Many of these test may be HTML pages rather than using the harness.
 
-Add informal notes here on possible stress tests.
+Add informal notes here on possible manual tests.
 
 - Suspending or hibernating the machine.
 - Manually crashing or relaunching the browser's GPU process.
