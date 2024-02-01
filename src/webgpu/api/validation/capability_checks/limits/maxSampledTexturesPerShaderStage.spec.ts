@@ -107,7 +107,7 @@ g.test('createPipelineLayout,at_over')
         const kNumGroups = Math.ceil(testValue / maxBindingsPerBindGroup);
 
         // Not sure what to do in this case but best we get notified if it happens.
-        assert(kNumGroups < t.device.limits.maxBindGroups);
+        assert(kNumGroups <= t.device.limits.maxBindGroups);
 
         const bindGroupLayouts = range(kNumGroups, i => {
           const numInGroup = Math.min(
