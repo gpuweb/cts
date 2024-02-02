@@ -7,9 +7,6 @@ The test video files were generated with by ffmpeg cmds below:
 // Generate four-colors-vp8-bt601.webm, mimeType: 'video/webm; codecs=vp8'
 ffmpeg.exe -loop 1 -i .\four-colors.png -c:v libvpx -pix_fmt yuv420p -frames 50 -colorspace smpte170m -color_primaries smpte170m -color_trc smpte170m -color_range tv four-colors-vp8-bt601.webm
 
-// Generate four-colors-theora-bt601.ogv, mimeType: 'video/ogg; codecs=theora'
-ffmpeg.exe -loop 1 -i .\four-colors.png -c:v libtheora -pix_fmt yuv420p -frames 50 -colorspace smpte170m -color_primaries smpte170m -color_trc smpte170m -color_range tv four-colors-theora-bt601.ogv
-
 // Generate four-colors-h264-bt601.mp4, mimeType: 'video/mp4; codecs=avc1.4d400c'
 ffmpeg.exe -loop 1 -i .\four-colors.png -c:v libx264 -pix_fmt yuv420p -frames 50 -colorspace smpte170m -color_primaries smpte170m -color_trc smpte170m -color_range tv four-colors-h264-bt601.mp4
 
