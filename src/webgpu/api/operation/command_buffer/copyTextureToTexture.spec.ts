@@ -1376,6 +1376,9 @@ g.test('copy_multisampled_color')
     texture can only be 1.
   `
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
+  })
   .fn(t => {
     const textureSize = [32, 16, 1] as const;
     const kColorFormat = 'rgba8unorm';
@@ -1564,6 +1567,9 @@ g.test('copy_multisampled_depth')
     texture can only be 1.
   `
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(t.isCompatibility, 'multisample textures are not copyable in compatibility mode');
+  })
   .fn(t => {
     const textureSize = [32, 16, 1] as const;
     const kDepthFormat = 'depth24plus';
