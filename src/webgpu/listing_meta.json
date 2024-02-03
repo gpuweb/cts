@@ -845,6 +845,7 @@
   "webgpu:compat,api,validation,createBindGroupLayout:unsupportedStorageTextureFormats:*": { "subcaseMS": 0.601 },
   "webgpu:compat,api,validation,encoding,cmds,copyTextureToBuffer:compressed:*": { "subcaseMS": 202.929 },
   "webgpu:compat,api,validation,encoding,cmds,copyTextureToTexture:compressed:*": { "subcaseMS": 0.600 },
+  "webgpu:compat,api,validation,encoding,cmds,copyTextureToTexture:multisample:*": { "subcaseMS": 0.600 },
   "webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,compute_pass,unused:*": { "subcaseMS": 1.501 },
   "webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,compute_pass,used:*": { "subcaseMS": 49.405 },
   "webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,render_pass,unused:*": { "subcaseMS": 16.002 },
