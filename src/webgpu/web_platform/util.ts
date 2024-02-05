@@ -370,8 +370,6 @@ export function startPlayingAndWaitForVideo(
           try {
             await callback();
             resolve();
-            video.src = '';
-            video.srcObject = null;
           } catch (ex) {
             reject(ex);
           }
@@ -513,6 +511,8 @@ export function getVideoElement(t: GPUTest, videoName: VideoName): HTMLVideoElem
 
   const videoUrl = getResourcePath(videoName);
   videoElement.src = videoUrl;
+
+  t.trackForCleanup(videoElement);
 
   return videoElement;
 }
