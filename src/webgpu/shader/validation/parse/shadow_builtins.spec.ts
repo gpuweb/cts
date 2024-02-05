@@ -334,6 +334,42 @@ const kTests = {
     keyword: `normalize`,
     src: `_ = normalize(vec2(1, 2));`,
   },
+  pack2x16snorm: {
+    keyword: `pack2x16snorm`,
+    src: `_ = pack2x16snorm(vec2(1, 2));`,
+  },
+  pack2x16unorm: {
+    keyword: `pack2x16unorm`,
+    src: `_ = pack2x16unorm(vec2(1, 2));`,
+  },
+  pack2x16float: {
+    keyword: `pack2x16float`,
+    src: `_ = pack2x16float(vec2(1, 2));`,
+  },
+  pack4x8snorm: {
+    keyword: `pack4x8snorm`,
+    src: `_ = pack4x8snorm(vec4(1, 2, 3, 4));`,
+  },
+  pack4x8unorm: {
+    keyword: `pack4x8unorm`,
+    src: `_ = pack4x8unorm(vec4(1, 2, 3, 4));`,
+  },
+  pack4xI8: {
+    keyword: `pack4xI8`,
+    src: `_ = pack4xI8(vec4(1, 2, 3, 4));`,
+  },
+  pack4xU8: {
+    keyword: `pack4xU8`,
+    src: `_ = pack4xU8(vec4(1, 2, 3, 4));`,
+  },
+  pack4xI8Clamp: {
+    keyword: `pack4xI8Clamp`,
+    src: `_ = pack4xI8Clamp(vec4(1, 2, 3, 4));`,
+  },
+  pack4xU8Clamp: {
+    keyword: `pack4xU8Clamp`,
+    src: `_ = pack4xU8Clamp(vec4(1, 2, 3, 4));`,
+  },
   pow: {
     keyword: `pow`,
     src: `_ = pow(1, 2);`,
@@ -413,6 +449,34 @@ const kTests = {
   u32: {
     keyword: `u32`,
     src: `_ = u32(1i);`,
+  },
+  unpack2x16snorm: {
+    keyword: `unpack2x16snorm`,
+    src: `_ = unpack2x16snorm(2);`,
+  },
+  unpack2x16unorm: {
+    keyword: `unpack2x16unorm`,
+    src: `_ = unpack2x16unorm(2);`,
+  },
+  unpack2x16float: {
+    keyword: `unpack2x16float`,
+    src: `_ = unpack2x16float(2);`,
+  },
+  unpack4x8snorm: {
+    keyword: `unpack4x8snorm`,
+    src: `_ = unpack4x8snorm(4);`,
+  },
+  unpack4x8unorm: {
+    keyword: `unpack4x8unorm`,
+    src: `_ = unpack4x8unorm(4);`,
+  },
+  unpack4xI8: {
+    keyword: `unpack4xI8`,
+    src: `_ = unpack4xI8(4);`,
+  },
+  unpack4xU8: {
+    keyword: `unpack4xU8`,
+    src: `_ = unpack4xU8(4);`,
   },
   vec2_templated: {
     keyword: `vec2`,
@@ -758,6 +822,181 @@ fn func() {
   ${func}
 }
     `;
+    const pass = t.params.inject === 'none' || t.params.inject === 'function';
+    t.expectCompileResult(pass, code);
+  });
+
+const kAtomicTests = {
+  atomicLoad: {
+    keyword: `atomicLoad`,
+    src: `_ = atomicLoad(&a);`,
+  },
+  atomicStore: {
+    keyword: `atomicStore`,
+    src: `atomicStore(&a, 1);`,
+  },
+  atomicAdd: {
+    keyword: `atomicAdd`,
+    src: `_ = atomicAdd(&a, 1);`,
+  },
+  atomicSub: {
+    keyword: `atomicSub`,
+    src: `_ = atomicSub(&a, 1);`,
+  },
+  atomicMax: {
+    keyword: `atomicMax`,
+    src: `_ = atomicMax(&a, 1);`,
+  },
+  atomicMin: {
+    keyword: `atomicMin`,
+    src: `_ = atomicMin(&a, 1);`,
+  },
+  atomicAnd: {
+    keyword: `atomicAnd`,
+    src: `_ = atomicAnd(&a, 1);`,
+  },
+  atomicOr: {
+    keyword: `atomicOr`,
+    src: `_ = atomicOr(&a, 1);`,
+  },
+  atomicXor: {
+    keyword: `atomicXor`,
+    src: `_ = atomicXor(&a, 1);`,
+  },
+};
+
+g.test('shadow_hides_builtin_atomic')
+  .desc(`Test that shadows hide buitin atomic methods.`)
+  .params(u =>
+    u
+      .combine('builtin', keysOf(kAtomicTests))
+      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const data = kAtomicTests[t.params.builtin];
+    const value = `let ${data.keyword} = 4;`;
+
+    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? value : ``;
+    const func = t.params.inject === 'function' ? value : ``;
+
+    const code = `
+var<workgroup> a: atomic<i32>;
+
+${module_scope}
+
+fn sibling() {
+  ${sibling_func}
+}
+
+@compute @workgroup_size(1)
+fn main() {
+  ${func}
+  ${data.src}
+}
+    `;
+
+    const pass = t.params.inject === 'none' || t.params.inject === 'sibling';
+    t.expectCompileResult(pass, code);
+  });
+
+const kBarrierTests = {
+  storageBarrier: {
+    keyword: `storageBarrier`,
+    src: `storageBarrier();`,
+  },
+  textureBarrier: {
+    keyword: `textureBarrier`,
+    src: `textureBarrier();`,
+  },
+  workgroupBarrier: {
+    keyword: `workgroupBarrier`,
+    src: `workgroupBarrier();`,
+  },
+  workgroupUniformLoad: {
+    keyword: `workgroupUniformLoad`,
+    src: `_ = workgroupUniformLoad(&u);`,
+  },
+};
+
+g.test('shadow_hides_builtin_barriers')
+  .desc(`Test that shadows hide buitin barrier methods.`)
+  .params(u =>
+    u
+      .combine('builtin', keysOf(kBarrierTests))
+      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const data = kBarrierTests[t.params.builtin];
+    const value = `let ${data.keyword} = 4;`;
+
+    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? value : ``;
+    const func = t.params.inject === 'function' ? value : ``;
+
+    const code = `
+var<workgroup> u: u32;
+
+${module_scope}
+
+fn sibling() {
+  ${sibling_func}
+}
+
+@compute @workgroup_size(1)
+fn main() {
+  ${func}
+  ${data.src}
+}
+    `;
+
+    const pass = t.params.inject === 'none' || t.params.inject === 'sibling';
+    t.expectCompileResult(pass, code);
+  });
+
+const kAccessModeTests = {
+  read: {
+    keyword: `read`,
+    src: `var<storage, read> a: i32;`,
+  },
+  read_write: {
+    keyword: `read_write`,
+    src: `var<storage, read_write> a: i32;`,
+  },
+  write: {
+    keyword: `write`,
+    src: `var t: texture_storage_1d<rgba8unorm, write>;`,
+  },
+};
+
+g.test('shadow_hides_access_mode')
+  .desc(`Test that shadows hide access modes.`)
+  .params(u =>
+    u
+      .combine('builtin', keysOf(kAccessModeTests))
+      .combine('inject', ['none', 'function', 'module'])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const data = kAccessModeTests[t.params.builtin];
+    const value = `let ${data.keyword} = 4;`;
+
+    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const func = t.params.inject === 'function' ? value : ``;
+
+    const code = `
+${module_scope}
+
+@group(0) @binding(0) ${data.src}
+
+@compute @workgroup_size(1)
+fn main() {
+  ${func}
+}
+    `;
+
     const pass = t.params.inject === 'none' || t.params.inject === 'function';
     t.expectCompileResult(pass, code);
   });
