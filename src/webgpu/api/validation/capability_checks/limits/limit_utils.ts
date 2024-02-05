@@ -1006,6 +1006,29 @@ export class LimitTestsImpl extends GPUTestBase {
   }
 
   /**
+   * Test a method on GPURenderCommandsMixin or GPUBindingCommandsMixin
+   * The function will be called with the mixin.
+   */
+  async testGPURenderAndBindingCommandsMixin(
+    encoderType: RenderEncoderType,
+    fn: ({
+      mixin,
+      bindGroup,
+    }: {
+      mixin: GPURenderCommandsMixin & GPUBindingCommandsMixin;
+      bindGroup: GPUBindGroup;
+    }) => void,
+    shouldError: boolean,
+    msg = ''
+  ) {
+    const { mixin, prep, test, bindGroup } = this._getGPURenderCommandsMixin(encoderType);
+    fn({ mixin, bindGroup });
+    prep();
+
+    await this.expectValidationError(test, shouldError, msg);
+  }
+
+  /**
    * Creates GPUBindingCommandsMixin setup with some initial state.
    */
   _getGPUBindingCommandsMixin(encoderType: EncoderType) {
