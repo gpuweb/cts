@@ -508,17 +508,17 @@ g.test('shadow_hides_builtin')
   .desc(`Test that shadows hide buitins.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kTests))
-      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kTests))
   )
   .fn(t => {
     const data = kTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
-    const sibling_func = t.params.inject === 'sibling' ? value : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? local : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
 struct Data {
@@ -526,7 +526,7 @@ struct Data {
 }
 @group(0) @binding(0) var<storage> placeholder: Data;
 
-${module_scope}
+${module_shadow}
 
 fn sibling() {
   ${sibling_func}
@@ -555,26 +555,25 @@ g.test('shadow_hides_builtin_f16')
   .desc(`Test that shadows hide buitins when shader-f16 is enabled.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kFloat16Tests))
-      .combine('inject', ['none', 'function', 'sibling', 'module'])
-
+      .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kFloat16Tests))
   )
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
   })
   .fn(t => {
     const data = kFloat16Tests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : f16;` : ``;
-    const sibling_func = t.params.inject === 'sibling' ? value : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : f16;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? local : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
 enable f16;
 
-${module_scope}
+${module_shadow}
 
 fn sibling() {
   ${sibling_func}
@@ -670,24 +669,23 @@ const kTextureTypeTests = {
   },
 };
 
-g.test('shadow_hides_builtin_texture_type')
-  .desc(`Test that shadows hide buitins when textures are used.`)
+g.test('shadow_hides_builtin_handle_type')
+  .desc(`Test that shadows hide buitins when handle addresspace types are used.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kTextureTypeTests))
-      .combine('inject', ['none', 'function', 'module'])
-
+      .combine('inject', ['none', 'function', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kTextureTypeTests))
   )
   .fn(t => {
     const data = kTextureTypeTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : f32;` : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : f32;` : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
-${module_scope}
+${module_shadow}
 @group(0) @binding(0) ${data.src}
 
 fn func() {
@@ -761,17 +759,17 @@ g.test('shadow_hides_builtin_texture')
   .desc(`Test that shadows hide texture buitins.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kTextureTests))
-      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kTextureTests))
   )
   .fn(t => {
     const data = kTextureTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
-    const sibling_func = t.params.inject === 'sibling' ? value : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? local : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
 @group(0) @binding(0) var t_2d: texture_2d<f32>;
@@ -782,7 +780,7 @@ g.test('shadow_hides_builtin_texture')
 @group(1) @binding(0) var s: sampler;
 @group(1) @binding(1) var sc: sampler_comparison;
 
-${module_scope}
+${module_shadow}
 
 fn sibling() {
   ${sibling_func}
@@ -802,19 +800,14 @@ fn main() -> @location(0) vec4f {
 
 g.test('shadow_hides_builtin_atomic_type')
   .desc(`Test that shadows hide buitins when atomic types are used.`)
-  .params(u =>
-    u
-      .combine('inject', ['none', 'function', 'module'])
-
-      .beginSubcases()
-  )
+  .params(u => u.combine('inject', ['none', 'function', 'module'] as const).beginSubcases())
   .fn(t => {
-    const value = `let atomic = 4;`;
-    const module_scope = t.params.inject === 'module' ? `var<private> atomic: i32;` : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const local = `let atomic = 4;`;
+    const module_shadow = t.params.inject === 'module' ? `var<private> atomic: i32;` : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
-${module_scope}
+${module_shadow}
 
 var<workgroup> val: atomic<i32>;
 
@@ -869,22 +862,22 @@ g.test('shadow_hides_builtin_atomic')
   .desc(`Test that shadows hide buitin atomic methods.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kAtomicTests))
-      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kAtomicTests))
   )
   .fn(t => {
     const data = kAtomicTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
-    const sibling_func = t.params.inject === 'sibling' ? value : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? local : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
 var<workgroup> a: atomic<i32>;
 
-${module_scope}
+${module_shadow}
 
 fn sibling() {
   ${sibling_func}
@@ -924,22 +917,22 @@ g.test('shadow_hides_builtin_barriers')
   .desc(`Test that shadows hide buitin barrier methods.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kBarrierTests))
-      .combine('inject', ['none', 'function', 'sibling', 'module'])
+      .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kBarrierTests))
   )
   .fn(t => {
     const data = kBarrierTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
-    const sibling_func = t.params.inject === 'sibling' ? value : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const sibling_func = t.params.inject === 'sibling' ? local : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
 var<workgroup> u: u32;
 
-${module_scope}
+${module_shadow}
 
 fn sibling() {
   ${sibling_func}
@@ -975,19 +968,19 @@ g.test('shadow_hides_access_mode')
   .desc(`Test that shadows hide access modes.`)
   .params(u =>
     u
-      .combine('builtin', keysOf(kAccessModeTests))
-      .combine('inject', ['none', 'function', 'module'])
+      .combine('inject', ['none', 'function', 'module'] as const)
       .beginSubcases()
+      .combine('builtin', keysOf(kAccessModeTests))
   )
   .fn(t => {
     const data = kAccessModeTests[t.params.builtin];
-    const value = `let ${data.keyword} = 4;`;
+    const local = `let ${data.keyword} = 4;`;
 
-    const module_scope = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
-    const func = t.params.inject === 'function' ? value : ``;
+    const module_shadow = t.params.inject === 'module' ? `var<private> ${data.keyword} : i32;` : ``;
+    const func = t.params.inject === 'function' ? local : ``;
 
     const code = `
-${module_scope}
+${module_shadow}
 
 @group(0) @binding(0) ${data.src}
 
