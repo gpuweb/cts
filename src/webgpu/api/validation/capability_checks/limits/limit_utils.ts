@@ -1,7 +1,13 @@
 import { kUnitCaseParamsBuilder } from '../../../../../common/framework/params_builder.js';
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { getGPU } from '../../../../../common/util/navigator_gpu.js';
-import { assert, range, reorder, ReorderOrder } from '../../../../../common/util/util.js';
+import {
+  assert,
+  range,
+  reorder,
+  ReorderOrder,
+  unreachable,
+} from '../../../../../common/util/util.js';
 import { getDefaultLimitsForAdapter } from '../../../../capability_info.js';
 import { GPUTestBase } from '../../../../gpu_test.js';
 
@@ -994,12 +1000,18 @@ export class LimitTestsImpl extends GPUTestBase {
    */
   async testGPURenderCommandsMixin(
     encoderType: RenderEncoderType,
-    fn: ({ mixin }: { mixin: GPURenderCommandsMixin }) => void,
+    fn: ({
+      mixin,
+      bindGroup,
+    }: {
+      mixin: GPURenderCommandsMixin & GPUBindingCommandsMixin;
+      bindGroup: GPUBindGroup;
+    }) => void,
     shouldError: boolean,
     msg = ''
   ) {
-    const { mixin, prep, test } = this._getGPURenderCommandsMixin(encoderType);
-    fn({ mixin });
+    const { mixin, prep, test, bindGroup } = this._getGPURenderCommandsMixin(encoderType);
+    fn({ mixin, bindGroup });
     prep();
 
     await this.expectValidationError(test, shouldError, msg);
@@ -1111,4 +1123,151 @@ export function makeLimitTestGroup(limit: GPUSupportedLimit) {
   const description = `API Validation Tests for ${limit}.`;
   const g = makeTestGroup(makeLimitTestFixture(limit));
   return { g, description, limit };
+}
+
+/**
+ * Returns the total possible bindings per stage
+ */
+export function getTotalPossibleBindingsPerStage(device: GPUDevice) {
+  return (
+    device.limits.maxSampledTexturesPerShaderStage +
+    device.limits.maxSamplersPerShaderStage +
+    device.limits.maxUniformBuffersPerShaderStage +
+    device.limits.maxStorageBuffersPerShaderStage +
+    device.limits.maxStorageTexturesPerShaderStage
+  );
+}
+
+/**
+ * Returns the total possible bindings per render pipeline
+ */
+export function getTotalPossibleBindingsPerRenderPipeline(device: GPUDevice) {
+  return getTotalPossibleBindingsPerStage(device) * 2;
+}
+
+type BindingLayout = {
+  buffer?: GPUBufferBindingLayout;
+  sampler?: GPUSamplerBindingLayout;
+  texture?: GPUTextureBindingLayout;
+  storageTexture?: GPUStorageTextureBindingLayout;
+  externalTexture?: GPUExternalTextureBindingLayout;
+};
+
+type LimitToBindingLayout = {
+  name: keyof GPUSupportedLimits;
+  entry: BindingLayout;
+  wgslDecl: (id: string) => string;
+};
+
+const kLimitToBindingLayout: readonly LimitToBindingLayout[] = [
+  {
+    name: 'maxSampledTexturesPerShaderStage',
+    entry: {
+      texture: {},
+    },
+    wgslDecl(id: string) {
+      return `var ${id}: texture_2d<f32>`;
+    },
+  },
+  {
+    name: 'maxSamplersPerShaderStage',
+    entry: {
+      sampler: {},
+    },
+    wgslDecl(id: string) {
+      return `var ${id}: sampler`;
+    },
+  },
+  {
+    name: 'maxUniformBuffersPerShaderStage',
+    entry: {
+      buffer: {},
+    },
+    wgslDecl(id: string) {
+      return `var<uniform> ${id}: f32`;
+    },
+  },
+  {
+    name: 'maxStorageBuffersPerShaderStage',
+    entry: {
+      buffer: {
+        type: 'read-only-storage',
+      },
+    },
+    wgslDecl(id: string) {
+      return `var<storage, read> ${id}: f32`;
+    },
+  },
+  {
+    name: 'maxStorageTexturesPerShaderStage',
+    entry: {
+      storageTexture: {
+        access: 'write-only',
+        format: 'rgba8unorm',
+        viewDimension: '2d',
+      },
+    },
+    wgslDecl(id: string) {
+      return `var ${id}: texture_storage_2d<rgba8unorm, write>`;
+    },
+  },
+] as const;
+
+/**
+ * Yields all possible binding wgsl declarations for a stage.
+ */
+export function* getWGSLBindingDeclarationEntriesForStage(device: GPUDevice, idPrefix: string) {
+  let count = 0;
+  for (const { name, wgslDecl } of kLimitToBindingLayout) {
+    const limit = device.limits[name] as number;
+    for (let i = 0; i < limit; ++i) {
+      yield wgslDecl(`${idPrefix}${count++}`);
+    }
+  }
+  unreachable('ran out of bindings');
+}
+
+/**
+ * Yields all possible binding layout entries for a stage.
+ */
+function* getBindingLayoutEntriesForStage(device: GPUDevice) {
+  for (const { name, entry } of kLimitToBindingLayout) {
+    const limit = device.limits[name] as number;
+    for (let i = 0; i < limit; ++i) {
+      yield entry;
+    }
+  }
+}
+
+/**
+ * Yields all of the possible BindingLayoutEntryAndVisibility entries for a render pipeline
+ */
+function* getBindingLayoutEntriesForRenderPipeline(
+  device: GPUDevice
+): Generator<GPUBindGroupLayoutEntry> {
+  const visibilities = [GPUShaderStage.VERTEX, GPUShaderStage.FRAGMENT];
+  for (const visibility of visibilities) {
+    for (const bindEntryResourceType of getBindingLayoutEntriesForStage(device)) {
+      const entry: GPUBindGroupLayoutEntry = {
+        binding: 0,
+        visibility,
+        ...bindEntryResourceType,
+      };
+      yield entry;
+    }
+  }
+}
+
+/**
+ * Yields count GPUBindGroupLayoutEntries
+ */
+export function* getRenderPipelineBindingLayoutEntries(
+  device: GPUDevice,
+  count: number
+): Generator<GPUBindGroupLayoutEntry> {
+  assert(count < getTotalPossibleBindingsPerRenderPipeline(device));
+  const iter = getBindingLayoutEntriesForRenderPipeline(device);
+  for (; count > 0; --count) {
+    yield iter.next().value;
+  }
 }

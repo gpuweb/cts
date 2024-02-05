@@ -1,6 +1,8 @@
 import { assert } from '../../../../../common/util/util.js';
 
 import {
+  getRenderPipelineBindingLayoutEntries,
+  getTotalPossibleBindingsPerRenderPipeline,
   kCreatePipelineTypes,
   kEncoderTypes,
   kMaximumLimitBaseParams,
@@ -9,116 +11,6 @@ import {
 
 const limit = 'maxBindGroups';
 export const { g, description } = makeLimitTestGroup(limit);
-
-type BindingLayout = {
-  buffer?: GPUBufferBindingLayout;
-  sampler?: GPUSamplerBindingLayout;
-  texture?: GPUTextureBindingLayout;
-  storageTexture?: GPUStorageTextureBindingLayout;
-  externalTexture?: GPUExternalTextureBindingLayout;
-};
-
-type LimitToBindingLayout = {
-  name: keyof GPUSupportedLimits;
-  entry: BindingLayout;
-};
-
-const kLimitToBindingLayout: readonly LimitToBindingLayout[] = [
-  {
-    name: 'maxSampledTexturesPerShaderStage',
-    entry: {
-      texture: {},
-    },
-  },
-  {
-    name: 'maxSamplersPerShaderStage',
-    entry: {
-      sampler: {},
-    },
-  },
-  {
-    name: 'maxUniformBuffersPerShaderStage',
-    entry: {
-      buffer: {},
-    },
-  },
-  {
-    name: 'maxStorageBuffersPerShaderStage',
-    entry: {
-      buffer: {
-        type: 'read-only-storage',
-      },
-    },
-  },
-  {
-    name: 'maxStorageTexturesPerShaderStage',
-    entry: {
-      storageTexture: {
-        access: 'write-only',
-        format: 'rgba8unorm',
-        viewDimension: '2d',
-      },
-    },
-  },
-] as const;
-
-/**
- * Yields all possible binding layout entries for a stage.
- */
-function* getBindingLayoutEntriesForStage(device: GPUDevice) {
-  for (const { name, entry } of kLimitToBindingLayout) {
-    const limit = device.limits[name] as number;
-    for (let i = 0; i < limit; ++i) {
-      yield entry;
-    }
-  }
-}
-
-/**
- * Yields all of the possible BindingLayoutEntryAndVisibility entries for a render pipeline
- */
-function* getBindingLayoutEntriesForRenderPipeline(
-  device: GPUDevice
-): Generator<GPUBindGroupLayoutEntry> {
-  const visibilities = [GPUShaderStage.VERTEX, GPUShaderStage.FRAGMENT];
-  for (const visibility of visibilities) {
-    for (const bindEntryResourceType of getBindingLayoutEntriesForStage(device)) {
-      const entry: GPUBindGroupLayoutEntry = {
-        binding: 0,
-        visibility,
-        ...bindEntryResourceType,
-      };
-      yield entry;
-    }
-  }
-}
-
-/**
- * Returns the total possible bindings per render pipeline
- */
-function getTotalPossibleBindingsPerRenderPipeline(device: GPUDevice) {
-  const totalPossibleBindingsPerStage =
-    device.limits.maxSampledTexturesPerShaderStage +
-    device.limits.maxSamplersPerShaderStage +
-    device.limits.maxUniformBuffersPerShaderStage +
-    device.limits.maxStorageBuffersPerShaderStage +
-    device.limits.maxStorageTexturesPerShaderStage;
-  return totalPossibleBindingsPerStage * 2;
-}
-
-/**
- * Yields count GPUBindGroupLayoutEntries
- */
-function* getBindingLayoutEntries(
-  device: GPUDevice,
-  count: number
-): Generator<GPUBindGroupLayoutEntry> {
-  assert(count < getTotalPossibleBindingsPerRenderPipeline(device));
-  const iter = getBindingLayoutEntriesForRenderPipeline(device);
-  for (; count > 0; --count) {
-    yield iter.next().value;
-  }
-}
 
 g.test('createPipelineLayout,at_over')
   .desc(`Test using createPipelineLayout at and over ${limit} limit`)
@@ -138,14 +30,16 @@ g.test('createPipelineLayout,at_over')
         );
 
         const bindingDescriptions: string[] = [];
-        const bindGroupLayouts = [...getBindingLayoutEntries(device, testValue)].map(entry => {
-          bindingDescriptions.push(
-            `${JSON.stringify(entry)} // group(${bindingDescriptions.length})`
-          );
-          return device.createBindGroupLayout({
-            entries: [entry],
-          });
-        });
+        const bindGroupLayouts = [...getRenderPipelineBindingLayoutEntries(device, testValue)].map(
+          entry => {
+            bindingDescriptions.push(
+              `${JSON.stringify(entry)} // group(${bindingDescriptions.length})`
+            );
+            return device.createBindGroupLayout({
+              entries: [entry],
+            });
+          }
+        );
 
         await t.expectValidationError(
           () => {
