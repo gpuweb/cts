@@ -2143,5 +2143,14 @@
   "webgpu:shader,validation,expression,call,builtin,arrayLength:bool_type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:access_mode:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:function_param:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_f16:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_handle_type:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_texture:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_atomic_type:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_atomic:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_builtin_barriers:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,parse,shadow_builtins:shadow_hides_access_mode:*": { "subcaseMS": 0 },
   "_end": ""
 }
