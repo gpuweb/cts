@@ -112,7 +112,7 @@ function getPipelineDescriptor(device: GPUDevice, preference: VertexBufferBindGr
         module,
         targets: [{ format: 'rgba8unorm' }],
       },
-    } as GPURenderPipelineDescriptor,
+    } as const,
   };
 }
 
