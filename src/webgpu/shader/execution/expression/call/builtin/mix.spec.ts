@@ -19,7 +19,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './mix.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -36,7 +36,7 @@ g.test('abstract_float_matching')
     const cases = await d.get('abstract_const');
     await run(
       t,
-      abstractBuiltin('mix'),
+      abstractFloatBuiltin('mix'),
       [TypeAbstractFloat, TypeAbstractFloat, TypeAbstractFloat],
       TypeAbstractFloat,
       t.params,
@@ -52,7 +52,7 @@ g.test('abstract_float_nonmatching_vec2')
     const cases = await d.get('abstract_vec2_scalar_const');
     await run(
       t,
-      abstractBuiltin('mix'),
+      abstractFloatBuiltin('mix'),
       [TypeVec(2, TypeAbstractFloat), TypeVec(2, TypeAbstractFloat), TypeAbstractFloat],
       TypeVec(2, TypeAbstractFloat),
       t.params,
@@ -68,7 +68,7 @@ g.test('abstract_float_nonmatching_vec3')
     const cases = await d.get('abstract_vec3_scalar_const');
     await run(
       t,
-      abstractBuiltin('mix'),
+      abstractFloatBuiltin('mix'),
       [TypeVec(3, TypeAbstractFloat), TypeVec(3, TypeAbstractFloat), TypeAbstractFloat],
       TypeVec(3, TypeAbstractFloat),
       t.params,
@@ -84,7 +84,7 @@ g.test('abstract_float_nonmatching_vec4')
     const cases = await d.get('abstract_vec4_scalar_const');
     await run(
       t,
-      abstractBuiltin('mix'),
+      abstractFloatBuiltin('mix'),
       [TypeVec(4, TypeAbstractFloat), TypeVec(4, TypeAbstractFloat), TypeAbstractFloat],
       TypeVec(4, TypeAbstractFloat),
       t.params,
