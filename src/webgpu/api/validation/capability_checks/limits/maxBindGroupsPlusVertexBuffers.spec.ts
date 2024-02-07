@@ -92,7 +92,7 @@ function getPipelineDescriptor(device: GPUDevice, preference: VertexBufferBindGr
   `;
 
   const module = device.createShaderModule({ code });
-  const buffers = new Array(numVertexBuffers);
+  const buffers = new Array<GPUVertexBufferLayout | null>(numVertexBuffers);
   if (numVertexBuffers > 0) {
     buffers[numVertexBuffers - 1] = {
       arrayStride: 16,
