@@ -10,7 +10,9 @@ import {
   TypeF32,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors,
+  kAllConcreteIntegerScalarsAndVectors,
+  TypeAbstractFloat,
+  kAllAbstractIntegerScalarAndVectors,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -18,7 +20,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinusTwoToTwo,
+  minusTwoToTwoRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval,
@@ -26,8 +28,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
-
+const kValuesTypes = objectsToRecord([
+  ...kAllAbstractIntegerScalarAndVectors,
+  ...kAllFloatScalarsAndVectors,
+]);
 g.test('values')
   .desc(
     `
@@ -40,7 +44,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => unique(kMinusTwoToTwo, fullRangeForType(kValuesTypes[u.type])))
+      .expand('value', u =>
+        unique(
+          minusTwoToTwoRangeForType(kValuesTypes[u.type]),
+          fullRangeForType(kValuesTypes[u.type])
+        )
+      )
   )
   .beforeAllSubcases(t => {
     if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -50,7 +59,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
   .fn(t => {
     const type = kValuesTypes[t.params.type];
     const expectedResult =
-      t.params.value > 0 && isRepresentable(1 / Math.sqrt(t.params.value), elementType(type));
+      t.params.value > 0 &&
+      isRepresentable(
+        1 / Math.sqrt(Number(t.params.value)),
+        // AbstractInt is converted to AbstractFloat before calling into the builtin
+        elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+      );
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
@@ -60,7 +74,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument')
   .desc(

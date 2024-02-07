@@ -10,7 +10,9 @@ import {
   TypeF32,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors,
+  kAllConcreteIntegerScalarsAndVectors,
+  kAllAbstractIntegerScalarAndVectors,
+  TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { fpTraitsFor } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -18,7 +20,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinus3PiTo3Pi,
+  minusThreePiToThreePiRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval,
@@ -26,7 +28,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
+const kValuesTypes = objectsToRecord([
+  ...kAllAbstractIntegerScalarAndVectors,
+  ...kAllFloatScalarsAndVectors,
+]);
 
 g.test('values')
   .desc(
@@ -40,7 +45,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => unique(kMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type])))
+      .expand('value', u =>
+        unique(
+          minusThreePiToThreePiRangeForType(kValuesTypes[u.type]),
+          fullRangeForType(kValuesTypes[u.type])
+        )
+      )
   )
   .beforeAllSubcases(t => {
     if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -49,9 +59,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   })
   .fn(t => {
     const type = kValuesTypes[t.params.type];
-    const fp = fpTraitsFor(elementType(type));
+    const fp = fpTraitsFor(
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
+      elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+    );
     const smallestPositive = fp.constants().positive.min;
-    const v = fp.quantize(t.params.value);
+    const v = fp.quantize(Number(t.params.value));
     const expectedResult = Math.abs(Math.cos(v)) > smallestPositive;
     validateConstOrOverrideBuiltinEval(
       t,
@@ -62,7 +75,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument')
   .desc(

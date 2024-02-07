@@ -14,7 +14,12 @@ import {
   kAllFloatVector2,
   kAllFloatVector3,
   kAllFloatVector4,
-  kAllIntegerScalarsAndVectors,
+  kAllConcreteIntegerScalarsAndVectors,
+  kAbstractIntegerScalar,
+  kAbstractIntegerVector2,
+  TypeAbstractFloat,
+  kAbstractIntegerVector3,
+  kAbstractIntegerVector4,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -33,7 +38,7 @@ export const g = makeTestGroup(ShaderValidationTest);
  * formed from `vec` of the element type `type`.
  */
 function calculate(
-  vec: number[],
+  vec: (number | bigint)[],
   type: ScalarType
 ): {
   /**
@@ -49,16 +54,25 @@ function calculate(
   /** The computed value of length(). */
   result: number;
 } {
-  const squareSum = vec.reduce((prev, curr) => prev + curr * curr, 0);
+  const vec_number = vec.map(e => Number(e));
+  const squareSum = vec_number.reduce((prev, curr) => prev + Number(curr) * Number(curr), 0);
   const result = Math.sqrt(squareSum);
   return {
-    isIntermediateRepresentable: isRepresentable(squareSum, type),
-    isResultRepresentable: isRepresentable(result, type),
+    isIntermediateRepresentable: isRepresentable(
+      squareSum,
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
+      elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+    ),
+    isResultRepresentable: isRepresentable(
+      result,
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
+      elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+    ),
     result,
   };
 }
 
-const kScalarTypes = objectsToRecord(kAllFloatScalars);
+const kScalarTypes = objectsToRecord([...kAbstractIntegerScalar, ...kAllFloatScalars]);
 
 g.test('scalar')
   .desc(
@@ -92,7 +106,7 @@ the input scalar value always compiles without error
     );
   });
 
-const kVec2Types = objectsToRecord(kAllFloatVector2);
+const kVec2Types = objectsToRecord([...kAbstractIntegerVector2, ...kAllFloatVector2]);
 
 g.test('vec2')
   .desc(
@@ -127,7 +141,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     );
   });
 
-const kVec3Types = objectsToRecord(kAllFloatVector3);
+const kVec3Types = objectsToRecord([...kAbstractIntegerVector3, ...kAllFloatVector3]);
 
 g.test('vec3')
   .desc(
@@ -163,7 +177,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     );
   });
 
-const kVec4Types = objectsToRecord(kAllFloatVector4);
+const kVec4Types = objectsToRecord([...kAbstractIntegerVector4, ...kAllFloatVector4]);
 
 g.test('vec4')
   .desc(
@@ -200,7 +214,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument')
   .desc(
