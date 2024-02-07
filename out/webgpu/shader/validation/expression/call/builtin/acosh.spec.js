@@ -10,7 +10,10 @@ import {
   TypeF32,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors } from
+  kAllConcreteIntegerScalarsAndVectors,
+  TypeAbstractInt,
+  kAllAbstractIntegerScalarAndVectors,
+  TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -18,7 +21,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinusTwoToTwo,
+  minusTwoToTwoRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval } from
@@ -26,7 +29,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
+const kValuesTypes = objectsToRecord([
+...kAllAbstractIntegerScalarAndVectors,
+...kAllFloatScalarsAndVectors]
+);
 
 g.test('values').
 desc(
@@ -40,7 +46,12 @@ combine('stage', kConstantAndOverrideStages).
 combine('type', keysOf(kValuesTypes)).
 filter((u) => stageSupportsType(u.stage, kValuesTypes[u.type])).
 beginSubcases().
-expand('value', (u) => unique(fullRangeForType(kValuesTypes[u.type]), kMinusTwoToTwo))
+expand('value', (u) =>
+unique(
+  minusTwoToTwoRangeForType(kValuesTypes[u.type]),
+  fullRangeForType(kValuesTypes[u.type])
+)
+)
 ).
 beforeAllSubcases((t) => {
   if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -49,7 +60,11 @@ beforeAllSubcases((t) => {
 }).
 fn((t) => {
   const type = kValuesTypes[t.params.type];
-  const expectedResult = isRepresentable(Math.acosh(t.params.value), elementType(type));
+  const expectedResult = isRepresentable(
+    Math.acosh(Number(t.params.value)),
+    // AbstractInt is converted to AbstractFloat before calling into the builtin
+    elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+  );
   validateConstOrOverrideBuiltinEval(
     t,
     builtin,
@@ -59,7 +74,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord(kAllConcreteIntegerScalarsAndVectors);
 
 g.test('integer_argument').
 desc(
@@ -74,7 +89,7 @@ fn((t) => {
     t,
     builtin,
     /* expectedResult */type === TypeF32,
-    [type.create(1)],
+    [type.create(type === TypeAbstractInt ? 1n : 1)],
     'constant'
   );
 });

@@ -12,7 +12,7 @@ import {
   VectorType,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors,
+  kAllConcreteIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -20,7 +20,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kSparseMinus3PiTo3Pi,
+  sparseMinusThreePiToThreePiRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval,
@@ -42,8 +42,18 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('y', u => unique(kSparseMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
-      .expand('x', u => unique(kSparseMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type], 4)))
+      .expand('y', u =>
+        unique(
+          sparseMinusThreePiToThreePiRangeForType(kValuesTypes[u.type]),
+          fullRangeForType(kValuesTypes[u.type], 4)
+        )
+      )
+      .expand('x', u =>
+        unique(
+          sparseMinusThreePiToThreePiRangeForType(kValuesTypes[u.type]),
+          fullRangeForType(kValuesTypes[u.type], 4)
+        )
+      )
   )
   .beforeAllSubcases(t => {
     if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -53,7 +63,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   .fn(t => {
     const type = kValuesTypes[t.params.type];
     const expectedResult = isRepresentable(
-      Math.abs(Math.atan2(t.params.y, t.params.x)),
+      Math.abs(Math.atan2(Number(t.params.x), Number(t.params.y))),
       elementType(type)
     );
     validateConstOrOverrideBuiltinEval(
@@ -65,7 +75,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument_y')
   .desc(

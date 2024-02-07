@@ -10,14 +10,16 @@ import {
   TypeF32,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors } from
+  kAllConcreteIntegerScalarsAndVectors,
+  kAllAbstractIntegerScalarAndVectors } from
 '../../../../../util/conversion.js';
+import { absBigInt } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinusTwoToTwo,
+  minusTwoToTwoRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval } from
@@ -25,7 +27,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
+const kValuesTypes = objectsToRecord([
+...kAllAbstractIntegerScalarAndVectors,
+...kAllFloatScalarsAndVectors]
+);
 
 g.test('values').
 desc(
@@ -39,7 +44,12 @@ combine('stage', kConstantAndOverrideStages).
 combine('type', keysOf(kValuesTypes)).
 filter((u) => stageSupportsType(u.stage, kValuesTypes[u.type])).
 beginSubcases().
-expand('value', (u) => unique(kMinusTwoToTwo, fullRangeForType(kValuesTypes[u.type])))
+expand('value', (u) =>
+unique(
+  minusTwoToTwoRangeForType(kValuesTypes[u.type]),
+  fullRangeForType(kValuesTypes[u.type])
+)
+)
 ).
 beforeAllSubcases((t) => {
   if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -47,7 +57,10 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  const expectedResult = Math.abs(t.params.value) <= 1;
+  const expectedResult =
+  typeof t.params.value === 'bigint' ?
+  absBigInt(t.params.value) <= 1n :
+  Math.abs(t.params.value) <= 1;
   validateConstOrOverrideBuiltinEval(
     t,
     builtin,
@@ -57,7 +70,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

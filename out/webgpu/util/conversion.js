@@ -1665,8 +1665,40 @@ export const kAllFloatVectors = [
 /// All floating-point scalar and vector types
 export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors];
 
-/// All integer scalar and vector types
-export const kAllIntegerScalarsAndVectors = [
+/// Abstract integer scalar type
+export const kAbstractIntegerScalar = [TypeAbstractInt];
+
+/// Abstract integer vec2 type
+export const kAbstractIntegerVector2 = [TypeVec(2, TypeAbstractInt)];
+
+/// Abstract integer vec3 type
+export const kAbstractIntegerVector3 = [TypeVec(3, TypeAbstractInt)];
+
+/// Abstract integer vec4 type
+export const kAbstractIntegerVector4 = [TypeVec(4, TypeAbstractInt)];
+
+/// All abstract integer scalar vector types
+export const kAbstractIntegerVectors = [
+...kAbstractIntegerVector2,
+...kAbstractIntegerVector3,
+...kAbstractIntegerVector4];
+
+
+/// Abstract integer scalar and vector types
+export const kAllAbstractIntegerScalarAndVectors = [
+...kAbstractIntegerScalar,
+...kAbstractIntegerVectors];
+
+
+// Abstract and concrete integer types are not grouped into an 'all' type,
+// because for many validation tests there is a valid conversion of
+// AbstractInt -> AbstractFloat, but not one for the concrete integers. Thus, an
+// AbstractInt literal will be a potentially valid input, whereas the concrete
+// integers will not be. For many tests the pattern is to have separate fixtures
+// for the things that might be valid and those that are never valid.
+
+/// All concrete integer scalar and vector types
+export const kAllConcreteIntegerScalarsAndVectors = [
 TypeI32,
 TypeVec(2, TypeI32),
 TypeVec(3, TypeI32),
@@ -1694,9 +1726,9 @@ TypeVec(4, TypeU32)];
 
 
 /// All floating-point and integer scalar and vector types
-export const kAllFloatAndIntegerScalarsAndVectors = [
+export const kAllFloatAndConcreteIntegerScalarsAndVectors = [
 ...kAllFloatScalarsAndVectors,
-...kAllIntegerScalarsAndVectors];
+...kAllConcreteIntegerScalarsAndVectors];
 
 
 /// All floating-point and signed integer scalar and vector types

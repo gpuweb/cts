@@ -5535,6 +5535,7 @@ export function isRepresentable(value, type) {
     const constants = fpTraitsFor(type).constants();
     return value >= constants.negative.min && value <= constants.positive.max;
   }
+
   assert(false, `isRepresentable() is not yet implemented for type ${type}`);
 }
 //# sourceMappingURL=floating_point.js.map

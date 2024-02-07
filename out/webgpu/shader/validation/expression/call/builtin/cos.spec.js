@@ -10,14 +10,15 @@ import {
   TypeF32,
   elementType,
   kAllFloatScalarsAndVectors,
-  kAllIntegerScalarsAndVectors } from
+  kAllConcreteIntegerScalarsAndVectors,
+  kAllAbstractIntegerScalarAndVectors } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  kMinus3PiTo3Pi,
+  minusThreePiToThreePiRangeForType,
   stageSupportsType,
   unique,
   validateConstOrOverrideBuiltinEval } from
@@ -25,8 +26,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
-
+const kValuesTypes = objectsToRecord([
+...kAllAbstractIntegerScalarAndVectors,
+...kAllFloatScalarsAndVectors]
+);
 g.test('values').
 desc(
   `
@@ -39,7 +42,12 @@ combine('stage', kConstantAndOverrideStages).
 combine('type', keysOf(kValuesTypes)).
 filter((u) => stageSupportsType(u.stage, kValuesTypes[u.type])).
 beginSubcases().
-expand('value', (u) => unique(kMinus3PiTo3Pi, fullRangeForType(kValuesTypes[u.type])))
+expand('value', (u) =>
+unique(
+  minusThreePiToThreePiRangeForType(kValuesTypes[u.type]),
+  fullRangeForType(kValuesTypes[u.type])
+)
+)
 ).
 beforeAllSubcases((t) => {
   if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
@@ -56,7 +64,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

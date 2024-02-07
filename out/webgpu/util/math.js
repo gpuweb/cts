@@ -2281,4 +2281,9 @@ export function subtractVectors(v1, v2) {
 export function dotProduct(v1, v2) {
   return v1.reduce((a, v, i) => a + v * v2[i], 0);
 }
+
+/** @returns the absolute value of a bigint */
+export function absBigInt(v) {
+  return v < 0n ? -v : v;
+}
 //# sourceMappingURL=math.js.map

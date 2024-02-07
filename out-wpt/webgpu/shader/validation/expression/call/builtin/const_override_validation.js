@@ -12,84 +12,116 @@ import {
   scalarF16Range,
   scalarF32Range,
   scalarF64Range,
-  linearRange } from
+  linearRange,
+  linearRangeBigInt } from
 '../../../../../util/math.js';
 
 
-/// A linear sweep between -2 to 2
-export const kMinusTwoToTwo = linearRange(-2, 2, 10);
+/** @returns a function that can select between ranges depending on type */
+export function rangeForType(
+number_range,
+bigint_range)
+{
+  return (type) => {
+    switch (elementType(type).kind) {
+      case 'abstract-float':
+      case 'f32':
+      case 'f16':
+        return number_range;
+      case 'abstract-int':
+        return bigint_range;
+    }
+    unreachable(`Received unexpected type '${type}'`);
+  };
+}
 
-/// An array of values ranging from -3π to 3π, with a focus on multiples of π
-export const kMinus3PiTo3Pi = [
--3 * Math.PI,
--2.999 * Math.PI,
+/* @returns a linear sweep between -2 to 2 for type */
 
--2.501 * Math.PI,
--2.5 * Math.PI,
--2.499 * Math.PI,
+export const minusTwoToTwoRangeForType = rangeForType(
+  linearRange(-2, 2, 10),
+  [-2n, -1n, 0n, 1n, 2n]
+);
 
--2.001 * Math.PI,
--2.0 * Math.PI,
--1.999 * Math.PI,
+/* @returns array of values ranging from -3π to 3π, with a focus on multiples of π */
+export const minusThreePiToThreePiRangeForType = rangeForType(
+  [
+  -3 * Math.PI,
+  -2.999 * Math.PI,
 
--1.501 * Math.PI,
--1.5 * Math.PI,
--1.499 * Math.PI,
+  -2.501 * Math.PI,
+  -2.5 * Math.PI,
+  -2.499 * Math.PI,
 
--1.001 * Math.PI,
--1.0 * Math.PI,
--0.999 * Math.PI,
+  -2.001 * Math.PI,
+  -2.0 * Math.PI,
+  -1.999 * Math.PI,
 
--0.501 * Math.PI,
--0.5 * Math.PI,
--0.499 * Math.PI,
+  -1.501 * Math.PI,
+  -1.5 * Math.PI,
+  -1.499 * Math.PI,
 
--0.001,
-0,
-0.001,
+  -1.001 * Math.PI,
+  -1.0 * Math.PI,
+  -0.999 * Math.PI,
 
-0.499 * Math.PI,
-0.5 * Math.PI,
-0.501 * Math.PI,
+  -0.501 * Math.PI,
+  -0.5 * Math.PI,
+  -0.499 * Math.PI,
 
-0.999 * Math.PI,
-1.0 * Math.PI,
-1.001 * Math.PI,
+  -0.001,
+  0,
+  0.001,
 
-1.499 * Math.PI,
-1.5 * Math.PI,
-1.501 * Math.PI,
+  0.499 * Math.PI,
+  0.5 * Math.PI,
+  0.501 * Math.PI,
 
-1.999 * Math.PI,
-2.0 * Math.PI,
-2.001 * Math.PI,
+  0.999 * Math.PI,
+  1.0 * Math.PI,
+  1.001 * Math.PI,
 
-2.499 * Math.PI,
-2.5 * Math.PI,
-2.501 * Math.PI,
+  1.499 * Math.PI,
+  1.5 * Math.PI,
+  1.501 * Math.PI,
 
-2.999 * Math.PI,
-3 * Math.PI];
+  1.999 * Math.PI,
+  2.0 * Math.PI,
+  2.001 * Math.PI,
 
+  2.499 * Math.PI,
+  2.5 * Math.PI,
+  2.501 * Math.PI,
 
-/// A minimal array of values ranging from -3π to 3π, with a focus on multiples
-/// of π. Used when multiple parameters are being passed in, so the number of
-/// cases becomes the square or more of this list.
-export const kSparseMinus3PiTo3Pi = [
--3 * Math.PI,
--2.5 * Math.PI,
--2.0 * Math.PI,
--1.5 * Math.PI,
--1.0 * Math.PI,
--0.5 * Math.PI,
-0,
-0.5 * Math.PI,
-Math.PI,
-1.5 * Math.PI,
-2.0 * Math.PI,
-2.5 * Math.PI,
-3 * Math.PI];
+  2.999 * Math.PI,
+  3 * Math.PI],
 
+  [-2n, -1n, 0n, 1n, 2n]
+);
+
+/**
+ * @returns a minimal array of values ranging from -3π to 3π, with a focus on
+ * multiples of π.
+ *
+ * Used when multiple parameters are being passed in, so the number of cases
+ * becomes the square or more of this list. */
+export const sparseMinusThreePiToThreePiRangeForType = rangeForType(
+  [
+  -3 * Math.PI,
+  -2.5 * Math.PI,
+  -2.0 * Math.PI,
+  -1.5 * Math.PI,
+  -1.0 * Math.PI,
+  -0.5 * Math.PI,
+  0,
+  0.5 * Math.PI,
+  Math.PI,
+  1.5 * Math.PI,
+  2.0 * Math.PI,
+  2.5 * Math.PI,
+  3 * Math.PI],
+
+  [-2n, -1n, 0n, 1n, 2n]
+);
 
 /// The evaluation stages to test
 export const kConstantAndOverrideStages = ['constant', 'override'];
@@ -191,6 +223,9 @@ export function fullRangeForType(type, count) {
       );
     case 'u32':
       return linearRange(0, kValue.u32.max, count).map((f) => Math.floor(f));
+    case 'abstract-int':
+      // Returned values are already ints, so don't need to be floored.
+      return linearRangeBigInt(kValue.i64.negative.min, kValue.i64.positive.max, count);
   }
   unreachable();
 }
