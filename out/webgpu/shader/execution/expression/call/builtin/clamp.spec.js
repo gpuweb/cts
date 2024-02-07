@@ -24,7 +24,7 @@ import {
 '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './clamp.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -71,7 +71,7 @@ fn(async (t) => {
   const cases = await d.get('abstract_const');
   await run(
     t,
-    abstractBuiltin('clamp'),
+    abstractFloatBuiltin('clamp'),
     [TypeAbstractFloat, TypeAbstractFloat, TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,

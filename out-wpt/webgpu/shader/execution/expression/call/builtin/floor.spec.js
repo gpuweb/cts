@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './floor.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -27,7 +27,14 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = await d.get('abstract');
-  await run(t, abstractBuiltin('floor'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+  await run(
+    t,
+    abstractFloatBuiltin('floor'),
+    [TypeAbstractFloat],
+    TypeAbstractFloat,
+    t.params,
+    cases
+  );
 });
 
 g.test('f32').

@@ -1293,26 +1293,6 @@ export function fullU32Range(count = 50) {
   return [0, ...biasedRange(1, kValue.u32.max, count)].map(Math.trunc);
 }
 
-/** Short list of f32 values of interest to test against */
-const kInterestingF32Values = [
-kValue.f32.negative.min,
--10.0,
--1.0,
--0.125,
-kValue.f32.negative.max,
-kValue.f32.negative.subnormal.min,
-kValue.f32.negative.subnormal.max,
--0.0,
-0.0,
-kValue.f32.positive.subnormal.min,
-kValue.f32.positive.subnormal.max,
-kValue.f32.positive.min,
-0.125,
-1.0,
-10.0,
-kValue.f32.positive.max];
-
-
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 64-bit signed ints
  *
@@ -1334,6 +1314,26 @@ counts =
   ...biasedRangeBigInt(1n, kValue.i64.positive.max, counts.positive)];
 
 }
+
+/** Short list of f32 values of interest to test against */
+const kInterestingF32Values = [
+kValue.f32.negative.min,
+-10.0,
+-1.0,
+-0.125,
+kValue.f32.negative.max,
+kValue.f32.negative.subnormal.min,
+kValue.f32.negative.subnormal.max,
+-0.0,
+0.0,
+kValue.f32.positive.subnormal.min,
+kValue.f32.positive.subnormal.max,
+kValue.f32.positive.min,
+0.125,
+1.0,
+10.0,
+kValue.f32.positive.max];
+
 
 /** @returns minimal f32 values that cover the entire range of f32 behaviours
  *

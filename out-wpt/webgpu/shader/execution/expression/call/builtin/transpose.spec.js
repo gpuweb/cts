@@ -11,7 +11,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './transpose.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -31,7 +31,7 @@ fn(async (t) => {
   const cases = await d.get(`abstract_mat${cols}x${rows}_const`);
   await run(
     t,
-    abstractBuiltin('transpose'),
+    abstractFloatBuiltin('transpose'),
     [TypeMat(cols, rows, TypeAbstractFloat)],
     TypeMat(rows, cols, TypeAbstractFloat),
     t.params,

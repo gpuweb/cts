@@ -29,7 +29,7 @@ import {
 
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './min.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -102,7 +102,7 @@ fn(async (t) => {
   const cases = await d.get('abstract');
   await run(
     t,
-    abstractBuiltin('min'),
+    abstractFloatBuiltin('min'),
     [TypeAbstractFloat, TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,

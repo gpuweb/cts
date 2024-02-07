@@ -13,7 +13,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './radians.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -30,7 +30,7 @@ fn(async (t) => {
   const cases = await d.get('abstract');
   await run(
     t,
-    abstractBuiltin('radians'),
+    abstractFloatBuiltin('radians'),
     [TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,

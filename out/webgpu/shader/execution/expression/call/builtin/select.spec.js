@@ -36,7 +36,7 @@ import {
 
 import { run, allInputSources } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -141,7 +141,7 @@ fn(async (t) => {
 
   await run(
     t,
-    t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
+    t.params.component === 'af' ? abstractFloatBuiltin('select') : builtin('select'),
     [overload.type, overload.type, TypeBool],
     overload.type,
     t.params,
@@ -245,7 +245,7 @@ fn(async (t) => {
 
   await run(
     t,
-    t.params.component === 'af' ? abstractBuiltin('select') : builtin('select'),
+    t.params.component === 'af' ? abstractFloatBuiltin('select') : builtin('select'),
     [tests.dataType, tests.dataType, tests.boolType],
     tests.dataType,
     t.params,

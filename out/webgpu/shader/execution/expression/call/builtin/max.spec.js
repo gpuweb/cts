@@ -30,7 +30,7 @@ import {
 
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './max.cache.js';
 
 /** Generate set of max test cases from list of interesting values */
@@ -103,7 +103,7 @@ fn(async (t) => {
   const cases = await d.get('abstract');
   await run(
     t,
-    abstractBuiltin('max'),
+    abstractFloatBuiltin('max'),
     [TypeAbstractFloat, TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,
