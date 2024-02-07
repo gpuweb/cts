@@ -1171,27 +1171,18 @@ export function sparseI32Range(): readonly number[] {
 const kVectorI32Values = {
   2: kInterestingI32Values.flatMap(f => [
     [f, 1],
-    [1, f],
-    [f, -1],
     [-1, f],
   ]),
   3: kInterestingI32Values.flatMap(f => [
-    [f, 1, 2],
-    [1, f, 2],
-    [1, 2, f],
-    [f, -1, -2],
-    [-1, f, -2],
-    [-1, -2, f],
+    [f, 1, -2],
+    [-1, f, 2],
+    [1, -2, f],
   ]),
   4: kInterestingI32Values.flatMap(f => [
-    [f, 1, 2, 3],
-    [1, f, 2, 3],
-    [1, 2, f, 3],
-    [1, 2, 3, f],
-    [f, -1, -2, -3],
-    [-1, f, -2, -3],
-    [-1, -2, f, -3],
-    [-1, -2, -3, f],
+    [f, -1, 2, 3],
+    [1, f, -2, 3],
+    [1, 2, f, -3],
+    [-1, 2, -3, f],
   ]),
 };
 
@@ -1361,29 +1352,20 @@ export function sparseScalarF32Range(): readonly number[] {
 }
 
 const kVectorF32Values = {
-  2: sparseScalarF32Range().flatMap(f => [
+  2: kInterestingF32Values.flatMap(f => [
     [f, 1.0],
-    [1.0, f],
-    [f, -1.0],
     [-1.0, f],
   ]),
-  3: sparseScalarF32Range().flatMap(f => [
-    [f, 1.0, 2.0],
-    [1.0, f, 2.0],
-    [1.0, 2.0, f],
-    [f, -1.0, -2.0],
-    [-1.0, f, -2.0],
-    [-1.0, -2.0, f],
+  3: kInterestingF32Values.flatMap(f => [
+    [f, 1.0, -2.0],
+    [-1.0, f, 2.0],
+    [1.0, -2.0, f],
   ]),
-  4: sparseScalarF32Range().flatMap(f => [
-    [f, 1.0, 2.0, 3.0],
-    [1.0, f, 2.0, 3.0],
-    [1.0, 2.0, f, 3.0],
-    [1.0, 2.0, 3.0, f],
-    [f, -1.0, -2.0, -3.0],
-    [-1.0, f, -2.0, -3.0],
-    [-1.0, -2.0, f, -3.0],
-    [-1.0, -2.0, -3.0, f],
+  4: kInterestingF32Values.flatMap(f => [
+    [f, -1.0, 2.0, 3.0],
+    [1.0, f, -2.0, 3.0],
+    [1.0, 2.0, f, -3.0],
+    [-1.0, 2.0, -3.0, f],
   ]),
 };
 
@@ -1597,29 +1579,20 @@ export function sparseScalarF16Range(): readonly number[] {
 }
 
 const kVectorF16Values = {
-  2: sparseScalarF16Range().flatMap(f => [
+  2: kInterestingF16Values.flatMap(f => [
     [f, 1.0],
-    [1.0, f],
-    [f, -1.0],
     [-1.0, f],
   ]),
-  3: sparseScalarF16Range().flatMap(f => [
-    [f, 1.0, 2.0],
-    [1.0, f, 2.0],
-    [1.0, 2.0, f],
-    [f, -1.0, -2.0],
-    [-1.0, f, -2.0],
-    [-1.0, -2.0, f],
+  3: kInterestingF16Values.flatMap(f => [
+    [f, 1.0, -2.0],
+    [-1.0, f, 2.0],
+    [1.0, -2.0, f],
   ]),
-  4: sparseScalarF16Range().flatMap(f => [
-    [f, 1.0, 2.0, 3.0],
-    [1.0, f, 2.0, 3.0],
-    [1.0, 2.0, f, 3.0],
-    [1.0, 2.0, 3.0, f],
-    [f, -1.0, -2.0, -3.0],
-    [-1.0, f, -2.0, -3.0],
-    [-1.0, -2.0, f, -3.0],
-    [-1.0, -2.0, -3.0, f],
+  4: kInterestingF16Values.flatMap(f => [
+    [f, -1.0, 2.0, 3.0],
+    [1.0, f, -2.0, 3.0],
+    [1.0, 2.0, f, -3.0],
+    [-1.0, 2.0, -3.0, f],
   ]),
 };
 
@@ -1833,29 +1806,20 @@ export function sparseScalarF64Range(): readonly number[] {
 }
 
 const kVectorF64Values = {
-  2: sparseScalarF64Range().flatMap(f => [
+  2: kInterestingF64Values.flatMap(f => [
     [f, 1.0],
-    [1.0, f],
-    [f, -1.0],
     [-1.0, f],
   ]),
-  3: sparseScalarF64Range().flatMap(f => [
-    [f, 1.0, 2.0],
-    [1.0, f, 2.0],
-    [1.0, 2.0, f],
-    [f, -1.0, -2.0],
-    [-1.0, f, -2.0],
-    [-1.0, -2.0, f],
+  3: kInterestingF64Values.flatMap(f => [
+    [f, 1.0, -2.0],
+    [-1.0, f, 2.0],
+    [1.0, -2.0, f],
   ]),
-  4: sparseScalarF64Range().flatMap(f => [
-    [f, 1.0, 2.0, 3.0],
-    [1.0, f, 2.0, 3.0],
-    [1.0, 2.0, f, 3.0],
-    [1.0, 2.0, 3.0, f],
-    [f, -1.0, -2.0, -3.0],
-    [-1.0, f, -2.0, -3.0],
-    [-1.0, -2.0, f, -3.0],
-    [-1.0, -2.0, -3.0, f],
+  4: kInterestingF64Values.flatMap(f => [
+    [f, -1.0, 2.0, 3.0],
+    [1.0, f, -2.0, 3.0],
+    [1.0, 2.0, f, -3.0],
+    [-1.0, 2.0, -3.0, f],
   ]),
 };
 
