@@ -664,6 +664,15 @@ export const listing = [
       "validation",
       "capability_checks",
       "limits",
+      "maxBindGroupsPlusVertexBuffers"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "capability_checks",
+      "limits",
       "maxBindingsPerBindGroup"
     ]
   },

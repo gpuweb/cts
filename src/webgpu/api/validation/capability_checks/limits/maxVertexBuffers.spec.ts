@@ -63,10 +63,10 @@ g.test('setVertexBuffer,at_over')
           usage: GPUBufferUsage.VERTEX,
         });
 
-        await t.testGPURenderCommandsMixin(
+        await t.testGPURenderAndBindingCommandsMixin(
           encoderType,
-          ({ mixin }) => {
-            mixin.setVertexBuffer(lastIndex, buffer);
+          ({ passEncoder }) => {
+            passEncoder.setVertexBuffer(lastIndex, buffer);
           },
           shouldError,
           `lastIndex: ${lastIndex}, actualLimit: ${actualLimit}, shouldError: ${shouldError}`

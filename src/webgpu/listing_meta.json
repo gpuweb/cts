@@ -283,6 +283,8 @@
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:createPipelineLayout,at_over:*": { "subcaseMS": 9.310 },
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:setBindGroup,at_over:*": { "subcaseMS": 9.984 },
   "webgpu:api,validation,capability_checks,limits,maxBindGroups:validate,maxBindGroupsPlusVertexBuffers:*": { "subcaseMS": 11.200 },
+  "webgpu:api,validation,capability_checks,limits,maxBindGroupsPlusVertexBuffers:createRenderPipeline,at_over:*": { "subcaseMS": 11.200 },
+  "webgpu:api,validation,capability_checks,limits,maxBindGroupsPlusVertexBuffers:draw,at_over:*": { "subcaseMS": 11.200 },
   "webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:createBindGroupLayout,at_over:*": { "subcaseMS": 12.441 },
   "webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:createPipeline,at_over:*": { "subcaseMS": 11.179 },
   "webgpu:api,validation,capability_checks,limits,maxBindingsPerBindGroup:validate:*": { "subcaseMS": 12.401 },
