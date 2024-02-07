@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   kRenderEncoderTypes,
   kMaximumLimitBaseParams,
@@ -10,7 +9,7 @@ const kVertexBufferBindGroupPreferences = ['vertexBuffers', 'bindGroups'] as con
 type VertexBufferBindGroupPreference = (typeof kVertexBufferBindGroupPreferences)[number];
 
 const kLayoutTypes = ['auto', 'explicit'] as const;
-type LayoutType = typeof kLayoutTypes[number];
+type LayoutType = (typeof kLayoutTypes)[number];
 
 /**
  * Given testValue, choose more vertex buffers or more bind groups based on preference
@@ -48,11 +47,11 @@ function createLayout(device: GPUDevice, layoutType: LayoutType, numBindGroups: 
               binding: 0,
               visibility: GPUShaderStage.VERTEX,
               buffer: {},
-            }
+            },
           ],
         });
       }
-      return device.createPipelineLayout({ bindGroupLayouts })
+      return device.createPipelineLayout({ bindGroupLayouts });
     }
   }
 }
@@ -60,7 +59,12 @@ function createLayout(device: GPUDevice, layoutType: LayoutType, numBindGroups: 
 /**
  * Generate a render pipeline that can be used to test maxBindGroupsPlusVertexBuffers
  */
-function getPipelineDescriptor(device: GPUDevice, preference: VertexBufferBindGroupPreference, testValue: number, layoutType: LayoutType) {
+function getPipelineDescriptor(
+  device: GPUDevice,
+  preference: VertexBufferBindGroupPreference,
+  testValue: number,
+  layoutType: LayoutType
+) {
   // Get the numVertexBuffers and numBindGroups we could use given testValue as a total.
   // We will only use 1 of each but we'll use the last index.
   const { numVertexBuffers, numBindGroups } = getNumBindGroupsAndNumVertexBuffers(
@@ -146,7 +150,12 @@ g.test('createRenderPipeline,at_over')
           `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < maxBindGroupsAndVertexBuffers (${actualLimit})`
         );
 
-        const { code, descriptor } = getPipelineDescriptor(device, preference, testValue, layoutType);
+        const { code, descriptor } = getPipelineDescriptor(
+          device,
+          preference,
+          testValue,
+          layoutType
+        );
 
         await t.testCreateRenderPipeline(
           descriptor,
@@ -213,26 +222,26 @@ g.test('draw,at_over')
 
         await t.testGPURenderAndBindingCommandsMixin(
           encoderType,
-          ({ bindGroup, mixin }) => {
+          ({ bindGroup, passEncoder }) => {
             // Set the last vertex buffer and clear it. This should have no effect
             // unless there is a bug in bookkeeping in the implementation.
-            mixin.setVertexBuffer(device.limits.maxVertexBuffers - 1, vertexBuffer);
-            mixin.setVertexBuffer(device.limits.maxVertexBuffers - 1, null);
+            passEncoder.setVertexBuffer(device.limits.maxVertexBuffers - 1, vertexBuffer);
+            passEncoder.setVertexBuffer(device.limits.maxVertexBuffers - 1, null);
 
             // Set the last bindGroup and clear it. This should have no effect
             // unless there is a bug in bookkeeping in the implementation.
-            mixin.setBindGroup(device.limits.maxBindGroups - 1, bindGroup);
-            mixin.setBindGroup(device.limits.maxBindGroups - 1, null);
+            passEncoder.setBindGroup(device.limits.maxBindGroups - 1, bindGroup);
+            passEncoder.setBindGroup(device.limits.maxBindGroups - 1, null);
 
             if (numVertexBuffers) {
-              mixin.setVertexBuffer(numVertexBuffers - 1, vertexBuffer);
+              passEncoder.setVertexBuffer(numVertexBuffers - 1, vertexBuffer);
             }
 
             if (numBindGroups) {
-              mixin.setBindGroup(numBindGroups - 1, bindGroup);
+              passEncoder.setBindGroup(numBindGroups - 1, bindGroup);
             }
 
-            mixin.setPipeline(pipeline);
+            passEncoder.setPipeline(pipeline);
 
             const indirectBuffer = device.createBuffer({
               size: 4,
@@ -248,18 +257,18 @@ g.test('draw,at_over')
 
             switch (drawType) {
               case 'draw':
-                mixin.draw(0);
+                passEncoder.draw(0);
                 break;
               case 'drawIndexed':
-                mixin.setIndexBuffer(indexBuffer, 'uint16');
-                mixin.drawIndexed(0);
+                passEncoder.setIndexBuffer(indexBuffer, 'uint16');
+                passEncoder.drawIndexed(0);
                 break;
               case 'drawIndirect':
-                mixin.drawIndirect(indirectBuffer, 0);
+                passEncoder.drawIndirect(indirectBuffer, 0);
                 break;
               case 'drawIndexedIndirect':
-                mixin.setIndexBuffer(indexBuffer, 'uint16');
-                mixin.drawIndexedIndirect(indirectBuffer, 0);
+                passEncoder.setIndexBuffer(indexBuffer, 'uint16');
+                passEncoder.drawIndexedIndirect(indirectBuffer, 0);
                 break;
             }
           },
