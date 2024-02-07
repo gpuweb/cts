@@ -143,7 +143,7 @@ g.test('createRenderPipeline,at_over')
           device.limits.maxBindGroups + device.limits.maxVertexBuffers;
         t.skipIf(
           actualLimit > maxUsableBindGroupsPlusVertexBuffers,
-          `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < maxBindGroupsAndVertexBuffers(${actualLimit})`
+          `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < maxBindGroupsAndVertexBuffers (${actualLimit})`
         );
 
         const { code, descriptor } = getPipelineDescriptor(device, preference, testValue, layoutType);
