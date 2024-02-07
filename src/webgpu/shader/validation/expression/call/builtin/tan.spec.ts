@@ -60,6 +60,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   .fn(t => {
     const type = kValuesTypes[t.params.type];
     const fp = fpTraitsFor(
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
       elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
     );
     const smallestPositive = fp.constants().positive.min;

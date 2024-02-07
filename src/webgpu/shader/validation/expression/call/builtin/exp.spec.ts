@@ -84,6 +84,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const type = kValuesTypes[t.params.type];
     const expectedResult = isRepresentable(
       Math.exp(Number(t.params.value)),
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
       elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
     );
     validateConstOrOverrideBuiltinEval(

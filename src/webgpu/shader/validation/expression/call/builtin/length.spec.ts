@@ -60,10 +60,12 @@ function calculate(
   return {
     isIntermediateRepresentable: isRepresentable(
       squareSum,
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
       elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
     ),
     isResultRepresentable: isRepresentable(
       result,
+      // AbstractInt is converted to AbstractFloat before calling into the builtin
       elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
     ),
     result,

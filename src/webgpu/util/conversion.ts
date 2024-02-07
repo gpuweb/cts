@@ -1690,6 +1690,13 @@ export const kAllAbstractIntegerScalarAndVectors = [
   ...kAbstractIntegerVectors,
 ] as const;
 
+// Abstract and concrete integer types are not grouped into an 'all' type,
+// because for many validation tests there is a valid conversion of
+// AbstractInt -> AbstractFloat, but not one for the concrete integers. Thus, an
+// AbstractInt literal will be a potentially valid input, whereas the concrete
+// integers will not be. For many tests the pattern is to have separate fixtures
+// for the things that might be valid and those that are never valid.
+
 /// All concrete integer scalar and vector types
 export const kAllConcreteIntegerScalarsAndVectors = [
   TypeI32,

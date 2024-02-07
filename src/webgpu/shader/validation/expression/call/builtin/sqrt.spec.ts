@@ -63,6 +63,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       t.params.value >= 0 &&
       isRepresentable(
         Math.sqrt(Number(t.params.value)),
+        // AbstractInt is converted to AbstractFloat before calling into the builtin
         elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
       );
     validateConstOrOverrideBuiltinEval(
