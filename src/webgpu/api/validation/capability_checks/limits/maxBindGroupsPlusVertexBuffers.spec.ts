@@ -182,7 +182,7 @@ g.test('draw,at_over')
           device.limits.maxBindGroups + maxUsableVertexBuffers;
         t.skipIf(
           actualLimit > maxUsableBindGroupsPlusVertexBuffers,
-          `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < the maxBindGroupsAndVertexBuffers(${actualLimit})`
+          `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < the maxBindGroupsAndVertexBuffers (${actualLimit})`
         );
 
         // Get the numVertexBuffers and numBindGroups we could use given testValue as a total.
