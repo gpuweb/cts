@@ -4,6 +4,7 @@ Tests for the behavior of read-only storage textures.
 TODO:
 - Test the use of read-only storage textures in vertex and fragment shaders
 - Test 1D and 3D textures
+- Test mipmap level > 0
 - Test bgra8unorm with 'bgra8unorm-storage'
 - Test resource usage transitions with read-only storage textures
 `;
@@ -58,7 +59,7 @@ class F extends GPUTest {
     const depthOrArrayLayers = storageTexture.depthOrArrayLayers;
 
     const texelData = new ArrayBuffer(bytesPerBlock * width * height * depthOrArrayLayers);
-    const texelTypedData = this.GetTypedArrayBufferForTexelData(texelData, format);
+    const texelTypedDataView = this.GetTypedArrayBufferViewForTexelData(texelData, format);
     const componentCount = ComponentCount(format);
     const outputBufferData = new ArrayBuffer(4 * 4 * width * height * depthOrArrayLayers);
     const outputBufferTypedData = this.GetTypedArrayBufferForOutputBufferData(
@@ -73,7 +74,7 @@ class F extends GPUTest {
       component: number
     ) => {
       const texelComponentIndex = texelDataIndex * componentCount + component;
-      texelTypedData[texelComponentIndex] = texelValue;
+      texelTypedDataView[texelComponentIndex] = texelValue;
       const outputTexelComponentIndex = texelDataIndex * 4 + component;
       outputBufferTypedData[outputTexelComponentIndex] = outputValue;
     };
@@ -164,33 +165,18 @@ class F extends GPUTest {
   }
 
   GetTypedArrayBufferForOutputBufferData(arrayBuffer: ArrayBuffer, format: ColorTextureFormat) {
-    switch (format) {
-      case 'r32uint':
-      case 'rg32uint':
-      case 'rgba32uint':
-      case 'rgba8uint':
-      case 'rgba16uint':
+    switch (kTextureFormatInfo[format].color.type) {
+      case 'uint':
         return new Uint32Array(arrayBuffer);
-      case 'r32sint':
-      case 'rg32sint':
-      case 'rgba8sint':
-      case 'rgba16sint':
-      case 'rgba32sint':
+      case 'sint':
         return new Int32Array(arrayBuffer);
-      case 'r32float':
-      case 'rg32float':
-      case 'rgba32float':
-      case 'rgba8unorm':
-      case 'rgba8snorm':
-      case 'rgba16float':
+      case 'float':
+      case 'unfilterable-float':
         return new Float32Array(arrayBuffer);
-      default:
-        unreachable();
-        return new Uint8Array(arrayBuffer);
     }
   }
 
-  GetTypedArrayBufferForTexelData(arrayBuffer: ArrayBuffer, format: ColorTextureFormat) {
+  GetTypedArrayBufferViewForTexelData(arrayBuffer: ArrayBuffer, format: ColorTextureFormat) {
     switch (format) {
       case 'r32uint':
       case 'rg32uint':
@@ -222,26 +208,14 @@ class F extends GPUTest {
     }
   }
 
-  GetOutputBufferWGSLType(format: GPUTextureFormat) {
-    switch (format) {
-      case 'r32uint':
-      case 'rg32uint':
-      case 'rgba32uint':
-      case 'rgba8uint':
-      case 'rgba16uint':
+  GetOutputBufferWGSLType(format: ColorTextureFormat) {
+    switch (kTextureFormatInfo[format].color.type) {
+      case 'uint':
         return 'vec4u';
-      case 'r32sint':
-      case 'rg32sint':
-      case 'rgba8sint':
-      case 'rgba16sint':
-      case 'rgba32sint':
+      case 'sint':
         return 'vec4i';
-      case 'r32float':
-      case 'rg32float':
-      case 'rgba32float':
-      case 'rgba8snorm':
-      case 'rgba8unorm':
-      case 'rgba16float':
+      case 'float':
+      case 'unfilterable-float':
         return 'vec4f';
       default:
         unreachable();
@@ -249,11 +223,11 @@ class F extends GPUTest {
     }
   }
 
-  DoTransform(storageTexture: GPUTexture, outputBuffer: GPUBuffer) {
+  DoTransform(storageTexture: GPUTexture, format: ColorTextureFormat, outputBuffer: GPUBuffer) {
     const declaration =
       storageTexture.depthOrArrayLayers > 1 ? 'texture_storage_2d_array' : 'texture_storage_2d';
     const textureDeclaration = `
-    @group(0) @binding(0) var readOnlyTexture: ${declaration}<${storageTexture.format}, read>;
+    @group(0) @binding(0) var readOnlyTexture: ${declaration}<${format}, read>;
     `;
 
     const textureLoadCoord =
@@ -263,9 +237,7 @@ class F extends GPUTest {
     const computeShader = `
     ${textureDeclaration}
     @group(0) @binding(1)
-    var<storage,read_write> outputBuffer : array<${this.GetOutputBufferWGSLType(
-      storageTexture.format
-    )}>;
+    var<storage,read_write> outputBuffer : array<${this.GetOutputBufferWGSLType(format)}>;
     @compute
     @workgroup_size(${storageTexture.width}, ${storageTexture.height}, ${
       storageTexture.depthOrArrayLayers
@@ -327,9 +299,7 @@ g.test('basic')
   .fn(t => {
     const { format, depthOrArrayLayers } = t.params;
 
-    // In compatibility mode the lowest maxComputeInvocationsPerWorkgroup is 128 vs non-compat which
-    // is 256. So in non-compat we get 16 * 8 * 2, vs compat where we get 8 * 8 * 2
-    const kWidth = t.isCompatibility ? 8 : 16;
+    const kWidth = 8;
     const height = 8;
     const textureSize = [kWidth, height, depthOrArrayLayers] as const;
     const storageTexture = t.device.createTexture({
@@ -347,32 +317,21 @@ g.test('basic')
     });
     t.trackForCleanup(outputBuffer);
 
-    t.DoTransform(storageTexture, outputBuffer);
+    t.DoTransform(storageTexture, format, outputBuffer);
 
-    switch (format) {
-      case 'r32uint':
-      case 'rg32uint':
-      case 'rgba8uint':
-      case 'rgba16uint':
-      case 'rgba32uint':
+    switch (kTextureFormatInfo[format].color.type) {
+      case 'uint':
         t.expectGPUBufferValuesEqual(outputBuffer, new Uint32Array(expectedData));
         break;
-      case 'r32sint':
-      case 'rg32sint':
-      case 'rgba8sint':
-      case 'rgba16sint':
-      case 'rgba32sint':
+      case 'sint':
         t.expectGPUBufferValuesEqual(outputBuffer, new Int32Array(expectedData));
         break;
-      case 'r32float':
-      case 'rg32float':
-      case 'rgba32float':
-      case 'rgba8snorm':
-      case 'rgba8unorm':
-      case 'rgba16float':
+      case 'float':
+      case 'unfilterable-float':
         t.expectGPUBufferValuesEqual(outputBuffer, new Float32Array(expectedData));
         break;
       default:
         unreachable();
+        break;
     }
   });
