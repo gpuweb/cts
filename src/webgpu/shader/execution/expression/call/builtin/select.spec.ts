@@ -32,11 +32,14 @@ import {
   vec4,
   abstractFloat,
   TypeAbstractFloat,
+  TypeAbstractInt,
+  abstractInt,
+  Scalar,
 } from '../../../../../util/conversion.js';
 import { CaseList } from '../../case.js';
 import { run, allInputSources } from '../../expression.js';
 
-import { abstractFloatBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -44,32 +47,47 @@ function makeBool(n: number) {
   return bool((n & 1) === 1);
 }
 
-type scalarKind = 'b' | 'af' | 'f' | 'h' | 'i' | 'u';
+type scalarKind = 'b' | 'af' | 'f' | 'h' | 'ai' | 'i' | 'u';
 
 const dataType = {
   b: {
     type: TypeBool,
     constructor: makeBool,
+    shader_builder: builtin('select'),
   },
   af: {
     type: TypeAbstractFloat,
     constructor: abstractFloat,
+    shader_builder: abstractFloatBuiltin('select'),
   },
   f: {
     type: TypeF32,
     constructor: f32,
+    shader_builder: builtin('select'),
   },
   h: {
     type: TypeF16,
     constructor: f16,
+    shader_builder: builtin('select'),
+  },
+  ai: {
+    type: TypeAbstractInt,
+    // Only ints are used in the tests below, so the conversion to bigint will
+    // be safe. If a non-int is passed in this will Error.
+    constructor: (v: number): Scalar => {
+      return abstractInt(BigInt(v));
+    },
+    shader_builder: abstractIntBuiltin('select'),
   },
   i: {
     type: TypeI32,
     constructor: i32,
+    shader_builder: builtin('select'),
   },
   u: {
     type: TypeU32,
     constructor: u32,
+    shader_builder: builtin('select'),
   },
 };
 
@@ -79,7 +97,7 @@ g.test('scalar')
   .params(u =>
     u
       .combine('inputSource', allInputSources)
-      .combine('component', ['b', 'af', 'f', 'h', 'i', 'u'] as const)
+      .combine('component', ['b', 'af', 'f', 'h', 'ai', 'i', 'u'] as const)
       .combine('overload', ['scalar', 'vec2', 'vec3', 'vec4'] as const)
   )
   .beforeAllSubcases(t => {
@@ -87,6 +105,7 @@ g.test('scalar')
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
     t.skipIf(t.params.component === 'af' && t.params.inputSource !== 'const');
+    t.skipIf(t.params.component === 'ai' && t.params.inputSource !== 'const');
   })
   .fn(async t => {
     const componentType = dataType[t.params.component as scalarKind].type;
@@ -99,6 +118,7 @@ g.test('scalar')
     // always compare as different.  The tricky case is boolean, where the parity
     // has to be different, i.e. c[k]-c[k+4] must be odd.
     const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i));
+
     // Now form vectors that will have different components from each other.
     const v2a = vec2(c[0], c[1]);
     const v2b = vec2(c[4], c[5]);
@@ -141,7 +161,7 @@ g.test('scalar')
 
     await run(
       t,
-      t.params.component === 'af' ? abstractFloatBuiltin('select') : builtin('select'),
+      dataType[t.params.component as scalarKind].shader_builder,
       [overload.type, overload.type, TypeBool],
       overload.type,
       t.params,
@@ -155,7 +175,7 @@ g.test('vector')
   .params(u =>
     u
       .combine('inputSource', allInputSources)
-      .combine('component', ['b', 'af', 'f', 'h', 'i', 'u'] as const)
+      .combine('component', ['b', 'af', 'f', 'h', 'ai', 'i', 'u'] as const)
       .combine('overload', ['vec2', 'vec3', 'vec4'] as const)
   )
   .beforeAllSubcases(t => {
@@ -163,6 +183,7 @@ g.test('vector')
       t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
     }
     t.skipIf(t.params.component === 'af' && t.params.inputSource !== 'const');
+    t.skipIf(t.params.component === 'ai' && t.params.inputSource !== 'const');
   })
   .fn(async t => {
     const componentType = dataType[t.params.component as scalarKind].type;
@@ -245,7 +266,7 @@ g.test('vector')
 
     await run(
       t,
-      t.params.component === 'af' ? abstractFloatBuiltin('select') : builtin('select'),
+      dataType[t.params.component as scalarKind].shader_builder,
       [tests.dataType, tests.dataType, tests.boolType],
       tests.dataType,
       t.params,
