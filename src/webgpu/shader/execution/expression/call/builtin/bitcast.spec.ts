@@ -496,7 +496,7 @@ g.test('af_to_f32')
   )
   .fn(async t => {
     const cases = scalarF32Range().map(u => {
-      const res = FP['f32'].correctlyRounded(u).map(f => {
+      const res = FP['f32'].addFlushedIfNeeded([u]).map(f => {
         return f32(f);
       });
       return {
