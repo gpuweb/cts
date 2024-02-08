@@ -52,41 +52,41 @@ type scalarKind = 'b' | 'af' | 'f' | 'h' | 'ai' | 'i' | 'u';
 const dataType = {
   b: {
     type: TypeBool,
-    constructor: makeBool,
+    scalar_builder: makeBool,
     shader_builder: builtin('select'),
   },
   af: {
     type: TypeAbstractFloat,
-    constructor: abstractFloat,
+    scalar_builder: abstractFloat,
     shader_builder: abstractFloatBuiltin('select'),
   },
   f: {
     type: TypeF32,
-    constructor: f32,
+    scalar_builder: f32,
     shader_builder: builtin('select'),
   },
   h: {
     type: TypeF16,
-    constructor: f16,
+    scalar_builder: f16,
     shader_builder: builtin('select'),
   },
   ai: {
     type: TypeAbstractInt,
     // Only ints are used in the tests below, so the conversion to bigint will
     // be safe. If a non-int is passed in this will Error.
-    constructor: (v: number): Scalar => {
+    scalar_builder: (v: number): Scalar => {
       return abstractInt(BigInt(v));
     },
     shader_builder: abstractIntBuiltin('select'),
   },
   i: {
     type: TypeI32,
-    constructor: i32,
+    scalar_builder: i32,
     shader_builder: builtin('select'),
   },
   u: {
     type: TypeU32,
-    constructor: u32,
+    scalar_builder: u32,
     shader_builder: builtin('select'),
   },
 };
@@ -108,8 +108,8 @@ g.test('scalar')
     t.skipIf(t.params.component === 'ai' && t.params.inputSource !== 'const');
   })
   .fn(async t => {
-    const componentType = dataType[t.params.component as scalarKind].type;
-    const cons = dataType[t.params.component as scalarKind].constructor;
+    const componentType = dataType[t.params.component].type;
+    const scalar_builder = dataType[t.params.component].scalar_builder;
 
     // Create the scalar values that will be selected from, either as scalars
     // or vectors.
@@ -117,22 +117,22 @@ g.test('scalar')
     // Each boolean will select between c[k] and c[k+4].  Those values must
     // always compare as different.  The tricky case is boolean, where the parity
     // has to be different, i.e. c[k]-c[k+4] must be odd.
-    const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i));
+    const scalars = [0, 1, 2, 3, 5, 6, 7, 8].map(i => scalar_builder(i));
 
     // Now form vectors that will have different components from each other.
-    const v2a = vec2(c[0], c[1]);
-    const v2b = vec2(c[4], c[5]);
-    const v3a = vec3(c[0], c[1], c[2]);
-    const v3b = vec3(c[4], c[5], c[6]);
-    const v4a = vec4(c[0], c[1], c[2], c[3]);
-    const v4b = vec4(c[4], c[5], c[6], c[7]);
+    const v2a = vec2(scalars[0], scalars[1]);
+    const v2b = vec2(scalars[4], scalars[5]);
+    const v3a = vec3(scalars[0], scalars[1], scalars[2]);
+    const v3b = vec3(scalars[4], scalars[5], scalars[6]);
+    const v4a = vec4(scalars[0], scalars[1], scalars[2], scalars[3]);
+    const v4b = vec4(scalars[4], scalars[5], scalars[6], scalars[7]);
 
     const overloads = {
       scalar: {
         type: componentType,
         cases: [
-          { input: [c[0], c[1], False], expected: c[0] },
-          { input: [c[0], c[1], True], expected: c[1] },
+          { input: [scalars[0], scalars[1], False], expected: scalars[0] },
+          { input: [scalars[0], scalars[1], True], expected: scalars[1] },
         ],
       },
       vec2: {
@@ -186,15 +186,15 @@ g.test('vector')
     t.skipIf(t.params.component === 'ai' && t.params.inputSource !== 'const');
   })
   .fn(async t => {
-    const componentType = dataType[t.params.component as scalarKind].type;
-    const cons = dataType[t.params.component as scalarKind].constructor;
+    const componentType = dataType[t.params.component].type;
+    const scalar_builder = dataType[t.params.component].scalar_builder;
 
     // Create the scalar values that will be selected from.
     //
     // Each boolean will select between c[k] and c[k+4].  Those values must
     // always compare as different.  The tricky case is boolean, where the parity
     // has to be different, i.e. c[k]-c[k+4] must be odd.
-    const c = [0, 1, 2, 3, 5, 6, 7, 8].map(i => cons(i));
+    const scalars = [0, 1, 2, 3, 5, 6, 7, 8].map(i => scalar_builder(i));
     const T = True;
     const F = False;
 
@@ -202,8 +202,8 @@ g.test('vector')
 
     switch (t.params.overload) {
       case 'vec2': {
-        const a = vec2(c[0], c[1]);
-        const b = vec2(c[4], c[5]);
+        const a = vec2(scalars[0], scalars[1]);
+        const b = vec2(scalars[4], scalars[5]);
         tests = {
           dataType: TypeVec(2, componentType),
           boolType: TypeVec(2, TypeBool),
@@ -217,8 +217,8 @@ g.test('vector')
         break;
       }
       case 'vec3': {
-        const a = vec3(c[0], c[1], c[2]);
-        const b = vec3(c[4], c[5], c[6]);
+        const a = vec3(scalars[0], scalars[1], scalars[2]);
+        const b = vec3(scalars[4], scalars[5], scalars[6]);
         tests = {
           dataType: TypeVec(3, componentType),
           boolType: TypeVec(3, TypeBool),
@@ -236,8 +236,8 @@ g.test('vector')
         break;
       }
       case 'vec4': {
-        const a = vec4(c[0], c[1], c[2], c[3]);
-        const b = vec4(c[4], c[5], c[6], c[7]);
+        const a = vec4(scalars[0], scalars[1], scalars[2], scalars[3]);
+        const b = vec4(scalars[4], scalars[5], scalars[6], scalars[7]);
         tests = {
           dataType: TypeVec(4, componentType),
           boolType: TypeVec(4, TypeBool),
@@ -266,7 +266,7 @@ g.test('vector')
 
     await run(
       t,
-      dataType[t.params.component as scalarKind].shader_builder,
+      dataType[t.params.component].shader_builder,
       [tests.dataType, tests.dataType, tests.boolType],
       tests.dataType,
       t.params,
