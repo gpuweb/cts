@@ -93,6 +93,10 @@ layoutType)
       ${attribUsage}
       return vec4f(0);
     }
+
+    @fragment fn fs() -> @location(0) vec4f {
+      return vec4f(0);
+    }
   `;
 
   const module = device.createShaderModule({ code });
@@ -146,8 +150,13 @@ fn(async (t) => {
       const maxUsableBindGroupsPlusVertexBuffers =
       device.limits.maxBindGroups + device.limits.maxVertexBuffers;
       t.skipIf(
-        actualLimit > maxUsableBindGroupsPlusVertexBuffers,
+        maxUsableBindGroupsPlusVertexBuffers < actualLimit,
         `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < maxBindGroupsAndVertexBuffers (${actualLimit})`
+      );
+      t.skipIf(
+        maxUsableBindGroupsPlusVertexBuffers === actualLimit && testValue > actualLimit,
+        `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) === maxBindGroupsAndVertexBuffers (${actualLimit})
+           but the testValue (${testValue}) > maxBindGroupsAndVertexBuffers (${actualLimit})`
       );
 
       const { code, descriptor } = getPipelineDescriptor(
@@ -190,8 +199,13 @@ fn(async (t) => {
       const maxUsableBindGroupsPlusVertexBuffers =
       device.limits.maxBindGroups + maxUsableVertexBuffers;
       t.skipIf(
-        actualLimit > maxUsableBindGroupsPlusVertexBuffers,
-        `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < the maxBindGroupsAndVertexBuffers (${actualLimit})`
+        maxUsableBindGroupsPlusVertexBuffers < actualLimit,
+        `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) is < maxBindGroupsAndVertexBuffers (${actualLimit})`
+      );
+      t.skipIf(
+        maxUsableBindGroupsPlusVertexBuffers === actualLimit && testValue > actualLimit,
+        `can not test because the max usable bindGroups + vertexBuffers (${maxUsableBindGroupsPlusVertexBuffers}) === maxBindGroupsAndVertexBuffers (${actualLimit})
+           but the testValue (${testValue}) > maxBindGroupsAndVertexBuffers (${actualLimit})`
       );
 
       // Get the numVertexBuffers and numBindGroups we could use given testValue as a total.
@@ -204,14 +218,18 @@ fn(async (t) => {
 
       const module = device.createShaderModule({
         code: `
-        @vertex fn vs() -> @builtin(position) vec4f {
-          return vec4f(0);
-        }
-        `
+            @vertex fn vs() -> @builtin(position) vec4f {
+              return vec4f(0);
+            }
+            @fragment fn fs() -> @location(0) vec4f {
+              return vec4f(0);
+            }
+            `
       });
       const pipeline = device.createRenderPipeline({
         layout: 'auto',
-        vertex: { module }
+        vertex: { module },
+        fragment: { module, targets: [{ format: 'rgba8unorm' }] }
       });
 
       const vertexBuffer = device.createBuffer({
@@ -244,7 +262,7 @@ fn(async (t) => {
           passEncoder.setPipeline(pipeline);
 
           const indirectBuffer = device.createBuffer({
-            size: 4,
+            size: 20,
             usage: GPUBufferUsage.INDIRECT
           });
           t.trackForCleanup(indirectBuffer);
