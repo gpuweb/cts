@@ -13,6 +13,7 @@ import {
   Value,
   Vector,
   VectorType,
+  isAbstractType,
   scalarTypeOf,
 } from '../../../util/conversion.js';
 
@@ -601,7 +602,7 @@ function basicExpressionShaderBody(
     // Constant eval
     //////////////////////////////////////////////////////////////////////////
     let body = '';
-    if (parameterTypes.some(ty => scalarTypeOf(ty).kind === 'abstract-float')) {
+    if (parameterTypes.some(isAbstractType)) {
       // Directly assign the expression to the output, to avoid an
       // intermediate store, which will concretize the value early
       body = cases
@@ -627,10 +628,16 @@ function basicExpressionShaderBody(
   }`;
     }
 
+    // If params are abstract, we will assign them directly to the storage array, so skip the values array.
+    let valuesArray = '';
+    if (!parameterTypes.some(isAbstractType)) {
+      valuesArray = wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder);
+    }
+
     return `
 ${wgslOutputs(resultType, cases.length)}
 
-${wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder)}
+${valuesArray}
 
 @compute @workgroup_size(1)
 fn main() {

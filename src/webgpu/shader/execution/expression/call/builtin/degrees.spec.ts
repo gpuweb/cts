@@ -12,7 +12,7 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './degrees.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -29,7 +29,7 @@ g.test('abstract_float')
     const cases = await d.get('abstract_const');
     await run(
       t,
-      abstractBuiltin('degrees'),
+      abstractFloatBuiltin('degrees'),
       [TypeAbstractFloat],
       TypeAbstractFloat,
       t.params,
