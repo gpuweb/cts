@@ -2044,6 +2044,7 @@
   "webgpu:shader,validation,shader_io,locations:stage_inout:*": { "subcaseMS": 1.850 },
   "webgpu:shader,validation,shader_io,locations:type:*": { "subcaseMS": 1.332 },
   "webgpu:shader,validation,shader_io,locations:validation:*": { "subcaseMS": 1.296 },
+  "webgpu:shader,validation,shader_io,locations:out_of_order:*": { "subcaseMS": 1.296 },
   "webgpu:shader,validation,shader_io,size:size:*": { "subcaseMS": 1.218 },
   "webgpu:shader,validation,shader_io,size:size_fp16:*": { "subcaseMS": 1.500 },
   "webgpu:shader,validation,shader_io,size:size_non_struct:*": { "subcaseMS": 0.929 },
