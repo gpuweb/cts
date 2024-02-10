@@ -335,9 +335,6 @@ class F extends ValidationTest {
     });
     this.trackForCleanup(buffer);
 
-    const kEmptyBindGroupNdx = 0;
-    const kNonEmptyBindGroupNdx = 1;
-
     const {
       emptyBindGroupLayout,
       nonEmptyBindGroupLayout,
