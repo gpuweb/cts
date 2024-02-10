@@ -358,9 +358,9 @@ class F extends ValidationTest {
         const nonEmptyBindGroupLayout = pipeline.getBindGroupLayout(kNonEmptyBindGroupNdx);
         return { emptyBindGroupLayout, nonEmptyBindGroupLayout, pipeline };
       } else {
-        // Testing non-empty
-        //   emptyBindGroupLayout comes from the pipeline we'll render/compute with
-        //   nonEmptyBindGroupLayout comes from a possibly incompatible place.
+        // Testing non-empty:
+        // - emptyBindGroupLayout comes from the pipeline we'll render/compute with.
+        // - nonEmptyBindGroupLayout comes from a possibly incompatible place.
         const pipeline = pipelineType === 'auto0' ? pipelineAuto0 : pipelineExplicit;
         const nonEmptyBindGroupLayout =
           bindingType === 'explicit'
