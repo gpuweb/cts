@@ -345,9 +345,9 @@ class F extends ValidationTest {
       pipeline: T;
     } = (() => {
       if (empty) {
-        // Testing empty so
-        //   nonEmptyBindGroupLayout comes from the pipeline we'll render/compute with
-        //   emptyBindGroupLayout comes from a possibly incompatible place.
+        // Testing empty:
+        // - nonEmptyBindGroupLayout comes from the pipeline we'll render/compute with.
+        // - emptyBindGroupLayout comes from a possibly incompatible place.
         const pipeline = pipelineType === 'auto0' ? pipelineAuto0 : pipelineExplicit;
         const emptyBindGroupLayout =
           bindingType === 'explicit'
