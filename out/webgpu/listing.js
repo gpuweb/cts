@@ -509,6 +509,14 @@ export const listing = [
       "api",
       "operation",
       "storage_texture",
+      "read_only"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "operation",
+      "storage_texture",
       "read_write"
     ]
   },
