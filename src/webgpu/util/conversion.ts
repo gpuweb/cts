@@ -1032,8 +1032,8 @@ export class Scalar {
   }
 }
 
-export interface ScalarBuilder {
-  (value: number): Scalar;
+export interface ScalarBuilder<T> {
+  (value: T): Scalar;
 }
 
 /** Create a Scalar of `type` by storing `value` as an element of `workingDataArray` and retrieving it.
