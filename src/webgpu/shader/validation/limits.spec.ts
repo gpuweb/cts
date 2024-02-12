@@ -26,32 +26,32 @@ g.test('struct_members')
   });
 
 g.test('nesting_depth_composite_struct')
-  .desc(`Test that composite types can be nested up to 255 levels.`)
+  .desc(`Test that composite types can be nested up to 64 levels.`)
   .fn(t => {
     let code = `struct S0 { a : u32 }\n`;
-    for (let s = 1; s < 255; s++) {
+    for (let s = 1; s < 64; s++) {
       code += `struct S${s} { a : S${s - 1} }\n`;
     }
     code += `
-    @group(0) @binding(0) var<storage, read_write> buffer : S254;
+    @group(0) @binding(0) var<storage, read_write> buffer : S63;
 
     @compute @workgroup_size(1)
     fn foo() {
-      buffer = S254();
+      buffer = S63();
     }
     `;
     t.expectPipelineResult({ expectedResult: true, code, entryPoint: 'foo' });
   });
 
 g.test('nesting_depth_composite_array')
-  .desc(`Test that composite types can be nested up to 255 levels.`)
+  .desc(`Test that composite types can be nested up to 64 levels.`)
   .fn(t => {
     let type = ``;
-    for (let m = 0; m < 254; m++) {
+    for (let m = 0; m < 63; m++) {
       type += `array<`;
     }
     type += 'u32';
-    for (let m = 0; m < 254; m++) {
+    for (let m = 0; m < 63; m++) {
       type += `, 1>`;
     }
 
@@ -67,18 +67,18 @@ g.test('nesting_depth_composite_array')
   });
 
 g.test('nesting_depth_braces')
-  .desc(`Test that brace-enclosed statements can be nested up to 127 levels.`)
+  .desc(`Test that brace-enclosed statements can be nested up to 62 levels.`)
   .fn(t => {
-    let code = `@group(0) @binding(0) var<storage, read_write> buffer : array<u32, 127>;
+    let code = `@group(0) @binding(0) var<storage, read_write> buffer : array<u32, 62>;
     @compute @workgroup_size(1)
 
     fn foo() {
     `;
-    for (let b = 0; b < 127; b++) {
+    for (let b = 0; b < 62; b++) {
       code += `  if (buffer[${b}] == ${b}) {\n`;
     }
     code += '    buffer[0] = 42;\n';
-    for (let b = 0; b < 127; b++) {
+    for (let b = 0; b < 62; b++) {
       code += `  }\n`;
     }
     code += `
@@ -159,7 +159,7 @@ g.test('switch_case_selectors_same_clause')
 // A list of types used for array elements.
 const kArrayElements = {
   bool: {
-    size: 1,
+    size: 4,
     to_u32: (x: string) => `u32(${x})`,
   },
   u32: {
@@ -173,11 +173,11 @@ const kArrayElements = {
 };
 
 g.test('private_array_byte_size')
-  .desc(`Test that arrays in the private address space up to 65535 bytes are supported.`)
+  .desc(`Test that arrays in the private address space up to 16384 bytes are supported.`)
   .params(u => u.combine('type', keysOf(kArrayElements)))
   .fn(t => {
     const type = kArrayElements[t.params.type];
-    const elements = Math.floor(65535 / type.size);
+    const elements = Math.floor(16384 / type.size);
     let code = `
     @group(0) @binding(0) var<storage, read_write> buffer : array<u32, ${elements}>;
 
@@ -193,12 +193,37 @@ g.test('private_array_byte_size')
     t.expectPipelineResult({ expectedResult: true, code, entryPoint: 'foo' });
   });
 
-g.test('function_array_byte_size')
-  .desc(`Test that arrays in the function address space up to 65535 bytes are supported.`)
+g.test('private_array_combined_byte_size')
+  .desc(`Test the combined sizes of variables in the private address.`)
   .params(u => u.combine('type', keysOf(kArrayElements)))
   .fn(t => {
     const type = kArrayElements[t.params.type];
-    const elements = Math.floor(65535 / type.size);
+    const elements = Math.floor(16384 / type.size / 4);
+    let code = `
+    @group(0) @binding(0) var<storage, read_write> buffer : array<u32, ${elements}>;
+
+    var<private> arr1 : array<${t.params.type}, ${elements}>;
+    var<private> arr2 : array<${t.params.type}, ${elements}>;
+    var<private> arr3 : array<${t.params.type}, ${elements}>;
+    var<private> arr4 : array<${t.params.type}, ${elements}>;
+
+    @compute @workgroup_size(1)
+    fn foo() {
+      for (var i = 0; i < ${elements}; i++) {
+        buffer[i] = ${type.to_u32('arr1[i]')} + ${type.to_u32('arr2[i]')} +
+                    ${type.to_u32('arr3[i]')} + ${type.to_u32('arr4[i]')};
+      }
+    }
+    `;
+    t.expectPipelineResult({ expectedResult: true, code, entryPoint: 'foo' });
+  });
+
+g.test('function_array_byte_size')
+  .desc(`Test that arrays in the function address space up to 16384 bytes are supported.`)
+  .params(u => u.combine('type', keysOf(kArrayElements)))
+  .fn(t => {
+    const type = kArrayElements[t.params.type];
+    const elements = Math.floor(16384 / type.size);
     let code = `
     @group(0) @binding(0) var<storage, read_write> buffer : array<u32, ${elements}>;
 
@@ -218,7 +243,7 @@ g.test('function_variable_combined_byte_size')
   .params(u => u.combine('type', keysOf(kArrayElements)))
   .fn(t => {
     const type = kArrayElements[t.params.type];
-    const elements = Math.floor(65535 / type.size / 4);
+    const elements = Math.floor(16384 / type.size / 4);
     let code = `
     @group(0) @binding(0) var<storage, read_write> buffer : array<u32, ${elements}>;
 
@@ -288,12 +313,12 @@ g.test('workgroup_array_byte_size_override')
   });
 
 g.test('const_array_elements')
-  .desc(`Test that constant array expressions with 65535 elements are supported.`)
+  .desc(`Test that constant array expressions with 32768 elements are supported.`)
   .fn(t => {
-    let type = `array<u32, 65535>`;
+    let type = `array<u32, 32768>`;
 
     let expr = `${type}(`;
-    for (let i = 0; i < 65535; i++) {
+    for (let i = 0; i < 32768; i++) {
       expr += `${i}, `;
     }
     expr += `)`;
