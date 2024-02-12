@@ -48,10 +48,15 @@ params((u) =>
 u.
 combine('inputSource', allButConstInputSource).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('scalarType', ['u32', 'i32', 'f32']).
+combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16']).
 combine('derefType', keysOf(kDerefCases)).
 filter((p) => !kDerefCases[p.derefType].requires_pointer_composite_access)
 ).
+beforeAllSubcases((t) => {
+  if (t.params.scalarType === 'f16') {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  }
+}).
 fn(async (t) => {
   const ty = scalarType(t.params.scalarType);
   const cases = sparseScalarF32Range().map((e) => {
@@ -83,9 +88,14 @@ params((u) =>
 u.
 combine('inputSource', allButConstInputSource).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('scalarType', ['i32', 'f32']).
+combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16']).
 combine('derefType', keysOf(kDerefCases))
 ).
+beforeAllSubcases((t) => {
+  if (t.params.scalarType === 'f16') {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  }
+}).
 fn(async (t) => {
   if (
   kDerefCases[t.params.derefType].requires_pointer_composite_access &&
@@ -124,9 +134,14 @@ params((u) =>
 u.
 combine('inputSource', allButConstInputSource).
 combine('vectorize', [undefined, 2, 3, 4]).
-combine('scalarType', ['i32', 'f32']).
+combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16']).
 combine('derefType', keysOf(kDerefCases))
 ).
+beforeAllSubcases((t) => {
+  if (t.params.scalarType === 'f16') {
+    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+  }
+}).
 fn(async (t) => {
   if (
   kDerefCases[t.params.derefType].requires_pointer_composite_access &&

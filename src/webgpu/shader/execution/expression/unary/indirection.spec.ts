@@ -48,10 +48,15 @@ Pointer expression dereference.
     u
       .combine('inputSource', allButConstInputSource)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
-      .combine('scalarType', ['u32', 'i32', 'f32'] as ScalarKind[])
+      .combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16'] as ScalarKind[])
       .combine('derefType', keysOf(kDerefCases))
       .filter(p => !kDerefCases[p.derefType].requires_pointer_composite_access)
   )
+  .beforeAllSubcases(t => {
+    if (t.params.scalarType === 'f16') {
+      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+    }
+  })
   .fn(async t => {
     const ty = scalarType(t.params.scalarType);
     const cases = sparseScalarF32Range().map(e => {
@@ -83,9 +88,14 @@ Pointer expression dereference as lhs of index accessor expression
     u
       .combine('inputSource', allButConstInputSource)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
-      .combine('scalarType', ['i32', 'f32'] as ScalarKind[])
+      .combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16'] as ScalarKind[])
       .combine('derefType', keysOf(kDerefCases))
   )
+  .beforeAllSubcases(t => {
+    if (t.params.scalarType === 'f16') {
+      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+    }
+  })
   .fn(async t => {
     if (
       kDerefCases[t.params.derefType].requires_pointer_composite_access &&
@@ -124,9 +134,14 @@ Pointer expression dereference as lhs of member accessor expression
     u
       .combine('inputSource', allButConstInputSource)
       .combine('vectorize', [undefined, 2, 3, 4] as const)
-      .combine('scalarType', ['i32', 'f32'] as ScalarKind[])
+      .combine('scalarType', ['bool', 'u32', 'i32', 'f32', 'f16'] as ScalarKind[])
       .combine('derefType', keysOf(kDerefCases))
   )
+  .beforeAllSubcases(t => {
+    if (t.params.scalarType === 'f16') {
+      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
+    }
+  })
   .fn(async t => {
     if (
       kDerefCases[t.params.derefType].requires_pointer_composite_access &&
