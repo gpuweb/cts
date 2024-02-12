@@ -1,7 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
-Execution Tests for unary indirection (dereference)
+Execution Tests for unary address-of and indirection (dereference)
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
 import { GPUTest } from '../../../../gpu_test.js';
@@ -169,4 +169,4 @@ fn(async (t) => {
   );
   await run(t, shaderBuilder, [ty], ty, t.params, cases);
 });
-//# sourceMappingURL=indirection.spec.js.map
+//# sourceMappingURL=address_of_and_indirection.spec.js.map

@@ -3288,6 +3288,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "address_of_and_indirection"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "af_arithmetic"
     ]
   },
@@ -3388,15 +3397,6 @@ export const listing = [
       "expression",
       "unary",
       "i32_conversion"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "execution",
-      "expression",
-      "unary",
-      "indirection"
     ]
   },
   {
