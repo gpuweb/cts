@@ -9,10 +9,16 @@ Returns the sign of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeF16, TypeF32, TypeI32 } from '../../../../../util/conversion.js';
+import {
+  TypeAbstractFloat,
+  TypeAbstractInt,
+  TypeF16,
+  TypeF32,
+  TypeI32,
+} from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractFloatBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 import { d } from './sign.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -26,7 +32,7 @@ g.test('abstract_float')
       .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
   .fn(async t => {
-    const cases = await d.get('abstract');
+    const cases = await d.get('abstract_float');
     await run(
       t,
       abstractFloatBuiltin('sign'),
@@ -41,9 +47,14 @@ g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
   .desc(`abstract int tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract_int');
+    await run(t, abstractIntBuiltin('sign'), [TypeAbstractInt], TypeAbstractInt, t.params, cases);
+  });
 
 g.test('i32')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
