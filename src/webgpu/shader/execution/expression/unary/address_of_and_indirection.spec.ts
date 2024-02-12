@@ -1,5 +1,5 @@
 export const description = `
-Execution Tests for unary indirection (dereference)
+Execution Tests for unary address-of and indirection (dereference)
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
