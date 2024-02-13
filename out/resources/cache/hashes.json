@@ -104,6 +104,6 @@
   "webgpu/shader/execution/unary/u32_complement.bin": "d00cdf00",
   "webgpu/shader/execution/unary/u32_conversion.bin": "2940ba5e",
   "webgpu/shader/execution/unary/ai_assignment.bin": "9c0d8f91",
-  "webgpu/shader/execution/binary/ai_arithmetic.bin": "f48612cb",
+  "webgpu/shader/execution/binary/ai_arithmetic.bin": "e17954",
   "webgpu/shader/execution/unary/ai_arithmetic.bin": "2a1ff461"
 }
