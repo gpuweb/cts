@@ -3,7 +3,7 @@ This test dedicatedly tests validation of GPUFragmentState of createRenderPipeli
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { assert, range } from '../../../../common/util/util.js';
+import { range } from '../../../../common/util/util.js';
 import {
   kBlendFactors,
   kBlendOperations,
@@ -61,7 +61,7 @@ g.test('targets_format_is_color_format')
       // Test all non-color texture formats, plus 'rgba8unorm' as a control case.
       .combine('format', kAllTextureFormats)
       .filter(({ format }) => {
-        return format == 'rgba8unorm' || !kTextureFormatInfo[format].color;
+        return format === 'rgba8unorm' || !kTextureFormatInfo[format].color;
       })
       .combine('isAsync', [false, true])
       .beginSubcases()
