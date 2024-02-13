@@ -13,24 +13,37 @@ import { align } from './util/math.js';
  * `formatTableWithDefaults`. This ensures keys are never missing, always explicitly `undefined`.
  *
  * All top-level keys must be defined here, or they won't be exposed at all.
+ * Documentation is also written here; this makes it propagate through to the end types.
  */
 const kFormatUniversalDefaults = {
+  /** Texel block width. */
   blockWidth: undefined,
+  /** Texel block height. */
   blockHeight: undefined,
   color: undefined,
   depth: undefined,
   stencil: undefined,
   colorRender: undefined,
+  /** Whether the format can be used in a multisample texture. */
   multisample: undefined,
+  /** Optional feature required to use this format, or `undefined` if none. */
   feature: undefined,
+  /** The base format for srgb formats. Specified on both srgb and equivalent non-srgb formats. */
   baseFormat: undefined,
 
+  /** @deprecated */
   sampleType: undefined,
+  /** @deprecated */
   copySrc: undefined,
+  /** @deprecated */
   copyDst: undefined,
+  /** @deprecated Use `.color.bytes`, `.depth.bytes`, or `.stencil.bytes`. */
   bytesPerBlock: undefined,
+  /** @deprecated */
   renderable: false,
+  /** @deprecated */
   renderTargetPixelByteCost: undefined,
+  /** @deprecated */
   renderTargetComponentAlignment: undefined
 
   // IMPORTANT:
@@ -1643,20 +1656,7 @@ assert(
  * This is not actually the type of values in kTextureFormatInfo; that type is fully const
  * so that it can be narrowed very precisely at usage sites by the compiler.
  * This type exists only as a type check on the inferred type of kTextureFormatInfo.
- * Documentation is also written here, but not actually visible to the IDE.
  */
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1723,10 +1723,6 @@ export const kTextureFormatInfo = {
 const kTextureFormatInfo_TypeCheck =
 
 kTextureFormatInfo;
-
-/** List of all GPUTextureFormat values. */
-// MAINTENANCE_TODO: dedup with kAllTextureFormats
-export const kTextureFormats = keysOf(kAllTextureFormatInfo);
 
 /** Valid GPUTextureFormats for `copyExternalImageToTexture`, by spec. */
 export const kValidTextureFormatsForCopyE2T = [
@@ -1957,7 +1953,7 @@ export function isEncodableTextureformat(format) {
   return format in kEncodableTextureFormatInfo;
 }
 
-export const kFeaturesForFormats = getFeaturesForFormats(kTextureFormats);
+export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
 
 /**
  * Given an array of texture formats return the number of bytes per sample.

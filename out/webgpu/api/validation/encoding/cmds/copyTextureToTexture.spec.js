@@ -6,7 +6,7 @@ copyTextureToTexture tests.
 import { kTextureUsages, kTextureDimensions } from '../../../../capability_info.js';
 import {
   kTextureFormatInfo,
-  kTextureFormats,
+  kAllTextureFormats,
   kCompressedTextureFormats,
   kDepthStencilFormats,
   kFeaturesForFormats,
@@ -360,10 +360,10 @@ combine('srcFormatFeature', kFeaturesForFormats).
 combine('dstFormatFeature', kFeaturesForFormats).
 beginSubcases().
 expand('srcFormat', ({ srcFormatFeature }) =>
-filterFormatsByFeature(srcFormatFeature, kTextureFormats)
+filterFormatsByFeature(srcFormatFeature, kAllTextureFormats)
 ).
 expand('dstFormat', ({ dstFormatFeature }) =>
-filterFormatsByFeature(dstFormatFeature, kTextureFormats)
+filterFormatsByFeature(dstFormatFeature, kAllTextureFormats)
 )
 ).
 beforeAllSubcases((t) => {
