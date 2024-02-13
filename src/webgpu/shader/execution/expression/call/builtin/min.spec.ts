@@ -25,36 +25,52 @@ import {
   TypeU32,
   i32,
   u32,
+  abstractInt,
+  TypeAbstractInt,
 } from '../../../../../util/conversion.js';
+import { minBigInt } from '../../../../../util/math.js';
 import { Case } from '../../case.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractFloatBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 import { d } from './min.cache.js';
 
 export const g = makeTestGroup(GPUTest);
 
 /** Generate set of min test cases from list of interesting values */
-function generateTestCases(
-  values: Array<number>,
-  makeCase: (x: number, y: number) => Case
-): Array<Case> {
-  const cases = new Array<Case>();
-  values.forEach(e => {
-    values.forEach(f => {
-      cases.push(makeCase(e, f));
+function generateTestCases<Type>(values: Type[], makeCase: (x: Type, y: Type) => Case): Case[] {
+  return values.flatMap(e => {
+    return values.map(f => {
+      return makeCase(e, f);
     });
   });
-  return cases;
 }
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
   .desc(`abstract int tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const makeCase = (x: bigint, y: bigint): Case => {
+      return { input: [abstractInt(x), abstractInt(y)], expected: abstractInt(minBigInt(x, y)) };
+    };
+
+    const test_values = [-0x70000000n, -2n, -1n, 0n, 1n, 2n, 0x70000000n];
+    const cases = generateTestCases(test_values, makeCase);
+
+    await run(
+      t,
+      abstractIntBuiltin('min'),
+      [TypeAbstractInt, TypeAbstractInt],
+      TypeAbstractInt,
+      t.params,
+      cases
+    );
+  });
 
 g.test('u32')
   .specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions')
@@ -67,7 +83,7 @@ g.test('u32')
       return { input: [u32(x), u32(y)], expected: u32(Math.min(x, y)) };
     };
 
-    const test_values: Array<number> = [0, 1, 2, 0x70000000, 0x80000000, 0xffffffff];
+    const test_values: number[] = [0, 1, 2, 0x70000000, 0x80000000, 0xffffffff];
     const cases = generateTestCases(test_values, makeCase);
 
     await run(t, builtin('min'), [TypeU32, TypeU32], TypeU32, t.params, cases);
@@ -84,7 +100,7 @@ g.test('i32')
       return { input: [i32(x), i32(y)], expected: i32(Math.min(x, y)) };
     };
 
-    const test_values: Array<number> = [-0x70000000, -2, -1, 0, 1, 2, 0x70000000];
+    const test_values: number[] = [-0x70000000, -2, -1, 0, 1, 2, 0x70000000];
     const cases = generateTestCases(test_values, makeCase);
 
     await run(t, builtin('min'), [TypeI32, TypeI32], TypeI32, t.params, cases);
