@@ -2287,12 +2287,12 @@ export function absBigInt(v: bigint): bigint {
   return v < 0n ? -v : v;
 }
 
-/** @returns the minimum from a list of bigints */
-export function minBigInt(...vals: bigint[]): bigint {
-  return vals.reduce((prev, cur) => (cur < prev ? cur : prev));
-}
-
 /** @returns the maximum from a list of bigints */
 export function maxBigInt(...vals: bigint[]): bigint {
   return vals.reduce((prev, cur) => (cur > prev ? cur : prev));
+}
+
+/** @returns the minimum from a list of bigints */
+export function minBigInt(...vals: bigint[]): bigint {
+  return vals.reduce((prev, cur) => (cur < prev ? cur : prev));
 }
