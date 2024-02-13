@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { checkElementsPassPredicate } from '../../../util/check_contents.js';import { align } from '../../../util/math.js';
+import { PRNG } from '../../../util/prng.js';
 
 /* All buffer sizes are counted in units of 4-byte words. */
 
@@ -192,6 +193,7 @@ export class MemoryModelTester {
 
 
 
+
   /** Sets up a memory model test by initializing buffers and pipeline layouts. */
   constructor(
   t,
@@ -200,6 +202,7 @@ export class MemoryModelTester {
   resultShader,
   accessValueType = 'u32')
   {
+    this.prng = new PRNG(1);
     this.test = t;
     this.params = params;
 
@@ -519,12 +522,12 @@ export class MemoryModelTester {
     );
   }
 
-  /** Returns a random integer between 0 and the max. */
+  /** Returns a random integer in the range [0, max). */
   getRandomInt(max) {
-    return Math.floor(Math.random() * max);
+    return this.prng.randomU32() % max;
   }
 
-  /** Returns a random number in between the min and max values. */
+  /** Returns a random number in the range [min, max). */
   getRandomInRange(min, max) {
     if (min === max) {
       return min;

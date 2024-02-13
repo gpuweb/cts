@@ -1,6 +1,7 @@
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 import { align } from '../../../util/math.js';
+import { PRNG } from '../../../util/prng.js';
 
 /* All buffer sizes are counted in units of 4-byte words. */
 
@@ -191,6 +192,7 @@ export class MemoryModelTester {
   protected testBindGroup: GPUBindGroup;
   protected resultPipeline: GPUComputePipeline;
   protected resultBindGroup: GPUBindGroup;
+  protected prng: PRNG;
 
   /** Sets up a memory model test by initializing buffers and pipeline layouts. */
   constructor(
@@ -200,6 +202,7 @@ export class MemoryModelTester {
     resultShader: string,
     accessValueType: AccessValueType = 'u32'
   ) {
+    this.prng = new PRNG(1);
     this.test = t;
     this.params = params;
 
@@ -519,12 +522,12 @@ export class MemoryModelTester {
     );
   }
 
-  /** Returns a random integer between 0 and the max. */
+  /** Returns a random integer in the range [0, max). */
   protected getRandomInt(max: number): number {
-    return Math.floor(Math.random() * max);
+    return this.prng.randomU32() % max;
   }
 
-  /** Returns a random number in between the min and max values. */
+  /** Returns a random number in the range [min, max). */
   protected getRandomInRange(min: number, max: number): number {
     if (min === max) {
       return min;
