@@ -24,37 +24,53 @@ import {
   TypeI32,
   TypeU32,
   i32,
-  u32 } from
+  u32,
+  abstractInt,
+  TypeAbstractInt } from
 '../../../../../util/conversion.js';
+import { minBigInt } from '../../../../../util/math.js';
 
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractFloatBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 import { d } from './min.cache.js';
 
 export const g = makeTestGroup(GPUTest);
 
 /** Generate set of min test cases from list of interesting values */
-function generateTestCases(
-values,
-makeCase)
-{
-  const cases = new Array();
-  values.forEach((e) => {
-    values.forEach((f) => {
-      cases.push(makeCase(e, f));
+function generateTestCases(values, makeCase) {
+  return values.flatMap((e) => {
+    return values.map((f) => {
+      return makeCase(e, f);
     });
   });
-  return cases;
 }
 
 g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`abstract int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+u.
+combine('inputSource', onlyConstInputSource).
+combine('vectorize', [undefined, 2, 3, 4])
 ).
-unimplemented();
+fn(async (t) => {
+  const makeCase = (x, y) => {
+    return { input: [abstractInt(x), abstractInt(y)], expected: abstractInt(minBigInt(x, y)) };
+  };
+
+  const test_values = [-0x70000000n, -2n, -1n, 0n, 1n, 2n, 0x70000000n];
+  const cases = generateTestCases(test_values, makeCase);
+
+  await run(
+    t,
+    abstractIntBuiltin('min'),
+    [TypeAbstractInt, TypeAbstractInt],
+    TypeAbstractInt,
+    t.params,
+    cases
+  );
+});
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
