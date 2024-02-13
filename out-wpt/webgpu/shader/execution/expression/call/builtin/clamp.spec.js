@@ -17,6 +17,7 @@ Component-wise when T is a vector.
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
   TypeAbstractFloat,
+  TypeAbstractInt,
   TypeF16,
   TypeF32,
   TypeI32,
@@ -24,7 +25,7 @@ import {
 '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { abstractFloatBuiltin, builtin } from './builtin.js';
+import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
 import { d } from './clamp.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -33,9 +34,21 @@ g.test('abstract_int').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
 desc(`abstract int tests`).
 params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
+u.
+combine('inputSource', onlyConstInputSource).
+combine('vectorize', [undefined, 2, 3, 4])
 ).
-unimplemented();
+fn(async (t) => {
+  const cases = await d.get('abstract_int');
+  await run(
+    t,
+    abstractIntBuiltin('clamp'),
+    [TypeAbstractInt, TypeAbstractInt, TypeAbstractInt],
+    TypeAbstractInt,
+    t.params,
+    cases
+  );
+});
 
 g.test('u32').
 specURL('https://www.w3.org/TR/WGSL/#integer-builtin-functions').
