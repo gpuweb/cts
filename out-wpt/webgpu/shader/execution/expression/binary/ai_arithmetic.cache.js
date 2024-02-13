@@ -7,12 +7,17 @@
 '../case.js';
 import { makeCaseCache } from '../case_cache.js';
 
+function isOOB(val) {
+  return val > kValue.i64.positive.max || val < kValue.i64.negative.min;
+}
 function ai_add(x, y) {
   const result = x + y;
-  if (result > kValue.i64.positive.max || result < kValue.i64.negative.min) {
-    return undefined;
-  }
-  return result;
+  return !isOOB(result) ? result : undefined;
+}
+
+function ai_sub(x, y) {
+  const result = x - y;
+  return !isOOB(result) ? result : undefined;
 }
 
 export const d = makeCaseCache('binary/ai_arithmetic', {
@@ -36,5 +41,26 @@ export const d = makeCaseCache('binary/ai_arithmetic', {
   },
   addition_vector4_scalar: () => {
     return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_add);
+  },
+  subtraction: () => {
+    return generateBinaryToI64Cases(sparseI64Range(), sparseI64Range(), ai_sub);
+  },
+  subtraction_scalar_vector2: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(2), ai_sub);
+  },
+  subtraction_scalar_vector3: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(3), ai_sub);
+  },
+  subtraction_scalar_vector4: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(4), ai_sub);
+  },
+  subtraction_vector2_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(2), sparseI64Range(), ai_sub);
+  },
+  subtraction_vector3_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(3), sparseI64Range(), ai_sub);
+  },
+  subtraction_vector4_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_sub);
   }
 });
