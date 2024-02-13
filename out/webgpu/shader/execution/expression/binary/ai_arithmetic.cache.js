@@ -15,6 +15,13 @@ function ai_add(x, y) {
   return !isOOB(result) ? result : undefined;
 }
 
+function ai_div(x, y) {
+  if (y === 0n) return undefined;
+  if (x === kValue.i64.negative.min && y === -1n) return undefined;
+  const result = x / y;
+  return !isOOB(result) ? result : undefined;
+}
+
 function ai_sub(x, y) {
   const result = x - y;
   return !isOOB(result) ? result : undefined;
@@ -41,6 +48,27 @@ export const d = makeCaseCache('binary/ai_arithmetic', {
   },
   addition_vector4_scalar: () => {
     return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_add);
+  },
+  division: () => {
+    return generateBinaryToI64Cases(sparseI64Range(), sparseI64Range(), ai_div);
+  },
+  division_scalar_vector2: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(2), ai_div);
+  },
+  division_scalar_vector3: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(3), ai_div);
+  },
+  division_scalar_vector4: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(4), ai_div);
+  },
+  division_vector2_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(2), sparseI64Range(), ai_div);
+  },
+  division_vector3_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(3), sparseI64Range(), ai_div);
+  },
+  division_vector4_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_div);
   },
   subtraction: () => {
     return generateBinaryToI64Cases(sparseI64Range(), sparseI64Range(), ai_sub);
