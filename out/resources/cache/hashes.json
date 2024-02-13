@@ -76,7 +76,7 @@
   "webgpu/shader/execution/refract.bin": "55d587bd",
   "webgpu/shader/execution/round.bin": "239913af",
   "webgpu/shader/execution/saturate.bin": "38a3dede",
-  "webgpu/shader/execution/sign.bin": "1a15fa60",
+  "webgpu/shader/execution/sign.bin": "79316052",
   "webgpu/shader/execution/sin.bin": "45d8740b",
   "webgpu/shader/execution/sinh.bin": "dd5e328b",
   "webgpu/shader/execution/smoothstep.bin": "1a0f49d1",
