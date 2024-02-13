@@ -1529,6 +1529,7 @@
   "webgpu:shader,execution,expression,call,user,ptr_params:write_ptr_to_member:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,call,user,ptr_params:write_ptr_to_element:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,call,user,ptr_params:mixed_ptr_parameters:*": { "subcaseMS": 0.000 },
+  "webgpu:shader,execution,expression,unary,ai_arithmetic:negation:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,unary,af_arithmetic:negation:*": { "subcaseMS": 2165.950 },
   "webgpu:shader,execution,expression,unary,af_assignment:abstract:*": { "subcaseMS": 788.400 },
   "webgpu:shader,execution,expression,unary,af_assignment:f16:*": { "subcaseMS": 1.000 },
