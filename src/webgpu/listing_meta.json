@@ -716,6 +716,7 @@
   "webgpu:api,validation,render_pipeline,fragment_state:pipeline_output_targets:*": { "subcaseMS": 0.497 },
   "webgpu:api,validation,render_pipeline,fragment_state:targets_blend:*": { "subcaseMS": 1.203 },
   "webgpu:api,validation,render_pipeline,fragment_state:targets_format_filterable:*": { "subcaseMS": 2.143 },
+  "webgpu:api,validation,render_pipeline,fragment_state:targets_format_is_color_format:*": { "subcaseMS": 2.000 },
   "webgpu:api,validation,render_pipeline,fragment_state:targets_format_renderable:*": { "subcaseMS": 3.339 },
   "webgpu:api,validation,render_pipeline,fragment_state:targets_write_mask:*": { "subcaseMS": 12.272 },
   "webgpu:api,validation,render_pipeline,inter_stage:interpolation_sampling:*": { "subcaseMS": 3.126 },

@@ -14,11 +14,13 @@ import {
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
   computeBytesPerSampleFromFormats,
+  kColorTextureFormats,
 } from '../../../format_info.js';
 import {
   getFragmentShaderCodeWithOutput,
   getPlainTypeInfo,
   kDefaultFragmentShaderCode,
+  kDefaultVertexShaderCode,
 } from '../../../util/shader.js';
 import { kTexelRepresentationInfo } from '../../../util/texture/texel_data.js';
 
@@ -49,12 +51,59 @@ g.test('color_target_exists')
     t.doCreateRenderPipelineTest(isAsync, false, badDescriptor);
   });
 
+g.test('targets_format_is_color_format')
+  .desc(
+    `Tests that color target state format must be a color format, regardless of how the
+    fragment shader writes to it.`
+  )
+  .params(u =>
+    u
+      // Test all non-color texture formats, plus 'rgba8unorm' as a control case.
+      .combine('format', kAllTextureFormats)
+      .filter(({ format }) => {
+        return format === 'rgba8unorm' || !kTextureFormatInfo[format].color;
+      })
+      .combine('isAsync', [false, true])
+      .beginSubcases()
+      .combine('fragOutType', ['f32', 'u32', 'i32'] as const)
+  )
+  .beforeAllSubcases(t => {
+    const { format } = t.params;
+    const info = kTextureFormatInfo[format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
+    t.selectDeviceOrSkipTestCase(info.feature);
+  })
+  .fn(t => {
+    const { isAsync, format, fragOutType } = t.params;
+
+    const fragmentShaderCode = getFragmentShaderCodeWithOutput([
+      { values, plainType: fragOutType, componentCount: 4 },
+    ]);
+
+    const success = format === 'rgba8unorm' && fragOutType === 'f32';
+    t.doCreateRenderPipelineTest(isAsync, success, {
+      vertex: {
+        module: t.device.createShaderModule({ code: kDefaultVertexShaderCode }),
+        entryPoint: 'main',
+      },
+      fragment: {
+        module: t.device.createShaderModule({ code: fragmentShaderCode }),
+        entryPoint: 'main',
+        targets: [{ format }],
+      },
+      layout: 'auto',
+    });
+  });
+
 g.test('targets_format_renderable')
-  .desc(`Tests that color target state format must have RENDER_ATTACHMENT capability.`)
+  .desc(
+    `Tests that color target state format must have RENDER_ATTACHMENT capability
+    (tests only color formats).`
+  )
   .params(u =>
     u //
       .combine('isAsync', [false, true])
-      .combine('format', kAllTextureFormats)
+      .combine('format', kColorTextureFormats)
   )
   .beforeAllSubcases(t => {
     const { format } = t.params;
