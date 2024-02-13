@@ -22,6 +22,11 @@ function ai_div(x: bigint, y: bigint): bigint | undefined {
   return !isOOB(result) ? result : undefined;
 }
 
+function ai_mul(x: bigint, y: bigint): bigint | undefined {
+  const result = x * y;
+  return !isOOB(result) ? result : undefined;
+}
+
 function ai_sub(x: bigint, y: bigint): bigint | undefined {
   const result = x - y;
   return !isOOB(result) ? result : undefined;
@@ -69,6 +74,27 @@ export const d = makeCaseCache('binary/ai_arithmetic', {
   },
   division_vector4_scalar: () => {
     return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_div);
+  },
+  multiplication: () => {
+    return generateBinaryToI64Cases(sparseI64Range(), sparseI64Range(), ai_mul);
+  },
+  multiplication_scalar_vector2: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(2), ai_mul);
+  },
+  multiplication_scalar_vector3: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(3), ai_mul);
+  },
+  multiplication_scalar_vector4: () => {
+    return generateI64VectorBinaryToVectorCases(sparseI64Range(), vectorI64Range(4), ai_mul);
+  },
+  multiplication_vector2_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(2), sparseI64Range(), ai_mul);
+  },
+  multiplication_vector3_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(3), sparseI64Range(), ai_mul);
+  },
+  multiplication_vector4_scalar: () => {
+    return generateVectorI64BinaryToVectorCases(vectorI64Range(4), sparseI64Range(), ai_mul);
   },
   subtraction: () => {
     return generateBinaryToI64Cases(sparseI64Range(), sparseI64Range(), ai_sub);
