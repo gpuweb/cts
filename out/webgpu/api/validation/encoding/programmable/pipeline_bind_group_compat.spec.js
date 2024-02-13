@@ -37,8 +37,17 @@ const kPipelineTypes = ['auto0', 'explicit'];
 const kBindingTypes = ['auto0', 'auto1', 'explicit'];
 
 
-const kEmptyBindGroupNdx = 0;
-const kNonEmptyBindGroupNdx = 1;
+const kEmptyBindGroup0Ndx = 0;
+const kEmptyBindGroup1Ndx = 1;
+const kNonEmptyBindGroup0Ndx = 2;
+const kNonEmptyBindGroup1Ndx = 3;
+
+// Swaps 2 array elements in place.
+function swapArrayElements(array, ndx1, ndx2) {
+  const t = array[ndx1];
+  array[ndx1] = array[ndx2];
+  array[ndx2] = t;
+}
 
 // Test resource type compatibility in pipeline and bind group
 // [1]: Need to add externalTexture
@@ -291,8 +300,12 @@ class F extends ValidationTest {
     empty,
     pipelineType,
     bindingType,
+    swap,
+    success,
     makePipelinesFn,
     doCommandFn
+
+
 
 
 
@@ -321,7 +334,12 @@ class F extends ValidationTest {
 
     });
     const explicitPipelineLayout = device.createPipelineLayout({
-      bindGroupLayouts: [explicitEmptyBindGroupLayout, explicitBindGroupLayout]
+      bindGroupLayouts: [
+      explicitEmptyBindGroupLayout,
+      explicitEmptyBindGroupLayout,
+      explicitBindGroupLayout,
+      explicitBindGroupLayout]
+
     });
 
     const [pipelineAuto0, pipelineAuto1, pipelineExplicit] = makePipelinesFn(
@@ -335,51 +353,71 @@ class F extends ValidationTest {
     });
     this.trackForCleanup(buffer);
 
-    let emptyBindGroupLayout;
-    let nonEmptyBindGroupLayout;
-    let pipeline;
+    let emptyBindGroupLayouts;
+    let nonEmptyBindGroupLayouts;
+    const pipeline = pipelineType === 'auto0' ? pipelineAuto0 : pipelineExplicit;
+
+    // Gets a bindGroupLayout either from the explicit layout passed in
+    // or one of the 2 `layout: 'auto'` pipelines.
+    const getBindGroupLayout = (
+    explicitBindGroupLayout,
+    bindGroupIndex) =>
+
+    bindingType === 'explicit' ?
+    explicitBindGroupLayout :
+    bindingType === 'auto0' ?
+    pipelineAuto0.getBindGroupLayout(bindGroupIndex) :
+    pipelineAuto1.getBindGroupLayout(bindGroupIndex);
 
     if (empty) {
       // Testing empty:
-      // - nonEmptyBindGroupLayout comes from the pipeline we'll render/compute with.
       // - emptyBindGroupLayout comes from a possibly incompatible place.
-      pipeline = pipelineType === 'auto0' ? pipelineAuto0 : pipelineExplicit;
-      emptyBindGroupLayout =
-      bindingType === 'explicit' ?
-      explicitEmptyBindGroupLayout :
-      bindingType === 'auto0' ?
-      pipelineAuto0.getBindGroupLayout(kEmptyBindGroupNdx) :
-      pipelineAuto1.getBindGroupLayout(kEmptyBindGroupNdx);
-      nonEmptyBindGroupLayout = pipeline.getBindGroupLayout(kNonEmptyBindGroupNdx);
+      // - nonEmptyBindGroupLayout comes from the pipeline we'll render/compute with.
+      emptyBindGroupLayouts = [
+      getBindGroupLayout(explicitEmptyBindGroupLayout, kEmptyBindGroup0Ndx),
+      getBindGroupLayout(explicitEmptyBindGroupLayout, kEmptyBindGroup1Ndx)];
+
+      if (swap) {
+        swapArrayElements(emptyBindGroupLayouts, 0, 1);
+      }
+      nonEmptyBindGroupLayouts = [
+      pipeline.getBindGroupLayout(kNonEmptyBindGroup0Ndx),
+      pipeline.getBindGroupLayout(kNonEmptyBindGroup1Ndx)];
+
     } else {
       // Testing non-empty:
-      // - emptyBindGroupLayout comes from the pipeline we'll render/compute with.
       // - nonEmptyBindGroupLayout comes from a possibly incompatible place.
-      pipeline = pipelineType === 'auto0' ? pipelineAuto0 : pipelineExplicit;
-      nonEmptyBindGroupLayout =
-      bindingType === 'explicit' ?
-      explicitBindGroupLayout :
-      bindingType === 'auto0' ?
-      pipelineAuto0.getBindGroupLayout(kNonEmptyBindGroupNdx) :
-      pipelineAuto1.getBindGroupLayout(kNonEmptyBindGroupNdx);
-      emptyBindGroupLayout = pipeline.getBindGroupLayout(kEmptyBindGroupNdx);
+      // - emptyBindGroupLayout comes from the pipeline we'll render/compute with.
+      nonEmptyBindGroupLayouts = [
+      getBindGroupLayout(explicitBindGroupLayout, kNonEmptyBindGroup0Ndx),
+      getBindGroupLayout(explicitBindGroupLayout, kNonEmptyBindGroup1Ndx)];
+
+      if (swap) {
+        swapArrayElements(nonEmptyBindGroupLayouts, 0, 1);
+      }
+      emptyBindGroupLayouts = [
+      pipeline.getBindGroupLayout(kEmptyBindGroup0Ndx),
+      pipeline.getBindGroupLayout(kEmptyBindGroup1Ndx)];
+
     }
 
-    const emptyBindGroup = device.createBindGroup({
-      layout: emptyBindGroupLayout,
+    const emptyBindGroups = emptyBindGroupLayouts.map((layout) =>
+    device.createBindGroup({
+      layout,
       entries: []
-    });
+    })
+    );
 
-    const nonEmptyBindGroup = device.createBindGroup({
-      layout: nonEmptyBindGroupLayout,
+    const nonEmptyBindGroups = nonEmptyBindGroupLayouts.map((layout) =>
+    device.createBindGroup({
+      layout,
       entries: [{ binding: 0, resource: { buffer } }]
-    });
+    })
+    );
 
     const encoder = device.createCommandEncoder();
 
-    doCommandFn({ t: this, encoder, pipeline, emptyBindGroup, nonEmptyBindGroup });
-
-    const success = bindingType === pipelineType;
+    doCommandFn({ t: this, encoder, pipeline, emptyBindGroups, nonEmptyBindGroups });
 
     this.expectValidationError(() => {
       encoder.finish();
@@ -902,12 +940,25 @@ fn((t) => {
   }, !success);
 });
 
+// pipelineType specifies which pipeline to try to render/compute with
+//    auto0 = the first `layout: 'auto'` pipeline
+//    explicit = a pipeline crated with an explicit pipeline layout using explicit bind group layouts
+//
+// bindingType specifies where to get bindGroupLayouts to use to create bindGroups
+//    auto0 = the first `layout: 'auto'` pipeline
+//    auto1 = the second `layout: 'auto'` pipeline
+//    explicit = a pipeline crated with an explicit pipeline layout using explicit bind group layouts
+//
+// swap specifies to swap the bindgroups we're testing. We test 2 of each type, 2 empty bindgroups and
+// 2 non-empty bindgroups. The 2 empty bindgroups, when swapped should still be compatible. Similarly
+// the 2 non-empty bindgroups, when swapped, should still be compatible.
 const kPipelineTypesAndBindingTypeParams = [
-{ pipelineType: 'auto0', bindingType: 'auto0' }, // successful case
-{ pipelineType: 'explicit', bindingType: 'explicit' }, // successful case
-{ pipelineType: 'explicit', bindingType: 'auto0' },
-{ pipelineType: 'auto0', bindingType: 'explicit' },
-{ pipelineType: 'auto0', bindingType: 'auto1' }];
+{ pipelineType: 'auto0', bindingType: 'auto0', swap: false, _success: true },
+{ pipelineType: 'explicit', bindingType: 'explicit', swap: false, _success: true },
+{ pipelineType: 'explicit', bindingType: 'auto0', swap: false, _success: false },
+{ pipelineType: 'auto0', bindingType: 'explicit', swap: false, _success: false },
+{ pipelineType: 'auto0', bindingType: 'auto1', swap: false, _success: false },
+{ pipelineType: 'auto0', bindingType: 'auto0', swap: true, _success: true }];
 
 
 g.test('default_bind_group_layouts_never_match,compute_pass').
@@ -918,11 +969,9 @@ desc(
   * Test that a pipeline with an explicit layout can not be used with a bindGroup from an auto layout
   * Test that a pipeline with an auto layout can not be used with a bindGroup from an explicit layout
   * Test that an auto layout from one pipeline can not be used with an auto layout from a different pipeline.
-
-  TODO:
   * Test matching bindgroup layouts on the same default layout pipeline are compatible. In other words if
     you only define group(2) then group(0)'s empty layout and group(1)'s empty layout should be compatible.
-    Similarly if group(0) and group(1) have the same types of resources they should be compatible.
+    Similarly if group(2) and group(3) have the same types of resources they should be compatible.
   `
 ).
 params((u) =>
@@ -932,13 +981,15 @@ combine('empty', [false, true]).
 combine('computeCommand', ['dispatchIndirect', 'dispatch'])
 ).
 fn((t) => {
-  const { pipelineType, bindingType, computeCommand, empty } = t.params;
+  const { pipelineType, bindingType, swap, _success: success, computeCommand, empty } = t.params;
 
   t.runDefaultLayoutBindingTest({
     visibility: GPUShaderStage.COMPUTE,
     empty,
     pipelineType,
     bindingType,
+    swap,
+    success,
     makePipelinesFn: (t, explicitPipelineLayout) => {
       return ['auto', 'auto', explicitPipelineLayout].map((layout) =>
       t.device.createComputePipeline({
@@ -946,8 +997,9 @@ fn((t) => {
         compute: {
           module: t.device.createShaderModule({
             code: `
-                @group(1) @binding(0) var<uniform> u: vec4f;
-                @compute @workgroup_size(1) fn main() { _ = u; }
+                @group(2) @binding(0) var<uniform> u1: vec4f;
+                @group(3) @binding(0) var<uniform> u2: vec4f;
+                @compute @workgroup_size(2) fn main() { _ = u1; _ = u2; }
               `
           }),
           entryPoint: 'main'
@@ -955,11 +1007,13 @@ fn((t) => {
       })
       );
     },
-    doCommandFn: ({ t, encoder, pipeline, emptyBindGroup, nonEmptyBindGroup }) => {
+    doCommandFn: ({ t, encoder, pipeline, emptyBindGroups, nonEmptyBindGroups }) => {
       const pass = encoder.beginComputePass();
       pass.setPipeline(pipeline);
-      pass.setBindGroup(kEmptyBindGroupNdx, emptyBindGroup);
-      pass.setBindGroup(kNonEmptyBindGroupNdx, nonEmptyBindGroup);
+      pass.setBindGroup(kEmptyBindGroup0Ndx, emptyBindGroups[0]);
+      pass.setBindGroup(kEmptyBindGroup1Ndx, emptyBindGroups[1]);
+      pass.setBindGroup(kNonEmptyBindGroup0Ndx, nonEmptyBindGroups[0]);
+      pass.setBindGroup(kNonEmptyBindGroup1Ndx, nonEmptyBindGroups[1]);
       t.doCompute(pass, computeCommand, true);
       pass.end();
     }
@@ -974,11 +1028,9 @@ desc(
   * Test that a pipeline with an explicit layout can not be used with a bindGroup from an auto layout
   * Test that a pipeline with an auto layout can not be used with a bindGroup from an explicit layout
   * Test that an auto layout from one pipeline can not be used with an auto layout from a different pipeline.
-
-  TODO:
   * Test matching bindgroup layouts on the same default layout pipeline are compatible. In other words if
     you only define group(2) then group(0)'s empty layout and group(1)'s empty layout should be compatible.
-    Similarly if group(0) and group(1) have the same types of resources they should be compatible.
+    Similarly if group(2) and group(3) have the same types of resources they should be compatible.
   `
 ).
 params((u) =>
@@ -993,13 +1045,15 @@ combine('renderCommand', [
 )
 ).
 fn((t) => {
-  const { pipelineType, bindingType, renderCommand, empty } = t.params;
+  const { pipelineType, bindingType, swap, _success: success, renderCommand, empty } = t.params;
 
   t.runDefaultLayoutBindingTest({
     visibility: GPUShaderStage.VERTEX,
     empty,
     pipelineType,
     bindingType,
+    swap,
+    success,
     makePipelinesFn: (t, explicitPipelineLayout) => {
       return ['auto', 'auto', explicitPipelineLayout].map(
         (layout) => {
@@ -1009,8 +1063,9 @@ fn((t) => {
             vertex: {
               module: t.device.createShaderModule({
                 code: `
-                @group(1) @binding(0) var<uniform> u: vec4f;
-                @vertex fn main() -> @builtin(position) vec4f { return u; }
+                @group(2) @binding(0) var<uniform> u1: vec4f;
+                @group(3) @binding(0) var<uniform> u2: vec4f;
+                @vertex fn main() -> @builtin(position) vec4f { return u1 + u2; }
               `
               }),
               entryPoint: 'main'
@@ -1026,7 +1081,7 @@ fn((t) => {
         }
       );
     },
-    doCommandFn: ({ t, encoder, pipeline, emptyBindGroup, nonEmptyBindGroup }) => {
+    doCommandFn: ({ t, encoder, pipeline, emptyBindGroups, nonEmptyBindGroups }) => {
       const attachmentTexture = t.device.createTexture({
         format: 'rgba8unorm',
         size: { width: 16, height: 16, depthOrArrayLayers: 1 },
@@ -1046,8 +1101,10 @@ fn((t) => {
       });
 
       renderPass.setPipeline(pipeline);
-      renderPass.setBindGroup(kEmptyBindGroupNdx, emptyBindGroup);
-      renderPass.setBindGroup(kNonEmptyBindGroupNdx, nonEmptyBindGroup);
+      renderPass.setBindGroup(kEmptyBindGroup0Ndx, emptyBindGroups[0]);
+      renderPass.setBindGroup(kEmptyBindGroup1Ndx, emptyBindGroups[1]);
+      renderPass.setBindGroup(kNonEmptyBindGroup0Ndx, nonEmptyBindGroups[0]);
+      renderPass.setBindGroup(kNonEmptyBindGroup1Ndx, nonEmptyBindGroups[1]);
       t.doRender(renderPass, renderCommand, true);
       renderPass.end();
     }
