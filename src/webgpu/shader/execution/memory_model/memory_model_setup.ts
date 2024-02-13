@@ -522,12 +522,12 @@ export class MemoryModelTester {
     );
   }
 
-  /** Returns a random integer between 0 and the max. */
+  /** Returns a random integer in the range [0, max). */
   protected getRandomInt(max: number): number {
     return this.prng.randomU32() % max;
   }
 
-  /** Returns a random number in between the min and max values. */
+  /** Returns a random number in the range [min, max). */
   protected getRandomInRange(min: number, max: number): number {
     if (min === max) {
       return min;
