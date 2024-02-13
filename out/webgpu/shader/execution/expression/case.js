@@ -1,13 +1,18 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Vector, i32, u32 } from '../../../util/conversion.js';import {
+**/import { Vector, i32, u32, abstractInt } from '../../../util/conversion.js';import {
 
   cartesianProduct,
   quantizeToI32,
-  quantizeToU32 } from
+  quantizeToU32,
+  quantizeToI64 } from
 '../../../util/math.js';
 
 
+
+function notUndefined(value) {
+  return value !== undefined;
+}
 
 /** Case is a single expression test case. */
 
@@ -21,8 +26,8 @@
 
 
 /**
- * A function that performs a binary operation on x and y, and returns the expected
- * result.
+ * A function that performs a binary operation on x and y, and returns the
+ * expected result.
  */
 
 
@@ -51,7 +56,7 @@ scalarize)
   }
   return {
     input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector(result.map(scalarize))
+    expected: new Vector(result.filter(notUndefined).map(scalarize))
   };
 }
 
@@ -70,16 +75,13 @@ op,
 quantize,
 scalarize)
 {
-  const cases = new Array();
-  scalars.forEach((s) => {
-    vectors.forEach((v) => {
-      const c = makeScalarVectorBinaryToVectorCase(s, v, op, quantize, scalarize);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
+  return scalars.flatMap((s) => {
+    return vectors.
+    map((v) => {
+      return makeScalarVectorBinaryToVectorCase(s, v, op, quantize, scalarize);
+    }).
+    filter(notUndefined);
   });
-  return cases;
 }
 
 /**
@@ -105,7 +107,7 @@ scalarize)
   }
   return {
     input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector(result.map(scalarize))
+    expected: new Vector(result.filter(notUndefined).map(scalarize))
   };
 }
 
@@ -124,16 +126,13 @@ op,
 quantize,
 scalarize)
 {
-  const cases = new Array();
-  scalars.forEach((s) => {
-    vectors.forEach((v) => {
-      const c = makeVectorScalarBinaryToVectorCase(v, s, op, quantize, scalarize);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
+  return scalars.flatMap((s) => {
+    return vectors.
+    map((v) => {
+      return makeVectorScalarBinaryToVectorCase(v, s, op, quantize, scalarize);
+    }).
+    filter(notUndefined);
   });
-  return cases;
 }
 
 /**
@@ -194,6 +193,34 @@ op)
 
 /**
  * @returns array of Case for the input params with op applied
+ * @param scalars array of scalar params
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param op he op to apply to each pair of scalar and vector
+ */
+export function generateI64VectorBinaryToVectorCases(
+scalars,
+vectors,
+op)
+{
+  return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToI64, abstractInt);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param scalars array of scalar params
+ * @param op he op to apply to each pair of vector and scalar
+ */
+export function generateVectorI64BinaryToVectorCases(
+vectors,
+scalars,
+op)
+{
+  return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToI64, abstractInt);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
  * @param param0s array of inputs to try for the first param
  * @param param1s array of inputs to try for the second param
  * @param op callback called on each pair of inputs to produce each case
@@ -244,5 +271,19 @@ param1s,
 op)
 {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToU32, u32);
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToI64Cases(
+param0s,
+param1s,
+op)
+{
+  return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
 }
 //# sourceMappingURL=case.js.map

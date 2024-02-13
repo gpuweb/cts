@@ -8,7 +8,7 @@ import { TypeAbstractFloat, TypeVec } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_addition.cache.js';
-import { abstractBinary } from './binary.js';
+import { abstractFloatBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -25,7 +25,7 @@ fn(async (t) => {
   const cases = await d.get('scalar');
   await run(
     t,
-    abstractBinary('+'),
+    abstractFloatBinary('+'),
     [TypeAbstractFloat, TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,
@@ -48,7 +48,7 @@ fn(async (t) => {
   const cases = await d.get('scalar'); // Using vectorize to generate vector cases based on scalar cases
   await run(
     t,
-    abstractBinary('+'),
+    abstractFloatBinary('+'),
     [TypeAbstractFloat, TypeAbstractFloat],
     TypeAbstractFloat,
     t.params,
@@ -70,7 +70,7 @@ fn(async (t) => {
   const cases = await d.get(`vec${dim}_scalar`);
   await run(
     t,
-    abstractBinary('+'),
+    abstractFloatBinary('+'),
     [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
     TypeVec(dim, TypeAbstractFloat),
     t.params,
@@ -92,7 +92,7 @@ fn(async (t) => {
   const cases = await d.get(`scalar_vec${dim}`);
   await run(
     t,
-    abstractBinary('+'),
+    abstractFloatBinary('+'),
     [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
     TypeVec(dim, TypeAbstractFloat),
     t.params,

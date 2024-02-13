@@ -8,7 +8,7 @@ import { TypeAbstractFloat, TypeMat } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_matrix_subtraction.cache.js';
-import { abstractBinary } from './binary.js';
+import { abstractFloatBinary } from './binary.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -32,7 +32,7 @@ Accuracy: Correctly rounded
     const cases = await d.get(`mat${cols}x${rows}`);
     await run(
       t,
-      abstractBinary('-'),
+      abstractFloatBinary('-'),
       [TypeMat(cols, rows, TypeAbstractFloat), TypeMat(cols, rows, TypeAbstractFloat)],
       TypeMat(cols, rows, TypeAbstractFloat),
       t.params,

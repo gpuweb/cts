@@ -1,13 +1,18 @@
 import { ROArrayArray } from '../../../../common/util/types.js';
-import { ScalarBuilder, Value, Vector, i32, u32 } from '../../../util/conversion.js';
+import { ScalarBuilder, Value, Vector, i32, u32, abstractInt } from '../../../util/conversion.js';
 import {
   QuantizeFunc,
   cartesianProduct,
   quantizeToI32,
   quantizeToU32,
+  quantizeToI64,
 } from '../../../util/math.js';
 
 import { Expectation } from './expectation.js';
+
+function notUndefined<T>(value: T | undefined): value is T {
+  return value !== undefined;
+}
 
 /** Case is a single expression test case. */
 export type Case = {
@@ -21,11 +26,11 @@ export type Case = {
 export type CaseList = Array<Case>;
 
 /**
- * A function that performs a binary operation on x and y, and returns the expected
- * result.
+ * A function that performs a binary operation on x and y, and returns the
+ * expected result.
  */
-export interface BinaryOp {
-  (x: number, y: number): number | undefined;
+export interface BinaryOp<T> {
+  (x: T, y: T): T | undefined;
 }
 
 /**
@@ -36,12 +41,12 @@ export interface BinaryOp {
  * @param quantize function to quantize all values in vectors and scalars
  * @param scalarize function to convert numbers to Scalars
  */
-function makeScalarVectorBinaryToVectorCase(
-  scalar: number,
-  vector: readonly number[],
-  op: BinaryOp,
-  quantize: QuantizeFunc,
-  scalarize: ScalarBuilder
+function makeScalarVectorBinaryToVectorCase<T>(
+  scalar: T,
+  vector: readonly T[],
+  op: BinaryOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
 ): Case | undefined {
   scalar = quantize(scalar);
   vector = vector.map(quantize);
@@ -51,7 +56,7 @@ function makeScalarVectorBinaryToVectorCase(
   }
   return {
     input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector((result as readonly number[]).map(scalarize)),
+    expected: new Vector(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -63,23 +68,20 @@ function makeScalarVectorBinaryToVectorCase(
  * @param quantize function to quantize all values in vectors and scalars
  * @param scalarize function to convert numbers to Scalars
  */
-function generateScalarVectorBinaryToVectorCases(
-  scalars: readonly number[],
-  vectors: ROArrayArray<number>,
-  op: BinaryOp,
-  quantize: QuantizeFunc,
-  scalarize: ScalarBuilder
+function generateScalarVectorBinaryToVectorCases<T>(
+  scalars: readonly T[],
+  vectors: ROArrayArray<T>,
+  op: BinaryOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
 ): Case[] {
-  const cases = new Array<Case>();
-  scalars.forEach(s => {
-    vectors.forEach(v => {
-      const c = makeScalarVectorBinaryToVectorCase(s, v, op, quantize, scalarize);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
+  return scalars.flatMap(s => {
+    return vectors
+      .map(v => {
+        return makeScalarVectorBinaryToVectorCase(s, v, op, quantize, scalarize);
+      })
+      .filter(notUndefined);
   });
-  return cases;
 }
 
 /**
@@ -90,12 +92,12 @@ function generateScalarVectorBinaryToVectorCases(
  * @param quantize function to quantize all values in vectors and scalars
  * @param scalarize function to convert numbers to Scalars
  */
-function makeVectorScalarBinaryToVectorCase(
-  vector: readonly number[],
-  scalar: number,
-  op: BinaryOp,
-  quantize: QuantizeFunc,
-  scalarize: ScalarBuilder
+function makeVectorScalarBinaryToVectorCase<T>(
+  vector: readonly T[],
+  scalar: T,
+  op: BinaryOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
 ): Case | undefined {
   vector = vector.map(quantize);
   scalar = quantize(scalar);
@@ -105,7 +107,7 @@ function makeVectorScalarBinaryToVectorCase(
   }
   return {
     input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector((result as readonly number[]).map(scalarize)),
+    expected: new Vector(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -117,23 +119,20 @@ function makeVectorScalarBinaryToVectorCase(
  * @param quantize function to quantize all values in vectors and scalars
  * @param scalarize function to convert numbers to Scalars
  */
-function generateVectorScalarBinaryToVectorCases(
-  vectors: ROArrayArray<number>,
-  scalars: readonly number[],
-  op: BinaryOp,
-  quantize: QuantizeFunc,
-  scalarize: ScalarBuilder
+function generateVectorScalarBinaryToVectorCases<T>(
+  vectors: ROArrayArray<T>,
+  scalars: readonly T[],
+  op: BinaryOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
 ): Case[] {
-  const cases = new Array<Case>();
-  scalars.forEach(s => {
-    vectors.forEach(v => {
-      const c = makeVectorScalarBinaryToVectorCase(v, s, op, quantize, scalarize);
-      if (c !== undefined) {
-        cases.push(c);
-      }
-    });
+  return scalars.flatMap(s => {
+    return vectors
+      .map(v => {
+        return makeVectorScalarBinaryToVectorCase(v, s, op, quantize, scalarize);
+      })
+      .filter(notUndefined);
   });
-  return cases;
 }
 
 /**
@@ -145,7 +144,7 @@ function generateVectorScalarBinaryToVectorCases(
 export function generateU32VectorBinaryToVectorCases(
   scalars: readonly number[],
   vectors: ROArrayArray<number>,
-  op: BinaryOp
+  op: BinaryOp<number>
 ): Case[] {
   return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToU32, u32);
 }
@@ -159,7 +158,7 @@ export function generateU32VectorBinaryToVectorCases(
 export function generateVectorU32BinaryToVectorCases(
   vectors: ROArrayArray<number>,
   scalars: readonly number[],
-  op: BinaryOp
+  op: BinaryOp<number>
 ): Case[] {
   return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToU32, u32);
 }
@@ -173,7 +172,7 @@ export function generateVectorU32BinaryToVectorCases(
 export function generateI32VectorBinaryToVectorCases(
   scalars: readonly number[],
   vectors: ROArrayArray<number>,
-  op: BinaryOp
+  op: BinaryOp<number>
 ): Case[] {
   return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToI32, i32);
 }
@@ -187,9 +186,37 @@ export function generateI32VectorBinaryToVectorCases(
 export function generateVectorI32BinaryToVectorCases(
   vectors: ROArrayArray<number>,
   scalars: readonly number[],
-  op: BinaryOp
+  op: BinaryOp<number>
 ): Case[] {
   return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToI32, i32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param scalars array of scalar params
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param op he op to apply to each pair of scalar and vector
+ */
+export function generateI64VectorBinaryToVectorCases(
+  scalars: readonly bigint[],
+  vectors: ROArrayArray<bigint>,
+  op: BinaryOp<bigint>
+): Case[] {
+  return generateScalarVectorBinaryToVectorCases(scalars, vectors, op, quantizeToI64, abstractInt);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param vectors array of vector params (2, 3, or 4 elements)
+ * @param scalars array of scalar params
+ * @param op he op to apply to each pair of vector and scalar
+ */
+export function generateVectorI64BinaryToVectorCases(
+  vectors: ROArrayArray<bigint>,
+  scalars: readonly bigint[],
+  op: BinaryOp<bigint>
+): Case[] {
+  return generateVectorScalarBinaryToVectorCases(vectors, scalars, op, quantizeToI64, abstractInt);
 }
 
 /**
@@ -200,12 +227,12 @@ export function generateVectorI32BinaryToVectorCases(
  * @param quantize function to quantize all values
  * @param scalarize function to convert numbers to Scalars
  */
-function generateScalarBinaryToScalarCases(
-  param0s: readonly number[],
-  param1s: readonly number[],
-  op: BinaryOp,
-  quantize: QuantizeFunc,
-  scalarize: ScalarBuilder
+function generateScalarBinaryToScalarCases<T>(
+  param0s: readonly T[],
+  param1s: readonly T[],
+  op: BinaryOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
 ): Case[] {
   param0s = param0s.map(quantize);
   param1s = param1s.map(quantize);
@@ -227,7 +254,7 @@ function generateScalarBinaryToScalarCases(
 export function generateBinaryToI32Cases(
   param0s: readonly number[],
   param1s: readonly number[],
-  op: BinaryOp
+  op: BinaryOp<number>
 ) {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI32, i32);
 }
@@ -241,7 +268,21 @@ export function generateBinaryToI32Cases(
 export function generateBinaryToU32Cases(
   param0s: readonly number[],
   param1s: readonly number[],
-  op: BinaryOp
+  op: BinaryOp<number>
 ) {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToU32, u32);
+}
+
+/**
+ * @returns an array of Cases for operations over a range of inputs
+ * @param param0s array of inputs to try for the first param
+ * @param param1s array of inputs to try for the second param
+ * @param op callback called on each pair of inputs to produce each case
+ */
+export function generateBinaryToI64Cases(
+  param0s: readonly bigint[],
+  param1s: readonly bigint[],
+  op: BinaryOp<bigint>
+) {
+  return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
 }

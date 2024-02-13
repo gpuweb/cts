@@ -1826,6 +1826,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "ai_arithmetic"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "bitwise"
     ]
   },
