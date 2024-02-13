@@ -5,7 +5,6 @@ TODO:
 - Test the use of read-only storage textures in vertex and fragment shaders
 - Test 1D and 3D textures
 - Test mipmap level > 0
-- Test bgra8unorm with 'bgra8unorm-storage'
 - Test resource usage transitions with read-only storage textures
 `;
 
@@ -39,6 +38,7 @@ function ComponentCount(format: ColorTextureFormat): number {
     case 'rgba16float':
     case 'rgba16sint':
     case 'rgba16uint':
+    case 'bgra8unorm':
       return 4;
     default:
       unreachable();
@@ -105,6 +105,29 @@ class F extends GPUTest {
                 const texelValue = (4 * texelDataIndex + component + 1) % 256;
                 const outputValue = texelValue / 255.0;
                 SetData(texelValue, outputValue, texelDataIndex, component);
+                break;
+              }
+              case 'bgra8unorm': {
+                const texelValue = (4 * texelDataIndex + component + 1) % 256;
+                const texelComponentIndex = texelDataIndex * componentCount + component;
+                texelTypedDataView[texelComponentIndex] = texelValue;
+
+                const outputValue = texelValue / 255.0;
+                let outputComponent = 0;
+                switch (component) {
+                  case 0:
+                    outputComponent = 2;
+                    break;
+                  case 2:
+                    outputComponent = 0;
+                    break;
+                  case 1:
+                  case 3:
+                    outputComponent = component;
+                    break;
+                }
+                const outputTexelComponentIndex = texelDataIndex * 4 + outputComponent;
+                outputBufferTypedData[outputTexelComponentIndex] = outputValue;
                 break;
               }
               case 'r32sint':
@@ -184,6 +207,7 @@ class F extends GPUTest {
         return new Uint32Array(arrayBuffer);
       case 'rgba8uint':
       case 'rgba8unorm':
+      case 'bgra8unorm':
         return new Uint8Array(arrayBuffer);
       case 'rgba16uint':
         return new Uint16Array(arrayBuffer);
@@ -293,9 +317,16 @@ g.test('basic')
   .params(u =>
     u
       .combine('format', kColorTextureFormats)
-      .filter(p => kTextureFormatInfo[p.format].color?.storage === true)
+      .filter(
+        p => p.format === 'bgra8unorm' || kTextureFormatInfo[p.format].color?.storage === true
+      )
       .combine('depthOrArrayLayers', [1, 2] as const)
   )
+  .beforeAllSubcases(t => {
+    if (t.params.format === 'bgra8unorm') {
+      t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
+    }
+  })
   .fn(t => {
     const { format, depthOrArrayLayers } = t.params;
 
