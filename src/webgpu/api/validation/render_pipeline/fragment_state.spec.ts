@@ -15,7 +15,6 @@ import {
   kTextureFormatInfo,
   computeBytesPerSampleFromFormats,
   kColorTextureFormats,
-  kDepthStencilFormats,
 } from '../../../format_info.js';
 import {
   getFragmentShaderCodeWithOutput,
@@ -57,14 +56,17 @@ g.test('targets_format_is_color_format')
     `Tests that color target state format must be a color format, regardless of how the
     fragment shader writes to it.`
   )
-  .params(u => {
-    assert(kColorTextureFormats.length + kDepthStencilFormats.length === kAllTextureFormats.length);
-    return u //
+  .params(u =>
+    u
+      // Test all non-color texture formats, plus 'rgba8unorm' as a control case.
+      .combine('format', kAllTextureFormats)
+      .filter(({ format }) => {
+        return format == 'rgba8unorm' || !kTextureFormatInfo[format].color;
+      })
       .combine('isAsync', [false, true])
-      .combine('format', ['rgba8unorm', ...kDepthStencilFormats] as const)
       .beginSubcases()
-      .combine('fragOutType', ['f32', 'u32', 'i32'] as const);
-  })
+      .combine('fragOutType', ['f32', 'u32', 'i32'] as const)
+  )
   .beforeAllSubcases(t => {
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
