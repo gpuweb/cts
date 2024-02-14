@@ -4,6 +4,7 @@ export const description = `Test fragment shader builtin variables and inter-sta
 * test @interpolate
 * test builtin(sample_index)
 * test builtin(front_facing)
+* test builtin(sample_mask)
 
 Note: @interpolate settings and sample_index affect whether or not the fragment shader
 is evaluated per-fragment or per-sample. With @interpolate(, sample) or usage of
@@ -305,6 +306,7 @@ type FragData = {
   ndcPoints: readonly number[][];
   windowPoints: readonly number[][];
   sampleIndex: number;
+  sampleMask: number;
   frontFacing: boolean;
 };
 
@@ -349,6 +351,22 @@ function generateFragmentInputs({
 
     for (let y = 0; y < height; ++y) {
       for (let x = 0; x < width; ++x) {
+        let sampleMask = 0;
+        for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
+          const localSampleMask = 1 << sampleIndex;
+          const multisampleOffset = fragmentOffsets[sampleIndex];
+          const sampleFragmentPoint = [x + multisampleOffset[0], y + multisampleOffset[1]];
+          const sampleBarycentricCoords = calcBarycentricCoordinates(
+            windowPoints2D,
+            sampleFragmentPoint
+          );
+
+          const inside = isInsideTriangle(sampleBarycentricCoords);
+          if (inside) {
+            sampleMask |= localSampleMask;
+          }
+        }
+
         for (let sampleIndex = 0; sampleIndex < sampleCount; ++sampleIndex) {
           const fragmentPoint = [x + 0.5, y + 0.5];
           const multisampleOffset = fragmentOffsets[sampleIndex];
@@ -373,6 +391,7 @@ function generateFragmentInputs({
               ndcPoints,
               windowPoints,
               sampleIndex,
+              sampleMask,
               frontFacing,
             });
 
@@ -479,6 +498,13 @@ function computeFragmentSampleIndex({ sampleIndex }: FragData) {
  */
 function computeFragmentFrontFacing({ frontFacing }: FragData) {
   return [frontFacing ? 1 : 0, 0, 0, 0];
+}
+
+/**
+ * Computes 'builtin(sample_mask)'
+ */
+function computeSampleMask({ sampleMask }: FragData) {
+  return [sampleMask, 0, 0, 0];
 }
 
 /**
@@ -1218,7 +1244,91 @@ g.test('inputs,front_facing')
     );
   });
 
-// To test sample_mask as a fragment shader output, consider
-// extending the tests in
-// src/webgpu/api/operation/render_pipeline/sample_mask.spec.ts
-g.test('inputs,sample_mask').unimplemented();
+g.test('inputs,sample_mask')
+  .desc(
+    `
+    Test fragment shader builtin(sample_mask) values.
+
+    Draws various triangles that should trigger different sample_mask values.
+    Checks that sample_mask matches what's expected.
+  `
+  )
+  .params(u =>
+    u //
+      .combine('nearFar', [[0, 1] as const, [0.25, 0.75] as const] as const)
+      .combine('sampleCount', [1, 4] as const)
+      .combine('interpolation', [
+        { type: 'perspective', sampling: 'center' },
+        { type: 'perspective', sampling: 'centroid' },
+        { type: 'perspective', sampling: 'sample' },
+        { type: 'linear', sampling: 'center' },
+        { type: 'linear', sampling: 'centroid' },
+        { type: 'linear', sampling: 'sample' },
+        { type: 'flat' },
+      ] as const)
+      .beginSubcases()
+      .combine('x', [1, 2, 4, 16])
+      .combine('y', [1, 2, 4, 16])
+  )
+  .beforeAllSubcases(t => {
+    const {
+      interpolation: { type, sampling },
+    } = t.params;
+    t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+  })
+  .fn(async t => {
+    const {
+      x,
+      y,
+      nearFar,
+      sampleCount,
+      interpolation: { type, sampling },
+    } = t.params;
+    // prettier-ignore
+    const clipSpacePoints = [
+      [ x, -y, 0, 1],
+      [-x,  y, 0, 1],
+      [ x,  y, 0, 1],
+    ];
+
+    const interStagePoints = [
+      [13, 14, 15, 16],
+      [17, 18, 19, 20],
+      [21, 22, 23, 24],
+    ];
+
+    const width = 4;
+    const height = 4;
+    const actual = await renderFragmentShaderInputsTo4TexturesAndReadbackValues(t, {
+      interpolationType: type,
+      interpolationSampling: sampling,
+      sampleCount,
+      width,
+      height,
+      nearFar,
+      clipSpacePoints,
+      interStagePoints,
+      fragInCode: '@builtin(sample_mask) sample_mask: u32,',
+      outputCode: 'vec4f(f32(fin.sample_mask), 0, 0, 0)',
+    });
+
+    const expected = generateFragmentInputs({
+      width,
+      height,
+      nearFar,
+      sampleCount,
+      clipSpacePoints,
+      interpolateFn: computeSampleMask,
+    });
+
+    t.expectOK(
+      checkSampleRectsApproximatelyEqual({
+        width,
+        height,
+        sampleCount,
+        actual,
+        expected,
+        maxDiffULPsForFloatFormat: 0,
+      })
+    );
+  });
