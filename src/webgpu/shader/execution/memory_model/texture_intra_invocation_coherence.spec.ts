@@ -1,6 +1,12 @@
 export const description = `
 Test that read/write storage textures are coherent within an invocation.
 
+Each invocation is assigned several random writing indices and a single
+read index from among those. Writes are randomly predicated (except the
+one corresponding to the read). Checks that an invocation can read data
+it has written to the texture previously.
+Does not test coherence between invocations
+
 Some platform (e.g. Metal) require a fence call to make writes visible
 to reads performed by the same invocation. These tests attempt to ensure
 WebGPU implementations emit correct fence calls.`;
@@ -80,17 +86,13 @@ function textureStore(dim: GPUTextureViewDimension, index: string): string {
 }
 
 function textureLoad(dim: GPUTextureViewDimension, format: GPUTextureFormat): string {
-  let code = ``;
-  if (format !== 'r32uint') {
-    code += `u32(`;
-  }
-  code += `textureLoad(t, indexToCoord(read_index[global_index])`;
+  let code = `textureLoad(t, indexToCoord(read_index[global_index])`;
   if (dim === '2d-array') {
     code += `, 0`;
   }
   code += `).x`;
   if (format !== 'r32uint') {
-    code += `)`;
+    code = `u32(${code})`;
   }
   return code;
 }
@@ -149,6 +151,7 @@ g.test('texture_intra_invocation_coherence')
     const num_wgs_x = 2;
     const num_wgs_y = 2;
     const invocations = wgx * wgy * num_wgs_x * num_wgs_y;
+    const num_writes_per_invocation = 4;
 
     const code = `
 requires readonly_and_readwrite_storage_textures;
@@ -206,7 +209,7 @@ fn main(@builtin(local_invocation_index) lid : u32,
       kDimensions.indexOf(t.params.dim);
     const prng = new PRNG(seed);
 
-    const num_write_indices = invocations * 4;
+    const num_write_indices = invocations * num_writes_per_invocation;
     const write_indices = new Uint32Array([...iterRange(num_write_indices, x => x)]);
     const write_masks = new Uint32Array([...iterRange(num_write_indices, x => 0)]);
     // Shuffle the indices.
@@ -226,9 +229,9 @@ fn main(@builtin(local_invocation_index) lid : u32,
     for (let i = 0; i < num_read_indices; i++) {
       // Pick a random index from index from this invocation's writes to read from.
       // Ensure that write is not masked out.
-      const readIdx = prng.randomU32() % 4;
-      read_indices[i] = write_indices[4 * i + readIdx];
-      write_masks[4 * i + readIdx] = 1;
+      const readIdx = prng.randomU32() % num_writes_per_invocation;
+      read_indices[i] = write_indices[num_writes_per_invocation * i + readIdx];
+      write_masks[num_writes_per_invocation * i + readIdx] = 1;
     }
 
     // Buffers
@@ -254,7 +257,7 @@ fn main(@builtin(local_invocation_index) lid : u32,
     t.trackForCleanup(output_buffer);
 
     // Texture
-    const texture_size = getTextureSize(invocations * 4, t.params.dim);
+    const texture_size = getTextureSize(invocations * num_writes_per_invocation, t.params.dim);
     const texture = t.device.createTexture({
       format: t.params.format,
       dimension: t.params.dim === '2d-array' ? '2d' : (t.params.dim as GPUTextureDimension),
