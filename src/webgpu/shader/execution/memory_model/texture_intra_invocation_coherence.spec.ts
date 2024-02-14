@@ -179,9 +179,8 @@ const num_wgs_y = ${num_wgs_y}u;
 ${indexToCoord(t.params.dim)}
 
 @compute @workgroup_size(wgx, wgy, 1)
-fn main(@builtin(local_invocation_index) lid : u32,
-        @builtin(workgroup_id) wgid : vec3u) {
-  let global_index = wgid.y * num_wgs_x * wgx * wgy + wgid.x * wgx * wgy + lid;
+fn main(@builtin(global_invocation_id) gid : vec3u) {
+  let global_index = gid.x + gid.y * num_wgs_x * wgx;
 
   let write_index = write_indices[global_index];
   let mask = write_mask[global_index];
