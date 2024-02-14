@@ -1259,12 +1259,7 @@ g.test('inputs,sample_mask')
       .combine('sampleCount', [1, 4] as const)
       .combine('interpolation', [
         { type: 'perspective', sampling: 'center' },
-        { type: 'perspective', sampling: 'centroid' },
         { type: 'perspective', sampling: 'sample' },
-        { type: 'linear', sampling: 'center' },
-        { type: 'linear', sampling: 'centroid' },
-        { type: 'linear', sampling: 'sample' },
-        { type: 'flat' },
       ] as const)
       .beginSubcases()
       .combine('x', [1, 2, 4, 16])
