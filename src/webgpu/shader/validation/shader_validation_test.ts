@@ -112,33 +112,27 @@ export class ShaderValidationTest extends GPUTest {
     expectedResult: boolean;
     // The WGSL shader code
     code: string;
-    // The entry point name (generates one if not set).
-    entryPoint?: string;
     // Pipeline overridable constants
     constants?: Record<string, GPUPipelineConstantValue>;
     // List of additional module-scope variable the entrypoint needs to reference
     reference?: string[];
   }) {
-    let code = args.code;
-    let entryPoint = args.entryPoint;
-    if (!entryPoint) {
-      entryPoint = 'main';
+    const phonies: Array<string> = [];
 
-      const phonies: Array<string> = [];
+    if (args.constants !== undefined) {
+      phonies.push(...keysOf(args.constants).map(c => `_ = ${c};`));
+    }
+    if (args.reference !== undefined) {
+      phonies.push(...args.reference.map(c => `_ = ${c};`));
+    }
 
-      if (args.constants !== undefined) {
-        phonies.push(...keysOf(args.constants).map(c => `_ = ${c};`));
-      }
-      if (args.reference !== undefined) {
-        phonies.push(...args.reference.map(c => `_ = ${c};`));
-      }
-
-      code += `
+    const code =
+      args.code +
+      `
 @compute @workgroup_size(1)
 fn main() {
   ${phonies.join('\n')}
 }`;
-    }
 
     let shaderModule: GPUShaderModule;
     this.expectGPUError(
@@ -154,7 +148,7 @@ fn main() {
       () => {
         this.device.createComputePipeline({
           layout: 'auto',
-          compute: { module: shaderModule!, entryPoint, constants: args.constants },
+          compute: { module: shaderModule!, entryPoint: 'main', constants: args.constants },
         });
       },
       !args.expectedResult
