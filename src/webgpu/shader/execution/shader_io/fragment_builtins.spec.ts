@@ -1250,7 +1250,10 @@ g.test('inputs,sample_mask')
     Test fragment shader builtin(sample_mask) values.
 
     Draws various triangles that should trigger different sample_mask values.
-    Checks that sample_mask matches what's expected.
+    Checks that sample_mask matches what's expected. Note: the triangles
+    are selected so they do not intersect sample points as we don't want
+    to test precision issues on whether or not a sample point is inside
+    or outside the triangle when right on the edge.
   `
   )
   .params(u =>
