@@ -1229,8 +1229,8 @@ g.test('inputs,front_facing')
       interpolateFn: computeFragmentFrontFacing,
     });
 
-    // Double check, first corner should be different than last based on the triangles we are drawing.
-    assert(expected[0] !== expected[expected.length - 4]);
+    assert(expected.indexOf(0) >= 0, 'expect some values to be 0');
+    assert(expected.findIndex(v => v !== 0) >= 0, 'expect some values to be non 0');
 
     t.expectOK(
       checkSampleRectsApproximatelyEqual({
@@ -1261,12 +1261,42 @@ g.test('inputs,sample_mask')
       .combine('nearFar', [[0, 1] as const, [0.25, 0.75] as const] as const)
       .combine('sampleCount', [1, 4] as const)
       .combine('interpolation', [
+        // given that 'sample' effects whether things are run per-sample or per-fragment
+        // we test all of these to make sure they don't affect the result differently than expected.
         { type: 'perspective', sampling: 'center' },
+        { type: 'perspective', sampling: 'centroid' },
         { type: 'perspective', sampling: 'sample' },
+        { type: 'linear', sampling: 'center' },
+        { type: 'linear', sampling: 'centroid' },
+        { type: 'linear', sampling: 'sample' },
+        { type: 'flat' },
       ] as const)
       .beginSubcases()
-      .combine('x', [1, 2, 4, -1, -2, -4])
-      .combine('y', [1, 2, 4, -1, -2, -4])
+      .combineWithParams([
+        { x: 1, y: 1 },
+        { x: 2, y: 1 },
+        { x: 3, y: 1 },
+        { x: -1, y: 1 },
+        { x: -3, y: 1 },
+        { x: 1, y: 2 },
+        { x: 2, y: 2 },
+        { x: 3, y: 2 },
+        { x: 3, y: 3 },
+        { x: -2, y: 3 },
+        { x: 1, y: -1 },
+        { x: -1, y: 3 },
+        { x: -1, y: 1 },
+        { x: 3, y: -1 },
+        { x: -1, y: -1 },
+        { x: -2, y: -1 },
+        { x: -3, y: -1 },
+        { x: 2, y: -2 },
+        { x: -1, y: -2 },
+        { x: -3, y: -2 },
+        { x: 1, y: -3 },
+        { x: 2, y: -3 },
+        { x: 3, y: -3 },
+      ])
   )
   .beforeAllSubcases(t => {
     const {
@@ -1284,9 +1314,9 @@ g.test('inputs,sample_mask')
     } = t.params;
     // prettier-ignore
     const clipSpacePoints = [
-      [ x, -y, 0, 1],
-      [-x,  y, 0, 1],
-      [ x,  y, 0, 1],
+      [ x + 0.2, -y, 0, 1],
+      [-x + 0.2,  y, 0, 1],
+      [ x + 0.2,  y, 0, 1],
     ];
 
     const interStagePoints = [
