@@ -1262,8 +1262,8 @@ g.test('inputs,sample_mask')
         { type: 'perspective', sampling: 'sample' },
       ] as const)
       .beginSubcases()
-      .combine('x', [1, 2, 4, 16])
-      .combine('y', [1, 2, 4, 16])
+      .combine('x', [1, 2, 4, -1, -2, -4])
+      .combine('y', [1, 2, 4, -1, -2, -4])
   )
   .beforeAllSubcases(t => {
     const {
