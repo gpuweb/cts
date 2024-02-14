@@ -3048,7 +3048,7 @@ export const listing = [
       "expression",
       "call",
       "builtin",
-      "textureDimension"
+      "textureDimensions"
     ]
   },
   {
