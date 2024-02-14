@@ -3566,6 +3566,14 @@ export const listing = [
       "shader",
       "execution",
       "memory_model",
+      "texture_intra_invocation_coherence"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "memory_model",
       "weak"
     ]
   },
