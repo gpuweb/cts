@@ -2,19 +2,20 @@ import { keysOf } from '../../common/util/data_tables.js';
 import { assert } from '../../common/util/util.js';
 import { align } from '../util/math.js';
 
-const kArrayLength = 3;
+const kDefaultArrayLength = 3;
 
 export type Requirement = 'never' | 'may' | 'must'; // never is the same as "must not"
 export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'atomic' | 'array';
-export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
+export type ScalarType = 'i32' | 'u32' | 'f16' | 'f32' | 'bool';
 
-export const HostSharableTypes = ['i32', 'u32', 'f32'] as const;
+export const HostSharableTypes = ['i32', 'u32', 'f16', 'f32'] as const;
 
 /** Info for each plain scalar type. */
 export const kScalarTypeInfo =
   /* prettier-ignore */ {
   'i32':    { layout: { alignment:  4, size:  4 }, supportsAtomics:  true, arrayLength: 1, innerLength: 0 },
   'u32':    { layout: { alignment:  4, size:  4 }, supportsAtomics:  true, arrayLength: 1, innerLength: 0 },
+  'f16':    { layout: { alignment:  2, size:  2 }, supportsAtomics: false, arrayLength: 1, innerLength: 0, feature: 'shader-f16' },
   'f32':    { layout: { alignment:  4, size:  4 }, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
   'bool':   { layout:                   undefined, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
 } as const;
@@ -24,28 +25,70 @@ export const kScalarTypes = keysOf(kScalarTypeInfo);
 /** Info for each vecN<> container type. */
 export const kVectorContainerTypeInfo =
   /* prettier-ignore */ {
-  'vec2':   { layout: { alignment:  8, size:  8 }, arrayLength: 2 , innerLength: 0 },
-  'vec3':   { layout: { alignment: 16, size: 12 }, arrayLength: 3 , innerLength: 0 },
-  'vec4':   { layout: { alignment: 16, size: 16 }, arrayLength: 4 , innerLength: 0 },
+  'vec2':   { arrayLength: 2 , innerLength: 0 },
+  'vec3':   { arrayLength: 3 , innerLength: 0 },
+  'vec4':   { arrayLength: 4 , innerLength: 0 },
 } as const;
 /** List of all vecN<> container types. */
 export const kVectorContainerTypes = keysOf(kVectorContainerTypeInfo);
 
+/** Returns the vector layout for a given vector container and base type, or undefined if that base type has no layout */
+function vectorLayout(
+  vectorContainer: 'vec2' | 'vec3' | 'vec4',
+  baseType: ScalarType
+): { alignment: number; size: number } | undefined {
+  const n = kVectorContainerTypeInfo[vectorContainer].arrayLength;
+  const scalarLayout = kScalarTypeInfo[baseType].layout;
+  if (scalarLayout === undefined) {
+    return undefined;
+  }
+  if (n === 3) {
+    return { alignment: scalarLayout.alignment * 4, size: scalarLayout.size * 3 };
+  }
+  return { alignment: scalarLayout.alignment * n, size: scalarLayout.size * n };
+}
+
 /** Info for each matNxN<> container type. */
 export const kMatrixContainerTypeInfo =
   /* prettier-ignore */ {
-  'mat2x2': { layout: { alignment:  8, size: 16 }, arrayLength: 2, innerLength: 2 },
-  'mat3x2': { layout: { alignment:  8, size: 24 }, arrayLength: 3, innerLength: 2 },
-  'mat4x2': { layout: { alignment:  8, size: 32 }, arrayLength: 4, innerLength: 2 },
-  'mat2x3': { layout: { alignment: 16, size: 32 }, arrayLength: 2, innerLength: 3 },
-  'mat3x3': { layout: { alignment: 16, size: 48 }, arrayLength: 3, innerLength: 3 },
-  'mat4x3': { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 3 },
-  'mat2x4': { layout: { alignment: 16, size: 32 }, arrayLength: 2, innerLength: 4 },
-  'mat3x4': { layout: { alignment: 16, size: 48 }, arrayLength: 3, innerLength: 4 },
-  'mat4x4': { layout: { alignment: 16, size: 64 }, arrayLength: 4, innerLength: 4 },
+  'mat2x2': { arrayLength: 2, innerLength: 2 },
+  'mat3x2': { arrayLength: 3, innerLength: 2 },
+  'mat4x2': { arrayLength: 4, innerLength: 2 },
+  'mat2x3': { arrayLength: 2, innerLength: 3 },
+  'mat3x3': { arrayLength: 3, innerLength: 3 },
+  'mat4x3': { arrayLength: 4, innerLength: 3 },
+  'mat2x4': { arrayLength: 2, innerLength: 4 },
+  'mat3x4': { arrayLength: 3, innerLength: 4 },
+  'mat4x4': { arrayLength: 4, innerLength: 4 },
 } as const;
 /** List of all matNxN<> container types. */
 export const kMatrixContainerTypes = keysOf(kMatrixContainerTypeInfo);
+
+export const kMatrixContainerTypeLayoutInfo =
+  /* prettier-ignore */ {
+  'f16': {
+    'mat2x2': { layout: { alignment:  4, size:  8 } },
+    'mat3x2': { layout: { alignment:  4, size: 12 } },
+    'mat4x2': { layout: { alignment:  4, size: 16 } },
+    'mat2x3': { layout: { alignment:  8, size: 16 } },
+    'mat3x3': { layout: { alignment:  8, size: 24 } },
+    'mat4x3': { layout: { alignment:  8, size: 32 } },
+    'mat2x4': { layout: { alignment:  8, size: 16 } },
+    'mat3x4': { layout: { alignment:  8, size: 24 } },
+    'mat4x4': { layout: { alignment:  8, size: 32 } },
+  },
+  'f32': {
+    'mat2x2': { layout: { alignment:  8, size: 16 } },
+    'mat3x2': { layout: { alignment:  8, size: 24 } },
+    'mat4x2': { layout: { alignment:  8, size: 32 } },
+    'mat2x3': { layout: { alignment: 16, size: 32 } },
+    'mat3x3': { layout: { alignment: 16, size: 48 } },
+    'mat4x3': { layout: { alignment: 16, size: 64 } },
+    'mat2x4': { layout: { alignment: 16, size: 32 } },
+    'mat3x4': { layout: { alignment: 16, size: 48 } },
+    'mat4x4': { layout: { alignment: 16, size: 64 } },
+  }
+} as const;
 
 export type AddressSpace = 'storage' | 'uniform' | 'private' | 'function' | 'workgroup' | 'handle';
 export type AccessMode = 'read' | 'write' | 'read_write';
@@ -189,21 +232,27 @@ export function* generateTypes({
     for (const vectorType of kVectorContainerTypes) {
       yield {
         type: `${vectorType}<${scalarType}>`,
-        _kTypeInfo: { elementBaseType: baseType, ...kVectorContainerTypeInfo[vectorType] },
+        _kTypeInfo: {
+          elementBaseType: baseType,
+          ...kVectorContainerTypeInfo[vectorType],
+          layout: vectorLayout(vectorType, scalarType as ScalarType),
+        },
       };
     }
   }
 
   if (containerType === 'matrix') {
-    // Matrices can only be f32.
-    if (baseType === 'f32') {
+    // Matrices can only be f16 or f32.
+    if (baseType === 'f16' || baseType === 'f32') {
       for (const matrixType of kMatrixContainerTypes) {
-        const matrixInfo = kMatrixContainerTypeInfo[matrixType];
+        const matrixDimInfo = kMatrixContainerTypeInfo[matrixType];
+        const matrixLayoutInfo = kMatrixContainerTypeLayoutInfo[baseType][matrixType];
         yield {
           type: `${matrixType}<${scalarType}>`,
           _kTypeInfo: {
-            elementBaseType: `vec${matrixInfo.innerLength}<${scalarType}>`,
-            ...matrixInfo,
+            elementBaseType: `vec${matrixDimInfo.innerLength}<${scalarType}>`,
+            ...matrixDimInfo,
+            ...matrixLayoutInfo,
           },
         };
       }
@@ -212,21 +261,31 @@ export function* generateTypes({
 
   // Array types
   if (containerType === 'array') {
+    // Buffer affective binding size must be a multiple of 4. Adjust array length as needed.
+    let arrayLength = kDefaultArrayLength;
+    if (
+      addressSpace === 'storage' &&
+      scalarInfo.layout !== undefined &&
+      scalarInfo.layout.alignment % 4 !== 0
+    ) {
+      arrayLength = align(arrayLength, 4);
+    }
+
     const arrayTypeInfo = {
       elementBaseType: `${baseType}`,
-      arrayLength: kArrayLength,
+      arrayLength,
       layout: scalarInfo.layout
         ? {
             alignment: scalarInfo.layout.alignment,
             size:
               addressSpace === 'uniform'
                 ? // Uniform storage class must have array elements aligned to 16.
-                  kArrayLength *
+                  arrayLength *
                   arrayStride({
                     ...scalarInfo.layout,
                     alignment: 16,
                   })
-                : kArrayLength * arrayStride(scalarInfo.layout),
+                : arrayLength * arrayStride(scalarInfo.layout),
           }
         : undefined,
     };
@@ -234,11 +293,11 @@ export function* generateTypes({
     // Sized
     if (addressSpace === 'uniform') {
       yield {
-        type: `array<vec4<${scalarType}>,${kArrayLength}>`,
+        type: `array<vec4<${scalarType}>,${arrayLength}>`,
         _kTypeInfo: arrayTypeInfo,
       };
     } else {
-      yield { type: `array<${scalarType},${kArrayLength}>`, _kTypeInfo: arrayTypeInfo };
+      yield { type: `array<${scalarType},${arrayLength}>`, _kTypeInfo: arrayTypeInfo };
     }
     // Unsized
     if (addressSpace === 'storage') {
@@ -272,7 +331,7 @@ export function supportsAtomics(p: {
   );
 }
 
-/** Generates an iterator of supported base types (i32/u32/f32/bool) */
+/** Generates an iterator of supported base types (i32/u32/f16/f32/bool) */
 export function* supportedScalarTypes(p: { isAtomic: boolean; addressSpace: string }) {
   for (const scalarType of kScalarTypes) {
     const info = kScalarTypeInfo[scalarType];
