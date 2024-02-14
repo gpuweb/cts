@@ -1354,6 +1354,41 @@ export function vectorI64Range(dim: number): ROArrayArray<bigint> {
   return kVectorI64Values[dim];
 }
 
+const kSparseVectorI64Values = {
+  2: sparseI64Range().map((i, idx) => [
+    idx % 2 === 0 ? i : BigInt(idx),
+    idx % 2 === 1 ? i : -BigInt(idx),
+  ]),
+  3: sparseI64Range().map((i, idx) => [
+    idx % 3 === 0 ? i : BigInt(idx),
+    idx % 3 === 1 ? i : -BigInt(idx),
+    idx % 3 === 2 ? i : BigInt(idx),
+  ]),
+  4: sparseI64Range().map((i, idx) => [
+    idx % 4 === 0 ? i : BigInt(idx),
+    idx % 4 === 1 ? i : -BigInt(idx),
+    idx % 4 === 2 ? i : BigInt(idx),
+    idx % 4 === 3 ? i : -BigInt(idx),
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting
+ * abstract integer values.
+ *
+ * This is an even more stripped down version of `vectorI64Range` for when
+ * pairs of vectors are being tested.
+ * All interesting integers from sparseI64Range are guaranteed to be
+ * tested, but not in every position.
+ */
+export function sparseVectorI64Range(dim: number): ROArrayArray<bigint> {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorI64Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorI64Values[dim];
+}
+
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 64-bit signed ints
  *
