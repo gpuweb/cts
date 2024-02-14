@@ -1682,6 +1682,7 @@
   "webgpu:shader,execution,memory_model,coherence:corw2:*": { "subcaseMS": 244.384 },
   "webgpu:shader,execution,memory_model,coherence:cowr:*": { "subcaseMS": 250.484 },
   "webgpu:shader,execution,memory_model,coherence:coww:*": { "subcaseMS": 245.850 },
+  "webgpu:shader,execution,memory_model,texture_intra_invocation_coherence:texture_intra_invocation_coherence:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,memory_model,weak:2_plus_2_write:*": { "subcaseMS": 185.150 },
   "webgpu:shader,execution,memory_model,weak:load_buffer:*": { "subcaseMS": 184.900 },
   "webgpu:shader,execution,memory_model,weak:message_passing:*": { "subcaseMS": 196.550 },
