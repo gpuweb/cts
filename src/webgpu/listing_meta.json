@@ -2168,5 +2168,8 @@
   "webgpu:shader,validation,expression,call,builtin,arrayLength:bool_type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:type:*": { "subcaseMS": 0 },
   "webgpu:shader,validation,expression,call,builtin,arrayLength:access_mode:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,expression,unary,address_of_and_indirection:basic:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,expression,unary,address_of_and_indirection:composite:*": { "subcaseMS": 0 },
+  "webgpu:shader,validation,expression,unary,address_of_and_indirection:invalid:*": { "subcaseMS": 0 },
   "_end": ""
 }
