@@ -9,14 +9,14 @@ import { CheckElementsGenerator, checkElementsEqualGenerated } from '../../util/
 export const g = makeTestGroup(GPUTest);
 
 // The limits that we test.
-const kMaxStructMembers = 4096;
-const kMaxCompositeNestingDepth = 64;
+const kMaxStructMembers = 1024;
+const kMaxCompositeNestingDepth = 32;
 const kMaxBraceNestingDepth = 63;
 const kMaxFunctionParameters = 255;
 const kMaxSwitchCaseSelectors = 1024;
-const kMaxPrivateStorageSize = 16384;
-const kMaxFunctionStorageSize = 16384;
-const kMaxConstArrayElements = 16384;
+const kMaxPrivateStorageSize = 8192;
+const kMaxFunctionStorageSize = 8192;
+const kMaxConstArrayElements = 8192;
 
 /**
  * Run a shader and check that the buffer output matches expectations.
