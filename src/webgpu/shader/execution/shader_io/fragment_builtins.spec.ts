@@ -1254,6 +1254,59 @@ g.test('inputs,sample_mask')
     are selected so they do not intersect sample points as we don't want
     to test precision issues on whether or not a sample point is inside
     or outside the triangle when right on the edge.
+
+    Example: x=-1, y=2, it draws the following triangle
+
+    [ -0.8, -2 ]
+    [  1.2,  2 ]
+    [ -0.8,  2 ]
+
+    On to a 4x4 pixel texture
+
+     -0.8, 2
+      .----------------------.  1.2 2
+      |...................../
+      |..................../
+      |.................../
+      |................../
+      |................./
+    +-----+-----+-----+-----+  ---
+    | |...|.....|..../|     |   ^
+    | |...|.....|.../ |     |   |
+    +-----+-----+-----+-----+   |
+    | |...|.....|../  |     |   |
+    | |...|.....|./   |     |   |
+    +-----+-----+-----+-----+   texture / clip space
+    | |...|.....|     |     |   |
+    | |...|..../|     |     |   |
+    +-----+-----+-----+-----+   |
+    | |...|../  |     |     |   |
+    | |...|./   |     |     |   V
+    +-----+-----+-----+-----+  ---
+      |.../
+      |../
+      |./
+      |/
+      /
+      .
+      -0.8, -2
+
+    Inside an individual pixel you might see this situation
+
+    +-------------+
+    |....s1|/     |
+    |......|      |
+    |...../|   s2 |
+    +------C------+
+    |s3./  |      |
+    |../   |      |
+    |./    |s4    |
+    +-------------+
+
+    where s1, s2, s3, s4, are sample points and C is the center. For a sampleCount = 4 texture
+    the sample_mask is expected to emit sample_mask = 0b0101
+
+    ref: https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_standard_multisample_quality_levels
   `
   )
   .params(u =>
