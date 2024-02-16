@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { keysOf } from '../common/util/data_tables.js';import { assert } from '../common/util/util.js';
+**/import { keysOf } from '../common/util/data_tables.js';import { assert, unreachable } from '../common/util/util.js';
 import { align } from './util/math.js';
 
 
@@ -31,10 +31,6 @@ const kFormatUniversalDefaults = {
   /** The base format for srgb formats. Specified on both srgb and equivalent non-srgb formats. */
   baseFormat: undefined,
 
-  /** @deprecated */
-  sampleType: undefined,
-  /** @deprecated */
-  copySrc: undefined,
   /** @deprecated */
   copyDst: undefined,
   /** @deprecated Use `.color.bytes`, `.depth.bytes`, or `.stencil.bytes`. */
@@ -80,7 +76,7 @@ function formatTableWithDefaults({
 
 /** "plain color formats", plus rgb9e5ufloat. */
 const kRegularTextureFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, copySrc: true, copyDst: true },
+  defaults: { blockWidth: 1, blockHeight: 1, copyDst: true },
   table: {
     // plain, 8 bits per component
 
@@ -98,7 +94,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8snorm: {
@@ -111,7 +106,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         bytes: 1
       },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8uint: {
@@ -128,7 +122,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r8sint: {
@@ -145,7 +138,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -163,7 +155,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8snorm: {
@@ -176,7 +167,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         bytes: 2
       },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8uint: {
@@ -193,7 +183,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg8sint: {
@@ -210,7 +199,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -229,7 +217,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'rgba8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     'rgba8unorm-srgb': {
@@ -247,7 +234,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'rgba8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8snorm: {
@@ -260,7 +246,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         bytes: 4
       },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8uint: {
@@ -277,7 +262,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba8sint: {
@@ -294,7 +278,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     bgra8unorm: {
@@ -312,7 +295,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'bgra8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     'bgra8unorm-srgb': {
@@ -330,7 +312,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
       baseFormat: 'bgra8unorm',
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -350,7 +331,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r16sint: {
@@ -367,7 +347,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r16float: {
@@ -384,7 +363,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -402,7 +380,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg16sint: {
@@ -419,7 +396,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg16float: {
@@ -436,7 +412,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -454,7 +429,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba16sint: {
@@ -471,7 +445,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba16float: {
@@ -488,7 +461,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -508,7 +480,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r32sint: {
@@ -525,7 +496,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     r32float: {
@@ -542,7 +512,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -560,7 +529,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg32sint: {
@@ -577,7 +545,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg32float: {
@@ -594,7 +561,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -612,7 +578,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba32sint: {
@@ -629,7 +594,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgba32float: {
@@ -646,7 +610,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
 
@@ -666,7 +629,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rgb10a2unorm: {
@@ -683,7 +645,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
       get renderTargetComponentAlignment() {return this.colorRender.alignment;},
       get renderTargetPixelByteCost() {return this.colorRender.byteCost;},
       multisample: true,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     },
     rg11b10ufloat: {
@@ -696,7 +657,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         bytes: 4
       },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;},
       renderTargetPixelByteCost: 8,
       renderTargetComponentAlignment: 4
@@ -714,7 +674,6 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
         bytes: 4
       },
       multisample: false,
-      get sampleType() {return this.color.type;},
       get bytesPerBlock() {return this.color.bytes;}
     }
   }
@@ -724,7 +683,7 @@ const kRegularTextureFormatInfo = formatTableWithDefaults({
 // because one aspect can be sized and one can be unsized. This should be cleaned up, but is kept
 // this way during a migration phase.
 const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
-  defaults: { blockWidth: 1, blockHeight: 1, multisample: true, copySrc: true, renderable: true },
+  defaults: { blockWidth: 1, blockHeight: 1, multisample: true, renderable: true },
   table: {
     stencil8: {
       stencil: {
@@ -735,7 +694,6 @@ const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 1
       },
-      sampleType: 'uint',
       copyDst: true,
       bytesPerBlock: 1
     },
@@ -748,7 +706,6 @@ const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 2
       },
-      sampleType: 'depth',
       copyDst: true,
       bytesPerBlock: 2
     },
@@ -761,7 +718,6 @@ const kSizedDepthStencilFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 4
       },
-      sampleType: 'depth',
       copyDst: false,
       bytesPerBlock: 4
     }
@@ -779,9 +735,7 @@ const kUnsizedDepthStencilFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: undefined
       },
-      copySrc: false,
       copyDst: false,
-      sampleType: 'depth',
       renderable: true
     },
     'depth24plus-stencil8': {
@@ -801,9 +755,7 @@ const kUnsizedDepthStencilFormatInfo = formatTableWithDefaults({
         readWriteStorage: false,
         bytes: 1
       },
-      copySrc: false,
       copyDst: false,
-      sampleType: 'depth',
       renderable: true
     },
     'depth32float-stencil8': {
@@ -824,9 +776,7 @@ const kUnsizedDepthStencilFormatInfo = formatTableWithDefaults({
         bytes: 1
       },
       feature: 'depth32float-stencil8',
-      copySrc: false,
       copyDst: false,
-      sampleType: 'depth',
       renderable: true
     }
   }
@@ -838,8 +788,6 @@ const kBCTextureFormatInfo = formatTableWithDefaults({
     blockHeight: 4,
     multisample: false,
     feature: 'texture-compression-bc',
-    sampleType: 'float',
-    copySrc: true,
     copyDst: true
   },
   table: {
@@ -1020,8 +968,6 @@ const kETC2TextureFormatInfo = formatTableWithDefaults({
     blockHeight: 4,
     multisample: false,
     feature: 'texture-compression-etc2',
-    sampleType: 'float',
-    copySrc: true,
     copyDst: true
   },
   table: {
@@ -1152,8 +1098,6 @@ const kASTCTextureFormatInfo = formatTableWithDefaults({
   defaults: {
     multisample: false,
     feature: 'texture-compression-astc',
-    sampleType: 'float',
-    copySrc: true,
     copyDst: true
   },
   table: {
@@ -1706,8 +1650,6 @@ assert(
 
 
 
-
-
 /** Per-GPUTextureFormat info. */
 export const kTextureFormatInfo = {
   ...kRegularTextureFormatInfo,
@@ -1847,6 +1789,35 @@ aspect)
 }
 
 /**
+ * @returns the sample type of the specified aspect of the specified format.
+ */
+export function sampleTypeForFormatAndAspect(
+format,
+aspect)
+{
+  const info = kTextureFormatInfo[format];
+  if (info.color) {
+    assert(aspect === 'all', `color format ${format} used with aspect ${aspect}`);
+    return info.color.type;
+  } else if (info.depth && info.stencil) {
+    if (aspect === 'depth-only') {
+      return info.depth.type;
+    } else if (aspect === 'stencil-only') {
+      return info.stencil.type;
+    } else {
+      unreachable(`depth-stencil format ${format} used with aspect ${aspect}`);
+    }
+  } else if (info.depth) {
+    assert(aspect !== 'stencil-only', `depth-only format ${format} used with aspect ${aspect}`);
+    return info.depth.type;
+  } else if (info.stencil) {
+    assert(aspect !== 'depth-only', `stencil-only format ${format} used with aspect ${aspect}`);
+    return info.stencil.type;
+  }
+  unreachable();
+}
+
+/**
  * Gets all copyable aspects for copies between texture and buffer for specified depth/stencil format and copy type, by spec.
  */
 export function depthStencilFormatCopyableAspects(
@@ -1949,8 +1920,8 @@ isCompatibilityMode)
   return !!kTextureFormatInfo[format].color?.storage;
 }
 
-export function isEncodableTextureformat(format) {
-  return format in kEncodableTextureFormatInfo;
+export function isRegularTextureFormat(format) {
+  return format in kRegularTextureFormatInfo;
 }
 
 export const kFeaturesForFormats = getFeaturesForFormats(kAllTextureFormats);
