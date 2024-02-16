@@ -4169,6 +4169,15 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "expression",
+      "unary",
+      "address_of_and_indirection"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "extension",
       "pointer_composite_access"
     ]
