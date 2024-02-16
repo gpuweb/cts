@@ -15,6 +15,7 @@ import {
   textureDimensionAndFormatCompatible } from
 '../../../../../format_info.js';
 import { GPUTest } from '../../../../../gpu_test.js';
+import { align } from '../../../../../util/math.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -170,22 +171,22 @@ function testValues(params)
 
   switch (params.dimensions) {
     case '1d':{
-        const w = Math.max(bw, kMinLen) * kMultipleA;
+        const w = align(kMinLen, bw) * kMultipleA;
         return { size: [w], expected: [w >>> mip] };
       }
     case '2d':{
-        const w = Math.max(bw, kMinLen) * kMultipleA;
-        const h = Math.max(bh, kMinLen) * kMultipleB;
+        const w = align(kMinLen, bw) * kMultipleA;
+        const h = align(kMinLen, bh) * kMultipleB;
         return { size: [w, h], expected: [w >>> mip, h >>> mip] };
       }
     case '2d-array':{
-        const w = Math.max(bw, kMinLen) * kMultipleC;
-        const h = Math.max(bh, kMinLen) * kMultipleB;
+        const w = align(kMinLen, bw) * kMultipleC;
+        const h = align(kMinLen, bh) * kMultipleB;
         return { size: [w, h, 4], expected: [w >>> mip, h >>> mip] };
       }
     case '3d':{
-        const w = Math.max(bw, kMinLen) * kMultipleA;
-        const h = Math.max(bh, kMinLen) * kMultipleB;
+        const w = align(kMinLen, bw) * kMultipleA;
+        const h = align(kMinLen, bh) * kMultipleB;
         const d = kMinLen * kMultipleC;
         return {
           size: [w, h, d],
@@ -193,14 +194,14 @@ function testValues(params)
         };
       }
     case 'cube':{
-        const l = Math.max(bw, kMinLen) * Math.max(bh, kMinLen) * kMultipleB;
+        const l = align(kMinLen, bw) * align(kMinLen, bh) * kMultipleB;
         return {
           size: [l, l, kNumCubeFaces],
           expected: [l >>> mip, l >>> mip]
         };
       }
     case 'cube-array':{
-        const l = Math.max(bw, kMinLen) * Math.max(bh, kMinLen) * kMultipleC;
+        const l = align(kMinLen, bw) * align(kMinLen, bh) * kMultipleC;
         return {
           size: [l, l, kNumCubeFaces * 3],
           expected: [l >>> mip, l >>> mip]
@@ -495,7 +496,7 @@ fn((t) => {
 
   function wgslStorageTextureType() {
     const dimensions = t.params.dimensions.replace('-', '_');
-    return `texture_storage_${dimensions}<${t.params.format}, read>`;
+    return `texture_storage_${dimensions}<${t.params.format}, write>`;
   }
 
   run(t, textureView, wgslStorageTextureType(), undefined, values);
