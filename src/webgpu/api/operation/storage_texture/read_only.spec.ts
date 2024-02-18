@@ -12,13 +12,13 @@ TODO:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { unreachable, assert } from '../../../../common/util/util.js';
 import { Float16Array } from '../../../../external/petamoriken/float16/float16.js';
-import { GPUConst } from '../../../constants.js';
 import {
   ColorTextureFormat,
   kColorTextureFormats,
   kTextureFormatInfo,
 } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
+import { ShaderStage } from '../../../shader/validation/decl/util.js';
 
 function ComponentCount(format: ColorTextureFormat): number {
   switch (format) {
@@ -226,7 +226,7 @@ class F extends GPUTest {
 
   DoTransform(
     storageTexture: GPUTexture,
-    shaderStage: GPUShaderStageFlags,
+    shaderStage: ShaderStage,
     format: ColorTextureFormat,
     outputBuffer: GPUBuffer
   ) {
@@ -257,7 +257,7 @@ class F extends GPUTest {
     const commandEncoder = this.device.createCommandEncoder();
 
     switch (shaderStage) {
-      case GPUConst.ShaderStage.COMPUTE: {
+      case 'compute': {
         const textureLoadCoord =
           storageTexture.depthOrArrayLayers > 1
             ? `vec2u(invocationID.x, invocationID.y), invocationID.z`
@@ -293,7 +293,7 @@ class F extends GPUTest {
         computePassEncoder.end();
         break;
       }
-      case GPUConst.ShaderStage.FRAGMENT: {
+      case 'fragment': {
         const textureLoadCoord =
           storageTexture.depthOrArrayLayers > 1 ? 'textureCoord, z' : 'textureCoord';
 
@@ -375,7 +375,7 @@ class F extends GPUTest {
         renderPassEncoder.end();
         break;
       }
-      case GPUConst.ShaderStage.VERTEX: {
+      case 'vertex': {
         unreachable();
         break;
       }
@@ -397,10 +397,7 @@ g.test('basic')
     u
       .combine('format', kColorTextureFormats)
       .filter(p => kTextureFormatInfo[p.format].color?.storage === true)
-      .combine('shaderStage', [
-        GPUConst.ShaderStage.COMPUTE,
-        GPUConst.ShaderStage.FRAGMENT,
-      ] as const)
+      .combine('shaderStage', ['fragment', 'compute'] as const)
       .combine('depthOrArrayLayers', [1, 2] as const)
   )
   .fn(t => {
