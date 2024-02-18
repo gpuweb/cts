@@ -306,7 +306,7 @@ class F extends GPUTest {
           for (var z = 0u; z < ${storageTexture.depthOrArrayLayers}; z++) {
             let initialValue = textureLoad(readOnlyTexture, ${textureLoadCoord});
             let outputIndex =
-              storageTextureTexelCountPerImage * z + textureCoord.y * ${storageTexture.height} +
+              storageTextureTexelCountPerImage * z + textureCoord.y * ${storageTexture.width} +
               textureCoord.x;
             outputBuffer[outputIndex] = initialValue;
           }
