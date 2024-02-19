@@ -34,6 +34,7 @@ void (async () => {
   const workerString = optionString('worker');
   const dedicatedWorker = workerString === 'dedicated' ? new TestDedicatedWorker() : undefined;
   const sharedWorker = workerString === 'shared' ? new TestSharedWorker() : undefined;
+  const serviceWorker = workerString === 'service' ? new TestServiceWorker() : undefined;
 
   globalTestConfig.unrollConstEvalLoops = optionEnabled('unroll_const_eval_loops');
 
@@ -68,6 +69,8 @@ void (async () => {
         await dedicatedWorker.run(rec, name, expectations);
       } else if (sharedWorker) {
         await sharedWorker.run(rec, name, expectations);
+      } else if (serviceWorker) {
+        await serviceWorker.run(rec, name, expectations);
       } else {
         await testcase.run(rec, expectations);
       }

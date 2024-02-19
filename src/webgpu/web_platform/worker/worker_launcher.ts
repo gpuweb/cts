@@ -33,3 +33,28 @@ export async function launchSharedWorker() {
   });
   return await promise;
 }
+
+export async function launchServiceWorker() {
+  const selfPath = import.meta.url;
+  const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
+  const serviceWorkerPath = selfPathDir + '/worker.js';
+  const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
+    type: 'module',
+    scope: '/',
+  });
+  await navigator.serviceWorker.ready;
+
+  const promise = new Promise<TestResult>(resolve => {
+    navigator.serviceWorker.addEventListener(
+      'message',
+      ev => {
+        resolve(ev.data as TestResult);
+      },
+      { once: true }
+    );
+  });
+  registration.active.postMessage({
+    defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
+  });
+  return await promise;
+}

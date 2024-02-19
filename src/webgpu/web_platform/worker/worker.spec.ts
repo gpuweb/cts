@@ -51,3 +51,21 @@ g.test('shared_worker')
     const result = await launchSharedWorker();
     assert(result.error === undefined, `should be no error from worker but was: ${result.error}`);
   });
+
+g.test('service_worker')
+  .desc(`test WebGPU is available in service workers and check for basic functionality`)
+  .fn(async t => {
+    if (isNode()) {
+      t.skip('node does not support 100% compatible workers');
+      return;
+    }
+    // Note: we load worker_launcher dynamically because ts-node support
+    // is using commonjs which doesn't support import.meta. Further,
+    // we need to put the url in a string add pass the string to import
+    // otherwise typescript tries to parse the file which again, fails.
+    // worker_launcher.js is excluded in node.tsconfig.json.
+    const url = './worker_launcher.js';
+    const { launchServiceWorker } = await import(url);
+    const result = await launchServiceWorker();
+    assert(result.error === undefined, `should be no error from worker but was: ${result.error}`);
+  });

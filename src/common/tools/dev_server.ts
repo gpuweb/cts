@@ -150,14 +150,17 @@ app.get('/out/**/*.js', async (req, res, next) => {
   const tsUrl = jsUrl.replace(/\.js$/, '.ts');
   if (compileCache.has(tsUrl)) {
     res.setHeader('Content-Type', 'application/javascript');
+    res.setHeader('Service-Worker-Allowed', '/');
     res.send(compileCache.get(tsUrl));
     return;
   }
 
-  let absPath = path.join(srcDir, tsUrl);
+  // FIXME: I'm not sure if this is the way I should handle it...
+  const dir = jsUrl.endsWith('worker.js') ? path.resolve(srcDir, '../out') : srcDir;
+  let absPath = path.join(dir, tsUrl);
   if (!fs.existsSync(absPath)) {
     // The .ts file doesn't exist. Try .js file in case this is a .js/.d.ts pair.
-    absPath = path.join(srcDir, jsUrl);
+    absPath = path.join(dir, jsUrl);
   }
 
   try {
@@ -166,6 +169,7 @@ app.get('/out/**/*.js', async (req, res, next) => {
       compileCache.set(tsUrl, result.code);
 
       res.setHeader('Content-Type', 'application/javascript');
+      res.setHeader('Service-Worker-Allowed', '/');
       res.send(result.code);
     } else {
       throw new Error(`Failed compile ${tsUrl}.`);

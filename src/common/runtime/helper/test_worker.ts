@@ -94,3 +94,52 @@ export class TestSharedWorker {
     rec.injectResult(workerResult);
   }
 }
+
+export class TestServiceWorker {
+  private readonly ctsOptions: CTSOptions;
+  private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
+
+  constructor(ctsOptions?: CTSOptions) {
+    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: 'service' } };
+  }
+
+  async run(
+    rec: TestCaseRecorder,
+    query: string,
+    expectations: TestQueryWithExpectation[] = []
+  ): Promise<void> {
+    const [suite, name] = query.split(":", 2);
+    const fileName = name.split(',').join('/');
+    const serviceWorkerPath = `/out/${suite}/webworker/${fileName}.worker.js`;
+
+    const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
+      type: 'module',
+      scope: '/',
+    });
+    await navigator.serviceWorker.ready;
+
+    navigator.serviceWorker.onmessage = ev => {
+      const query: string = ev.data.query;
+      const result: TransferredTestCaseResult = ev.data.result;
+      if (result.logs) {
+        for (const l of result.logs) {
+          Object.setPrototypeOf(l, LogMessageWithStack.prototype);
+        }
+      }
+      this.resolvers.get(query)!(result as LiveTestCaseResult);
+
+      // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
+      // update the entire results JSON somehow at some point).
+    };
+
+    registration.active.postMessage({
+      query,
+      expectations,
+      ctsOptions: this.ctsOptions,
+    });
+    const serviceWorkerResult = await new Promise<LiveTestCaseResult>(resolve => {
+      this.resolvers.set(query, resolve);
+    });
+    rec.injectResult(serviceWorkerResult);
+  }
+}

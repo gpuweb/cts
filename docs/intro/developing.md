@@ -58,6 +58,7 @@ The following url parameters change how the harness runs:
 - `debug=1` enables verbose debug logging from tests.
 - `worker=dedicated` runs the tests on a dedicated worker instead of the main thread.
 - `worker=shared` runs the tests on a shared worker instead of the main thread.
+- `worker=service` runs the tests on a service worker instead of the main thread.
 - `power_preference=low-power` runs most tests passing `powerPreference: low-power` to `requestAdapter`
 - `power_preference=high-performance` runs most tests passing `powerPreference: high-performance` to `requestAdapter`
 
