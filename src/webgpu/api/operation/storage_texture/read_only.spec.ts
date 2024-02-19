@@ -376,6 +376,7 @@ class F extends GPUTest {
         break;
       }
       case 'vertex': {
+        // Not implemented yet.
         unreachable();
         break;
       }
