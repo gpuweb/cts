@@ -71,11 +71,12 @@ class F extends GPUTest {
       texelValue: number,
       outputValue: number,
       texelDataIndex: number,
-      component: number
+      component: number,
+      outputComponent: number = component
     ) => {
       const texelComponentIndex = texelDataIndex * componentCount + component;
       texelTypedDataView[texelComponentIndex] = texelValue;
-      const outputTexelComponentIndex = texelDataIndex * 4 + component;
+      const outputTexelComponentIndex = texelDataIndex * 4 + outputComponent;
       outputBufferTypedData[outputTexelComponentIndex] = outputValue;
     };
     for (let z = 0; z < depthOrArrayLayers; ++z) {
@@ -109,25 +110,11 @@ class F extends GPUTest {
               }
               case 'bgra8unorm': {
                 const texelValue = (4 * texelDataIndex + component + 1) % 256;
-                const texelComponentIndex = texelDataIndex * componentCount + component;
-                texelTypedDataView[texelComponentIndex] = texelValue;
-
                 const outputValue = texelValue / 255.0;
-                let outputComponent = 0;
-                switch (component) {
-                  case 0:
-                    outputComponent = 2;
-                    break;
-                  case 2:
-                    outputComponent = 0;
-                    break;
-                  case 1:
-                  case 3:
-                    outputComponent = component;
-                    break;
-                }
-                const outputTexelComponentIndex = texelDataIndex * 4 + outputComponent;
-                outputBufferTypedData[outputTexelComponentIndex] = outputValue;
+                // BGRA -> RGBA
+                assert(component < 4);
+                const outputComponent = [2, 1, 0, 3][component];
+                SetData(texelValue, outputValue, texelDataIndex, component, outputComponent);
                 break;
               }
               case 'r32sint':
