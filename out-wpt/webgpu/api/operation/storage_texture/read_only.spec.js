@@ -4,7 +4,7 @@
 Tests for the behavior of read-only storage textures.
 
 TODO:
-- Test the use of read-only storage textures in vertex and fragment shaders
+- Test the use of read-only storage textures in vertex shader
 - Test 1D and 3D textures
 - Test mipmap level > 0
 - Test resource usage transitions with read-only storage textures
@@ -17,6 +17,7 @@ import {
   kTextureFormatInfo } from
 '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
+
 
 function ComponentCount(format) {
   switch (format) {
@@ -234,61 +235,163 @@ class F extends GPUTest {
     }
   }
 
-  DoTransform(storageTexture, format, outputBuffer) {
+  DoTransform(
+  storageTexture,
+  shaderStage,
+  format,
+  outputBuffer)
+  {
     const declaration =
     storageTexture.depthOrArrayLayers > 1 ? 'texture_storage_2d_array' : 'texture_storage_2d';
     const textureDeclaration = `
     @group(0) @binding(0) var readOnlyTexture: ${declaration}<${format}, read>;
     `;
-
-    const textureLoadCoord =
-    storageTexture.depthOrArrayLayers > 1 ?
-    `vec2u(invocationID.x, invocationID.y), invocationID.z` :
-    `vec2u(invocationID.x, invocationID.y)`;
-    const computeShader = `
+    const bindingResourceDeclaration = `
     ${textureDeclaration}
     @group(0) @binding(1)
     var<storage,read_write> outputBuffer : array<${this.GetOutputBufferWGSLType(format)}>;
-    @compute
-    @workgroup_size(${storageTexture.width}, ${storageTexture.height}, ${
-    storageTexture.depthOrArrayLayers
-    })
-    fn main(
-      @builtin(local_invocation_id) invocationID: vec3u,
-      @builtin(local_invocation_index) invocationIndex: u32) {
-      let initialValue = textureLoad(readOnlyTexture, ${textureLoadCoord});
-      outputBuffer[invocationIndex] = initialValue;
-    }`;
-    const computePipeline = this.device.createComputePipeline({
-      compute: {
-        module: this.device.createShaderModule({
-          code: computeShader
-        })
-      },
-      layout: 'auto'
-    });
-    const bindGroup = this.device.createBindGroup({
-      layout: computePipeline.getBindGroupLayout(0),
-      entries: [
-      {
-        binding: 0,
-        resource: storageTexture.createView()
-      },
-      {
-        binding: 1,
-        resource: {
-          buffer: outputBuffer
-        }
-      }]
+    `;
 
-    });
+    const bindGroupEntries = [
+    {
+      binding: 0,
+      resource: storageTexture.createView()
+    },
+    {
+      binding: 1,
+      resource: {
+        buffer: outputBuffer
+      }
+    }];
+
 
     const commandEncoder = this.device.createCommandEncoder();
-    const computePassEncoder = commandEncoder.beginComputePass();
-    computePassEncoder.setPipeline(computePipeline);
-    computePassEncoder.setBindGroup(0, bindGroup);
-    computePassEncoder.dispatchWorkgroups(1);
-    computePassEncoder.end();
+
+    switch (shaderStage) {
+      case 'compute':{
+          const textureLoadCoord =
+          storageTexture.depthOrArrayLayers > 1 ?
+          `vec2u(invocationID.x, invocationID.y), invocationID.z` :
+          `vec2u(invocationID.x, invocationID.y)`;
+
+          const computeShader = `
+      ${bindingResourceDeclaration}
+      @compute
+      @workgroup_size(${storageTexture.width}, ${storageTexture.height}, ${storageTexture.depthOrArrayLayers})
+      fn main(
+        @builtin(local_invocation_id) invocationID: vec3u,
+        @builtin(local_invocation_index) invocationIndex: u32) {
+        let initialValue = textureLoad(readOnlyTexture, ${textureLoadCoord});
+        outputBuffer[invocationIndex] = initialValue;
+      }`;
+          const computePipeline = this.device.createComputePipeline({
+            compute: {
+              module: this.device.createShaderModule({
+                code: computeShader
+              })
+            },
+            layout: 'auto'
+          });
+          const bindGroup = this.device.createBindGroup({
+            layout: computePipeline.getBindGroupLayout(0),
+            entries: bindGroupEntries
+          });
+
+          const computePassEncoder = commandEncoder.beginComputePass();
+          computePassEncoder.setPipeline(computePipeline);
+          computePassEncoder.setBindGroup(0, bindGroup);
+          computePassEncoder.dispatchWorkgroups(1);
+          computePassEncoder.end();
+          break;
+        }
+      case 'fragment':{
+          const textureLoadCoord =
+          storageTexture.depthOrArrayLayers > 1 ? 'textureCoord, z' : 'textureCoord';
+
+          const fragmentShader = `
+        ${bindingResourceDeclaration}
+        @fragment
+        fn main(@builtin(position) fragCoord: vec4f) -> @location(0) vec4f {
+          let textureCoord = vec2u(fragCoord.xy);
+          let storageTextureTexelCountPerImage = ${storageTexture.width * storageTexture.height}u;
+          for (var z = 0u; z < ${storageTexture.depthOrArrayLayers}; z++) {
+            let initialValue = textureLoad(readOnlyTexture, ${textureLoadCoord});
+            let outputIndex =
+              storageTextureTexelCountPerImage * z + textureCoord.y * ${storageTexture.width} +
+              textureCoord.x;
+            outputBuffer[outputIndex] = initialValue;
+          }
+          return vec4f(0.0, 1.0, 0.0, 1.0);
+        }`;
+          const vertexShader = `
+            @vertex
+            fn main(@builtin(vertex_index) vertexIndex : u32) -> @builtin(position) vec4f {
+                var pos = array(
+                  vec2f(-1.0, -1.0),
+                  vec2f(-1.0,  1.0),
+                  vec2f( 1.0, -1.0),
+                  vec2f(-1.0,  1.0),
+                  vec2f( 1.0, -1.0),
+                  vec2f( 1.0,  1.0));
+                return vec4f(pos[vertexIndex], 0.0, 1.0);
+            }
+          `;
+          const renderPipeline = this.device.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+              module: this.device.createShaderModule({
+                code: vertexShader
+              })
+            },
+            fragment: {
+              module: this.device.createShaderModule({
+                code: fragmentShader
+              }),
+              targets: [
+              {
+                format: 'rgba8unorm'
+              }]
+
+            },
+            primitive: {
+              topology: 'triangle-list'
+            }
+          });
+
+          const bindGroup = this.device.createBindGroup({
+            layout: renderPipeline.getBindGroupLayout(0),
+            entries: bindGroupEntries
+          });
+
+          const placeholderColorTexture = this.device.createTexture({
+            size: [storageTexture.width, storageTexture.height, 1],
+            usage: GPUTextureUsage.RENDER_ATTACHMENT,
+            format: 'rgba8unorm'
+          });
+          this.trackForCleanup(placeholderColorTexture);
+
+          const renderPassEncoder = commandEncoder.beginRenderPass({
+            colorAttachments: [
+            {
+              view: placeholderColorTexture.createView(),
+              loadOp: 'clear',
+              clearValue: { r: 0, g: 0, b: 0, a: 0 },
+              storeOp: 'store'
+            }]
+
+          });
+          renderPassEncoder.setPipeline(renderPipeline);
+          renderPassEncoder.setBindGroup(0, bindGroup);
+          renderPassEncoder.draw(6);
+          renderPassEncoder.end();
+          break;
+        }
+      case 'vertex':
+        // Not implemented yet.
+        unreachable();
+        break;
+    }
+
     this.queue.submit([commandEncoder.finish()]);
   }
 }
@@ -307,6 +410,7 @@ combine('format', kColorTextureFormats).
 filter(
   (p) => p.format === 'bgra8unorm' || kTextureFormatInfo[p.format].color?.storage === true
 ).
+combine('shaderStage', ['fragment', 'compute']).
 combine('depthOrArrayLayers', [1, 2])
 ).
 beforeAllSubcases((t) => {
@@ -315,7 +419,7 @@ beforeAllSubcases((t) => {
   }
 }).
 fn((t) => {
-  const { format, depthOrArrayLayers } = t.params;
+  const { format, shaderStage, depthOrArrayLayers } = t.params;
 
   const kWidth = 8;
   const height = 8;
@@ -335,7 +439,7 @@ fn((t) => {
   });
   t.trackForCleanup(outputBuffer);
 
-  t.DoTransform(storageTexture, format, outputBuffer);
+  t.DoTransform(storageTexture, shaderStage, format, outputBuffer);
 
   switch (kTextureFormatInfo[format].color.type) {
     case 'uint':
