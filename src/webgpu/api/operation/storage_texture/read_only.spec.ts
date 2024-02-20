@@ -2,7 +2,6 @@ export const description = `
 Tests for the behavior of read-only storage textures.
 
 TODO:
-- Test the use of read-only storage textures in vertex shader
 - Test 1D and 3D textures
 - Test mipmap level > 0
 - Test resource usage transitions with read-only storage textures
