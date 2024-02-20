@@ -64,7 +64,7 @@ const storageMemoryBarrierStoreLoadTestCode = `
 `;
 
 const textureMemoryBarrierStoreLoadTestCode = `
-  textureStore(texture_locations, indexToCoord(x_0), vec4u(1,0,0,0));
+  textureStore(texture_locations, indexToCoord(x_0), vec4u(1));
   textureBarrier();
   let r0 = textureLoad(texture_locations, indexToCoord(x_1)).x;
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_1].r0, r0);
@@ -94,7 +94,7 @@ const storageMemoryBarrierLoadStoreTestCode = `
 const textureMemoryBarrierLoadStoreTestCode = `
   let r0 = textureLoad(texture_locations, indexToCoord(x_0)).x;
   textureBarrier();
-  textureStore(texture_locations, indexToCoord(x_1), vec4u(1,0,0,0));
+  textureStore(texture_locations, indexToCoord(x_1), vec4u(1));
   atomicStore(&results.value[shuffled_workgroup * workgroupXSize + id_0].r0, r0);
 `;
 
@@ -119,11 +119,11 @@ const storageMemoryBarrierStoreStoreTestCode = `
 `;
 
 const textureMemoryBarrierStoreStoreTestCode = `
-  textureStore(texture_locations, indexToCoord(x_0), vec4u(1,0,0,0));
+  textureStore(texture_locations, indexToCoord(x_0), vec4u(1));
   textureBarrier();
-  textureStore(texture_locations, indexToCoord(x_1), vec4u(2,0,0,0));
+  textureStore(texture_locations, indexToCoord(x_1), vec4u(2));
   textureBarrier();
-  test_locations.value[shuffled_workgroup * workgroupXSize * stress_params.mem_stride * 2u + x_1] = textureLoad(texture_locations, indexToCoord(x_1)).x;
+  test_locations.value[x_1] = textureLoad(texture_locations, indexToCoord(x_1)).x;
 `;
 
 const workgroupMemoryBarrierStoreStoreTestCode = `

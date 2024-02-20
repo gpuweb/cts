@@ -427,12 +427,13 @@ export class MemoryModelTester {
       });
       layouts = [testLayout, textureLayout];
 
+      const texLocations = (this.textures as MemoryModelTextures).testLocations.deviceTex;
       this.textureBindGroup = this.test.device.createBindGroup({
         label: 'textureBindGroup',
         entries: [
           {
             binding: 0,
-            resource: (this.textures as MemoryModelTextures).testLocations.deviceTex.createView(),
+            resource: texLocations.createView(),
           },
         ],
         layout: textureLayout,
@@ -1249,15 +1250,15 @@ export function buildTestShader(
   testType: TestType
 ): string {
   let memoryTypeCode;
-  let isStorageAS = false;
+  let isGlobalSpace = false;
   switch (memoryType) {
     case MemoryType.AtomicStorageClass:
       memoryTypeCode = storageMemoryAtomicTestShaderCode;
-      isStorageAS = true;
+      isGlobalSpace = true;
       break;
     case MemoryType.NonAtomicStorageClass:
       memoryTypeCode = storageMemoryNonAtomicTestShaderCode;
-      isStorageAS = true;
+      isGlobalSpace = true;
       break;
     case MemoryType.AtomicWorkgroupClass:
       memoryTypeCode = workgroupMemoryAtomicTestShaderCode;
@@ -1267,6 +1268,7 @@ export function buildTestShader(
       break;
     case MemoryType.NonAtomicTextureClass:
       memoryTypeCode = textureMemoryNonAtomicTestShaderCode;
+      isGlobalSpace = true;
       break;
   }
   let testTypeCode;
@@ -1275,7 +1277,7 @@ export function buildTestShader(
       testTypeCode = interWorkgroupTestShaderCode;
       break;
     case TestType.IntraWorkgroup:
-      if (isStorageAS) {
+      if (isGlobalSpace) {
         testTypeCode = storageIntraWorkgroupTestShaderCode;
       } else {
         testTypeCode = intraWorkgroupTestShaderCode;
