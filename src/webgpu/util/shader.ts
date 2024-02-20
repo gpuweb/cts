@@ -178,7 +178,9 @@ export function getFragmentShaderCodeWithOutput(
     }`;
 }
 
-export type TShaderStage = 'compute' | 'vertex' | 'fragment' | 'empty';
+export const kValidShaderStages = ['compute', 'vertex', 'fragment'] as const;
+export type TValidShaderStage = (typeof kValidShaderStages)[number];
+export type TShaderStage = TValidShaderStage | 'empty';
 
 /**
  * Return a foo shader of the given stage with the given entry point

@@ -17,7 +17,7 @@ import {
   kTextureFormatInfo,
 } from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
-import { ShaderStage } from '../../../shader/validation/decl/util.js';
+import { TValidShaderStage } from '../../../util/shader.js';
 
 function ComponentCount(format: ColorTextureFormat): number {
   switch (format) {
@@ -237,7 +237,7 @@ class F extends GPUTest {
 
   DoTransform(
     storageTexture: GPUTexture,
-    shaderStage: ShaderStage,
+    shaderStage: TValidShaderStage,
     format: ColorTextureFormat,
     outputBuffer: GPUBuffer
   ) {
@@ -386,11 +386,10 @@ class F extends GPUTest {
         renderPassEncoder.end();
         break;
       }
-      case 'vertex': {
+      case 'vertex':
         // Not implemented yet.
         unreachable();
         break;
-      }
     }
 
     this.queue.submit([commandEncoder.finish()]);
