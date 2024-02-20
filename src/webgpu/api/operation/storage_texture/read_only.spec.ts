@@ -386,10 +386,10 @@ class F extends GPUTest {
         break;
       }
       case 'vertex': {
-        // Draw one vertex (as one point in the point list) at (coordX + 0.5, coordY + 0.5) in the
-        // storageTexture.width * storageTexture.height grid (in frame buffer coordinates), and save
-        // the texel values at (coordX, coordY, z) (z >= 0 && z < storageTexture.depthOrArrayLayers)
-        // into the corresponding vertex shader outputs.
+        // For each texel location (coordX, coordY), draw one point at (coordX + 0.5, coordY + 0.5)
+        // in the storageTexture.width * storageTexture.height grid, and save all the texel values
+        // at (coordX, coordY, z) (z >= 0 && z < storageTexture.depthOrArrayLayers) into the
+        // corresponding vertex shader outputs.
         let vertexOutputs = '';
         for (let layer = 0; layer < storageTexture.depthOrArrayLayers; ++layer) {
           vertexOutputs = vertexOutputs.concat(
