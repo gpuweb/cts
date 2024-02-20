@@ -407,7 +407,8 @@ class F extends GPUTest {
         } else {
           for (let z = 0; z < storageTexture.depthOrArrayLayers; ++z) {
             loadFromTextureWGSL = loadFromTextureWGSL.concat(
-              `output.vertex_out${z} = textureLoad(readOnlyTexture, vec2u(coordX, coordY), ${z});`
+              `
+              output.vertex_out${z} = textureLoad(readOnlyTexture, vec2u(coordX, coordY), ${z});`
             );
           }
         }
