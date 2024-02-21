@@ -529,9 +529,8 @@ g.test('basic')
       .combine('depthOrArrayLayers', [1, 2] as const)
   )
   .beforeAllSubcases(t => {
-    if (t.params.format === 'bgra8unorm') {
-      t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
-    }
+    t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   })
   .fn(t => {
     const { format, shaderStage, depthOrArrayLayers } = t.params;
