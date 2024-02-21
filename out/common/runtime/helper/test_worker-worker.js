@@ -9,7 +9,7 @@ import { assert } from '../../util/util.js';
 
 
 
-// Should be DedicatedWorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
+// Should be WorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
 
 
 
@@ -17,7 +17,7 @@ const loader = new DefaultTestFileLoader();
 
 setBaseResourcePath('../../../resources');
 
-self.onmessage = async (ev) => {
+async function reportTestResults(ev) {
   const query = ev.data.query;
   const expectations = ev.data.expectations;
   const ctsOptions = ev.data.ctsOptions;
@@ -44,6 +44,18 @@ self.onmessage = async (ev) => {
   const [rec, result] = log.record(testcase.query.toString());
   await testcase.run(rec, expectations);
 
-  self.postMessage({ query, result });
+  this.postMessage({ query, result });
+}
+
+self.onmessage = (ev) => {
+  void reportTestResults.call(self, ev);
+};
+
+self.onconnect = (event) => {
+  const port = event.ports[0];
+
+  port.onmessage = (ev) => {
+    void reportTestResults.call(port, ev);
+  };
 };
 //# sourceMappingURL=test_worker-worker.js.map

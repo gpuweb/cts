@@ -21,7 +21,7 @@ import {
   OptionsInfos,
   camelCaseToSnakeCase,
 } from './helper/options.js';
-import { TestWorker } from './helper/test_worker.js';
+import { TestDedicatedWorker, TestSharedWorker } from './helper/test_worker.js';
 
 const rootQuerySpec = 'webgpu:*';
 let promptBeforeReload = false;
@@ -63,7 +63,9 @@ const logger = new Logger();
 
 setBaseResourcePath('../out/resources');
 
-const worker = options.worker ? new TestWorker(options) : undefined;
+const dedicatedWorker =
+  options.worker === 'dedicated' ? new TestDedicatedWorker(options) : undefined;
+const sharedWorker = options.worker === 'shared' ? new TestSharedWorker(options) : undefined;
 
 const autoCloseOnPass = document.getElementById('autoCloseOnPass') as HTMLInputElement;
 const resultsVis = document.getElementById('resultsVis')!;
@@ -176,8 +178,10 @@ function makeCaseHTML(t: TestTreeLeaf): VisualizedSubtree {
 
     const [rec, res] = logger.record(name);
     caseResult = res;
-    if (worker) {
-      await worker.run(rec, name);
+    if (dedicatedWorker) {
+      await dedicatedWorker.run(rec, name);
+    } else if (sharedWorker) {
+      await sharedWorker.run(rec, name);
     } else {
       await t.run(rec);
     }
