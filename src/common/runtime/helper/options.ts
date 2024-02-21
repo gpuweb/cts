@@ -25,7 +25,7 @@ export function optionString(
  * The possible options for the tests.
  */
 export interface CTSOptions {
-  worker: boolean;
+  worker?: 'dedicated' | 'shared' | '';
   debug: boolean;
   compatibility: boolean;
   forceFallbackAdapter: boolean;
@@ -34,7 +34,7 @@ export interface CTSOptions {
 }
 
 export const kDefaultCTSOptions: CTSOptions = {
-  worker: false,
+  worker: '',
   debug: true,
   compatibility: false,
   forceFallbackAdapter: false,
@@ -61,7 +61,15 @@ export type OptionsInfos<Type> = Record<keyof Type, OptionInfo>;
  * Options to the CTS.
  */
 export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
-  worker: { description: 'run in a worker' },
+  worker: {
+    description: 'run in a worker',
+    parser: optionString,
+    selectValueDescriptions: [
+      { value: '', description: 'no worker' },
+      { value: 'dedicated', description: 'dedicated worker' },
+      { value: 'shared', description: 'shared worker' },
+    ],
+  },
   debug: { description: 'show more info' },
   compatibility: { description: 'run in compatibility mode' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },
