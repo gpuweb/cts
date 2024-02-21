@@ -53,6 +53,8 @@ To shutdown the server perform an HTTP GET or POST at the URL:
 
 
 
+
+
 // The interface that exposes creation of the GPU, and optional interface to code coverage.
 
 
@@ -202,14 +204,16 @@ if (verbose) {
             if (codeCoverage !== undefined) {
               codeCoverage.begin();
             }
+            const start = performance.now();
             const result = await runTestcase(testcase);
+            const durationMS = performance.now() - start;
             const coverageData = codeCoverage !== undefined ? codeCoverage.end() : undefined;
             let message = '';
             if (result.logs !== undefined) {
               message = result.logs.map((log) => prettyPrintLog(log)).join('\n');
             }
             const status = result.status;
-            const res = { status, message, coverageData };
+            const res = { status, message, durationMS, coverageData };
             response.statusCode = 200;
             response.end(JSON.stringify(res));
           } else {
