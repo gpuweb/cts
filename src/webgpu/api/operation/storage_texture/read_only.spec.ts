@@ -532,6 +532,9 @@ g.test('basic')
     if (t.params.format === 'bgra8unorm') {
       t.selectDeviceOrSkipTestCase('bgra8unorm-storage');
     }
+    if (t.isCompatibility) {
+      t.skipIfTextureFormatNotUsableAsStorageTexture(t.params.format);
+    }
   })
   .fn(t => {
     const { format, shaderStage, depthOrArrayLayers } = t.params;
