@@ -435,12 +435,13 @@ class F extends GPUTest {
             var output : VertexOutput;
             let coordX = vertexIndex % ${storageTexture.width}u;
             let coordY = vertexIndex / ${storageTexture.width}u;
-            let outputPosX =
-              -1.0 + 1.0 / f32(${storageTexture.width}) +
-              2.0 / f32(${storageTexture.width}) * f32(coordX);
-            let outputPosY =
-              -1.0 + 1.0 / f32(${storageTexture.height}) +
-              2.0 / f32(${storageTexture.height}) * f32(coordY);
+            // Each vertex in the mesh take an even step along X axis from -1.0 to 1.0.
+            let posXStep = f32(${2.0 / storageTexture.width});
+            // As well as along Y axis.
+            let posYStep = f32(${2.0 / storageTexture.height});
+            // And the vertex located in the middle of the step, i.e. with a bias of 0.5 step.
+            let outputPosX = -1.0 + posXStep * 0.5 + posXStep * f32(coordX);
+            let outputPosY = -1.0 + posYStep * 0.5 + posYStep * f32(coordY);
             output.my_pos = vec4f(outputPosX, outputPosY, 0.0, 1.0);
             output.tex_coord = vec2u(coordX, coordY);
             ${loadFromTextureWGSL}
