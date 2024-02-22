@@ -4459,6 +4459,14 @@ export const listing = [
       "shader",
       "validation",
       "shader_io",
+      "layout_constraints"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
       "locations"
     ]
   },
