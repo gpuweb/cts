@@ -2078,6 +2078,7 @@
   "webgpu:shader,validation,shader_io,invariant:not_valid_on_user_defined_io:*": { "subcaseMS": 1.100 },
   "webgpu:shader,validation,shader_io,invariant:parsing:*": { "subcaseMS": 1.438 },
   "webgpu:shader,validation,shader_io,invariant:valid_only_with_vertex_position_builtin:*": { "subcaseMS": 1.461 },
+  "webgpu:shader,validation,shader_io,layout_constraints:layout_constraints:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,shader_io,locations:duplicates:*": { "subcaseMS": 1.906 },
   "webgpu:shader,validation,shader_io,locations:location_fp16:*": { "subcaseMS": 0.501 },
   "webgpu:shader,validation,shader_io,locations:nesting:*": { "subcaseMS": 0.967 },
