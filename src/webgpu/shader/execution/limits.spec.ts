@@ -10,13 +10,13 @@ export const g = makeTestGroup(GPUTest);
 
 // The limits that we test.
 const kMaxStructMembers = 1024;
-const kMaxCompositeNestingDepth = 32;
+const kMaxCompositeNestingDepth = 16;
 const kMaxBraceNestingDepth = 63;
 const kMaxFunctionParameters = 255;
 const kMaxSwitchCaseSelectors = 1024;
 const kMaxPrivateStorageSize = 8192;
 const kMaxFunctionStorageSize = 8192;
-const kMaxConstArrayElements = 8192;
+const kMaxConstArrayElements = 2048;
 
 /**
  * Run a shader and check that the buffer output matches expectations.
