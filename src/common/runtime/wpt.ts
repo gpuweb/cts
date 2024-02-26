@@ -9,7 +9,7 @@ import { parseExpectationsForTestQuery, relativeQueryString } from '../internal/
 import { assert } from '../util/util.js';
 
 import { optionEnabled, optionString } from './helper/options.js';
-import { TestDedicatedWorker, TestSharedWorker } from './helper/test_worker.js';
+import { TestDedicatedWorker, TestServiceWorker, TestSharedWorker } from './helper/test_worker.js';
 
 // testharness.js API (https://web-platform-tests.org/writing-tests/testharness-api.html)
 declare interface WptTestObject {
