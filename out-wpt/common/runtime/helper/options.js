@@ -34,7 +34,7 @@ searchParams = getWindowURL().searchParams)
 
 
 export const kDefaultCTSOptions = {
-  worker: '',
+  worker: false,
   debug: true,
   compatibility: false,
   forceFallbackAdapter: false,
@@ -61,15 +61,7 @@ export const kDefaultCTSOptions = {
  * Options to the CTS.
  */
 export const kCTSOptionsInfo = {
-  worker: {
-    description: 'run in a worker',
-    parser: optionString,
-    selectValueDescriptions: [
-    { value: '', description: 'no worker' },
-    { value: 'dedicated', description: 'dedicated worker' },
-    { value: 'shared', description: 'shared worker' }]
-
-  },
+  worker: { description: 'run in a worker' },
   debug: { description: 'show more info' },
   compatibility: { description: 'run in compatibility mode' },
   forceFallbackAdapter: { description: 'pass forceFallbackAdapter: true to requestAdapter' },

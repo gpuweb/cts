@@ -4,7 +4,7 @@
 
 
 
-export async function launchDedicatedWorker() {
+export async function launchWorker() {
   const selfPath = import.meta.url;
   const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
   const workerPath = selfPathDir + '/worker.js';
@@ -14,23 +14,6 @@ export async function launchDedicatedWorker() {
     worker.addEventListener('message', (ev) => resolve(ev.data), { once: true });
   });
   worker.postMessage({ defaultRequestAdapterOptions: getDefaultRequestAdapterOptions() });
-  return await promise;
-}
-
-export async function launchSharedWorker() {
-  const selfPath = import.meta.url;
-  const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
-  const workerPath = selfPathDir + '/worker.js';
-  const worker = new SharedWorker(workerPath, { type: 'module' });
-
-  const port = worker.port;
-  const promise = new Promise((resolve) => {
-    port.addEventListener('message', (ev) => resolve(ev.data), { once: true });
-  });
-  port.start();
-  port.postMessage({
-    defaultRequestAdapterOptions: getDefaultRequestAdapterOptions()
-  });
   return await promise;
 }
 //# sourceMappingURL=worker_launcher.js.map

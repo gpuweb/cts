@@ -1,10 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { getGPU, setDefaultRequestAdapterOptions } from '../../../common/util/navigator_gpu.js';import { assert, objectEquals, iterRange } from '../../../common/util/util.js';
-// Should be WorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
-
-
-
 async function basicTest() {
   const adapter = await getGPU(null).requestAdapter();
   assert(adapter !== null, 'Failed to get adapter.');
@@ -72,7 +68,7 @@ async function basicTest() {
   device.destroy();
 }
 
-async function reportTestResults(ev) {
+self.onmessage = async (ev) => {
   const defaultRequestAdapterOptions =
   ev.data.defaultRequestAdapterOptions;
   setDefaultRequestAdapterOptions(defaultRequestAdapterOptions);
@@ -83,18 +79,6 @@ async function reportTestResults(ev) {
   } catch (err) {
     error = err.toString();
   }
-  this.postMessage({ error });
-}
-
-self.onmessage = (ev) => {
-  void reportTestResults.call(self, ev);
-};
-
-self.onconnect = (event) => {
-  const port = event.ports[0];
-
-  port.onmessage = (ev) => {
-    void reportTestResults.call(port, ev);
-  };
+  self.postMessage({ error });
 };
 //# sourceMappingURL=worker.js.map
