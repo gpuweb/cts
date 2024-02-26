@@ -3287,6 +3287,16 @@ export const listing = [
       "execution",
       "expression",
       "call",
+      "builtin",
+      "workgroupUniformLoad"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "call",
       "user",
       "ptr_params"
     ]
