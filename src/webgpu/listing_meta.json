@@ -1548,6 +1548,7 @@
   "webgpu:shader,execution,expression,call,builtin,unpack4xU8:basic:*": { "subcaseMS": 78.501 },
   "webgpu:shader,execution,expression,call,builtin,workgroupBarrier:barrier:*": { "subcaseMS": 0.701 },
   "webgpu:shader,execution,expression,call,builtin,workgroupBarrier:stage:*": { "subcaseMS": 1.801 },
+  "webgpu:shader,execution,expression,call,builtin,workgroupUniformLoad:types:*": { "subcaseMS": 1.000 },
   "webgpu:shader,execution,expression,call,user,ptr_params:array_length:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,call,user,ptr_params:atomic_ptr_to_element:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,call,user,ptr_params:mixed_ptr_parameters:*": { "subcaseMS": 0.000 },
