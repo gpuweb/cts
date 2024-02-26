@@ -85,6 +85,7 @@ const workingDataI32 = new Int32Array(workingData);
 const workingDataI8 = new Int8Array(workingData);
 const workingDataF64 = new Float64Array(workingData);
 const workingDataI64 = new BigInt64Array(workingData);
+const workingDataU64 = new BigUint64Array(workingData);
 const workingDataView = new DataView(workingData);
 
 /**
@@ -1070,11 +1071,11 @@ function scalarFromValue<A extends TypedArrayBufferView>(
  * reinterpreting it as an element of `workingDataLoadArray`.
  * Both working data arrays *must* be aliases of `workingData`.
  */
-function scalarFromBits(
+function scalarFromBits<A extends TypedArrayBufferView>(
   type: ScalarType,
-  workingDataStoreArray: TypedArrayBufferView,
+  workingDataStoreArray: A,
   workingDataLoadArray: TypedArrayBufferView,
-  bits: number
+  bits: ArrayElementType<A>
 ): Scalar {
   // Clear all bits of the working data since `value` may be smaller; the upper bits should be 0.
   workingDataU32[1] = 0;
@@ -1107,6 +1108,9 @@ export const f16Bits = (bits: number): Scalar =>
 /** Create an AbstractInt from a numeric value, a JS `bigint`. */
 export const abstractInt = (value: bigint): Scalar =>
   scalarFromValue(TypeAbstractInt, workingDataI64, value);
+
+export const abstractIntBits = (bits: bigint): Scalar =>
+  scalarFromBits(TypeAbstractInt, workingDataU64, workingDataI64, bits);
 
 /** Create an i32 from a numeric value, a JS `number`. */
 export const i32 = (value: number): Scalar => scalarFromValue(TypeI32, workingDataI32, value);
