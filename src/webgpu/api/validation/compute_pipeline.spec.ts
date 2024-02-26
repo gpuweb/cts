@@ -8,6 +8,12 @@ import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { kValue } from '../../util/constants.js';
 import { TShaderStage, getShaderWithEntryPoint } from '../../util/shader.js';
 
+import {
+  kAPIResources,
+  getWGSLShaderForResource,
+  getAPIBindGroupLayoutForResource,
+  doResourcesMatch,
+} from './utils.js';
 import { ValidationTest } from './validation_test.js';
 
 class F extends ValidationTest {
@@ -689,4 +695,38 @@ Tests calling createComputePipeline(Async) validation for overridable constants 
     testFn(1, 1, true);
     testFn(maxVec4Count + 1, 0, false);
     testFn(0, maxMat4Count + 1, false);
+  });
+
+g.test('resource_compatibility')
+  .desc(
+    'Tests validation of resource (bind group) compatibility between pipeline layout and WGSL shader'
+  )
+  .params(u =>
+    u //
+      .combine('api_resource', kAPIResources)
+      .beginSubcases()
+      .combine('isAsync', [true, false] as const)
+      .combine('wgsl_resource', kAPIResources)
+  )
+  .fn(t => {
+    const layout = t.device.createPipelineLayout({
+      bindGroupLayouts: [
+        getAPIBindGroupLayoutForResource(t.device, GPUShaderStage.COMPUTE, t.params.api_resource),
+      ],
+    });
+
+    const descriptor = {
+      layout,
+      compute: {
+        module: t.device.createShaderModule({
+          code: getWGSLShaderForResource('compute', t.params.wgsl_resource),
+        }),
+        entryPoint: 'main',
+      },
+    };
+    t.doCreateComputePipelineTest(
+      t.params.isAsync,
+      doResourcesMatch(t.params.api_resource, t.params.wgsl_resource),
+      descriptor
+    );
   });
