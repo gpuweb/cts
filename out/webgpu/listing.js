@@ -4180,6 +4180,16 @@ export const listing = [
       "shader",
       "validation",
       "expression",
+      "call",
+      "builtin",
+      "workgroupUniformLoad"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
       "unary",
       "address_of_and_indirection"
     ]
