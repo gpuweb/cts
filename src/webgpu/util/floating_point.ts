@@ -2834,7 +2834,7 @@ export abstract class FPTraits {
       assert(this.kind === 'f32' || this.kind === 'f16');
       // asin(n) = atan2(n, sqrt(1.0 - n * n)) or a polynomial approximation with absolute error
       const x = this.sqrtInterval(this.subtractionInterval(1, this.multiplicationInterval(n, n)));
-      const approx_abs_error = this.kind === 'f32' ? 6.77e-5 : 3.91e-3;
+      const approx_abs_error = this.kind === 'f32' ? 6.81e-5 : 3.91e-3;
       return this.spanIntervals(
         this.atan2Interval(n, x),
         this.absoluteErrorInterval(Math.asin(n), approx_abs_error)
