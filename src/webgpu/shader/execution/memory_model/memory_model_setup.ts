@@ -17,8 +17,8 @@ import { PRNG } from '../../../util/prng.js';
 export type AccessValueType = 'f16' | 'u32';
 export const kAccessValueTypes = ['f16', 'u32'] as const;
 
-/** The width used for textures (default limit in WebGPU). */
-const kWidth = 8192;
+/** The width used for textures (default compat limit in WebGPU). */
+const kWidth = 4096;
 
 /* Parameter values are set heuristically, typically by a time-intensive search. */
 export type MemoryModelTestParams = {
@@ -877,11 +877,9 @@ const nonAtomicTestShaderBindings = [
 ].join('\n');
 
 /** The extra binding for texture non-atomic texture tests. */
-const textureBindings = [
-  `
-  @group(1) @binding(0) var texture_locations : texture_storage_2d<r32uint, read_write>;
-`,
-].join('\n');
+const textureBindings = `
+@group(1) @binding(0) var texture_locations : texture_storage_2d<r32uint, read_write>;
+`;
 
 /** Bindings used in the result aggregation phase of the test. */
 const resultShaderBindings = `

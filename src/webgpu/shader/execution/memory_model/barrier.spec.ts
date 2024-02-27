@@ -210,7 +210,7 @@ g.test('workgroup_barrier_store_load')
       'workgroupUniformLoad does not have storage memory semantics'
     );
     t.skipIf(
-      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType !== 'u32',
+      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType === 'f16',
       'textures do not support f16 access'
     );
   })
@@ -275,7 +275,7 @@ g.test('workgroup_barrier_load_store')
       'workgroupUniformLoad does not have storage memory semantics'
     );
     t.skipIf(
-      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType !== 'u32',
+      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType === 'f16',
       'textures do not support f16 access'
     );
   })
@@ -340,7 +340,7 @@ g.test('workgroup_barrier_store_store')
       'workgroupUniformLoad does not have storage memory semantics'
     );
     t.skipIf(
-      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType !== 'u32',
+      t.params.memType === MemoryType.NonAtomicTextureClass && t.params.accessValueType === 'f16',
       'textures do not support f16 access'
     );
   })
