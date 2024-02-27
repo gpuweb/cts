@@ -5,6 +5,7 @@ Note: entry point matching tests are in shader_module/entry_point.spec.ts
 `;
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { keysOf } from '../../../common/util/data_tables.js';
 import { kValue } from '../../util/constants.js';
 import { TShaderStage, getShaderWithEntryPoint } from '../../util/shader.js';
 
@@ -703,21 +704,24 @@ g.test('resource_compatibility')
   )
   .params(u =>
     u //
-      .combine('apiResource', kAPIResources)
+      .combine('apiResource', keysOf(kAPIResources))
       .beginSubcases()
       .combine('isAsync', [true, false] as const)
-      .combine('wgslResource', kAPIResources)
+      .combine('wgslResource', keysOf(kAPIResources))
   )
   .fn(t => {
+    const apiResource = kAPIResources[t.params.apiResource];
+    const wgslResource = kAPIResources[t.params.wgslResource];
     t.skipIf(
-      t.params.wgslResource.storageTexture !== undefined &&
+      wgslResource.storageTexture !== undefined &&
+        wgslResource.storageTexture.access !== 'write-only' &&
         !t.hasLanguageFeature('readonly_and_readwrite_storage_textures'),
       'Storage textures require language feature'
     );
 
     const layout = t.device.createPipelineLayout({
       bindGroupLayouts: [
-        getAPIBindGroupLayoutForResource(t.device, GPUShaderStage.COMPUTE, t.params.apiResource),
+        getAPIBindGroupLayoutForResource(t.device, GPUShaderStage.COMPUTE, apiResource),
       ],
     });
 
@@ -725,14 +729,14 @@ g.test('resource_compatibility')
       layout,
       compute: {
         module: t.device.createShaderModule({
-          code: getWGSLShaderForResource('compute', t.params.wgslResource),
+          code: getWGSLShaderForResource('compute', wgslResource),
         }),
         entryPoint: 'main',
       },
     };
     t.doCreateComputePipelineTest(
       t.params.isAsync,
-      doResourcesMatch(t.params.apiResource, t.params.wgslResource),
+      doResourcesMatch(apiResource, wgslResource),
       descriptor
     );
   });
