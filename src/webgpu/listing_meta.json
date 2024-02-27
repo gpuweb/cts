@@ -1669,7 +1669,7 @@
   "webgpu:shader,execution,flow_control,switch:switch_default_only:*": { "subcaseMS": 12.550 },
   "webgpu:shader,execution,flow_control,switch:switch_multiple_case:*": { "subcaseMS": 5.550 },
   "webgpu:shader,execution,flow_control,switch:switch_multiple_case_default:*": { "subcaseMS": 12.000 },
-  "webgpu:shader,execution,flow_control,switch,switch_inside_loop_with_continue:*": { "subcaseMS": 0 },
+  "webgpu:shader,execution,flow_control,switch:switch_inside_loop_with_continue:*": { "subcaseMS": 0 },
   "webgpu:shader,execution,flow_control,while:while_basic:*": { "subcaseMS": 5.951 },
   "webgpu:shader,execution,flow_control,while:while_break:*": { "subcaseMS": 12.450 },
   "webgpu:shader,execution,flow_control,while:while_continue:*": { "subcaseMS": 5.650 },
