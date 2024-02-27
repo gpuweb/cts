@@ -85,6 +85,7 @@ const workingDataI32 = new Int32Array(workingData);
 const workingDataI8 = new Int8Array(workingData);
 const workingDataF64 = new Float64Array(workingData);
 const workingDataI64 = new BigInt64Array(workingData);
+const workingDataU64 = new BigUint64Array(workingData);
 const workingDataView = new DataView(workingData);
 
 /**
@@ -1107,6 +1108,9 @@ scalarFromBits(TypeF16, workingDataU16, workingDataF16, bits);
 /** Create an AbstractInt from a numeric value, a JS `bigint`. */
 export const abstractInt = (value) =>
 scalarFromValue(TypeAbstractInt, workingDataI64, value);
+
+export const abstractIntBits = (bits) =>
+scalarFromBits(TypeAbstractInt, workingDataU64, workingDataI64, bits);
 
 /** Create an i32 from a numeric value, a JS `number`. */
 export const i32 = (value) => scalarFromValue(TypeI32, workingDataI32, value);
