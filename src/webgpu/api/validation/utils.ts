@@ -1,14 +1,14 @@
 interface Resource {
-  buffer?: GPUBufferBindingLayout;
-  sampler?: GPUSamplerBindingLayout;
-  texture?: GPUTextureBindingLayout;
-  storageTexture?: GPUStorageTextureBindingLayout;
-  externalTexture?: GPUExternalTextureBindingLayout;
-  code: string;
-  staticUse?: string;
+  readonly buffer?: GPUBufferBindingLayout;
+  readonly sampler?: GPUSamplerBindingLayout;
+  readonly texture?: GPUTextureBindingLayout;
+  readonly storageTexture?: GPUStorageTextureBindingLayout;
+  readonly externalTexture?: GPUExternalTextureBindingLayout;
+  readonly code: string;
+  readonly staticUse?: string;
 }
 
-export const kAPIResources: Resource[] = [
+export const kAPIResources: readonly Resource[] = [
   // Buffers
   {
     buffer: { type: 'uniform' },
@@ -326,7 +326,7 @@ export function getWGSLShaderForResource(stage: string, resource: Resource): str
   const retVal = stage === 'vertex' ? 'return vecf();' : '';
   code += `
 fn main() ${retTy} {
-  _ = ${resource.staticUse ? resource.staticUse : 'res'};
+  _ = ${resource.staticUse ?? 'res'};
   ${retVal}
 }
 `;
