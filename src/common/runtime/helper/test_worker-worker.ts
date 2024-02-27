@@ -9,7 +9,7 @@ import { assert } from '../../util/util.js';
 
 import { CTSOptions } from './options.js';
 
-// Should be DedicatedWorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
+// Should be WorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 declare const self: any;
 
@@ -17,7 +17,7 @@ const loader = new DefaultTestFileLoader();
 
 setBaseResourcePath('../../../resources');
 
-self.onmessage = async (ev: MessageEvent) => {
+async function reportTestResults(this: MessagePort | Worker, ev: MessageEvent) {
   const query: string = ev.data.query;
   const expectations: TestQueryWithExpectation[] = ev.data.expectations;
   const ctsOptions: CTSOptions = ev.data.ctsOptions;
@@ -44,5 +44,17 @@ self.onmessage = async (ev: MessageEvent) => {
   const [rec, result] = log.record(testcase.query.toString());
   await testcase.run(rec, expectations);
 
-  self.postMessage({ query, result });
+  this.postMessage({ query, result });
+}
+
+self.onmessage = (ev: MessageEvent) => {
+  void reportTestResults.call(self, ev);
+};
+
+self.onconnect = (event: MessageEvent) => {
+  const port = event.ports[0];
+
+  port.onmessage = (ev: MessageEvent) => {
+    void reportTestResults.call(port, ev);
+  };
 };
