@@ -365,6 +365,7 @@
   "webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits:*": { "subcaseMS": 14.751 },
   "webgpu:api,validation,compute_pipeline:overrides,workgroup_size:*": { "subcaseMS": 6.376 },
   "webgpu:api,validation,compute_pipeline:pipeline_layout,device_mismatch:*": { "subcaseMS": 1.175 },
+  "webgpu:api,validation,compute_pipeline:resource_compatibility:*": { "subcaseMS": 1.175 },
   "webgpu:api,validation,compute_pipeline:shader_module,compute:*": { "subcaseMS": 6.867 },
   "webgpu:api,validation,compute_pipeline:shader_module,device_mismatch:*": { "subcaseMS": 15.350 },
   "webgpu:api,validation,compute_pipeline:shader_module,invalid:*": { "subcaseMS": 2.500 },
