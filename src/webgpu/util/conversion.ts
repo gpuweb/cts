@@ -750,6 +750,21 @@ export class MatrixType {
   public toString(): string {
     return `mat${this.cols}x${this.rows}<${this.elementType}>`;
   }
+
+  /** Constructs a Matrix of this type with the given values */
+  public create(value: (number | bigint) | readonly (number | bigint)[]): Matrix {
+    if (value instanceof Array) {
+      assert(value.length === this.cols * this.rows);
+    } else {
+      value = Array(this.cols * this.rows).fill(value);
+    }
+    const columns: (number | bigint)[][] = [];
+    for (let i = 0; i < this.cols; i++) {
+      const start = i * this.rows;
+      columns.push(value.slice(start, start + this.rows));
+    }
+    return new Matrix(columns.map(c => c.map(v => this.elementType.create(v))));
+  }
 }
 
 // Maps a string representation of a Matrix type to Matrix type.
@@ -1660,6 +1675,14 @@ export const kAllFloatVectors = [
   ...kAllFloatVector2,
   ...kAllFloatVector3,
   ...kAllFloatVector4,
+] as const;
+
+/// All f16 floating-point scalar and vector types
+export const kAllF16ScalarsAndVectors = [
+  TypeF16,
+  TypeVec(2, TypeF16),
+  TypeVec(3, TypeF16),
+  TypeVec(4, TypeF16),
 ] as const;
 
 /// All floating-point scalar and vector types
