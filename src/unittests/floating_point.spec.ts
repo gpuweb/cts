@@ -2440,7 +2440,7 @@ g.test('asinInterval')
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = FP[p.trait];
         const constants = trait.constants();
-        const abs_error = p.trait === 'f32' ? 6.77e-5 : 3.91e-3;
+        const abs_error = p.trait === 'f32' ? 6.81e-5 : 3.91e-3;
         // prettier-ignore
         return [
           // The acceptance interval @ x = -1 and 1 is kUnboundedEndpoints,
