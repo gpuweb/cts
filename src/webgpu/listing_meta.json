@@ -1819,6 +1819,8 @@
   "webgpu:shader,validation,expression,call,builtin,cosh:values:*": { "subcaseMS": 0.272 },
   "webgpu:shader,validation,expression,call,builtin,degrees:integer_argument:*": { "subcaseMS": 1.311 },
   "webgpu:shader,validation,expression,call,builtin,degrees:values:*": { "subcaseMS": 0.303 },
+  "webgpu:shader,validation,expression,call,builtin,derivatives:only_in_fragment:*": { "subcaseMS": 1.000 },
+  "webgpu:shader,validation,expression,call,builtin,derivatives:invalid_argument_types:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,expression,call,builtin,dot4I8Packed:bad_args:*": { "subcaseMS": 0.302 },
   "webgpu:shader,validation,expression,call,builtin,dot4I8Packed:must_use:*": { "subcaseMS": 0.300 },
   "webgpu:shader,validation,expression,call,builtin,dot4I8Packed:supported:*": { "subcaseMS": 1.100 },
