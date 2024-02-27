@@ -2,6 +2,8 @@ interface Resource {
   buffer?: GPUBufferBindingLayout;
   sampler?: GPUSamplerBindingLayout;
   texture?: GPUTextureBindingLayout;
+  storageTexture?: GPUStorageTextureBindingLayout;
+  externalTexture?: GPUExternalTextureBindingLayout;
   code: string;
   staticUse?: string;
 }
@@ -163,6 +165,153 @@ export const kAPIResources: Resource[] = [
     texture: { sampleType: 'uint', viewDimension: 'cube-array', multisampled: false },
     code: `var res : texture_cube_array<u32>`,
   },
+
+  // Storage textures
+  // Only cover r32uint, r32sint, and r32float here for ease of testing.
+  {
+    storageTexture: { access: 'write-only', format: 'r32uint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32uint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32sint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32sint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32float', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32float, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32uint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32uint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32sint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32sint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32float', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32float, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32uint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32uint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32sint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32sint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32float', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32float, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32uint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32uint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32sint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32sint, write>`,
+  },
+  {
+    storageTexture: { access: 'write-only', format: 'r32float', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32float, write>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32uint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32uint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32sint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32sint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32float', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32float, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32uint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32uint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32sint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32sint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32float', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32float, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32uint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32uint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32sint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32sint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32float', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32float, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32uint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32uint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32sint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32sint, read>`,
+  },
+  {
+    storageTexture: { access: 'read-only', format: 'r32float', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32float, read>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32uint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32uint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32sint', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32sint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32float', viewDimension: '1d' },
+    code: `var res : texture_storage_1d<r32float, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32uint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32uint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32sint', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32sint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32float', viewDimension: '2d' },
+    code: `var res : texture_storage_2d<r32float, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32uint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32uint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32sint', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32sint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32float', viewDimension: '2d-array' },
+    code: `var res : texture_storage_2d_array<r32float, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32uint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32uint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32sint', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32sint, read_write>`,
+  },
+  {
+    storageTexture: { access: 'read-write', format: 'r32float', viewDimension: '3d' },
+    code: `var res : texture_storage_3d<r32float, read_write>`,
+  },
 ];
 
 export function getWGSLShaderForResource(stage: string, resource: Resource): string {
@@ -173,9 +322,12 @@ export function getWGSLShaderForResource(stage: string, resource: Resource): str
     code += `@workgroup_size(1)`;
   }
 
+  const retTy = stage === 'vertex' ? ' -> @builtin(position) vec4f' : '';
+  const retVal = stage === 'vertex' ? 'return vecf();' : '';
   code += `
-fn main() {
+fn main() ${retTy} {
   _ = ${resource.staticUse ? resource.staticUse : 'res'};
+  ${retVal}
 }
 `;
 
@@ -200,13 +352,27 @@ export function getAPIBindGroupLayoutForResource(
   if (resource.texture) {
     entry.texture = resource.texture;
   }
+  if (resource.storageTexture) {
+    entry.storageTexture = resource.storageTexture;
+  }
+  if (resource.externalTexture) {
+    entry.externalTexture = resource.externalTexture;
+  }
 
-  return device.createBindGroupLayout({ entries: [entry] });
+  const entries: GPUBindGroupLayoutEntry[] = [entry];
+  return device.createBindGroupLayout({ entries });
 }
 
 function doSampleTypesMatch(api: GPUTextureSampleType, wgsl: GPUTextureSampleType): boolean {
   if (api === 'float' || api === 'unfilterable-float') {
     return wgsl === 'float' || wgsl === 'unfilterable-float';
+  }
+  return api === wgsl;
+}
+
+function doAccessesMatch(api: GPUStorageTextureAccess, wgsl: GPUStorageTextureAccess): boolean {
+  if (api === 'read-write') {
+    return wgsl === 'read-write' || wgsl === 'write-only';
   }
   return api === wgsl;
 }
@@ -238,6 +404,21 @@ export function doResourcesMatch(api: Resource, wgsl: Resource): boolean {
       api.texture.viewDimension === wgsl.texture.viewDimension &&
       api.texture.multisampled === wgsl.texture.multisampled
     );
+  }
+  if (api.storageTexture) {
+    if (!wgsl.storageTexture) {
+      return false;
+    }
+    const aAccess = api.storageTexture.access as GPUStorageTextureAccess;
+    const wAccess = wgsl.storageTexture.access as GPUStorageTextureAccess;
+    return (
+      doAccessesMatch(aAccess, wAccess) &&
+      api.storageTexture.format === wgsl.storageTexture.format &&
+      api.storageTexture.viewDimension === wgsl.storageTexture.viewDimension
+    );
+  }
+  if (api.externalTexture) {
+    return wgsl.externalTexture !== undefined;
   }
 
   return false;

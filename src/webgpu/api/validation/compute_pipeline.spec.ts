@@ -703,15 +703,21 @@ g.test('resource_compatibility')
   )
   .params(u =>
     u //
-      .combine('api_resource', kAPIResources)
+      .combine('apiResource', kAPIResources)
       .beginSubcases()
       .combine('isAsync', [true, false] as const)
-      .combine('wgsl_resource', kAPIResources)
+      .combine('wgslResource', kAPIResources)
   )
   .fn(t => {
+    t.skipIf(
+      t.params.wgslResource.storageTexture !== undefined &&
+        !t.hasLanguageFeature('readonly_and_readwrite_storage_textures'),
+      'Storage textures require language feature'
+    );
+
     const layout = t.device.createPipelineLayout({
       bindGroupLayouts: [
-        getAPIBindGroupLayoutForResource(t.device, GPUShaderStage.COMPUTE, t.params.api_resource),
+        getAPIBindGroupLayoutForResource(t.device, GPUShaderStage.COMPUTE, t.params.apiResource),
       ],
     });
 
@@ -719,14 +725,14 @@ g.test('resource_compatibility')
       layout,
       compute: {
         module: t.device.createShaderModule({
-          code: getWGSLShaderForResource('compute', t.params.wgsl_resource),
+          code: getWGSLShaderForResource('compute', t.params.wgslResource),
         }),
         entryPoint: 'main',
       },
     };
     t.doCreateComputePipelineTest(
       t.params.isAsync,
-      doResourcesMatch(t.params.api_resource, t.params.wgsl_resource),
+      doResourcesMatch(t.params.apiResource, t.params.wgslResource),
       descriptor
     );
   });
