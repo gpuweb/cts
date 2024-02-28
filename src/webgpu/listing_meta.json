@@ -1570,6 +1570,7 @@
   "webgpu:shader,execution,expression,unary,ai_assignment:abstract:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,unary,ai_assignment:i32:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,unary,ai_assignment:u32:*": { "subcaseMS": 0.000 },
+  "webgpu:shader,execution,expression,unary,ai_complement:complement:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,unary,bool_conversion:bool:*": { "subcaseMS": 8.357 },
   "webgpu:shader,execution,expression,unary,bool_conversion:f16:*": { "subcaseMS": 44.794 },
   "webgpu:shader,execution,expression,unary,bool_conversion:f32:*": { "subcaseMS": 41.276 },

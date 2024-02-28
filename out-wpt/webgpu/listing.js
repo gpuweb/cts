@@ -3352,6 +3352,15 @@ export const listing = [
       "execution",
       "expression",
       "unary",
+      "ai_complement"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "unary",
       "bool_conversion"
     ]
   },
