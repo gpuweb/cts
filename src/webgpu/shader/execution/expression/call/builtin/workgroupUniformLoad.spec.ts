@@ -99,6 +99,7 @@ g.test('types')
     u.combine('type', keysOf(kTypes)).combine('wgsize', [
       [1, 1],
       [3, 7],
+      [1, 128],
       [16, 16],
     ])
   )
@@ -109,6 +110,11 @@ g.test('types')
     const num_invocations = wgsize_x * wgsize_y;
     const num_words_per_invocation = type.expected.length;
     const total_host_words = num_invocations * num_words_per_invocation;
+
+    t.skipIf(
+      num_invocations > t.device.limits.maxComputeInvocationsPerWorkgroup,
+      `num_invocations (${num_invocations}) > maxComputeInvocationsPerWorkgroup (${t.device.limits.maxComputeInvocationsPerWorkgroup})`
+    );
 
     let load = `workgroupUniformLoad(&wgvar)`;
     if (type.to_host) {
