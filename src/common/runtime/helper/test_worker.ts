@@ -48,6 +48,8 @@ export class TestDedicatedWorker {
   }
 }
 
+export TestWorker = TestDedicatedWorker;
+
 export class TestSharedWorker {
   private readonly ctsOptions: CTSOptions;
   private readonly port: MessagePort;
