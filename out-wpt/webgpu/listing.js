@@ -1480,6 +1480,14 @@ export const listing = [
       "api",
       "validation",
       "render_pipeline",
+      "resource_compatibility"
+    ]
+  },
+  {
+    "file": [
+      "api",
+      "validation",
+      "render_pipeline",
       "shader_module"
     ]
   },

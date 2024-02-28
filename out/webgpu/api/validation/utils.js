@@ -153,8 +153,15 @@ export function getWGSLShaderForResource(stage, resource) {
     code += `@workgroup_size(1)`;
   }
 
-  const retTy = stage === 'vertex' ? ' -> @builtin(position) vec4f' : '';
-  const retVal = stage === 'vertex' ? 'return vecf();' : '';
+  let retTy = '';
+  let retVal = '';
+  if (stage === 'vertex') {
+    retTy = ' -> @builtin(position) vec4f';
+    retVal = 'return vec4f();';
+  } else if (stage === 'fragment') {
+    retTy = ' -> @location(0) vec4f';
+    retVal = 'return vec4f();';
+  }
   code += `
 fn main() ${retTy} {
   _ = ${resource.staticUse ?? 'res'};
