@@ -48,8 +48,7 @@ export class TestDedicatedWorker {
   }
 }
 
-TestWorker = TestDedicatedWorker;
-export TestWorker;
+export class TestWorker extends TestDedicatedWorker {}
 
 export class TestSharedWorker {
   private readonly ctsOptions: CTSOptions;
