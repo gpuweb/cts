@@ -147,7 +147,7 @@ g.test('texture_intra_invocation_coherence')
     t.skipIfLanguageFeatureNotSupported('readonly_and_readwrite_storage_textures');
 
     const wgx = 16;
-    const wgy = 16;
+    const wgy = t.device.limits.maxComputeInvocationsPerWorkgroup / wgx;
     const num_wgs_x = 2;
     const num_wgs_y = 2;
     const invocations = wgx * wgy * num_wgs_x * num_wgs_y;
