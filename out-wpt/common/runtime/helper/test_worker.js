@@ -48,6 +48,8 @@ export class TestDedicatedWorker {
   }
 }
 
+export class TestWorker extends TestDedicatedWorker {}
+
 export class TestSharedWorker {
 
 
