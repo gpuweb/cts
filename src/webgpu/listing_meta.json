@@ -747,6 +747,7 @@
   "webgpu:api,validation,render_pipeline,overrides:value,validation_error,vertex:*": { "subcaseMS": 6.022 },
   "webgpu:api,validation,render_pipeline,primitive_state:strip_index_format:*": { "subcaseMS": 5.267 },
   "webgpu:api,validation,render_pipeline,primitive_state:unclipped_depth:*": { "subcaseMS": 1.025 },
+  "webgpu:api,validation,render_pipeline,resource_compatibility:resource_compatibility:*": { "subcaseMS": 1.025 },
   "webgpu:api,validation,render_pipeline,shader_module:device_mismatch:*": { "subcaseMS": 0.700 },
   "webgpu:api,validation,render_pipeline,shader_module:invalid,fragment:*": { "subcaseMS": 5.800 },
   "webgpu:api,validation,render_pipeline,shader_module:invalid,vertex:*": { "subcaseMS": 15.151 },
