@@ -8,19 +8,61 @@ T is AbstractInt, AbstractFloat, i32, u32, f32, or f16
 Returns the dot product of e1 and e2.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
-import { allInputSources, run } from '../../expression.js';
+import { TypeAbstractInt, TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractIntBuiltin, builtin } from './builtin.js';
 import { d } from './dot.cache.js';
 
 export const g = makeTestGroup(GPUTest);
 
-g.test('abstract_int').
+g.test('abstract_int_vec2').
 specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
-desc(`abstract int tests`).
-params((u) => u.combine('inputSource', allInputSources)).
-unimplemented();
+desc(`abstract float tests using vec2s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_int_vec2');
+  await run(
+    t,
+    abstractIntBuiltin('dot'),
+    [TypeVec(2, TypeAbstractInt), TypeVec(2, TypeAbstractInt)],
+    TypeAbstractInt,
+    t.params,
+    cases
+  );
+});
+
+g.test('abstract_int_vec3').
+specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
+desc(`abstract float tests using vec3s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_int_vec3');
+  await run(
+    t,
+    abstractIntBuiltin('dot'),
+    [TypeVec(3, TypeAbstractInt), TypeVec(3, TypeAbstractInt)],
+    TypeAbstractInt,
+    t.params,
+    cases
+  );
+});
+
+g.test('abstract_int_vec4').
+specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').
+desc(`abstract float tests using vec4s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_int_vec4');
+  await run(
+    t,
+    abstractIntBuiltin('dot'),
+    [TypeVec(4, TypeAbstractInt), TypeVec(4, TypeAbstractInt)],
+    TypeAbstractInt,
+    t.params,
+    cases
+  );
+});
 
 g.test('i32').
 specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions').

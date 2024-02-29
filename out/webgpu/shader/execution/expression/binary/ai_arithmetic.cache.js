@@ -7,36 +7,33 @@
 '../case.js';
 import { makeCaseCache } from '../case_cache.js';
 
-function isOOB(val) {
-  return val > kValue.i64.positive.max || val < kValue.i64.negative.min;
-}
 function ai_add(x, y) {
   const result = x + y;
-  return !isOOB(result) ? result : undefined;
+  return !kValue.i64.isOOB(result) ? result : undefined;
 }
 
 function ai_div(x, y) {
   if (y === 0n) return undefined;
   if (x === kValue.i64.negative.min && y === -1n) return undefined;
   const result = x / y;
-  return !isOOB(result) ? result : undefined;
+  return !kValue.i64.isOOB(result) ? result : undefined;
 }
 
 function ai_mul(x, y) {
   const result = x * y;
-  return !isOOB(result) ? result : undefined;
+  return !kValue.i64.isOOB(result) ? result : undefined;
 }
 
 function ai_rem(x, y) {
   if (y === 0n) return undefined;
   if (x === kValue.i64.negative.min && y === -1n) return undefined;
   const result = x % y;
-  return !isOOB(result) ? result : undefined;
+  return !kValue.i64.isOOB(result) ? result : undefined;
 }
 
 function ai_sub(x, y) {
   const result = x - y;
-  return !isOOB(result) ? result : undefined;
+  return !kValue.i64.isOOB(result) ? result : undefined;
 }
 
 export const d = makeCaseCache('binary/ai_arithmetic', {

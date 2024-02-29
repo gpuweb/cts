@@ -34,6 +34,14 @@ function notUndefined(value) {
 
 
 /**
+ * A function that performs a vector-vector operation on x and y, and returns the
+ * expected result.
+ */
+
+
+
+
+/**
  * @returns a Case for the input params with op applied
  * @param scalar scalar param
  * @param vector vector param (2, 3, or 4 elements)
@@ -285,5 +293,72 @@ param1s,
 op)
 {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
+}
+
+/**
+ * @returns a Case for the input params with op applied
+ * @param param0 vector param (2, 3, or 4 elements) for the first param
+ * @param param1 vector param (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
+ */
+function makeVectorVectorToScalarCase(
+param0,
+param1,
+op,
+quantize,
+scalarize)
+{
+  const param0_quantized = param0.map(quantize);
+  const param1_quantized = param1.map(quantize);
+  const result = op(param0_quantized, param1_quantized);
+  if (result === undefined) return undefined;
+
+  return {
+    input: [
+    new Vector(param0_quantized.map(scalarize)),
+    new Vector(param1_quantized.map(scalarize))],
+
+    expected: scalarize(result)
+  };
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
+ */
+function generateVectorVectorToScalarCases(
+param0s,
+param1s,
+op,
+quantize,
+scalarize)
+{
+  return param0s.flatMap((param0) => {
+    return param1s.
+    map((param1) => {
+      return makeVectorVectorToScalarCase(param0, param1, op, quantize, scalarize);
+    }).
+    filter(notUndefined);
+  });
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
+export function generateVectorVectorToI64Cases(
+param0s,
+param1s,
+op)
+{
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
 }
 //# sourceMappingURL=case.js.map
