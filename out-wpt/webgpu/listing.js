@@ -1843,6 +1843,15 @@ export const listing = [
       "execution",
       "expression",
       "binary",
+      "ai_comparison"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "binary",
       "bitwise"
     ]
   },
