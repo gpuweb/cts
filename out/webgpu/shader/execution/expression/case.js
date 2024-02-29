@@ -354,6 +354,34 @@ scalarize)
  * @param param1s array of vector params (2, 3, or 4 elements) for the second param
  * @param op the op to apply to each pair of vectors
  */
+export function generateVectorVectorToI32Cases(
+param0s,
+param1s,
+op)
+{
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToI32, i32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
+export function generateVectorVectorToU32Cases(
+param0s,
+param1s,
+op)
+{
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToU32, u32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
 export function generateVectorVectorToI64Cases(
 param0s,
 param1s,
