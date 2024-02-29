@@ -106,5 +106,6 @@
   "webgpu/shader/execution/unary/ai_arithmetic.bin": "deac2a47",
   "webgpu/shader/execution/binary/af_matrix_matrix_multiplication.bin": "19607838",
   "webgpu/shader/execution/binary/af_matrix_scalar_multiplication.bin": "29c9bff5",
-  "webgpu/shader/execution/binary/af_matrix_vector_multiplication.bin": "ff5d8157"
+  "webgpu/shader/execution/binary/af_matrix_vector_multiplication.bin": "ff5d8157",
+  "webgpu/shader/execution/derivatives.bin": "d0003650"
 }
