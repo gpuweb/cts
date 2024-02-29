@@ -5139,7 +5139,7 @@ class FPAbstractTraits extends FPTraits {
   {
     return this.toInterval(kF32Traits.divisionInterval(x, y));
   };
-  dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
+  dotInterval = this.dotIntervalImpl.bind(this);
   expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
   exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
   faceForwardIntervals = this.unimplementedFaceForward.bind(this);

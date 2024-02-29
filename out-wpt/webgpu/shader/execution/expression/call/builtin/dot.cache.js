@@ -57,12 +57,18 @@ function ci_dot(x, y) {
   return x.reduce((prev, _, idx) => prev + Math.imul(x[idx], y[idx]), 0);
 }
 
-// Cases: [f32|f16]_vecN_[non_]const
-const float_cases = ['f32', 'f16'].
+// Cases: [f32|f16|abstract]_vecN_[non_]const
+const float_cases = ['f32', 'f16', 'abstract'].
 flatMap((trait) =>
 [2, 3, 4].flatMap((N) =>
 [true, false].map((nonConst) => ({
-  [`${trait}_vec${N}_${nonConst ? 'non_const' : 'const'}`]: () => {
+  [`${trait === 'abstract' ? 'abstract_float' : trait}_vec${N}_${
+  nonConst ? 'non_const' : 'const'
+  }`]: () => {
+    // Emit an empty array for not const abstract float, since they will never be run
+    if (trait === 'abstract' && nonConst) {
+      return [];
+    }
     // vec3 and vec4 require calculating all possible permutations, so their runtime is much
     // longer per test, so only using sparse vectors for them.
     return FP[trait].generateVectorPairToIntervalCases(

@@ -6125,14 +6125,19 @@ const kDotIntervalCases = {
   // overflow f16 and result in unbounded endpoints.
   // https://github.com/gpuweb/cts/issues/2155
   { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints },
-  { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints }]
+  { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints }],
+
+  abstract: [
+  // See f32 for details
+  { input: [[kValue.f64.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f64.positive.max, -2.0, -3.0]], expected: [-13, 0] },
+  { input: [[kValue.f64.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f64.negative.min, 2.0, 3.0]], expected: [0, 13] }]
 
 };
 
 g.test('dotInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -6145,7 +6150,7 @@ expandWithParams((p) => {
   { input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
   { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
   { input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
-  { input: [[0.1, 0.0], [1.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] }, // correclt rounded of 0.1
+  { input: [[0.1, 0.0], [1.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] }, // correctly rounded of 0.1
 
   // vec3
   { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
@@ -6154,7 +6159,7 @@ expandWithParams((p) => {
   { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
   { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
   { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
-  { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] }, // correclt rounded of 0.1
+  { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] }, // correctly rounded of 0.1
 
   // vec4
   { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
