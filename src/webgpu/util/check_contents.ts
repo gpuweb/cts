@@ -69,6 +69,41 @@ export function checkElementsEqual(
 }
 
 /**
+ * Check whether two `TypedArray`s have equal contents.
+ * Returns `undefined` if the check passes, or an `Error` if not.
+ */
+export function checkElementsApproximatelyEqual(
+  actual: TypedArrayBufferView,
+  expected: TypedArrayBufferView,
+  maxDifference: number
+): ErrorWithExtra | undefined {
+  assert(actual.constructor === expected.constructor, 'TypedArray type mismatch');
+  assert(actual.length === expected.length, 'size mismatch');
+
+  let failedElementsFirstMaybe: number | undefined = undefined;
+  /** Sparse array with `true` for elements that failed. */
+  const failedElements: (true | undefined)[] = [];
+  for (let i = 0; i < actual.length; ++i) {
+    if (Math.abs(Number(actual[i]) - Number(expected[i])) > maxDifference) {
+      failedElementsFirstMaybe ??= i;
+      failedElements[i] = true;
+    }
+  }
+
+  if (failedElementsFirstMaybe === undefined) {
+    return undefined;
+  }
+
+  const failedElementsFirst = failedElementsFirstMaybe;
+  return failCheckElements({
+    actual,
+    failedElements,
+    failedElementsFirst,
+    predicatePrinter: [{ leftHeader: 'expected ==', getValueForCell: index => expected[index] }],
+  });
+}
+
+/**
  * Check whether each value in a `TypedArray` is between the two corresponding "expected" values
  * (either `a(i) <= actual[i] <= b(i)` or `a(i) >= actual[i] => b(i)`).
  */

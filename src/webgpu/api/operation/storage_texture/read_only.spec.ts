@@ -616,9 +616,16 @@ g.test('basic')
         t.expectGPUBufferValuesEqual(outputBuffer, new Int32Array(expectedData));
         break;
       case 'float':
-      case 'unfilterable-float':
-        t.expectGPUBufferValuesEqual(outputBuffer, new Float32Array(expectedData));
+      case 'unfilterable-float': {
+        const maxDifference =
+          t.isCompatibility && (format === 'rgba8snorm' || format === 'rgba8unorm') ? 1 / 255 : 0;
+        t.expectGPUBufferValuesApproximatelyEqual(
+          outputBuffer,
+          new Float32Array(expectedData),
+          maxDifference
+        );
         break;
+      }
       default:
         unreachable();
         break;

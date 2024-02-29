@@ -39,7 +39,11 @@ import {
   isTextureFormatUsableAsStorageFormat,
 } from './format_info.js';
 import { makeBufferWithContents } from './util/buffer.js';
-import { checkElementsEqual, checkElementsBetween } from './util/check_contents.js';
+import {
+  checkElementsEqual,
+  checkElementsBetween,
+  checkElementsApproximatelyEqual,
+} from './util/check_contents.js';
 import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js';
 import { ScalarType } from './util/conversion.js';
 import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
@@ -529,6 +533,28 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       method,
       mode,
     });
+  }
+  /**
+   * Expect a GPUBuffer's contents to approximately equal the values in the provided TypedArray.
+   */
+  expectGPUBufferValuesApproximatelyEqual(
+    src: GPUBuffer,
+    expected: TypedArrayBufferView,
+    maxDifference: number,
+    srcByteOffset: number = 0,
+    { method = 'copy', mode = 'fail' }: { method?: 'copy' | 'map'; mode?: 'fail' | 'warn' } = {}
+  ): void {
+    this.expectGPUBufferValuesPassCheck(
+      src,
+      a => checkElementsApproximatelyEqual(a, expected, maxDifference),
+      {
+        srcByteOffset,
+        type: expected.constructor as TypedArrayBufferViewConstructor,
+        typedLength: expected.length,
+        method,
+        mode,
+      }
+    );
   }
 
   /**
