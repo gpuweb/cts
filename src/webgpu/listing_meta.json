@@ -2183,6 +2183,7 @@
   "webgpu:web_platform,copyToTexture,video:copy_from_video:*": { "subcaseMS": 25.101 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,compute:*": { "subcaseMS": 36.270 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,sample:*": { "subcaseMS": 34.968 },
+  "webgpu:web_platform,external_texture,video:importExternalTexture,sample_non_YUV_video_frame:*": { "subcaseMS": 36.270 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,sampleWithVideoFrameWithVisibleRectParam:*": { "subcaseMS": 29.160 },
   "webgpu:web_platform,worker,worker:dedicated_worker:*": { "subcaseMS": 245.901 },
   "webgpu:web_platform,worker,worker:shared_worker:*": { "subcaseMS": 26.801 },
