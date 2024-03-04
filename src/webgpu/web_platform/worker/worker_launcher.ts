@@ -42,18 +42,19 @@ export async function launchServiceWorker() {
     type: 'module',
     scope: '/',
   });
-  await navigator.serviceWorker.ready;
+  await registration.update();
 
   const promise = new Promise<TestResult>(resolve => {
     navigator.serviceWorker.addEventListener(
       'message',
       ev => {
         resolve(ev.data as TestResult);
+        void registration.unregister();
       },
       { once: true }
     );
   });
-  registration.active.postMessage({
+  registration.active?.postMessage({
     defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
   });
   return await promise;

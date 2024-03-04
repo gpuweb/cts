@@ -155,7 +155,7 @@ app.get('/out/**/*.js', async (req, res, next) => {
     return;
   }
 
-  // FIXME: I'm not sure if this is the way I should handle it...
+  // I'm not sure if this is the way I should handle it...
   const dir = jsUrl.endsWith('worker.js') ? path.resolve(srcDir, '../out') : srcDir;
   let absPath = path.join(dir, tsUrl);
   if (!fs.existsSync(absPath)) {

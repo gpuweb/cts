@@ -78,16 +78,15 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
         `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
-// oldG is a TestGroup<Fixture> object (defined in common/internal/test_group.ts).
-import { g as oldG } from '${relPathToSuiteRoot}/${entry.file.join('/')}.spec.js';
-
-// FIXME: Expose a proxied test interface. I think this can completely replace test_worker-worker.js
-// (using this instead of that), but if not then hopefully it can at least share code with it.
-console.log(oldG.iterate());
+// g is a TestGroup<Fixture> object (defined in common/internal/test_group.ts).
+import { g } from '${relPathToSuiteRoot}/${entry.file.join('/')}.spec.js';
 
 import { globalTestConfig } from '/out/common/framework/test_config.js';
 import { Logger } from '/out/common/internal/logging/logger.js';
 import { setDefaultRequestAdapterOptions } from '/out/common/util/navigator_gpu.js';
+import { parseQuery } from '/out/common/internal/query/parseQuery.js';
+import { comparePublicParamsPaths, Ordering } from '/out/common/internal/query/compare.js';
+import { assert } from '/out/common/util/util.js';
 
 async function reportTestResults(ev) {
   const query = ev.data.query;
@@ -109,17 +108,19 @@ async function reportTestResults(ev) {
     });
   }
 
-  // const testcases = Array.from(await loader.loadCases(parseQuery(query)));
-  // assert(testcases.length === 1, 'worker query resulted in != 1 cases');
-
-  // const testcase = testcases[0];
-  const testcase = { query }; // FIXME! I failed to figure out how to get a testcase from oldG and query ;(
-  const [rec, result] = log.record(testcase.query.toString());
-  // await testcase.run(rec, expectations);
-  result.status = 'pass'; // FIXME
-  result.timems = 42; // FIXME
+  const testQuerySingleCase = parseQuery(query);
+  let testcase = null;
+  for (const t of g.iterate()) {
+    for (const c of t.iterate(testQuerySingleCase.params)) {
+      if (comparePublicParamsPaths(c.id.params, testQuerySingleCase.params) === Ordering.Equal) {
+        testcase = c;
+      }
+    }
+  }
+  assert(testcase);
+  const [rec, result] = log.record(query);
+  await testcase.run(rec, testQuerySingleCase, expectations);
   this.postMessage({ query, result });
-
 }
 
 self.onmessage = (ev) => {

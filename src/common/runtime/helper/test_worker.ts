@@ -108,7 +108,7 @@ export class TestServiceWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    const [suite, name] = query.split(":", 2);
+    const [suite, name] = query.split(':', 2);
     const fileName = name.split(',').join('/');
     const serviceWorkerPath = `/out/${suite}/webworker/${fileName}.worker.js`;
 
@@ -116,7 +116,7 @@ export class TestServiceWorker {
       type: 'module',
       scope: '/',
     });
-    await navigator.serviceWorker.ready;
+    await registration.update();
 
     navigator.serviceWorker.onmessage = ev => {
       const query: string = ev.data.query;
@@ -132,13 +132,14 @@ export class TestServiceWorker {
       // update the entire results JSON somehow at some point).
     };
 
-    registration.active.postMessage({
+    registration.active?.postMessage({
       query,
       expectations,
       ctsOptions: this.ctsOptions,
     });
     const serviceWorkerResult = await new Promise<LiveTestCaseResult>(resolve => {
       this.resolvers.set(query, resolve);
+      void registration.unregister();
     });
     rec.injectResult(serviceWorkerResult);
   }
