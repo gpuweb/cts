@@ -346,6 +346,7 @@ const kScopeCases: Record<string, ScopeCase> = {
   call_unaffected_error: {
     code: `
     ${generateDiagnostic('directive', 'error', 'derivative_uniformity')};
+    fn foo() { _ = textureSample(t,s,0.0); }
     ${scopeCode(`
       ${generateDiagnostic('', 'off', 'derivative_uniformity')}
       if non_uniform_cond {
