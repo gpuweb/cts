@@ -1204,6 +1204,38 @@ export function vectorI32Range(dim: number): ROArrayArray<number> {
   return kVectorI32Values[dim];
 }
 
+const kSparseVectorI32Values = {
+  2: sparseI32Range().map((i, idx) => [idx % 2 === 0 ? i : idx, idx % 2 === 1 ? i : -idx]),
+  3: sparseI32Range().map((i, idx) => [
+    idx % 3 === 0 ? i : idx,
+    idx % 3 === 1 ? i : -idx,
+    idx % 3 === 2 ? i : idx,
+  ]),
+  4: sparseI32Range().map((i, idx) => [
+    idx % 4 === 0 ? i : idx,
+    idx % 4 === 1 ? i : -idx,
+    idx % 4 === 2 ? i : idx,
+    idx % 4 === 3 ? i : -idx,
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting
+ * abstract integer values.
+ *
+ * This is an even more stripped down version of `vectorI32Range` for when
+ * pairs of vectors are being tested.
+ * All interesting integers from sparseI32Range are guaranteed to be
+ * tested, but not in every position.
+ */
+export function sparseVectorI32Range(dim: number): ROArrayArray<number> {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorI32Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorI32Values[dim];
+}
+
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit signed ints
  *
@@ -1282,6 +1314,38 @@ export function vectorU32Range(dim: number): ROArrayArray<number> {
   return kVectorU32Values[dim];
 }
 
+const kSparseVectorU32Values = {
+  2: sparseU32Range().map((i, idx) => [idx % 2 === 0 ? i : idx, idx % 2 === 1 ? i : -idx]),
+  3: sparseU32Range().map((i, idx) => [
+    idx % 3 === 0 ? i : idx,
+    idx % 3 === 1 ? i : -idx,
+    idx % 3 === 2 ? i : idx,
+  ]),
+  4: sparseU32Range().map((i, idx) => [
+    idx % 4 === 0 ? i : idx,
+    idx % 4 === 1 ? i : -idx,
+    idx % 4 === 2 ? i : idx,
+    idx % 4 === 3 ? i : -idx,
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting
+ * abstract integer values.
+ *
+ * This is an even more stripped down version of `vectorU32Range` for when
+ * pairs of vectors are being tested.
+ * All interesting integers from sparseU32Range are guaranteed to be
+ * tested, but not in every position.
+ */
+export function sparseVectorU32Range(dim: number): ROArrayArray<number> {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorU32Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorU32Values[dim];
+}
+
 /**
  * @returns an ascending sorted array of numbers spread over the entire range of 32-bit unsigned ints
  *
@@ -1352,6 +1416,41 @@ const kVectorI64Values = {
 export function vectorI64Range(dim: number): ROArrayArray<bigint> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorI64Range only accepts dimensions 2, 3, and 4');
   return kVectorI64Values[dim];
+}
+
+const kSparseVectorI64Values = {
+  2: sparseI64Range().map((i, idx) => [
+    idx % 2 === 0 ? i : BigInt(idx),
+    idx % 2 === 1 ? i : -BigInt(idx),
+  ]),
+  3: sparseI64Range().map((i, idx) => [
+    idx % 3 === 0 ? i : BigInt(idx),
+    idx % 3 === 1 ? i : -BigInt(idx),
+    idx % 3 === 2 ? i : BigInt(idx),
+  ]),
+  4: sparseI64Range().map((i, idx) => [
+    idx % 4 === 0 ? i : BigInt(idx),
+    idx % 4 === 1 ? i : -BigInt(idx),
+    idx % 4 === 2 ? i : BigInt(idx),
+    idx % 4 === 3 ? i : -BigInt(idx),
+  ]),
+};
+
+/**
+ * Minimal set of vectors, indexed by dimension, that contain interesting
+ * abstract integer values.
+ *
+ * This is an even more stripped down version of `vectorI64Range` for when
+ * pairs of vectors are being tested.
+ * All interesting integers from sparseI64Range are guaranteed to be
+ * tested, but not in every position.
+ */
+export function sparseVectorI64Range(dim: number): ROArrayArray<bigint> {
+  assert(
+    dim === 2 || dim === 3 || dim === 4,
+    'sparseVectorI64Range only accepts dimensions 2, 3, and 4'
+  );
+  return kSparseVectorI64Values[dim];
 }
 
 /**

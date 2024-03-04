@@ -34,6 +34,14 @@ export interface BinaryOp<T> {
 }
 
 /**
+ * A function that performs a vector-vector operation on x and y, and returns the
+ * expected result.
+ */
+export interface VectorVectorToScalarOp<T> {
+  (x: T[], y: T[]): T | undefined;
+}
+
+/**
  * @returns a Case for the input params with op applied
  * @param scalar scalar param
  * @param vector vector param (2, 3, or 4 elements)
@@ -285,4 +293,99 @@ export function generateBinaryToI64Cases(
   op: BinaryOp<bigint>
 ) {
   return generateScalarBinaryToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
+}
+
+/**
+ * @returns a Case for the input params with op applied
+ * @param param0 vector param (2, 3, or 4 elements) for the first param
+ * @param param1 vector param (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
+ */
+function makeVectorVectorToScalarCase<T>(
+  param0: readonly T[],
+  param1: readonly T[],
+  op: VectorVectorToScalarOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
+): Case | undefined {
+  const param0_quantized = param0.map(quantize);
+  const param1_quantized = param1.map(quantize);
+  const result = op(param0_quantized, param1_quantized);
+  if (result === undefined) return undefined;
+
+  return {
+    input: [
+      new Vector(param0_quantized.map(scalarize)),
+      new Vector(param1_quantized.map(scalarize)),
+    ],
+    expected: scalarize(result),
+  };
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ * @param quantize function to quantize all values in vectors and scalars
+ * @param scalarize function to convert numbers to Scalars
+ */
+function generateVectorVectorToScalarCases<T>(
+  param0s: ROArrayArray<T>,
+  param1s: ROArrayArray<T>,
+  op: VectorVectorToScalarOp<T>,
+  quantize: QuantizeFunc<T>,
+  scalarize: ScalarBuilder<T>
+): Case[] {
+  return param0s.flatMap(param0 => {
+    return param1s
+      .map(param1 => {
+        return makeVectorVectorToScalarCase(param0, param1, op, quantize, scalarize);
+      })
+      .filter(notUndefined);
+  });
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
+export function generateVectorVectorToI32Cases(
+  param0s: ROArrayArray<number>,
+  param1s: ROArrayArray<number>,
+  op: VectorVectorToScalarOp<number>
+): Case[] {
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToI32, i32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
+export function generateVectorVectorToU32Cases(
+  param0s: ROArrayArray<number>,
+  param1s: ROArrayArray<number>,
+  op: VectorVectorToScalarOp<number>
+): Case[] {
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToU32, u32);
+}
+
+/**
+ * @returns array of Case for the input params with op applied
+ * @param param0s array of vector params (2, 3, or 4 elements) for the first param
+ * @param param1s array of vector params (2, 3, or 4 elements) for the second param
+ * @param op the op to apply to each pair of vectors
+ */
+export function generateVectorVectorToI64Cases(
+  param0s: ROArrayArray<bigint>,
+  param1s: ROArrayArray<bigint>,
+  op: VectorVectorToScalarOp<bigint>
+): Case[] {
+  return generateVectorVectorToScalarCases(param0s, param1s, op, quantizeToI64, abstractInt);
 }
