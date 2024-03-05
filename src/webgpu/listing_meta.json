@@ -1922,6 +1922,8 @@
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:invalid:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,extension,pointer_composite_access:deref:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,extension,pointer_composite_access:pointer:*": { "subcaseMS": 0.000 },
+  "webgpu:shader,validation,extension,readonly_and_readwrite_storage_textures:textureBarrier:*": { "subcaseMS": 1.141 },
+  "webgpu:shader,validation,extension,readonly_and_readwrite_storage_textures:var_decl:*": { "subcaseMS": 42.299 },
   "webgpu:shader,validation,functions,alias_analysis:aliasing_inside_function:*": { "subcaseMS": 1.200 },
   "webgpu:shader,validation,functions,alias_analysis:member_accessors:*": { "subcaseMS": 1.656 },
   "webgpu:shader,validation,functions,alias_analysis:one_atomic_pointer_one_module_scope:*": { "subcaseMS": 0.000 },
@@ -2194,8 +2196,8 @@
   "webgpu:web_platform,copyToTexture,video:copy_from_video:*": { "subcaseMS": 25.101 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,compute:*": { "subcaseMS": 36.270 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,sample:*": { "subcaseMS": 34.968 },
-  "webgpu:web_platform,external_texture,video:importExternalTexture,sample_non_YUV_video_frame:*": { "subcaseMS": 36.270 },
   "webgpu:web_platform,external_texture,video:importExternalTexture,sampleWithVideoFrameWithVisibleRectParam:*": { "subcaseMS": 29.160 },
+  "webgpu:web_platform,external_texture,video:importExternalTexture,sample_non_YUV_video_frame:*": { "subcaseMS": 36.270 },
   "webgpu:web_platform,worker,worker:dedicated_worker:*": { "subcaseMS": 245.901 },
   "webgpu:web_platform,worker,worker:shared_worker:*": { "subcaseMS": 26.801 },
   "_end": ""
