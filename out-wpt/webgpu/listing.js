@@ -4242,6 +4242,14 @@ export const listing = [
     "file": [
       "shader",
       "validation",
+      "extension",
+      "readonly_and_readwrite_storage_textures"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
       "functions",
       "alias_analysis"
     ]
