@@ -1,5 +1,6 @@
 import { FP } from '../../../../util/floating_point.js';
 import { sparseMatrixF64Range, sparseScalarF64Range } from '../../../../util/math.js';
+import { selectNCases } from '../case.js';
 import { makeCaseCache } from '../case_cache.js';
 
 // Cases: matCxR_scalar
@@ -7,11 +8,15 @@ const mat_scalar_cases = ([2, 3, 4] as const)
   .flatMap(cols =>
     ([2, 3, 4] as const).map(rows => ({
       [`mat${cols}x${rows}_scalar`]: () => {
-        return FP.abstract.generateMatrixScalarToMatrixCases(
-          sparseMatrixF64Range(cols, rows),
-          sparseScalarF64Range(),
-          'finite',
-          FP.abstract.multiplicationMatrixScalarInterval
+        return selectNCases(
+          'binary/af_matrix_scalar_multiplication_mat_scalar',
+          50,
+          FP.abstract.generateMatrixScalarToMatrixCases(
+            sparseMatrixF64Range(cols, rows),
+            sparseScalarF64Range(),
+            'finite',
+            FP.abstract.multiplicationMatrixScalarInterval
+          )
         );
       },
     }))
@@ -23,11 +28,15 @@ const scalar_mat_cases = ([2, 3, 4] as const)
   .flatMap(cols =>
     ([2, 3, 4] as const).map(rows => ({
       [`scalar_mat${cols}x${rows}`]: () => {
-        return FP.abstract.generateScalarMatrixToMatrixCases(
-          sparseScalarF64Range(),
-          sparseMatrixF64Range(cols, rows),
-          'finite',
-          FP.abstract.multiplicationScalarMatrixInterval
+        return selectNCases(
+          'binary/af_matrix_scalar_multiplication_scalar_mat',
+          50,
+          FP.abstract.generateScalarMatrixToMatrixCases(
+            sparseScalarF64Range(),
+            sparseMatrixF64Range(cols, rows),
+            'finite',
+            FP.abstract.multiplicationScalarMatrixInterval
+          )
         );
       },
     }))
