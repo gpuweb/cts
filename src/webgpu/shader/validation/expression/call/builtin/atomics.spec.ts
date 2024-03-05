@@ -187,3 +187,93 @@ g.test('atomic_parameterization')
       )
     );
   });
+
+g.test('data_parameters')
+  .desc('Validates that data parameters must match atomic type (or be implicitly convertible)')
+  .params(u =>
+    u
+      .combine('op', [
+        'atomicStore',
+        'atomicAdd',
+        'atomicSub',
+        'atomicMax',
+        'atomicMin',
+        'atomicAnd',
+        'atomicOr',
+        'atomicXor',
+        'atomicExchange',
+        'atomicCompareExchangeWeak1',
+        'atomicCompareExchangeWeak2',
+      ] as const)
+      .beginSubcases()
+      .combine('atomicType', ['i32', 'u32'] as const)
+      .combine('dataType', ['i32', 'u32', 'f32', 'AbstractInt'] as const)
+  )
+  .fn(t => {
+    let dataValue = '';
+    switch (t.params.dataType) {
+      case 'i32':
+        dataValue = '1i';
+        break;
+      case 'u32':
+        dataValue = '1u';
+        break;
+      case 'f32':
+        dataValue = '1f';
+        break;
+      case 'AbstractInt':
+        dataValue = '1';
+        break;
+    }
+    let op = '';
+    switch (t.params.op) {
+      case 'atomicCompareExchangeWeak1':
+        op = `atomicCompareExchangeWeak(&a, ${dataValue}, 1)`;
+        break;
+      case 'atomicCompareExchangeWeak2':
+        op = `atomicCompareExchangeWeak(&a, 1, ${dataValue})`;
+        break;
+      default:
+        op = `${t.params.op}(&a, ${dataValue})`;
+        break;
+    }
+    const code = `
+var<workgroup> a : atomic<${t.params.atomicType}>;
+fn foo() {
+  ${op};
+}
+`;
+
+    const expect = t.params.atomicType === t.params.dataType || t.params.dataType === 'AbstractInt';
+    t.expectCompileResult(expect, code);
+  });
+
+g.test('return_types')
+  .desc('Validates return types of atomics')
+  .params(u =>
+    u
+      .combine('op', keysOf(kAtomicOps))
+      .beginSubcases()
+      .combine('atomicType', ['i32', 'u32'] as const)
+      .combine('returnType', ['i32', 'u32', 'f32'] as const)
+  )
+  .fn(t => {
+    let op = `${kAtomicOps[t.params.op]('&a')}`;
+    switch (t.params.op) {
+      case 'compareexchangeweak':
+        op = `let tmp : ${t.params.returnType} = ${op}.old_value`;
+        break;
+      default:
+        op = `let tmp : ${t.params.returnType} = ${op}`;
+        break;
+    }
+    const code = `
+var<workgroup> a : atomic<${t.params.atomicType}>;
+fn foo() {
+  ${op};
+}
+`;
+
+    const expect = t.params.atomicType === t.params.returnType && t.params.op !== 'store';
+    t.expectCompileResult(expect, code);
+  });
