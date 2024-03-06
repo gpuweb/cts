@@ -5164,26 +5164,16 @@ class FPAbstractTraits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
-  public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
-    this,
-    'multiplicationMatrixMatrixInterval'
-  );
-  public readonly multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(
-    this,
-    'multiplicationMatrixScalarInterval'
-  );
-  public readonly multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(
-    this,
-    'multiplicationScalarMatrixInterval'
-  );
-  public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
-    this,
-    'multiplicationMatrixVectorInterval'
-  );
-  public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
-    this,
-    'multiplicationVectorMatrixInterval'
-  );
+  public readonly multiplicationMatrixMatrixInterval =
+    this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixScalarInterval =
+    this.multiplicationMatrixScalarIntervalImpl.bind(this);
+  public readonly multiplicationScalarMatrixInterval =
+    this.multiplicationScalarMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixVectorInterval =
+    this.multiplicationMatrixVectorIntervalImpl.bind(this);
+  public readonly multiplicationVectorMatrixInterval =
+    this.multiplicationVectorMatrixIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
     this,
