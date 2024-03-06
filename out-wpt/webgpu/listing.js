@@ -3690,6 +3690,14 @@ export const listing = [
       "shader",
       "execution",
       "shader_io",
+      "user_io"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "shader_io",
       "workgroup_size"
     ]
   },

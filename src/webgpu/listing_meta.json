@@ -1743,6 +1743,7 @@
   "webgpu:shader,execution,shader_io,shared_structs:shared_between_stages:*": { "subcaseMS": 9.601 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_buffer:*": { "subcaseMS": 20.701 },
   "webgpu:shader,execution,shader_io,shared_structs:shared_with_non_entry_point_function:*": { "subcaseMS": 6.801 },
+  "webgpu:shader,execution,shader_io,user_io:passthrough:*": { "subcaseMS": 373.385 },
   "webgpu:shader,execution,shader_io,workgroup_size:workgroup_size:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,shadow:builtin:*": { "subcaseMS": 4.700 },
   "webgpu:shader,execution,shadow:declaration:*": { "subcaseMS": 9.700 },
