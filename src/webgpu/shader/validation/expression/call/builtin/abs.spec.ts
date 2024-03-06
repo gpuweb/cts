@@ -107,6 +107,12 @@ const kTests = {
           _ = abs(p);`,
     pass: false,
   },
+  ptr_deref: {
+    src: `var<function> a = 1u;
+          let p: ptr<function, u32> = &a;
+          _ = abs(*p);`,
+    pass: true,
+  },
   sampler: {
     src: `_ = abs(s);`,
     pass: false,
