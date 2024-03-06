@@ -1,5 +1,10 @@
 export const description = `
 Test for user-defined shader I/O.
+
+passthrough:
+  * Data passed into vertex shader as uints and converted to test type
+  * Passed from vertex to fragment as test type
+  * Output from fragment shader as uint
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
@@ -18,18 +23,25 @@ struct IOData {
   @location(2) @interpolate(flat) user2 : vec4<${type}>,
 }
 
+struct VertexInput {
+  @builtin(vertex_index) idx : u32,
+  @location(0) in0 : u32,
+  @location(1) in1 : vec2u,
+  @location(2) in2 : vec4u,
+}
+
 @vertex
-fn vsMain(@builtin(vertex_index) input : u32) -> IOData {
+fn vsMain(input : VertexInput) -> IOData {
   const vertices = array(
     vec4f(-1, -1, 0, 1),
     vec4f(-1,  1, 0, 1),
     vec4f( 1, -1, 0, 1),
   );
   var data : IOData;
-  data.pos = vertices[input];
-  data.user0 = 1;
-  data.user1 = vec2(2);
-  data.user2 = vec4(3);
+  data.pos = vertices[input.idx];
+  data.user0 = ${type}(input.in0);
+  data.user1 = vec2<${type}>(input.in1);
+  data.user2 = vec4<${type}>(input.in2);
   return data;
 }
 
@@ -60,16 +72,62 @@ function drawPassthrough(t: GPUTest, code: string) {
     vertex: {
       module: t.device.createShaderModule({ code }),
       entryPoint: 'vsMain',
+      buffers: [
+        {
+          arrayStride: 4,
+          attributes: [
+            {
+              format: 'uint32',
+              offset: 0,
+              shaderLocation: 0,
+            },
+          ],
+        },
+        {
+          arrayStride: 8,
+          attributes: [
+            {
+              format: 'uint32x2',
+              offset: 0,
+              shaderLocation: 1,
+            },
+          ],
+        },
+        {
+          arrayStride: 16,
+          attributes: [
+            {
+              format: 'uint32x4',
+              offset: 0,
+              shaderLocation: 2,
+            },
+          ],
+        },
+      ],
     },
     fragment: {
       module: t.device.createShaderModule({ code }),
       entryPoint: 'fsMain',
-      targets: [{ format: formats[0] }, { format: formats[1] }, { format: formats[2] }],
+      targets: formats.map(x => {
+        return { format: x };
+      }),
     },
     primitive: {
       topology: 'triangle-list',
     },
   });
+
+  const vertexBuffer = t.makeBufferWithContents(
+    new Uint32Array([
+      // scalar: offset 0
+      1, 1, 1, 0,
+      // vec2: offset 16
+      2, 2, 2, 2, 2, 2, 0, 0,
+      // vec4: offset 48
+      3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+    ]),
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.VERTEX
+  );
 
   const bytesPerComponent = 4;
   // 256 is the minimum bytes per row for texture to buffer copies.
@@ -109,6 +167,9 @@ function drawPassthrough(t: GPUTest, code: string) {
     })),
   });
   pass.setPipeline(pipeline);
+  pass.setVertexBuffer(0, vertexBuffer, 0, 12);
+  pass.setVertexBuffer(1, vertexBuffer, 16, 24);
+  pass.setVertexBuffer(2, vertexBuffer, 48, 48);
   pass.draw(3);
   pass.end();
 
@@ -138,8 +199,8 @@ function drawPassthrough(t: GPUTest, code: string) {
   t.expectGPUBufferValuesEqual(outputBuffer, expect);
 }
 
-g.test('interstage_passthrough')
-  .desc('Tests passing user-defined data between vertex and fragment shaders')
+g.test('passthrough')
+  .desc('Tests passing user-defined data from vertex input through fragment output')
   .params(u => u.combine('type', ['f32', 'f16', 'i32', 'u32'] as const))
   .beforeAllSubcases(t => {
     if (t.params.type === 'f16') {
