@@ -106,7 +106,6 @@ export class TestServiceWorker extends TestBaseWorker {
 
     const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
       type: 'module',
-      scope: '/',
     });
     await registration.update();
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);

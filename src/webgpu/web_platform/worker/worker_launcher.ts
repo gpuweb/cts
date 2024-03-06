@@ -40,7 +40,6 @@ export async function launchServiceWorker() {
   const serviceWorkerPath = selfPathDir + '/worker.js';
   const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
     type: 'module',
-    scope: '/',
   });
   await registration.update();
 

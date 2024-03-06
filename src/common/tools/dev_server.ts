@@ -150,7 +150,6 @@ app.get('/out/**/*.js', async (req, res, next) => {
   const tsUrl = jsUrl.replace(/\.js$/, '.ts');
   if (compileCache.has(tsUrl)) {
     res.setHeader('Content-Type', 'application/javascript');
-    res.setHeader('Service-Worker-Allowed', '/');
     res.send(compileCache.get(tsUrl));
     return;
   }
@@ -169,7 +168,6 @@ app.get('/out/**/*.js', async (req, res, next) => {
       compileCache.set(tsUrl, result.code);
 
       res.setHeader('Content-Type', 'application/javascript');
-      res.setHeader('Service-Worker-Allowed', '/');
       res.send(result.code);
     } else {
       throw new Error(`Failed compile ${tsUrl}.`);
