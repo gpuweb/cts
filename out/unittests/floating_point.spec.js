@@ -7193,7 +7193,7 @@ fn((t) => {
 g.test('multiplicationMatrixMatrixInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
@@ -7766,6 +7766,20 @@ const kMultiplicationMatrixScalarIntervalCases = {
     [[0, reinterpretU16AsF16(0x43fe)], 0], // [[0, 3.99609375], 0]
     [0, 0]]
 
+  }],
+
+  abstract: [
+  // From https://github.com/gpuweb/cts/issues/3044
+  {
+    matrix: [
+    [kValue.f64.negative.min, 0],
+    [0, 0]],
+
+    scalar: kValue.f64.negative.subnormal.min,
+    expected: [
+    [[0, reinterpretU64AsF64(0x400ffffffffffffdn)], 0], // [[0, 3.9999995...], 0],
+    [0, 0]]
+
   }]
 
 };
@@ -7773,7 +7787,7 @@ const kMultiplicationMatrixScalarIntervalCases = {
 g.test('multiplicationMatrixScalarInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -7945,7 +7959,7 @@ fn((t) => {
 g.test('multiplicationMatrixVectorInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
@@ -8062,7 +8076,7 @@ fn((t) => {
 g.test('multiplicationVectorMatrixInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 combineWithParams([
 // Only testing that different shapes of matrices are handled correctly
@@ -8070,8 +8084,8 @@ combineWithParams([
 // multiplicationVectorMatrixInterval uses DotIntervalOp for calculating
 // intervals, so the testing for dotInterval covers the actual interval
 // calculations.
-// Keep all expected result integer no larger than 2047 to ensure that all result is exactly
-// represeantable in both f32 and f16.
+// Keep all expected result integer no larger than 2047 to ensure that
+// all result is exactly representable in both f32 and f16.
 {
   vector: [1, 2],
   matrix: [
