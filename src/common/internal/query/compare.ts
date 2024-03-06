@@ -58,7 +58,7 @@ function compareOneLevel(ordering: Ordering, aIsBig: boolean, bIsBig: boolean): 
   return Ordering.Unordered;
 }
 
-function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
+export function comparePaths(a: readonly string[], b: readonly string[]): Ordering {
   const shorter = Math.min(a.length, b.length);
 
   for (let i = 0; i < shorter; ++i) {

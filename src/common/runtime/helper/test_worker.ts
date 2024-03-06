@@ -5,30 +5,39 @@ import { TestQueryWithExpectation } from '../../internal/query/query.js';
 
 import { CTSOptions, kDefaultCTSOptions } from './options.js';
 
-export class TestDedicatedWorker {
-  private readonly ctsOptions: CTSOptions;
+class TestBaseWorker {
+  protected readonly ctsOptions: CTSOptions;
+  protected readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
+
+  constructor(worker: CTSOptions['worker'], ctsOptions?: CTSOptions) {
+    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker } };
+  }
+
+  onmessage(ev: MessageEvent) {
+    const query: string = ev.data.query;
+    const result: TransferredTestCaseResult = ev.data.result;
+    if (result.logs) {
+      for (const l of result.logs) {
+        Object.setPrototypeOf(l, LogMessageWithStack.prototype);
+      }
+    }
+    this.resolvers.get(query)!(result as LiveTestCaseResult);
+
+    // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
+    // update the entire results JSON somehow at some point).
+  }
+}
+
+export class TestDedicatedWorker extends TestBaseWorker {
   private readonly worker: Worker;
-  private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
 
   constructor(ctsOptions?: CTSOptions) {
-    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: 'dedicated' } };
+    super('dedicated', ctsOptions);
     const selfPath = import.meta.url;
     const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
     const workerPath = selfPathDir + '/test_worker-worker.js';
     this.worker = new Worker(workerPath, { type: 'module' });
-    this.worker.onmessage = ev => {
-      const query: string = ev.data.query;
-      const result: TransferredTestCaseResult = ev.data.result;
-      if (result.logs) {
-        for (const l of result.logs) {
-          Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-        }
-      }
-      this.resolvers.get(query)!(result as LiveTestCaseResult);
-
-      // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
-      // update the entire results JSON somehow at some point).
-    };
+    this.worker.onmessage = ev => this.onmessage(ev);
   }
 
   async run(
@@ -50,32 +59,18 @@ export class TestDedicatedWorker {
 
 export class TestWorker extends TestDedicatedWorker {}
 
-export class TestSharedWorker {
-  private readonly ctsOptions: CTSOptions;
+export class TestSharedWorker extends TestBaseWorker {
   private readonly port: MessagePort;
-  private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
 
   constructor(ctsOptions?: CTSOptions) {
-    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: 'shared' } };
+    super('shared', ctsOptions);
     const selfPath = import.meta.url;
     const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
     const workerPath = selfPathDir + '/test_worker-worker.js';
     const worker = new SharedWorker(workerPath, { type: 'module' });
     this.port = worker.port;
     this.port.start();
-    this.port.onmessage = ev => {
-      const query: string = ev.data.query;
-      const result: TransferredTestCaseResult = ev.data.result;
-      if (result.logs) {
-        for (const l of result.logs) {
-          Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-        }
-      }
-      this.resolvers.get(query)!(result as LiveTestCaseResult);
-
-      // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
-      // update the entire results JSON somehow at some point).
-    };
+    this.port.onmessage = ev => this.onmessage(ev);
   }
 
   async run(
@@ -95,12 +90,9 @@ export class TestSharedWorker {
   }
 }
 
-export class TestServiceWorker {
-  private readonly ctsOptions: CTSOptions;
-  private readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
-
+export class TestServiceWorker extends TestBaseWorker {
   constructor(ctsOptions?: CTSOptions) {
-    this.ctsOptions = { ...(ctsOptions || kDefaultCTSOptions), ...{ worker: 'service' } };
+    super('service', ctsOptions);
   }
 
   async run(
@@ -117,20 +109,7 @@ export class TestServiceWorker {
       scope: '/',
     });
     await registration.update();
-
-    navigator.serviceWorker.onmessage = ev => {
-      const query: string = ev.data.query;
-      const result: TransferredTestCaseResult = ev.data.result;
-      if (result.logs) {
-        for (const l of result.logs) {
-          Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-        }
-      }
-      this.resolvers.get(query)!(result as LiveTestCaseResult);
-
-      // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
-      // update the entire results JSON somehow at some point).
-    };
+    navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
 
     registration.active?.postMessage({
       query,

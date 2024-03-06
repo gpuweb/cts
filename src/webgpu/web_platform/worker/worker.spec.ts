@@ -12,6 +12,12 @@ import { assert } from '../../../common/util/util.js';
 
 export const g = makeTestGroup(Fixture);
 
+// Note: we load worker_launcher dynamically because ts-node support
+// is using commonjs which doesn't support import.meta. Further,
+// we need to put the url in a string and pass the string to import
+// otherwise typescript tries to parse the file which again, fails.
+// worker_launcher.js is excluded in node.tsconfig.json.
+
 function isNode(): boolean {
   return typeof process !== 'undefined' && process?.versions?.node !== undefined;
 }
@@ -19,15 +25,7 @@ function isNode(): boolean {
 g.test('dedicated_worker')
   .desc(`test WebGPU is available in dedicated workers and check for basic functionality`)
   .fn(async t => {
-    if (isNode()) {
-      t.skip('node does not support 100% compatible workers');
-      return;
-    }
-    // Note: we load worker_launcher dynamically because ts-node support
-    // is using commonjs which doesn't support import.meta. Further,
-    // we need to put the url in a string add pass the string to import
-    // otherwise typescript tries to parse the file which again, fails.
-    // worker_launcher.js is excluded in node.tsconfig.json.
+    t.skipIf(isNode(), 'node does not support 100% compatible workers');
     const url = './worker_launcher.js';
     const { launchDedicatedWorker } = await import(url);
     const result = await launchDedicatedWorker();
@@ -37,15 +35,7 @@ g.test('dedicated_worker')
 g.test('shared_worker')
   .desc(`test WebGPU is available in shared workers and check for basic functionality`)
   .fn(async t => {
-    if (isNode()) {
-      t.skip('node does not support 100% compatible workers');
-      return;
-    }
-    // Note: we load worker_launcher dynamically because ts-node support
-    // is using commonjs which doesn't support import.meta. Further,
-    // we need to put the url in a string add pass the string to import
-    // otherwise typescript tries to parse the file which again, fails.
-    // worker_launcher.js is excluded in node.tsconfig.json.
+    t.skipIf(isNode(), 'node does not support 100% compatible workers');
     const url = './worker_launcher.js';
     const { launchSharedWorker } = await import(url);
     const result = await launchSharedWorker();
@@ -55,15 +45,7 @@ g.test('shared_worker')
 g.test('service_worker')
   .desc(`test WebGPU is available in service workers and check for basic functionality`)
   .fn(async t => {
-    if (isNode()) {
-      t.skip('node does not support 100% compatible workers');
-      return;
-    }
-    // Note: we load worker_launcher dynamically because ts-node support
-    // is using commonjs which doesn't support import.meta. Further,
-    // we need to put the url in a string add pass the string to import
-    // otherwise typescript tries to parse the file which again, fails.
-    // worker_launcher.js is excluded in node.tsconfig.json.
+    t.skipIf(isNode(), 'node does not support 100% compatible workers');
     const url = './worker_launcher.js';
     const { launchServiceWorker } = await import(url);
     const result = await launchServiceWorker();

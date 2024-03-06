@@ -80,60 +80,9 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
 
 // g is a TestGroup<Fixture> object (defined in common/internal/test_group.ts).
 import { g } from '${relPathToSuiteRoot}/${entry.file.join('/')}.spec.js';
+import { wrapTestGroupForWorker } from '${relPathToSuiteRoot}/../common/runtime/helper/wrap_for_worker.js';
 
-import { globalTestConfig } from '/out/common/framework/test_config.js';
-import { Logger } from '/out/common/internal/logging/logger.js';
-import { setDefaultRequestAdapterOptions } from '/out/common/util/navigator_gpu.js';
-import { parseQuery } from '/out/common/internal/query/parseQuery.js';
-import { comparePublicParamsPaths, Ordering } from '/out/common/internal/query/compare.js';
-import { assert } from '/out/common/util/util.js';
-
-async function reportTestResults(ev) {
-  const query = ev.data.query;
-  const expectations = ev.data.expectations;
-  const ctsOptions = ev.data.ctsOptions;
-
-  const { debug, unrollConstEvalLoops, powerPreference, compatibility } = ctsOptions;
-  globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
-  globalTestConfig.compatibility = compatibility;
-
-  Logger.globalDebugMode = debug;
-  const log = new Logger();
-
-  if (powerPreference || compatibility) {
-    setDefaultRequestAdapterOptions({
-      ...(powerPreference && { powerPreference }),
-      // MAINTENANCE_TODO: Change this to whatever the option ends up being
-      ...(compatibility && { compatibilityMode: true }),
-    });
-  }
-
-  const testQuerySingleCase = parseQuery(query);
-  let testcase = null;
-  for (const t of g.iterate()) {
-    for (const c of t.iterate(testQuerySingleCase.params)) {
-      if (comparePublicParamsPaths(c.id.params, testQuerySingleCase.params) === Ordering.Equal) {
-        testcase = c;
-      }
-    }
-  }
-  assert(testcase);
-  const [rec, result] = log.record(query);
-  await testcase.run(rec, testQuerySingleCase, expectations);
-  this.postMessage({ query, result });
-}
-
-self.onmessage = (ev) => {
-  void reportTestResults.call(ev.source || self, ev);
-};
-
-self.onconnect = (event) => {
-  const port = event.ports[0];
-
-  port.onmessage = (ev) => {
-    void reportTestResults.call(port, ev);
-  };
-};
+wrapTestGroupForWorker(g);
 `
       );
     }
