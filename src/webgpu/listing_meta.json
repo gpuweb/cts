@@ -1807,6 +1807,7 @@
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_left_vec_size_mismatch:*": { "subcaseMS": 1.367 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_right_concrete:*": { "subcaseMS": 1.237 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_right_vec_size_mismatch:*": { "subcaseMS": 1.334 },
+  "webgpu:shader,validation,expression,call,builtin,abs:parameters:*": { "subcaseMS": 10.133 },
   "webgpu:shader,validation,expression,call,builtin,abs:values:*": { "subcaseMS": 0.391 },
   "webgpu:shader,validation,expression,call,builtin,acos:integer_argument:*": { "subcaseMS": 1.512 },
   "webgpu:shader,validation,expression,call,builtin,acos:values:*": { "subcaseMS": 0.342 },
