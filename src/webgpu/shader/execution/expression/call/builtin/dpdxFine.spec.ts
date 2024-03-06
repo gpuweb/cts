@@ -18,8 +18,12 @@ const builtin = 'dpdxFine';
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#derivative-builtin-functions')
-  .params(u => u.combine('vectorize', [undefined, 2, 3, 4] as const))
+  .params(u =>
+    u
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
+      .combine('non_uniform_discard', [false, true])
+  )
   .fn(async t => {
     const cases = await d.get('scalar');
-    runDerivativeTest(t, cases, builtin, t.params.vectorize);
+    runDerivativeTest(t, cases, builtin, t.params.non_uniform_discard, t.params.vectorize);
   });

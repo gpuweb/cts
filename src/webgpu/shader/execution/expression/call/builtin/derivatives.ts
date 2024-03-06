@@ -9,9 +9,16 @@ import { packScalarsToVector } from '../../expression.js';
  * @param t the GPUTest
  * @param cases list of test cases to run
  * @param builtin the builtin function to test
+ * @param non_uniform_discard if true, one of each pair of invocations will discard
  * @param vectorize if defined, the vector width to use (2, 3, or 4)
  */
-export function runDerivativeTest(t: GPUTest, cases: Case[], builtin: string, vectorize?: number) {
+export function runDerivativeTest(
+  t: GPUTest,
+  cases: Case[],
+  builtin: string,
+  non_uniform_discard: boolean,
+  vectorize?: number
+) {
   // If the 'vectorize' config option was provided, pack the cases into vectors.
   let type: Type = Type.f32;
   if (vectorize !== undefined) {
@@ -89,6 +96,7 @@ fn frag(info : CaseInfo) {
   let inv_idx = u32(info.position.${dir} - 0.5);
   let index = info.quad_idx*4 + case_idx*2 + inv_idx;
   let input = inputs[index];
+  ${non_uniform_discard ? 'if inv_idx == 0 { discard; }' : ''}
   outputs[index] = ${builtin}(input);
 }
 `;
@@ -167,6 +175,10 @@ fn frag(info : CaseInfo) {
 
         // Both invocations involved in the derivative should get the same result.
         for (let d = 0; d < 2; d++) {
+          if (non_uniform_discard && d === 0) {
+            continue;
+          }
+
           const index = (i * 2 + d) * valueStride;
           const result = type.read(outputData, index);
           const cmp = toComparator(c.expected).compare(result);
