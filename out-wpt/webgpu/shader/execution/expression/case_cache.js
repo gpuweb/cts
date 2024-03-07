@@ -123,11 +123,11 @@ export function deserializeCase(s) {
   return { input, expected };
 }
 
-/** CaseListBuilder is a function that builds a CaseList */
+/** CaseListBuilder is a function that builds a list of cases, Case[] */
 
 
 /**
- * CaseCache is a cache of CaseList.
+ * CaseCache is a cache of Case[].
  * CaseCache implements the Cacheable interface, so the cases can be pre-built
  * and stored in the data cache, reducing computation costs at CTS runtime.
  */

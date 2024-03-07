@@ -24,9 +24,6 @@ function notUndefined(value) {
 
 
 
-/** CaseList is a list of Cases */
-
-
 /**
  * Filters a given set of Cases down to a target number of cases by
  * randomly selecting which Cases to return.
