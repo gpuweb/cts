@@ -144,23 +144,22 @@ app.get('/out/:suite([a-zA-Z0-9_-]+)/listing.js', async (req, res, next) => {
   }
 });
 
-// Serve all other .js files by fetching the source .ts file and compiling it.
-app.get('/out/**/*.js', async (req, res, next) => {
-  const jsUrl = path.relative('/out', req.url);
-  // Worker files are generated on the fly.
-  if (jsUrl.endsWith('.worker.js')) {
-    const specUrl = req.url.replace(/\/webworker/, '').replace(/\.worker.js$/, '.spec.js');
-    const result = `\
-import { g } from '${specUrl}';
+// Serve .worker.js files by generating the necessary wrapper.
+app.get('/out/:suite([a-zA-Z0-9_-]+)/webworker/:filepath(*).worker.js', (req, res, next) => {
+  const { suite, filepath } = req.params;
+  const result = `\
+import { g } from '/out/${suite}/${filepath}.spec.js';
 import { wrapTestGroupForWorker } from '/out/common/runtime/helper/wrap_for_worker.js';
 
 wrapTestGroupForWorker(g);
 `;
-    res.setHeader('Content-Type', 'application/javascript');
-    res.send(result);
-    return;
-  }
+  res.setHeader('Content-Type', 'application/javascript');
+  res.send(result);
+});
 
+// Serve all other .js files by fetching the source .ts file and compiling it.
+app.get('/out/**/*.js', async (req, res, next) => {
+  const jsUrl = path.relative('/out', req.url);
   const tsUrl = jsUrl.replace(/\.js$/, '.ts');
   if (compileCache.has(tsUrl)) {
     res.setHeader('Content-Type', 'application/javascript');
