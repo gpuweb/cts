@@ -5,7 +5,7 @@ import { setDefaultRequestAdapterOptions } from '../../util/navigator_gpu.js';
 import { CTSOptions } from './options.js';
 
 /*
- * Set config environement for workers based on CTSOptions and return a Logger.
+ * Set config environment for workers with ctsOptions and return a Logger.
  */
 export function setupWorkerEnvironment(ctsOptions: CTSOptions): Logger {
   const { debug, unrollConstEvalLoops, powerPreference, compatibility } = ctsOptions;

@@ -12,7 +12,7 @@ and generate Web Worker proxies in OUT_DIR/{suite}/webworker/**/*.worker.js for
 every .spec.js file. (Note {suite}/webworker/ is reserved for this purpose.)
 
 Example:
-  tools/gen_listings gen/ src/unittests/ src/webgpu/
+  tools/gen_listings_and_webworkers gen/ src/unittests/ src/webgpu/
 
 Options:
   --help          Print this message and exit.
