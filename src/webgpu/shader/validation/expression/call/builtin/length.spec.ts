@@ -7,15 +7,13 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   ScalarType,
-  TypeF16,
-  TypeF32,
+  Type,
   elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalar,
   kConvertableToFloatVec2,
   kConvertableToFloatVec3,
   kConvertableToFloatVec4,
-  TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -57,12 +55,12 @@ function calculate(
     isIntermediateRepresentable: isRepresentable(
       squareSum,
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
     ),
     isResultRepresentable: isRepresentable(
       result,
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
     ),
     result,
   };
@@ -86,7 +84,7 @@ the input scalar value always compiles without error
       .expand('value', u => fullRangeForType(kScalarTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kScalarTypes[t.params.type]) === TypeF16) {
+    if (elementType(kScalarTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -122,7 +120,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec2Types[t.params.type]) === TypeF16) {
+    if (elementType(kVec2Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -158,7 +156,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec3Types[t.params.type]) === TypeF16) {
+    if (elementType(kVec3Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -195,7 +193,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec4Types[t.params.type]) === TypeF16) {
+    if (elementType(kVec4Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -210,7 +208,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([Type.f32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument')
   .desc(
@@ -224,7 +222,7 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      /* expectedResult */ type === TypeF32,
+      /* expectedResult */ type === Type.f32,
       [type.create(1)],
       'constant'
     );

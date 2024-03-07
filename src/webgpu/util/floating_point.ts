@@ -12,7 +12,7 @@ import {
   f16,
   f32,
   isFloatType,
-  Scalar,
+  ScalarValue,
   ScalarType,
   toMatrix,
   toVector,
@@ -1073,8 +1073,8 @@ export abstract class FPTraits {
   public abstract readonly flushSubnormal: (n: number) => number;
   /** @returns 1 * ULP: (number) */
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
-  /** @returns a builder for converting numbers to Scalars */
-  public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a builder for converting numbers to ScalarsValues */
+  public abstract readonly scalarBuilder: (n: number) => ScalarValue;
   /** @returns a range of scalars for testing */
   public abstract scalarRange(): readonly number[];
   /** @returns a reduced range of scalars for testing */

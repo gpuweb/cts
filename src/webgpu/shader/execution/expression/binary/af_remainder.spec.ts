@@ -4,7 +4,7 @@ Execution Tests for non-matrix abstract float remainder expression
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeVec } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_remainder.cache.js';
@@ -26,8 +26,8 @@ Accuracy: Derived from x - y * trunc(x/y)
     await run(
       t,
       abstractFloatBinary('%'),
-      [TypeAbstractFloat, TypeAbstractFloat],
-      TypeAbstractFloat,
+      [Type.abstractFloat, Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases
     );
@@ -49,8 +49,8 @@ Accuracy: Derived from x - y * trunc(x/y)
     await run(
       t,
       abstractFloatBinary('%'),
-      [TypeAbstractFloat, TypeAbstractFloat],
-      TypeAbstractFloat,
+      [Type.abstractFloat, Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases
     );
@@ -71,8 +71,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       abstractFloatBinary('%'),
-      [TypeVec(dim, TypeAbstractFloat), TypeAbstractFloat],
-      TypeVec(dim, TypeAbstractFloat),
+      [Type.vec(dim, Type.abstractFloat), Type.abstractFloat],
+      Type.vec(dim, Type.abstractFloat),
       t.params,
       cases
     );
@@ -93,8 +93,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       abstractFloatBinary('%'),
-      [TypeAbstractFloat, TypeVec(dim, TypeAbstractFloat)],
-      TypeVec(dim, TypeAbstractFloat),
+      [Type.abstractFloat, Type.vec(dim, Type.abstractFloat)],
+      Type.vec(dim, Type.abstractFloat),
       t.params,
       cases
     );

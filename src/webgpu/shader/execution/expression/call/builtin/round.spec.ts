@@ -1,7 +1,7 @@
 export const description = `
 Execution tests for the 'round' builtin function
 
-S is AbstractFloat, f32, f16
+S is abstract-float, f32, f16
 T is S or vecN<S>
 @const fn round(e: T) -> T
 Result is the integer k nearest to e, as a floating point value.
@@ -12,7 +12,7 @@ Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractFloatBuiltin, builtin } from './builtin.js';
@@ -33,8 +33,8 @@ g.test('abstract_float')
     await run(
       t,
       abstractFloatBuiltin('round'),
-      [TypeAbstractFloat],
-      TypeAbstractFloat,
+      [Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases
     );
@@ -48,7 +48,7 @@ g.test('f32')
   )
   .fn(async t => {
     const cases = await d.get('f32');
-    await run(t, builtin('round'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('round'), [Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('f16')
@@ -62,5 +62,5 @@ g.test('f16')
   })
   .fn(async t => {
     const cases = await d.get('f16');
-    await run(t, builtin('round'), [TypeF16], TypeF16, t.params, cases);
+    await run(t, builtin('round'), [Type.f16], Type.f16, t.params, cases);
   });

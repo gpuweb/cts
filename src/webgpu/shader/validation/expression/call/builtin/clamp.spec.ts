@@ -6,7 +6,7 @@ Validation tests for the ${builtin}() builtin.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
-  TypeF16,
+  Type,
   elementType,
   kFloatScalarsAndVectors,
   kConcreteIntegerScalarsAndVectors,
@@ -44,7 +44,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .expand('high', u => fullRangeForType(kValuesTypes[u.type], 4))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
