@@ -128,14 +128,12 @@ g.test('loop_break_if_logical_and_condition')
   .desc('Test flow control for a loop with a logical and break if')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
-    runFlowControlTest(
-      t,
-      f => ({
-        entrypoint: `
+    runFlowControlTest(t, f => ({
+      entrypoint: `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
-    ${f.expect_order(1,4,7)}
+    ${f.expect_order(1, 4, 7)}
     continuing {
       i++;
       break if !(a(i) && b(i));
@@ -145,28 +143,27 @@ g.test('loop_break_if_logical_and_condition')
       `,
       extra: `
 fn a(i : i32) -> bool {
-  ${f.expect_order(2,5,8)}
+  ${f.expect_order(2, 5, 8)}
   return i < ${f.value(3)};
 }
 fn b(i : i32) -> bool {
-  ${f.expect_order(3,6)}
+  ${f.expect_order(3, 6)}
   return i < ${f.value(5)};
 }
-      `}));
+      `,
+    }));
   });
 
 g.test('loop_break_if_logical_or_condition')
   .desc('Test flow control for a loop with a logical or break if')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
-    runFlowControlTest(
-      t,
-      f => ({
-        entrypoint: `
+    runFlowControlTest(t, f => ({
+      entrypoint: `
   ${f.expect_order(0)}
   var i = ${f.value(0)};
   loop {
-    ${f.expect_order(1,3,6,9)}
+    ${f.expect_order(1, 3, 6, 9)}
     continuing {
       i++;
       break if !(a(i) || b(i));
@@ -176,12 +173,13 @@ g.test('loop_break_if_logical_or_condition')
       `,
       extra: `
 fn a(i : i32) -> bool {
-  ${f.expect_order(2,4,7,10)}
+  ${f.expect_order(2, 4, 7, 10)}
   return i < ${f.value(2)};
 }
 fn b(i : i32) -> bool {
-  ${f.expect_order(5,8,11)}
+  ${f.expect_order(5, 8, 11)}
   return i < ${f.value(4)};
 }
-      `}));
+      `,
+    }));
   });
