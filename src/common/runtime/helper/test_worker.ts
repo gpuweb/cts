@@ -5,12 +5,7 @@ import { TestQueryWithExpectation } from '../../internal/query/query.js';
 import { assert } from '../../util/util.js';
 
 import { CTSOptions, kDefaultCTSOptions } from './options.js';
-
-interface WorkerTestRunRequest {
-  rec: TestCaseRecorder;
-  query: string;
-  expectations: TestQueryWithExpectation[];
-}
+import { WorkerTestRunRequest } from './utils_worker.js';
 
 class TestBaseWorker {
   protected readonly ctsOptions: CTSOptions;
@@ -36,14 +31,17 @@ class TestBaseWorker {
 
   async makeRequestAndRecordResult(
     target: MessagePort | Worker | ServiceWorker,
-    request: WorkerTestRunRequest
+    rec: TestCaseRecorder,
+    query: string,
+    expectations: TestQueryWithExpectation[]
   ) {
-    const { query, expectations, rec } = request;
-    target.postMessage({
+    const request: WorkerTestRunRequest = {
       query,
       expectations,
       ctsOptions: this.ctsOptions,
-    });
+    };
+    target.postMessage(request);
+
     const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
       this.resolvers.set(query, resolve);
     });
@@ -68,8 +66,7 @@ export class TestDedicatedWorker extends TestBaseWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    const request: WorkerTestRunRequest = { rec, query, expectations };
-    await this.makeRequestAndRecordResult(this.worker, request);
+    await this.makeRequestAndRecordResult(this.worker, rec, query, expectations);
   }
 }
 
@@ -94,8 +91,7 @@ export class TestSharedWorker extends TestBaseWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    const request: WorkerTestRunRequest = { rec, query, expectations };
-    await this.makeRequestAndRecordResult(this.port, request);
+    await this.makeRequestAndRecordResult(this.port, rec, query, expectations);
   }
 }
 
@@ -119,8 +115,7 @@ export class TestServiceWorker extends TestBaseWorker {
     await registration.update();
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
     assert(!!registration.active);
-    const request: WorkerTestRunRequest = { rec, query, expectations };
-    await this.makeRequestAndRecordResult(registration.active, request);
+    await this.makeRequestAndRecordResult(registration.active, rec, query, expectations);
     void registration.unregister();
   }
 }

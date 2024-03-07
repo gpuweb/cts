@@ -1,11 +1,9 @@
 import { setBaseResourcePath } from '../../framework/resources.js';
 import { DefaultTestFileLoader } from '../../internal/file_loader.js';
 import { parseQuery } from '../../internal/query/parseQuery.js';
-import { TestQueryWithExpectation } from '../../internal/query/query.js';
 import { assert } from '../../util/util.js';
 
-import { CTSOptions } from './options.js';
-import { setupWorkerEnvironment } from './utils_worker.js';
+import { setupWorkerEnvironment, WorkerTestRunRequest } from './utils_worker.js';
 
 // Should be WorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
@@ -16,9 +14,7 @@ const loader = new DefaultTestFileLoader();
 setBaseResourcePath('../../../resources');
 
 async function reportTestResults(this: MessagePort | Worker, ev: MessageEvent) {
-  const query: string = ev.data.query;
-  const expectations: TestQueryWithExpectation[] = ev.data.expectations;
-  const ctsOptions: CTSOptions = ev.data.ctsOptions;
+  const { query, expectations, ctsOptions } = ev.data as WorkerTestRunRequest;
 
   const log = setupWorkerEnvironment(ctsOptions);
 

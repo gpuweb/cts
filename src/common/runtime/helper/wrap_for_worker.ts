@@ -1,18 +1,15 @@
 import { Fixture } from '../../framework/fixture';
 import { comparePaths, comparePublicParamsPaths, Ordering } from '../../internal/query/compare.js';
 import { parseQuery } from '../../internal/query/parseQuery.js';
-import { TestQuerySingleCase, TestQueryWithExpectation } from '../../internal/query/query.js';
+import { TestQuerySingleCase } from '../../internal/query/query.js';
 import { TestGroup } from '../../internal/test_group.js';
 import { assert } from '../../util/util.js';
 
-import { CTSOptions } from './options.js';
-import { setupWorkerEnvironment } from './utils_worker.js';
+import { setupWorkerEnvironment, WorkerTestRunRequest } from './utils_worker.js';
 
 export function wrapTestGroupForWorker(g: TestGroup<Fixture>) {
   self.onmessage = async (ev: MessageEvent) => {
-    const query: string = ev.data.query;
-    const expectations: TestQueryWithExpectation[] = ev.data.expectations;
-    const ctsOptions: CTSOptions = ev.data.ctsOptions;
+    const { query, expectations, ctsOptions } = ev.data as WorkerTestRunRequest;
 
     const log = setupWorkerEnvironment(ctsOptions);
 
