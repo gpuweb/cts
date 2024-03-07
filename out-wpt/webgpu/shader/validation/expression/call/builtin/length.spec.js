@@ -10,16 +10,12 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllFloatScalars,
-  kAllFloatVector2,
-  kAllFloatVector3,
-  kAllFloatVector4,
   kAllConcreteIntegerScalarsAndVectors,
-  kAbstractIntegerScalar,
-  kAbstractIntegerVector2,
-  TypeAbstractFloat,
-  kAbstractIntegerVector3,
-  kAbstractIntegerVector4 } from
+  kConvertableToFloatScalar,
+  kConvertableToFloatVec2,
+  kConvertableToFloatVec3,
+  kConvertableToFloatVec4,
+  TypeAbstractFloat } from
 '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -72,7 +68,7 @@ type)
   };
 }
 
-const kScalarTypes = objectsToRecord([...kAbstractIntegerScalar, ...kAllFloatScalars]);
+const kScalarTypes = objectsToRecord(kConvertableToFloatScalar);
 
 g.test('scalar').
 desc(
@@ -106,7 +102,7 @@ fn((t) => {
   );
 });
 
-const kVec2Types = objectsToRecord([...kAbstractIntegerVector2, ...kAllFloatVector2]);
+const kVec2Types = objectsToRecord(kConvertableToFloatVec2);
 
 g.test('vec2').
 desc(
@@ -141,7 +137,7 @@ fn((t) => {
   );
 });
 
-const kVec3Types = objectsToRecord([...kAbstractIntegerVector3, ...kAllFloatVector3]);
+const kVec3Types = objectsToRecord(kConvertableToFloatVec3);
 
 g.test('vec3').
 desc(
@@ -177,7 +173,7 @@ fn((t) => {
   );
 });
 
-const kVec4Types = objectsToRecord([...kAbstractIntegerVector4, ...kAllFloatVector4]);
+const kVec4Types = objectsToRecord(kConvertableToFloatVec4);
 
 g.test('vec4').
 desc(

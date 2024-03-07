@@ -8,7 +8,8 @@ import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tabl
 import {
   TypeF16,
   elementType,
-  kAllFloatAndConcreteIntegerScalarsAndVectors } from
+  kAllFloatScalarsAndVectors,
+  kAllConcreteIntegerScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -21,7 +22,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatAndConcreteIntegerScalarsAndVectors);
+const kValuesTypes = objectsToRecord([
+...kAllFloatScalarsAndVectors,
+...kAllConcreteIntegerScalarsAndVectors]
+);
 
 g.test('values').
 desc(
