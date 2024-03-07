@@ -24,9 +24,6 @@ export type Case = {
   expected: Expectation;
 };
 
-/** CaseList is a list of Cases */
-export type CaseList = Array<Case>;
-
 /**
  * Filters a given set of Cases down to a target number of cases by
  * randomly selecting which Cases to return.
@@ -58,7 +55,7 @@ export type CaseList = Array<Case>;
  *          items, they can just use [].
  * @param cases list of Cases to be selected from.
  */
-export function selectNCases(dis: string, n: number, cases: CaseList): CaseList {
+export function selectNCases(dis: string, n: number, cases: Case[]): Case[] {
   assert(n > 0 && Math.round(n) === n, `n ${n} is expected to be a positive integer`);
   const count = cases.length;
   if (n >= count) {
