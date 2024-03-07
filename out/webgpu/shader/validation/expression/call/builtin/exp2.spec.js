@@ -11,7 +11,7 @@ import {
   TypeF32,
   TypeAbstractFloat,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
@@ -92,7 +92,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

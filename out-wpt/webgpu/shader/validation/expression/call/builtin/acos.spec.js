@@ -9,7 +9,7 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { absBigInt } from '../../../../../util/math.js';
@@ -67,7 +67,7 @@ fn((t) => {
 });
 
 // f32 is included here to confirm that validation is failing due to a type issue and not something else.
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

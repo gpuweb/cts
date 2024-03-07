@@ -9,9 +9,9 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllFloatScalarsAndVectors,
-  kAllSignedIntegerScalarsAndVectors,
-  kAllUnsignedIntegerScalarsAndVectors } from
+  kFloatScalarsAndVectors,
+  kConcreteSignedIntegerScalarsAndVectors,
+  kConcreteUnsignedIntegerScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -25,8 +25,8 @@ import {
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kValuesTypes = objectsToRecord([
-...kAllFloatScalarsAndVectors,
-...kAllSignedIntegerScalarsAndVectors]
+...kFloatScalarsAndVectors,
+...kConcreteSignedIntegerScalarsAndVectors]
 );
 
 g.test('values').
@@ -61,7 +61,7 @@ fn((t) => {
 
 const kUnsignedIntegerArgumentTypes = objectsToRecord([
 TypeF32,
-...kAllUnsignedIntegerScalarsAndVectors]
+...kConcreteUnsignedIntegerScalarsAndVectors]
 );
 
 g.test('unsigned_integer_argument').

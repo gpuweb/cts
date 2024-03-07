@@ -9,7 +9,7 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   TypeAbstractInt,
   kConvertableToFloatScalarsAndVectors,
   TypeAbstractFloat } from
@@ -70,7 +70,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord(kAllConcreteIntegerScalarsAndVectors);
+const kIntegerArgumentTypes = objectsToRecord(kConcreteIntegerScalarsAndVectors);
 
 g.test('integer_argument').
 desc(

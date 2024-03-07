@@ -9,7 +9,7 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   TypeAbstractFloat,
   kConvertableToFloatScalarsAndVectors } from
 '../../../../../util/conversion.js';
@@ -71,7 +71,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

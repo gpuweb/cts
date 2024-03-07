@@ -9,7 +9,7 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { fpTraitsFor } from '../../../../../util/floating_point.js';
@@ -67,7 +67,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(

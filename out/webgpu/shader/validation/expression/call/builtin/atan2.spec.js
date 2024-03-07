@@ -11,8 +11,8 @@ import {
   Vector,
   VectorType,
   elementType,
-  kAllFloatScalarsAndVectors,
-  kAllConcreteIntegerScalarsAndVectors } from
+  kFloatScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -28,7 +28,7 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatScalarsAndVectors);
+const kValuesTypes = objectsToRecord(kFloatScalarsAndVectors);
 
 g.test('values').
 desc(
@@ -75,7 +75,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kAllConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument_y').
 desc(

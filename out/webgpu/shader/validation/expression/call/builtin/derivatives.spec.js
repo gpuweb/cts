@@ -9,8 +9,8 @@ import {
   TypeF32,
   TypeMat,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
-  kAllF16ScalarsAndVectors } from
+  kConcreteIntegerScalarsAndVectors,
+  kConcreteF16ScalarsAndVectors } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -99,8 +99,8 @@ fn foo() {
 // The list of invalid argument types to test, with an f32 control case.
 const kArgumentTypes = objectsToRecord([
 TypeF32,
-...kAllConcreteIntegerScalarsAndVectors,
-...kAllF16ScalarsAndVectors,
+...kConcreteIntegerScalarsAndVectors,
+...kConcreteF16ScalarsAndVectors,
 TypeMat(2, 2, TypeF32)]
 );
 
