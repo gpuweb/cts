@@ -150,11 +150,11 @@ app.get('/out/**/*.js', async (req, res, next) => {
   // Worker files are generated on the fly.
   if (jsUrl.endsWith('.worker.js')) {
     const specUrl = req.url.replace(/\/webworker/, '').replace(/\.worker.js$/, '.spec.js');
-    const result = `
-    import { g } from '${specUrl}';
-    import { wrapTestGroupForWorker } from '/out/common/runtime/helper/wrap_for_worker.js';
+    const result = `\
+import { g } from '${specUrl}';
+import { wrapTestGroupForWorker } from '/out/common/runtime/helper/wrap_for_worker.js';
 
-    wrapTestGroupForWorker(g);
+wrapTestGroupForWorker(g);
 `;
     res.setHeader('Content-Type', 'application/javascript');
     res.send(result);
