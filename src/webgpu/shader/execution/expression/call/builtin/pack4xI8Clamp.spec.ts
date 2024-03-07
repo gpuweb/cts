@@ -9,7 +9,7 @@ result.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeI32, TypeU32, TypeVec, u32, toVector, i32 } from '../../../../../util/conversion.js';
+import { u32, toVector, i32, Type } from '../../../../../util/conversion.js';
 import { clamp } from '../../../../../util/math.js';
 import { Case } from '../../case.js';
 import { allInputSources, Config, run } from '../../expression.js';
@@ -69,5 +69,5 @@ g.test('basic')
       return [makeCase(v)];
     });
 
-    await run(t, builtin('pack4xI8Clamp'), [TypeVec(4, TypeI32)], TypeU32, cfg, cases);
+    await run(t, builtin('pack4xI8Clamp'), [Type.vec4i], Type.u32, cfg, cases);
   });

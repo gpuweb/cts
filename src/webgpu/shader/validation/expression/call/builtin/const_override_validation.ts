@@ -2,7 +2,6 @@ import { assert, unreachable } from '../../../../../../common/util/util.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
   Type,
-  TypeF16,
   Value,
   elementType,
   elementsOf,
@@ -156,7 +155,7 @@ export function validateConstOrOverrideBuiltinEval(
   stage: ConstantOrOverrideStage
 ) {
   const elTys = args.map(arg => elementType(arg.type)!);
-  const enables = elTys.some(ty => ty === TypeF16) ? 'enable f16;' : '';
+  const enables = elTys.some(ty => ty === Type.f16) ? 'enable f16;' : '';
 
   switch (stage) {
     case 'constant': {

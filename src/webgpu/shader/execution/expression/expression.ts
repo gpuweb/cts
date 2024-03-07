@@ -5,14 +5,12 @@ import { Comparator, ComparatorImpl } from '../../../util/compare.js';
 import { kValue } from '../../../util/constants.js';
 import {
   MatrixType,
-  Scalar,
+  ScalarValue,
   ScalarType,
   Type,
-  TypeU32,
-  TypeVec,
-  Value,
-  Vector,
   VectorType,
+  Value,
+  VectorValue,
   isAbstractType,
   scalarTypeOf,
 } from '../../../util/conversion.js';
@@ -158,11 +156,11 @@ function storageType(ty: Type): Type {
       `Custom handling is implemented for 'abstract-float' values`
     );
     if (ty.kind === 'bool') {
-      return TypeU32;
+      return Type.u32;
     }
   }
   if (ty instanceof VectorType) {
-    return TypeVec(ty.width, storageType(ty.elementType) as ScalarType);
+    return Type.vec(ty.width, storageType(ty.elementType) as ScalarType);
   }
   return ty;
 }
@@ -1213,22 +1211,22 @@ function packScalarsToVector(
   }
 
   const packedCases: Array<Case> = [];
-  const packedParameterTypes = parameterTypes.map(p => TypeVec(vectorWidth, p as ScalarType));
-  const packedResultType = new VectorType(vectorWidth, resultType);
+  const packedParameterTypes = parameterTypes.map(p => Type.vec(vectorWidth, p as ScalarType));
+  const packedResultType = Type.vec(vectorWidth, resultType);
 
   const clampCaseIdx = (idx: number) => Math.min(idx, cases.length - 1);
 
   let caseIdx = 0;
   while (caseIdx < cases.length) {
     // Construct the vectorized inputs from the scalar cases
-    const packedInputs = new Array<Vector>(parameterTypes.length);
+    const packedInputs = new Array<VectorValue>(parameterTypes.length);
     for (let paramIdx = 0; paramIdx < parameterTypes.length; paramIdx++) {
-      const inputElements = new Array<Scalar>(vectorWidth);
+      const inputElements = new Array<ScalarValue>(vectorWidth);
       for (let i = 0; i < vectorWidth; i++) {
         const input = cases[clampCaseIdx(caseIdx + i)].input;
-        inputElements[i] = (input instanceof Array ? input[paramIdx] : input) as Scalar;
+        inputElements[i] = (input instanceof Array ? input[paramIdx] : input) as ScalarValue;
       }
-      packedInputs[paramIdx] = new Vector(inputElements);
+      packedInputs[paramIdx] = new VectorValue(inputElements);
     }
 
     // Gather the comparators for the packed cases
@@ -1242,7 +1240,7 @@ function packScalarsToVector(
         const gElements = new Array<string>(vectorWidth);
         const eElements = new Array<string>(vectorWidth);
         for (let i = 0; i < vectorWidth; i++) {
-          const d = cmp_impls[i]((got as Vector).elements[i]);
+          const d = cmp_impls[i]((got as VectorValue).elements[i]);
           matched = matched && d.matched;
           gElements[i] = d.got;
           eElements[i] = d.expected;

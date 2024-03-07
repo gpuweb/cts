@@ -3,11 +3,11 @@ import { unreachable } from '../../../../common/util/util.js';
 import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Matrix,
+  MatrixValue,
   Value,
-  Vector,
+  VectorValue,
   deserializeValue,
-  isScalar,
+  isScalarValue,
   serializeValue,
 } from '../../../util/conversion.js';
 import {
@@ -31,7 +31,7 @@ enum SerializedExpectationKind {
 
 /** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s: BinaryStream, e: Expectation) {
-  if (isScalar(e) || e instanceof Vector || e instanceof Matrix) {
+  if (isScalarValue(e) || e instanceof VectorValue || e instanceof MatrixValue) {
     s.writeU8(SerializedExpectationKind.Value);
     serializeValue(s, e);
     return;
