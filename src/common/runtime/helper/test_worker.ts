@@ -2,8 +2,15 @@ import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 import { TransferredTestCaseResult, LiveTestCaseResult } from '../../internal/logging/result.js';
 import { TestCaseRecorder } from '../../internal/logging/test_case_recorder.js';
 import { TestQueryWithExpectation } from '../../internal/query/query.js';
+import { assert } from '../../util/util.js';
 
 import { CTSOptions, kDefaultCTSOptions } from './options.js';
+
+interface WorkerTestRunRequest {
+  rec: TestCaseRecorder;
+  query: string;
+  expectations: TestQueryWithExpectation[];
+}
 
 class TestBaseWorker {
   protected readonly ctsOptions: CTSOptions;
@@ -26,6 +33,22 @@ class TestBaseWorker {
     // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
     // update the entire results JSON somehow at some point).
   }
+
+  async makeRequestAndRecordResult(
+    target: MessagePort | Worker | ServiceWorker,
+    request: WorkerTestRunRequest
+  ) {
+    const { query, expectations, rec } = request;
+    target.postMessage({
+      query,
+      expectations,
+      ctsOptions: this.ctsOptions,
+    });
+    const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
+      this.resolvers.set(query, resolve);
+    });
+    rec.injectResult(workerResult);
+  }
 }
 
 export class TestDedicatedWorker extends TestBaseWorker {
@@ -45,15 +68,8 @@ export class TestDedicatedWorker extends TestBaseWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    this.worker.postMessage({
-      query,
-      expectations,
-      ctsOptions: this.ctsOptions,
-    });
-    const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
-      this.resolvers.set(query, resolve);
-    });
-    rec.injectResult(workerResult);
+    const request: WorkerTestRunRequest = { rec, query, expectations };
+    await this.makeRequestAndRecordResult(this.worker, request);
   }
 }
 
@@ -78,15 +94,8 @@ export class TestSharedWorker extends TestBaseWorker {
     query: string,
     expectations: TestQueryWithExpectation[] = []
   ): Promise<void> {
-    this.port.postMessage({
-      query,
-      expectations,
-      ctsOptions: this.ctsOptions,
-    });
-    const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
-      this.resolvers.set(query, resolve);
-    });
-    rec.injectResult(workerResult);
+    const request: WorkerTestRunRequest = { rec, query, expectations };
+    await this.makeRequestAndRecordResult(this.port, request);
   }
 }
 
@@ -109,16 +118,9 @@ export class TestServiceWorker extends TestBaseWorker {
     });
     await registration.update();
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
-
-    registration.active?.postMessage({
-      query,
-      expectations,
-      ctsOptions: this.ctsOptions,
-    });
-    const serviceWorkerResult = await new Promise<LiveTestCaseResult>(resolve => {
-      this.resolvers.set(query, resolve);
-      void registration.unregister();
-    });
-    rec.injectResult(serviceWorkerResult);
+    assert(!!registration.active);
+    const request: WorkerTestRunRequest = { rec, query, expectations };
+    await this.makeRequestAndRecordResult(registration.active, request);
+    void registration.unregister();
   }
 }
