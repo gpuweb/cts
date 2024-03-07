@@ -36,7 +36,7 @@ import {
   abstractInt,
   Scalar,
 } from '../../../../../util/conversion.js';
-import { CaseList } from '../../case.js';
+import { Case } from '../../case.js';
 import { run, allInputSources } from '../../expression.js';
 
 import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
@@ -198,7 +198,7 @@ g.test('vector')
     const T = True;
     const F = False;
 
-    let tests: { dataType: VectorType; boolType: VectorType; cases: CaseList };
+    let tests: { dataType: VectorType; boolType: VectorType; cases: Case[] };
 
     switch (t.params.overload) {
       case 'vec2': {

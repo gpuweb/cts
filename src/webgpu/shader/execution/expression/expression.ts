@@ -17,7 +17,7 @@ import {
   scalarTypeOf,
 } from '../../../util/conversion.js';
 
-import { Case, CaseList } from './case.js';
+import { Case } from './case.js';
 import { toComparator } from './expectation.js';
 
 /** The input value source */
@@ -267,7 +267,7 @@ export async function run(
   parameterTypes: Array<Type>,
   resultType: Type,
   cfg: Config = { inputSource: 'storage_r' },
-  cases: CaseList,
+  cases: Case[],
   batch_size?: number
 ) {
   // If the 'vectorize' config option was provided, pack the cases into vectors.
@@ -324,7 +324,7 @@ export async function run(
     }
   };
 
-  const processBatch = async (batchCases: CaseList) => {
+  const processBatch = async (batchCases: Case[]) => {
     const checkBatch = await submitBatch(
       t,
       shaderBuilder,
@@ -375,7 +375,7 @@ async function submitBatch(
   shaderBuilder: ShaderBuilder,
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   inputSource: InputSource,
   pipelineCache: PipelineCache
 ): Promise<() => void> {
@@ -469,7 +469,7 @@ function map<T, U>(v: T | readonly T[], fn: (value: T, index?: number) => U): U[
 export type ShaderBuilder = (
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   inputSource: InputSource
 ) => string;
 
@@ -536,7 +536,7 @@ struct Output {
 function wgslValuesArray(
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   expressionBuilder: ExpressionBuilder
 ): string {
   return `
@@ -586,7 +586,7 @@ function basicExpressionShaderBody(
   expressionBuilder: ExpressionBuilder,
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   inputSource: InputSource
 ): string {
   assert(
@@ -683,7 +683,7 @@ export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): Sh
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
-    cases: CaseList,
+    cases: Case[],
     inputSource: InputSource
   ) => {
     return `\
@@ -706,7 +706,7 @@ export function basicExpressionWithPredeclarationBuilder(
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
-    cases: CaseList,
+    cases: Case[],
     inputSource: InputSource
   ) => {
     return `\
@@ -726,7 +726,7 @@ export function compoundAssignmentBuilder(op: string): ShaderBuilder {
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
-    cases: CaseList,
+    cases: Case[],
     inputSource: InputSource
   ) => {
     //////////////////////////////////////////////////////////////////////////
@@ -953,7 +953,7 @@ export function abstractFloatShaderBuilder(expressionBuilder: ExpressionBuilder)
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
-    cases: CaseList,
+    cases: Case[],
     inputSource: InputSource
   ) => {
     assert(inputSource === 'const', `'abstract-float' results are only defined for const-eval`);
@@ -1037,7 +1037,7 @@ export function abstractIntShaderBuilder(expressionBuilder: ExpressionBuilder): 
   return (
     parameterTypes: Array<Type>,
     resultType: Type,
-    cases: CaseList,
+    cases: Case[],
     inputSource: InputSource
   ) => {
     assert(inputSource === 'const', `'abstract-int' results are only defined for const-eval`);
@@ -1084,7 +1084,7 @@ async function buildPipeline(
   shaderBuilder: ShaderBuilder,
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   inputSource: InputSource,
   outputBuffer: GPUBuffer,
   pipelineCache: PipelineCache
@@ -1194,9 +1194,9 @@ async function buildPipeline(
 function packScalarsToVector(
   parameterTypes: Array<Type>,
   resultType: Type,
-  cases: CaseList,
+  cases: Case[],
   vectorWidth: number
-): { cases: CaseList; parameterTypes: Array<Type>; resultType: Type } {
+): { cases: Case[]; parameterTypes: Array<Type>; resultType: Type } {
   // Validate that the parameters and return type are all vectorizable
   for (let i = 0; i < parameterTypes.length; i++) {
     const ty = parameterTypes[i];
