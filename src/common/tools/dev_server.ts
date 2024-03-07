@@ -147,6 +147,19 @@ app.get('/out/:suite([a-zA-Z0-9_-]+)/listing.js', async (req, res, next) => {
 // Serve all other .js files by fetching the source .ts file and compiling it.
 app.get('/out/**/*.js', async (req, res, next) => {
   const jsUrl = path.relative('/out', req.url);
+  // Worker files are generated on the fly.
+  if (jsUrl.endsWith('.worker.js')) {
+    const specUrl = req.url.replace(/\/webworker/, '').replace(/\.worker.js$/, '.spec.js');
+    const result = `
+    import { g } from '${specUrl}';
+    import { wrapTestGroupForWorker } from '/out/common/runtime/helper/wrap_for_worker.js';
+
+    wrapTestGroupForWorker(g);
+`;
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(result);
+  }
+
   const tsUrl = jsUrl.replace(/\.js$/, '.ts');
   if (compileCache.has(tsUrl)) {
     res.setHeader('Content-Type', 'application/javascript');
@@ -154,12 +167,10 @@ app.get('/out/**/*.js', async (req, res, next) => {
     return;
   }
 
-  // I'm not sure if this is the way I should handle it...
-  const dir = jsUrl.endsWith('worker.js') ? path.resolve(srcDir, '../out') : srcDir;
-  let absPath = path.join(dir, tsUrl);
+  let absPath = path.join(srcDir, tsUrl);
   if (!fs.existsSync(absPath)) {
     // The .ts file doesn't exist. Try .js file in case this is a .js/.d.ts pair.
-    absPath = path.join(dir, jsUrl);
+    absPath = path.join(srcDir, jsUrl);
   }
 
   try {
