@@ -9,7 +9,7 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllConcreteIntegerScalarsAndVectors,
+  kConcreteIntegerScalarsAndVectors,
   TypeAbstractInt,
   kConvertableToFloatScalarsAndVectors,
   TypeAbstractFloat,
@@ -70,7 +70,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     );
   });
 
-const kIntegerArgumentTypes = objectsToRecord(kAllConcreteIntegerScalarsAndVectors);
+const kIntegerArgumentTypes = objectsToRecord(kConcreteIntegerScalarsAndVectors);
 
 g.test('integer_argument')
   .desc(
