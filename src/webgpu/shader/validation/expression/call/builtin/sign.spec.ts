@@ -9,7 +9,8 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllFloatAndSignedIntegerScalarsAndVectors,
+  kAllFloatScalarsAndVectors,
+  kAllSignedIntegerScalarsAndVectors,
   kAllUnsignedIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -23,7 +24,10 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllFloatAndSignedIntegerScalarsAndVectors);
+const kValuesTypes = objectsToRecord([
+  ...kAllFloatScalarsAndVectors,
+  ...kAllSignedIntegerScalarsAndVectors,
+]);
 
 g.test('values')
   .desc(
