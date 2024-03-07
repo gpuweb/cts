@@ -7,9 +7,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { fpTraitsFor } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -47,7 +47,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       )
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -55,7 +55,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const type = kValuesTypes[t.params.type];
     const fp = fpTraitsFor(
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
+      scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
     );
     const smallestPositive = fp.constants().positive.min;
     const v = fp.quantize(Number(t.params.value));

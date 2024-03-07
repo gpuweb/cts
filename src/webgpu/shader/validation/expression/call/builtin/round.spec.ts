@@ -7,9 +7,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { fpTraitsFor } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -39,10 +39,10 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
       .expand('value', u => {
-        if (elementType(kValuesTypes[u.type]).kind === 'abstract-int') {
+        if (scalarTypeOf(kValuesTypes[u.type]).kind === 'abstract-int') {
           return fullRangeForType(kValuesTypes[u.type]);
         } else {
-          const constants = fpTraitsFor(elementType(kValuesTypes[u.type])).constants();
+          const constants = fpTraitsFor(scalarTypeOf(kValuesTypes[u.type])).constants();
           return unique(fullRangeForType(kValuesTypes[u.type]), [
             constants.negative.min + 0.1,
             constants.positive.max - 0.1,
@@ -51,7 +51,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       })
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

@@ -6,9 +6,9 @@ Validation tests for the ${builtin}() builtin.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf,
   Type,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
@@ -50,7 +50,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       )
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -59,7 +59,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const expectedResult = isRepresentable(
       Math.asinh(Number(t.params.value)),
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
+      scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
     );
     validateConstOrOverrideBuiltinEval(
       t,

@@ -7,9 +7,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { absBigInt } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -47,7 +47,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       )
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

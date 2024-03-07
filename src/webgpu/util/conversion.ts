@@ -616,6 +616,10 @@ export class ScalarType {
     return this._size;
   }
 
+  public get alignment(): number {
+    return this._size;
+  }
+
   /** Constructs a ScalarValue of this type with `value` */
   public create(value: number | bigint): ScalarValue {
     switch (typeof value) {
@@ -663,14 +667,17 @@ export class VectorType {
   readonly width: number; // Number of elements in the vector
   readonly elementType: ScalarType; // Element type
 
+  // Maps a string representation of a vector type to vector type.
+  private static instances = new Map<string, VectorType>();
+
   static create(width: number, elementType: ScalarType): VectorType {
     const key = `${elementType.toString()} ${width}}`;
-    let ty = vectorTypes.get(key);
+    let ty = this.instances.get(key);
     if (ty !== undefined) {
       return ty;
     }
     ty = new VectorType(width, elementType);
-    vectorTypes.set(key, ty);
+    this.instances.set(key, ty);
     return ty;
   }
 
@@ -700,6 +707,14 @@ export class VectorType {
     return this.elementType.size * this.width;
   }
 
+  public get alignment(): number {
+    return VectorType.alignmentOf(this.width, this.elementType);
+  }
+
+  public static alignmentOf(width: number, elementType: ScalarType) {
+    return elementType.size * (width === 3 ? 4 : width);
+  }
+
   /** Constructs a Vector of this type with the given values */
   public create(value: (number | bigint) | readonly (number | bigint)[]): VectorValue {
     if (value instanceof Array) {
@@ -711,23 +726,23 @@ export class VectorType {
   }
 }
 
-// Maps a string representation of a vector type to vector type.
-const vectorTypes = new Map<string, VectorType>();
-
 /** MatrixType describes the type of WGSL Matrix. */
 export class MatrixType {
   readonly cols: number; // Number of columns in the Matrix
   readonly rows: number; // Number of elements per column in the Matrix
   readonly elementType: ScalarType; // Element type
 
+  // Maps a string representation of a Matrix type to Matrix type.
+  private static instances = new Map<string, MatrixType>();
+
   static create(cols: number, rows: number, elementType: ScalarType): MatrixType {
     const key = `${elementType.toString()} ${cols} ${rows}`;
-    let ty = matrixTypes.get(key);
+    let ty = this.instances.get(key);
     if (ty !== undefined) {
       return ty;
     }
     ty = new MatrixType(cols, rows, elementType);
-    matrixTypes.set(key, ty);
+    this.instances.set(key, ty);
     return ty;
   }
 
@@ -767,6 +782,14 @@ export class MatrixType {
     return `mat${this.cols}x${this.rows}<${this.elementType}>`;
   }
 
+  public get size(): number {
+    return VectorType.alignmentOf(this.rows, this.elementType) * this.cols;
+  }
+
+  public get alignment(): number {
+    return VectorType.alignmentOf(this.rows, this.elementType);
+  }
+
   /** Constructs a Matrix of this type with the given values */
   public create(value: (number | bigint) | readonly (number | bigint)[]): MatrixValue {
     if (value instanceof Array) {
@@ -783,8 +806,55 @@ export class MatrixType {
   }
 }
 
-// Maps a string representation of a Matrix type to Matrix type.
-const matrixTypes = new Map<string, MatrixType>();
+/** ArrayType describes the type of WGSL Array. */
+export class ArrayType {
+  readonly count: number; // Number of elements in the array
+  readonly elementType: Type; // Element type
+
+  // Maps a string representation of a array type to array type.
+  private static instances = new Map<string, ArrayType>();
+
+  static create(count: number, elementType: Type): ArrayType {
+    const key = `${elementType.toString()} ${count}`;
+    let ty = this.instances.get(key);
+    if (ty !== undefined) {
+      return ty;
+    }
+    ty = new ArrayType(count, elementType);
+    this.instances.set(key, ty);
+    return ty;
+  }
+
+  constructor(count: number, elementType: Type) {
+    this.count = count;
+    this.elementType = elementType;
+  }
+
+  /**
+   * @returns a array constructed from the values read from the buffer at the
+   * given byte offset
+   */
+  public read(buf: Uint8Array, offset: number): ArrayValue {
+    const elements: Array<Value> = [];
+    for (let i = 0; i < this.count; i++) {
+      elements[i] = this.elementType.read(buf, offset);
+      offset += this.elementType.size;
+    }
+    return new ArrayValue(elements);
+  }
+
+  public toString(): string {
+    return `array<${this.elementType}, ${this.count}>`;
+  }
+
+  public get size(): number {
+    return this.elementType.alignment * this.count;
+  }
+
+  public get alignment(): number {
+    return this.elementType.alignment;
+  }
+}
 
 /** ArrayElementType infers the element type of the indexable type A */
 type ArrayElementType<A> = A extends { [index: number]: infer T } ? T : never;
@@ -838,8 +908,8 @@ const boolType = new ScalarType('bool', 4, (buf: Uint8Array, offset: number) =>
   bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 );
 
-/** Type is a ScalarType, VectorType, or MatrixType. */
-export type Type = ScalarType | VectorType | MatrixType;
+/** Type is a ScalarType, VectorType, MatrixType or ArrayType. */
+export type Type = ScalarType | VectorType | MatrixType | ArrayType;
 
 /** Type holds pre-declared Types along with helper constructor functions. */
 export const Type = {
@@ -894,6 +964,8 @@ export const Type = {
   mat3x4h: MatrixType.create(3, 4, f16Type),
   mat4x4f: MatrixType.create(4, 4, f32Type),
   mat4x4h: MatrixType.create(4, 4, f16Type),
+
+  array: (count: number, elementType: Type) => ArrayType.create(count, elementType),
 };
 
 /** @returns the ScalarType from the ScalarKind */
@@ -937,11 +1009,14 @@ export function numElementsOf(ty: Type): number {
   if (ty instanceof MatrixType) {
     return ty.cols * ty.rows;
   }
+  if (ty instanceof ArrayType) {
+    return ty.count;
+  }
   throw new Error(`unhandled type ${ty}`);
 }
 
 /** @returns the scalar elements of the given Value */
-export function elementsOf(value: Value): ScalarValue[] {
+export function elementsOf(value: Value): Value[] {
   if (isScalarValue(value)) {
     return [value];
   }
@@ -951,7 +1026,35 @@ export function elementsOf(value: Value): ScalarValue[] {
   if (value instanceof MatrixValue) {
     return value.elements.flat();
   }
+  if (value instanceof ArrayValue) {
+    return value.elements;
+  }
   throw new Error(`unhandled value ${value}`);
+}
+
+/** @returns the scalar elements of the given Value */
+export function scalarElementsOf(value: Value): ScalarValue[] {
+  if (isScalarValue(value)) {
+    return [value];
+  }
+  if (value instanceof VectorValue) {
+    return value.elements;
+  }
+  if (value instanceof MatrixValue) {
+    return value.elements.flat();
+  }
+  if (value instanceof ArrayValue) {
+    return value.elements.map(els => scalarElementsOf(els)).flat();
+  }
+  throw new Error(`unhandled value ${value}`);
+}
+
+/** @returns the inner element type of the given type */
+export function elementTypeOf(t: Type) {
+  if (t instanceof ScalarType) {
+    return t;
+  }
+  return t.elementType;
 }
 
 /** @returns the scalar (element) type of the given Type */
@@ -964,6 +1067,9 @@ export function scalarTypeOf(ty: Type): ScalarType {
   }
   if (ty instanceof MatrixType) {
     return ty.elementType;
+  }
+  if (ty instanceof ArrayType) {
+    return scalarTypeOf(ty.elementType);
   }
   throw new Error(`unhandled type ${ty}`);
 }
@@ -1755,6 +1861,48 @@ export class MatrixValue {
 }
 
 /**
+ * Class that encapsulates an Array value.
+ */
+export class ArrayValue {
+  readonly elements: Value[];
+  readonly type: ArrayType;
+
+  public constructor(elements: Array<Value>) {
+    const elem_type = elements[0].type;
+    if (!elements.every(c => elements.every(r => objectEquals(r.type, elem_type)))) {
+      throw new Error(`cannot mix array element types`);
+    }
+
+    this.elements = elements;
+    this.type = ArrayType.create(elements.length, elem_type);
+  }
+
+  /**
+   * Copies the matrix value to the Uint8Array buffer at the provided byte offset.
+   * @param buffer the destination buffer
+   * @param offset the byte offset within buffer
+   */
+  public copyTo(buffer: Uint8Array, offset: number) {
+    for (const element of this.elements) {
+      element.copyTo(buffer, offset);
+      offset += this.type.elementType.size;
+    }
+  }
+
+  /**
+   * @returns the WGSL representation of this matrix value
+   */
+  public wgsl(): string {
+    const els = this.elements.map(r => r.wgsl()).join(', ');
+    return `${this.type}(${els})`;
+  }
+
+  public toString(): string {
+    return this.wgsl();
+  }
+}
+
+/**
  * Helper for constructing Matrices from arrays of numbers
  *
  * @param m array of array of numbers to be converted, all Array of number must
@@ -1776,8 +1924,8 @@ export function toMatrix(m: ROArrayArray<number>, op: (n: number) => ScalarValue
   return new MatrixValue(elements);
 }
 
-/** Value is a Scalar, Vector or Matrix value. */
-export type Value = ScalarValue | VectorValue | MatrixValue;
+/** Value is a Scalar, Vector, Matrix or Array value. */
+export type Value = ScalarValue | VectorValue | MatrixValue | ArrayValue;
 
 export type SerializedScalarValue = {
   kind: 'scalar';
@@ -2160,11 +2308,3 @@ export const kAllScalarsAndVectors = [
   ...kConvertableToFloatScalarsAndVectors,
   ...kConcreteIntegerScalarsAndVectors,
 ] as const;
-
-/** @returns the inner element type of the given type */
-export function elementType(t: ScalarType | VectorType | MatrixType) {
-  if (t instanceof ScalarType) {
-    return t;
-  }
-  return t.elementType;
-}

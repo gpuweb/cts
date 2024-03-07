@@ -7,10 +7,10 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  elementType,
   kFloatScalarsAndVectors,
   kConcreteSignedIntegerScalarsAndVectors,
   kConcreteUnsignedIntegerScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -43,7 +43,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() input
       .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

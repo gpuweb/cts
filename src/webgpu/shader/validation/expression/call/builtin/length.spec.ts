@@ -8,12 +8,12 @@ import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tabl
 import {
   ScalarType,
   Type,
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConvertableToFloatScalar,
   kConvertableToFloatVec2,
   kConvertableToFloatVec3,
   kConvertableToFloatVec4,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -55,12 +55,12 @@ function calculate(
     isIntermediateRepresentable: isRepresentable(
       squareSum,
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
+      scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
     ),
     isResultRepresentable: isRepresentable(
       result,
       // AbstractInt is converted to AbstractFloat before calling into the builtin
-      elementType(type).kind === 'abstract-int' ? Type.abstractFloat : elementType(type)
+      scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
     ),
     result,
   };
@@ -84,7 +84,7 @@ the input scalar value always compiles without error
       .expand('value', u => fullRangeForType(kScalarTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (elementType(kScalarTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kScalarTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -116,11 +116,11 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .beginSubcases()
       .expand('x', u => fullRangeForType(kVec2Types[u.type], 5))
       .expand('y', u => fullRangeForType(kVec2Types[u.type], 5))
-      .expand('_result', u => [calculate([u.x, u.y], elementType(kVec2Types[u.type]))])
+      .expand('_result', u => [calculate([u.x, u.y], scalarTypeOf(kVec2Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec2Types[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kVec2Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -152,11 +152,11 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .expand('x', u => fullRangeForType(kVec3Types[u.type], 4))
       .expand('y', u => fullRangeForType(kVec3Types[u.type], 4))
       .expand('z', u => fullRangeForType(kVec3Types[u.type], 4))
-      .expand('_result', u => [calculate([u.x, u.y, u.z], elementType(kVec3Types[u.type]))])
+      .expand('_result', u => [calculate([u.x, u.y, u.z], scalarTypeOf(kVec3Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec3Types[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kVec3Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -189,11 +189,11 @@ Validates that constant evaluation and override evaluation of ${builtin}() with 
       .expand('y', u => fullRangeForType(kVec4Types[u.type], 3))
       .expand('z', u => fullRangeForType(kVec4Types[u.type], 3))
       .expand('w', u => fullRangeForType(kVec4Types[u.type], 3))
-      .expand('_result', u => [calculate([u.x, u.y, u.z, u.w], elementType(kVec4Types[u.type]))])
+      .expand('_result', u => [calculate([u.x, u.y, u.z, u.w], scalarTypeOf(kVec4Types[u.type]))])
       .filter(u => u._result.isResultRepresentable === u._result.isIntermediateRepresentable)
   )
   .beforeAllSubcases(t => {
-    if (elementType(kVec4Types[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kVec4Types[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })

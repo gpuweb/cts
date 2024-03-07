@@ -6,9 +6,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  elementType,
   kConcreteIntegerScalarsAndVectors,
   kConcreteF16ScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -113,14 +113,14 @@ Derivative builtins only accept f32 scalar and vector types.
     u.combine('type', keysOf(kArgumentTypes)).combine('call', ['', ...kDerivativeBuiltins])
   )
   .beforeAllSubcases(t => {
-    if (elementType(kArgumentTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kArgumentTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
     const type = kArgumentTypes[t.params.type];
     const code = `
-${elementType(kArgumentTypes[t.params.type]) === Type.f16 ? 'enable f16;' : ''}
+${scalarTypeOf(kArgumentTypes[t.params.type]) === Type.f16 ? 'enable f16;' : ''}
 
 fn foo() {
   let x: ${type.toString()} = ${t.params.call}(${type.create(1).wgsl()});

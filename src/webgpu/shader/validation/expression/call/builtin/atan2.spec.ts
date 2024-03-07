@@ -7,9 +7,9 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   VectorValue,
-  elementType,
   kFloatScalarsAndVectors,
   kConcreteIntegerScalarsAndVectors,
+  scalarTypeOf,
   Type,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
@@ -54,7 +54,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       )
   )
   .beforeAllSubcases(t => {
-    if (elementType(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
@@ -62,7 +62,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const type = kValuesTypes[t.params.type];
     const expectedResult = isRepresentable(
       Math.abs(Math.atan2(Number(t.params.x), Number(t.params.y))),
-      elementType(type)
+      scalarTypeOf(type)
     );
     validateConstOrOverrideBuiltinEval(
       t,
