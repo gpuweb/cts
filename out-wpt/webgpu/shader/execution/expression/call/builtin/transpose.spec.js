@@ -3,12 +3,12 @@
 **/export const description = `
 Execution tests for the 'transpose' builtin function
 
-T is AbstractFloat, f32, or f16
+T is abstract-float, f32, or f16
 @const transpose(e: matRxC<T> ) -> matCxR<T>
 Returns the transpose of e.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
 import { abstractFloatBuiltin, builtin } from './builtin.js';
@@ -32,8 +32,8 @@ fn(async (t) => {
   await run(
     t,
     abstractFloatBuiltin('transpose'),
-    [TypeMat(cols, rows, TypeAbstractFloat)],
-    TypeMat(rows, cols, TypeAbstractFloat),
+    [Type.mat(cols, rows, Type.abstractFloat)],
+    Type.mat(rows, cols, Type.abstractFloat),
     t.params,
     cases
   );
@@ -59,8 +59,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('transpose'),
-    [TypeMat(cols, rows, TypeF32)],
-    TypeMat(rows, cols, TypeF32),
+    [Type.mat(cols, rows, Type.f32)],
+    Type.mat(rows, cols, Type.f32),
     t.params,
     cases
   );
@@ -89,8 +89,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('transpose'),
-    [TypeMat(cols, rows, TypeF16)],
-    TypeMat(rows, cols, TypeF16),
+    [Type.mat(cols, rows, Type.f16)],
+    Type.mat(rows, cols, Type.f16),
     t.params,
     cases
   );

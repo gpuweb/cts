@@ -3,14 +3,14 @@
 **/export const description = `
 Execution tests for the 'distance' builtin function
 
-S is AbstractFloat, f32, f16
+S is abstract-float, f32, f16
 T is S or vecN<S>
 @const fn distance(e1: T ,e2: T ) -> f32
 Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -32,7 +32,7 @@ desc(`f32 tests`).
 params((u) => u.combine('inputSource', allInputSources)).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
-  await run(t, builtin('distance'), [TypeF32, TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('distance'), [Type.f32, Type.f32], Type.f32, t.params, cases);
 });
 
 g.test('f32_vec2').
@@ -43,14 +43,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
-    TypeF32,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec2f, Type.vec2f], Type.f32, t.params, cases);
 });
 
 g.test('f32_vec3').
@@ -61,14 +54,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
-    TypeF32,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec3f, Type.vec3f], Type.f32, t.params, cases);
 });
 
 g.test('f32_vec4').
@@ -79,14 +65,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
-    TypeF32,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec4f, Type.vec4f], Type.f32, t.params, cases);
 });
 
 g.test('f16').
@@ -98,7 +77,7 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
-  await run(t, builtin('distance'), [TypeF16, TypeF16], TypeF16, t.params, cases);
+  await run(t, builtin('distance'), [Type.f16, Type.f16], Type.f16, t.params, cases);
 });
 
 g.test('f16_vec2').
@@ -112,14 +91,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
-    TypeF16,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec2h, Type.vec2h], Type.f16, t.params, cases);
 });
 
 g.test('f16_vec3').
@@ -133,14 +105,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
-    TypeF16,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec3h, Type.vec3h], Type.f16, t.params, cases);
 });
 
 g.test('f16_vec4').
@@ -154,12 +119,5 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const'
   );
-  await run(
-    t,
-    builtin('distance'),
-    [TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
-    TypeF16,
-    t.params,
-    cases
-  );
+  await run(t, builtin('distance'), [Type.vec4h, Type.vec4h], Type.f16, t.params, cases);
 });

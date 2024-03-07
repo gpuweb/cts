@@ -1073,7 +1073,7 @@ export class FPTraits {
 
   /** @returns 1 * ULP: (number) */
 
-  /** @returns a builder for converting numbers to Scalars */
+  /** @returns a builder for converting numbers to ScalarsValues */
 
   /** @returns a range of scalars for testing */
 

@@ -3,12 +3,12 @@
 **/export const description = `
 Execution tests for the 'determinant' builtin function
 
-T is AbstractFloat, f32, or f16
+T is abstract-float, f32, or f16
 @const determinant(e: matCxC<T> ) -> T
 Returns the determinant of e.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeMat } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -33,7 +33,7 @@ fn(async (t) => {
     `f32_mat${dim}x${dim}_const` :
     `f32_mat${dim}x${dim}_non_const`
   );
-  await run(t, builtin('determinant'), [TypeMat(dim, dim, TypeF32)], TypeF32, t.params, cases);
+  await run(t, builtin('determinant'), [Type.mat(dim, dim, Type.f32)], Type.f32, t.params, cases);
 });
 
 g.test('f16').
@@ -50,5 +50,5 @@ fn(async (t) => {
     `f16_mat${dim}x${dim}_const` :
     `f16_mat${dim}x${dim}_non_const`
   );
-  await run(t, builtin('determinant'), [TypeMat(dim, dim, TypeF16)], TypeF16, t.params, cases);
+  await run(t, builtin('determinant'), [Type.mat(dim, dim, Type.f16)], Type.f16, t.params, cases);
 });

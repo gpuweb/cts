@@ -18,7 +18,7 @@ import {
   i32,
   kFloat16Format,
   kFloat32Format,
-  Matrix,
+  MatrixValue,
   numbersApproximatelyEqual,
   pack2x16float,
   pack2x16snorm,
@@ -391,7 +391,7 @@ fn((t) => {
     return [...Array(rows).keys()].map((r) => scalar_builder(c * cols + r));
   });
 
-  const got = new Matrix(elements);
+  const got = new MatrixValue(elements);
   const got_type = got.type;
   t.expect(
     got_type.cols === cols,

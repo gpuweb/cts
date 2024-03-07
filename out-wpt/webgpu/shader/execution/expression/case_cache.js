@@ -3,11 +3,11 @@
 **/import { dataCache } from '../../../../common/framework/data_cache.js';import { unreachable } from '../../../../common/util/util.js';import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
-  Matrix,
-  Scalar,
+  MatrixValue,
 
-  Vector,
+  VectorValue,
   deserializeValue,
+  isScalarValue,
   serializeValue } from
 '../../../util/conversion.js';
 import {
@@ -31,7 +31,7 @@ SerializedExpectationKind = /*#__PURE__*/function (SerializedExpectationKind) {S
 
 /** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s, e) {
-  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
+  if (isScalarValue(e) || e instanceof VectorValue || e instanceof MatrixValue) {
     s.writeU8(SerializedExpectationKind.Value);
     serializeValue(s, e);
     return;

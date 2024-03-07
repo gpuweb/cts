@@ -21,7 +21,7 @@ Details could be found at: https://github.com/gpuweb/cts/issues/2201
 import { assert, range } from '../../../../common/util/util.js';
 import { GPUTest, TextureTestMixin } from '../../../gpu_test.js';
 import { checkElementsPassPredicate, checkElementsEqual } from '../../../util/check_contents.js';
-import { TypeF32, TypeU32 } from '../../../util/conversion.js';
+import { Type } from '../../../util/conversion.js';
 import { TexelView } from '../../../util/texture/texel_view.js';
 
 const kColors = [
@@ -438,7 +438,7 @@ class F extends TextureTestMixin(GPUTest) {
   fragmentShaderOutputMask)
   {
     const buffer = this.copy2DTextureToBufferUsingComputePass(
-      TypeF32, // correspond to 'rgba8unorm' format
+      Type.f32, // correspond to 'rgba8unorm' format
       4,
       texture.createView(),
       sampleCount
@@ -464,7 +464,7 @@ class F extends TextureTestMixin(GPUTest) {
     const buffer = this.copy2DTextureToBufferUsingComputePass(
       // Use f32 as the scalar type for depth (depth24plus, depth32float)
       // Use u32 as the scalar type for stencil (stencil8)
-      aspect === 'depth-only' ? TypeF32 : TypeU32,
+      aspect === 'depth-only' ? Type.f32 : Type.u32,
       1,
       depthStencilTexture.createView({ aspect }),
       sampleCount
@@ -705,7 +705,7 @@ fn(async (t) => {
     );
 
     const colorBuffer = t.copy2DTextureToBufferUsingComputePass(
-      TypeF32, // correspond to 'rgba8unorm' format
+      Type.f32, // correspond to 'rgba8unorm' format
       4,
       color.createView(),
       sampleCount
@@ -717,7 +717,7 @@ fn(async (t) => {
     colorResultPromises.push(colorResult);
 
     const depthBuffer = t.copy2DTextureToBufferUsingComputePass(
-      TypeF32, // correspond to 'depth24plus-stencil8' format
+      Type.f32, // correspond to 'depth24plus-stencil8' format
       1,
       depthStencil.createView({ aspect: 'depth-only' }),
       sampleCount
@@ -729,7 +729,7 @@ fn(async (t) => {
     depthResultPromises.push(depthResult);
 
     const stencilBuffer = t.copy2DTextureToBufferUsingComputePass(
-      TypeU32, // correspond to 'depth24plus-stencil8' format
+      Type.u32, // correspond to 'depth24plus-stencil8' format
       1,
       depthStencil.createView({ aspect: 'stencil-only' }),
       sampleCount

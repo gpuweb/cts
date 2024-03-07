@@ -8,7 +8,7 @@ unsigned integer dot product of these two vectors.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeU32, u32 } from '../../../../../util/conversion.js';
+import { Type, u32 } from '../../../../../util/conversion.js';
 import { Case } from '../../case.js';
 import { allInputSources, Config, run } from '../../expression.js';
 
@@ -55,5 +55,5 @@ g.test('basic')
       return [makeCase(...(v as [number, number]))];
     });
 
-    await run(t, builtin('dot4U8Packed'), [TypeU32, TypeU32], TypeU32, cfg, cases);
+    await run(t, builtin('dot4U8Packed'), [Type.u32, Type.u32], Type.u32, cfg, cases);
   });

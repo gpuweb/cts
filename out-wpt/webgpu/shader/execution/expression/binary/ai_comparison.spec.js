@@ -1,10 +1,10 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
-Execution Tests for the abstract int comparison expressions
+Execution Tests for the abstract-int comparison expressions
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeBool, TypeAbstractInt, bool, abstractInt } from '../../../../util/conversion.js';
+import { bool, abstractInt, Type } from '../../../../util/conversion.js';
 import { vectorI64Range } from '../../../../util/math.js';
 
 import { onlyConstInputSource, run } from '../expression.js';
@@ -35,7 +35,7 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] === v[1]));
-  await run(t, binary('=='), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('=='), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });
 
 g.test('not_equals').
@@ -52,7 +52,7 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] !== v[1]));
-  await run(t, binary('!='), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('!='), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });
 
 g.test('less_than').
@@ -69,7 +69,7 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] < v[1]));
-  await run(t, binary('<'), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('<'), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });
 
 g.test('less_equals').
@@ -86,7 +86,7 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] <= v[1]));
-  await run(t, binary('<='), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('<='), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });
 
 g.test('greater_than').
@@ -103,7 +103,7 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] > v[1]));
-  await run(t, binary('>'), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('>'), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });
 
 g.test('greater_equals').
@@ -120,5 +120,5 @@ combine('vectorize', [undefined, 2, 3, 4])
 ).
 fn(async (t) => {
   const cases = vectorI64Range(2).map((v) => makeCase(v[0], v[1], v[0] >= v[1]));
-  await run(t, binary('>='), [TypeAbstractInt, TypeAbstractInt], TypeBool, t.params, cases);
+  await run(t, binary('>='), [Type.abstractInt, Type.abstractInt], Type.bool, t.params, cases);
 });

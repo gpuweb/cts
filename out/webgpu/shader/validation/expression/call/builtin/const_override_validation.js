@@ -1,12 +1,12 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { assert, unreachable } from '../../../../../../common/util/util.js';import { kValue } from '../../../../../util/constants.js';import {
+  Type,
 
-  TypeF16,
-
-  elementType,
-  elementsOf,
-  isAbstractType } from
+  elementTypeOf,
+  isAbstractType,
+  scalarElementsOf,
+  scalarTypeOf } from
 '../../../../../util/conversion.js';
 import {
   scalarF16Range,
@@ -23,7 +23,7 @@ number_range,
 bigint_range)
 {
   return (type) => {
-    switch (elementType(type).kind) {
+    switch (scalarTypeOf(type).kind) {
       case 'abstract-float':
       case 'f32':
       case 'f16':
@@ -132,7 +132,7 @@ export const kConstantAndOverrideStages = ['constant', 'override'];
  * @returns true if evaluation stage `stage` supports expressions of type @p.
  */
 export function stageSupportsType(stage, type) {
-  if (stage === 'override' && isAbstractType(elementType(type))) {
+  if (stage === 'override' && isAbstractType(elementTypeOf(type))) {
     // Abstract numerics are concretized before being used in an override expression.
     return false;
   }
@@ -155,8 +155,8 @@ expectedResult,
 args,
 stage)
 {
-  const elTys = args.map((arg) => elementType(arg.type));
-  const enables = elTys.some((ty) => ty === TypeF16) ? 'enable f16;' : '';
+  const elTys = args.map((arg) => elementTypeOf(arg.type));
+  const enables = elTys.some((ty) => ty === Type.f16) ? 'enable f16;' : '';
 
   switch (stage) {
     case 'constant':{
@@ -175,7 +175,7 @@ const v = ${builtin}(${args.map((arg) => arg.wgsl()).join(', ')});`
         let numOverrides = 0;
         for (const arg of args) {
           const argOverrides = [];
-          for (const el of elementsOf(arg)) {
+          for (const el of scalarElementsOf(arg)) {
             const name = `o${numOverrides++}`;
             overrideDecls.push(`override ${name} : ${el.type};`);
             argOverrides.push(name);
@@ -201,7 +201,7 @@ export function fullRangeForType(type, count) {
   if (count === undefined) {
     count = 25;
   }
-  switch (elementType(type)?.kind) {
+  switch (scalarTypeOf(type)?.kind) {
     case 'abstract-float':
       return scalarF64Range({
         pos_sub: Math.ceil(count * 1 / 5),

@@ -3,13 +3,13 @@
 **/export const description = `
 Execution tests for the 'acos' builtin function
 
-S is AbstractFloat, f32, f16
+S is abstract-float, f32, f16
 T is S or vecN<S>
 @const fn acos(e: T ) -> T
 Returns the arc cosine of e. Component-wise when T is a vector.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF32, TypeF16 } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { d } from './acos.cache.js';
@@ -33,7 +33,7 @@ u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3,
 ).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
-  await run(t, builtin('acos'), [TypeF32], TypeF32, t.params, cases);
+  await run(t, builtin('acos'), [Type.f32], Type.f32, t.params, cases);
 });
 
 g.test('f16').
@@ -47,5 +47,5 @@ beforeAllSubcases((t) => {
 }).
 fn(async (t) => {
   const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
-  await run(t, builtin('acos'), [TypeF16], TypeF16, t.params, cases);
+  await run(t, builtin('acos'), [Type.f16], Type.f16, t.params, cases);
 });

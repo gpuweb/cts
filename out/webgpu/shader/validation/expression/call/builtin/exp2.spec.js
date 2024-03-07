@@ -7,12 +7,10 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
-  TypeF16,
-  TypeF32,
-  TypeAbstractFloat,
-  elementType,
+  Type,
   kConcreteIntegerScalarsAndVectors,
-  kConvertableToFloatScalarsAndVectors } from
+  kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf } from
 '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -72,7 +70,7 @@ beginSubcases().
 expand('value', (u) => valueForType(kValuesTypes[u.type]))
 ).
 beforeAllSubcases((t) => {
-  if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
     t.selectDeviceOrSkipTestCase('shader-f16');
   }
 }).
@@ -81,7 +79,7 @@ fn((t) => {
   const expectedResult = isRepresentable(
     Math.pow(2, Number(t.params.value)),
     // AbstractInt is converted to AbstractFloat before calling into the builtin
-    elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+    scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
   );
   validateConstOrOverrideBuiltinEval(
     t,
@@ -92,7 +90,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([Type.f32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(
@@ -106,7 +104,7 @@ fn((t) => {
   validateConstOrOverrideBuiltinEval(
     t,
     builtin,
-    /* expectedResult */type === TypeF32,
+    /* expectedResult */type === Type.f32,
     [type.create(0)],
     'constant'
   );

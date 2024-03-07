@@ -6,12 +6,10 @@ Validation tests for the ${builtin}() builtin.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
-  TypeF16,
-  TypeF32,
-  elementType,
+  Type,
   kConcreteIntegerScalarsAndVectors,
-  TypeAbstractFloat,
-  kConvertableToFloatScalarsAndVectors } from
+  kConvertableToFloatScalarsAndVectors,
+  scalarTypeOf } from
 '../../../../../util/conversion.js';
 import { fpTraitsFor } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -49,7 +47,7 @@ unique(
 )
 ).
 beforeAllSubcases((t) => {
-  if (elementType(kValuesTypes[t.params.type]) === TypeF16) {
+  if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
     t.selectDeviceOrSkipTestCase('shader-f16');
   }
 }).
@@ -57,7 +55,7 @@ fn((t) => {
   const type = kValuesTypes[t.params.type];
   const fp = fpTraitsFor(
     // AbstractInt is converted to AbstractFloat before calling into the builtin
-    elementType(type).kind === 'abstract-int' ? TypeAbstractFloat : elementType(type)
+    scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
   );
   const smallestPositive = fp.constants().positive.min;
   const v = fp.quantize(Number(t.params.value));
@@ -71,7 +69,7 @@ fn((t) => {
   );
 });
 
-const kIntegerArgumentTypes = objectsToRecord([TypeF32, ...kConcreteIntegerScalarsAndVectors]);
+const kIntegerArgumentTypes = objectsToRecord([Type.f32, ...kConcreteIntegerScalarsAndVectors]);
 
 g.test('integer_argument').
 desc(
@@ -85,7 +83,7 @@ fn((t) => {
   validateConstOrOverrideBuiltinEval(
     t,
     builtin,
-    /* expectedResult */type === TypeF32,
+    /* expectedResult */type === Type.f32,
     [type.create(0)],
     'constant'
   );

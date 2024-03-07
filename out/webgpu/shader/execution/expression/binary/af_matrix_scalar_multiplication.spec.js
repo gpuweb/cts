@@ -4,7 +4,7 @@
 Execution Tests for matrix-scalar and scalar-matrix AbstractFloat multiplication expression
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeMat } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_matrix_scalar_multiplication.cache.js';
@@ -33,8 +33,8 @@ fn(async (t) => {
   await run(
     t,
     abstractFloatBinary('*'),
-    [TypeMat(cols, rows, TypeAbstractFloat), TypeAbstractFloat],
-    TypeMat(cols, rows, TypeAbstractFloat),
+    [Type.mat(cols, rows, Type.abstractFloat), Type.abstractFloat],
+    Type.mat(cols, rows, Type.abstractFloat),
     t.params,
     cases
   );
@@ -61,8 +61,8 @@ fn(async (t) => {
   await run(
     t,
     abstractFloatBinary('*'),
-    [TypeAbstractFloat, TypeMat(cols, rows, TypeAbstractFloat)],
-    TypeMat(cols, rows, TypeAbstractFloat),
+    [Type.abstractFloat, Type.mat(cols, rows, Type.abstractFloat)],
+    Type.mat(cols, rows, Type.abstractFloat),
     t.params,
     cases
   );

@@ -4,7 +4,7 @@
 Execution Tests for matrix-vector and vector-matrix AbstractFloat multiplication expression
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeMat, TypeVec } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_matrix_vector_multiplication.cache.js';
@@ -33,8 +33,8 @@ fn(async (t) => {
   await run(
     t,
     abstractFloatBinary('*'),
-    [TypeMat(cols, rows, TypeAbstractFloat), TypeVec(cols, TypeAbstractFloat)],
-    TypeVec(rows, TypeAbstractFloat),
+    [Type.mat(cols, rows, Type.abstractFloat), Type.vec(cols, Type.abstractFloat)],
+    Type.vec(rows, Type.abstractFloat),
     t.params,
     cases
   );
@@ -61,8 +61,8 @@ fn(async (t) => {
   await run(
     t,
     abstractFloatBinary('*'),
-    [TypeVec(rows, TypeAbstractFloat), TypeMat(cols, rows, TypeAbstractFloat)],
-    TypeVec(cols, TypeAbstractFloat),
+    [Type.vec(rows, Type.abstractFloat), Type.mat(cols, rows, Type.abstractFloat)],
+    Type.vec(cols, Type.abstractFloat),
     t.params,
     cases
   );

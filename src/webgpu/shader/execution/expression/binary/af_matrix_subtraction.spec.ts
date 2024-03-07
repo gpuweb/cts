@@ -1,10 +1,10 @@
 export const description = `
-Execution Tests for matrix AbstractFloat subtraction expression
+Execution Tests for matrix abstract-float subtraction expression
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat, TypeMat } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_matrix_subtraction.cache.js';
@@ -33,8 +33,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       abstractFloatBinary('-'),
-      [TypeMat(cols, rows, TypeAbstractFloat), TypeMat(cols, rows, TypeAbstractFloat)],
-      TypeMat(cols, rows, TypeAbstractFloat),
+      [Type.mat(cols, rows, Type.abstractFloat), Type.mat(cols, rows, Type.abstractFloat)],
+      Type.mat(cols, rows, Type.abstractFloat),
       t.params,
       cases
     );

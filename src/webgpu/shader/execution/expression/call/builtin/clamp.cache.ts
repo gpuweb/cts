@@ -1,5 +1,5 @@
 import { kValue } from '../../../../../util/constants.js';
-import { ScalarType, TypeAbstractInt, TypeI32, TypeU32 } from '../../../../../util/conversion.js';
+import { ScalarType, Type } from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
 import { maxBigInt, minBigInt } from '../../../../../util/math.js';
 import { Case } from '../../case.js';
@@ -59,11 +59,11 @@ function generateAbstractIntegerTestCases(test_values: Array<bigint>): Array<Cas
         ? []
         : test_values.map(e => ({
             input: [
-              TypeAbstractInt.create(e),
-              TypeAbstractInt.create(low),
-              TypeAbstractInt.create(high),
+              Type.abstractInt.create(e),
+              Type.abstractInt.create(low),
+              Type.abstractInt.create(high),
             ],
-            expected: TypeAbstractInt.create(minBigInt(maxBigInt(e, low), high)),
+            expected: Type.abstractInt.create(minBigInt(maxBigInt(e, low), high)),
           }))
     )
   );
@@ -113,16 +113,16 @@ const fp_cases = (['f32', 'f16', 'abstract'] as const)
 
 export const d = makeCaseCache('clamp', {
   u32_non_const: () => {
-    return generateConcreteIntegerTestCases(u32Values, TypeU32, 'non_const');
+    return generateConcreteIntegerTestCases(u32Values, Type.u32, 'non_const');
   },
   u32_const: () => {
-    return generateConcreteIntegerTestCases(u32Values, TypeU32, 'const');
+    return generateConcreteIntegerTestCases(u32Values, Type.u32, 'const');
   },
   i32_non_const: () => {
-    return generateConcreteIntegerTestCases(i32Values, TypeI32, 'non_const');
+    return generateConcreteIntegerTestCases(i32Values, Type.i32, 'non_const');
   },
   i32_const: () => {
-    return generateConcreteIntegerTestCases(i32Values, TypeI32, 'const');
+    return generateConcreteIntegerTestCases(i32Values, Type.i32, 'const');
   },
   abstract_int: () => {
     return generateAbstractIntegerTestCases(abstractFloatValues);

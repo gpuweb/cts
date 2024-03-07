@@ -1,7 +1,14 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/import { crc32 } from '../../../../common/util/crc32.js';import { assert } from '../../../../common/util/util.js';
-import { abstractInt, i32, u32, Vector } from '../../../util/conversion.js';
+import {
+  abstractInt,
+  i32,
+
+  u32,
+
+  VectorValue } from
+'../../../util/conversion.js';
 import {
   cartesianProduct,
 
@@ -103,8 +110,8 @@ scalarize)
     return undefined;
   }
   return {
-    input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector(result.filter(notUndefined).map(scalarize))
+    input: [scalarize(scalar), new VectorValue(vector.map(scalarize))],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize))
   };
 }
 
@@ -154,8 +161,8 @@ scalarize)
     return undefined;
   }
   return {
-    input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector(result.filter(notUndefined).map(scalarize))
+    input: [new VectorValue(vector.map(scalarize)), scalarize(scalar)],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize))
   };
 }
 
@@ -357,8 +364,8 @@ scalarize)
 
   return {
     input: [
-    new Vector(param0_quantized.map(scalarize)),
-    new Vector(param1_quantized.map(scalarize))],
+    new VectorValue(param0_quantized.map(scalarize)),
+    new VectorValue(param1_quantized.map(scalarize))],
 
     expected: scalarize(result)
   };

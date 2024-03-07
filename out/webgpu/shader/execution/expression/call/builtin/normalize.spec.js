@@ -3,12 +3,12 @@
 **/export const description = `
 Execution tests for the 'normalize' builtin function
 
-T is AbstractFloat, f32, or f16
+T is abstract-float, f32, or f16
 @const fn normalize(e: vecN<T> ) -> vecN<T>
 Returns a unit vector in the same direction as e.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -32,7 +32,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec2_const' : 'f32_vec2_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(2, TypeF32)], TypeVec(2, TypeF32), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec2f], Type.vec2f, t.params, cases);
 });
 
 g.test('f32_vec3').
@@ -43,7 +43,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec3_const' : 'f32_vec3_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(3, TypeF32)], TypeVec(3, TypeF32), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec3f], Type.vec3f, t.params, cases);
 });
 
 g.test('f32_vec4').
@@ -54,7 +54,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f32_vec4_const' : 'f32_vec4_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(4, TypeF32)], TypeVec(4, TypeF32), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec4f], Type.vec4f, t.params, cases);
 });
 
 g.test('f16_vec2').
@@ -68,7 +68,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(2, TypeF16)], TypeVec(2, TypeF16), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec2h], Type.vec2h, t.params, cases);
 });
 
 g.test('f16_vec3').
@@ -82,7 +82,7 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(3, TypeF16)], TypeVec(3, TypeF16), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec3h], Type.vec3h, t.params, cases);
 });
 
 g.test('f16_vec4').
@@ -96,6 +96,6 @@ fn(async (t) => {
   const cases = await d.get(
     t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const'
   );
-  await run(t, builtin('normalize'), [TypeVec(4, TypeF16)], TypeVec(4, TypeF16), t.params, cases);
+  await run(t, builtin('normalize'), [Type.vec4h], Type.vec4h, t.params, cases);
 });
 //# sourceMappingURL=normalize.spec.js.map

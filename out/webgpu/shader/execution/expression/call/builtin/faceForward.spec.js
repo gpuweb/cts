@@ -3,12 +3,12 @@
 **/export const description = `
 Execution tests for the 'faceForward' builtin function
 
-T is vecN<AbstractFloat>, vecN<f32>, or vecN<f16>
+T is vecN<Type.abstractFloat>, vecN<f32>, or vecN<f16>
 @const fn faceForward(e1: T ,e2: T ,e3: T ) -> T
 Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { builtin } from './builtin.js';
@@ -33,8 +33,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(2, TypeF32), TypeVec(2, TypeF32), TypeVec(2, TypeF32)],
-    TypeVec(2, TypeF32),
+    [Type.vec2f, Type.vec2f, Type.vec2f],
+    Type.vec2f,
     t.params,
     cases
   );
@@ -51,8 +51,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(3, TypeF32), TypeVec(3, TypeF32), TypeVec(3, TypeF32)],
-    TypeVec(3, TypeF32),
+    [Type.vec3f, Type.vec3f, Type.vec3f],
+    Type.vec3f,
     t.params,
     cases
   );
@@ -69,8 +69,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(4, TypeF32), TypeVec(4, TypeF32), TypeVec(4, TypeF32)],
-    TypeVec(4, TypeF32),
+    [Type.vec4f, Type.vec4f, Type.vec4f],
+    Type.vec4f,
     t.params,
     cases
   );
@@ -90,8 +90,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(2, TypeF16), TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
-    TypeVec(2, TypeF16),
+    [Type.vec2h, Type.vec2h, Type.vec2h],
+    Type.vec2h,
     t.params,
     cases
   );
@@ -111,8 +111,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(3, TypeF16), TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
-    TypeVec(3, TypeF16),
+    [Type.vec3h, Type.vec3h, Type.vec3h],
+    Type.vec3h,
     t.params,
     cases
   );
@@ -132,8 +132,8 @@ fn(async (t) => {
   await run(
     t,
     builtin('faceForward'),
-    [TypeVec(4, TypeF16), TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
-    TypeVec(4, TypeF16),
+    [Type.vec4h, Type.vec4h, Type.vec4h],
+    Type.vec4h,
     t.params,
     cases
   );

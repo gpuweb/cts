@@ -4,7 +4,7 @@
 Execution Tests for the abstract int arithmetic binary expression operations
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractInt, TypeVec } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './ai_arithmetic.cache.js';
@@ -29,8 +29,8 @@ fn(async (t) => {
   await run(
     t,
     abstractIntBinary('+'),
-    [TypeAbstractInt, TypeAbstractInt],
-    TypeAbstractInt,
+    [Type.abstractInt, Type.abstractInt],
+    Type.abstractInt,
     t.params,
     cases
   );
@@ -48,9 +48,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_rhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`addition_scalar_vector${vec_size}`);
-  await run(t, abstractIntBinary('+'), [TypeAbstractInt, vec_type], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('+'), [Type.abstractInt, vec_type], vec_type, t.params, cases);
 });
 
 g.test('addition_vector_scalar').
@@ -65,9 +65,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_lhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`addition_vector${vec_size}_scalar`);
-  await run(t, abstractIntBinary('+'), [vec_type, TypeAbstractInt], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('+'), [vec_type, Type.abstractInt], vec_type, t.params, cases);
 });
 
 g.test('division').
@@ -87,8 +87,8 @@ fn(async (t) => {
   await run(
     t,
     abstractIntBinary('/'),
-    [TypeAbstractInt, TypeAbstractInt],
-    TypeAbstractInt,
+    [Type.abstractInt, Type.abstractInt],
+    Type.abstractInt,
     t.params,
     cases
   );
@@ -106,9 +106,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_rhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`division_scalar_vector${vec_size}`);
-  await run(t, abstractIntBinary('/'), [TypeAbstractInt, vec_type], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('/'), [Type.abstractInt, vec_type], vec_type, t.params, cases);
 });
 
 g.test('division_vector_scalar').
@@ -123,9 +123,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_lhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`division_vector${vec_size}_scalar`);
-  await run(t, abstractIntBinary('/'), [vec_type, TypeAbstractInt], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('/'), [vec_type, Type.abstractInt], vec_type, t.params, cases);
 });
 
 g.test('multiplication').
@@ -145,8 +145,8 @@ fn(async (t) => {
   await run(
     t,
     abstractIntBinary('*'),
-    [TypeAbstractInt, TypeAbstractInt],
-    TypeAbstractInt,
+    [Type.abstractInt, Type.abstractInt],
+    Type.abstractInt,
     t.params,
     cases
   );
@@ -164,9 +164,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_rhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`multiplication_scalar_vector${vec_size}`);
-  await run(t, abstractIntBinary('*'), [TypeAbstractInt, vec_type], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('*'), [Type.abstractInt, vec_type], vec_type, t.params, cases);
 });
 
 g.test('multiplication_vector_scalar').
@@ -181,9 +181,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_lhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`multiplication_vector${vec_size}_scalar`);
-  await run(t, abstractIntBinary('*'), [vec_type, TypeAbstractInt], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('*'), [vec_type, Type.abstractInt], vec_type, t.params, cases);
 });
 
 g.test('remainder').
@@ -203,8 +203,8 @@ fn(async (t) => {
   await run(
     t,
     abstractIntBinary('%'),
-    [TypeAbstractInt, TypeAbstractInt],
-    TypeAbstractInt,
+    [Type.abstractInt, Type.abstractInt],
+    Type.abstractInt,
     t.params,
     cases
   );
@@ -222,9 +222,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_rhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`remainder_scalar_vector${vec_size}`);
-  await run(t, abstractIntBinary('%'), [TypeAbstractInt, vec_type], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('%'), [Type.abstractInt, vec_type], vec_type, t.params, cases);
 });
 
 g.test('remainder_vector_scalar').
@@ -239,9 +239,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_lhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`remainder_vector${vec_size}_scalar`);
-  await run(t, abstractIntBinary('%'), [vec_type, TypeAbstractInt], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('%'), [vec_type, Type.abstractInt], vec_type, t.params, cases);
 });
 
 g.test('subtraction').
@@ -261,8 +261,8 @@ fn(async (t) => {
   await run(
     t,
     abstractIntBinary('-'),
-    [TypeAbstractInt, TypeAbstractInt],
-    TypeAbstractInt,
+    [Type.abstractInt, Type.abstractInt],
+    Type.abstractInt,
     t.params,
     cases
   );
@@ -280,9 +280,9 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_rhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_rhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`subtraction_scalar_vector${vec_size}`);
-  await run(t, abstractIntBinary('-'), [TypeAbstractInt, vec_type], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('-'), [Type.abstractInt, vec_type], vec_type, t.params, cases);
 });
 
 g.test('subtraction_vector_scalar').
@@ -297,7 +297,7 @@ u.combine('inputSource', onlyConstInputSource).combine('vectorize_lhs', [2, 3, 4
 ).
 fn(async (t) => {
   const vec_size = t.params.vectorize_lhs;
-  const vec_type = TypeVec(vec_size, TypeAbstractInt);
+  const vec_type = Type.vec(vec_size, Type.abstractInt);
   const cases = await d.get(`subtraction_vector${vec_size}_scalar`);
-  await run(t, abstractIntBinary('-'), [vec_type, TypeAbstractInt], vec_type, t.params, cases);
+  await run(t, abstractIntBinary('-'), [vec_type, Type.abstractInt], vec_type, t.params, cases);
 });

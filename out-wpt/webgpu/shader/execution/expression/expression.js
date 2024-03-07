@@ -7,12 +7,10 @@ import {
   MatrixType,
 
   ScalarType,
-
-  TypeU32,
-  TypeVec,
-
-  Vector,
+  Type,
   VectorType,
+
+  VectorValue,
   isAbstractType,
   scalarTypeOf } from
 '../../../util/conversion.js';
@@ -158,11 +156,11 @@ function storageType(ty) {
       `Custom handling is implemented for 'abstract-float' values`
     );
     if (ty.kind === 'bool') {
-      return TypeU32;
+      return Type.u32;
     }
   }
   if (ty instanceof VectorType) {
-    return TypeVec(ty.width, storageType(ty.elementType));
+    return Type.vec(ty.width, storageType(ty.elementType));
   }
   return ty;
 }
@@ -1213,8 +1211,8 @@ vectorWidth)
   }
 
   const packedCases = [];
-  const packedParameterTypes = parameterTypes.map((p) => TypeVec(vectorWidth, p));
-  const packedResultType = new VectorType(vectorWidth, resultType);
+  const packedParameterTypes = parameterTypes.map((p) => Type.vec(vectorWidth, p));
+  const packedResultType = Type.vec(vectorWidth, resultType);
 
   const clampCaseIdx = (idx) => Math.min(idx, cases.length - 1);
 
@@ -1228,7 +1226,7 @@ vectorWidth)
         const input = cases[clampCaseIdx(caseIdx + i)].input;
         inputElements[i] = input instanceof Array ? input[paramIdx] : input;
       }
-      packedInputs[paramIdx] = new Vector(inputElements);
+      packedInputs[paramIdx] = new VectorValue(inputElements);
     }
 
     // Gather the comparators for the packed cases

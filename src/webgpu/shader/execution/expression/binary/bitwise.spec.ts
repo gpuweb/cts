@@ -9,7 +9,7 @@ import {
   abstractIntBits,
   i32,
   i32Bits,
-  Scalar,
+  ScalarValue,
   scalarType,
   u32,
   u32Bits,
@@ -27,27 +27,27 @@ export const g = makeTestGroup(GPUTest);
 interface ScalarImpl {
   // builder is a mostly a wrapper around type builders like 'i32Bits' that
   // handles the (number|bigint) type check.
-  builder: (bits: bigint | number) => Scalar;
+  builder: (bits: bigint | number) => ScalarValue;
   size: 32 | 64;
 }
 
 const kScalarImpls = {
   i32: {
-    builder: (bits: bigint | number): Scalar => {
+    builder: (bits: bigint | number): ScalarValue => {
       assert(typeof bits === 'number');
       return i32Bits(bits);
     },
     size: 32,
   } as ScalarImpl,
   u32: {
-    builder: (bits: bigint | number): Scalar => {
+    builder: (bits: bigint | number): ScalarValue => {
       assert(typeof bits === 'number');
       return u32Bits(bits);
     },
     size: 32,
   } as ScalarImpl,
   'abstract-int': {
-    builder: (bits: bigint | number): Scalar => {
+    builder: (bits: bigint | number): ScalarValue => {
       assert(typeof bits === 'bigint');
       return abstractIntBits(bits);
     },
