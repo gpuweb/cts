@@ -1654,31 +1654,24 @@ export function isFloatType(ty: Type): boolean {
 export const kAllFloatScalars = [TypeAbstractFloat, TypeF32, TypeF16] as const;
 
 /// All floating-point vec2 types
-export const kAllFloatVector2 = [
+const kAllFloatVector2 = [
   TypeVec(2, TypeAbstractFloat),
   TypeVec(2, TypeF32),
   TypeVec(2, TypeF16),
 ] as const;
 
 /// All floating-point vec3 types
-export const kAllFloatVector3 = [
+const kAllFloatVector3 = [
   TypeVec(3, TypeAbstractFloat),
   TypeVec(3, TypeF32),
   TypeVec(3, TypeF16),
 ] as const;
 
 /// All floating-point vec4 types
-export const kAllFloatVector4 = [
+const kAllFloatVector4 = [
   TypeVec(4, TypeAbstractFloat),
   TypeVec(4, TypeF32),
   TypeVec(4, TypeF16),
-] as const;
-
-/// All floating-point vector types
-export const kAllFloatVectors = [
-  ...kAllFloatVector2,
-  ...kAllFloatVector3,
-  ...kAllFloatVector4,
 ] as const;
 
 /// All f16 floating-point scalar and vector types
@@ -1690,31 +1683,11 @@ export const kAllF16ScalarsAndVectors = [
 ] as const;
 
 /// All floating-point scalar and vector types
-export const kAllFloatScalarsAndVectors = [...kAllFloatScalars, ...kAllFloatVectors] as const;
-
-/// Abstract integer scalar type
-export const kAbstractIntegerScalar = [TypeAbstractInt] as const;
-
-/// Abstract integer vec2 type
-export const kAbstractIntegerVector2 = [TypeVec(2, TypeAbstractInt)] as const;
-
-/// Abstract integer vec3 type
-export const kAbstractIntegerVector3 = [TypeVec(3, TypeAbstractInt)] as const;
-
-/// Abstract integer vec4 type
-export const kAbstractIntegerVector4 = [TypeVec(4, TypeAbstractInt)] as const;
-
-/// All abstract integer scalar vector types
-export const kAbstractIntegerVectors = [
-  ...kAbstractIntegerVector2,
-  ...kAbstractIntegerVector3,
-  ...kAbstractIntegerVector4,
-] as const;
-
-/// Abstract integer scalar and vector types
-export const kAllAbstractIntegerScalarAndVectors = [
-  ...kAbstractIntegerScalar,
-  ...kAbstractIntegerVectors,
+export const kAllFloatScalarsAndVectors = [
+  ...kAllFloatScalars,
+  ...kAllFloatVector2,
+  ...kAllFloatVector3,
+  ...kAllFloatVector4,
 ] as const;
 
 // Abstract and concrete integer types are not grouped into an 'all' type,
@@ -1752,16 +1725,43 @@ export const kAllUnsignedIntegerScalarsAndVectors = [
   TypeVec(4, TypeU32),
 ] as const;
 
-/// All floating-point and integer scalar and vector types
-export const kAllFloatAndConcreteIntegerScalarsAndVectors = [
-  ...kAllFloatScalarsAndVectors,
-  ...kAllConcreteIntegerScalarsAndVectors,
+/// All types which are convertable to floating-point scalar types.
+export const kConvertableToFloatScalar = [
+  TypeAbstractInt,
+  ...kAllFloatScalars,
 ] as const;
 
-/// All floating-point and signed integer scalar and vector types
-export const kAllFloatAndSignedIntegerScalarsAndVectors = [
+/// All types which are convertable to floating-point vector 2 types.
+export const kConvertableToFloatVec2 = [
+  TypeVec(2, TypeAbstractInt),
+  ...kAllFloatVector2,
+] as const;
+
+/// All types which are convertable to floating-point vector 3 types.
+export const kConvertableToFloatVec3 = [
+  TypeVec(3, TypeAbstractInt),
+  ...kAllFloatVector3,
+] as const;
+
+/// All types which are convertable to floating-point vector 4 types.
+export const kConvertableToFloatVec4 = [
+  TypeVec(4, TypeAbstractInt),
+  ...kAllFloatVector4,
+] as const;
+
+/// All types which are convertable to floating-point scalar or vector types.
+export const kConvertableToFloatScalarsAndVec = [
+  TypeAbstractInt,
+  TypeVec(2, TypeAbstractInt),
+  TypeVec(3, TypeAbstractInt),
+  TypeVec(4, TypeAbstractInt),
   ...kAllFloatScalarsAndVectors,
-  ...kAllSignedIntegerScalarsAndVectors,
+] as const;
+
+/// All the scalar and vector types
+export const kAllScalarsAndVec = [
+  ...kConvertableToFloatScalarsAndVec,
+  ...kAllConcreteIntegerScalarsAndVectors,
 ] as const;
 
 /** @returns the inner element type of the given type */

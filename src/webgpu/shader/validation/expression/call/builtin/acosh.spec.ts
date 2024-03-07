@@ -9,10 +9,9 @@ import {
   TypeF16,
   TypeF32,
   elementType,
-  kAllFloatScalarsAndVectors,
   kAllConcreteIntegerScalarsAndVectors,
   TypeAbstractInt,
-  kAllAbstractIntegerScalarAndVectors,
+  kConvertableToFloatScalarsAndVec,
   TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
@@ -29,10 +28,7 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord([
-  ...kAllAbstractIntegerScalarAndVectors,
-  ...kAllFloatScalarsAndVectors,
-]);
+const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVec);
 
 g.test('values')
   .desc(
