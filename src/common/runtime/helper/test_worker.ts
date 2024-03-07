@@ -24,6 +24,7 @@ class TestBaseWorker {
       }
     }
     this.resolvers.get(query)!(result as LiveTestCaseResult);
+    this.resolvers.delete(query);
 
     // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
     // update the entire results JSON somehow at some point).
@@ -43,6 +44,7 @@ class TestBaseWorker {
     target.postMessage(request);
 
     const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
+      assert(!this.resolvers.has(query), "can't request same query twice simultaneously");
       this.resolvers.set(query, resolve);
     });
     rec.injectResult(workerResult);
