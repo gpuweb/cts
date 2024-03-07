@@ -158,6 +158,7 @@ wrapTestGroupForWorker(g);
 `;
     res.setHeader('Content-Type', 'application/javascript');
     res.send(result);
+    return;
   }
 
   const tsUrl = jsUrl.replace(/\.js$/, '.ts');
