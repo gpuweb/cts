@@ -4,10 +4,10 @@ import BinaryStream from '../../../util/binary_stream.js';
 import { deserializeComparator, serializeComparator } from '../../../util/compare.js';
 import {
   Matrix,
-  Scalar,
   Value,
   Vector,
   deserializeValue,
+  isScalar,
   serializeValue,
 } from '../../../util/conversion.js';
 import {
@@ -31,7 +31,7 @@ enum SerializedExpectationKind {
 
 /** serializeExpectation() serializes an Expectation to a BinaryStream */
 export function serializeExpectation(s: BinaryStream, e: Expectation) {
-  if (e instanceof Scalar || e instanceof Vector || e instanceof Matrix) {
+  if (isScalar(e) || e instanceof Vector || e instanceof Matrix) {
     s.writeU8(SerializedExpectationKind.Value);
     serializeValue(s, e);
     return;

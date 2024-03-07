@@ -1,6 +1,6 @@
 import { ROArrayArray } from '../../../../common/util/types.js';
 import { Comparator, compare } from '../../../util/compare.js';
-import { Matrix, Scalar, Value, Vector } from '../../../util/conversion.js';
+import { Matrix, Value, Vector, isScalar } from '../../../util/conversion.js';
 import { FPInterval } from '../../../util/floating_point.js';
 
 export type Expectation =
@@ -14,7 +14,7 @@ export type Expectation =
 export function isComparator(e: Expectation): e is Comparator {
   return !(
     e instanceof FPInterval ||
-    e instanceof Scalar ||
+    isScalar(e) ||
     e instanceof Vector ||
     e instanceof Matrix ||
     e instanceof Array

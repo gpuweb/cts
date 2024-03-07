@@ -8,7 +8,7 @@ import {
 import { Expectation, toComparator } from '../shader/execution/expression/expectation.js';
 
 import BinaryStream from './binary_stream.js';
-import { isFloatValue, Matrix, Scalar, Value, Vector } from './conversion.js';
+import { isFloatValue, isScalar, Matrix, Scalar, Value, Vector } from './conversion.js';
 import { FPInterval } from './floating_point.js';
 
 /** Comparison describes the result of a Comparator function. */
@@ -98,7 +98,7 @@ function compareValue(got: Value, expected: Value): Comparison {
     }
   }
 
-  if (got instanceof Scalar) {
+  if (isScalar(got)) {
     const g = got;
     const e = expected as Scalar;
     const isFloat = g.type.kind === 'f64' || g.type.kind === 'f32' || g.type.kind === 'f16';
@@ -175,7 +175,7 @@ function compareInterval(got: Value, expected: FPInterval): Comparison {
     }
   }
 
-  if (got instanceof Scalar) {
+  if (isScalar(got)) {
     const g = got.value as number;
     const matched = expected.contains(g);
     return {
