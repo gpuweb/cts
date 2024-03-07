@@ -12,7 +12,6 @@ import {
   TypeAbstractFloat,
   elementType,
   kAllConcreteIntegerScalarsAndVectors,
-  kAllFloatScalarsAndVectors,
   kConvertableToFloatScalarsAndVec,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';

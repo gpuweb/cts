@@ -26,7 +26,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kValuesTypes = objectsToRecord([
   ...kAllFloatScalarsAndVectors,
-  ...kAllSignedIntegerScalarsAndVectors
+  ...kAllSignedIntegerScalarsAndVectors,
 ]);
 
 g.test('values')

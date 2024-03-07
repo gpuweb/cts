@@ -1726,28 +1726,16 @@ export const kAllUnsignedIntegerScalarsAndVectors = [
 ] as const;
 
 /// All types which are convertable to floating-point scalar types.
-export const kConvertableToFloatScalar = [
-  TypeAbstractInt,
-  ...kAllFloatScalars,
-] as const;
+export const kConvertableToFloatScalar = [TypeAbstractInt, ...kAllFloatScalars] as const;
 
 /// All types which are convertable to floating-point vector 2 types.
-export const kConvertableToFloatVec2 = [
-  TypeVec(2, TypeAbstractInt),
-  ...kAllFloatVector2,
-] as const;
+export const kConvertableToFloatVec2 = [TypeVec(2, TypeAbstractInt), ...kAllFloatVector2] as const;
 
 /// All types which are convertable to floating-point vector 3 types.
-export const kConvertableToFloatVec3 = [
-  TypeVec(3, TypeAbstractInt),
-  ...kAllFloatVector3,
-] as const;
+export const kConvertableToFloatVec3 = [TypeVec(3, TypeAbstractInt), ...kAllFloatVector3] as const;
 
 /// All types which are convertable to floating-point vector 4 types.
-export const kConvertableToFloatVec4 = [
-  TypeVec(4, TypeAbstractInt),
-  ...kAllFloatVector4,
-] as const;
+export const kConvertableToFloatVec4 = [TypeVec(4, TypeAbstractInt), ...kAllFloatVector4] as const;
 
 /// All types which are convertable to floating-point scalar or vector types.
 export const kConvertableToFloatScalarsAndVec = [

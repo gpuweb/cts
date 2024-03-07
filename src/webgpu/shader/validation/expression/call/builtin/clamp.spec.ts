@@ -8,7 +8,6 @@ import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tabl
 import {
   TypeF16,
   elementType,
-  kAllFloatScalars,
   kAllFloatScalarsAndVectors,
   kAllConcreteIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
@@ -25,7 +24,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kValuesTypes = objectsToRecord([
   ...kAllFloatScalarsAndVectors,
-  ...kAllConcreteIntegerScalarsAndVectors
+  ...kAllConcreteIntegerScalarsAndVectors,
 ]);
 
 g.test('values')
