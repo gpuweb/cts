@@ -10,7 +10,7 @@ import {
   TypeF32,
   elementType,
   kAllConcreteIntegerScalarsAndVectors,
-  kConvertableToFloatScalarsAndVec,
+  kConvertableToFloatScalarsAndVectors,
   TypeAbstractFloat,
 } from '../../../../../util/conversion.js';
 import { isRepresentable } from '../../../../../util/floating_point.js';
@@ -28,7 +28,7 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVec);
+const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVectors);
 
 const additionalRangeForType = rangeForType(
   linearRange(-2000, 2000, 10),

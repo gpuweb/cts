@@ -10,7 +10,7 @@ import {
   TypeF32,
   elementType,
   kAllConcreteIntegerScalarsAndVectors,
-  kConvertableToFloatScalarsAndVec,
+  kConvertableToFloatScalarsAndVectors,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -25,7 +25,7 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVec);
+const kValuesTypes = objectsToRecord(kConvertableToFloatScalarsAndVectors);
 
 g.test('values')
   .desc(
