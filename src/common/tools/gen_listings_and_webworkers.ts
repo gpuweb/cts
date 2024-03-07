@@ -5,7 +5,7 @@ import * as process from 'process';
 import { crawl } from './crawl.js';
 
 function usage(rc: number): void {
-  console.error(`Usage: tools/gen_listings [options] [OUT_DIR] [SUITE_DIRS...]
+  console.error(`Usage: tools/gen_listings_and_webworkers [options] [OUT_DIR] [SUITE_DIRS...]
 
 For each suite in SUITE_DIRS, generate listings into OUT_DIR/{suite}/listing.js,
 and generate Web Worker proxies in OUT_DIR/{suite}/webworker/**/*.worker.js for
