@@ -22,7 +22,7 @@ class FeaturesNotSupported extends Error {}
 export class TestOOMedShouldAttemptGC extends Error {}
 
 export class DevicePool {
-  holders = 'uninitialized';
+  holders = new DescriptorToHolderMap();
 
   async requestAdapter(recorder) {
     const gpu = getGPU(recorder);
@@ -36,28 +36,7 @@ export class DevicePool {
   adapter,
   descriptor)
   {
-    let holder;
-    if (this.holders === 'uninitialized') {
-      this.holders = new DescriptorToHolderMap();
-    }
-
-    let errorMessage = '';
-    if (this.holders !== 'failed') {
-      try {
-        holder = await this.holders.getOrCreate(adapter, descriptor);
-      } catch (ex) {
-        this.holders = 'failed';
-        if (ex instanceof Error) {
-          errorMessage = ` with ${ex.name} "${ex.message}"`;
-        }
-      }
-    }
-
-    assert(
-      this.holders !== 'failed',
-      `WebGPU device failed to initialize${errorMessage}; not retrying`
-    );
-    assert(!!holder);
+    const holder = await this.holders.getOrCreate(adapter, descriptor);
     assert(holder.state === 'free', 'Device was in use on DevicePool.acquire');
     holder.state = 'acquired';
     holder.beginTestScope();
