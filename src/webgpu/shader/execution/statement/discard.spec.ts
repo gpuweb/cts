@@ -89,8 +89,8 @@ function drawFullScreen(
   // Create a buffer to hold the storage shader resources.
   // (0,0) = vec2u width * height
   // (0,1) = u32
-  const dataSize = 2 * kWidth * kHeight * bytesPerWord
-  const dataBufferSize = dataSize + bytesPerWord
+  const dataSize = 2 * kWidth * kHeight * bytesPerWord;
+  const dataBufferSize = dataSize + bytesPerWord;
   const dataBuffer = t.device.createBuffer({
     size: dataBufferSize,
     usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE,
@@ -98,7 +98,8 @@ function drawFullScreen(
 
   const uniformSize = bytesPerWord * 5;
   const uniformBuffer = t.makeBufferWithContents(
-    new Uint32Array([4,1,4,4,7]),
+    // Loop bound, [derivative constants].
+    new Uint32Array([4, 1, 4, 4, 7]),
     GPUBufferUsage.COPY_DST | GPUBufferUsage.STORAGE
   );
 
@@ -262,12 +263,12 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
                 const is_x = idx % 2 === 0;
                 if (is_x) {
                   const x = Math.floor(idx / 2) % kWidth;
-                  if (x >= (kWidth / 2)) {
+                  if (x >= kWidth / 2) {
                     return 0;
                   }
                 } else {
                   const y = Math.floor((idx - 1) / kWidth);
-                  if (y >= (kHeight / 2)) {
+                  if (y >= kHeight / 2) {
                     return 0;
                   }
                 }
@@ -282,7 +283,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < (kWidth * kHeight / 4) && (value == a[idx - 1] || value == 0);
+          return value < (kWidth * kHeight) / 4 && (value === a[idx - 1] || value === 0);
         },
         {
           predicatePrinter: [
@@ -291,7 +292,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
               getValueForCell: (idx: number) => {
                 const x = idx % kWidth;
                 const y = Math.floor(idx / kWidth);
-                if (x < (kWidth / 2) && y < (kHeight / 2)) {
+                if (x < kWidth / 2 && y < kHeight / 2) {
                   return 'any';
                 } else {
                   return 0;
@@ -367,7 +368,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < (kWidth * kHeight / 2) && (value == a[idx - 1] || value == 0);
+          return value < (kWidth * kHeight) / 2 && (value === a[idx - 1] || value === 0);
         },
         {
           predicatePrinter: [
@@ -541,12 +542,12 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
 }
 `;
 
-    // No storage writes occur.
+    // One pixel per quad is discarded. The derivatives values are always the same +/- 3.
     const dataChecker = (a: Float32Array) => {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          if (idx < 3 * (2 * kWidth * kHeight) / 4) {
+          if (idx < (3 * (2 * kWidth * kHeight)) / 4) {
             return value === -3 || value === 3;
           } else {
             return value === 0;
@@ -557,7 +558,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
             {
               leftHeader: 'data exp ==',
               getValueForCell: (idx: number) => {
-                if (idx < 3 * (2 * kWidth * kHeight) / 4) {
+                if (idx < (3 * (2 * kWidth * kHeight)) / 4) {
                   return '+/- 3';
                 } else {
                   return 0;
@@ -569,17 +570,17 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       );
     };
 
-    // No fragment outputs occur.
+    // 3/4 of the fragments are written.
     const fbChecker = (a: Uint32Array) => {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
           const x = idx % kWidth;
           const y = Math.floor(idx / kWidth);
-          if (((x | y) & 0x1) == 0) {
+          if (((x | y) & 0x1) === 0) {
             return value === 0;
           } else {
-            return value < 3 * (kWidth * kHeight) / 4;
+            return value < (3 * (kWidth * kHeight)) / 4;
           }
         },
         {
@@ -589,7 +590,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
               getValueForCell: (idx: number) => {
                 const x = idx % kWidth;
                 const y = Math.floor(idx / kWidth);
-                if (((x | y) & 0x1) == 0) {
+                if (((x | y) & 0x1) === 0) {
                   return 0;
                 } else {
                   return 'any';
@@ -603,4 +604,3 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
 
     drawFullScreen(t, code, dataChecker, fbChecker);
   });
-
