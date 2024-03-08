@@ -93,11 +93,47 @@ export function initUncanonicalizedDeviceDescriptor(
   }
 }
 
+/**
+ * Gets the adapter limits as a standard JavaScript object.
+ */
+function getAdapterLimitsAsDeviceRequiredLimits(adapter: GPUAdapter) {
+  const requiredLimits: Record<string, GPUSize64> = {};
+  const adapterLimits = adapter.limits as unknown as Record<string, GPUSize64>;
+  for (const key in adapter.limits) {
+    requiredLimits[key] = adapterLimits[key];
+  }
+  return requiredLimits;
+}
+
+/**
+ * Conditionally applies adapter limits to device descriptor
+ * but does not overwrite existing requested limits.
+ */
+function conditionallyApplyAdapterLimitsToDeviceDescriptor(
+  adapter: GPUAdapter,
+  useAdapterLimits: boolean,
+  descriptor: UncanonicalizedDeviceDescriptor | undefined
+): UncanonicalizedDeviceDescriptor {
+  return {
+    ...(descriptor || {}),
+    requiredLimits: {
+      ...(useAdapterLimits && getAdapterLimitsAsDeviceRequiredLimits(adapter)),
+      ...(descriptor?.requiredLimits || {}),
+    },
+  };
+}
+
 export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** Provider for default device. */
   private provider: Promise<DeviceProvider> | undefined;
   /** Provider for mismatched device. */
   private mismatchedProvider: Promise<DeviceProvider> | undefined;
+  /** True if device should be created with adapter limits */
+  private useAdapterLimits = false;
+
+  constructor(recorder: TestCaseRecorder, params: TestParams) {
+    super(recorder, params);
+  }
 
   override async postInit(): Promise<void> {
     // Skip all subcases if there's no device.
@@ -123,6 +159,14 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     return this.provider;
   }
 
+  useAdapterLimitsForDevice() {
+    assert(
+      this.provider === undefined,
+      'useAdapterLimits must be called before getting the device'
+    );
+    this.useAdapterLimits = true;
+  }
+
   get isCompatibility() {
     return globalTestConfig.compatibility;
   }
@@ -140,10 +184,18 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
    */
   selectDeviceOrSkipTestCase(descriptor: DeviceSelectionDescriptor): void {
     assert(this.provider === undefined, "Can't selectDeviceOrSkipTestCase() multiple times");
-    this.provider = devicePool.acquire(
-      this.recorder,
-      initUncanonicalizedDeviceDescriptor(descriptor)
-    );
+    this.provider = devicePool
+      .requestAdapter(this.recorder)
+      .then(adapter =>
+        devicePool.acquire(
+          adapter,
+          conditionallyApplyAdapterLimitsToDeviceDescriptor(
+            adapter,
+            this.useAdapterLimits,
+            initUncanonicalizedDeviceDescriptor(descriptor)
+          )
+        )
+      );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.provider.catch(() => {});
   }
@@ -201,10 +253,18 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       "Can't selectMismatchedDeviceOrSkipTestCase() multiple times"
     );
 
-    this.mismatchedProvider = mismatchedDevicePool.acquire(
-      this.recorder,
-      initUncanonicalizedDeviceDescriptor(descriptor)
-    );
+    this.mismatchedProvider = mismatchedDevicePool
+      .requestAdapter(this.recorder)
+      .then(adapter =>
+        mismatchedDevicePool.acquire(
+          adapter,
+          conditionallyApplyAdapterLimitsToDeviceDescriptor(
+            adapter,
+            this.useAdapterLimits,
+            initUncanonicalizedDeviceDescriptor(descriptor)
+          )
+        )
+      );
     // Suppress uncaught promise rejection (we'll catch it later).
     this.mismatchedProvider.catch(() => {});
   }
@@ -1200,6 +1260,20 @@ export class GPUTest extends GPUTestBase {
   expectDeviceLost(reason: GPUDeviceLostReason): void {
     assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     this.provider.expectDeviceLost(reason);
+  }
+}
+
+/**
+ * A version of GPUTest that requires the adapter limits.
+ */
+export class AdapterLimitsGPUTest extends GPUTest {
+  public static override MakeSharedState(
+    recorder: TestCaseRecorder,
+    params: TestParams
+  ): GPUTestSubcaseBatchState {
+    const state = new GPUTestSubcaseBatchState(recorder, params);
+    state.useAdapterLimitsForDevice();
+    return state;
   }
 }
 
