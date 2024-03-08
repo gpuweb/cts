@@ -2303,8 +2303,17 @@ export const kConvertableToFloatScalarsAndVectors = [
   ...kFloatScalarsAndVectors,
 ] as const;
 
-/// All the scalar and vector types
-export const kAllScalarsAndVectors = [
+/// All the numeric scalar and vector types.
+export const kAllNumericScalarsAndVectors = [
   ...kConvertableToFloatScalarsAndVectors,
   ...kConcreteIntegerScalarsAndVectors,
+] as const;
+
+/// All the scalar and vector types.
+export const kAllScalarsAndVectors = [
+  Type.bool,
+  Type.vec(2, Type.bool),
+  Type.vec(3, Type.bool),
+  Type.vec(4, Type.bool),
+  ...kAllNumericScalarsAndVectors,
 ] as const;
