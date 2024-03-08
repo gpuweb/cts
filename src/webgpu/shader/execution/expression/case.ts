@@ -1,7 +1,14 @@
 import { crc32 } from '../../../../common/util/crc32.js';
 import { ROArrayArray } from '../../../../common/util/types.js';
 import { assert } from '../../../../common/util/util.js';
-import { abstractInt, i32, ScalarBuilder, u32, Value, Vector } from '../../../util/conversion.js';
+import {
+  abstractInt,
+  i32,
+  ScalarBuilder,
+  u32,
+  Value,
+  VectorValue,
+} from '../../../util/conversion.js';
 import {
   cartesianProduct,
   QuantizeFunc,
@@ -23,9 +30,6 @@ export type Case = {
   // The expected result, or function to check the result
   expected: Expectation;
 };
-
-/** CaseList is a list of Cases */
-export type CaseList = Array<Case>;
 
 /**
  * Filters a given set of Cases down to a target number of cases by
@@ -58,7 +62,7 @@ export type CaseList = Array<Case>;
  *          items, they can just use [].
  * @param cases list of Cases to be selected from.
  */
-export function selectNCases(dis: string, n: number, cases: CaseList): CaseList {
+export function selectNCases(dis: string, n: number, cases: Case[]): Case[] {
   assert(n > 0 && Math.round(n) === n, `n ${n} is expected to be a positive integer`);
   const count = cases.length;
   if (n >= count) {
@@ -106,8 +110,8 @@ function makeScalarVectorBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [scalarize(scalar), new VectorValue(vector.map(scalarize))],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -157,8 +161,8 @@ function makeVectorScalarBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [new VectorValue(vector.map(scalarize)), scalarize(scalar)],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -360,8 +364,8 @@ function makeVectorVectorToScalarCase<T>(
 
   return {
     input: [
-      new Vector(param0_quantized.map(scalarize)),
-      new Vector(param1_quantized.map(scalarize)),
+      new VectorValue(param0_quantized.map(scalarize)),
+      new VectorValue(param1_quantized.map(scalarize)),
     ],
     expected: scalarize(result),
   };

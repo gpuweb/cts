@@ -1,7 +1,7 @@
 export const description = `
 Execution tests for the 'atanh' builtin function
 
-S is AbstractFloat, f32, f16
+S is abstract-float, f32, f16
 T is S or vecN<S>
 @const fn atanh(e: T ) -> T
 Returns the hyperbolic arc tangent of e. The result is 0 when abs(e) ≥ 1.
@@ -12,7 +12,7 @@ Note: The result is not mathematically meaningful when abs(e) >= 1.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { TypeF16, TypeF32 } from '../../../../../util/conversion.js';
+import { Type } from '../../../../../util/conversion.js';
 import { allInputSources, run } from '../../expression.js';
 
 import { d } from './atanh.cache.js';
@@ -36,7 +36,7 @@ g.test('f32')
   )
   .fn(async t => {
     const cases = await d.get(t.params.inputSource === 'const' ? 'f32_const' : 'f32_non_const');
-    await run(t, builtin('atanh'), [TypeF32], TypeF32, t.params, cases);
+    await run(t, builtin('atanh'), [Type.f32], Type.f32, t.params, cases);
   });
 
 g.test('f16')
@@ -50,5 +50,5 @@ g.test('f16')
   })
   .fn(async t => {
     const cases = await d.get(t.params.inputSource === 'const' ? 'f16_const' : 'f16_non_const');
-    await run(t, builtin('atanh'), [TypeF16], TypeF16, t.params, cases);
+    await run(t, builtin('atanh'), [Type.f16], Type.f16, t.params, cases);
   });

@@ -1,10 +1,10 @@
 export const description = `
-Execution Tests for AbstractFloat arithmetic unary expression operations
+Execution Tests for Type.abstractFloat arithmetic unary expression operations
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeAbstractFloat } from '../../../../util/conversion.js';
+import { Type } from '../../../../util/conversion.js';
 import { onlyConstInputSource, run } from '../expression.js';
 
 import { d } from './af_arithmetic.cache.js';
@@ -30,8 +30,8 @@ Accuracy: Correctly rounded
     await run(
       t,
       abstractFloatUnary('-'),
-      [TypeAbstractFloat],
-      TypeAbstractFloat,
+      [Type.abstractFloat],
+      Type.abstractFloat,
       t.params,
       cases,
       1

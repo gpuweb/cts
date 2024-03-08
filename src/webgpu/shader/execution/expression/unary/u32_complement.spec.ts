@@ -4,7 +4,7 @@ Execution Tests for the u32 bitwise complement operation
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
-import { TypeU32, u32 } from '../../../../util/conversion.js';
+import { Type, u32 } from '../../../../util/conversion.js';
 import { fullU32Range } from '../../../../util/math.js';
 import { allInputSources, run } from '../expression.js';
 
@@ -26,5 +26,5 @@ Expression: ~x
     const cases = fullU32Range().map(e => {
       return { input: u32(e), expected: u32(~e) };
     });
-    await run(t, unary('~'), [TypeU32], TypeU32, t.params, cases);
+    await run(t, unary('~'), [Type.u32], Type.u32, t.params, cases);
   });
