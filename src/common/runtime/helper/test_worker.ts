@@ -2,6 +2,7 @@ import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 import { TransferredTestCaseResult, LiveTestCaseResult } from '../../internal/logging/result.js';
 import { TestCaseRecorder } from '../../internal/logging/test_case_recorder.js';
 import { TestQueryWithExpectation } from '../../internal/query/query.js';
+import { timeout } from '../../util/timeout.js';
 import { assert } from '../../util/util.js';
 
 import { CTSOptions, kDefaultCTSOptions } from './options.js';
@@ -9,9 +10,9 @@ import { WorkerTestRunRequest } from './utils_worker.js';
 
 /** Query all currently-registered service workers, and unregister them. */
 function unregisterAllServiceWorkers() {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
+  void navigator.serviceWorker.getRegistrations().then(registrations => {
     for (const registration of registrations) {
-      registration.unregister();
+      void registration.unregister();
     }
   });
 }
@@ -133,7 +134,7 @@ export class TestServiceWorker extends TestBaseWorker {
     });
     // If this a new registration, it might not be active yet.
     while (!registration.active) {
-      await new Promise(resolve => setTimeout(resolve, 0));
+      await new Promise(resolve => timeout(resolve, 0));
     }
     const serviceWorker = registration.active;
 
