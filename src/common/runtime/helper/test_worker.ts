@@ -126,14 +126,18 @@ export class TestServiceWorker extends TestBaseWorker {
   ): Promise<void> {
     const [suite, name] = query.split(':', 2);
     const fileName = name.split(',').join('/');
-    const serviceWorkerPath = `/out/${suite}/webworker/${fileName}.worker.js`;
+    const serviceWorkerURL = new URL(
+      `/out/${suite}/webworker/${fileName}.worker.js`,
+      window.location.href
+    ).toString();
 
     // If a registration already exists for this path, it will be ignored.
-    const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
+    const registration = await navigator.serviceWorker.register(serviceWorkerURL, {
       type: 'module',
     });
-    // If this a new registration, it might not be active yet.
-    while (!registration.active) {
+    // Make sure the registration we just requested is active. (We don't worry about it being
+    // outdated from a previous page load, because we wipe all service workers on shutdown/startup.)
+    while (!registration.active || registration.active.scriptURL !== serviceWorkerURL) {
       await new Promise(resolve => timeout(resolve, 0));
     }
     const serviceWorker = registration.active;
