@@ -7,6 +7,22 @@ import { assert } from '../../util/util.js';
 import { CTSOptions, kDefaultCTSOptions } from './options.js';
 import { WorkerTestRunRequest } from './utils_worker.js';
 
+/** Query all currently-registered service workers, and unregister them. */
+function unregisterAllServiceWorkers() {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    for (const registration of registrations) {
+      registration.unregister();
+    }
+  });
+}
+
+// NOTE: This code runs on startup for any runtime with worker support. Here, we use that chance to
+// delete any leaked service workers, and register to clean up after ourselves at shutdown.
+unregisterAllServiceWorkers();
+window.addEventListener('beforeunload', () => {
+  unregisterAllServiceWorkers();
+});
+
 class TestBaseWorker {
   protected readonly ctsOptions: CTSOptions;
   protected readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
