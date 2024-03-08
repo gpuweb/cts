@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 9087 variants generated from 2207 tests in 507 files -->
+<!-- Prefix: "?q="; 9103 variants generated from 2213 tests in 508 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -7992,6 +7992,19 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atanh:values:*'><!-- estimated: 308.616 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atanh:integer_argument:*'><!-- estimated: 8.208 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:stage:*'><!-- estimated: 44.418 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:atomic_parameterization:*'><!-- estimated: 266.508 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicStore";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicAdd";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicSub";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicMax";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicMin";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicAnd";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicOr";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicXor";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicExchange";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicCompareExchangeWeak1";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:op="atomicCompareExchangeWeak2";*'><!-- estimated: 307.056 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,atomics:return_types:*'><!-- estimated: 1849.386 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,barriers:only_in_compute:*'><!-- estimated: 36.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,barriers:no_return_value:*'><!-- estimated: 12.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,bitcast:bad_const_to_f32:*'><!-- estimated: 185.680 ms -->
@@ -8458,6 +8471,9 @@
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_indirect_recursion_via_ptr_store_type:*'><!-- estimated: 2.100 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_indirect_recursion_via_struct_member:*'><!-- estimated: 2.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_indirect_recursion_via_struct_attribute:*'><!-- estimated: 9.504 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,types,atomics:type:*'><!-- estimated: 17.850 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,types,atomics:address_space:*'><!-- estimated: 14.700 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,types,atomics:invalid_operations:*'><!-- estimated: 7.350 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,struct:no_direct_recursion:*'><!-- estimated: 1.902 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,struct:no_indirect_recursion:*'><!-- estimated: 1.802 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,struct:no_indirect_recursion_via_array_element:*'><!-- estimated: 1.802 ms -->
