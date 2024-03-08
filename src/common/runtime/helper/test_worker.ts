@@ -127,13 +127,17 @@ export class TestServiceWorker extends TestBaseWorker {
     const fileName = name.split(',').join('/');
     const serviceWorkerPath = `/out/${suite}/webworker/${fileName}.worker.js`;
 
+    // If a registration already exists for this path, it will be ignored.
     const registration = await navigator.serviceWorker.register(serviceWorkerPath, {
       type: 'module',
     });
-    await registration.update();
+    // If this a new registration, it might not be active yet.
+    while (!registration.active) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    const serviceWorker = registration.active;
+
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
-    assert(!!registration.active);
-    await this.makeRequestAndRecordResult(registration.active, rec, query, expectations);
-    void registration.unregister();
+    await this.makeRequestAndRecordResult(serviceWorker, rec, query, expectations);
   }
 }
