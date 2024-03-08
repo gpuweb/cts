@@ -14,12 +14,6 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { GPUTest } from '../../../../../gpu_test.js';
 import {
   VectorType,
-  TypeVec,
-  TypeBool,
-  TypeF32,
-  TypeF16,
-  TypeI32,
-  TypeU32,
   f32,
   f16,
   i32,
@@ -31,12 +25,11 @@ import {
   vec3,
   vec4,
   abstractFloat,
-  TypeAbstractFloat,
-  TypeAbstractInt,
   abstractInt,
-  Scalar,
+  ScalarValue,
+  Type,
 } from '../../../../../util/conversion.js';
-import { CaseList } from '../../case.js';
+import { Case } from '../../case.js';
 import { run, allInputSources } from '../../expression.js';
 
 import { abstractFloatBuiltin, abstractIntBuiltin, builtin } from './builtin.js';
@@ -51,41 +44,41 @@ type scalarKind = 'b' | 'af' | 'f' | 'h' | 'ai' | 'i' | 'u';
 
 const dataType = {
   b: {
-    type: TypeBool,
+    type: Type.bool,
     scalar_builder: makeBool,
     shader_builder: builtin('select'),
   },
   af: {
-    type: TypeAbstractFloat,
+    type: Type.abstractFloat,
     scalar_builder: abstractFloat,
     shader_builder: abstractFloatBuiltin('select'),
   },
   f: {
-    type: TypeF32,
+    type: Type.f32,
     scalar_builder: f32,
     shader_builder: builtin('select'),
   },
   h: {
-    type: TypeF16,
+    type: Type.f16,
     scalar_builder: f16,
     shader_builder: builtin('select'),
   },
   ai: {
-    type: TypeAbstractInt,
+    type: Type.abstractInt,
     // Only ints are used in the tests below, so the conversion to bigint will
     // be safe. If a non-int is passed in this will Error.
-    scalar_builder: (v: number): Scalar => {
+    scalar_builder: (v: number): ScalarValue => {
       return abstractInt(BigInt(v));
     },
     shader_builder: abstractIntBuiltin('select'),
   },
   i: {
-    type: TypeI32,
+    type: Type.i32,
     scalar_builder: i32,
     shader_builder: builtin('select'),
   },
   u: {
-    type: TypeU32,
+    type: Type.u32,
     scalar_builder: u32,
     shader_builder: builtin('select'),
   },
@@ -136,21 +129,21 @@ g.test('scalar')
         ],
       },
       vec2: {
-        type: TypeVec(2, componentType),
+        type: Type.vec(2, componentType),
         cases: [
           { input: [v2a, v2b, False], expected: v2a },
           { input: [v2a, v2b, True], expected: v2b },
         ],
       },
       vec3: {
-        type: TypeVec(3, componentType),
+        type: Type.vec(3, componentType),
         cases: [
           { input: [v3a, v3b, False], expected: v3a },
           { input: [v3a, v3b, True], expected: v3b },
         ],
       },
       vec4: {
-        type: TypeVec(4, componentType),
+        type: Type.vec(4, componentType),
         cases: [
           { input: [v4a, v4b, False], expected: v4a },
           { input: [v4a, v4b, True], expected: v4b },
@@ -162,7 +155,7 @@ g.test('scalar')
     await run(
       t,
       dataType[t.params.component as scalarKind].shader_builder,
-      [overload.type, overload.type, TypeBool],
+      [overload.type, overload.type, Type.bool],
       overload.type,
       t.params,
       overload.cases
@@ -198,15 +191,15 @@ g.test('vector')
     const T = True;
     const F = False;
 
-    let tests: { dataType: VectorType; boolType: VectorType; cases: CaseList };
+    let tests: { dataType: VectorType; boolType: VectorType; cases: Case[] };
 
     switch (t.params.overload) {
       case 'vec2': {
         const a = vec2(scalars[0], scalars[1]);
         const b = vec2(scalars[4], scalars[5]);
         tests = {
-          dataType: TypeVec(2, componentType),
-          boolType: TypeVec(2, TypeBool),
+          dataType: Type.vec(2, componentType),
+          boolType: Type.vec(2, Type.bool),
           cases: [
             { input: [a, b, vec2(F, F)], expected: vec2(a.x, a.y) },
             { input: [a, b, vec2(F, T)], expected: vec2(a.x, b.y) },
@@ -220,8 +213,8 @@ g.test('vector')
         const a = vec3(scalars[0], scalars[1], scalars[2]);
         const b = vec3(scalars[4], scalars[5], scalars[6]);
         tests = {
-          dataType: TypeVec(3, componentType),
-          boolType: TypeVec(3, TypeBool),
+          dataType: Type.vec(3, componentType),
+          boolType: Type.vec(3, Type.bool),
           cases: [
             { input: [a, b, vec3(F, F, F)], expected: vec3(a.x, a.y, a.z) },
             { input: [a, b, vec3(F, F, T)], expected: vec3(a.x, a.y, b.z) },
@@ -239,8 +232,8 @@ g.test('vector')
         const a = vec4(scalars[0], scalars[1], scalars[2], scalars[3]);
         const b = vec4(scalars[4], scalars[5], scalars[6], scalars[7]);
         tests = {
-          dataType: TypeVec(4, componentType),
-          boolType: TypeVec(4, TypeBool),
+          dataType: Type.vec(4, componentType),
+          boolType: Type.vec(4, Type.bool),
           cases: [
             { input: [a, b, vec4(F, F, F, F)], expected: vec4(a.x, a.y, a.z, a.w) },
             { input: [a, b, vec4(F, F, F, T)], expected: vec4(a.x, a.y, a.z, b.w) },

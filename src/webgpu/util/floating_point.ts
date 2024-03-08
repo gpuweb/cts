@@ -12,7 +12,7 @@ import {
   f16,
   f32,
   isFloatType,
-  Scalar,
+  ScalarValue,
   ScalarType,
   toMatrix,
   toVector,
@@ -1073,8 +1073,8 @@ export abstract class FPTraits {
   public abstract readonly flushSubnormal: (n: number) => number;
   /** @returns 1 * ULP: (number) */
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
-  /** @returns a builder for converting numbers to Scalars */
-  public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a builder for converting numbers to ScalarsValues */
+  public abstract readonly scalarBuilder: (n: number) => ScalarValue;
   /** @returns a range of scalars for testing */
   public abstract scalarRange(): readonly number[];
   /** @returns a reduced range of scalars for testing */
@@ -5164,26 +5164,16 @@ class FPAbstractTraits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
-  public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
-    this,
-    'multiplicationMatrixMatrixInterval'
-  );
-  public readonly multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(
-    this,
-    'multiplicationMatrixScalarInterval'
-  );
-  public readonly multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(
-    this,
-    'multiplicationScalarMatrixInterval'
-  );
-  public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
-    this,
-    'multiplicationMatrixVectorInterval'
-  );
-  public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
-    this,
-    'multiplicationVectorMatrixInterval'
-  );
+  public readonly multiplicationMatrixMatrixInterval =
+    this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixScalarInterval =
+    this.multiplicationMatrixScalarIntervalImpl.bind(this);
+  public readonly multiplicationScalarMatrixInterval =
+    this.multiplicationScalarMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixVectorInterval =
+    this.multiplicationMatrixVectorIntervalImpl.bind(this);
+  public readonly multiplicationVectorMatrixInterval =
+    this.multiplicationVectorMatrixIntervalImpl.bind(this);
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
     this,

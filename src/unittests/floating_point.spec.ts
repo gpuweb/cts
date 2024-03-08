@@ -7193,7 +7193,7 @@ g.test('subtractionMatrixMatrixInterval')
 g.test('multiplicationMatrixMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .combineWithParams<MatrixPairToMatrixCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -7768,12 +7768,26 @@ const kMultiplicationMatrixScalarIntervalCases = {
       ],
     },
   ] as MatrixScalarToMatrixCase[],
+  abstract: [
+    // From https://github.com/gpuweb/cts/issues/3044
+    {
+      matrix: [
+        [kValue.f64.negative.min, 0],
+        [0, 0],
+      ],
+      scalar: kValue.f64.negative.subnormal.min,
+      expected: [
+        [[0, reinterpretU64AsF64(0x400ffffffffffffdn)], 0], // [[0, 3.9999995...], 0],
+        [0, 0],
+      ],
+    },
+  ] as MatrixScalarToMatrixCase[],
 } as const;
 
 g.test('multiplicationMatrixScalarInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<MatrixScalarToMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -7945,7 +7959,7 @@ interface MatrixVectorToVectorCase {
 g.test('multiplicationMatrixVectorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .combineWithParams<MatrixVectorToVectorCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -8062,7 +8076,7 @@ interface VectorMatrixToVectorCase {
 g.test('multiplicationVectorMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .combineWithParams<VectorMatrixToVectorCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -8070,8 +8084,8 @@ g.test('multiplicationVectorMatrixInterval')
         // multiplicationVectorMatrixInterval uses DotIntervalOp for calculating
         // intervals, so the testing for dotInterval covers the actual interval
         // calculations.
-        // Keep all expected result integer no larger than 2047 to ensure that all result is exactly
-        // represeantable in both f32 and f16.
+        // Keep all expected result integer no larger than 2047 to ensure that
+        // all result is exactly representable in both f32 and f16.
         {
           vector: [1, 2],
           matrix: [

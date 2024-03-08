@@ -5,12 +5,10 @@ Validation tests for derivative builtins.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
-  TypeF16,
-  TypeF32,
-  TypeMat,
-  elementType,
-  kAllConcreteIntegerScalarsAndVectors,
-  kAllF16ScalarsAndVectors,
+  Type,
+  kConcreteIntegerScalarsAndVectors,
+  kConcreteF16ScalarsAndVectors,
+  scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -98,10 +96,10 @@ fn foo() {
 
 // The list of invalid argument types to test, with an f32 control case.
 const kArgumentTypes = objectsToRecord([
-  TypeF32,
-  ...kAllConcreteIntegerScalarsAndVectors,
-  ...kAllF16ScalarsAndVectors,
-  TypeMat(2, 2, TypeF32),
+  Type.f32,
+  ...kConcreteIntegerScalarsAndVectors,
+  ...kConcreteF16ScalarsAndVectors,
+  Type.mat2x2f,
 ]);
 
 g.test('invalid_argument_types')
@@ -115,17 +113,17 @@ Derivative builtins only accept f32 scalar and vector types.
     u.combine('type', keysOf(kArgumentTypes)).combine('call', ['', ...kDerivativeBuiltins])
   )
   .beforeAllSubcases(t => {
-    if (elementType(kArgumentTypes[t.params.type]) === TypeF16) {
+    if (scalarTypeOf(kArgumentTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
     const type = kArgumentTypes[t.params.type];
     const code = `
-${elementType(kArgumentTypes[t.params.type]) === TypeF16 ? 'enable f16;' : ''}
+${scalarTypeOf(kArgumentTypes[t.params.type]) === Type.f16 ? 'enable f16;' : ''}
 
 fn foo() {
   let x: ${type.toString()} = ${t.params.call}(${type.create(1).wgsl()});
 }`;
-    t.expectCompileResult(kArgumentTypes[t.params.type] === TypeF32 || t.params.call === '', code);
+    t.expectCompileResult(kArgumentTypes[t.params.type] === Type.f32 || t.params.call === '', code);
   });

@@ -1,11 +1,20 @@
+import { crc32 } from '../../../../common/util/crc32.js';
 import { ROArrayArray } from '../../../../common/util/types.js';
-import { ScalarBuilder, Value, Vector, i32, u32, abstractInt } from '../../../util/conversion.js';
+import { assert } from '../../../../common/util/util.js';
 import {
-  QuantizeFunc,
+  abstractInt,
+  i32,
+  ScalarBuilder,
+  u32,
+  Value,
+  VectorValue,
+} from '../../../util/conversion.js';
+import {
   cartesianProduct,
+  QuantizeFunc,
   quantizeToI32,
-  quantizeToU32,
   quantizeToI64,
+  quantizeToU32,
 } from '../../../util/math.js';
 
 import { Expectation } from './expectation.js';
@@ -22,8 +31,46 @@ export type Case = {
   expected: Expectation;
 };
 
-/** CaseList is a list of Cases */
-export type CaseList = Array<Case>;
+/**
+ * Filters a given set of Cases down to a target number of cases by
+ * randomly selecting which Cases to return.
+ *
+ * The selection algorithm is deterministic and stable for a case's
+ * inputs.
+ *
+ * This means that if a specific case is selected is not affected by the
+ * presence of other cases in the list, so in theory it is possible to create a
+ * pathological set of cases such that all or not of the cases are selected
+ * in spite of the target number.
+ *
+ * This is a trade-off from guaranteeing stability of the selected cases over
+ * small changes, so the target number of cases is more of a suggestion. It is
+ * still guaranteed that if you set n0 < n1, then the invocation with n0 will
+ * return at most the number of cases that n1 does, it just isn't guaranteed to
+ * be less.
+ *
+ * @param dis is a string provided for additional hashing information to avoid
+ *            systemic bias in the selection process across different test
+ *            suites. Specifically every Case with the same input values being
+ *            included or skipped regardless of the operation that they are
+ *            testing. This string should be something like the name of the case
+ *            cache the values are for or the operation under test.
+ * @param n number of cases targeted be returned. Expected to be a positive
+ *          integer. If equal or greater than the number of cases, then all the
+ *          cases are returned. 0 is not allowed, since it is likely a
+ *          programming error, because if the caller intentionally wants 0
+ *          items, they can just use [].
+ * @param cases list of Cases to be selected from.
+ */
+export function selectNCases(dis: string, n: number, cases: Case[]): Case[] {
+  assert(n > 0 && Math.round(n) === n, `n ${n} is expected to be a positive integer`);
+  const count = cases.length;
+  if (n >= count) {
+    return cases;
+  }
+  const dis_crc32 = crc32(dis);
+  return cases.filter(c => n * (0xffff_ffff / count) > (crc32(c.input.toString()) ^ dis_crc32));
+}
 
 /**
  * A function that performs a binary operation on x and y, and returns the
@@ -63,8 +110,8 @@ function makeScalarVectorBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [scalarize(scalar), new VectorValue(vector.map(scalarize))],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -114,8 +161,8 @@ function makeVectorScalarBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [new VectorValue(vector.map(scalarize)), scalarize(scalar)],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -317,8 +364,8 @@ function makeVectorVectorToScalarCase<T>(
 
   return {
     input: [
-      new Vector(param0_quantized.map(scalarize)),
-      new Vector(param1_quantized.map(scalarize)),
+      new VectorValue(param0_quantized.map(scalarize)),
+      new VectorValue(param1_quantized.map(scalarize)),
     ],
     expected: scalarize(result),
   };
