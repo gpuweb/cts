@@ -2303,8 +2303,17 @@ Type.vec(4, Type.abstractInt),
 ...kFloatScalarsAndVectors];
 
 
-/// All the scalar and vector types
-export const kAllScalarsAndVectors = [
+/// All the numeric scalar and vector types.
+export const kAllNumericScalarsAndVectors = [
 ...kConvertableToFloatScalarsAndVectors,
 ...kConcreteIntegerScalarsAndVectors];
+
+
+/// All the scalar and vector types.
+export const kAllScalarsAndVectors = [
+Type.bool,
+Type.vec(2, Type.bool),
+Type.vec(3, Type.bool),
+Type.vec(4, Type.bool),
+...kAllNumericScalarsAndVectors];
 //# sourceMappingURL=conversion.js.map

@@ -5,7 +5,11 @@ Validation tests for the ${builtin}() builtin.
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { Type, kAllScalarsAndVectors, scalarTypeOf } from '../../../../../util/conversion.js';
+import {
+  Type,
+  kAllNumericScalarsAndVectors,
+  scalarTypeOf } from
+'../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -17,7 +21,7 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord(kAllScalarsAndVectors);
+const kValuesTypes = objectsToRecord(kAllNumericScalarsAndVectors);
 
 g.test('values').
 desc(
