@@ -76,8 +76,10 @@ g.test('storage_texture_types')
   )
   .params(u =>
     u
-      .combine('format', kAllTextureFormats)
       .combine('access', ['read', 'write', 'read_write'] as const)
+      .combine('format', kAllTextureFormats)
+      // bgra8unorm-storage feature is tested at webgpu,api,validation,texture,bgra8unorm_storage
+      .filter(p => p.format !== 'bgra8unorm')
   )
   .fn(t => {
     const { format, access } = t.params;
