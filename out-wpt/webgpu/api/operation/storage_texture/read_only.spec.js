@@ -51,7 +51,7 @@ class F extends GPUTest {
   storageTexture,
   format)
   {
-    const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
+    const bytesPerBlock = kTextureFormatInfo[format].color.bytes;
     assert(bytesPerBlock !== undefined);
 
     const width = storageTexture.width;
