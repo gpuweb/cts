@@ -2656,13 +2656,18 @@ const kCeilIntervalCases = {
   { input: 2 ** 14, expected: 2 ** 14 },
   { input: -(2 ** 14), expected: -(2 ** 14) },
   { input: 0x8000, expected: 0x8000 } // https://github.com/gpuweb/cts/issues/2766
+  ],
+  abstract: [
+  { input: 2 ** 52, expected: 2 ** 52 },
+  { input: -(2 ** 52), expected: -(2 ** 52) },
+  { input: 0x8000000000000000, expected: 0x8000000000000000 } // https://github.com/gpuweb/cts/issues/2766
   ]
 };
 
 g.test('ceilInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
@@ -2689,7 +2694,7 @@ expandWithParams((p) => {
   { input: constants.negative.max, expected: 0 },
   ...kCeilIntervalCases[p.trait],
 
-  // 32-bit subnormals
+  // Subnormals
   { input: constants.positive.subnormal.max, expected: [0, 1] },
   { input: constants.positive.subnormal.min, expected: [0, 1] },
   { input: constants.negative.subnormal.min, expected: 0 },

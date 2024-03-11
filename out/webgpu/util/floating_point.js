@@ -5120,7 +5120,7 @@ class FPAbstractTraits extends FPTraits {
     'atan2Interval'
   );
   atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
-  ceilInterval = this.unimplementedScalarToInterval.bind(this, 'ceilInterval');
+  ceilInterval = this.ceilIntervalImpl.bind(this);
   clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
