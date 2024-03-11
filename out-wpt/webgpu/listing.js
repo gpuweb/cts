@@ -1762,8 +1762,8 @@ export const listing = [
       "execution",
       "expression",
       "access",
-      "index",
-      "array"
+      "array",
+      "index"
     ]
   },
   {
@@ -1772,8 +1772,18 @@ export const listing = [
       "execution",
       "expression",
       "access",
-      "index",
-      "vector"
+      "vector",
+      "components"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "access",
+      "vector",
+      "index"
     ]
   },
   {

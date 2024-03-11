@@ -197,4 +197,4 @@ fn(async (t) => {
     cases
   );
 });
-//# sourceMappingURL=array.spec.js.map
+//# sourceMappingURL=index.spec.js.map

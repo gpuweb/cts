@@ -12,7 +12,7 @@ export const g = makeTestGroup(GPUTest);
 
 g.test('concrete_scalar')
   .specURL('https://www.w3.org/TR/WGSL/#vector-access-expr')
-  .desc(`Test indexing of an array of concrete scalars`)
+  .desc(`Test indexing of concrete vectors`)
   .params(u =>
     u
       .combine('inputSource', allInputSources)
@@ -51,7 +51,7 @@ g.test('concrete_scalar')
 
 g.test('abstract_scalar')
   .specURL('https://www.w3.org/TR/WGSL/#vector-access-expr')
-  .desc(`Test indexing of an array of scalars`)
+  .desc(`Test indexing of abstract numeric vectors`)
   .params(u =>
     u
       .combine('elementType', ['abstract-int', 'abstract-float'] as const)
