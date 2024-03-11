@@ -27,9 +27,6 @@ Accuracy: Correctly rounded
       .combine('x_rows', [2, 3, 4] as const)
       .combine('y_cols', [2, 3, 4] as const)
   )
-  .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['shader-f16'] });
-  })
   .fn(async t => {
     const x_cols = t.params.common_dim;
     const x_rows = t.params.x_rows;
