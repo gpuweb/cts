@@ -1761,6 +1761,26 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "access",
+      "index",
+      "array"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "access",
+      "index",
+      "vector"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "binary",
       "af_addition"
     ]

@@ -6,6 +6,7 @@ import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit } from './constants.js';
 import {
+  align,
   cartesianProduct,
   clamp,
   correctlyRoundedF16,
@@ -627,6 +628,8 @@ export class ScalarType {
         switch (this.kind) {
           case 'abstract-float':
             return abstractFloat(value);
+          case 'abstract-int':
+            return abstractInt(BigInt(value));
           case 'f64':
             return f64(value);
           case 'f32':
@@ -836,9 +839,10 @@ export class ArrayType {
    */
   read(buf, offset) {
     const elements = [];
+
     for (let i = 0; i < this.count; i++) {
       elements[i] = this.elementType.read(buf, offset);
-      offset += this.elementType.size;
+      offset += this.stride;
     }
     return new ArrayValue(elements);
   }
@@ -847,8 +851,12 @@ export class ArrayType {
     return `array<${this.elementType}, ${this.count}>`;
   }
 
+  get stride() {
+    return align(this.elementType.size, this.elementType.alignment);
+  }
+
   get size() {
-    return this.elementType.alignment * this.count;
+    return this.stride * this.count;
   }
 
   get alignment() {
@@ -914,6 +922,7 @@ bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 /** Type holds pre-declared Types along with helper constructor functions. */
 export const Type = {
   abstractInt: abstractIntType,
+  'abstract-int': abstractIntType,
   i32: i32Type,
   u32: u32Type,
   i16: i16Type,
@@ -922,6 +931,7 @@ export const Type = {
   u8: u8Type,
 
   abstractFloat: abstractFloatType,
+  'abstract-float': abstractFloatType,
   f64: f64Type,
   f32: f32Type,
   f16: f16Type,
@@ -1878,7 +1888,7 @@ export class ArrayValue {
   }
 
   /**
-   * Copies the matrix value to the Uint8Array buffer at the provided byte offset.
+   * Copies the array value to the Uint8Array buffer at the provided byte offset.
    * @param buffer the destination buffer
    * @param offset the byte offset within buffer
    */
@@ -1890,16 +1900,21 @@ export class ArrayValue {
   }
 
   /**
-   * @returns the WGSL representation of this matrix value
+   * @returns the WGSL representation of this array value
    */
   wgsl() {
     const els = this.elements.map((r) => r.wgsl()).join(', ');
-    return `${this.type}(${els})`;
+    return isAbstractType(this.type.elementType) ? `array(${els})` : `${this.type}(${els})`;
   }
 
   toString() {
     return this.wgsl();
   }
+}
+
+/** Helper for constructing an ArrayValue with the provided values */
+export function array(...elements) {
+  return new ArrayValue(elements);
 }
 
 /**
