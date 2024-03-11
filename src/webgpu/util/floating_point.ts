@@ -5091,7 +5091,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
-  public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
+  public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
   public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
   public readonly ulpInterval = (n: number, numULP: number): FPInterval => {

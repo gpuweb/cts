@@ -1836,24 +1836,27 @@ interface AbsoluteErrorCase {
 const kSmallAbsoluteErrorValue = {
   f32: 2 ** -11, // Builtin cos and sin has a absolute error 2**-11 for f32
   f16: 2 ** -7, // Builtin cos and sin has a absolute error 2**-7 for f16
+  abstract: 2 ** -11, // Builtin cos and sin has a absolute error 2**-11 for AbstractFloat
 } as const;
 // A large absolute error value is a representable value x that much smaller than maximum
 // positive, but positive.max - x is still exactly representable.
 const kLargeAbsoluteErrorValue = {
   f32: 2 ** 110, // f32.positive.max - 2**110 = 3.4028104e+38 = 0x7f7fffbf in f32
   f16: 2 ** 10, // f16.positive.max - 2**10 = 64480 = 0x7bdf in f16
+  abstract: 2 ** 977, // f64.positive.man - 2**977 = 1.79769e+308 = 0x7fefffffffffffbf in f64
 } as const;
 // A subnormal absolute error value is a subnormal representable value x of kind, which ensures
 // that positive.subnormal.min +/- x is still exactly representable.
 const kSubnormalAbsoluteErrorValue = {
   f32: 2 ** -140, // f32 0x00000200
   f16: 2 ** -20, // f16 0x0010
+  abstract: 2 ** -1065, // f64 0x0000_0000_0000_0200
 } as const;
 
 g.test('absoluteErrorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<AbsoluteErrorCase>(p => {
         const trait = FP[p.trait];
@@ -1861,6 +1864,27 @@ g.test('absoluteErrorInterval')
         const smallErr = kSmallAbsoluteErrorValue[p.trait];
         const largeErr = kLargeAbsoluteErrorValue[p.trait];
         const subnormalErr = kSubnormalAbsoluteErrorValue[p.trait];
+
+        // Additional testing for non-f64 values, since JS number is f64 internally
+        // prettier-ignore
+        const additionalSubnormal64bit = p.trait !== 'abstract' ?
+          [
+            // 64-bit subnormals, expected to be treated as 0.0 or smallest subnormal of kind.
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, constants.positive.subnormal.min] },
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
+            // Note that f32 minimum subnormal is so smaller than 1.0, adding them together may result in the f64 results 1.0.
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, constants.positive.subnormal.min] },
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
+            { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [constants.negative.subnormal.max, 0] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [constants.negative.subnormal.max, 0] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
+            { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
+          ] as const : [] as const;
+
         // prettier-ignore
         return [
           // Edge Cases
@@ -1903,21 +1927,6 @@ g.test('absoluteErrorInterval')
           { value: constants.negative.subnormal.max, error: smallErr, expected: [constants.negative.subnormal.max - smallErr, smallErr] },
           { value: constants.negative.subnormal.max, error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
 
-          // 64-bit subnormals, expected to be treated as 0.0 or smallest subnormal of kind.
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 0, expected: [0, constants.positive.subnormal.min] },
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
-          // Note that f32 minimum subnormal is so smaller than 1.0, adding them together may result in the f64 results 1.0.
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 0, expected: [0, constants.positive.subnormal.min] },
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: subnormalErr, expected: [-subnormalErr, constants.positive.subnormal.min + subnormalErr] },
-          { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), error: 1, expected: [-1, constants.positive.subnormal.min + 1] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 0, expected: [constants.negative.subnormal.max, 0] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 0, expected: [constants.negative.subnormal.max, 0] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: subnormalErr, expected: [constants.negative.subnormal.max - subnormalErr, subnormalErr] },
-          { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), error: 1, expected: [constants.negative.subnormal.max - 1, 1] },
-
           // Zero
           { value: 0, error: 0, expected: 0 },
           { value: 0, error: smallErr, expected: [-smallErr, smallErr] },
@@ -1930,6 +1939,8 @@ g.test('absoluteErrorInterval')
           { value: -2, error: 0, expected: -2 },
           { value: -2, error: smallErr, expected: [-2 - smallErr, -2 + smallErr] },
           { value: -2, error: 1, expected: [-3, -1] },
+
+          ...additionalSubnormal64bit,
         ];
       })
   )
