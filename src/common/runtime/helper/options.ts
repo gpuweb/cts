@@ -25,7 +25,7 @@ export function optionString(
  * The possible options for the tests.
  */
 export interface CTSOptions {
-  worker?: 'dedicated' | 'shared' | '';
+  worker?: 'dedicated' | 'shared' | 'service' | '';
   debug: boolean;
   compatibility: boolean;
   forceFallbackAdapter: boolean;
@@ -68,6 +68,7 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
       { value: '', description: 'no worker' },
       { value: 'dedicated', description: 'dedicated worker' },
       { value: 'shared', description: 'shared worker' },
+      { value: 'service', description: 'service worker' },
     ],
   },
   debug: { description: 'show more info' },
