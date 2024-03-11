@@ -87,7 +87,7 @@ async function reportTestResults(this: MessagePort | Worker, ev: MessageEvent) {
 }
 
 self.onmessage = (ev: MessageEvent) => {
-  void reportTestResults.call(self, ev);
+  void reportTestResults.call(ev.source || self, ev);
 };
 
 self.onconnect = (event: MessageEvent) => {

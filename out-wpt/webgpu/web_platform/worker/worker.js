@@ -87,7 +87,7 @@ async function reportTestResults(ev) {
 }
 
 self.onmessage = (ev) => {
-  void reportTestResults.call(self, ev);
+  void reportTestResults.call(ev.source || self, ev);
 };
 
 self.onconnect = (event) => {

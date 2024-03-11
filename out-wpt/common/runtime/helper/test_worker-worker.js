@@ -1,13 +1,9 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { setBaseResourcePath } from '../../framework/resources.js';import { globalTestConfig } from '../../framework/test_config.js';import { DefaultTestFileLoader } from '../../internal/file_loader.js';
-import { Logger } from '../../internal/logging/logger.js';
-import { parseQuery } from '../../internal/query/parseQuery.js';
-
-import { setDefaultRequestAdapterOptions } from '../../util/navigator_gpu.js';
+**/import { setBaseResourcePath } from '../../framework/resources.js';import { DefaultTestFileLoader } from '../../internal/file_loader.js';import { parseQuery } from '../../internal/query/parseQuery.js';
 import { assert } from '../../util/util.js';
 
-
+import { setupWorkerEnvironment } from './utils_worker.js';
 
 // Should be WorkerGlobalScope, but importing lib "webworker" conflicts with lib "dom".
 
@@ -18,24 +14,9 @@ const loader = new DefaultTestFileLoader();
 setBaseResourcePath('../../../resources');
 
 async function reportTestResults(ev) {
-  const query = ev.data.query;
-  const expectations = ev.data.expectations;
-  const ctsOptions = ev.data.ctsOptions;
+  const { query, expectations, ctsOptions } = ev.data;
 
-  const { debug, unrollConstEvalLoops, powerPreference, compatibility } = ctsOptions;
-  globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
-  globalTestConfig.compatibility = compatibility;
-
-  Logger.globalDebugMode = debug;
-  const log = new Logger();
-
-  if (powerPreference || compatibility) {
-    setDefaultRequestAdapterOptions({
-      ...(powerPreference && { powerPreference }),
-      // MAINTENANCE_TODO: Change this to whatever the option ends up being
-      ...(compatibility && { compatibilityMode: true })
-    });
-  }
+  const log = setupWorkerEnvironment(ctsOptions);
 
   const testcases = Array.from(await loader.loadCases(parseQuery(query)));
   assert(testcases.length === 1, 'worker query resulted in != 1 cases');
@@ -48,7 +29,7 @@ async function reportTestResults(ev) {
 }
 
 self.onmessage = (ev) => {
-  void reportTestResults.call(self, ev);
+  void reportTestResults.call(ev.source || self, ev);
 };
 
 self.onconnect = (event) => {
