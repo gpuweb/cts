@@ -1816,6 +1816,8 @@
   "webgpu:shader,validation,decl,var_access_mode:read_access:*": { "subcaseMS": 1.177 },
   "webgpu:shader,validation,decl,var_access_mode:write_access:*": { "subcaseMS": 1.154 },
   "webgpu:shader,validation,expression,access,vector:vector:*": { "subcaseMS": 1.407 },
+  "webgpu:shader,validation,expression,binary,and_or_xor:invalid_types:*": { "subcaseMS": 24.069 },
+  "webgpu:shader,validation,expression,binary,and_or_xor:scalar_vector:*": { "subcaseMS": 666.807 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_left_concrete:*": { "subcaseMS": 1.216 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_left_vec_size_mismatch:*": { "subcaseMS": 1.367 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_right_concrete:*": { "subcaseMS": 1.237 },
