@@ -1,11 +1,14 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/let windowURL = undefined;function getWindowURL() {if (windowURL === undefined) {
+**/import { unreachable } from '../../util/util.js';let windowURL = undefined;
+function getWindowURL() {
+  if (windowURL === undefined) {
     windowURL = new URL(window.location.toString());
   }
   return windowURL;
 }
 
+/** Parse a runner option that is always boolean-typed. False if missing or '0'. */
 export function optionEnabled(
 opt,
 searchParams = getWindowURL().searchParams)
@@ -14,11 +17,32 @@ searchParams = getWindowURL().searchParams)
   return val !== null && val !== '0';
 }
 
+/** Parse a runner option that is always string-typed. If the option is missing, returns `''`. */
 export function optionString(
 opt,
 searchParams = getWindowURL().searchParams)
 {
   return searchParams.get(opt) || '';
+}
+
+/** Runtime modes for whether to run tests in a worker. '0' means no worker. */
+
+/** Parse a runner option for different worker modes (as in `?worker=shared`). */
+export function optionWorkerMode(
+opt,
+searchParams = getWindowURL().searchParams)
+{
+  const value = searchParams.get(opt);
+  if (value === null || value === '0') {
+    return '0';
+  } else if (value === 'service') {
+    return 'service';
+  } else if (value === 'shared') {
+    return 'shared';
+  } else if (value === '' || value === '1' || value === 'dedicated') {
+    return 'dedicated';
+  }
+  unreachable('invalid worker= option value');
 }
 
 /**
@@ -34,7 +58,7 @@ searchParams = getWindowURL().searchParams)
 
 
 export const kDefaultCTSOptions = {
-  worker: '',
+  worker: '0',
   debug: true,
   compatibility: false,
   forceFallbackAdapter: false,
@@ -63,9 +87,9 @@ export const kDefaultCTSOptions = {
 export const kCTSOptionsInfo = {
   worker: {
     description: 'run in a worker',
-    parser: optionString,
+    parser: optionWorkerMode,
     selectValueDescriptions: [
-    { value: '', description: 'no worker' },
+    { value: '0', description: 'no worker' },
     { value: 'dedicated', description: 'dedicated worker' },
     { value: 'shared', description: 'shared worker' },
     { value: 'service', description: 'service worker' }]
