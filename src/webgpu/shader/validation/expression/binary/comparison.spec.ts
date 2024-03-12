@@ -64,8 +64,8 @@ g.test('scalar_vector')
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
     const code = `
 ${hasF16 ? 'enable f16;' : ''}
-const lhs = ${lhs.create(lhsElement.kind === 'abstract-int' ? 0n : 0).wgsl()};
-const rhs = ${rhs.create(rhsElement.kind === 'abstract-int' ? 0n : 0).wgsl()};
+const lhs = ${lhs.create(0).wgsl()};
+const rhs = ${rhs.create(0).wgsl()};
 const foo = lhs ${kComparisonOperators[t.params.op].op} rhs;
 `;
 
@@ -73,16 +73,16 @@ const foo = lhs ${kComparisonOperators[t.params.op].op} rhs;
 
     // Determine if the element types are comparable.
     let elementIsCompatible = false;
-    if (lhsElement.kind === 'abstract-int') {
+    if (lhsElement === Type.abstractInt) {
       // Abstract integers are comparable to any other numeric type.
-      elementIsCompatible = rhsElement.kind !== 'bool';
-    } else if (rhsElement.kind === 'abstract-int') {
+      elementIsCompatible = rhsElement !== Type.bool;
+    } else if (rhsElement === Type.abstractInt) {
       // Abstract integers are comparable to any other numeric type.
-      elementIsCompatible = lhsElement.kind !== 'bool';
-    } else if (lhsElement.kind === 'abstract-float') {
+      elementIsCompatible = lhsElement !== Type.bool;
+    } else if (lhsElement === Type.abstractFloat) {
       // Abstract floats are comparable to any other float type.
       elementIsCompatible = isFloatType(rhsElement);
-    } else if (rhsElement.kind === 'abstract-float') {
+    } else if (rhsElement === Type.abstractFloat) {
       // Abstract floats are comparable to any other float type.
       elementIsCompatible = isFloatType(lhsElement);
     } else {
@@ -98,7 +98,7 @@ const foo = lhs ${kComparisonOperators[t.params.op].op} rhs;
       valid = lhs.width === rhs.width && elementIsCompatible;
     }
 
-    if (lhsElement.kind === 'bool') {
+    if (lhsElement === Type.bool) {
       valid &&= kComparisonOperators[t.params.op].supportsBool;
     }
 
