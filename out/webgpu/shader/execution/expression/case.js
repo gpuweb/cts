@@ -69,7 +69,9 @@ export function selectNCases(dis, n, cases) {
     return cases;
   }
   const dis_crc32 = crc32(dis);
-  return cases.filter((c) => n * (0xffff_ffff / count) > (crc32(c.input.toString()) ^ dis_crc32));
+  return cases.filter(
+    (c) => Math.trunc(n / count * 0xffff_ffff) > (crc32(c.input.toString()) ^ dis_crc32) >>> 0
+  );
 }
 
 /**

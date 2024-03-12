@@ -11,7 +11,7 @@ flatMap((k) =>
   [`mat${k}x${rows}_mat${cols}x${k}`]: () => {
     return selectNCases(
       'binary/af_matrix_matrix_multiplication',
-      50,
+      10,
       FP.abstract.generateMatrixPairToMatrixCases(
         sparseMatrixF64Range(k, rows),
         sparseMatrixF64Range(cols, k),
