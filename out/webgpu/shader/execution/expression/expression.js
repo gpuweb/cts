@@ -13,7 +13,8 @@ import {
   VectorValue,
   isAbstractType,
   scalarTypeOf,
-  ArrayType } from
+  ArrayType,
+  elementTypeOf } from
 '../../../util/conversion.js';
 import { align } from '../../../util/math.js';
 
@@ -618,7 +619,7 @@ inputSource)
     // Constant eval
     //////////////////////////////////////////////////////////////////////////
     let body = '';
-    if (parameterTypes.some(isAbstractType)) {
+    if (parameterTypes.some((ty) => isAbstractType(elementTypeOf(ty)))) {
       // Directly assign the expression to the output, to avoid an
       // intermediate store, which will concretize the value early
       body = cases.
