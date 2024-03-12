@@ -72,14 +72,14 @@ g.test('storage_texture_types')
     `Test that for texture_storage_xx<format, access>
 - format must be an enumerant for one of the texel formats for storage textures
 - access must be an enumerant for one of the access modes
+
+Note: bgra8unorm need bgra8unorm-storage feature to enable storage usable.
 `
   )
   .params(u =>
     u
       .combine('access', ['read', 'write', 'read_write'] as const)
       .combine('format', kAllTextureFormats)
-      // bgra8unorm-storage feature is tested at webgpu,api,validation,texture,bgra8unorm_storage
-      .filter(p => p.format !== 'bgra8unorm')
   )
   .fn(t => {
     const { format, access } = t.params;
