@@ -1047,14 +1047,14 @@ export abstract class FPTraits {
     unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
-  /** Version of absoluteErrorInterval that always returns the unboundedInterval */
-  protected unboundedAbsoluteErrorInterval(_n: number, _error_range: number): FPInterval {
-    return this.constants().unboundedInterval;
+  /** Stub for absolute errors */
+  protected unimplementedAbsoluteErrorInterval(_n: number, _error_range: number): FPInterval {
+    unreachable(`Absolute Error is not implement for '${this.kind}'`);
   }
 
-  /** Version of ulpInterval that always returns the unboundedInterval */
-  protected unboundedUlpInterval(_n: number, _numULP: number): FPInterval {
-    return this.constants().unboundedInterval;
+  /** Stub for ULP errors */
+  protected unimplementedUlpInterval(_n: number, _numULP: number): FPInterval {
+    unreachable(`ULP Error is not implement for '${this.kind}'`);
   }
 
   // Utilities - Defined by subclass
@@ -5091,12 +5091,10 @@ class FPAbstractTraits extends FPTraits {
   public readonly sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
-  public readonly absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  public readonly absoluteErrorInterval = this.unimplementedAbsoluteErrorInterval.bind(this); // Should use FP.f32 instead
   public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
-  public readonly ulpInterval = (n: number, numULP: number): FPInterval => {
-    return this.toInterval(kF32Traits.ulpInterval(n, numULP));
-  };
+  public readonly ulpInterval = this.unimplementedUlpInterval.bind(this); // Should use FP.f32 instead
 
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
