@@ -5128,10 +5128,7 @@ class FPAbstractTraits extends FPTraits {
   coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
   crossInterval = this.crossIntervalImpl.bind(this);
   degreesInterval = this.degreesIntervalImpl.bind(this);
-  determinantInterval = this.unimplementedMatrixToInterval.bind(
-    this,
-    'determinantInterval'
-  );
+  determinantInterval = this.determinantIntervalImpl.bind(this);
   distanceInterval = this.unimplementedDistance.bind(this);
   divisionInterval = (
   x,

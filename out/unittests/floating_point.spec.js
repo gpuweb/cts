@@ -6504,7 +6504,7 @@ fn((t) => {
 g.test('determinantInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 combineWithParams([
 // Extreme values, i.e. subnormals, very large magnitudes, and those lead to

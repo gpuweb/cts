@@ -78,7 +78,21 @@ const f16_cases = ([2, 3, 4] as const)
   )
   .reduce((a, b) => ({ ...a, ...b }), {});
 
+// Cases: abstract_matDxD
+const abstract_cases = ([2, 3, 4] as const)
+  .map(dim => ({
+    [`abstract_mat${dim}x${dim}`]: () => {
+      return FP.abstract.generateMatrixToScalarCases(
+        kDeterminantMatrixValues[dim],
+        'finite',
+        FP.abstract.determinantInterval
+      );
+    },
+  }))
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('determinant', {
   ...f32_cases,
   ...f16_cases,
+  ...abstract_cases,
 });
