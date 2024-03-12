@@ -61,8 +61,8 @@ g.test('scalar_vector')
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
     const code = `
 ${hasF16 ? 'enable f16;' : ''}
-const lhs = ${lhs.create(lhsElement.kind === 'abstract-int' ? 0n : 0).wgsl()};
-const rhs = ${rhs.create(rhsElement.kind === 'abstract-int' ? 0n : 0).wgsl()};
+const lhs = ${lhs.create(0).wgsl()};
+const rhs = ${rhs.create(0).wgsl()};
 const foo = lhs ${op.op} rhs;
 `;
 
@@ -92,7 +92,7 @@ const foo = lhs ${op.op} rhs;
       valid = lhs.width === rhs.width && elementIsCompatible;
     }
 
-    if (lhsElement.kind === 'bool') {
+    if (lhsElement === Type.bool) {
       valid &&= op.supportsBool;
     }
 

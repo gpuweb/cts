@@ -30,7 +30,7 @@ fn((t) => {
   const hasF16 = elementTy === Type.f16;
   const code = `
 ${hasF16 ? 'enable f16;' : ''}
-const rhs = ${type.create(elementTy.kind === 'abstract-int' ? 0n : 0).wgsl()};
+const rhs = ${type.create(0).wgsl()};
 const foo = !rhs;
 `;
 
