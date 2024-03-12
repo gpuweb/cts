@@ -1,5 +1,5 @@
 import { TestParams } from '../../framework/fixture.js';
-import { optionString, optionWorkerMode } from '../../runtime/helper/options.js';
+import { optionWorkerMode } from '../../runtime/helper/options.js';
 import { assert, unreachable } from '../../util/util.js';
 import { Expectation } from '../logging/result.js';
 
