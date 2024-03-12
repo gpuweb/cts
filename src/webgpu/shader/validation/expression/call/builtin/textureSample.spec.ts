@@ -14,8 +14,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  kConcreteIntegerScalarsAndVectors,
-  kConvertableToFloatScalarsAndVectors,
+  kAllScalarsAndVectors,
   isConvertible,
   ScalarType,
   VectorType,
@@ -43,10 +42,7 @@ const kValidTextureSampleParameterTypes: { [n: string]: TextureSampleArguments }
 } as const;
 
 const kTextureTypes = keysOf(kValidTextureSampleParameterTypes);
-const kValuesTypes = objectsToRecord([
-  ...kConvertableToFloatScalarsAndVectors,
-  ...kConcreteIntegerScalarsAndVectors,
-] as const);
+const kValuesTypes = objectsToRecord(kAllScalarsAndVectors);
 
 export const g = makeTestGroup(ShaderValidationTest);
 
