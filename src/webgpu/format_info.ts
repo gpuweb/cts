@@ -1558,6 +1558,31 @@ export const kValidTextureFormatsForCopyE2T = [
 // Other related stuff
 //
 
+/**
+ * Pass this to `expandWithParams` to expand a format list into a format+aspect list.
+ *
+ * In some cases, `aspect` will be unset, invoking the default (which is always `"all"`).
+ */
+export function* aspectParamsForTextureFormat(format: GPUTextureFormat): Generator<{
+  /** `GPUTextureAspect | undefined` to pass to WebGPU. */
+  aspect?: 'depth-only' | 'stencil-only';
+  /** Key for the aspect in the info table: `kTextureFormatInfo[format][_aspectKey]`. */
+  _aspectKey: 'color' | 'depth' | 'stencil';
+}> {
+  const info = kTextureFormatInfo[format];
+  if (info.color?.bytes) {
+    yield { _aspectKey: 'color' } as const;
+  }
+  if (info.depth?.bytes) {
+    yield { aspect: 'depth-only', _aspectKey: 'depth' } as const;
+    if (!info.stencil) yield { _aspectKey: 'depth' } as const;
+  }
+  if (info.stencil?.bytes) {
+    yield { aspect: 'stencil-only', _aspectKey: 'stencil' } as const;
+    if (!info.depth) yield { _aspectKey: 'stencil' } as const;
+  }
+}
+
 const kDepthStencilFormatCapabilityInBufferTextureCopy = {
   // kUnsizedDepthStencilFormats
   depth24plus: {
