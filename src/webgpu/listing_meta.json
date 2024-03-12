@@ -1941,6 +1941,8 @@
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:basic:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:composite:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:invalid:*": { "subcaseMS": 0.000 },
+  "webgpu:shader,validation,expression,unary,bitwise_complement:invalid_types:*": { "subcaseMS": 7.564 },
+  "webgpu:shader,validation,expression,unary,bitwise_complement:scalar_vector:*": { "subcaseMS": 73.852 },
   "webgpu:shader,validation,expression,unary,logical_negation:invalid_types:*": { "subcaseMS": 7.100 },
   "webgpu:shader,validation,expression,unary,logical_negation:scalar_vector:*": { "subcaseMS": 84.680 },
   "webgpu:shader,validation,extension,pointer_composite_access:deref:*": { "subcaseMS": 0.000 },
