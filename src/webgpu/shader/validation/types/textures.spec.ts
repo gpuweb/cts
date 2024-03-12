@@ -67,34 +67,30 @@ g.test('texel_formats,as_value')
     t.expectCompileResult(false, wgsl);
   });
 
+const kAccessModes = ['read', 'write', 'read_write'];
+
 g.test('storage_texture_types')
   .desc(
     `Test that for texture_storage_xx<format, access>
 - format must be an enumerant for one of the texel formats for storage textures
 - access must be an enumerant for one of the access modes
 
-Note: bgra8unorm need bgra8unorm-storage feature to enable storage usable.
+Besides, the shader compilation should always pass regardless of whether the format supports the usage indicated by the access or not.
 `
   )
   .params(u =>
-    u
-      .combine('access', ['read', 'write', 'read_write'] as const)
-      .combine('format', kAllTextureFormats)
+    u.combine('access', [...kAccessModes, 'storage'] as const).combine('format', kAllTextureFormats)
   )
   .fn(t => {
     const { format, access } = t.params;
     const info = kTextureFormatInfo[format];
-    let storage = info.color?.storage || info.depth?.storage || info.stencil?.storage || false;
+    let isFormatValid =
+      info.color?.storage || info.depth?.storage || info.stencil?.storage || false;
     if (t.isCompatibility) {
       // Adjust if storage is supported under compatibility mode for formats in kCompatModeUnsupportedStorageTextureFormats.
-      storage = isTextureFormatUsableAsStorageFormat(format, t.isCompatibility);
+      isFormatValid = isTextureFormatUsableAsStorageFormat(format, t.isCompatibility);
     }
-    const readWriteStorage =
-      info.color?.readWriteStorage ||
-      info.depth?.readWriteStorage ||
-      info.stencil?.readWriteStorage ||
-      false;
-    const valid = access === 'read_write' ? readWriteStorage : storage;
+    const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}>;`;
-    t.expectCompileResult(valid, wgsl);
+    t.expectCompileResult(isFormatValid && isAccessValid, wgsl);
   });
