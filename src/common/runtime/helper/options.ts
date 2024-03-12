@@ -41,9 +41,8 @@ export function optionWorkerMode(
     return 'shared';
   } else if (value === '' || value === '1' || value === 'dedicated') {
     return 'dedicated';
-  } else {
-    unreachable('invalid worker= option value');
   }
+  unreachable('invalid worker= option value');
 }
 
 /**
