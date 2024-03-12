@@ -1,12 +1,12 @@
 export const description = `
-Validation tests for logical and bitwise and/or/xor expressions.
+Validation tests for add/sub/mul expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../common/util/data_tables.js';
 import {
   kAllScalarsAndVectors,
-  ScalarType,
+  kConvertableToFloatScalar,
   scalarTypeOf,
   Type,
   VectorType,
@@ -15,11 +15,11 @@ import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-// A list of operators and a flag for whether they support boolean values or not.
+// A list of operators tested in this file.
 const kOperators = {
-  and: { op: '&', supportsBool: true },
-  or: { op: '|', supportsBool: true },
-  xor: { op: '^', supportsBool: false },
+  add: { op: '+' },
+  sub: { op: '-' },
+  mul: { op: '*' },
 };
 
 // A list of scalar and vector types.
@@ -28,7 +28,7 @@ const kScalarAndVectorTypes = objectsToRecord(kAllScalarsAndVectors);
 g.test('scalar_vector')
   .desc(
     `
-  Validates that scalar and vector expressions are only accepted for bool or compatible integer types.
+  Validates that scalar and vector expressions are only accepted for compatible numeric types.
   `
   )
   .params(u =>
@@ -67,34 +67,26 @@ const rhs = ${rhs.create(0).wgsl()};
 const foo = lhs ${op.op} rhs;
 `;
 
-    // Determine if the element types are compatible.
-    const kIntegerTypes = [Type.abstractInt, Type.i32, Type.u32];
-    let elementIsCompatible = false;
-    if (lhsElement === Type.abstractInt) {
-      // Abstract integers are compatible with any other integer type.
-      elementIsCompatible = kIntegerTypes.includes(rhsElement);
-    } else if (rhsElement === Type.abstractInt) {
-      // Abstract integers are compatible with any other numeric type.
-      elementIsCompatible = kIntegerTypes.includes(lhsElement);
-    } else if (kIntegerTypes.includes(lhsElement)) {
-      // Concrete integers are only compatible with values with the exact same type.
-      elementIsCompatible = lhsElement === rhsElement;
-    } else if (lhsElement === Type.bool) {
-      // Booleans are only compatible with other booleans.
-      elementIsCompatible = rhsElement === Type.bool;
+    let elementsCompatible = lhsElement === rhsElement;
+    const elementTypes = [lhsElement, rhsElement];
+
+    // Booleans are not allowed for arithmetic expressions.
+    if (elementTypes.includes(Type.bool)) {
+      elementsCompatible = false;
+
+      // AbstractInt is allowed with everything but booleans which are already checked above.
+    } else if (elementTypes.includes(Type.abstractInt)) {
+      elementsCompatible = true;
+
+      // AbstractFloat is allowed with AbstractInt (checked above) or float types
+    } else if (elementTypes.includes(Type.abstractFloat)) {
+      elementsCompatible = elementTypes.every(e => kConvertableToFloatScalar.includes(e));
     }
 
-    // Determine if the full type is compatible.
-    let valid = false;
-    if (lhs instanceof ScalarType && rhs instanceof ScalarType) {
-      valid = elementIsCompatible;
-    } else if (lhs instanceof VectorType && rhs instanceof VectorType) {
-      // Vectors are only compatible with if the vector widths match.
-      valid = lhs.width === rhs.width && elementIsCompatible;
-    }
-
-    if (lhsElement === Type.bool) {
-      valid &&= op.supportsBool;
+    // Determine if the full type is compatible. The only invalid case is mixed vector sizes.
+    let valid = elementsCompatible;
+    if (lhs instanceof VectorType && rhs instanceof VectorType) {
+      valid = valid && lhs.width === rhs.width;
     }
 
     t.expectCompileResult(valid, code);
@@ -107,11 +99,6 @@ interface InvalidTypeConfig {
   control: (x: string) => string;
 }
 const kInvalidTypes: Record<string, InvalidTypeConfig> = {
-  mat2x2f: {
-    expr: 'm',
-    control: e => `i32(${e}[0][0])`,
-  },
-
   array: {
     expr: 'arr',
     control: e => `${e}[0]`,
@@ -143,10 +130,18 @@ const kInvalidTypes: Record<string, InvalidTypeConfig> = {
   },
 };
 
-g.test('invalid_types')
+g.test('scalar_vector_out_of_range')
   .desc(
     `
-  Validates that expressions are never accepted for non-scalar and non-vector types.
+  TODO: Check with a couple values in f32 or f16 that would result in out of range values on the type.
+  `
+  )
+  .unimplemented();
+
+g.test('invalid_type_with_itself')
+  .desc(
+    `
+  Validates that expressions are never accepted for non-scalar, non-vector, and non-matrix types.
   `
   )
   .params(u =>
