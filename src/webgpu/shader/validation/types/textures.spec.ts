@@ -86,10 +86,6 @@ Besides, the shader compilation should always pass regardless of whether the for
     const info = kTextureFormatInfo[format];
     let isFormatValid =
       info.color?.storage || info.depth?.storage || info.stencil?.storage || false;
-    if (t.isCompatibility) {
-      // Adjust if storage is supported under compatibility mode for formats in kCompatModeUnsupportedStorageTextureFormats.
-      isFormatValid = isTextureFormatUsableAsStorageFormat(format, t.isCompatibility);
-    }
     const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}>;`;
     t.expectCompileResult(isFormatValid && isAccessValid, wgsl);
