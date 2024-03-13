@@ -1047,14 +1047,14 @@ export class FPTraits {
     unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
-  /** Version of absoluteErrorInterval that always returns the unboundedInterval */
-  unboundedAbsoluteErrorInterval(_n, _error_range) {
-    return this.constants().unboundedInterval;
+  /** Stub for absolute errors */
+  unimplementedAbsoluteErrorInterval(_n, _error_range) {
+    unreachable(`Absolute Error is not implement for '${this.kind}'`);
   }
 
-  /** Version of ulpInterval that always returns the unboundedInterval */
-  unboundedUlpInterval(_n, _numULP) {
-    return this.constants().unboundedInterval;
+  /** Stub for ULP errors */
+  unimplementedUlpInterval(_n, _numULP) {
+    unreachable(`ULP Error is not implement for '${this.kind}'`);
   }
 
   // Utilities - Defined by subclass
@@ -5091,12 +5091,10 @@ class FPAbstractTraits extends FPTraits {
   sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
-  absoluteErrorInterval = this.absoluteErrorIntervalImpl.bind(this);
+  absoluteErrorInterval = this.unimplementedAbsoluteErrorInterval.bind(this); // Should use FP.f32 instead
   correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
-  ulpInterval = (n, numULP) => {
-    return this.toInterval(kF32Traits.ulpInterval(n, numULP));
-  };
+  ulpInterval = this.unimplementedUlpInterval.bind(this); // Should use FP.f32 instead
 
   // Framework - API - Overrides
   absInterval = this.absIntervalImpl.bind(this);
