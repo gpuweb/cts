@@ -13,7 +13,7 @@ const cases = (['f32', 'f16', 'abstract'] as const)
         return FP[trait].generateScalarToIntervalCases(
           FP[trait].scalarRange(),
           nonConst ? 'unfiltered' : 'finite',
-          // degrees has an inherited accuracy, so is only expected to be as accurate as f32
+          // degrees has an inherited accuracy, so abstract is only expected to be as accurate as f32
           FP[trait !== 'abstract' ? trait : 'f32'].degreesInterval
         );
       },

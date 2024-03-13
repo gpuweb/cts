@@ -6119,17 +6119,12 @@ const kDotIntervalCases = {
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f16.positive.max, -2.0, -3.0]], expected: kUnboundedEndpoints },
     { input: [[kValue.f16.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f16.negative.min, 2.0, 3.0]], expected: kUnboundedEndpoints },
   ] as VectorPairToIntervalCase[],
-  abstract: [
-    // See f32 for details
-    { input: [[kValue.f64.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f64.positive.max, -2.0, -3.0]], expected: [-13, 0] },
-    { input: [[kValue.f64.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f64.negative.min, 2.0, 3.0]], expected: [0, 13] },
-  ] as VectorPairToIntervalCase[],
 } as const;
 
 g.test('dotInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<VectorPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -7167,7 +7162,7 @@ g.test('subtractionMatrixMatrixInterval')
 g.test('multiplicationMatrixMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .combineWithParams<MatrixPairToMatrixCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -7933,7 +7928,7 @@ interface MatrixVectorToVectorCase {
 g.test('multiplicationMatrixVectorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .combineWithParams<MatrixVectorToVectorCase>([
         // Only testing that different shapes of matrices are handled correctly
@@ -8050,7 +8045,7 @@ interface VectorMatrixToVectorCase {
 g.test('multiplicationVectorMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .combineWithParams<VectorMatrixToVectorCase>([
         // Only testing that different shapes of matrices are handled correctly

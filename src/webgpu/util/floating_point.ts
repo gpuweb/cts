@@ -1713,7 +1713,6 @@ export abstract class FPTraits {
   ): Case | undefined {
     param0 = map2DArray(param0, this.quantize);
     param1 = map2DArray(param1, this.quantize);
-
     const results = ops.map(o => o(param0, param1));
     if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
       return undefined;
@@ -2527,9 +2526,10 @@ export abstract class FPTraits {
   protected runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
     const num_cols = m.length;
     const num_rows = m[0].length;
-    if (m.some(c => c.some(r => !r.isFinite()))) {
-      return this.constants().unboundedMatrix[num_cols][num_rows];
-    }
+
+    // Do not check for OOB inputs and exit early here, because the shape of
+    // the output matrix may be determined by the operation being run,
+    // i.e. transpose.
 
     const m_flat: readonly FPInterval[] = flatten2DArray(m);
     const m_values: ROArrayArray<number> = cartesianProduct<number>(
@@ -3411,7 +3411,10 @@ export abstract class FPTraits {
     x: readonly number[] | readonly FPInterval[],
     y: readonly number[] | readonly FPInterval[]
   ): FPInterval {
-    assert(x.length === y.length, `dot not defined for vectors with different lengths`);
+    assert(
+      x.length === y.length,
+      `dot not defined for vectors with different lengths, x = ${x}, y = ${y}`
+    );
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
 
@@ -5137,7 +5140,7 @@ class FPAbstractTraits extends FPTraits {
   ): FPInterval => {
     return this.toInterval(kF32Traits.divisionInterval(x, y));
   };
-  public readonly dotInterval = this.dotIntervalImpl.bind(this);
+  public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dot');
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
@@ -5162,16 +5165,22 @@ class FPAbstractTraits extends FPTraits {
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
-  public readonly multiplicationMatrixMatrixInterval =
-    this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
+    this,
+    'matrix-matrix multiplication'
+  );
   public readonly multiplicationMatrixScalarInterval =
     this.multiplicationMatrixScalarIntervalImpl.bind(this);
   public readonly multiplicationScalarMatrixInterval =
     this.multiplicationScalarMatrixIntervalImpl.bind(this);
-  public readonly multiplicationMatrixVectorInterval =
-    this.multiplicationMatrixVectorIntervalImpl.bind(this);
-  public readonly multiplicationVectorMatrixInterval =
-    this.multiplicationVectorMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
+    this,
+    'matrix-vector multiplication'
+  );
+  public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
+    this,
+    'vector-matrix multiplication'
+  );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
     this,

@@ -14,7 +14,7 @@ const cases = (['f32', 'f16', 'abstract'] as const)
           FP[trait].vectorRange(3),
           FP[trait].vectorRange(3),
           nonConst ? 'unfiltered' : 'finite',
-          // cross has an inherited accuracy, so is only expected to be as accurate as f32
+          // cross has an inherited accuracy, so abstract is only expected to be as accurate as f32
           FP[trait !== 'abstract' ? trait : 'f32'].crossInterval
         );
       },
