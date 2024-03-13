@@ -22,12 +22,7 @@ import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
 
-/**
- * For ULP purposes, abstract float behaves like f32, so need to swizzle it in
- * for expectations.
- */
 const kFPTraitForULP = {
-  abstract: 'f32',
   f32: 'f32',
   f16: 'f16',
 } as const;
@@ -4364,13 +4359,10 @@ const kDivisionInterval64BitsNormalCases = {
 g.test('divisionInterval')
   .params(u =>
     u
-      .combine('trait', ['abstract', 'f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
-        // This is a ULP based interval, so abstract should behave like f32, so
-        // swizzling the trait as needed.
-        const trait = p.trait === 'abstract' ? 'f32' : p.trait;
-        const fp = FP[trait];
+        const fp = FP[p.trait];
         const constants = fp.constants();
         // prettier-ignore
         return [
@@ -4387,7 +4379,7 @@ g.test('divisionInterval')
           { input: [-4, -2], expected: 2 },
 
           // 64-bit normals that can not be exactly represented
-          ...kDivisionInterval64BitsNormalCases[trait],
+          ...kDivisionInterval64BitsNormalCases[p.trait],
 
           // Denominator out of range
           { input: [1, constants.positive.infinity], expected: kUnboundedEndpoints },
@@ -4403,10 +4395,7 @@ g.test('divisionInterval')
       })
   )
   .fn(t => {
-    // This is a ULP based interval, so abstract should behave like f32, so
-    // swizzling the trait as needed for calculating the expected result.
-    const trait = t.params.trait === 'abstract' ? 'f32' : t.params.trait;
-    const fp = FP[trait];
+    const fp = FP[t.params.trait];
 
     const error = (n: number): number => {
       return 2.5 * fp.oneULP(n);
@@ -4414,7 +4403,6 @@ g.test('divisionInterval')
 
     const [x, y] = t.params.input;
 
-    // Do not swizzle here, so the correct implementation under test is called.
     const expected = FP[t.params.trait].toInterval(applyError(t.params.expected, error));
     const got = FP[t.params.trait].divisionInterval(x, y);
     t.expect(
@@ -4841,7 +4829,7 @@ const kRemainderCases = {
 g.test('remainderInterval')
   .params(u =>
     u
-      .combine('trait', ['abstract', 'f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = kFPTraitForULP[p.trait];
