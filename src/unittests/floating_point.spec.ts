@@ -5367,40 +5367,12 @@ const kMixImpreciseIntervalCases = {
     { input: [kValue.f16.negative.min,  10.0, 0.5], expected: kUnboundedEndpoints },
     { input: [kValue.f16.negative.min, -10.0, 0.5], expected: [-32768.0, -32752.0] },
   ] as ScalarTripleToIntervalCase[],
-  abstract: [
-    // [0.0, 1.0] cases
-    { input: [0.0, 1.0, 0.1], expected: 0.1 },
-    { input: [0.0, 1.0, 0.9], expected: 0.9 },
-    // [1.0, 0.0] cases
-    { input: [1.0, 0.0, 0.1], expected: 0.9 },
-    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
-    // [0.0, 10.0] cases
-    { input: [0.0, 10.0, 0.1], expected: 1 },
-    { input: [0.0, 10.0, 0.9], expected: 9 },
-    // [2.0, 10.0] cases
-    { input: [2.0, 10.0, 0.1], expected: 2.8 },
-    { input: [2.0, 10.0, 0.9], expected: 9.2 },
-    // [-1.0, 1.0] cases
-    { input: [-1.0, 1.0, 0.1], expected: -0.8 },
-    { input: [-1.0, 1.0, 0.9], expected: 0.8 },
-
-    // Showing how precise and imprecise versions diff
-    // Note that this expectation is 0 in f64 as |10.0| is much smaller than
-    // |f64.negative.min|, so that 10 - f64.negative.min == -f64.negative.min
-    { input: [kValue.f64.negative.min, 10.0, 1.0], expected: 0 },
-    // -10.0 is the same, much smaller than f64.negative.min
-    { input: [kValue.f64.negative.min, -10.0, 1.0], expected: 0 },
-    { input: [kValue.f64.negative.min,  10.0, 5.0], expected: kUnboundedEndpoints },
-    { input: [kValue.f64.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
-    { input: [kValue.f64.negative.min, 10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
-    { input: [kValue.f64.negative.min, -10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
-  ] as ScalarTripleToIntervalCase[],
 } as const;
 
 g.test('mixImpreciseInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5529,40 +5501,12 @@ const kMixPreciseIntervalCases = {
     // Intermediate OOB
     { input: [1.0, 2.0,  kPlusOneULPFunctions['f16'](kValue.f16.positive.max / 2)], expected: kUnboundedEndpoints },
   ] as ScalarTripleToIntervalCase[],
-  abstract: [
-    // [0.0, 1.0] cases
-    { input: [0.0, 1.0, 0.1], expected: 0.1 },
-    { input: [0.0, 1.0, 0.9], expected: 0.9 },
-    // [1.0, 0.0] cases
-    { input: [1.0, 0.0, 0.1], expected: 0.9 },
-    { input: [1.0, 0.0, 0.9], expected: kMinusNULPFunctions['abstract'](0.1, 2) }, // This not being 0.1 is related to https://github.com/gpuweb/cts/issues/2993
-    // [0.0, 10.0] cases
-    { input: [0.0, 10.0, 0.1], expected: 1 },
-    { input: [0.0, 10.0, 0.9], expected: 9 },
-    // [2.0, 10.0] cases
-    { input: [2.0, 10.0, 0.1], expected: 2.8 },
-    { input: [2.0, 10.0, 0.9], expected: 9.2 },
-    // [-1.0, 1.0] cases
-    { input: [-1.0, 1.0, 0.1], expected: -0.8 },
-    { input: [-1.0, 1.0, 0.9], expected: 0.8 },
-
-    // Showing how precise and imprecise versions diff
-    { input: [kValue.f64.negative.min, 10.0, 1.0], expected: 10.0 },
-    { input: [kValue.f64.negative.min, -10.0, 1.0], expected: -10.0 },
-    { input: [kValue.f64.negative.min, 10.0, 5.0], expected: kUnboundedEndpoints },
-    { input: [kValue.f64.negative.min, -10.0, 5.0], expected: kUnboundedEndpoints },
-    { input: [kValue.f64.negative.min, 10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
-    { input: [kValue.f64.negative.min, -10.0, 0.5], expected: reinterpretU64AsF64(0xffdf_ffff_ffff_ffffn) },
-
-    // Intermediate OOB
-    { input: [1.0, 2.0,  kPlusOneULPFunctions['abstract'](kValue.f64.positive.max / 2)], expected: kUnboundedEndpoints },
-  ] as ScalarTripleToIntervalCase[],
 } as const;
 
 g.test('mixPreciseInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
