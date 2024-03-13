@@ -84,7 +84,7 @@ Besides, the shader compilation should always pass regardless of whether the for
   .fn(t => {
     const { format, access } = t.params;
     const info = kTextureFormatInfo[format];
-    let isFormatValid =
+    const isFormatValid =
       info.color?.storage || info.depth?.storage || info.stencil?.storage || false;
     const isAccessValid = kAccessModes.includes(access);
     const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}>;`;
