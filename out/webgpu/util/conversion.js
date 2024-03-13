@@ -2234,6 +2234,56 @@ export function isFloatType(ty) {
   return false;
 }
 
+/** @returns true if an argument of type 'src' can be used for a parameter of type 'dst' */
+export function isConvertible(src, dst) {
+  if (src === dst) {
+    return true;
+  }
+
+  const widthOf = (ty) => {
+    return ty instanceof VectorType ? ty.width : 1;
+  };
+
+  if (widthOf(src) !== widthOf(dst)) {
+    return false;
+  }
+
+  const elSrc = scalarTypeOf(src);
+  const elDst = scalarTypeOf(dst);
+
+  switch (elSrc.kind) {
+    case 'abstract-float':
+      switch (elDst.kind) {
+        case 'abstract-float':
+        case 'f16':
+        case 'f32':
+        case 'f64':
+          return true;
+        default:
+          return false;
+      }
+    case 'abstract-int':
+      switch (elDst.kind) {
+        case 'abstract-int':
+        case 'abstract-float':
+        case 'f16':
+        case 'f32':
+        case 'f64':
+        case 'u16':
+        case 'u32':
+        case 'u8':
+        case 'i16':
+        case 'i32':
+        case 'i8':
+          return true;
+        default:
+          return false;
+      }
+    default:
+      return false;
+  }
+}
+
 /// All floating-point scalar types
 const kFloatScalars = [Type.abstractFloat, Type.f32, Type.f16];
 
