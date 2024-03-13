@@ -18,7 +18,9 @@ const kBadArgs = {
   '1i32': '(1u,2i)',
   '1f32': '(1u,2f)',
   '1bool': '(1u,true)',
-  '1vec2u': '(1u,vec2u())'
+  '1vec2u': '(1u,vec2u())',
+  bool_bool: '(false,true)',
+  bool2_bool2: '(vec2<bool>(),vec2(false,true))'
 };
 
 export const g = makeTestGroup(ShaderValidationTest);
