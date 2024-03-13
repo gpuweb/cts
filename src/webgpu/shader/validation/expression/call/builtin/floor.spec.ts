@@ -73,3 +73,32 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
       'constant'
     );
   });
+
+const kGoodArgs = '(1.1)';
+const kBadArgs = {
+  no_parens: '',
+  // Bad number of args
+  '0args': '()',
+  '2args': '(1.0,2.0)',
+  // Bad value for arg 0
+  '0aint': '(1)',
+  '0i32': '(1i)',
+  '0u32': '(1u)',
+  '0bool': '(false)',
+  '0vec2u': '(vec2u())',
+  '0array': '(array(1.1,2.2))',
+  '0struct': '(modf(2.2))',
+};
+
+g.test('bad_args')
+  .desc(`Test compilation failure of ${builtin} with bad arguments`)
+  .params(u => u.combine('arg', keysOf(kBadArgs)))
+  .fn(t => {
+    t.expectCompileResult(false, `const c = ${builtin}${kBadArgs[t.params.arg]};`);
+  });
+
+g.test('must_use')
+  .desc(`Result of ${builtin} must be used`)
+  .fn(t => {
+    t.expectCompileResult(false, `fn f() { ${builtin}${kGoodArgs}; }`);
+  });
