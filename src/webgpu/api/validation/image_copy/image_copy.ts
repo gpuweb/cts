@@ -4,7 +4,6 @@ import {
   SizedTextureFormat,
   kTextureFormatInfo,
   isCompressedTextureFormat,
-  resolvePerAspectFormat,
   kCompressedTextureFormats,
   kDepthStencilFormats,
 } from '../../../format_info.js';

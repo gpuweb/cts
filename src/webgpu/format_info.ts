@@ -1,5 +1,5 @@
 import { keysOf } from '../common/util/data_tables.js';
-import { assert, objectEquals, unreachable } from '../common/util/util.js';
+import { assert, unreachable } from '../common/util/util.js';
 
 import { align } from './util/math.js';
 import { ImageCopyType } from './util/texture/layout.js';
