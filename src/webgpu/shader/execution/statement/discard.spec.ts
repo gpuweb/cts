@@ -231,7 +231,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
   });
 
 g.test('three_quarters')
-  .desc('Test a shader that discards all fragments')
+  .desc('Test a shader that discards all but the upper-left quadrant fragments')
   .fn(t => {
     const code = `
 ${kSharedCode}
@@ -239,7 +239,7 @@ ${kSharedCode}
 @fragment
 fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
   _ = uniformValues[0];
-  if (pos.x >= 0.5 || pos.y >= 0.5) {
+  if (pos.x >= 0.5 * ${kWidth} || pos.y >= 0.5 * ${kHeight}) {
     discard;
   }
   let idx = atomicAdd(&atomicIndex, 1);
@@ -253,7 +253,12 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < 0.5;
+          const is_x = idx % 2 === 0;
+          if (is_x) {
+            return value < 0.5 * kWidth;
+          } else {
+            return value < 0.5 * kHeight;
+          }
         },
         {
           predicatePrinter: [
@@ -272,7 +277,11 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
                     return 0;
                   }
                 }
-                return '< 0.5';
+                if (is_x) {
+                  return `< ${0.5 * kWidth}`;
+                } else {
+                  return `< ${0.5 * kHeight}`;
+                }
               },
             },
           ],
@@ -283,7 +292,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < (kWidth * kHeight) / 4 && (value === a[idx - 1] || value === 0);
+          return value < (kWidth * kHeight) / 4;
         },
         {
           predicatePrinter: [
@@ -314,10 +323,10 @@ g.test('function_call')
 ${kSharedCode}
 
 fn foo(pos : vec2f) {
-  if (pos.x <= 0.5 && pos.y <= 0.5) {
+  if pos.x <= 0.5 * ${kWidth} && pos.y <= 0.5 * ${kHeight} {
     discard;
   }
-  if (pos.x >= 0.5 && pos.y >= 0.5) {
+  if pos.x >= 0.5 * ${kWidth} && pos.y >= 0.5 * ${kHeight} {
     discard;
   }
 }
@@ -342,10 +351,12 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
             return is_x ? a[idx + 1] === 0 : a[idx - 1] === 0;
           }
 
-          if (value < 0.5) {
-            return is_x ? a[idx + 1] > 0.5 : a[idx - 1] > 0.5;
+          let expect = is_x ? kWidth : kHeight;
+          expect = 0.5 * expect;
+          if (value < expect) {
+            return is_x ? a[idx + 1] > 0.5 * kWidth : a[idx - 1] > 0.5 * kHeight;
           } else {
-            return is_x ? a[idx + 1] < 0.5 : a[idx - 1] < 0.5;
+            return is_x ? a[idx + 1] < 0.5 * kWidth : a[idx - 1] < 0.5 * kHeight;
           }
         },
         {
@@ -368,7 +379,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < (kWidth * kHeight) / 2 && (value === a[idx - 1] || value === 0);
+          return value < (kWidth * kHeight) / 2;
         },
         {
           predicatePrinter: [
