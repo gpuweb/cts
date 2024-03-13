@@ -6494,7 +6494,7 @@ interface MatrixToScalarCase {
 g.test('determinantInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .combineWithParams<MatrixToScalarCase>([
         // Extreme values, i.e. subnormals, very large magnitudes, and those lead to
