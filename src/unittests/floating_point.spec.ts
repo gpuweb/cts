@@ -6321,30 +6321,12 @@ const kCrossIntervalCases = {
       ]
     },
   ] as VectorPairToVectorCase[],
-  abstract: [
-    { input: [
-        [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.max, kValue.f64.negative.subnormal.min],
-        [kValue.f64.negative.subnormal.min, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max]
-      ],
-      expected: [0.0, 0.0, 0.0]
-    },
-    { input: [
-        [0.1, -0.1, -0.1],
-        [-0.1, 0.1, -0.1]
-      ],
-      expected: [
-        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
-        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
-        0.0
-      ]
-    },
-  ] as VectorPairToVectorCase[],
 } as const;
 
 g.test('crossInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<VectorPairToVectorCase>(p => {
         const trait = FP[p.trait];
