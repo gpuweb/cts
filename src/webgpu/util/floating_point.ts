@@ -5145,7 +5145,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
-  public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
+  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fma');
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(
     this,

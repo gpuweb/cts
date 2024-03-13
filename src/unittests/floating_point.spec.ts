@@ -5247,21 +5247,12 @@ const kFmaIntervalCases = {
     // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
     // maximum case: -0.0 + -0.0 = 0.
     { input: [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] },  ] as ScalarTripleToIntervalCase[],
-  abstract: [
-    // These operations break down in the CTS, because `number` is a f64 under the hood, so precision is sometimes lost
-    // if intermediate results are  closer to 0 than the smallest subnormal will be precisely 0.
-    // See https://github.com/gpuweb/cts/issues/2993 for details
-    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, 0], expected: 0 },
-    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max], expected: [0, kValue.f64.positive.subnormal.max] },
-    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
-    { input: [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
-  ] as ScalarTripleToIntervalCase[],
 } as const;
 
 g.test('fmaInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
