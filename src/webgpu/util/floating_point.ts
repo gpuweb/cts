@@ -5196,7 +5196,7 @@ class FPAbstractTraits extends FPTraits {
     'normalizeInterval'
   );
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
-  public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly radiansInterval = this.unimplementedScalarToInterval.bind(this, 'radiansImpl');
   public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
     this,
     'reflectInterval'
