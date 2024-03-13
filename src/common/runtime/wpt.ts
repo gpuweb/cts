@@ -8,8 +8,8 @@ import { parseQuery } from '../internal/query/parseQuery.js';
 import { parseExpectationsForTestQuery, relativeQueryString } from '../internal/query/query.js';
 import { assert } from '../util/util.js';
 
-import { optionEnabled, optionString } from './helper/options.js';
-import { TestDedicatedWorker, TestSharedWorker } from './helper/test_worker.js';
+import { optionEnabled, optionWorkerMode } from './helper/options.js';
+import { TestDedicatedWorker, TestServiceWorker, TestSharedWorker } from './helper/test_worker.js';
 
 // testharness.js API (https://web-platform-tests.org/writing-tests/testharness-api.html)
 declare interface WptTestObject {
@@ -31,9 +31,10 @@ setup({
 });
 
 void (async () => {
-  const workerString = optionString('worker');
+  const workerString = optionWorkerMode('worker');
   const dedicatedWorker = workerString === 'dedicated' ? new TestDedicatedWorker() : undefined;
   const sharedWorker = workerString === 'shared' ? new TestSharedWorker() : undefined;
+  const serviceWorker = workerString === 'service' ? new TestServiceWorker() : undefined;
 
   globalTestConfig.unrollConstEvalLoops = optionEnabled('unroll_const_eval_loops');
 
@@ -68,6 +69,8 @@ void (async () => {
         await dedicatedWorker.run(rec, name, expectations);
       } else if (sharedWorker) {
         await sharedWorker.run(rec, name, expectations);
+      } else if (serviceWorker) {
+        await serviceWorker.run(rec, name, expectations);
       } else {
         await testcase.run(rec, expectations);
       }

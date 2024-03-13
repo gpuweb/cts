@@ -12,7 +12,7 @@ import {
   f16,
   f32,
   isFloatType,
-  Scalar,
+  ScalarValue,
   ScalarType,
   toMatrix,
   toVector,
@@ -1047,14 +1047,14 @@ export abstract class FPTraits {
     unreachable(`'refract' is not yet implemented for '${this.kind}'`);
   }
 
-  /** Version of absoluteErrorInterval that always returns the unboundedInterval */
-  protected unboundedAbsoluteErrorInterval(_n: number, _error_range: number): FPInterval {
-    return this.constants().unboundedInterval;
+  /** Stub for absolute errors */
+  protected unimplementedAbsoluteErrorInterval(_n: number, _error_range: number): FPInterval {
+    unreachable(`Absolute Error is not implement for '${this.kind}'`);
   }
 
-  /** Version of ulpInterval that always returns the unboundedInterval */
-  protected unboundedUlpInterval(_n: number, _numULP: number): FPInterval {
-    return this.constants().unboundedInterval;
+  /** Stub for ULP errors */
+  protected unimplementedUlpInterval(_n: number, _numULP: number): FPInterval {
+    unreachable(`ULP Error is not implement for '${this.kind}'`);
   }
 
   // Utilities - Defined by subclass
@@ -1073,8 +1073,8 @@ export abstract class FPTraits {
   public abstract readonly flushSubnormal: (n: number) => number;
   /** @returns 1 * ULP: (number) */
   public abstract readonly oneULP: (target: number, mode?: FlushMode) => number;
-  /** @returns a builder for converting numbers to Scalars */
-  public abstract readonly scalarBuilder: (n: number) => Scalar;
+  /** @returns a builder for converting numbers to ScalarsValues */
+  public abstract readonly scalarBuilder: (n: number) => ScalarValue;
   /** @returns a range of scalars for testing */
   public abstract scalarRange(): readonly number[];
   /** @returns a reduced range of scalars for testing */
@@ -5091,12 +5091,10 @@ class FPAbstractTraits extends FPTraits {
   public readonly sparseMatrixRange = sparseMatrixF64Range;
 
   // Framework - Fundamental Error Intervals - Overrides
-  public readonly absoluteErrorInterval = this.unboundedAbsoluteErrorInterval.bind(this);
+  public readonly absoluteErrorInterval = this.unimplementedAbsoluteErrorInterval.bind(this); // Should use FP.f32 instead
   public readonly correctlyRoundedInterval = this.correctlyRoundedIntervalImpl.bind(this);
   public readonly correctlyRoundedMatrix = this.correctlyRoundedMatrixImpl.bind(this);
-  public readonly ulpInterval = (n: number, numULP: number): FPInterval => {
-    return this.toInterval(kF32Traits.ulpInterval(n, numULP));
-  };
+  public readonly ulpInterval = this.unimplementedUlpInterval.bind(this); // Should use FP.f32 instead
 
   // Framework - API - Overrides
   public readonly absInterval = this.absIntervalImpl.bind(this);
@@ -5120,7 +5118,7 @@ class FPAbstractTraits extends FPTraits {
     'atan2Interval'
   );
   public readonly atanhInterval = this.unimplementedScalarToInterval.bind(this, 'atanhInterval');
-  public readonly ceilInterval = this.unimplementedScalarToInterval.bind(this, 'ceilInterval');
+  public readonly ceilInterval = this.ceilIntervalImpl.bind(this);
   public readonly clampMedianInterval = this.clampMedianIntervalImpl.bind(this);
   public readonly clampMinMaxInterval = this.clampMinMaxIntervalImpl.bind(this);
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
@@ -5128,10 +5126,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
   public readonly crossInterval = this.crossIntervalImpl.bind(this);
   public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
-  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
-    this,
-    'determinantInterval'
-  );
+  public readonly determinantInterval = this.determinantIntervalImpl.bind(this);
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
   public readonly divisionInterval = (
     x: number | FPInterval,

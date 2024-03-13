@@ -1,7 +1,14 @@
 import { crc32 } from '../../../../common/util/crc32.js';
 import { ROArrayArray } from '../../../../common/util/types.js';
 import { assert } from '../../../../common/util/util.js';
-import { abstractInt, i32, ScalarBuilder, u32, Value, Vector } from '../../../util/conversion.js';
+import {
+  abstractInt,
+  i32,
+  ScalarBuilder,
+  u32,
+  Value,
+  VectorValue,
+} from '../../../util/conversion.js';
 import {
   cartesianProduct,
   QuantizeFunc,
@@ -62,7 +69,9 @@ export function selectNCases(dis: string, n: number, cases: Case[]): Case[] {
     return cases;
   }
   const dis_crc32 = crc32(dis);
-  return cases.filter(c => n * (0xffff_ffff / count) > (crc32(c.input.toString()) ^ dis_crc32));
+  return cases.filter(
+    c => Math.trunc((n / count) * 0xffff_ffff) > (crc32(c.input.toString()) ^ dis_crc32) >>> 0
+  );
 }
 
 /**
@@ -103,8 +112,8 @@ function makeScalarVectorBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [scalarize(scalar), new Vector(vector.map(scalarize))],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [scalarize(scalar), new VectorValue(vector.map(scalarize))],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -154,8 +163,8 @@ function makeVectorScalarBinaryToVectorCase<T>(
     return undefined;
   }
   return {
-    input: [new Vector(vector.map(scalarize)), scalarize(scalar)],
-    expected: new Vector(result.filter(notUndefined).map(scalarize)),
+    input: [new VectorValue(vector.map(scalarize)), scalarize(scalar)],
+    expected: new VectorValue(result.filter(notUndefined).map(scalarize)),
   };
 }
 
@@ -357,8 +366,8 @@ function makeVectorVectorToScalarCase<T>(
 
   return {
     input: [
-      new Vector(param0_quantized.map(scalarize)),
-      new Vector(param1_quantized.map(scalarize)),
+      new VectorValue(param0_quantized.map(scalarize)),
+      new VectorValue(param1_quantized.map(scalarize)),
     ],
     expected: scalarize(result),
   };
