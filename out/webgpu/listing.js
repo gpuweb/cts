@@ -3758,6 +3758,14 @@ export const listing = [
       "shader",
       "execution",
       "statement",
+      "discard"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "statement",
       "increment_decrement"
     ]
   },
