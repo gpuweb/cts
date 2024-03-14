@@ -64,7 +64,7 @@ const kValidStatements = {
   function_call2: `workgroupBarrier()`,
 
   if1: `if true { } else { }`,
-  if2: `if true { }`, 
+  if2: `if true { }`,
 
   break1: `loop { break; }`,
   break2: `loop { if false { break; } }`,
