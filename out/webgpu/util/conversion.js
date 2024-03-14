@@ -2234,6 +2234,17 @@ export function isFloatType(ty) {
   return false;
 }
 
+/**
+ * @returns if `ty` is an unsigned type.
+ */
+export function isUnsignedType(ty) {
+  if (ty instanceof ScalarType) {
+    return ty.kind === 'u8' || ty.kind === 'u16' || ty.kind === 'u32';
+  } else {
+    return isUnsignedType(ty.elementType);
+  }
+}
+
 /** @returns true if an argument of type 'src' can be used for a parameter of type 'dst' */
 export function isConvertible(src, dst) {
   if (src === dst) {
