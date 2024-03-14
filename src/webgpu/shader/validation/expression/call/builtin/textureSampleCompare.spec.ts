@@ -95,10 +95,7 @@ Validates that only incorrect array_index arguments are rejected by ${builtin}
     u
       .combine('textureType', kTextureTypes)
       // filter out types with no array_index
-      .filter(
-        ({ textureType }) =>
-          !!kValidTextureSampleCompareParameterTypes[textureType].hasArrayIndexArg
-      )
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].hasArrayIndexArg)
       .combine('arrayIndexType', keysOf(kValuesTypes))
       .beginSubcases()
       .combine('value', [-9, -8, 0, 7, 8])
@@ -173,10 +170,7 @@ Validates that only incorrect offset arguments are rejected by ${builtin}
     u
       .combine('textureType', kTextureTypes)
       // filter out types with no offset
-      .filter(
-        ({ textureType }) =>
-          kValidTextureSampleCompareParameterTypes[textureType].offsetArgType !== undefined
-      )
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType)
       .combine('offsetType', keysOf(kValuesTypes))
       .beginSubcases()
       .combine('value', [-9, -8, 0, 7, 8])
@@ -219,10 +213,7 @@ Validates that only non-const offset arguments are rejected by ${builtin}
       .combine('textureType', kTextureTypes)
       .combine('varType', ['c', 'u', 'l'])
       // filter out types with no offset
-      .filter(
-        ({ textureType }) =>
-          kValidTextureSampleCompareParameterTypes[textureType].offsetArgType !== undefined
-      )
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType)
   )
   .fn(t => {
     const { textureType, varType } = t.params;
@@ -232,7 +223,6 @@ Validates that only non-const offset arguments are rejected by ${builtin}
     const coordWGSL = coordsArgType.create(0).wgsl();
     const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
     const offsetWGSL = `${offsetArgType}(${varType})`;
-    const castWGSL = offsetArgType!.elementType.toString();
 
     const code = `
 @group(0) @binding(0) var s: sampler_comparison;
@@ -240,7 +230,7 @@ Validates that only non-const offset arguments are rejected by ${builtin}
 @group(0) @binding(2) var<uniform> u: ${offsetArgType};
 @fragment fn fs(@builtin(position) p: vec4f) -> @location(0) vec4f {
   const c = 1;
-  let l = ${offsetArgType}(${castWGSL}(p.x));
+  let l = ${offsetArgType?.create(0).wgsl()};
   let v = textureSampleCompare(t, s, ${coordWGSL}${arrayWGSL}, 0, ${offsetWGSL});
   return vec4f(0);
 }
