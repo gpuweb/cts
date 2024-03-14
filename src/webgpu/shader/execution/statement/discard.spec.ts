@@ -226,7 +226,6 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
         a,
         (idx: number, value: number | bigint) => {
           return value === kWidth * kHeight;
-          //return value === 0;
         },
         {
           predicatePrinter: [
