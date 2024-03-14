@@ -1713,7 +1713,6 @@ export abstract class FPTraits {
   ): Case | undefined {
     param0 = map2DArray(param0, this.quantize);
     param1 = map2DArray(param1, this.quantize);
-
     const results = ops.map(o => o(param0, param1));
     if (filter === 'finite' && results.some(m => m.some(c => c.some(r => !r.isFinite())))) {
       return undefined;
@@ -2527,9 +2526,10 @@ export abstract class FPTraits {
   protected runMatrixToMatrixOp(m: FPMatrix, op: MatrixToMatrixOp): FPMatrix {
     const num_cols = m.length;
     const num_rows = m[0].length;
-    if (m.some(c => c.some(r => !r.isFinite()))) {
-      return this.constants().unboundedMatrix[num_cols][num_rows];
-    }
+
+    // Do not check for OOB inputs and exit early here, because the shape of
+    // the output matrix may be determined by the operation being run,
+    // i.e. transpose.
 
     const m_flat: readonly FPInterval[] = flatten2DArray(m);
     const m_values: ROArrayArray<number> = cartesianProduct<number>(
@@ -3411,7 +3411,10 @@ export abstract class FPTraits {
     x: readonly number[] | readonly FPInterval[],
     y: readonly number[] | readonly FPInterval[]
   ): FPInterval {
-    assert(x.length === y.length, `dot not defined for vectors with different lengths`);
+    assert(
+      x.length === y.length,
+      `dot not defined for vectors with different lengths, x = ${x}, y = ${y}`
+    );
     return this.runVectorPairToIntervalOp(this.toVector(x), this.toVector(y), this.DotIntervalOp);
   }
 
@@ -5124,22 +5127,26 @@ class FPAbstractTraits extends FPTraits {
   public readonly clampIntervals = [this.clampMedianInterval, this.clampMinMaxInterval];
   public readonly cosInterval = this.unimplementedScalarToInterval.bind(this, 'cosInterval');
   public readonly coshInterval = this.unimplementedScalarToInterval.bind(this, 'coshInterval');
-  public readonly crossInterval = this.crossIntervalImpl.bind(this);
-  public readonly degreesInterval = this.degreesIntervalImpl.bind(this);
-  public readonly determinantInterval = this.determinantIntervalImpl.bind(this);
+  public readonly crossInterval = this.unimplementedVectorPairToVector.bind(this, 'crossInterval');
+  public readonly degreesInterval = this.unimplementedScalarToInterval.bind(
+    this,
+    'degreesInterval'
+  );
+  public readonly determinantInterval = this.unimplementedMatrixToInterval.bind(
+    this,
+    'determinant'
+  );
   public readonly distanceInterval = this.unimplementedDistance.bind(this);
-  public readonly divisionInterval = (
-    x: number | FPInterval,
-    y: number | FPInterval
-  ): FPInterval => {
-    return this.toInterval(kF32Traits.divisionInterval(x, y));
-  };
-  public readonly dotInterval = this.dotIntervalImpl.bind(this);
+  public readonly divisionInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'divisionInterval'
+  );
+  public readonly dotInterval = this.unimplementedVectorPairToInterval.bind(this, 'dotInterval');
   public readonly expInterval = this.unimplementedScalarToInterval.bind(this, 'expInterval');
   public readonly exp2Interval = this.unimplementedScalarToInterval.bind(this, 'exp2Interval');
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
-  public readonly fmaInterval = this.fmaIntervalImpl.bind(this);
+  public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
   public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(
     this,
@@ -5154,36 +5161,49 @@ class FPAbstractTraits extends FPTraits {
   public readonly log2Interval = this.unimplementedScalarToInterval.bind(this, 'log2Interval');
   public readonly maxInterval = this.maxIntervalImpl.bind(this);
   public readonly minInterval = this.minIntervalImpl.bind(this);
-  public readonly mixImpreciseInterval = this.mixImpreciseIntervalImpl.bind(this);
-  public readonly mixPreciseInterval = this.mixPreciseIntervalImpl.bind(this);
+  public readonly mixImpreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixImpreciseInterval'
+  );
+  public readonly mixPreciseInterval = this.unimplementedScalarTripleToInterval.bind(
+    this,
+    'mixPreciseInterval'
+  );
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.modfIntervalImpl.bind(this);
   public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
-  public readonly multiplicationMatrixMatrixInterval =
-    this.multiplicationMatrixMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
+    this,
+    'multiplicationMatrixMatrixInterval'
+  );
   public readonly multiplicationMatrixScalarInterval =
     this.multiplicationMatrixScalarIntervalImpl.bind(this);
   public readonly multiplicationScalarMatrixInterval =
     this.multiplicationScalarMatrixIntervalImpl.bind(this);
-  public readonly multiplicationMatrixVectorInterval =
-    this.multiplicationMatrixVectorIntervalImpl.bind(this);
-  public readonly multiplicationVectorMatrixInterval =
-    this.multiplicationVectorMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
+    this,
+    'multiplicationMatrixVectorInterval'
+  );
+  public readonly multiplicationVectorMatrixInterval = this.unimplementedVectorMatrixToVector.bind(
+    this,
+    'multiplicationVectorMatrixInterval'
+  );
   public readonly negationInterval = this.negationIntervalImpl.bind(this);
   public readonly normalizeInterval = this.unimplementedVectorToVector.bind(
     this,
     'normalizeInterval'
   );
   public readonly powInterval = this.unimplementedScalarPairToInterval.bind(this, 'powInterval');
-  public readonly radiansInterval = this.radiansIntervalImpl.bind(this);
+  public readonly radiansInterval = this.unimplementedScalarToInterval.bind(this, 'radiansImpl');
   public readonly reflectInterval = this.unimplementedVectorPairToVector.bind(
     this,
     'reflectInterval'
   );
   public readonly refractInterval = this.unimplementedRefract.bind(this);
-  public readonly remainderInterval = (x: number, y: number): FPInterval => {
-    return this.toInterval(kF32Traits.remainderInterval(x, y));
-  };
+  public readonly remainderInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'remainderInterval'
+  );
   public readonly roundInterval = this.roundIntervalImpl.bind(this);
   public readonly saturateInterval = this.saturateIntervalImpl.bind(this);
   public readonly signInterval = this.signIntervalImpl.bind(this);

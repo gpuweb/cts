@@ -85,7 +85,8 @@ const abstract_cases = ([2, 3, 4] as const)
       return FP.abstract.generateMatrixToScalarCases(
         kDeterminantMatrixValues[dim],
         'finite',
-        FP.abstract.determinantInterval
+        // determinant has an inherited accuracy, so abstract is only expected to be as accurate as f32
+        FP.f32.determinantInterval
       );
     },
   }))
