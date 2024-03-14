@@ -55,31 +55,37 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     );
   });
 
-const kGoodArgs = '(1.1, 2.2)';
-const kBadArgs = {
-  no_parens: '',
+const kArgCases = {
+  'good': '(1.1, 2.2)',
+  bad_no_parens: '',
   // Bad number of args
-  '0args': '()',
-  '1arg': '(1.0)',
+  'bad_0args': '()',
+  'bad_1arg': '(1.0)',
+  'bad_3arg': '(1.0, 2.0, 3.0)',
   // Bad value for arg 0
-  '0bool': '(false, 1.0)',
-  '0array': '(array(1.1,2.2), 1.0)',
-  '0struct': '(modf(2.2), 1.0)',
-  // Bad value for arg 1
-  '1bool': '(1.0, true)',
-  '1array': '(1.0, array(1.1,2.2))',
-  '1struct': '(1.0, modf(2.2))',
+  'bad_0bool': '(false, 1.0)',
+  'bad_0array': '(array(1.1,2.2), 1.0)',
+  'bad_0struct': '(modf(2.2), 1.0)',
+  // Bad value type for arg 1
+  'bad_1bool': '(1.0, true)',
+  'bad_1array': '(1.0, array(1.1,2.2))',
+  'bad_1struct': '(1.0, modf(2.2))',
 };
 
-g.test('bad_args')
-  .desc(`Test compilation failure of ${builtin} with bad arguments`)
-  .params(u => u.combine('arg', keysOf(kBadArgs)))
+g.test('args')
+  .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
+  .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
-    t.expectCompileResult(false, `const c = ${builtin}${kBadArgs[t.params.arg]};`);
+    t.expectCompileResult(
+      t.params.arg === 'good',
+      `const c = ${builtin}${kArgCases[t.params.arg]};`
+    );
   });
 
 g.test('must_use')
   .desc(`Result of ${builtin} must be used`)
+  .params(u => u.combine('use', [true, false]))
   .fn(t => {
-    t.expectCompileResult(false, `fn f() { ${builtin}${kGoodArgs}; }`);
+    const use_it = t.params.use ? '_ = ' : '';
+    t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}${kArgCases['good']}; }`);
   });
