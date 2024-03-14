@@ -1,13 +1,13 @@
-const builtin = 'textureSample';
+const builtin = 'textureSampleCompare';
 export const description = `
 Validation tests for the ${builtin}() builtin.
 
-* test textureSample coords parameter must be correct type
-* test textureSample array_index parameter must be correct type
-* test textureSample coords parameter must be correct type
-* test textureSample offset parameter must be correct type
-* test textureSample offset parameter must be a const-expression
-* test textureSample offset parameter must be between -8 and +7 inclusive
+* test textureSampleCompare coords parameter must be correct type
+* test textureSampleCompare array_index parameter must be correct type
+* test textureSampleCompare depth_ref parameter must be correct type
+* test textureSampleCompare offset parameter must be correct type
+* test textureSampleCompare offset parameter must be a const-expression
+* test textureSampleCompare offset parameter must be between -8 and +7 inclusive
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -22,23 +22,13 @@ import {
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
-type TextureSampleArguments = {
+type TextureSampleCompareArguments = {
   coordsArgType: ScalarType | VectorType;
   hasArrayIndexArg?: boolean;
   offsetArgType?: VectorType;
 };
 
-const kValidTextureSampleParameterTypes: { [n: string]: TextureSampleArguments } = {
-  'texture_1d<f32>': { coordsArgType: Type.f32 },
-  'texture_2d<f32>': { coordsArgType: Type.vec2f, offsetArgType: Type.vec2i },
-  'texture_2d_array<f32>': {
-    coordsArgType: Type.vec2f,
-    hasArrayIndexArg: true,
-    offsetArgType: Type.vec2i,
-  },
-  'texture_3d<f32>': { coordsArgType: Type.vec3f, offsetArgType: Type.vec3i },
-  'texture_cube<f32>': { coordsArgType: Type.vec3f },
-  'texture_cube_array<f32>': { coordsArgType: Type.vec3f, hasArrayIndexArg: true },
+const kValidTextureSampleCompareParameterTypes: { [n: string]: TextureSampleCompareArguments } = {
   texture_depth_2d: { coordsArgType: Type.vec2f, offsetArgType: Type.vec2i },
   texture_depth_2d_array: {
     coordsArgType: Type.vec2f,
@@ -49,7 +39,7 @@ const kValidTextureSampleParameterTypes: { [n: string]: TextureSampleArguments }
   texture_depth_cube_array: { coordsArgType: Type.vec3f, hasArrayIndexArg: true },
 } as const;
 
-const kTextureTypes = keysOf(kValidTextureSampleParameterTypes);
+const kTextureTypes = keysOf(kValidTextureSampleCompareParameterTypes);
 const kValuesTypes = objectsToRecord(kAllScalarsAndVectors);
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -62,14 +52,14 @@ Validates that only incorrect coords arguments are rejected by ${builtin}
   )
   .params(u =>
     u
-      .combine('textureType', keysOf(kValidTextureSampleParameterTypes))
+      .combine('textureType', keysOf(kValidTextureSampleCompareParameterTypes))
       .combine('coordType', keysOf(kValuesTypes))
       .beginSubcases()
       .combine('value', [-1, 0, 1] as const)
       // filter out unsigned types with negative values
       .filter(t => isUnsignedType(kValuesTypes[t.coordType]) && t.value < 0)
       .expand('offset', ({ textureType }) => {
-        const offset = kValidTextureSampleParameterTypes[textureType].offsetArgType;
+        const offset = kValidTextureSampleCompareParameterTypes[textureType].offsetArgType;
         return offset ? [false, true] : [false];
       })
   )
@@ -80,17 +70,17 @@ Validates that only incorrect coords arguments are rejected by ${builtin}
       offsetArgType,
       coordsArgType: coordsRequiredType,
       hasArrayIndexArg,
-    } = kValidTextureSampleParameterTypes[textureType];
+    } = kValidTextureSampleCompareParameterTypes[textureType];
 
     const coordWGSL = coordArgType.create(value).wgsl();
     const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
     const offsetWGSL = offset ? `, ${offsetArgType?.create(0).wgsl()}` : '';
 
     const code = `
-@group(0) @binding(0) var s: sampler;
+@group(0) @binding(0) var s: sampler_comparison;
 @group(0) @binding(1) var t: ${textureType};
 @fragment fn fs() -> @location(0) vec4f {
-  let v = textureSample(t, s, ${coordWGSL}${arrayWGSL}${offsetWGSL});
+  let v = textureSampleCompare(t, s, ${coordWGSL}${arrayWGSL}, 0${offsetWGSL});
   return vec4f(0);
 }
 `;
@@ -108,7 +98,7 @@ Validates that only incorrect array_index arguments are rejected by ${builtin}
     u
       .combine('textureType', kTextureTypes)
       // filter out types with no array_index
-      .filter(t => !!kValidTextureSampleParameterTypes[t.textureType].hasArrayIndexArg)
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].hasArrayIndexArg)
       .combine('arrayIndexType', keysOf(kValuesTypes))
       .beginSubcases()
       .combine('value', [-9, -8, 0, 7, 8])
@@ -119,22 +109,61 @@ Validates that only incorrect array_index arguments are rejected by ${builtin}
     const { textureType, arrayIndexType, value } = t.params;
     const arrayIndexArgType = kValuesTypes[arrayIndexType];
     const args = [arrayIndexArgType.create(value)];
-    const { coordsArgType, offsetArgType } = kValidTextureSampleParameterTypes[textureType];
+    const { coordsArgType, offsetArgType } = kValidTextureSampleCompareParameterTypes[textureType];
 
     const coordWGSL = coordsArgType.create(0).wgsl();
     const arrayWGSL = args.map(arg => arg.wgsl()).join(', ');
     const offsetWGSL = offsetArgType ? `, ${offsetArgType.create(0).wgsl()}` : '';
 
     const code = `
-@group(0) @binding(0) var s: sampler;
+@group(0) @binding(0) var s: sampler_comparison;
 @group(0) @binding(1) var t: ${textureType};
 @fragment fn fs() -> @location(0) vec4f {
-  let v = textureSample(t, s, ${coordWGSL}, ${arrayWGSL}${offsetWGSL});
+  let v = textureSampleCompare(t, s, ${coordWGSL}, ${arrayWGSL}, 0${offsetWGSL});
   return vec4f(0);
 }
 `;
     const expectSuccess =
       isConvertible(arrayIndexArgType, Type.i32) || isConvertible(arrayIndexArgType, Type.u32);
+    t.expectCompileResult(expectSuccess, code);
+  });
+
+g.test('depth_ref_argument')
+  .desc(
+    `
+Validates that only incorrect depth_ref arguments are rejected by ${builtin}
+`
+  )
+  .params(u =>
+    u
+      .combine('textureType', kTextureTypes)
+      .combine('depthRefType', keysOf(kValuesTypes))
+      .beginSubcases()
+      .combine('value', [-1, 0, 1])
+      // filter out unsigned types with negative values
+      .filter(t => isUnsignedType(kValuesTypes[t.depthRefType]) && t.value < 0)
+  )
+  .fn(t => {
+    const { textureType, depthRefType, value } = t.params;
+    const depthRefArgType = kValuesTypes[depthRefType];
+    const args = [depthRefArgType.create(value)];
+    const { coordsArgType, hasArrayIndexArg, offsetArgType } =
+      kValidTextureSampleCompareParameterTypes[textureType];
+
+    const coordWGSL = coordsArgType.create(0).wgsl();
+    const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
+    const depthRefWGSL = args.map(arg => arg.wgsl()).join(', ');
+    const offsetWGSL = offsetArgType ? `, ${offsetArgType.create(0).wgsl()}` : '';
+
+    const code = `
+@group(0) @binding(0) var s: sampler_comparison;
+@group(0) @binding(1) var t: ${textureType};
+@fragment fn fs() -> @location(0) vec4f {
+  let v = textureSampleCompare(t, s, ${coordWGSL}${arrayWGSL}, ${depthRefWGSL}${offsetWGSL});
+  return vec4f(0);
+}
+`;
+    const expectSuccess = isConvertible(depthRefArgType, Type.f32);
     t.expectCompileResult(expectSuccess, code);
   });
 
@@ -148,7 +177,7 @@ Validates that only incorrect offset arguments are rejected by ${builtin}
     u
       .combine('textureType', kTextureTypes)
       // filter out types with no offset
-      .filter(t => !!kValidTextureSampleParameterTypes[t.textureType].offsetArgType)
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType)
       .combine('offsetType', keysOf(kValuesTypes))
       .beginSubcases()
       .combine('value', [-9, -8, 0, 7, 8])
@@ -163,17 +192,17 @@ Validates that only incorrect offset arguments are rejected by ${builtin}
       coordsArgType,
       hasArrayIndexArg,
       offsetArgType: offsetRequiredType,
-    } = kValidTextureSampleParameterTypes[textureType];
+    } = kValidTextureSampleCompareParameterTypes[textureType];
 
     const coordWGSL = coordsArgType.create(0).wgsl();
     const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
     const offsetWGSL = args.map(arg => arg.wgsl()).join(', ');
 
     const code = `
-@group(0) @binding(0) var s: sampler;
+@group(0) @binding(0) var s: sampler_comparison;
 @group(0) @binding(1) var t: ${textureType};
 @fragment fn fs() -> @location(0) vec4f {
-  let v = textureSample(t, s, ${coordWGSL}${arrayWGSL}, ${offsetWGSL});
+  let v = textureSampleCompare(t, s, ${coordWGSL}${arrayWGSL}, 0, ${offsetWGSL});
   return vec4f(0);
 }
 `;
@@ -193,25 +222,25 @@ Validates that only non-const offset arguments are rejected by ${builtin}
       .combine('textureType', kTextureTypes)
       .combine('varType', ['c', 'u', 'l'])
       // filter out types with no offset
-      .filter(t => !!kValidTextureSampleParameterTypes[t.textureType].offsetArgType)
+      .filter(t => !!kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType)
   )
   .fn(t => {
     const { textureType, varType } = t.params;
     const { coordsArgType, hasArrayIndexArg, offsetArgType } =
-      kValidTextureSampleParameterTypes[textureType];
+      kValidTextureSampleCompareParameterTypes[textureType];
 
     const coordWGSL = coordsArgType.create(0).wgsl();
     const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
     const offsetWGSL = `${offsetArgType}(${varType})`;
 
     const code = `
-@group(0) @binding(0) var s: sampler;
+@group(0) @binding(0) var s: sampler_comparison;
 @group(0) @binding(1) var t: ${textureType};
 @group(0) @binding(2) var<uniform> u: ${offsetArgType};
 @fragment fn fs() -> @location(0) vec4f {
   const c = 1;
-  let l = ${offsetArgType!.create(0).wgsl()};
-  let v = textureSample(t, s, ${coordWGSL}${arrayWGSL}, ${offsetWGSL});
+  let l = ${offsetArgType?.create(0).wgsl()};
+  let v = textureSampleCompare(t, s, ${coordWGSL}${arrayWGSL}, 0, ${offsetWGSL});
   return vec4f(0);
 }
 `;
