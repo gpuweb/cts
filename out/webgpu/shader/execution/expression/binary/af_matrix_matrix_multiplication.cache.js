@@ -16,7 +16,8 @@ flatMap((k) =>
         sparseMatrixF64Range(k, rows),
         sparseMatrixF64Range(cols, k),
         'finite',
-        FP.abstract.multiplicationMatrixMatrixInterval
+        // Matrix-matrix multiplication has an inherited accuracy, so abstract is only expected to be as accurate as f32
+        FP.f32.multiplicationMatrixMatrixInterval
       )
     );
   }
