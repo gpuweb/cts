@@ -57,7 +57,7 @@ combine('coordType', keysOf(kValuesTypes)).
 beginSubcases().
 combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
-.filter((t) => isUnsignedType(kValuesTypes[t.coordType]) && t.value < 0).
+.filter((t) => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0).
 expand('offset', ({ textureType }) => {
   const offset = kValidTextureSampleCompareParameterTypes[textureType].offsetArgType;
   return offset ? [false, true] : [false];
@@ -103,7 +103,7 @@ combine('arrayIndexType', keysOf(kValuesTypes)).
 beginSubcases().
 combine('value', [-9, -8, 0, 7, 8])
 // filter out unsigned types with negative values
-.filter((t) => isUnsignedType(kValuesTypes[t.arrayIndexType]) && t.value < 0)
+.filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
 ).
 fn((t) => {
   const { textureType, arrayIndexType, value } = t.params;
@@ -141,7 +141,7 @@ combine('depthRefType', keysOf(kValuesTypes)).
 beginSubcases().
 combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
-.filter((t) => isUnsignedType(kValuesTypes[t.depthRefType]) && t.value < 0)
+.filter((t) => !isUnsignedType(kValuesTypes[t.depthRefType]) || t.value >= 0)
 ).
 fn((t) => {
   const { textureType, depthRefType, value } = t.params;
@@ -182,7 +182,7 @@ combine('offsetType', keysOf(kValuesTypes)).
 beginSubcases().
 combine('value', [-9, -8, 0, 7, 8])
 // filter out unsigned types with negative values
-.filter((t) => isUnsignedType(kValuesTypes[t.offsetType]) && t.value < 0)
+.filter((t) => !isUnsignedType(kValuesTypes[t.offsetType]) || t.value >= 0)
 ).
 fn((t) => {
   const { textureType, offsetType, value } = t.params;
