@@ -14,6 +14,7 @@ Conditions that still occur:
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
+import { iterRange } from '../../../../common/util/util.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { checkElementsPassPredicate } from '../../../util/check_contents.js';
 
@@ -74,6 +75,7 @@ function drawFullScreen(
     size: [kWidth, kHeight],
     usage:
       GPUTextureUsage.COPY_SRC |
+      GPUTextureUsage.COPY_DST |
       GPUTextureUsage.RENDER_ATTACHMENT |
       GPUTextureUsage.TEXTURE_BINDING,
     format: 'r32uint',
@@ -81,10 +83,11 @@ function drawFullScreen(
   t.trackForCleanup(framebuffer);
 
   // Create a buffer to copy the framebuffer contents into.
-  const fbBuffer = t.device.createBuffer({
-    size: kWidth * kHeight * bytesPerWord,
-    usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-  });
+  // Initialize with a sentinel value and load this buffer to detect unintended writes.
+  const fbBuffer = t.makeBufferWithContents(
+    new Uint32Array([...iterRange(kWidth * kHeight, x => kWidth * kHeight)]),
+    GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST
+  );
 
   // Create a buffer to hold the storage shader resources.
   // (0,0) = vec2u width * height
@@ -135,11 +138,21 @@ function drawFullScreen(
   });
 
   const encoder = t.device.createCommandEncoder();
+  encoder.copyBufferToTexture(
+    {
+      buffer: fbBuffer,
+      offset: 0,
+      bytesPerRow: kWidth * bytesPerWord,
+      rowsPerImage: kHeight,
+    },
+    { texture: framebuffer },
+    { width: kWidth, height: kHeight }
+  );
   const pass = encoder.beginRenderPass({
     colorAttachments: [
       {
         view: framebuffer.createView(),
-        loadOp: 'clear',
+        loadOp: 'load',
         storeOp: 'store',
       },
     ],
@@ -212,7 +225,8 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value === 0;
+          return value === kWidth * kHeight;
+          //return value === 0;
         },
         {
           predicatePrinter: [
@@ -292,6 +306,13 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
+          const x = idx % kWidth;
+          const y = Math.floor(idx / kWidth);
+          if (x < kWidth / 2 && y < kHeight / 2) {
+            return value < (kWidth * kHeight) / 4;
+          } else {
+            return value === kWidth * kHeight;
+          }
           return value < (kWidth * kHeight) / 4;
         },
         {
@@ -323,10 +344,11 @@ g.test('function_call')
 ${kSharedCode}
 
 fn foo(pos : vec2f) {
-  if pos.x <= 0.5 * ${kWidth} && pos.y <= 0.5 * ${kHeight} {
+  let p = vec2i(pos);
+  if p.x <= ${kWidth} / 2 && p.y <= ${kHeight} / 2 {
     discard;
   }
-  if pos.x >= 0.5 * ${kWidth} && pos.y >= 0.5 * ${kHeight} {
+  if p.x >= ${kWidth} / 2 && p.y >= ${kHeight} / 2 {
     discard;
   }
 }
@@ -379,7 +401,13 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value < (kWidth * kHeight) / 2;
+          const x = idx % kWidth;
+          const y = Math.floor(idx / kWidth);
+          if ((x >= kWidth / 2 && y >= kHeight / 2) || (x <= kWidth / 2 && y <= kHeight / 2)) {
+            return value === kWidth * kHeight;
+          } else {
+            return value < (kWidth * kHeight) / 2;
+          }
         },
         {
           predicatePrinter: [
@@ -388,10 +416,11 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
               getValueForCell: (idx: number) => {
                 const x = idx % kWidth;
                 const y = Math.floor(idx / kWidth);
-                if (x < 0.5 && y < 0.5) {
-                  return 0;
-                } else if (x > 0.5 && y > 0.5) {
-                  return 0;
+                if (
+                  (x <= kWidth / 2 && y <= kHeight / 2) ||
+                  (x >= kWidth / 2 && y >= kHeight / 2)
+                ) {
+                  return kWidth * kHeight;
                 }
                 return 'any';
               },
@@ -449,14 +478,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value === 0;
+          return value === kWidth * kHeight;
         },
         {
           predicatePrinter: [
             {
               leftHeader: 'fb exp ==',
               getValueForCell: (idx: number) => {
-                return 0;
+                return kWidth * kHeight;
               },
             },
           ],
@@ -509,14 +538,14 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
       return checkElementsPassPredicate(
         a,
         (idx: number, value: number | bigint) => {
-          return value === 0;
+          return value === kWidth * kHeight;
         },
         {
           predicatePrinter: [
             {
               leftHeader: 'fb exp ==',
               getValueForCell: (idx: number) => {
-                return 0;
+                return kWidth * kHeight;
               },
             },
           ],
@@ -589,7 +618,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
           const x = idx % kWidth;
           const y = Math.floor(idx / kWidth);
           if (((x | y) & 0x1) === 0) {
-            return value === 0;
+            return value === kWidth * kHeight;
           } else {
             return value < (3 * (kWidth * kHeight)) / 4;
           }
@@ -602,7 +631,7 @@ fn fsMain(@builtin(position) pos : vec4f) -> @location(0) u32 {
                 const x = idx % kWidth;
                 const y = Math.floor(idx / kWidth);
                 if (((x | y) & 0x1) === 0) {
-                  return 0;
+                  return kWidth * kHeight;
                 } else {
                   return 'any';
                 }
