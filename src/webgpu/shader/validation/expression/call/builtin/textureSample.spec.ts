@@ -201,7 +201,7 @@ Validates that only non-const offset arguments are rejected by ${builtin}
 @group(0) @binding(0) var s: sampler;
 @group(0) @binding(1) var t: ${textureType};
 @group(0) @binding(2) var<uniform> u: ${offsetArgType};
-@fragment fn fs(@builtin(position) p: vec4f) -> @location(0) vec4f {
+@fragment fn fs() -> @location(0) vec4f {
   const c = 1;
   let l = ${offsetArgType!.create(0).wgsl()};
   let v = textureSample(t, s, ${coordWGSL}${arrayWGSL}, ${offsetWGSL});
