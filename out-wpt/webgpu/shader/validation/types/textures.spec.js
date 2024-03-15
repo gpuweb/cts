@@ -67,6 +67,34 @@ fn((t) => {
   t.expectCompileResult(false, wgsl);
 });
 
+const kValidTextureSampledTypes = ['f32', 'i32', 'u32'];
+
+g.test('sampled_texture_types').
+desc(
+  `Test that for texture_xx<T>
+- The sampled type T must be f32, i32, or u32
+`
+).
+params((u) =>
+u.
+combine('textureType', ['texture_2d', 'texture_multisampled_2d']).
+beginSubcases().
+combine('sampledType', [
+...kValidTextureSampledTypes,
+'bool',
+'vec2',
+'mat2x2',
+'1.0',
+'1',
+'1u']
+)
+).
+fn((t) => {
+  const { textureType, sampledType } = t.params;
+  const wgsl = `@group(0) @binding(0) var tex: ${textureType}<${sampledType}>;`;
+  t.expectCompileResult(kValidTextureSampledTypes.includes(sampledType), wgsl);
+});
+
 const kAccessModes = ['read', 'write', 'read_write'];
 
 g.test('storage_texture_types').
@@ -84,8 +112,12 @@ u.combine('access', [...kAccessModes, 'storage']).combine('format', kAllTextureF
 fn((t) => {
   const { format, access } = t.params;
   const info = kTextureFormatInfo[format];
+  // bgra8unorm is considered a valid storage format at shader compilation stage
   const isFormatValid =
-  info.color?.storage || info.depth?.storage || info.stencil?.storage || false;
+  info.color?.storage ||
+  info.depth?.storage ||
+  info.stencil?.storage ||
+  format === 'bgra8unorm';
   const isAccessValid = kAccessModes.includes(access);
   const wgsl = `@group(0) @binding(0) var tex: texture_storage_2d<${format}, ${access}>;`;
   t.expectCompileResult(isFormatValid && isAccessValid, wgsl);
