@@ -9,6 +9,8 @@ Validation tests for the ${builtin}() builtin.
 * test textureSample offset parameter must be correct type
 * test textureSample offset parameter must be a const-expression
 * test textureSample offset parameter must be between -8 and +7 inclusive
+
+note: uniformity validation is covered in src/webgpu/shader/validation/uniformity/uniformity.spec.ts
 `;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
@@ -21,6 +23,8 @@ import {
   isUnsignedType } from
 '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
+
+import { kEntryPointsToValidateFragmentOnlyBuiltins } from './shader_stage_utils.js';
 
 
 
@@ -55,6 +59,7 @@ const kValuesTypes = objectsToRecord(kAllScalarsAndVectors);
 export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('coords_argument').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#texturesample').
 desc(
   `
 Validates that only incorrect coords arguments are rejected by ${builtin}
@@ -68,10 +73,9 @@ beginSubcases().
 combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0).
-expand('offset', ({ textureType }) => {
-  const offset = kValidTextureSampleParameterTypes[textureType].offsetArgType;
-  return offset ? [false, true] : [false];
-})
+expand('offset', (t) =>
+kValidTextureSampleParameterTypes[t.textureType].offsetArgType ? [false, true] : [false]
+)
 ).
 fn((t) => {
   const { textureType, coordType, offset, value } = t.params;
@@ -99,6 +103,7 @@ fn((t) => {
 });
 
 g.test('array_index_argument').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#texturesample').
 desc(
   `
 Validates that only incorrect array_index arguments are rejected by ${builtin}
@@ -113,7 +118,10 @@ combine('arrayIndexType', keysOf(kValuesTypes)).
 beginSubcases().
 combine('value', [-9, -8, 0, 7, 8])
 // filter out unsigned types with negative values
-.filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
+.filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0).
+expand('offset', (t) =>
+kValidTextureSampleParameterTypes[t.textureType].offsetArgType ? [false, true] : [false]
+)
 ).
 fn((t) => {
   const { textureType, arrayIndexType, value } = t.params;
@@ -139,6 +147,7 @@ fn((t) => {
 });
 
 g.test('offset_argument').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#texturesample').
 desc(
   `
 Validates that only incorrect offset arguments are rejected by ${builtin}
@@ -183,6 +192,7 @@ fn((t) => {
 });
 
 g.test('offset_argument,non_const').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#texturesample').
 desc(
   `
 Validates that only non-const offset arguments are rejected by ${builtin}
@@ -217,4 +227,40 @@ fn((t) => {
 `;
   const expectSuccess = varType === 'c';
   t.expectCompileResult(expectSuccess, code);
+});
+
+g.test('only_in_fragment').
+specURL('https://gpuweb.github.io/gpuweb/wgsl/#texturesample').
+desc(
+  `
+Validates that ${builtin} must not be used in a compute or vertex shader.
+`
+).
+params((u) =>
+u.
+combine('textureType', kTextureTypes).
+combine('entryPoint', keysOf(kEntryPointsToValidateFragmentOnlyBuiltins)).
+expand('offset', (t) =>
+kValidTextureSampleParameterTypes[t.textureType].offsetArgType ? [false, true] : [false]
+)
+).
+fn((t) => {
+  const { textureType, entryPoint, offset } = t.params;
+  const { coordsArgType, hasArrayIndexArg, offsetArgType } =
+  kValidTextureSampleParameterTypes[textureType];
+
+  const coordWGSL = coordsArgType.create(0).wgsl();
+  const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
+  const offsetWGSL = offset ? `, ${offsetArgType?.create(0).wgsl()}` : '';
+
+  const config = kEntryPointsToValidateFragmentOnlyBuiltins[entryPoint];
+  const code = `
+${config.code}
+@group(0) @binding(0) var s: sampler;
+@group(0) @binding(1) var t: ${textureType};
+
+fn foo() {
+  _ = textureSample(t, s, ${coordWGSL}${arrayWGSL}${offsetWGSL});
+}`;
+  t.expectCompileResult(config.expectSuccess, code);
 });
