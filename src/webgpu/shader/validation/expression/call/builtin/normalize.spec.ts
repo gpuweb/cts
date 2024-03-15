@@ -24,7 +24,7 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
 
-// TODO: This should probably go in a utilities file somewhere.
+// These should probably go in a utilities file somewhere?
 const f32_cast_array = new Float32Array(1);
 function toF32(v: number): number {
   f32_cast_array[0] = v;
@@ -34,11 +34,16 @@ function toF32(v: number): number {
 const f16_max = 65504;
 const f16_min = -65504;
 const f16_epsilon = 0.0000000596046;
-
 function toF16(v: number): number {
-  if (Math.abs(v) < f16_epsilon) { return 0; }
-  if (v > f16_max) { return Infinity; }
-  if (v < f16_min) { return -Infinity; }
+  if (Math.abs(v) < f16_epsilon) {
+    return 0;
+  }
+  if (v > f16_max) {
+    return Infinity;
+  }
+  if (v < f16_min) {
+    return -Infinity;
+  }
   return v;
 }
 
@@ -68,9 +73,15 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
 
     let castFn;
     switch (scalarType) {
-      case Type.f32: castFn = toF32; break;
-      case Type.f16: castFn = toF16; break;
-      default: castFn = (v: number) => v; break;
+      case Type.f32:
+        castFn = toF32;
+        break;
+      case Type.f16:
+        castFn = toF16;
+        break;
+      default:
+        castFn = (v: number) => v;
+        break;
     }
 
     // Should be invalid if the normalization calculations result in intermediate
@@ -80,7 +91,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     const vv = castFn(v * v);
     const dp = castFn(vv * kValidArgumentTypes[t.params.type].width);
     const len = castFn(Math.sqrt(dp));
-    if (vv == Infinity || dp == Infinity || len == 0) {
+    if (vv === Infinity || dp === Infinity || len === 0) {
       expectedResult = false;
     }
 
@@ -101,7 +112,7 @@ const kInvalidArgumentTypes = objectsToRecord([
   Type.vec(2, Type.bool),
   Type.vec(3, Type.bool),
   Type.vec(4, Type.bool),
-  ...kConcreteIntegerScalarsAndVectors
+  ...kConcreteIntegerScalarsAndVectors,
 ]);
 
 g.test('invalid_argument')
@@ -117,7 +128,6 @@ Validates that all scalar arguments and vector integer or boolean arguments are 
     }
   })
   .fn(t => {
-    const type = kInvalidArgumentTypes[t.params.type];
     const expectedResult = false; // should always error with invalid argument types
     validateConstOrOverrideBuiltinEval(
       t,
