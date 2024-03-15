@@ -4168,6 +4168,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "max"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "min"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "modf"
     ]
   },
