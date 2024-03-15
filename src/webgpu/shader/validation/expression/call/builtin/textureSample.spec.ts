@@ -8,6 +8,7 @@ Validation tests for the ${builtin}() builtin.
 * test textureSample offset parameter must be correct type
 * test textureSample offset parameter must be a const-expression
 * test textureSample offset parameter must be between -8 and +7 inclusive
+* test textureSample not usable in a compute or vertex shader
 
 note: uniformity validation is covered in src/webgpu/shader/validation/uniformity/uniformity.spec.ts
 `;
