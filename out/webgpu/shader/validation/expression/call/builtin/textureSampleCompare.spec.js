@@ -118,14 +118,14 @@ kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType ?
 )
 ).
 fn((t) => {
-  const { textureType, arrayIndexType, value } = t.params;
+  const { textureType, arrayIndexType, value, offset } = t.params;
   const arrayIndexArgType = kValuesTypes[arrayIndexType];
   const args = [arrayIndexArgType.create(value)];
   const { coordsArgType, offsetArgType } = kValidTextureSampleCompareParameterTypes[textureType];
 
   const coordWGSL = coordsArgType.create(0).wgsl();
   const arrayWGSL = args.map((arg) => arg.wgsl()).join(', ');
-  const offsetWGSL = offsetArgType ? `, ${offsetArgType.create(0).wgsl()}` : '';
+  const offsetWGSL = offset ? `, ${offsetArgType.create(0).wgsl()}` : '';
 
   const code = `
 @group(0) @binding(0) var s: sampler_comparison;
@@ -162,7 +162,7 @@ kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType ?
 )
 ).
 fn((t) => {
-  const { textureType, depthRefType, value } = t.params;
+  const { textureType, depthRefType, value, offset } = t.params;
   const depthRefArgType = kValuesTypes[depthRefType];
   const args = [depthRefArgType.create(value)];
   const { coordsArgType, hasArrayIndexArg, offsetArgType } =
@@ -171,7 +171,7 @@ fn((t) => {
   const coordWGSL = coordsArgType.create(0).wgsl();
   const arrayWGSL = hasArrayIndexArg ? ', 0' : '';
   const depthRefWGSL = args.map((arg) => arg.wgsl()).join(', ');
-  const offsetWGSL = offsetArgType ? `, ${offsetArgType.create(0).wgsl()}` : '';
+  const offsetWGSL = offset ? `, ${offsetArgType.create(0).wgsl()}` : '';
 
   const code = `
 @group(0) @binding(0) var s: sampler_comparison;
