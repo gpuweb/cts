@@ -4309,6 +4309,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureSampleCompareLevel"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureSampleGrad"
     ]
   },
