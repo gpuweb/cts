@@ -74,31 +74,35 @@ fn((t) => {
   );
 });
 
-const kGoodArgs = '(1.1)';
-const kBadArgs = {
-  no_parens: '',
+const kArgCases = {
+  good: '(1.1)',
+  bad_no_parens: '',
   // Bad number of args
-  '0args': '()',
-  '2args': '(1.0,2.0)',
-  // Bad value for arg 0
-  '0aint': '(1)',
-  '0i32': '(1i)',
-  '0u32': '(1u)',
-  '0bool': '(false)',
-  '0vec2u': '(vec2u())',
-  '0array': '(array(1.1,2.2))',
-  '0struct': '(modf(2.2))'
+  bad_0args: '()',
+  bad_2args: '(1.0,2.0)',
+  // Bad value type for arg 0
+  bad_0i32: '(1i)',
+  bad_0u32: '(1u)',
+  bad_0bool: '(false)',
+  bad_0vec2u: '(vec2u())',
+  bad_0array: '(array(1.1,2.2))',
+  bad_0struct: '(modf(2.2))'
 };
 
-g.test('bad_args').
-desc(`Test compilation failure of ${builtin} with bad arguments`).
-params((u) => u.combine('arg', keysOf(kBadArgs))).
+g.test('args').
+desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`).
+params((u) => u.combine('arg', keysOf(kArgCases))).
 fn((t) => {
-  t.expectCompileResult(false, `const c = ${builtin}${kBadArgs[t.params.arg]};`);
+  t.expectCompileResult(
+    t.params.arg === 'good',
+    `const c = ${builtin}${kArgCases[t.params.arg]};`
+  );
 });
 
 g.test('must_use').
 desc(`Result of ${builtin} must be used`).
+params((u) => u.combine('use', [true, false])).
 fn((t) => {
-  t.expectCompileResult(false, `fn f() { ${builtin}${kGoodArgs}; }`);
+  const use_it = t.params.use ? '_ = ' : '';
+  t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}${kArgCases['good']}; }`);
 });
