@@ -64,6 +64,17 @@ const kInvalidShaderSources = [
         return unknown(0.0, 0.0, 0.0, 1.0);
       }`,
   },
+  {
+    valid: false,
+    name: 'unicode-multi-byte-characters',
+    _errorLine: 1,
+    // This shader is simplistic enough to always result in the same error position.
+    // Generally, various backends may choose to report the error at different positions within the
+    // line, so it's difficult to meaningfully validate them.
+    _errorLinePos: 19,
+    _code: `/*🐈🐈🐈🐈🐈🐈🐈*/?
+// Expected Error: invalid character found`,
+  },
 ];
 
 const kAllShaderSources = [...kValidShaderSources, ...kInvalidShaderSources];
@@ -174,7 +185,7 @@ g.test('line_number_and_position')
       .combine('sourceMapName', kSourceMapsKeys)
   )
   .fn(async t => {
-    const { _code, _errorLine, sourceMapName } = t.params;
+    const { _code, _errorLine, _errorLinePos, sourceMapName } = t.params;
 
     const shaderModule = t.expectGPUError('validation', () => {
       const sourceMap = kSourceMaps[sourceMapName];
@@ -194,11 +205,19 @@ g.test('line_number_and_position')
           "GPUCompilationMessages that don't report a line number should not report a line position."
         );
 
-        if (message.lineNum === 0 || message.lineNum === _errorLine) {
+        if (message.lineNum === 0) {
           foundAppropriateError = true;
+          break;
+        }
 
-          // Various backends may choose to report the error at different positions within the line,
-          // so it's difficult to meaningfully validate them.
+        if (message.lineNum === _errorLine) {
+          foundAppropriateError = true;
+          if (_errorLinePos !== null && _errorLinePos !== undefined) {
+            t.expect(
+              message.linePos === _errorLinePos,
+              'Expected the error to be at the correct position'
+            );
+          }
           break;
         }
       }
