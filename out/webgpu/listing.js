@@ -4367,6 +4367,15 @@ export const listing = [
       "validation",
       "expression",
       "unary",
+      "arithmetic_negation"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "unary",
       "bitwise_complement"
     ]
   },
