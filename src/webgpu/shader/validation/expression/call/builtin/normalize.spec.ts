@@ -138,26 +138,31 @@ Validates that all scalar arguments and vector integer or boolean arguments are 
     );
   });
 
-const kGoodArgs = '(vec3f())';
-const kBadArgs = {
-  no_parens: '',
+const kArgCases = {
+  good: '(vec3f(1, 0, 0))',
+  bad_no_parens: '',
   // Bad number of args
-  '0args': '()',
-  '2args': '(vec3f(),vec3f())',
+  bad_0args: '()',
+  bad_2args: '(vec3f(),vec3f())',
   // Bad value for arg 0
-  '0array': '(array(1.1,2.2))',
-  '0struct': '(modf(2.2))',
+  bad_0array: '(array(1.1,2.2))',
+  bad_0struct: '(modf(2.2))',
 };
 
-g.test('bad_args')
-  .desc(`Test compilation failure of ${builtin} with bad arguments`)
-  .params(u => u.combine('arg', keysOf(kBadArgs)))
+g.test('args')
+  .desc(`Test compilation failure of ${builtin}  with variously shaped and typed arguments`)
+  .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
-    t.expectCompileResult(false, `const c = ${builtin}${kBadArgs[t.params.arg]};`);
+    t.expectCompileResult(
+      t.params.arg === 'good',
+      `const c = ${builtin}${kArgCases[t.params.arg]};`
+    );
   });
 
 g.test('must_use')
   .desc(`Result of ${builtin} must be used`)
+  .params(u => u.combine('use', [true, false]))
   .fn(t => {
-    t.expectCompileResult(false, `fn f() { ${builtin}${kGoodArgs}; }`);
+    const use_it = t.params.use ? '_ = ' : '';
+    t.expectCompileResult(false, `fn f() { ${use_it}${builtin}${kArgCases['good']}; }`);
   });
