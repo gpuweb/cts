@@ -3861,6 +3861,15 @@ export const listing = [
       "validation",
       "expression",
       "binary",
+      "add_sub_mul"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "binary",
       "and_or_xor"
     ]
   },

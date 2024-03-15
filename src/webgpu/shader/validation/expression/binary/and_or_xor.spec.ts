@@ -38,6 +38,7 @@ g.test('scalar_vector')
       .combine(
         'rhs',
         // Skip vec3 and vec4 on the RHS to keep the number of subcases down.
+        // vec3 + vec3 and vec4 + vec4 is tested in execution tests.
         keysOf(kScalarAndVectorTypes).filter(
           value => !(value.startsWith('vec3') || value.startsWith('vec4'))
         )
