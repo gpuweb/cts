@@ -31,6 +31,17 @@ function toF32(v: number): number {
   return f32_cast_array[0];
 }
 
+const f16_max = 65504;
+const f16_min = -65504;
+const f16_epsilon = 0.0000000596046;
+
+function toF16(v: number): number {
+  if (Math.abs(v) < f16_epsilon) { return 0; }
+  if (v > f16_max) { return Infinity; }
+  if (v < f16_min) { return -Infinity; }
+  return v;
+}
+
 g.test('values')
   .desc(
     `
@@ -55,7 +66,12 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
 
     const scalarType = scalarTypeOf(kValidArgumentTypes[t.params.type]);
 
-    const castFn = scalarType === Type.f32 || scalarType === Type.f16 ? toF32 : (v: number) => v;
+    let castFn;
+    switch (scalarType) {
+      case Type.f32: castFn = toF32; break;
+      case Type.f16: castFn = toF16; break;
+      default: castFn = (v: number) => v; break;
+    }
 
     // Should be invalid if the normalization calculations result in intermediate
     // values that exceed the maximum representable float value for the given type,
