@@ -110,7 +110,7 @@ export function float32ToFloatBits(
   assert(mantissaBits <= 23);
 
   if (Number.isNaN(n)) {
-    // NaN = all exponent bits true, 1 or more mantissia bits true
+    // NaN = all exponent bits true, 1 or more mantissa bits true
     return (((1 << exponentBits) - 1) << mantissaBits) | ((1 << mantissaBits) - 1);
   }
 
@@ -597,15 +597,18 @@ export type ScalarKind =
 export class ScalarType {
   readonly kind: ScalarKind; // The named type
   readonly _size: number; // In bytes
+  readonly _signed: boolean;
   readonly read: (buf: Uint8Array, offset: number) => ScalarValue; // reads a scalar from a buffer
 
   constructor(
     kind: ScalarKind,
     size: number,
+    signed: boolean,
     read: (buf: Uint8Array, offset: number) => ScalarValue
   ) {
     this.kind = kind;
     this._size = size;
+    this._signed = signed;
     this.read = read;
   }
 
@@ -619,6 +622,10 @@ export class ScalarType {
 
   public get alignment(): number {
     return this._size;
+  }
+
+  public get signed(): boolean {
+    return this._signed;
   }
 
   /** Constructs a ScalarValue of this type with `value` */
@@ -879,40 +886,43 @@ function valueFromBytes<A extends TypedArrayBufferView>(
   return workingDataOut[0] as ArrayElementType<A>;
 }
 
-const abstractIntType = new ScalarType('abstract-int', 8, (buf: Uint8Array, offset: number) =>
+const abstractIntType = new ScalarType('abstract-int', 8, true, (buf: Uint8Array, offset: number) =>
   abstractInt(valueFromBytes(workingDataI64, buf, offset))
 );
-const i32Type = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
+const i32Type = new ScalarType('i32', 4, true, (buf: Uint8Array, offset: number) =>
   i32(valueFromBytes(workingDataI32, buf, offset))
 );
-const u32Type = new ScalarType('u32', 4, (buf: Uint8Array, offset: number) =>
+const u32Type = new ScalarType('u32', 4, false, (buf: Uint8Array, offset: number) =>
   u32(valueFromBytes(workingDataU32, buf, offset))
 );
-const i16Type = new ScalarType('i16', 2, (buf: Uint8Array, offset: number) =>
+const i16Type = new ScalarType('i16', 2, true, (buf: Uint8Array, offset: number) =>
   i16(valueFromBytes(workingDataI16, buf, offset))
 );
-const u16Type = new ScalarType('u16', 2, (buf: Uint8Array, offset: number) =>
+const u16Type = new ScalarType('u16', 2, false, (buf: Uint8Array, offset: number) =>
   u16(valueFromBytes(workingDataU16, buf, offset))
 );
-const i8Type = new ScalarType('i8', 1, (buf: Uint8Array, offset: number) =>
+const i8Type = new ScalarType('i8', 1, true, (buf: Uint8Array, offset: number) =>
   i8(valueFromBytes(workingDataI8, buf, offset))
 );
-const u8Type = new ScalarType('u8', 1, (buf: Uint8Array, offset: number) =>
+const u8Type = new ScalarType('u8', 1, false, (buf: Uint8Array, offset: number) =>
   u8(valueFromBytes(workingDataU8, buf, offset))
 );
-const abstractFloatType = new ScalarType('abstract-float', 8, (buf: Uint8Array, offset: number) =>
-  abstractFloat(valueFromBytes(workingDataF64, buf, offset))
+const abstractFloatType = new ScalarType(
+  'abstract-float',
+  8,
+  true,
+  (buf: Uint8Array, offset: number) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
 );
-const f64Type = new ScalarType('f64', 8, (buf: Uint8Array, offset: number) =>
+const f64Type = new ScalarType('f64', 8, true, (buf: Uint8Array, offset: number) =>
   f64(valueFromBytes(workingDataF64, buf, offset))
 );
-const f32Type = new ScalarType('f32', 4, (buf: Uint8Array, offset: number) =>
+const f32Type = new ScalarType('f32', 4, true, (buf: Uint8Array, offset: number) =>
   f32(valueFromBytes(workingDataF32, buf, offset))
 );
-const f16Type = new ScalarType('f16', 2, (buf: Uint8Array, offset: number) =>
+const f16Type = new ScalarType('f16', 2, true, (buf: Uint8Array, offset: number) =>
   f16Bits(valueFromBytes(workingDataU16, buf, offset))
 );
-const boolType = new ScalarType('bool', 4, (buf: Uint8Array, offset: number) =>
+const boolType = new ScalarType('bool', 4, false, (buf: Uint8Array, offset: number) =>
   bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 );
 
