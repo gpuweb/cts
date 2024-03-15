@@ -2329,17 +2329,10 @@ export const kConcreteF16ScalarsAndVectors = [
 ] as const;
 
 /// All floating-point vector types
-export const kFloatVectors = [
-  ...kFloatVec2,
-  ...kFloatVec3,
-  ...kFloatVec4,
-] as const;
+export const kFloatVectors = [...kFloatVec2, ...kFloatVec3, ...kFloatVec4] as const;
 
 /// All floating-point scalar and vector types
-export const kFloatScalarsAndVectors = [
-  ...kFloatScalars,
-  ...kFloatVectors,
-] as const;
+export const kFloatScalarsAndVectors = [...kFloatScalars, ...kFloatVectors] as const;
 
 // Abstract and concrete integer types are not grouped into an 'all' type,
 // because for many validation tests there is a valid conversion of
@@ -2349,18 +2342,10 @@ export const kFloatScalarsAndVectors = [
 // for the things that might be valid and those that are never valid.
 
 /// All signed integer vector types
-export const kConcreteSignedIntegerVectors = [
-  Type.vec2i,
-  Type.vec3i,
-  Type.vec4i,
-] as const;
+export const kConcreteSignedIntegerVectors = [Type.vec2i, Type.vec3i, Type.vec4i] as const;
 
 /// All unsigned integer vector types
-export const kConcreteUnsignedIntegerVectors = [
-  Type.vec2u,
-  Type.vec3u,
-  Type.vec4u,
-] as const;
+export const kConcreteUnsignedIntegerVectors = [Type.vec2u, Type.vec3u, Type.vec4u] as const;
 
 /// All concrete integer vector types
 export const kConcreteIntegerVectors = [
