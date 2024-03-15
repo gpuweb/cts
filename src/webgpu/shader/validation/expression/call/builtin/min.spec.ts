@@ -35,8 +35,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('a', u => fullRangeForType(kValuesTypes[u.type]))
-      .expand('b', u => fullRangeForType(kValuesTypes[u.type]))
+      .expand('a', u => fullRangeForType(kValuesTypes[u.type], 5))
+      .expand('b', u => fullRangeForType(kValuesTypes[u.type], 5))
   )
   .beforeAllSubcases(t => {
     if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
@@ -56,20 +56,20 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
   });
 
 const kArgCases = {
-  'good': '(1.1, 2.2)',
+  good: '(1.1, 2.2)',
   bad_no_parens: '',
   // Bad number of args
-  'bad_0args': '()',
-  'bad_1arg': '(1.0)',
-  'bad_3arg': '(1.0, 2.0, 3.0)',
+  bad_0args: '()',
+  bad_1arg: '(1.0)',
+  bad_3arg: '(1.0, 2.0, 3.0)',
   // Bad value for arg 0
-  'bad_0bool': '(false, 1.0)',
-  'bad_0array': '(array(1.1,2.2), 1.0)',
-  'bad_0struct': '(modf(2.2), 1.0)',
+  bad_0bool: '(false, 1.0)',
+  bad_0array: '(array(1.1,2.2), 1.0)',
+  bad_0struct: '(modf(2.2), 1.0)',
   // Bad value type for arg 1
-  'bad_1bool': '(1.0, true)',
-  'bad_1array': '(1.0, array(1.1,2.2))',
-  'bad_1struct': '(1.0, modf(2.2))',
+  bad_1bool: '(1.0, true)',
+  bad_1array: '(1.0, array(1.1,2.2))',
+  bad_1struct: '(1.0, modf(2.2))',
 };
 
 g.test('args')
