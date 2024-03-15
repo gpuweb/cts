@@ -115,7 +115,7 @@ g.test('valid_statements')
 
 const kInvalidFunctions = {
   next_for_type: `fn foo() -> bool { }`,
-  next_return_for_type: `fn foo() -> bool { if true { return true } }`,
+  next_return_for_type: `fn foo() -> bool { if true { return true; } }`,
 };
 
 g.test('invalid_functions')
