@@ -4,7 +4,7 @@ Validation tests for the ${builtin}() builtin.
 
 * test textureSampleLevel coords parameter must be correct type
 * test textureSampleLevel array_index parameter must be correct type
-* test textureSampleLevel coords parameter must be correct type
+* test textureSampleLevel level parameter must be correct type
 * test textureSampleLevel offset parameter must be correct type
 * test textureSampleLevel offset parameter must be a const-expression
 * test textureSampleLevel offset parameter must be between -8 and +7 inclusive
