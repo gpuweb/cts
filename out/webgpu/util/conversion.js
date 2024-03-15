@@ -1695,7 +1695,7 @@ export function f32Bits(bits) {
 /** Create an f16 from a numeric value, a JS `number`. */
 export function f16(value) {
   workingDataF16[0] = value;
-  return new F16Value(value, workingDataU16[0]);
+  return new F16Value(workingDataF16[0], workingDataU16[0]);
 }
 
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
