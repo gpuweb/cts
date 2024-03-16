@@ -4328,6 +4328,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureSampleBaseClampToEdge"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureSampleBias"
     ]
   },

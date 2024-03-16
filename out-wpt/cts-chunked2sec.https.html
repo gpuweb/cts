@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 15455 variants generated from 2295 tests in 528 files -->
+<!-- Prefix: "?q="; 15511 variants generated from 2296 tests in 529 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -14015,6 +14015,62 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSample:offset_argument:*'><!-- estimated: 924.660 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSample:offset_argument,non_const:*'><!-- estimated: 24.060 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSample:only_in_fragment:*'><!-- estimated: 100.890 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="bool";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="abstract-int";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="abstract-float";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="f32";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="f16";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="i32";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="u32";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec2%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec3%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_2d%3Cf32%3E";coordType="vec4%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="bool";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cbool%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="abstract-int";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cabstract-int%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="abstract-float";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="f32";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="f16";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cabstract-float%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cf32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cf16%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="i32";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Ci32%3E";*'><!-- estimated: 718.068 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="u32";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec2%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec3%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBaseClampToEdge:coords_argument:textureType="texture_external";coordType="vec4%3Cu32%3E";*'><!-- estimated: 478.712 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBias:coords_argument:*'><!-- estimated: 1240.320 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBias:array_index_argument:*'><!-- estimated: 645.480 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureSampleBias:bias_argument:*'><!-- estimated: 1110.816 ms -->
