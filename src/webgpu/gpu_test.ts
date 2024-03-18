@@ -283,6 +283,26 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
       );
     }
   }
+
+  /** Skips this test case if the `langFeature` is *not* supported. */
+  skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
+    if (!this.hasLanguageFeature(langFeature)) {
+      this.skip(`WGSL language feature '${langFeature}' is not supported`);
+    }
+  }
+
+  /** Skips this test case if the `langFeature` is supported. */
+  skipIfLanguageFeatureSupported(langFeature: WGSLLanguageFeature) {
+    if (this.hasLanguageFeature(langFeature)) {
+      this.skip(`WGSL language feature '${langFeature}' is supported`);
+    }
+  }
+
+  /** returns true iff the `langFeature` is supported  */
+  hasLanguageFeature(langFeature: WGSLLanguageFeature) {
+    const lf = getGPU(this.recorder).wgslLanguageFeatures;
+    return lf !== undefined && lf.has(langFeature);
+  }
 }
 
 /**
