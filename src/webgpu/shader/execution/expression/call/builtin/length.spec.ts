@@ -10,20 +10,76 @@ Returns the length of e (e.g. abs(e) if T is a scalar, or sqrt(e[0]^2 + e[1]^2 +
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { Type } from '../../../../../util/conversion.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './length.cache.js';
 
 export const g = makeTestGroup(GPUTest);
 
 g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
-  .desc(`abstract float tests`)
-  .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
-  )
-  .unimplemented();
+  .desc(`abstract_float tests`)
+  .params(u => u.combine('inputSource', onlyConstInputSource))
+  .fn(async t => {
+    const cases = await d.get('abstract');
+    await run(
+      t,
+      abstractFloatBuiltin('length'),
+      [Type.abstractFloat],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
+  });
+
+g.test('abstract_float_vec2')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`abstract float tests using vec2s`)
+  .params(u => u.combine('inputSource', onlyConstInputSource))
+  .fn(async t => {
+    const cases = await d.get('abstract_vec2_const');
+    await run(
+      t,
+      abstractFloatBuiltin('length'),
+      [Type.vec2af],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
+  });
+
+g.test('abstract_float_vec3')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`abstract_float tests using vec3s`)
+  .params(u => u.combine('inputSource', onlyConstInputSource))
+  .fn(async t => {
+    const cases = await d.get('abstract_vec3_const');
+    await run(
+      t,
+      abstractFloatBuiltin('length'),
+      [Type.vec3af],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
+  });
+
+g.test('abstract_float_vec4')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`abstract_float tests using vec4s`)
+  .params(u => u.combine('inputSource', onlyConstInputSource))
+  .fn(async t => {
+    const cases = await d.get('abstract_vec4_const');
+    await run(
+      t,
+      abstractFloatBuiltin('length'),
+      [Type.vec4af],
+      Type.abstractFloat,
+      t.params,
+      cases
+    );
+  });
 
 g.test('f32')
   .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')

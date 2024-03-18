@@ -11,9 +11,9 @@ Returns the distance between e1 and e2 (e.g. length(e1-e2)).
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { Type } from '../../../../../util/conversion.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractFloatBuiltin, builtin } from './builtin.js';
 import { d } from './distance.cache.js';
 
 export const g = makeTestGroup(GPUTest);
@@ -21,10 +21,66 @@ export const g = makeTestGroup(GPUTest);
 g.test('abstract_float').
 specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions').
 desc(`abstract float tests`).
-params((u) =>
-u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4])
-).
-unimplemented();
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_const');
+  await run(
+    t,
+    abstractFloatBuiltin('distance'),
+    [Type.abstractFloat, Type.abstractFloat],
+    Type.abstractFloat,
+    t.params,
+    cases
+  );
+});
+
+g.test('abstract_float_vec2').
+specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
+desc(`abstract float tests using vec2s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec2_const');
+  await run(
+    t,
+    abstractFloatBuiltin('distance'),
+    [Type.vec2af, Type.vec2af],
+    Type.abstractFloat,
+    t.params,
+    cases
+  );
+});
+
+g.test('abstract_float_vec3').
+specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
+desc(`abstract float tests using vec3s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec3_const');
+  await run(
+    t,
+    abstractFloatBuiltin('distance'),
+    [Type.vec3af, Type.vec3af],
+    Type.abstractFloat,
+    t.params,
+    cases
+  );
+});
+
+g.test('abstract_float_vec4').
+specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').
+desc(`abstract float tests using vec4s`).
+params((u) => u.combine('inputSource', onlyConstInputSource)).
+fn(async (t) => {
+  const cases = await d.get('abstract_vec4_const');
+  await run(
+    t,
+    abstractFloatBuiltin('distance'),
+    [Type.vec4af, Type.vec4af],
+    Type.abstractFloat,
+    t.params,
+    cases
+  );
+});
 
 g.test('f32').
 specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions').

@@ -952,14 +952,17 @@ export const Type = {
 
   vec2i: VectorType.create(2, i32Type),
   vec2u: VectorType.create(2, u32Type),
+  vec2af: VectorType.create(2, abstractFloatType),
   vec2f: VectorType.create(2, f32Type),
   vec2h: VectorType.create(2, f16Type),
   vec3i: VectorType.create(3, i32Type),
   vec3u: VectorType.create(3, u32Type),
+  vec3af: VectorType.create(3, abstractFloatType),
   vec3f: VectorType.create(3, f32Type),
   vec3h: VectorType.create(3, f16Type),
   vec4i: VectorType.create(4, i32Type),
   vec4u: VectorType.create(4, u32Type),
+  vec4af: VectorType.create(4, abstractFloatType),
   vec4f: VectorType.create(4, f32Type),
   vec4h: VectorType.create(4, f16Type),
 
