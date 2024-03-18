@@ -272,7 +272,9 @@ fn(async (t) => {
     pass.end();
   }
   if (dsActual) {
-    enc.copyTextureToBuffer({ texture: dsTexture }, { buffer: dsActual }, [kNumTestPoints]);
+    enc.copyTextureToBuffer({ texture: dsTexture, aspect: 'depth-only' }, { buffer: dsActual }, [
+    kNumTestPoints]
+    );
   }
   {
     const clearValue = [0, 0, 0, 0]; // Will see this color if the check passed.
@@ -304,7 +306,11 @@ fn(async (t) => {
   }
   enc.copyTextureToBuffer({ texture: checkTexture }, { buffer: checkBuffer }, [kNumTestPoints]);
   if (dsExpected) {
-    enc.copyTextureToBuffer({ texture: dsTexture }, { buffer: dsExpected }, [kNumTestPoints]);
+    enc.copyTextureToBuffer(
+      { texture: dsTexture, aspect: 'depth-only' },
+      { buffer: dsExpected },
+      [kNumTestPoints]
+    );
   }
   t.device.queue.submit([enc.finish()]);
 
