@@ -550,7 +550,7 @@ function keyValueToPairs([k, v]) {
  */
 function prepareParams(params) {
   const pairsArrays = Object.entries(params).
-  filter(([, v]) => !!v && v !== '0').
+  filter(([, v]) => !!v).
   map(keyValueToPairs);
   const pairs = pairsArrays.flat();
   return new URLSearchParams(pairs).toString();

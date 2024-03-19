@@ -1,6 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { optionWorkerMode } from '../../runtime/helper/options.js';import { assert, unreachable } from '../../util/util.js';
+**/import { optionString } from '../../runtime/helper/options.js';import { assert, unreachable } from '../../util/util.js';
 
 
 import { compareQueries, Ordering } from './compare.js';
@@ -193,7 +193,7 @@ Expectation should be of the form path/to/cts.https.html?debug=0&q=suite:test_pa
       );
 
       const params = expectationURL.searchParams;
-      if (optionWorkerMode('worker', params) !== optionWorkerMode('worker', wptURL.searchParams)) {
+      if (optionString('worker', params) !== optionString('worker', wptURL.searchParams)) {
         continue;
       }
 
