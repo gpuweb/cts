@@ -4328,6 +4328,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureLoad"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureSample"
     ]
   },
@@ -4389,6 +4399,16 @@ export const listing = [
       "call",
       "builtin",
       "textureSampleLevel"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "textureStore"
     ]
   },
   {
