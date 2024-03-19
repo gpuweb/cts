@@ -1,5 +1,3 @@
-import { unreachable } from '../../util/util.js';
-
 let windowURL: URL | undefined = undefined;
 function getWindowURL() {
   if (windowURL === undefined) {
@@ -8,7 +6,6 @@ function getWindowURL() {
   return windowURL;
 }
 
-/** Parse a runner option that is always boolean-typed. False if missing or '0'. */
 export function optionEnabled(
   opt: string,
   searchParams: URLSearchParams = getWindowURL().searchParams
@@ -17,7 +14,6 @@ export function optionEnabled(
   return val !== null && val !== '0';
 }
 
-/** Parse a runner option that is always string-typed. If the option is missing, returns `''`. */
 export function optionString(
   opt: string,
   searchParams: URLSearchParams = getWindowURL().searchParams
@@ -25,40 +21,20 @@ export function optionString(
   return searchParams.get(opt) || '';
 }
 
-/** Runtime modes for whether to run tests in a worker. '0' means no worker. */
-type WorkerMode = '0' | 'dedicated' | 'service' | 'shared';
-/** Parse a runner option for different worker modes (as in `?worker=shared`). */
-export function optionWorkerMode(
-  opt: string,
-  searchParams: URLSearchParams = getWindowURL().searchParams
-): WorkerMode {
-  const value = searchParams.get(opt);
-  if (value === null || value === '0') {
-    return '0';
-  } else if (value === 'service') {
-    return 'service';
-  } else if (value === 'shared') {
-    return 'shared';
-  } else if (value === '' || value === '1' || value === 'dedicated') {
-    return 'dedicated';
-  }
-  unreachable('invalid worker= option value');
-}
-
 /**
  * The possible options for the tests.
  */
 export interface CTSOptions {
-  worker: WorkerMode;
+  worker?: 'dedicated' | 'shared' | 'service' | '';
   debug: boolean;
   compatibility: boolean;
   forceFallbackAdapter: boolean;
   unrollConstEvalLoops: boolean;
-  powerPreference: GPUPowerPreference | '';
+  powerPreference?: GPUPowerPreference | '';
 }
 
 export const kDefaultCTSOptions: CTSOptions = {
-  worker: '0',
+  worker: '',
   debug: true,
   compatibility: false,
   forceFallbackAdapter: false,
@@ -87,9 +63,9 @@ export type OptionsInfos<Type> = Record<keyof Type, OptionInfo>;
 export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
   worker: {
     description: 'run in a worker',
-    parser: optionWorkerMode,
+    parser: optionString,
     selectValueDescriptions: [
-      { value: '0', description: 'no worker' },
+      { value: '', description: 'no worker' },
       { value: 'dedicated', description: 'dedicated worker' },
       { value: 'shared', description: 'shared worker' },
       { value: 'service', description: 'service worker' },
