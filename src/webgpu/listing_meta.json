@@ -2252,6 +2252,8 @@
   "webgpu:shader,validation,types,alias:no_indirect_recursion_via_struct_attribute:*": { "subcaseMS": 1.584 },
   "webgpu:shader,validation,types,alias:no_indirect_recursion_via_struct_member:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,types,alias:no_indirect_recursion_via_vector_element:*": { "subcaseMS": 1.050 },
+  "webgpu:shader,validation,types,array:invalid:*": { "subcaseMS": 2.470 },
+  "webgpu:shader,validation,types,array:valid:*": { "subcaseMS": 449.293 },
   "webgpu:shader,validation,types,atomics:address_space:*": { "subcaseMS": 1.050 },
   "webgpu:shader,validation,types,atomics:invalid_operations:*": { "subcaseMS": 1.050 },
   "webgpu:shader,validation,types,atomics:type:*": { "subcaseMS": 1.050 },
