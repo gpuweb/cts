@@ -56,7 +56,18 @@ const kValidCases = {
   abstract_2x3: `const m = mat2x3(1,1,1,1,1,1);`,
   abstract_2x4: `const m = mat2x4(1,1,1,1,1,1,1,1);`,
 
-  // Pre-declared shadowable
+  // Base roots shadowable
+  shadow_mat2x2: `alias mat2x2 = array<vec2f, 2>;`,
+  shadow_mat2x3: `alias mat2x3 = array<vec2f, 3>;`,
+  shadow_mat2x4: `alias mat2x4 = array<vec2f, 4>;`,
+  shadow_mat3x2: `alias mat3x2 = array<vec3f, 2>;`,
+  shadow_mat3x3: `alias mat3x3 = array<vec3f, 3>;`,
+  shadow_mat3x4: `alias mat3x4 = array<vec3f, 4>;`,
+  shadow_mat4x2: `alias mat4x2 = array<vec4f, 2>;`,
+  shadow_mat4x3: `alias mat4x3 = array<vec4f, 3>;`,
+  shadow_mat4x4: `alias mat4x4 = array<vec4f, 4>;`,
+
+  // Pre-declared aliases shadowable
   shadow_mat2x2f: `alias mat2x2f = mat2x2<f32>;`,
   shadow_mat2x3f: `alias mat2x3f = mat2x3<f32>;`,
   shadow_mat2x4f: `alias mat2x4f = mat2x4<f32>;`,
