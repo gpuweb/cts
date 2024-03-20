@@ -30,7 +30,8 @@ export interface CTSOptions {
   compatibility: boolean;
   forceFallbackAdapter: boolean;
   unrollConstEvalLoops: boolean;
-  powerPreference?: GPUPowerPreference | '';
+  powerPreference: GPUPowerPreference | '';
+  logToWebSocket: boolean;
 }
 
 export const kDefaultCTSOptions: CTSOptions = {
@@ -40,6 +41,7 @@ export const kDefaultCTSOptions: CTSOptions = {
   forceFallbackAdapter: false,
   unrollConstEvalLoops: false,
   powerPreference: '',
+  logToWebSocket: false,
 };
 
 /**
@@ -84,6 +86,7 @@ export const kCTSOptionsInfo: OptionsInfos<CTSOptions> = {
       { value: 'high-performance', description: 'high-performance' },
     ],
   },
+  logToWebSocket: { description: 'send some logs to ws://localhost:59497/' },
 };
 
 /**
