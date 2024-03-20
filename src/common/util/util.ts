@@ -24,7 +24,7 @@ export class ErrorWithExtra extends Error {
     super(message);
 
     const oldExtras = baseOrMessage instanceof ErrorWithExtra ? baseOrMessage.extra : {};
-    this.extra = Logger.globalDebugMode
+    this.extra = globalTestConfig.enableDebugLogs
       ? { ...oldExtras, ...newExtra() }
       : { omitted: 'pass ?debug=1' };
   }
