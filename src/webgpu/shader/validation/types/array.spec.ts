@@ -1,5 +1,5 @@
 export const description = `
-Validation tests for matrix types
+Validation tests for array types
 `;
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
