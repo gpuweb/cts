@@ -4465,19 +4465,60 @@ const kLdexpIntervalCases = {
     { input: [-100, 14], expected: kUnboundedEndpoints },
     { input: [2 ** 10, 10], expected: kUnboundedEndpoints },
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    // Edge Cases
+    // 1.9999999999999997779553950749686919152736663818359375 * 2 ** 1023 = f64.positive.max
+    {
+      input: [1.9999999999999997779553950749686919152736663818359375, 1023],
+      expected: kValue.f64.positive.max,
+    },
+    // f64.positive.min = 1 * 2 ** -1022
+    { input: [1, -1022], expected: kValue.f64.positive.min },
+    // f64.positive.subnormal.max = 1.9999999999999997779553950749686919152736663818359375 * 2 ** -1022
+    {
+      input: [0.9999999999999997779553950749686919152736663818359375, -1022],
+      expected: [0, kValue.f64.positive.subnormal.max],
+    },
+    // f64.positive.subnormal.min = 0.0000000000000002220446049250313080847263336181640625 * 2 ** -1022
+    {
+      input: [0.0000000000000002220446049250313080847263336181640625, -1022],
+      expected: [0, kValue.f64.positive.subnormal.min],
+    },
+    {
+      input: [-0.0000000000000002220446049250313080847263336181640625, -1022],
+      expected: [kValue.f64.negative.subnormal.max, 0],
+    },
+    {
+      input: [-0.9999999999999997779553950749686919152736663818359375, -1022],
+      expected: [kValue.f64.negative.subnormal.min, 0],
+    },
+    { input: [-1, -1022], expected: kValue.f64.negative.max },
+    {
+      input: [-1.9999999999999997779553950749686919152736663818359375, 1023],
+      expected: kValue.f64.negative.min,
+    },
+    // e2 + bias <= 0, expect correctly rounded intervals.
+    { input: [2 ** 120, -130], expected: 2 ** -10 },
+    // Out of Bounds
+    { input: [1, 1024], expected: kUnboundedEndpoints },
+    { input: [-1, 1024], expected: kUnboundedEndpoints },
+    { input: [100, 1024], expected: kUnboundedEndpoints },
+    { input: [-100, 1024], expected: kUnboundedEndpoints },
+    { input: [2 ** 100, 1000], expected: kUnboundedEndpoints },
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('ldexpInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
         const constants = trait.constants();
         // prettier-ignore
         return [
-          // always exactly represeantable cases
+          // always exactly representable cases
           { input: [0, 0], expected: 0 },
           { input: [0, 1], expected: 0 },
           { input: [0, -1], expected: 0 },
