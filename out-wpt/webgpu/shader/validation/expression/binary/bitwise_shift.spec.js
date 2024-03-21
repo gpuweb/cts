@@ -39,7 +39,6 @@ desc(
 ).
 params((u) =>
 u.
-combine('op', ['<<', '>>']).
 combine('lhs', keysOf(kScalarAndVectorTypes)).
 combine(
   'rhs',
@@ -48,7 +47,8 @@ combine(
     (value) => !(value.startsWith('vec3') || value.startsWith('vec4'))
   )
 ).
-beginSubcases()
+beginSubcases().
+combine('op', ['<<', '>>'])
 ).
 beforeAllSubcases((t) => {
   if (
