@@ -112,7 +112,7 @@ const kTypeCases = {
     valid: false,
   },
   mat2x2f: {
-    code:  `override x : mat2x2f;`,
+    code: `override x : mat2x2f;`,
     valid: false,
   },
   matrix: {
@@ -200,4 +200,3 @@ g.test('initializer')
     const expect = testcase.valid;
     t.expectCompileResult(expect, code);
   });
-
