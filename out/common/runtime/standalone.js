@@ -47,16 +47,10 @@ const { queries: qs, options } = parseSearchParamLikeWithOptions(
   kStandaloneOptionsInfos,
   window.location.search || rootQuerySpec
 );
-const {
-  runnow,
-  debug,
-  unrollConstEvalLoops,
-  powerPreference,
-  compatibility,
-  forceFallbackAdapter
-} = options;
-globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+const { runnow, debug, powerPreference, compatibility, forceFallbackAdapter } = options;
+globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.logToWebSocket = options.logToWebSocket;
 
 Logger.globalDebugMode = debug;
 const logger = new Logger();

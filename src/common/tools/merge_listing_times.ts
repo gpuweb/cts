@@ -40,7 +40,9 @@ How to generate TIMING_LOG_FILES files:
 
 - Launch the 'websocket-logger' tool (see its README.md), which listens for
   log messages on localhost:59497.
-- Run the tests you want to capture data for, on the same system. Since
+- With the logToWebSocket flag enabled (?log_to_web_socket=1 in browser,
+  --log-to-web-socket on command line, or enable it by default in options.ts)...
+- ... run the tests you want to capture data for, on the same system. Since
   logging is done through the websocket side-channel, you can run the tests
   under any runtime (standalone, WPT, etc.) as long as WebSocket support is
   available (always true in browsers).

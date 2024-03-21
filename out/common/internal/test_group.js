@@ -34,7 +34,7 @@ import { validQueryPart } from '../internal/query/validQueryPart.js';
 
 import { assert, unreachable } from '../util/util.js';
 
-import { logToWebsocket } from './websocket_logger.js';
+import { logToWebSocket } from './websocket_logger.js';
 
 
 
@@ -737,7 +737,7 @@ class RunCaseSpecific {
         timems: rec.result.timems,
         nonskippedSubcaseCount: rec.nonskippedSubcaseCount
       };
-      logToWebsocket(JSON.stringify(msg));
+      logToWebSocket(JSON.stringify(msg));
     }
   }
 }

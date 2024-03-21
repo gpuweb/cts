@@ -15,9 +15,10 @@ import { setDefaultRequestAdapterOptions } from '../../util/navigator_gpu.js';
  * Set config environment for workers with ctsOptions and return a Logger.
  */
 export function setupWorkerEnvironment(ctsOptions) {
-  const { debug, unrollConstEvalLoops, powerPreference, compatibility } = ctsOptions;
-  globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+  const { debug, powerPreference, compatibility } = ctsOptions;
+  globalTestConfig.unrollConstEvalLoops = ctsOptions.unrollConstEvalLoops;
   globalTestConfig.compatibility = compatibility;
+  globalTestConfig.logToWebSocket = ctsOptions.logToWebSocket;
 
   Logger.globalDebugMode = debug;
   const log = new Logger();

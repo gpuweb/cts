@@ -33,13 +33,15 @@ searchParams = getWindowURL().searchParams)
 
 
 
+
 export const kDefaultCTSOptions = {
   worker: '',
   debug: true,
   compatibility: false,
   forceFallbackAdapter: false,
   unrollConstEvalLoops: false,
-  powerPreference: ''
+  powerPreference: '',
+  logToWebSocket: false
 };
 
 /**
@@ -83,7 +85,8 @@ export const kCTSOptionsInfo = {
     { value: 'low-power', description: 'low-power' },
     { value: 'high-performance', description: 'high-performance' }]
 
-  }
+  },
+  logToWebSocket: { description: 'send some logs to ws://localhost:59497/' }
 };
 
 /**
