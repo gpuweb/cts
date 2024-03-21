@@ -5212,7 +5212,7 @@ class FPAbstractTraits extends FPTraits {
     'smoothStepInterval'
   );
   public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this, 'sqrtInterval');
-  public readonly stepInterval = this.unimplementedScalarPairToInterval.bind(this, 'stepInterval');
+  public readonly stepInterval = this.stepIntervalImpl.bind(this);
   public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
   public readonly subtractionMatrixMatrixInterval =
     this.subtractionMatrixMatrixIntervalImpl.bind(this);

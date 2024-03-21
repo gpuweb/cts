@@ -4938,7 +4938,7 @@ g.test('remainderInterval')
 g.test('stepInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -4956,12 +4956,17 @@ g.test('stepInterval')
           { input: [1, -1], expected: 0 },
 
           // 64-bit normals
-          { input: [0.1, 0.1], expected: [0, 1] },
+          // number is f64 internally, so the value representing the literal
+          // 0.1/-0.1 will always be exactly representable in AbstractFloat,
+          // since AF is also f64 internally.
+          // It is impossible with normals to cause the rounding ambiguity that
+          // causes the 0 or 1 result.
+          { input: [0.1, 0.1], expected: p.trait === 'abstract' ? 1 : [0, 1] },
           { input: [0, 0.1], expected: 1 },
           { input: [0.1, 0], expected: 0 },
           { input: [0.1, 1], expected: 1 },
           { input: [1, 0.1], expected: 0 },
-          { input: [-0.1, -0.1], expected: [0, 1] },
+          { input: [-0.1, -0.1], expected: p.trait === 'abstract' ? 1 : [0, 1] },
           { input: [0, -0.1], expected: 0 },
           { input: [-0.1, 0], expected: 1 },
           { input: [-0.1, -1], expected: 0 },
