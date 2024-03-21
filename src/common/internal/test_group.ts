@@ -34,7 +34,7 @@ import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { DeepReadonly } from '../util/types.js';
 import { assert, unreachable } from '../util/util.js';
 
-import { logToWebsocket } from './websocket_logger.js';
+import { logToWebSocket } from './websocket_logger.js';
 
 export type RunFn = (
   rec: TestCaseRecorder,
@@ -737,7 +737,7 @@ class RunCaseSpecific implements RunCase {
         timems: rec.result.timems,
         nonskippedSubcaseCount: rec.nonskippedSubcaseCount,
       };
-      logToWebsocket(JSON.stringify(msg));
+      logToWebSocket(JSON.stringify(msg));
     }
   }
 }
