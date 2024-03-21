@@ -39,7 +39,6 @@ g.test('scalar_vector')
   )
   .params(u =>
     u
-      .combine('op', ['<<', '>>'])
       .combine('lhs', keysOf(kScalarAndVectorTypes))
       .combine(
         'rhs',
@@ -49,6 +48,7 @@ g.test('scalar_vector')
         )
       )
       .beginSubcases()
+      .combine('op', ['<<', '>>'])
   )
   .beforeAllSubcases(t => {
     if (
