@@ -4078,6 +4078,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "determinant"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "dot4I8Packed"
     ]
   },
