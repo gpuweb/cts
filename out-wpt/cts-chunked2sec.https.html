@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 11998 variants generated from 2345 tests in 535 files -->
+<!-- Prefix: "?q="; 12001 variants generated from 2345 tests in 535 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -7376,7 +7376,10 @@
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fma:f16:inputSource="uniform";*'><!-- estimated: 1943.428 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fma:f16:inputSource="storage_r";*'><!-- estimated: 1943.428 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fma:f16:inputSource="storage_rw";*'><!-- estimated: 1943.428 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:abstract_float:*'><!-- estimated: 1810.512 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:abstract_float:inputSource="const";vectorize="_undef_"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:abstract_float:inputSource="const";vectorize=2'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:abstract_float:inputSource="const";vectorize=3'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:abstract_float:inputSource="const";vectorize=4'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:f32:*'><!-- estimated: 196.304 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,fract:f16:*'><!-- estimated: 744.000 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,frexp:f32_fract:*'><!-- estimated: 109.900 ms -->

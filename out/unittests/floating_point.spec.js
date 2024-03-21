@@ -3091,14 +3091,26 @@ const kFractIntervalCases = {
   { input: -0.1, expected: [reinterpretU16AsF16(0x3b33), reinterpretU16AsF16(0x3b34)] }, // ~0.9
   { input: -0.9, expected: [reinterpretU16AsF16(0x2e60), reinterpretU16AsF16(0x2e68)] }, // ~0.1
   { input: -1.1, expected: [reinterpretU16AsF16(0x3b32), reinterpretU16AsF16(0x3b34)] }, // ~0.9
-  { input: 658.5, expected: 0.5 }]
+  { input: 658.5, expected: 0.5 }],
+
+  abstract: [
+  { input: 0.1, expected: reinterpretU64AsF64(0x3fb999999999999an) },
+  { input: 0.9, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+  { input: 1.1, expected: reinterpretU64AsF64(0x3fb99999999999a0n) },
+  { input: -0.1, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+  { input: -0.9, expected: reinterpretU64AsF64(0x3fb9999999999998n) },
+  { input: -1.1, expected: reinterpretU64AsF64(0x3fecccccccccccccn) },
+
+  // https://github.com/gpuweb/cts/issues/2766
+  { input: 0x80000000, expected: 0 }]
+
 
 };
 
 g.test('fractInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16']).
+combine('trait', ['f32', 'f16', 'abstract']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();

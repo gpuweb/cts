@@ -3093,12 +3093,24 @@ const kFractIntervalCases = {
     { input: -1.1, expected: [reinterpretU16AsF16(0x3b32), reinterpretU16AsF16(0x3b34)] }, // ~0.9
     { input: 658.5, expected: 0.5 },
   ] as ScalarToIntervalCase[],
+  abstract: [
+    { input: 0.1, expected: reinterpretU64AsF64(0x3fb999999999999an) },
+    { input: 0.9, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+    { input: 1.1, expected: reinterpretU64AsF64(0x3fb99999999999a0n) },
+    { input: -0.1, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+    { input: -0.9, expected: reinterpretU64AsF64(0x3fb9999999999998n) },
+    { input: -1.1, expected: reinterpretU64AsF64(0x3fecccccccccccccn) },
+
+    // https://github.com/gpuweb/cts/issues/2766
+    { input: 0x80000000, expected: 0 },
+  ] as ScalarToIntervalCase[],
+
 } as const;
 
 g.test('fractInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
