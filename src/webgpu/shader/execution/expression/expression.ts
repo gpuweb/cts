@@ -206,7 +206,7 @@ function fromStorage(ty: Type, expr: string): string {
     );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
-      return `${expr} != vec${ty.width}<u32>(0u)`;
+      return `(${expr} != vec${ty.width}<u32>(0u))`;
     }
   }
   return expr;
