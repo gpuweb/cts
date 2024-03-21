@@ -126,6 +126,7 @@ g.test('linear_memory')
     TODO: Test types like vec2<atomic<i32>>, if that's allowed.
     TODO: Test exprIndexAddon as constexpr.
     TODO: Test exprIndexAddon as pipeline-overridable constant expression.
+    TODO: Adjust test logic to support array of f16 in the uniform address space
   `
   )
   .params(u =>
@@ -202,7 +203,7 @@ g.test('linear_memory')
       // Array elements must be aligned to 16 bytes, but the logic in generateTypes
       // creates an array of vec4 of the baseType. But for f16 that's only 8 bytes.
       // We would need to write more complex logic for that.
-      t.skip('TODO: Test logic does not handle array of f16 in the uniform address space');
+      t.skip('Test logic does not handle array of f16 in the uniform address space');
     }
 
     let usesCanary = false;
