@@ -192,7 +192,7 @@ const kInitCases = {
 };
 
 g.test('initializer')
-  .desc('Test override types')
+  .desc('Test override initializers')
   .params(u => u.combine('case', keysOf(kInitCases)))
   .fn(t => {
     const testcase = kInitCases[t.params.case];
