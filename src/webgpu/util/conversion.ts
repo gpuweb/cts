@@ -818,7 +818,7 @@ export class MatrixType {
 
 /** ArrayType describes the type of WGSL Array. */
 export class ArrayType {
-  readonly count: number; // Number of elements in the array
+  readonly count: number; // Number of elements in the array. Zero represents a runtime-sized array.
   readonly elementType: Type; // Element type
 
   // Maps a string representation of a array type to array type.
@@ -855,7 +855,9 @@ export class ArrayType {
   }
 
   public toString(): string {
-    return `array<${this.elementType}, ${this.count}>`;
+    return this.count !== 0
+      ? `array<${this.elementType}, ${this.count}>`
+      : `array<${this.elementType}>`;
   }
 
   public get stride(): number {
