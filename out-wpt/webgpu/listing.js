@@ -3827,6 +3827,14 @@ export const listing = [
       "shader",
       "validation",
       "decl",
+      "let"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
       "override"
     ]
   },
