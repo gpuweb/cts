@@ -200,4 +200,11 @@ fn((t) => {
   const expect = testcase.valid;
   t.expectCompileResult(expect, code);
 });
+
+g.test('function_scope').
+desc('Test that override declarations are disallowed in functions').
+fn((t) => {
+  const code = `fn foo() { override x : u32; }`;
+  t.expectCompileResult(false, code);
+});
 //# sourceMappingURL=override.spec.js.map
