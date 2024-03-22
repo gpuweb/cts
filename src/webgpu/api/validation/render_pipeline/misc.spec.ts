@@ -121,11 +121,9 @@ g.test('external_texture')
       layout: 'auto',
       vertex: {
         module: shader,
-        entryPoint: 'vertexMain',
       },
       fragment: {
         module: shader,
-        entryPoint: 'fragmentMain',
         targets: [{ format: 'rgba8unorm' }],
       },
     };
