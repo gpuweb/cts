@@ -1823,6 +1823,14 @@
   "webgpu:shader,validation,decl,const:no_indirect_recursion:*": { "subcaseMS": 0.950 },
   "webgpu:shader,validation,decl,const:no_indirect_recursion_via_array_size:*": { "subcaseMS": 2.601 },
   "webgpu:shader,validation,decl,const:no_indirect_recursion_via_struct_attribute:*": { "subcaseMS": 1.034 },
+<<<<<<< Updated upstream
+=======
+  "webgpu:shader,validation,decl,const:type:*": { "subcaseMS": 10.651 },
+  "webgpu:shader,validation,decl,let:initializer:*": { "subcaseMS": 0.706 },
+  "webgpu:shader,validation,decl,let:module_scope:*": { "subcaseMS": 0.619 },
+  "webgpu:shader,validation,decl,let:type:*": { "subcaseMS": 122.199 },
+  "webgpu:shader,validation,decl,override:function_scope:*": { "subcaseMS": 1.003 },
+>>>>>>> Stashed changes
   "webgpu:shader,validation,decl,override:id:*": { "subcaseMS": 69.432 },
   "webgpu:shader,validation,decl,override:initializer:*": { "subcaseMS": 4.810 },
   "webgpu:shader,validation,decl,override:no_direct_recursion:*": { "subcaseMS": 1.000 },
