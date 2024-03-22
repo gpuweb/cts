@@ -116,13 +116,9 @@ g.test('one_color_attachment,mip_levels')
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
-      vertex: {
-        module,
-        entryPoint: 'main_vs',
-      },
+      vertex: { module },
       fragment: {
         module,
-        entryPoint: 'main_fs',
         targets: [{ format: kFormat }],
       },
       primitive: { topology: 'triangle-list' },
@@ -224,13 +220,9 @@ g.test('multiple_color_attachments,same_mip_level')
 
       const pipeline = t.device.createRenderPipeline({
         layout: 'auto',
-        vertex: {
-          module,
-          entryPoint: 'main_vs',
-        },
+        vertex: { module },
         fragment: {
           module,
-          entryPoint: 'main_fs',
           targets: new Array<GPUColorTargetState>(attachmentCount).fill({ format: kFormat }),
         },
         primitive: { topology: 'triangle-list' },
@@ -245,13 +237,9 @@ g.test('multiple_color_attachments,same_mip_level')
 
       const pipeline = t.device.createRenderPipeline({
         layout: 'auto',
-        vertex: {
-          module,
-          entryPoint: 'main_vs',
-        },
+        vertex: { module },
         fragment: {
           module,
-          entryPoint: 'main_fs',
           targets: [{ format: kFormat }],
         },
         primitive: { topology: 'triangle-list' },
@@ -313,13 +301,9 @@ g.test('multiple_color_attachments,same_slice_with_diff_mip_levels')
 
     const pipeline = t.device.createRenderPipeline({
       layout: 'auto',
-      vertex: {
-        module,
-        entryPoint: 'main_vs',
-      },
+      vertex: { module },
       fragment: {
         module,
-        entryPoint: 'main_fs',
         targets: new Array<GPUColorTargetState>(attachmentCount).fill({ format: kFormat }),
       },
       primitive: { topology: 'triangle-list' },
