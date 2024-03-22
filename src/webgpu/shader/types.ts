@@ -218,20 +218,25 @@ export function* generateTypes({
   isAtomic?: boolean;
 }): Generator<
   {
-    type: string; // WGSL name for the generated type
+    /** WGSL name for the generated type */
+    type: string;
     _kTypeInfo: {
-      // WGSL name for:
-      // - the generated type if it is scalar or atomic
-      // - the column vector type if the generated type is a matrix
-      // - the base type if the generated type is an array
+      /**
+       * WGSL name for:
+       * - the generated type if it is scalar or atomic
+       * - the column vector type if the generated type is a matrix
+       * - the base type if the generated type is an array
+       */
       elementBaseType: string;
-      // Layout details if host-shareable, and undefined otherwise.
+      /** Layout details if host-shareable, and undefined otherwise. */
       layout: undefined | AlignmentAndSize;
       supportsAtomics: boolean;
-      // The number of elementBaseType items in the container.
+      /** The number of elementBaseType items in the container. */
       arrayLength: number;
-      // 0 for scalar and vector.
-      // For a matrix type, this is the number of rows in the matrix.
+      /**
+       * 0 for scalar and vector.
+       * For a matrix type, this is the number of rows in the matrix.
+       */
       innerLength?: number;
     };
   },
