@@ -3093,12 +3093,24 @@ const kFractIntervalCases = {
     { input: -1.1, expected: [reinterpretU16AsF16(0x3b32), reinterpretU16AsF16(0x3b34)] }, // ~0.9
     { input: 658.5, expected: 0.5 },
   ] as ScalarToIntervalCase[],
+  abstract: [
+    { input: 0.1, expected: reinterpretU64AsF64(0x3fb999999999999an) },
+    { input: 0.9, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+    { input: 1.1, expected: reinterpretU64AsF64(0x3fb99999999999a0n) },
+    { input: -0.1, expected: reinterpretU64AsF64(0x3feccccccccccccdn) },
+    { input: -0.9, expected: reinterpretU64AsF64(0x3fb9999999999998n) },
+    { input: -1.1, expected: reinterpretU64AsF64(0x3fecccccccccccccn) },
+
+    // https://github.com/gpuweb/cts/issues/2766
+    { input: 0x80000000, expected: 0 },
+  ] as ScalarToIntervalCase[],
+
 } as const;
 
 g.test('fractInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -4465,19 +4477,60 @@ const kLdexpIntervalCases = {
     { input: [-100, 14], expected: kUnboundedEndpoints },
     { input: [2 ** 10, 10], expected: kUnboundedEndpoints },
   ] as ScalarPairToIntervalCase[],
+  abstract: [
+    // Edge Cases
+    // 1.9999999999999997779553950749686919152736663818359375 * 2 ** 1023 = f64.positive.max
+    {
+      input: [1.9999999999999997779553950749686919152736663818359375, 1023],
+      expected: kValue.f64.positive.max,
+    },
+    // f64.positive.min = 1 * 2 ** -1022
+    { input: [1, -1022], expected: kValue.f64.positive.min },
+    // f64.positive.subnormal.max = 1.9999999999999997779553950749686919152736663818359375 * 2 ** -1022
+    {
+      input: [0.9999999999999997779553950749686919152736663818359375, -1022],
+      expected: [0, kValue.f64.positive.subnormal.max],
+    },
+    // f64.positive.subnormal.min = 0.0000000000000002220446049250313080847263336181640625 * 2 ** -1022
+    {
+      input: [0.0000000000000002220446049250313080847263336181640625, -1022],
+      expected: [0, kValue.f64.positive.subnormal.min],
+    },
+    {
+      input: [-0.0000000000000002220446049250313080847263336181640625, -1022],
+      expected: [kValue.f64.negative.subnormal.max, 0],
+    },
+    {
+      input: [-0.9999999999999997779553950749686919152736663818359375, -1022],
+      expected: [kValue.f64.negative.subnormal.min, 0],
+    },
+    { input: [-1, -1022], expected: kValue.f64.negative.max },
+    {
+      input: [-1.9999999999999997779553950749686919152736663818359375, 1023],
+      expected: kValue.f64.negative.min,
+    },
+    // e2 + bias <= 0, expect correctly rounded intervals.
+    { input: [2 ** 120, -130], expected: 2 ** -10 },
+    // Out of Bounds
+    { input: [1, 1024], expected: kUnboundedEndpoints },
+    { input: [-1, 1024], expected: kUnboundedEndpoints },
+    { input: [100, 1024], expected: kUnboundedEndpoints },
+    { input: [-100, 1024], expected: kUnboundedEndpoints },
+    { input: [2 ** 100, 1000], expected: kUnboundedEndpoints },
+  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('ldexpInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
         const constants = trait.constants();
         // prettier-ignore
         return [
-          // always exactly represeantable cases
+          // always exactly representable cases
           { input: [0, 0], expected: 0 },
           { input: [0, 1], expected: 0 },
           { input: [0, -1], expected: 0 },
@@ -4885,7 +4938,7 @@ g.test('remainderInterval')
 g.test('stepInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -4903,12 +4956,17 @@ g.test('stepInterval')
           { input: [1, -1], expected: 0 },
 
           // 64-bit normals
-          { input: [0.1, 0.1], expected: [0, 1] },
+          // number is f64 internally, so the value representing the literal
+          // 0.1/-0.1 will always be exactly representable in AbstractFloat,
+          // since AF is also f64 internally.
+          // It is impossible with normals to cause the rounding ambiguity that
+          // causes the 0 or 1 result.
+          { input: [0.1, 0.1], expected: p.trait === 'abstract' ? 1 : [0, 1] },
           { input: [0, 0.1], expected: 1 },
           { input: [0.1, 0], expected: 0 },
           { input: [0.1, 1], expected: 1 },
           { input: [1, 0.1], expected: 0 },
-          { input: [-0.1, -0.1], expected: [0, 1] },
+          { input: [-0.1, -0.1], expected: p.trait === 'abstract' ? 1 : [0, 1] },
           { input: [0, -0.1], expected: 0 },
           { input: [-0.1, 0], expected: 1 },
           { input: [-0.1, -1], expected: 0 },
