@@ -9,12 +9,12 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 interface Case {
-  code: string,
-  valid: boolean,
-  decls?: string,
-};
+  code: string;
+  valid: boolean;
+  decls?: string;
+}
 
-const kTypeCases: Record<string,Case> = {
+const kTypeCases: Record<string, Case> = {
   bool: {
     code: `let x : bool = true;`,
     valid: true,
@@ -111,7 +111,7 @@ fn foo() {
     t.expectCompileResult(expect, code);
   });
 
-const kInitCases: Record<string,Case> = {
+const kInitCases: Record<string, Case> = {
   no_init: {
     code: `let x : u32;`,
     valid: false,
