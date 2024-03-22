@@ -29,7 +29,7 @@ const kValidArgumentTypes = objectsToRecord([
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() never errors
+Validates that constant evaluation and override evaluation of ${builtin}() error on invalid inputs.
 `
   )
   .params(u =>
@@ -61,6 +61,13 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     );
   });
 
+const kArgCasesF16 = {
+  bad_0f16: '(1h)',
+  bad_0vec2h: '(vec2h())',
+  bad_0vec3h: '(vec3h())',
+  bad_0vec4h: '(vec4h())',
+};
+
 const kArgCases = {
   good: '(vec3f())',
   bad_no_parens: '',
@@ -71,23 +78,25 @@ const kArgCases = {
   bad_0bool: '(false)',
   bad_0array: '(array(1.1,2.2))',
   bad_0struct: '(modf(2.2))',
-  bad_0f16: '(1h)',
   bad_0uint: '(1u)',
   bad_0int: '(1i)',
-  bad_0vec2h: '(vec2h())',
   bad_0vec2i: '(vec2i())',
   bad_0vec2u: '(vec2u())',
-  bad_0vec3h: '(vec3h())',
   bad_0vec3i: '(vec3i())',
   bad_0vec3u: '(vec3u())',
-  bad_0vec4h: '(vec4h())',
   bad_0vec4i: '(vec4i())',
   bad_0vec4u: '(vec4u())',
+  ...kArgCasesF16,
 };
 
 g.test('args')
   .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
+  .beforeAllSubcases(t => {
+    if (t.params.arg in kArgCasesF16) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
   .fn(t => {
     t.expectCompileResult(
       t.params.arg === 'good',
