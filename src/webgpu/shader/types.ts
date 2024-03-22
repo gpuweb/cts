@@ -5,10 +5,22 @@ import { align } from '../util/math.js';
 const kDefaultArrayLength = 3;
 
 export type Requirement = 'never' | 'may' | 'must'; // never is the same as "must not"
-export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'atomic' | 'array';
+export type ContainerType = 'scalar' | 'vector' | 'matrix' | 'array';
 export type ScalarType = 'i32' | 'u32' | 'f16' | 'f32' | 'bool';
 
 export const HostSharableTypes = ['i32', 'u32', 'f16', 'f32'] as const;
+
+// The alignment and size of a host shareable type.
+// See  "Alignment and Size" in the WGSL spec.  https://w3.org/TR/WGSL/#alignment-and-size
+// Note this is independent of the address space that values of this type might appear in.
+// See RequiredAlignOf(...) for the 16-byte granularity requirement when
+// values of a type are placed in the uniform address space.
+type AlignmentAndSize = {
+  // AlignOf(T) for generated type T
+  alignment: number;
+  // SizeOf(T) for generated type T
+  size: number;
+};
 
 /** Info for each plain scalar type. */
 export const kScalarTypeInfo =
@@ -36,7 +48,7 @@ export const kVectorContainerTypes = keysOf(kVectorContainerTypeInfo);
 function vectorLayout(
   vectorContainer: 'vec2' | 'vec3' | 'vec4',
   baseType: ScalarType
-): { alignment: number; size: number } | undefined {
+): undefined | AlignmentAndSize {
   const n = kVectorContainerTypeInfo[vectorContainer].arrayLength;
   const scalarLayout = kScalarTypeInfo[baseType].layout;
   if (scalarLayout === undefined) {
@@ -204,10 +216,34 @@ export function* generateTypes({
   containerType: ContainerType;
   /** Whether to wrap the baseType in `atomic<>`. */
   isAtomic?: boolean;
-}) {
+}): Generator<
+  {
+    type: string; // WGSL name for the generated type
+    _kTypeInfo: {
+      // WGSL name for:
+      // - the generated type if it is scalar or atomic
+      // - the column vector type if the generated type is a matrix
+      // - the base type if the generated type is an array
+      elementBaseType: string;
+      // Layout details if host-shareable, and undefined otherwise.
+      layout: undefined | AlignmentAndSize;
+      supportsAtomics: boolean;
+      // The number of elementBaseType items in the container.
+      arrayLength: number;
+      // 0 for scalar and vector.
+      // For a matrix type, this is the number of rows in the matrix.
+      innerLength?: number;
+    };
+  },
+  void
+> {
   const scalarInfo = kScalarTypeInfo[baseType];
   if (isAtomic) {
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
+    assert(
+      containerType === 'scalar' || containerType === 'array',
+      'atomics are only supported for scalars and arrays'
+    );
   }
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
 
@@ -236,6 +272,7 @@ export function* generateTypes({
           elementBaseType: baseType,
           ...kVectorContainerTypeInfo[vectorType],
           layout: vectorLayout(vectorType, scalarType as ScalarType),
+          supportsAtomics: false,
         },
       };
     }
@@ -253,6 +290,7 @@ export function* generateTypes({
             elementBaseType: `vec${matrixDimInfo.innerLength}<${scalarType}>`,
             ...matrixDimInfo,
             ...matrixLayoutInfo,
+            supportsAtomics: false,
           },
         };
       }
@@ -261,51 +299,64 @@ export function* generateTypes({
 
   // Array types
   if (containerType === 'array') {
-    // Buffer affective binding size must be a multiple of 4. Adjust array length as needed.
-    let arrayLength = kDefaultArrayLength;
-    if (
-      addressSpace === 'storage' &&
-      scalarInfo.layout !== undefined &&
-      scalarInfo.layout.alignment % 4 !== 0
-    ) {
-      arrayLength = align(arrayLength, 4);
+    let arrayElemType: string = scalarType;
+    let arrayElementCount: number = kDefaultArrayLength;
+    let supportsAtomics = scalarInfo.supportsAtomics;
+    let layout: undefined | AlignmentAndSize = undefined;
+    if (scalarInfo.layout) {
+      // Compute the layout of the array type.
+      // Adjust the array element count or element type as needed.
+      if (addressSpace === 'uniform') {
+        // Use a vec4 of the scalar type, to achieve a 16 byte alignment without internal padding.
+        // This works for 4-byte scalar types, and does not work for f16.
+        // It is the caller's responsibility to filter out the f16 case.
+        assert(!isAtomic, 'the uniform case is making vec4 of scalar, which cannot handle atomics');
+        arrayElemType = `vec4<${baseType}>`;
+        supportsAtomics = false;
+        const arrayElemLayout = vectorLayout('vec4', baseType) as AlignmentAndSize;
+        // assert(arrayElemLayout.alignment % 16 === 0); // Callers responsibility to avoid
+        arrayElementCount = align(arrayElementCount, 4) / 4;
+        const arrayByteSize = arrayElementCount * arrayElemLayout.size;
+        layout = { alignment: arrayElemLayout.alignment, size: arrayByteSize };
+      } else {
+        // The ordinary case.  Use scalarType as the element type.
+        const stride = arrayStride(scalarInfo.layout);
+        let arrayByteSize = arrayElementCount * stride;
+        if (addressSpace === 'storage') {
+          // The buffer effective binding size must be a multiple of 4.
+          // Adjust the array element count as needed.
+          while (arrayByteSize % 4 > 0) {
+            arrayElementCount++;
+            arrayByteSize = arrayElementCount * stride;
+          }
+        }
+        layout = { alignment: scalarInfo.layout.alignment, size: arrayByteSize };
+      }
     }
 
     const arrayTypeInfo = {
       elementBaseType: `${baseType}`,
-      arrayLength,
-      layout: scalarInfo.layout
-        ? {
-            alignment: scalarInfo.layout.alignment,
-            size:
-              addressSpace === 'uniform'
-                ? // Uniform storage class must have array elements aligned to 16.
-                  arrayLength *
-                  arrayStride({
-                    ...scalarInfo.layout,
-                    alignment: 16,
-                  })
-                : arrayLength * arrayStride(scalarInfo.layout),
-          }
-        : undefined,
+      arrayLength: arrayElementCount,
+      layout: scalarInfo.layout ? layout : undefined,
+      supportsAtomics,
     };
 
     // Sized
     if (addressSpace === 'uniform') {
       yield {
-        type: `array<vec4<${scalarType}>,${arrayLength}>`,
+        type: `array<${arrayElemType},${arrayElementCount}>`,
         _kTypeInfo: arrayTypeInfo,
       };
     } else {
-      yield { type: `array<${scalarType},${arrayLength}>`, _kTypeInfo: arrayTypeInfo };
+      yield { type: `array<${arrayElemType},${arrayElementCount}>`, _kTypeInfo: arrayTypeInfo };
     }
     // Unsized
     if (addressSpace === 'storage') {
-      yield { type: `array<${scalarType}>`, _kTypeInfo: arrayTypeInfo };
+      yield { type: `array<${arrayElemType}>`, _kTypeInfo: arrayTypeInfo };
     }
   }
 
-  function arrayStride(elementLayout: { size: number; alignment: number }) {
+  function arrayStride(elementLayout: AlignmentAndSize) {
     return align(elementLayout.size, elementLayout.alignment);
   }
 
