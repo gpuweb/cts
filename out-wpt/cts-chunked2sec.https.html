@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 12009 variants generated from 2353 tests in 535 files -->
+<!-- Prefix: "?q="; 12010 variants generated from 2353 tests in 535 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -8219,12 +8219,13 @@
 <meta name=variant content='?q=webgpu:shader,execution,padding:vec3:*'><!-- estimated: 8.700 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,padding:matCx3:*'><!-- estimated: 60.300 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,padding:array_of_matCx3:*'><!-- estimated: 51.900 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="storage";storageMode="read";*'><!-- estimated: 762.192 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="storage";storageMode="read_write";*'><!-- estimated: 1778.448 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="uniform";*'><!-- estimated: 666.918 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="private";*'><!-- estimated: 793.950 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="function";*'><!-- estimated: 793.950 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="workgroup";*'><!-- estimated: 857.466 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="storage";storageMode="read";*'><!-- estimated: 1206.804 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="storage";storageMode="read_write";access="read";*'><!-- estimated: 1333.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="storage";storageMode="read_write";access="write";*'><!-- estimated: 1333.836 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="uniform";*'><!-- estimated: 1079.772 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="private";*'><!-- estimated: 1206.804 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="function";*'><!-- estimated: 1206.804 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,robust_access:linear_memory:addressSpace="workgroup";*'><!-- estimated: 1270.320 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,robust_access_vertex:vertex_buffer_access:indexed=false;indirect=true;drawCallTestParameter="vertexCount";*'><!-- estimated: 1245.504 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,robust_access_vertex:vertex_buffer_access:indexed=false;indirect=true;drawCallTestParameter="instanceCount";*'><!-- estimated: 1037.920 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,robust_access_vertex:vertex_buffer_access:indexed=false;indirect=true;drawCallTestParameter="firstVertex";*'><!-- estimated: 1245.504 ms -->
