@@ -4,7 +4,7 @@ Execution Tests for array indexing expressions
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { Type, array, f32 } from '../../../../../util/conversion.js';
+import { False, True, Type, array, f32 } from '../../../../../util/conversion.js';
 import { Case } from '../../case.js';
 import { allInputSources, basicExpressionBuilder, run } from '../../expression.js';
 
@@ -71,6 +71,44 @@ g.test('concrete_scalar')
       basicExpressionBuilder(ops => `${ops[0]}[${ops[1]}]`),
       [Type.array(3, elementType), indexType],
       elementType,
+      t.params,
+      cases
+    );
+  });
+
+g.test('bool')
+  .specURL('https://www.w3.org/TR/WGSL/#array-access-expr')
+  .desc(`Test indexing of an array of booleans`)
+  .params(u =>
+    u
+      .combine(
+        'inputSource',
+        // 'uniform' address space requires array stride to be multiple of 16 bytes
+        allInputSources.filter(s => s !== 'uniform')
+      )
+      .combine('indexType', ['i32', 'u32'] as const)
+  )
+  .fn(async t => {
+    const indexType = Type[t.params.indexType];
+    const cases: Case[] = [
+      {
+        input: [array(True, False, True), indexType.create(0)],
+        expected: True,
+      },
+      {
+        input: [array(True, False, True), indexType.create(1)],
+        expected: False,
+      },
+      {
+        input: [array(True, False, True), indexType.create(2)],
+        expected: True,
+      },
+    ];
+    await run(
+      t,
+      basicExpressionBuilder(ops => `${ops[0]}[${ops[1]}]`),
+      [Type.array(3, Type.bool), indexType],
+      Type.bool,
       t.params,
       cases
     );
