@@ -247,7 +247,7 @@ export function* generateTypes({
     assert(scalarInfo.supportsAtomics, 'type does not support atomics');
     assert(
       containerType === 'scalar' || containerType === 'array',
-      'atomics are only supported for scalars and arrays'
+      "can only generate atomic inner types with containerType 'scalar' or 'array'"
     );
   }
   const scalarType = isAtomic ? `atomic<${baseType}>` : baseType;
