@@ -342,7 +342,7 @@ export function* generateTypes({
     const arrayTypeInfo = {
       elementBaseType: `${baseType}`,
       arrayLength: arrayElementCount,
-      layout: scalarInfo.layout ? layout : undefined,
+      layout,
       supportsAtomics,
     };
 
