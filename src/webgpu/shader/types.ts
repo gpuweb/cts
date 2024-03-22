@@ -347,14 +347,7 @@ export function* generateTypes({
     };
 
     // Sized
-    if (addressSpace === 'uniform') {
-      yield {
-        type: `array<${arrayElemType},${arrayElementCount}>`,
-        _kTypeInfo: arrayTypeInfo,
-      };
-    } else {
-      yield { type: `array<${arrayElemType},${arrayElementCount}>`, _kTypeInfo: arrayTypeInfo };
-    }
+    yield { type: `array<${arrayElemType},${arrayElementCount}>`, _kTypeInfo: arrayTypeInfo };
     // Unsized
     if (addressSpace === 'storage') {
       yield { type: `array<${arrayElemType}>`, _kTypeInfo: arrayTypeInfo };
