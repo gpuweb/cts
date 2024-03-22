@@ -30,6 +30,7 @@ class F extends GPUTest {
         @vertex
         fn main_vs(@builtin(vertex_index) VertexIndex : u32) -> @builtin(position) vec4<f32> {
           var pos : array<vec2<f32>, 3> = array<vec2<f32>, 3>(
+              // Triangle is slightly extended so its edge doesn't cut through pixel centers.
               vec2<f32>(-1.0, 1.01),
               vec2<f32>(1.01, -1.0),
               vec2<f32>(-1.0, -1.0));
