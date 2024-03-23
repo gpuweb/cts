@@ -17,8 +17,8 @@ Example:
   tools/validate src/unittests src/webgpu
 
 Options:
-  --help           Print this message and exit.
-  --validate-meta  Validate listing_meta.json files.
+  --help                     Print this message and exit.
+  --print-metadata-warnings  Print non-fatal warnings about listing_meta.json files.
 `);
   process.exit(rc);
 }
