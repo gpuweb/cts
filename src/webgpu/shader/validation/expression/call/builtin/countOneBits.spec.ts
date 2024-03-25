@@ -67,26 +67,30 @@ Validates that float arguments are rejected by ${builtin}()
     );
   });
 
-const kGoodArgs = '(1u)';
-const kBadArgs = {
+const kArgCases = {
+  good: '(1u)',
+  bad_no_parens: '',
   // Bad number of args
-  '0args': '',
-  '2args': '(1u,2u)',
-  // Bad value for arg 0
-  '0bool': '(false)',
-  '0array': '(array(1u))',
-  '0struct': '(modf(2.2))',
+  bad_too_few: '()',
+  bad_too_many: '(1u,2u)',
+  // Bad value for arg 0 (Note that float type arguments are handled in 'float_argument' above)
+  bad_0bool: '(false)',
+  bad_0array: '(array(1u))',
+  bad_0struct: '(modf(2.2))',
 };
 
-g.test('bad_args')
-  .desc(`Test compilation failure of ${builtin} with bad arguments`)
-  .params(u => u.combine('arg', keysOf(kBadArgs)))
+g.test('args')
+  .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
+  .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
-    t.expectCompileResult(false, `const c = ${builtin}${kBadArgs[t.params.arg]};`);
+    t.expectCompileResult(
+      t.params.arg === 'good',
+      `const c = ${builtin}${kArgCases[t.params.arg]};`
+    );
   });
 
 g.test('must_use')
   .desc(`Result of ${builtin} must be used`)
   .fn(t => {
-    t.expectCompileResult(false, `fn f() { ${builtin}${kGoodArgs}; }`);
+    t.expectCompileResult(false, `fn f() { ${builtin}${kArgCases['good']}; }`);
   });
