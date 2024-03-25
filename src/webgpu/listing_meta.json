@@ -2006,6 +2006,7 @@
   "webgpu:shader,validation,expression,call,builtin,sqrt:values:*": { "subcaseMS": 0.302 },
   "webgpu:shader,validation,expression,call,builtin,tan:integer_argument:*": { "subcaseMS": 1.734 },
   "webgpu:shader,validation,expression,call,builtin,tan:values:*": { "subcaseMS": 0.350 },
+  "webgpu:shader,validation,expression,call,builtin,textureDimensions:level_argument:*": { "subcaseMS": 1.348 },
   "webgpu:shader,validation,expression,call,builtin,textureLoad:array_index_argument,non_storage:*": { "subcaseMS": 1.358 },
   "webgpu:shader,validation,expression,call,builtin,textureLoad:array_index_argument,storage:*": { "subcaseMS": 1.906 },
   "webgpu:shader,validation,expression,call,builtin,textureLoad:coords_argument,non_storage:*": { "subcaseMS": 1.717 },
