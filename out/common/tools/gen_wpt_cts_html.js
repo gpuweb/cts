@@ -23,6 +23,7 @@ gen_wpt_cts_html.ts. Example:
   {
     "suite": "webgpu",
     "out": "path/to/output/cts.https.html",
+    "outJSON": "path/to/output/webgpu_variant_list.json",
     "template": "path/to/template/cts.https.html",
     "maxChunkTimeMS": 2000
   }
@@ -97,6 +98,9 @@ and myexpectations.txt is a file containing a list of WPT paths to suppress, e.g
 
 
 
+
+
+
 let config;
 
 (async () => {
@@ -115,6 +119,9 @@ let config;
           argumentsPrefixes: configJSON.argumentsPrefixes ?? ['?q='],
           noLongPathAssert: configJSON.noLongPathAssert ?? false
         };
+        if (configJSON.outVariantList) {
+          config.outVariantList = path.resolve(jsonFileDir, configJSON.outVariantList);
+        }
         if (configJSON.expectations) {
           config.expectations = {
             file: path.resolve(jsonFileDir, configJSON.expectations.file),
@@ -283,14 +290,21 @@ lines)
 
   result += await fs.readFile(config.template, 'utf8');
 
+  const variantList = [];
   for (const line of lines) {
     if (line !== undefined) {
-      if (line.urlQueryString) result += `<meta name=variant content='${line.urlQueryString}'>`;
+      if (line.urlQueryString) {
+        result += `<meta name=variant content='${line.urlQueryString}'>`;
+        variantList.push(line.urlQueryString);
+      }
       if (line.comment) result += `<!-- ${line.comment} -->`;
     }
     result += '\n';
   }
 
   await fs.writeFile(config.out, result);
+  if (config.outVariantList) {
+    await fs.writeFile(config.outVariantList, JSON.stringify(variantList, undefined, 2));
+  }
 }
 //# sourceMappingURL=gen_wpt_cts_html.js.map
