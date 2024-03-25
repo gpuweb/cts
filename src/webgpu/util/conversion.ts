@@ -871,6 +871,16 @@ export class ArrayType {
   public get alignment(): number {
     return this.elementType.alignment;
   }
+
+  /** Constructs an Array of this type with the given values */
+  public create(value: (number | bigint) | readonly (number | bigint)[]): ArrayValue {
+    if (value instanceof Array) {
+      assert(value.length === this.count);
+    } else {
+      value = Array(this.count).fill(value);
+    }
+    return new ArrayValue(value.map(v => this.elementType.create(v)));
+  }
 }
 
 /** ArrayElementType infers the element type of the indexable type A */
