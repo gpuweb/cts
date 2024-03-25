@@ -276,7 +276,7 @@ function toStorage(ty: Type, expr: string, helpers: TypeConversionHelpers): stri
 fn ${conv}(in : ${ty}) -> ${outTy} {
   var out : ${outTy};
   for (var i = 0; i < ${ty.count}; i++) {
-    out[i] = select(0, 1, in[i]);
+    out[i] = select(0u, 1u, in[i]);
   }
   return out;
 }
