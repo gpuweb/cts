@@ -118,12 +118,6 @@ g.test('u32_vec4')
     await run(t, builtin('dot'), [Type.vec4u, Type.vec4u], Type.u32, t.params, cases);
   });
 
-g.test('abstract_float')
-  .specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions')
-  .desc(`abstract float test`)
-  .params(u => u.combine('inputSource', allInputSources))
-  .unimplemented();
-
 g.test('f32_vec2')
   .specURL('https://www.w3.org/TR/WGSL/#vector-builtin-functions')
   .desc(`f32 tests using vec2s`)
