@@ -26,6 +26,11 @@ export type TestConfig = {
    * Whether or not to request a fallback adapter.
    */
   forceFallbackAdapter: boolean;
+
+  /**
+   * Whether to enable the `logToWebSocket` function used for out-of-band test logging.
+   */
+  logToWebSocket: boolean;
 };
 
 export const globalTestConfig: TestConfig = {
@@ -35,4 +40,5 @@ export const globalTestConfig: TestConfig = {
   unrollConstEvalLoops: false,
   compatibility: false,
   forceFallbackAdapter: false,
+  logToWebSocket: false,
 };

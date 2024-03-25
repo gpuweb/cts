@@ -108,6 +108,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       globalTestConfig.compatibility = true;
     } else if (a === '--force-fallback-adapter') {
       globalTestConfig.forceFallbackAdapter = true;
+    } else if (a === '--log-to-websocket') {
+      globalTestConfig.logToWebSocket = true;
     } else {
       console.log('unrecognized flag: ', a);
       usage(1);

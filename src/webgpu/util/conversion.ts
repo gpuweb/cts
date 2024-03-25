@@ -110,7 +110,7 @@ export function float32ToFloatBits(
   assert(mantissaBits <= 23);
 
   if (Number.isNaN(n)) {
-    // NaN = all exponent bits true, 1 or more mantissia bits true
+    // NaN = all exponent bits true, 1 or more mantissa bits true
     return (((1 << exponentBits) - 1) << mantissaBits) | ((1 << mantissaBits) - 1);
   }
 
@@ -597,15 +597,18 @@ export type ScalarKind =
 export class ScalarType {
   readonly kind: ScalarKind; // The named type
   readonly _size: number; // In bytes
+  readonly _signed: boolean;
   readonly read: (buf: Uint8Array, offset: number) => ScalarValue; // reads a scalar from a buffer
 
   constructor(
     kind: ScalarKind,
     size: number,
+    signed: boolean,
     read: (buf: Uint8Array, offset: number) => ScalarValue
   ) {
     this.kind = kind;
     this._size = size;
+    this._signed = signed;
     this.read = read;
   }
 
@@ -619,6 +622,10 @@ export class ScalarType {
 
   public get alignment(): number {
     return this._size;
+  }
+
+  public get signed(): boolean {
+    return this._signed;
   }
 
   /** Constructs a ScalarValue of this type with `value` */
@@ -879,40 +886,43 @@ function valueFromBytes<A extends TypedArrayBufferView>(
   return workingDataOut[0] as ArrayElementType<A>;
 }
 
-const abstractIntType = new ScalarType('abstract-int', 8, (buf: Uint8Array, offset: number) =>
+const abstractIntType = new ScalarType('abstract-int', 8, true, (buf: Uint8Array, offset: number) =>
   abstractInt(valueFromBytes(workingDataI64, buf, offset))
 );
-const i32Type = new ScalarType('i32', 4, (buf: Uint8Array, offset: number) =>
+const i32Type = new ScalarType('i32', 4, true, (buf: Uint8Array, offset: number) =>
   i32(valueFromBytes(workingDataI32, buf, offset))
 );
-const u32Type = new ScalarType('u32', 4, (buf: Uint8Array, offset: number) =>
+const u32Type = new ScalarType('u32', 4, false, (buf: Uint8Array, offset: number) =>
   u32(valueFromBytes(workingDataU32, buf, offset))
 );
-const i16Type = new ScalarType('i16', 2, (buf: Uint8Array, offset: number) =>
+const i16Type = new ScalarType('i16', 2, true, (buf: Uint8Array, offset: number) =>
   i16(valueFromBytes(workingDataI16, buf, offset))
 );
-const u16Type = new ScalarType('u16', 2, (buf: Uint8Array, offset: number) =>
+const u16Type = new ScalarType('u16', 2, false, (buf: Uint8Array, offset: number) =>
   u16(valueFromBytes(workingDataU16, buf, offset))
 );
-const i8Type = new ScalarType('i8', 1, (buf: Uint8Array, offset: number) =>
+const i8Type = new ScalarType('i8', 1, true, (buf: Uint8Array, offset: number) =>
   i8(valueFromBytes(workingDataI8, buf, offset))
 );
-const u8Type = new ScalarType('u8', 1, (buf: Uint8Array, offset: number) =>
+const u8Type = new ScalarType('u8', 1, false, (buf: Uint8Array, offset: number) =>
   u8(valueFromBytes(workingDataU8, buf, offset))
 );
-const abstractFloatType = new ScalarType('abstract-float', 8, (buf: Uint8Array, offset: number) =>
-  abstractFloat(valueFromBytes(workingDataF64, buf, offset))
+const abstractFloatType = new ScalarType(
+  'abstract-float',
+  8,
+  true,
+  (buf: Uint8Array, offset: number) => abstractFloat(valueFromBytes(workingDataF64, buf, offset))
 );
-const f64Type = new ScalarType('f64', 8, (buf: Uint8Array, offset: number) =>
+const f64Type = new ScalarType('f64', 8, true, (buf: Uint8Array, offset: number) =>
   f64(valueFromBytes(workingDataF64, buf, offset))
 );
-const f32Type = new ScalarType('f32', 4, (buf: Uint8Array, offset: number) =>
+const f32Type = new ScalarType('f32', 4, true, (buf: Uint8Array, offset: number) =>
   f32(valueFromBytes(workingDataF32, buf, offset))
 );
-const f16Type = new ScalarType('f16', 2, (buf: Uint8Array, offset: number) =>
+const f16Type = new ScalarType('f16', 2, true, (buf: Uint8Array, offset: number) =>
   f16Bits(valueFromBytes(workingDataU16, buf, offset))
 );
-const boolType = new ScalarType('bool', 4, (buf: Uint8Array, offset: number) =>
+const boolType = new ScalarType('bool', 4, false, (buf: Uint8Array, offset: number) =>
   bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 );
 
@@ -940,16 +950,22 @@ export const Type = {
 
   vec: (width: number, elementType: ScalarType) => VectorType.create(width, elementType),
 
+  vec2ai: VectorType.create(2, abstractIntType),
   vec2i: VectorType.create(2, i32Type),
   vec2u: VectorType.create(2, u32Type),
+  vec2af: VectorType.create(2, abstractFloatType),
   vec2f: VectorType.create(2, f32Type),
   vec2h: VectorType.create(2, f16Type),
+  vec3ai: VectorType.create(3, abstractIntType),
   vec3i: VectorType.create(3, i32Type),
   vec3u: VectorType.create(3, u32Type),
+  vec3af: VectorType.create(3, abstractFloatType),
   vec3f: VectorType.create(3, f32Type),
   vec3h: VectorType.create(3, f16Type),
+  vec4ai: VectorType.create(4, abstractIntType),
   vec4i: VectorType.create(4, i32Type),
   vec4u: VectorType.create(4, u32Type),
+  vec4af: VectorType.create(4, abstractFloatType),
   vec4f: VectorType.create(4, f32Type),
   vec4h: VectorType.create(4, f16Type),
 
@@ -1685,7 +1701,7 @@ export function f32Bits(bits: number) {
 /** Create an f16 from a numeric value, a JS `number`. */
 export function f16(value: number) {
   workingDataF16[0] = value;
-  return new F16Value(value, workingDataU16[0]);
+  return new F16Value(workingDataF16[0], workingDataU16[0]);
 }
 
 /** Create an f16 from a bit representation, a uint16 represented as a JS `number`. */
@@ -2234,6 +2250,17 @@ export function isFloatType(ty: Type): boolean {
   return false;
 }
 
+/**
+ * @returns if `ty` is an unsigned type.
+ */
+export function isUnsignedType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return ty.kind === 'u8' || ty.kind === 'u16' || ty.kind === 'u32';
+  } else {
+    return isUnsignedType(ty.elementType);
+  }
+}
+
 /** @returns true if an argument of type 'src' can be used for a parameter of type 'dst' */
 export function isConvertible(src: Type, dst: Type) {
   if (src === dst) {
@@ -2304,13 +2331,11 @@ export const kConcreteF16ScalarsAndVectors = [
   Type.vec4h,
 ] as const;
 
+/// All floating-point vector types
+export const kFloatVectors = [...kFloatVec2, ...kFloatVec3, ...kFloatVec4] as const;
+
 /// All floating-point scalar and vector types
-export const kFloatScalarsAndVectors = [
-  ...kFloatScalars,
-  ...kFloatVec2,
-  ...kFloatVec3,
-  ...kFloatVec4,
-] as const;
+export const kFloatScalarsAndVectors = [...kFloatScalars, ...kFloatVectors] as const;
 
 // Abstract and concrete integer types are not grouped into an 'all' type,
 // because for many validation tests there is a valid conversion of
@@ -2319,32 +2344,34 @@ export const kFloatScalarsAndVectors = [
 // integers will not be. For many tests the pattern is to have separate fixtures
 // for the things that might be valid and those that are never valid.
 
-/// All concrete integer scalar and vector types
-export const kConcreteIntegerScalarsAndVectors = [
-  Type.i32,
-  Type.vec2i,
-  Type.vec3i,
-  Type.vec4i,
-  Type.u32,
-  Type.vec2u,
-  Type.vec3u,
-  Type.vec4u,
+/// All signed integer vector types
+export const kConcreteSignedIntegerVectors = [Type.vec2i, Type.vec3i, Type.vec4i] as const;
+
+/// All unsigned integer vector types
+export const kConcreteUnsignedIntegerVectors = [Type.vec2u, Type.vec3u, Type.vec4u] as const;
+
+/// All concrete integer vector types
+export const kConcreteIntegerVectors = [
+  ...kConcreteSignedIntegerVectors,
+  ...kConcreteUnsignedIntegerVectors,
 ] as const;
 
 /// All signed integer scalar and vector types
 export const kConcreteSignedIntegerScalarsAndVectors = [
   Type.i32,
-  Type.vec2i,
-  Type.vec3i,
-  Type.vec4i,
+  ...kConcreteSignedIntegerVectors,
 ] as const;
 
 /// All unsigned integer scalar and vector types
 export const kConcreteUnsignedIntegerScalarsAndVectors = [
   Type.u32,
-  Type.vec2u,
-  Type.vec3u,
-  Type.vec4u,
+  ...kConcreteUnsignedIntegerVectors,
+] as const;
+
+/// All concrete integer scalar and vector types
+export const kConcreteIntegerScalarsAndVectors = [
+  ...kConcreteSignedIntegerScalarsAndVectors,
+  ...kConcreteUnsignedIntegerScalarsAndVectors,
 ] as const;
 
 /// All types which are convertable to floating-point scalar types.
@@ -2359,13 +2386,19 @@ export const kConvertableToFloatVec3 = [Type.vec(3, Type.abstractInt), ...kFloat
 /// All types which are convertable to floating-point vector 4 types.
 export const kConvertableToFloatVec4 = [Type.vec(4, Type.abstractInt), ...kFloatVec4] as const;
 
-/// All types which are convertable to floating-point scalar or vector types.
-export const kConvertableToFloatScalarsAndVectors = [
-  Type.abstractInt,
+/// All the types which are convertable to floating-point vector types.
+export const kConvertableToFloatVectors = [
   Type.vec(2, Type.abstractInt),
   Type.vec(3, Type.abstractInt),
   Type.vec(4, Type.abstractInt),
-  ...kFloatScalarsAndVectors,
+  ...kFloatVectors,
+] as const;
+
+/// All types which are convertable to floating-point scalar or vector types.
+export const kConvertableToFloatScalarsAndVectors = [
+  Type.abstractInt,
+  ...kFloatScalars,
+  ...kConvertableToFloatVectors,
 ] as const;
 
 /// All the numeric scalar and vector types.

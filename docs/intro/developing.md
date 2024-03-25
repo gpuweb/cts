@@ -56,7 +56,7 @@ The following url parameters change how the harness runs:
 
 - `runnow=1` runs all matching tests on page load.
 - `debug=1` enables verbose debug logging from tests.
-- `worker=dedicated` (or `worker` or `worker=1`) runs the tests on a dedicated worker instead of the main thread.
+- `worker=dedicated` runs the tests on a dedicated worker instead of the main thread.
 - `worker=shared` runs the tests on a shared worker instead of the main thread.
 - `worker=service` runs the tests on a service worker instead of the main thread.
 - `power_preference=low-power` runs most tests passing `powerPreference: low-power` to `requestAdapter`
@@ -119,15 +119,17 @@ Opening a pull request will automatically notify reviewers.
 To make the review process smoother, once a reviewer has started looking at your change:
 
 - Avoid major additions or changes that would be best done in a follow-up PR.
-- Avoid rebases (`git rebase`) and force pushes (`git push -f`). These can make
-  it difficult for reviewers to review incremental changes as GitHub often cannot
+- Avoid deleting commits that have already been reviewed, which occurs when using
+  rebases (`git rebase`) and force pushes (`git push -f`). These can make
+  it difficult for reviewers to review incremental changes as GitHub usually cannot
   view a useful diff across a rebase. If it's necessary to resolve conflicts
   with upstream changes, use a merge commit (`git merge`) and don't include any
-  consequential changes in the merge, so a reviewer can skip over merge commits
+  unnecessary changes in the merge, so that a reviewer can skip over merge commits
   when working through the individual commits in the PR.
-- When you address a review comment, mark the thread as "Resolved".
 
-Pull requests will (usually) be landed with the "Squash and merge" option.
+  The "Create a merge commit" merge option is disabled, so `main` history always
+  remains linear (no merge commits). PRs are usually landed using "Squash and merge".
+- When you address a review comment, mark the thread as "Resolved".
 
 ### TODOs
 
