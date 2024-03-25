@@ -1792,6 +1792,11 @@ export class VectorValue {
   }
 }
 
+/** Helper for constructing a new vector with the provided values */
+export function vec(...elements: ScalarValue[]) {
+  return new VectorValue(elements);
+}
+
 /** Helper for constructing a new two-element vector with the provided values */
 export function vec2(x: ScalarValue, y: ScalarValue) {
   return new VectorValue([x, y]);
