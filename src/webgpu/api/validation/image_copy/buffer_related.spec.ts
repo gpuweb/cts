@@ -4,14 +4,14 @@ import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { kTextureDimensions } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import {
-  kSizedTextureFormats,
+  aspectParamsForTextureFormat,
   kTextureFormatInfo,
   textureDimensionAndFormatCompatible,
 } from '../../../format_info.js';
 import { kResourceStates } from '../../../gpu_test.js';
 import { kImageCopyTypes } from '../../../util/texture/layout.js';
 
-import { ImageCopyTest, formatCopyableWithMethod } from './image_copy.js';
+import { ImageCopyTest, aspectCopyableWithMethod, kReducedFormatsList } from './image_copy.js';
 
 export const g = makeTestGroup(ImageCopyTest);
 
@@ -50,7 +50,7 @@ Test that the buffer must be valid and not destroyed.
 
     t.testBuffer(
       buffer,
-      texture,
+      { texture },
       { bytesPerRow: 0 },
       { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 16, method, success, submit }
@@ -86,7 +86,7 @@ g.test('buffer,device_mismatch')
     // Expect success in both finish and submit, or validation error in finish
     t.testBuffer(
       buffer,
-      texture,
+      { texture },
       { bytesPerRow: 0 },
       { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 16, method, success, submit: success }
@@ -135,7 +135,7 @@ TODO update such that it tests
     // Expect success in both finish and submit, or validation error in finish
     t.testBuffer(
       buffer,
-      texture,
+      { texture },
       { bytesPerRow: 0 },
       { width: 0, height: 0, depthOrArrayLayers: 0 },
       { dataSize: 16, method, success, submit: success }
@@ -148,38 +148,48 @@ g.test('bytes_per_row_alignment')
 Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is required.
 - for all copy methods between linear data and textures
 - for all texture dimensions
-- for all sized formats.
-- for various bytesPerRow aligned to 256 or not
-- for various number of blocks rows copied
+- for all sized (format,aspect) pairs, except for a bunch of redundant "regular" color formats
+- for various bytesPerRow (aligned to 256 or not)
+- for various number of blocks rows copied (0 or not)
 `
   )
   .params(u =>
     u //
       .combine('method', kImageCopyTypes)
-      .combine('format', kSizedTextureFormats)
-      .filter(formatCopyableWithMethod)
       .combine('dimension', kTextureDimensions)
+      .combine('format', kReducedFormatsList)
+      .expandWithParams(p => aspectParamsForTextureFormat(p.format))
+      .filter(p => aspectCopyableWithMethod(p.format, p._aspectKey, p.method))
       .filter(({ dimension, format }) => textureDimensionAndFormatCompatible(dimension, format))
       .beginSubcases()
-      .combine('bytesPerRow', [undefined, 0, 1, 255, 256, 257, 512])
-      .combine('copyHeightInBlocks', [0, 1, 2, 3])
+      .combineWithParams([
+        // valid: height<=1
+        { copyHeightInBlocks: 0, bytesPerRow: 1 },
+        { copyHeightInBlocks: 0, bytesPerRow: undefined },
+        { copyHeightInBlocks: 1, bytesPerRow: 1 },
+        { copyHeightInBlocks: 1, bytesPerRow: undefined },
+        // valid: multiples of 256
+        { copyHeightInBlocks: 2, bytesPerRow: 0 },
+        { copyHeightInBlocks: 2, bytesPerRow: 512 },
+        { copyHeightInBlocks: 2, bytesPerRow: 256 },
+        // valid only for writeTexture
+        { copyHeightInBlocks: 2, bytesPerRow: 128 },
+        { copyHeightInBlocks: 2, bytesPerRow: 1 }, // with 1-byte formats
+        { copyHeightInBlocks: 2, bytesPerRow: 2 }, // with <=2-byte formats
+        { copyHeightInBlocks: 2, bytesPerRow: 8 }, // with <=8-byte formats
+        { copyHeightInBlocks: 2, bytesPerRow: 32 }, // with <=32-byte formats
+      ])
       .expand('_textureHeightInBlocks', p => [
         p.copyHeightInBlocks === 0 ? 1 : p.copyHeightInBlocks,
       ])
       .unless(p => p.dimension === '1d' && p.copyHeightInBlocks > 1)
       // Depth/stencil format copies must copy the whole subresource.
-      .unless(p => {
-        const info = kTextureFormatInfo[p.format];
-        return (
-          (!!info.depth || !!info.stencil) && p.copyHeightInBlocks !== p._textureHeightInBlocks
-        );
-      })
+      .unless(p => p._aspectKey !== 'color' && p.copyHeightInBlocks !== p._textureHeightInBlocks)
       // bytesPerRow must be specified and it must be equal or greater than the bytes size of each row if we are copying multiple rows.
       // Note that we are copying one single block on each row in this test.
       .filter(
-        ({ format, bytesPerRow, copyHeightInBlocks }) =>
-          (bytesPerRow === undefined && copyHeightInBlocks <= 1) ||
-          (bytesPerRow !== undefined && bytesPerRow >= kTextureFormatInfo[format].bytesPerBlock)
+        ({ format, _aspectKey, bytesPerRow }) =>
+          bytesPerRow === undefined || bytesPerRow >= kTextureFormatInfo[format][_aspectKey]!.bytes!
       )
   )
   .beforeAllSubcases(t => {
@@ -188,8 +198,15 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const { method, dimension, format, bytesPerRow, copyHeightInBlocks, _textureHeightInBlocks } =
-      t.params;
+    const {
+      method,
+      dimension,
+      format,
+      aspect,
+      bytesPerRow,
+      copyHeightInBlocks,
+      _textureHeightInBlocks,
+    } = t.params;
 
     const info = kTextureFormatInfo[format];
 
@@ -217,7 +234,7 @@ Test that bytesPerRow must be a multiple of 256 for CopyB2T and CopyT2B if it is
     const copySize = [info.blockWidth, copyHeightInBlocks * info.blockHeight, 1];
 
     // Expect success in both finish and submit, or validation error in finish
-    t.testBuffer(buffer, texture, { bytesPerRow }, copySize, {
+    t.testBuffer(buffer, { texture, aspect }, { bytesPerRow }, copySize, {
       dataSize: 512 * 8 * 16,
       method,
       success,
