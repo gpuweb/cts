@@ -105,3 +105,8 @@ g.test('array')
       [{ input: [], expected: type.create(0) }]
     );
   });
+
+g.test('structure')
+  .specURL('https://www.w3.org/TR/WGSL/#zero-value-builtin-function')
+  .desc(`Test that an structure constructed from element values produces the expected value`)
+  .unimplemented();

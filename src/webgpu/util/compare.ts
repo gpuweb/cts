@@ -120,7 +120,7 @@ function compareValue(got: Value, expected: Value): Comparison {
   }
 
   if (got instanceof VectorValue || got instanceof ArrayValue) {
-    const e = expected as VectorValue;
+    const e = expected as VectorValue | ArrayValue;
     const gLen = got.elements.length;
     const eLen = e.elements.length;
     let matched = gLen === eLen;
