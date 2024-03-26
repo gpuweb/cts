@@ -75,7 +75,8 @@ const float_cases = (['f32', 'f16', 'abstract'] as const)
             N === 2 ? FP[trait].vectorRange(2) : FP[trait].sparseVectorRange(N),
             N === 2 ? FP[trait].vectorRange(2) : FP[trait].sparseVectorRange(N),
             nonConst ? 'unfiltered' : 'finite',
-            FP[trait].dotInterval
+            // dot has an inherited accuracy, so abstract is only expected to be as accurate as f32
+            FP[trait !== 'abstract' ? trait : 'f32'].dotInterval
           );
         },
       }))

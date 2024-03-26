@@ -47,18 +47,12 @@ const { queries: qs, options } = parseSearchParamLikeWithOptions(
   kStandaloneOptionsInfos,
   window.location.search || rootQuerySpec
 );
-const {
-  runnow,
-  debug,
-  unrollConstEvalLoops,
-  powerPreference,
-  compatibility,
-  forceFallbackAdapter,
-} = options;
-globalTestConfig.unrollConstEvalLoops = unrollConstEvalLoops;
+const { runnow, powerPreference, compatibility, forceFallbackAdapter } = options;
+globalTestConfig.enableDebugLogs = options.debug;
+globalTestConfig.unrollConstEvalLoops = options.unrollConstEvalLoops;
 globalTestConfig.compatibility = compatibility;
+globalTestConfig.logToWebSocket = options.logToWebSocket;
 
-Logger.globalDebugMode = debug;
 const logger = new Logger();
 
 setBaseResourcePath('../out/resources');
@@ -550,7 +544,7 @@ function keyValueToPairs([k, v]: [string, ParamValue]): [string, string][] {
  */
 function prepareParams(params: Record<string, ParamValue>): string {
   const pairsArrays = Object.entries(params)
-    .filter(([, v]) => !!v && v !== '0')
+    .filter(([, v]) => !!v)
     .map(keyValueToPairs);
   const pairs = pairsArrays.flat();
   return new URLSearchParams(pairs).toString();
