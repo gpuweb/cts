@@ -45,8 +45,6 @@ export class TestCaseRecorder {
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
   private debugging = false;
-  /** Used to dedup log messages which have identical stacks. */
-  private messagesForPreviouslySeenStacks = new Map<string, LogMessageWithStack>();
 
   constructor(result: LiveTestCaseResult, debugging: boolean) {
     this.result = result;
