@@ -10,6 +10,7 @@ import {
   toVector,
   u32,
   abstractFloat,
+  abstractInt,
 } from '../../../../../util/conversion.js';
 import { FP, FPInterval } from '../../../../../util/floating_point.js';
 import {
@@ -614,6 +615,7 @@ export const d = makeCaseCache('bitcast', {
   // Identity Cases
   i32_to_i32: () => fullI32Range().map(e => ({ input: i32(e), expected: i32(e) })),
   u32_to_u32: () => fullU32Range().map(e => ({ input: u32(e), expected: u32(e) })),
+  ai_to_u32: () => fullU32Range().map(e => ({ input: abstractInt(BigInt(e)), expected: u32(e) })),
   f32_inf_nan_to_f32: () =>
     f32RangeWithInfAndNaN.map(e => ({
       input: f32(e),
