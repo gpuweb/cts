@@ -382,7 +382,7 @@ g.test('matrix_column_vectors')
 
 g.test('array_elements')
   .specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function')
-  .desc(`Test that a array constructed from element values produces the expected value`)
+  .desc(`Test that an array constructed from element values produces the expected value`)
   .params(u =>
     u
       .combine('inputSource', allInputSources)
@@ -417,3 +417,8 @@ g.test('array_elements')
       ]
     );
   });
+
+g.test('structure')
+  .specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function')
+  .desc(`Test that an structure constructed from element values produces the expected value`)
+  .unimplemented();

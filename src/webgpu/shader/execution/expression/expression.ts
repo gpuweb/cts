@@ -192,7 +192,7 @@ function storageType(ty: Type): Type {
 type TypeConversionHelpers = {
   // The module-scope WGSL to emit with the shader.
   wgsl: string;
-  // A function that generates a unique identifier.
+  // A function that generates a unique WGSL identifier.
   uniqueID: () => string;
 };
 
