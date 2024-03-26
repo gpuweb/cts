@@ -212,7 +212,7 @@ g.test('line_number_and_position')
 
         if (message.lineNum === _errorLine) {
           foundAppropriateError = true;
-          if (_errorLinePos !== null && _errorLinePos !== undefined) {
+          if (_errorLinePos !== undefined) {
             t.expect(
               message.linePos === _errorLinePos,
               'Expected the error to be at the correct position'
