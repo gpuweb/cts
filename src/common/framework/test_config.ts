@@ -1,4 +1,9 @@
 export type TestConfig = {
+  /**
+   * Enable debug-level logs (normally logged via `Fixture.debug()`).
+   */
+  enableDebugLogs: boolean;
+
   maxSubcasesInFlight: number;
   testHeartbeatCallback: () => void;
   noRaceWithRejectOnTimeout: boolean;
@@ -34,6 +39,7 @@ export type TestConfig = {
 };
 
 export const globalTestConfig: TestConfig = {
+  enableDebugLogs: false,
   maxSubcasesInFlight: 500,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
