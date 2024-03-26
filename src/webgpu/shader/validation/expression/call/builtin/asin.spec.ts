@@ -85,7 +85,6 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
     );
   });
 
-
 const kTests = {
   valid: {
     src: `_ = asin(1);`,
@@ -214,4 +213,3 @@ fn main() -> @builtin(position) vec4<f32> {
 }`;
     t.expectCompileResult(kTests[t.params.test].pass, code);
   });
-``
