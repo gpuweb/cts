@@ -99,7 +99,7 @@
   "webgpu/shader/execution/unary/f32_arithmetic.bin": "6725561f",
   "webgpu/shader/execution/unary/f32_conversion.bin": "c331aec1",
   "webgpu/shader/execution/unary/i32_arithmetic.bin": "22f94632",
-  "webgpu/shader/execution/unary/i32_conversion.bin": "3f89d871",
+  "webgpu/shader/execution/unary/i32_conversion.bin": "c9dadd1e",
   "webgpu/shader/execution/unary/u32_conversion.bin": "4751045f",
   "webgpu/shader/execution/unary/ai_assignment.bin": "19653bbf",
   "webgpu/shader/execution/binary/ai_arithmetic.bin": "a41d22e",
