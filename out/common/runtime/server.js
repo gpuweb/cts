@@ -27,6 +27,7 @@ Options:
   --compat                  Run tests in compatibility mode.
   --coverage                Add coverage data to each result.
   --verbose                 Print result/log of every test as it runs.
+  --debug                   Include debug messages in logging.
   --gpu-provider            Path to node module that provides the GPU implementation.
   --gpu-provider-flag       Flag to set on the gpu-provider as <flag>=<value>
   --unroll-const-eval-loops Unrolls loops in constant-evaluation shader execution tests
@@ -102,6 +103,8 @@ for (let i = 0; i < sys.args.length; ++i) {
       gpuProviderModule = require(modulePath);
     } else if (a === '--gpu-provider-flag') {
       gpuProviderFlags.push(sys.args[++i]);
+    } else if (a === '--debug') {
+      globalTestConfig.enableDebugLogs = true;
     } else if (a === '--unroll-const-eval-loops') {
       globalTestConfig.unrollConstEvalLoops = true;
     } else if (a === '--help') {
@@ -159,7 +162,6 @@ if (verbose) {
 
 
 (async () => {
-  Logger.globalDebugMode = verbose;
   const log = new Logger();
   const testcases = new Map();
 

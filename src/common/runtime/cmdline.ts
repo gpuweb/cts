@@ -67,7 +67,6 @@ Colors.enabled = false;
 let verbose = false;
 let emitCoverage = false;
 let listMode: listModes = 'none';
-let debug = false;
 let printJSON = false;
 let quiet = false;
 let loadWebGPUExpectations: Promise<unknown> | undefined = undefined;
@@ -89,7 +88,7 @@ for (let i = 0; i < sys.args.length; ++i) {
     } else if (a === '--list-unimplemented') {
       listMode = 'unimplemented';
     } else if (a === '--debug') {
-      debug = true;
+      globalTestConfig.enableDebugLogs = true;
     } else if (a === '--print-json') {
       printJSON = true;
     } else if (a === '--expectations') {
@@ -176,7 +175,6 @@ if (queries.length === 0) {
     filterQuery
   );
 
-  Logger.globalDebugMode = debug;
   const log = new Logger();
 
   const failed: Array<[string, LiveTestCaseResult]> = [];

@@ -45,8 +45,6 @@ export class TestCaseRecorder {
   logs = [];
   logLinesAtCurrentSeverity = 0;
   debugging = false;
-  /** Used to dedup log messages which have identical stacks. */
-  messagesForPreviouslySeenStacks = new Map();
 
   constructor(result, debugging) {
     this.result = result;

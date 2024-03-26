@@ -33,7 +33,13 @@
 
 
 
+
+
+
+
+
 export const globalTestConfig = {
+  enableDebugLogs: false,
   maxSubcasesInFlight: 500,
   testHeartbeatCallback: () => {},
   noRaceWithRejectOnTimeout: false,
