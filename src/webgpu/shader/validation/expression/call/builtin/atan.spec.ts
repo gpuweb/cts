@@ -82,7 +82,6 @@ Validates that scalar and vector integer arguments are rejected by ${builtin}()
     );
   });
 
-
 const kTests = {
   valid: {
     src: `_ = atan(1);`,
