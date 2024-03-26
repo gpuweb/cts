@@ -88,7 +88,7 @@ for (let i = 0; i < sys.args.length; ++i) {
     } else if (a === '--list-unimplemented') {
       listMode = 'unimplemented';
     } else if (a === '--debug') {
-      globalTestConfig.enableDebugLogs == true;
+      globalTestConfig.enableDebugLogs = true;
     } else if (a === '--print-json') {
       printJSON = true;
     } else if (a === '--expectations') {
