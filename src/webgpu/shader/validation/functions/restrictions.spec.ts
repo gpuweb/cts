@@ -292,6 +292,7 @@ const kFunctionParamTypeCases: Record<string, ParamTypeCase> = {
   invalid_ptr5: { name: `ptr<private,u32,write>`, valid: false }, // Can't specify access mode
   invalid_ptr6: { name: `ptr<private,u32,read_write>`, valid: false }, // Can't specify access mode
   invalid_ptr7: { name: `ptr<private,clamp>`, valid: false }, // Invalid store type
+  invalid_ptr8: { name: `ptr<function, texture_external>`, valid: false }, // non-constructable pointer type
 };
 
 g.test('function_parameter_types')
