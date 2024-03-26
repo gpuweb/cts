@@ -202,7 +202,7 @@ g.test('line_number_and_position')
         // If a line is reported, it should point at the correct line (1-based).
         t.expect(
           (message.lineNum === 0) === (message.linePos === 0),
-          "GPUCompilationMessages that don't report a line number should not report a line position."
+          `Got message.lineNum ${message.lineNum}, .linePos ${message.linePos}, but GPUCompilationMessage should specify both or neither`
         );
 
         if (message.lineNum === 0) {
@@ -215,7 +215,7 @@ g.test('line_number_and_position')
           if (_errorLinePos !== undefined) {
             t.expect(
               message.linePos === _errorLinePos,
-              'Expected the error to be at the correct position'
+              `Got message.linePos ${message.linePos}, expected ${_errorLinePos}`
             );
           }
           break;
@@ -258,10 +258,9 @@ g.test('offset_and_length')
 
     for (const message of info.messages) {
       // Any offsets and lengths should reference valid spans of the shader code.
-      t.expect(message.offset <= _code.length, 'Message offset should be within the shader source');
       t.expect(
-        message.offset + message.length <= _code.length,
-        'Message offset and length should be within the shader source'
+        message.offset <= _code.length && message.offset + message.length <= _code.length,
+        'message.offset and .length should be within the shader source'
       );
 
       // If a valid line number and position are given, the offset should point the the same
@@ -274,9 +273,10 @@ g.test('offset_and_length')
           lineOffset += 1;
         }
 
+        const expectedOffset = lineOffset + message.linePos - 1;
         t.expect(
-          message.offset === lineOffset + message.linePos - 1,
-          'lineNum and linePos should point to the same location as offset'
+          message.offset === expectedOffset,
+          `message.lineNum (${message.lineNum}) and .linePos (${message.linePos}) point to a different offset (${lineOffset} + ${message.linePos} - 1 = ${expectedOffset}) than .offset (${message.offset})`
         );
       }
     }
