@@ -54,7 +54,10 @@ class F extends ValidationTest {
           this.expect(microtaskBRan, 'scheduling problem?: microtaskB has not run yet' + suffix);
           assert(ex instanceof Error, 'mapAsync rejected with non-error' + suffix);
           this.expect(typeof ex.stack === 'string', 'mapAsync rejected without a stack' + suffix);
-          this.expect(expectation.rejectName === ex.name, 'mapAsync rejected unexpectedly' + suffix);
+          this.expect(
+            expectation.rejectName === ex.name,
+            'mapAsync rejected with wrong exception name' + suffix
+          );
           if (expectation.earlyRejection) {
             this.expect(rejectedEarly, 'expected early mapAsync rejection, got deferred' + suffix);
           } else {
