@@ -1918,6 +1918,7 @@
   "webgpu:shader,validation,expression,call,builtin,atan:parameters:*": { "subcaseMS": 14928.226 },
   "webgpu:shader,validation,expression,call,builtin,atan:values:*": { "subcaseMS": 0.335 },
   "webgpu:shader,validation,expression,call,builtin,atanh:integer_argument:*": { "subcaseMS": 0.912 },
+  "webgpu:shader,validation,expression,call,builtin,atanh:parameters:*": { "subcaseMS": 19071.799 },
   "webgpu:shader,validation,expression,call,builtin,atanh:values:*": { "subcaseMS": 0.231 },
   "webgpu:shader,validation,expression,call,builtin,atomics:atomic_parameterization:*": { "subcaseMS": 1.346 },
   "webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:*": { "subcaseMS": 38.382 },
