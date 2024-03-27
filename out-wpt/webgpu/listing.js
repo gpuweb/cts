@@ -1780,6 +1780,16 @@ export const listing = [
       "execution",
       "expression",
       "access",
+      "matrix",
+      "index"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "access",
       "vector",
       "components"
     ]
@@ -3381,6 +3391,24 @@ export const listing = [
       "call",
       "user",
       "ptr_params"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "constructor",
+      "non_zero"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "constructor",
+      "zero_value"
     ]
   },
   {

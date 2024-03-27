@@ -818,7 +818,7 @@ export class MatrixType {
 
 /** ArrayType describes the type of WGSL Array. */
 export class ArrayType {
-  // Number of elements in the array
+  // Number of elements in the array. Zero represents a runtime-sized array.
   // Element type
 
   // Maps a string representation of a array type to array type.
@@ -855,7 +855,9 @@ export class ArrayType {
   }
 
   toString() {
-    return `array<${this.elementType}, ${this.count}>`;
+    return this.count !== 0 ?
+    `array<${this.elementType}, ${this.count}>` :
+    `array<${this.elementType}>`;
   }
 
   get stride() {
@@ -868,6 +870,16 @@ export class ArrayType {
 
   get alignment() {
     return this.elementType.alignment;
+  }
+
+  /** Constructs an Array of this type with the given values */
+  create(value) {
+    if (value instanceof Array) {
+      assert(value.length === this.count);
+    } else {
+      value = Array(this.count).fill(value);
+    }
+    return new ArrayValue(value.map((v) => this.elementType.create(v)));
   }
 }
 
@@ -1788,6 +1800,11 @@ export class VectorValue {
     assert(3 < this.elements.length);
     return this.elements[3];
   }
+}
+
+/** Helper for constructing a new vector with the provided values */
+export function vec(...elements) {
+  return new VectorValue(elements);
 }
 
 /** Helper for constructing a new two-element vector with the provided values */

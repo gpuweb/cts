@@ -182,11 +182,22 @@ function storageType(ty: Type): Type {
   if (ty instanceof VectorType) {
     return Type.vec(ty.width, storageType(ty.elementType) as ScalarType);
   }
+  if (ty instanceof ArrayType) {
+    return Type.array(ty.count, storageType(ty.elementType));
+  }
   return ty;
 }
 
+/** Structure used to hold [from|to]Storage conversion helpers  */
+type TypeConversionHelpers = {
+  // The module-scope WGSL to emit with the shader.
+  wgsl: string;
+  // A function that generates a unique WGSL identifier.
+  uniqueID: () => string;
+};
+
 // Helper for converting a value of the type 'ty' from the storage type.
-function fromStorage(ty: Type, expr: string): string {
+function fromStorage(ty: Type, expr: string, helpers: TypeConversionHelpers): string {
   if (ty instanceof ScalarType) {
     assert(ty.kind !== 'abstract-int', `'abstract-int' values should not be in input storage`);
     assert(ty.kind !== 'abstract-float', `'abstract-float' values should not be in input storage`);
@@ -206,14 +217,29 @@ function fromStorage(ty: Type, expr: string): string {
     );
     assert(ty.elementType.kind !== 'f64', `'No storage type defined for 'f64' values`);
     if (ty.elementType.kind === 'bool') {
-      return `${expr} != vec${ty.width}<u32>(0u)`;
+      return `(${expr} != vec${ty.width}<u32>(0u))`;
     }
+  }
+  if (ty instanceof ArrayType && elementTypeOf(ty) === Type.bool) {
+    // array<u32, N> -> array<bool, N>
+    const conv = helpers.uniqueID();
+    const inTy = Type.array(ty.count, Type.u32);
+    helpers.wgsl += `
+fn ${conv}(in : ${inTy}) -> ${ty} {
+  var out : ${ty};
+  for (var i = 0; i < ${ty.count}; i++) {
+    out[i] = in[i] != 0;
+  }
+  return out;
+}
+`;
+    return `${conv}(${expr})`;
   }
   return expr;
 }
 
 // Helper for converting a value of the type 'ty' to the storage type.
-function toStorage(ty: Type, expr: string): string {
+function toStorage(ty: Type, expr: string, helpers: TypeConversionHelpers): string {
   if (ty instanceof ScalarType) {
     assert(
       ty.kind !== 'abstract-int',
@@ -241,6 +267,21 @@ function toStorage(ty: Type, expr: string): string {
     if (ty.elementType.kind === 'bool') {
       return `select(vec${ty.width}<u32>(0u), vec${ty.width}<u32>(1u), ${expr})`;
     }
+  }
+  if (ty instanceof ArrayType && elementTypeOf(ty) === Type.bool) {
+    // array<bool, N> -> array<u32, N>
+    const conv = helpers.uniqueID();
+    const outTy = Type.array(ty.count, Type.u32);
+    helpers.wgsl += `
+fn ${conv}(in : ${ty}) -> ${outTy} {
+  var out : ${outTy};
+  for (var i = 0; i < ${ty.count}; i++) {
+    out[i] = select(0u, 1u, in[i]);
+  }
+  return out;
+}
+`;
+    return `${conv}(${expr})`;
   }
   return expr;
 }
@@ -617,6 +658,11 @@ function basicExpressionShaderBody(
     scalarTypeOf(resultType).kind !== 'abstract-float',
     `abstractFloatShaderBuilder should be used when result type is 'abstract-float'`
   );
+  let nextUniqueIDSuffix = 0;
+  const convHelpers: TypeConversionHelpers = {
+    wgsl: '',
+    uniqueID: () => `cts_symbol_${nextUniqueIDSuffix++}`,
+  };
   if (inputSource === 'const') {
     //////////////////////////////////////////////////////////////////////////
     // Constant eval
@@ -630,7 +676,8 @@ function basicExpressionShaderBody(
           (c, i) =>
             `  outputs[${i}].value = ${toStorage(
               resultType,
-              expressionBuilder(map(c.input, v => v.wgsl()))
+              expressionBuilder(map(c.input, v => v.wgsl())),
+              convHelpers
             )};`
         )
         .join('\n  ');
@@ -638,13 +685,13 @@ function basicExpressionShaderBody(
       body = cases
         .map((_, i) => {
           const value = `values[${i}]`;
-          return `  outputs[${i}].value = ${toStorage(resultType, value)};`;
+          return `  outputs[${i}].value = ${toStorage(resultType, value, convHelpers)};`;
         })
         .join('\n  ');
     } else {
       body = `
   for (var i = 0u; i < ${cases.length}; i++) {
-    outputs[i].value = ${toStorage(resultType, `values[i]`)};
+    outputs[i].value = ${toStorage(resultType, `values[i]`, convHelpers)};
   }`;
     }
 
@@ -659,20 +706,27 @@ ${wgslOutputs(resultType, cases.length)}
 
 ${valuesArray}
 
+${convHelpers.wgsl}
+
 @compute @workgroup_size(1)
 fn main() {
 ${body}
-}`;
+}
+`;
   } else {
     //////////////////////////////////////////////////////////////////////////
     // Runtime eval
     //////////////////////////////////////////////////////////////////////////
 
     // returns the WGSL expression to load the ith parameter of the given type from the input buffer
-    const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`);
+    const paramExpr = (ty: Type, i: number) => fromStorage(ty, `inputs[i].param${i}`, convHelpers);
 
     // resolves to the expression that calls the builtin
-    const expr = toStorage(resultType, expressionBuilder(parameterTypes.map(paramExpr)));
+    const expr = toStorage(
+      resultType,
+      expressionBuilder(parameterTypes.map(paramExpr)),
+      convHelpers
+    );
 
     return `
 struct Input {
@@ -682,6 +736,8 @@ ${wgslMembers(parameterTypes.map(storageType), inputSource, i => `param${i}`)}
 ${wgslOutputs(resultType, cases.length)}
 
 ${wgslInputVar(inputSource, cases.length)}
+
+${convHelpers.wgsl}
 
 @compute @workgroup_size(1)
 fn main() {
