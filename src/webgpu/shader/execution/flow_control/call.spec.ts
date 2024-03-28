@@ -123,10 +123,10 @@ g.test('call_arg_eval_logical_and')
 `,
       extra: `
 fn a(p : bool) {
-  ${f.expect_order(3,5)}
+  ${f.expect_order(3, 5)}
 }
 fn b(x : i32) -> bool {
-  ${f.expect_order(1,4)}
+  ${f.expect_order(1, 4)}
   return x == 1;
 }
 fn c() -> bool {
@@ -148,10 +148,10 @@ g.test('call_arg_eval_logical_or')
 `,
       extra: `
 fn a(p : bool) {
-  ${f.expect_order(3,5)}
+  ${f.expect_order(3, 5)}
 }
 fn b(x : i32) -> bool {
-  ${f.expect_order(1,4)}
+  ${f.expect_order(1, 4)}
   return x == 0;
 }
 fn c() -> bool {
