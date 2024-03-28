@@ -4102,6 +4102,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "cross"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "degrees"
     ]
   },
