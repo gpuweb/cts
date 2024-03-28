@@ -73,6 +73,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
 
     const type = kValidArgumentTypes[t.params.type];
 
+    // Validates cross(vec3(a, a, a), vec3(b, b, b));
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
