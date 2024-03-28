@@ -41,7 +41,7 @@
   "webgpu/shader/execution/atan.bin": "a9f63f85",
   "webgpu/shader/execution/atan2.bin": "119cb966",
   "webgpu/shader/execution/atanh.bin": "519b9021",
-  "webgpu/shader/execution/bitcast.bin": "1771a39c",
+  "webgpu/shader/execution/bitcast.bin": "822fc930",
   "webgpu/shader/execution/ceil.bin": "65668f50",
   "webgpu/shader/execution/clamp.bin": "e5ee6d5b",
   "webgpu/shader/execution/cos.bin": "40718867",

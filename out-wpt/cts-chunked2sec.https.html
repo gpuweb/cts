@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 14519 variants generated from 2394 tests in 541 files -->
+<!-- Prefix: "?q="; 14525 variants generated from 2394 tests in 541 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -7571,11 +7571,17 @@
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:af_to_u32:*'><!-- estimated: 0.000 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:af_to_vec2f16:*'><!-- estimated: 0.000 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:vec2af_to_vec4f16:*'><!-- estimated: 0.000 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_i32:*'><!-- estimated: 0.000 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_i32:inputSource="const";vectorize="_undef_";*'><!-- estimated: 1482.886 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_i32:inputSource="const";vectorize=2;*'><!-- estimated: 1482.886 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_i32:inputSource="const";vectorize=3;*'><!-- estimated: 1482.886 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_i32:inputSource="const";vectorize=4;*'><!-- estimated: 1482.886 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_u32:*'><!-- estimated: 0.000 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:*'><!-- estimated: 0.000 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_vec2f16:*'><!-- estimated: 0.000 ms -->
-<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:vec2ai_to_vec4f16:*'><!-- estimated: 0.000 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:inputSource="const";vectorize="_undef_";*'><!-- estimated: 1920.208 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:inputSource="const";vectorize=2;*'><!-- estimated: 1920.208 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:inputSource="const";vectorize=3;*'><!-- estimated: 1920.208 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_f32:inputSource="const";vectorize=4;*'><!-- estimated: 1920.208 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:ai_to_vec2h:*'><!-- estimated: 341.804 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,bitcast:vec2ai_to_vec4h:*'><!-- estimated: 608.714 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,ceil:abstract_float:inputSource="const";vectorize="_undef_"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,ceil:abstract_float:inputSource="const";vectorize=2'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,call,builtin,ceil:abstract_float:inputSource="const";vectorize=3'><!-- estimated: undefined ms -->
