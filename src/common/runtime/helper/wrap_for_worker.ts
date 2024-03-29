@@ -36,7 +36,11 @@ export function wrapTestGroupForWorker(g: TestGroup<Fixture>) {
       const ex = thrown instanceof Error ? thrown : new Error(`${thrown}`);
       ev.source?.postMessage({
         query,
-        result: { status: 'fail', timems: 0, logs: [new LogMessageWithStack('INTERNAL', ex)] },
+        result: {
+          status: 'fail',
+          timems: 0,
+          logs: [LogMessageWithStack.wrapError('INTERNAL', ex)],
+        },
       });
     }
   };
