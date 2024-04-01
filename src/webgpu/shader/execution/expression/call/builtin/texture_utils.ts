@@ -436,9 +436,10 @@ export function generateSamplePoints(
   // comparable results to our computed results.
   // Note: This value works with 8x8 textures. Other sizes have not been tested.
   // Values that worked for reference:
-  // NVidia 2070 Super: 16
-  // M1 Mac: 256
-  const kSubdivisionsPerTexel = 16;
+  // Win 11, NVidia 2070 Super: 16
+  // Linux, AMD Radeon Pro WX 3200: 256
+  // MacOS, M1 Mac: 256
+  const kSubdivisionsPerTexel = 256;
   const q = [args.textureWidth * kSubdivisionsPerTexel, args.textureHeight * kSubdivisionsPerTexel];
   return out.map(c => c.map((v, i) => Math.floor(v * q[i]) / q[i]) as vec2);
 }
