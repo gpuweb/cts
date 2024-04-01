@@ -435,7 +435,10 @@ export function generateSamplePoints(
   // Quantizing the texture coordinates seems to hit coords that produce
   // comparable results to our computed results.
   // Note: This value works with 8x8 textures. Other sizes have not been tested.
-  const kSubdivisionsPerTexel = 256;
+  // Values that worked for reference:
+  // NVidia 2070 Super: 16
+  // M1 Mac: 256
+  const kSubdivisionsPerTexel = 16;
   const q = [args.textureWidth * kSubdivisionsPerTexel, args.textureHeight * kSubdivisionsPerTexel];
   return out.map(c => c.map((v, i) => Math.floor(v * q[i]) / q[i]) as vec2);
 }
