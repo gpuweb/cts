@@ -97,6 +97,7 @@ Parameters:
   )
   .beforeAllSubcases(t => {
     const format = kTexelRepresentationInfo[t.params.format];
+    t.skipIfTextureFormatNotSupported(t.params.format);
     const hasFloat32 = format.componentOrder.some(c => {
       const info = format.componentInfo[c]!;
       return info.dataType === 'float' && info.bitLength === 32;
