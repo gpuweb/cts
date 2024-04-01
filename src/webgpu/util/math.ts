@@ -413,6 +413,31 @@ export function oneULPF32(target: number, mode: FlushMode = 'flush'): number {
   }
 }
 
+/** Converts two 32-bit hex values to a 64-bit float value */
+export function hexToF64(h32: number, l32: number): number {
+  const u32Arr = new Uint32Array(2);
+  u32Arr[0] = l32;
+  u32Arr[1] = h32;
+  const f64Arr = new Float64Array(u32Arr.buffer);
+  return f64Arr[0];
+}
+
+/** @returns an integer value between 0..0xffffffff using a simple non-cryptographic hash function */
+export function hashU32(...values: number[]) {
+  let n = 0x3504_f333;
+  for (const v of values) {
+    n = v + (n << 7) + (n >>> 1);
+    n = (n * 0x29493) & 0xffff_ffff;
+  }
+  n ^= n >>> 8;
+  n += n << 15;
+  n = n & 0xffff_ffff;
+  if (n < 0) {
+    n = ~n * 2 + 1;
+  }
+  return n;
+}
+
 /**
  * @returns ulp(x), the unit of least precision for a specific number as a 32-bit float
  *
