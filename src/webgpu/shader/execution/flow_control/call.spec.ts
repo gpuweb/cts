@@ -82,7 +82,7 @@ fn c() {
     }));
   });
 
-g.test('call_arg_eval')
+g.test('arg_eval')
   .desc('Test that arguments are evaluated left to right')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
@@ -111,7 +111,7 @@ fn d() -> u32 {
     }));
   });
 
-g.test('call_arg_eval_logical_and')
+g.test('arg_eval_logical_and')
   .desc('Test that arguments are evaluated left to right')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
@@ -120,6 +120,7 @@ g.test('call_arg_eval_logical_and')
   ${f.expect_order(0)}
   a(b(${f.value(1)}) && c());
   a(b(${f.value(0)}) && c());
+  ${f.expect_order(6)}
 `,
       extra: `
 fn a(p : bool) {
@@ -136,7 +137,7 @@ fn c() -> bool {
     }));
   });
 
-g.test('call_arg_eval_logical_or')
+g.test('arg_eval_logical_or')
   .desc('Test that arguments are evaluated left to right')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
@@ -145,6 +146,7 @@ g.test('call_arg_eval_logical_or')
   ${f.expect_order(0)}
   a(b(${f.value(1)}) || c());
   a(b(${f.value(0)}) || c());
+  ${f.expect_order(6)}
 `,
       extra: `
 fn a(p : bool) {
@@ -161,7 +163,7 @@ fn c() -> bool {
     }));
   });
 
-g.test('call_arg_eval_pointers')
+g.test('arg_eval_pointers')
   .desc('Test that arguments are evaluated left to right')
   .params(u => u.combine('preventValueOptimizations', [true, false]))
   .fn(t => {
@@ -171,6 +173,7 @@ g.test('call_arg_eval_pointers')
   ${f.expect_order(0)}
   _ = c(&x);
   a(b(&x), c(&x));
+  ${f.expect_order(5)}
 `,
       extra: `
 fn a(p1 : i32, p2 : i32) {
