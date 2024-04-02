@@ -176,8 +176,8 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_3d', 'texture_cube'] as const)
-      .beginSubcases()
       .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
+      .beginSubcases()
       .combine('coords', generateCoordBoundaries(3))
       .combine('offset', generateOffsets(3))
   )
