@@ -146,15 +146,20 @@ fn main() {
     t.expectCompileResult(t.params.control, code);
   });
 
-// A list of expressions that are invalid unless guarded by a short-circuiting const-expression.
-const kInvalidRhsExpressions: Record<string, string> = {
-  overflow: 'i32(1<<31) < 0',
-  binary: '(1.0 / 0) == 0',
-  builtin: 'sqrt(-1) == 0',
-  array_size: 'array<bool, 3 - 4>()[0]',
+// A map from operator to the value of the LHS that will cause short-circuiting.
+const kLhsForShortCircuit: Record<string, boolean> = {
+  '&&': false,
+  '||': true,
 };
 
-g.test('invalid_rhs')
+// A list of expressions that are invalid unless guarded by a short-circuiting expression.
+const kInvalidRhsExpressions: Record<string, string> = {
+  overflow: 'i32(1<<thirty_one) < 0',
+  binary: '(one_f32 / 0) == 0',
+  builtin: 'sqrt(-one_f32) == 0',
+};
+
+g.test('invalid_rhs_const')
   .desc(
     `
   Validates that a short-circuiting expression with a const-expression LHS guards the evaluation of its RHS expression.
@@ -164,24 +169,93 @@ g.test('invalid_rhs')
     u
       .combine('op', ['&&', '||'])
       .combine('rhs', keysOf(kInvalidRhsExpressions))
-      .combine('skip_rhs', [true, false])
+      .combine('short_circuit', [true, false])
       .beginSubcases()
   )
   .fn(t => {
-    const lhs =
-      t.params.op === '&&'
-        ? t.params.skip_rhs
-          ? 'false'
-          : 'true'
-        : t.params.skip_rhs
-        ? 'true'
-        : 'false';
+    let lhs = kLhsForShortCircuit[t.params.op];
+    if (!t.params.short_circuit) {
+      lhs = !lhs;
+    }
     const code = `
+const thirty_one = 31u;
+const one_f32 = 1.0f;
+
 @compute @workgroup_size(1)
 fn main() {
   let foo = ${lhs} ${t.params.op} ${kInvalidRhsExpressions[t.params.rhs]};
 }
 `;
 
-    t.expectCompileResult(t.params.skip_rhs, code);
+    t.expectCompileResult(t.params.short_circuit, code);
+  });
+
+g.test('invalid_rhs_override')
+  .desc(
+    `
+  Validates that a short-circuiting expression with an override-expression LHS guards the evaluation of its RHS expression.
+  `
+  )
+  .params(u =>
+    u
+      .combine('op', ['&&', '||'])
+      .combine('rhs', keysOf(kInvalidRhsExpressions))
+      .combine('short_circuit', [true, false])
+      .beginSubcases()
+  )
+  .fn(t => {
+    let lhs = kLhsForShortCircuit[t.params.op];
+    if (!t.params.short_circuit) {
+      lhs = !lhs;
+    }
+    const code = `
+override cond : bool;
+override one_f32 = 1.0f;
+override thirty_one = 31u;
+override foo = cond ${t.params.op} ${kInvalidRhsExpressions[t.params.rhs]};
+`;
+
+    const constants: Record<string, number> = {};
+    constants['cond'] = lhs ? 1 : 0;
+    t.expectPipelineResult({
+      expectedResult: t.params.short_circuit,
+      code,
+      constants,
+      reference: ['foo'],
+    });
+  });
+
+// A list of expressions that are invalid unless guarded by a short-circuiting expression.
+// The control case will use `value = 10`, the failure case will use `value = 1`.
+const kInvalidArrayCounts: Record<string, string> = {
+  negative: 'value - 2',
+  sqrt_neg1: 'u32(sqrt(value - 2))',
+  nested: '10 + array<i32, value - 2>()[0]',
+};
+
+g.test('invalid_array_count_on_rhs')
+  .desc(
+    `
+  Validates that an invalid array count expression is not guarded by a short-circuiting expression.
+  `
+  )
+  .params(u =>
+    u
+      .combine('op', ['&&', '||'])
+      .combine('rhs', keysOf(kInvalidArrayCounts))
+      .combine('control', [true, false])
+      .beginSubcases()
+  )
+  .fn(t => {
+    const lhs = t.params.op === '&&' ? 'false' : 'true';
+    const code = `
+const value = ${t.params.control ? '10' : '1'};
+
+@compute @workgroup_size(1)
+fn main() {
+  let foo = ${lhs} ${t.params.op} array<bool, ${kInvalidArrayCounts[t.params.rhs]}>()[0];
+}
+`;
+
+    t.expectCompileResult(t.params.control, code);
   });
