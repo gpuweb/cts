@@ -1,16 +1,12 @@
-const builtin = 'sign';
+const builtin = 'quantizeToF16';
 export const description = `
 Validation tests for the ${builtin}() builtin.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import {
-  Type,
-  kFloatScalarsAndVectors,
-  kConcreteSignedIntegerScalarsAndVectors,
-  scalarTypeOf,
-} from '../../../../../util/conversion.js';
+import { Type, kConcreteF32ScalarsAndVectors } from '../../../../../util/conversion.js';
+import { quantizeToF16 } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -22,60 +18,85 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord([
-  ...kFloatScalarsAndVectors,
-  ...kConcreteSignedIntegerScalarsAndVectors,
+const kValidArgumentTypes = objectsToRecord([
+  Type.abstractFloat,
+  Type.vec(2, Type.abstractFloat),
+  Type.vec(3, Type.abstractFloat),
+  Type.vec(4, Type.abstractFloat),
+  ...kConcreteF32ScalarsAndVectors,
 ]);
 
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() inputs rejects invalid values
+Validates that constant evaluation and override evaluation of ${builtin}() error on invalid inputs.
 `
   )
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', keysOf(kValuesTypes))
-      .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
+      .combine('type', keysOf(kValidArgumentTypes))
+      .filter(u => stageSupportsType(u.stage, kValidArgumentTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
+      .expand('value', u => fullRangeForType(kValidArgumentTypes[u.type]))
   )
-  .beforeAllSubcases(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(t => {
-    const expectedResult = true; // Result should always be representable by the type
+    let expectedResult = true;
+
+    // Should be invalid if the quantized value exceeds the maximum representable
+    // 16-bit float value.
+    const f16Value = quantizeToF16(Number(t.params.value));
+    if (f16Value === Infinity || f16Value === -Infinity) {
+      expectedResult = false;
+    }
+
+    const type = kValidArgumentTypes[t.params.type];
+
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       expectedResult,
-      [kValuesTypes[t.params.type].create(t.params.value)],
+      [type.create(t.params.value)],
       t.params.stage
     );
   });
 
+const kArgCasesF16 = {
+  bad_0f16: '(1h)',
+  bad_0vec2h: '(vec2h())',
+  bad_0vec3h: '(vec3h())',
+  bad_0vec4h: '(vec4h())',
+};
+
 const kArgCases = {
-  good: '(1.0)',
+  good: '(vec3f())',
   bad_no_parens: '',
   // Bad number of args
   bad_0args: '()',
-  bad_2arg: '(1.0, 1.0)',
+  bad_2arg: '(1.0, 2.0)',
   // Bad value for arg 0
   bad_0bool: '(false)',
   bad_0array: '(array(1.1,2.2))',
   bad_0struct: '(modf(2.2))',
   bad_0uint: '(1u)',
-  bad_0vec2u: '(vec2u(1))',
-  bad_0vec3u: '(vec3u(1))',
-  bad_0vec4u: '(vec4u(1))',
+  bad_0int: '(1i)',
+  bad_0vec2i: '(vec2i())',
+  bad_0vec2u: '(vec2u())',
+  bad_0vec3i: '(vec3i())',
+  bad_0vec3u: '(vec3u())',
+  bad_0vec4i: '(vec4i())',
+  bad_0vec4u: '(vec4u())',
+  ...kArgCasesF16,
 };
 
 g.test('args')
   .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
+  .beforeAllSubcases(t => {
+    if (t.params.arg in kArgCasesF16) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
   .fn(t => {
     t.expectCompileResult(
       t.params.arg === 'good',
