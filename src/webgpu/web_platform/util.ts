@@ -383,7 +383,12 @@ export function startPlayingAndWaitForVideo(
 
       video.addEventListener(
         'error',
-        event => reject(new ErrorWithExtra('Video received "error" event', () => ({ event }))),
+        event =>
+          reject(
+            new ErrorWithExtra('Video received "error" event, message: ' + event.message, () => ({
+              event,
+            }))
+          ),
         true
       );
 
