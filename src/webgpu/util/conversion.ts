@@ -2343,6 +2343,13 @@ const kFloatVec3 = [Type.vec3af, Type.vec3f, Type.vec3h] as const;
 /// All floating-point vec4 types
 const kFloatVec4 = [Type.vec4af, Type.vec4f, Type.vec4h] as const;
 
+export const kConcreteF32ScalarsAndVectors = [
+  Type.f32,
+  Type.vec2f,
+  Type.vec3f,
+  Type.vec4f,
+] as const;
+
 /// All f16 floating-point scalar and vector types
 export const kConcreteF16ScalarsAndVectors = [
   Type.f16,
@@ -2425,6 +2432,13 @@ export const kConvertableToFloatScalarsAndVectors = [
 export const kAllNumericScalarsAndVectors = [
   ...kConvertableToFloatScalarsAndVectors,
   ...kConcreteIntegerScalarsAndVectors,
+] as const;
+
+/// All the concrete integer and floating point scalars and vectors.
+export const kConcreteNumericScalarsAndVectors = [
+  ...kConcreteIntegerScalarsAndVectors,
+  ...kConcreteF16ScalarsAndVectors,
+  ...kConcreteF32ScalarsAndVectors,
 ] as const;
 
 /// All boolean types.

@@ -162,7 +162,13 @@ const kInputArgTypes: { readonly [name: string]: Argument } = {
 };
 
 g.test('typed_arguments')
-  .desc(`Test compilation validation of ${builtin} with variously typed arguments`)
+  .desc(
+    `
+Test compilation validation of ${builtin} with variously typed arguments
+  - The input types and count/offset types are matching to reduce testing permutations. Mismatching
+    input types are validated in 'mismatched' test above.
+`
+  )
   .params(u =>
     u.combine('input', keysOf(kInputArgTypes)).combine('countOffset', keysOf(kInputArgTypes))
   )
