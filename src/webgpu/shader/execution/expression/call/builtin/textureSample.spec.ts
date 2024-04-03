@@ -112,7 +112,7 @@ Parameters:
       usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING,
     };
     const texelView = createRandomTexelView(descriptor);
-    const calls: TextureCall<vec2>[] = generateSamplePoints(50, {
+    const calls: TextureCall<vec2>[] = generateSamplePoints(50, t.params.minFilter === 'nearest', {
       method: t.params.sample_points,
       textureWidth: 8,
       textureHeight: 8,

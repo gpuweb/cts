@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { assert, unreachable } from '../../../../../../common/util/util.js';
 import { EncodableTextureFormat } from '../../../../../format_info.js';
 import { float32ToUint32 } from '../../../../../util/conversion.js';
@@ -396,6 +397,7 @@ export type SamplePointMethods = (typeof kSamplePointMethods)[number];
  */
 export function generateSamplePoints(
   n: number,
+  nearest: boolean,
   args:
     | {
         method: 'texel-centre';
@@ -439,9 +441,20 @@ export function generateSamplePoints(
   // Win 11, NVidia 2070 Super: 16
   // Linux, AMD Radeon Pro WX 3200: 256
   // MacOS, M1 Mac: 256
-  const kSubdivisionsPerTexel = 2;
+  const kSubdivisionsPerTexel = 4;
   const q = [args.textureWidth * kSubdivisionsPerTexel, args.textureHeight * kSubdivisionsPerTexel];
-  return out.map(c => c.map((v, i) => Math.floor(v * q[i]) / q[i]) as vec2);
+  return out.map(
+    c =>
+      c.map((v, i) => {
+        // Quantize to kSubdivisionsPerPixel
+        const v1 = Math.floor(v * q[i]);
+        // If it's nearest and we're on the edge of a texel then move us off the edge
+        // since the edge could choose one texel or another in nearest mode
+        const v2 = (nearest && v1 % kSubdivisionsPerTexel === 0) ? v1 + 1 : v1;
+        // Convert back to texture coords
+        return v2 / q[i];
+      }) as vec2
+  );
 }
 
 function wgslTypeFor(data: Dimensionality, type: 'f' | 'i' | 'u'): string {
