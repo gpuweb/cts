@@ -88,7 +88,6 @@ Parameters:
         const type = kTextureFormatInfo[t.format].color?.type;
         return type === 'float' || type === 'unfilterable-float';
       })
-      .beginSubcases()
       .combine('sample_points', kSamplePointMethods)
       .combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
@@ -176,8 +175,8 @@ Parameters:
   .params(u =>
     u
       .combine('texture_type', ['texture_3d', 'texture_cube'] as const)
-      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .beginSubcases()
+      .combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat'] as const)
       .combine('coords', generateCoordBoundaries(3))
       .combine('offset', generateOffsets(3))
   )
