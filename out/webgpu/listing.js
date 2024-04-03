@@ -4102,6 +4102,36 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "countLeadingZeros"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "countOneBits"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "countTrailingZeros"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "cross"
     ]
   },
