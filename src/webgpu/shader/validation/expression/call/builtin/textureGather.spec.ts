@@ -143,6 +143,8 @@ Validates that only non-const components arguments are rejected by ${builtin}
     const code = `
 @group(0) @binding(0) var s: sampler;
 @group(0) @binding(1) var t: ${textureType};
+@group(0) @binding(2) var<uniform> u: ${componentArgType};
+
 @fragment fn fs() -> @location(0) vec4f {
   const c = 1;
   let l = 1;
