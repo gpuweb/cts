@@ -5,7 +5,9 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
+import { range } from '../../../../../../common/util/util.js';
 import {
+  Type,
   kConcreteIntegerScalarsAndVectors,
   kFloatScalarsAndVectors,
   u32,
@@ -60,71 +62,145 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
 g.test('mismatched')
   .desc(
     `
-Validates that even with valid types, if 'e' and 'newbits' do not match types ${builtin}() errors
+Validates that even with valid types, if arg0 and arg1 do not match types ${builtin}() errors
 `
   )
-  .params(u =>
-    u
-      .combine('e', keysOf(kValuesTypes))
-      .combine('newbits', keysOf(kValuesTypes))
-      .filter(u => u.e !== u.newbits)
-  )
+  .params(u => u.combine('arg0', keysOf(kValuesTypes)).combine('arg1', keysOf(kValuesTypes)))
   .fn(t => {
-    const eT = kValuesTypes[t.params.e];
-    const newbitsT = kValuesTypes[t.params.newbits];
+    const arg0 = kValuesTypes[t.params.arg0];
+    const arg1 = kValuesTypes[t.params.arg1];
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      /* expectedResult */ false,
-      [eT.create(0), newbitsT.create(0), u32(0), u32(32)],
+      /* expectedResult */ t.params.arg0 === t.params.arg1,
+      [arg0.create(0), arg1.create(0), u32(0), u32(32)],
       'constant'
     );
   });
 
-const kFloatTypes = objectsToRecord(kFloatScalarsAndVectors);
+g.test('count_offset')
+  .desc(
+    `
+Validates that count and offset must be smaller than the size of the primitive.
+`
+  )
+  .params(u =>
+    u
+      .combine('stage', kConstantAndOverrideStages)
+      .beginSubcases()
+      .combine(
+        'offset',
+        range(34, i => i)
+      )
+      .combine(
+        'count',
+        range(34, i => i)
+      )
+  )
+  .fn(t => {
+    validateConstOrOverrideBuiltinEval(
+      t,
+      builtin,
+      /* expectedResult */ t.params.offset + t.params.count <= 32,
+      [u32(0), u32(0), u32(t.params.offset), u32(t.params.count)],
+      t.params.stage
+    );
+  });
 
-// g.test('float_argument')
-//   .desc(
-//     `
-// Validates that float arguments are rejected by ${builtin}()
-// `
-//   )
-//   .params(u => u.combine('type', keysOf(kFloatTypes)))
-//   .fn(t => {
-//     const type = kFloatTypes[t.params.type];
-//     validateConstOrOverrideBuiltinEval(
-//       t,
-//       builtin,
-//       /* expectedResult */ false,
-//       [type.create(0)],
-//       'constant'
-//     );
-//   });
+interface Argument {
+  /** Argument as a string. */
+  readonly arg: string;
+  /** Is this a valid argument type. Note that all args must be valid for the call to be valid. */
+  readonly pass: boolean;
+  /** Additional setup code necessary for this arg in the function scope. */
+  readonly preamble?: string;
+}
 
-// // const kArgCases = {
-// //   good: '(1u)',
-// //   bad_no_parens: '',
-// //   // Bad number of args
-// //   bad_too_few: '()',
-// //   bad_too_many: '(1u,2u)',
-// //   // Bad value for arg 0 (Note that float type arguments are handled in 'float_argument' above)
-// //   bad_0bool: '(false)',
-// //   bad_0array: '(array(1u))',
-// //   bad_0struct: '(modf(2.2))',
-// // };
+function typesToArguments(types: readonly Type[], pass: boolean): Record<string, Argument> {
+  return types.reduce(
+    (res, type) => ({
+      ...res,
+      [type.toString()]: { arg: type.create(0).wgsl(), pass },
+    }),
+    {}
+  );
+}
 
-// g.test('args')
-//   .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
-//   .params(u => u.combine('arg', keysOf(kArgCases)))
-//   .fn(t => {
-//     t.expectCompileResult(
-//       t.params.arg === 'good',
-//       `const c = ${builtin}${kArgCases[t.params.arg]};`
-//     );
-//   });
+// u32 is included here to confirm that validation is failing due to a type issue and not something else.
+const kInputArgTypes: { readonly [name: string]: Argument } = {
+  ...typesToArguments([Type.u32], true),
+  ...typesToArguments([...kFloatScalarsAndVectors, Type.bool, Type.mat2x2f], false),
+  alias: { arg: 'u32_alias(1)', pass: true },
+  vec_bool: { arg: 'vec2<bool>(false,true)', pass: false },
+  atomic: { arg: 'a', pass: false },
+  array: {
+    preamble: 'var arry: array<u32, 5>;',
+    arg: 'arry',
+    pass: false,
+  },
+  array_runtime: { arg: 'k.arry', pass: false },
+  struct: {
+    preamble: 'var x: A;',
+    arg: 'x',
+    pass: false,
+  },
+  enumerant: { arg: 'read_write', pass: false },
+  ptr: {
+    preamble: `var<function> f = 1u;
+               let p: ptr<function, u32> = &f;`,
+    arg: 'p',
+    pass: false,
+  },
+  ptr_deref: {
+    preamble: `var<function> f = 1u;
+               let p: ptr<function, u32> = &f;`,
+    arg: '*p',
+    pass: true,
+  },
+  sampler: { arg: 's', pass: false },
+  texture: { arg: 't', pass: false },
+};
 
-// g.test('must_use')
-//   .desc(`Result of ${builtin} must be used`)
-//   .fn(t => {
-//     t.expectCompileResult(false, `fn f() { ${builtin}${kArgCases['good']}; }`);
-//   });
+g.test('typed_arguments')
+  .desc(`Test compilation validation of ${builtin} with variously typed arguments`)
+  .params(u =>
+    u.combine('input', keysOf(kInputArgTypes)).combine('countOffset', keysOf(kInputArgTypes))
+  )
+  .fn(t => {
+    const input = kInputArgTypes[t.params.input];
+    const countOffset = kInputArgTypes[t.params.countOffset];
+    t.expectCompileResult(
+      input.pass && countOffset.pass,
+      `alias u32_alias = u32;
+
+      @group(0) @binding(0) var s: sampler;
+      @group(0) @binding(1) var t: texture_2d<f32>;
+
+      var<workgroup> a: atomic<u32>;
+
+      struct A {
+        i: u32,
+      }
+      struct B {
+        arry: array<u32>,
+      }
+      @group(0) @binding(3) var<storage> k: B;
+
+
+      @vertex
+      fn main() -> @builtin(position) vec4<f32> {
+        ${input.preamble ? input.preamble : ''}
+        ${countOffset.preamble && countOffset !== input ? countOffset.preamble : ''}
+        _ = ${builtin}(${input.arg},${input.arg},${countOffset.arg},${countOffset.arg});
+        return vec4<f32>(.4, .2, .3, .1);
+      }`
+    );
+  });
+
+g.test('must_use')
+  .desc(`Result of ${builtin} must be used`)
+  .params(u => u.combine('use', [true, false]))
+  .fn(t => {
+    const use_it = t.params.use ? '_ = ' : '';
+    t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}(0u,1u,0u,1u); }`);
+  });
