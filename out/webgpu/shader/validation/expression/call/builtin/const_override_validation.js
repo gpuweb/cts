@@ -196,6 +196,65 @@ var<private> v = ${builtin}(${callArgs.join(', ')});`,
   }
 }
 
+/**
+ * Runs a validation test to check that evaluation of `binaryOp` either evaluates with or without
+ * error at shader creation time or pipeline creation time.
+ * @param t the ShaderValidationTest
+ * @param binaryOp the symbol of the binary operator
+ * @param expectedResult false if an error is expected, true if no error is expected
+ * @param left the left-hand side of the binary operation
+ * @param right the right-hand side of the binary operation
+ * @param stage the evaluation stage
+ */
+export function validateConstOrOverrideBinaryOpEval(
+t,
+binaryOp,
+expectedResult,
+left,
+right,
+stage)
+{
+  const allArgs = [left, right];
+  const elTys = allArgs.map((arg) => elementTypeOf(arg.type));
+  const enables = elTys.some((ty) => ty === Type.f16) ? 'enable f16;' : '';
+
+  switch (stage) {
+    case 'constant':{
+        t.expectCompileResult(
+          expectedResult,
+          `${enables}
+const v = ${left.wgsl()} ${binaryOp} ${right.wgsl()};`
+        );
+        break;
+      }
+    case 'override':{
+        assert(!elTys.some((ty) => isAbstractType(ty)));
+        const constants = {};
+        const overrideDecls = [];
+        const opArgs = [];
+        let numOverrides = 0;
+        for (const arg of allArgs) {
+          const argOverrides = [];
+          for (const el of scalarElementsOf(arg)) {
+            const name = `o${numOverrides++}`;
+            overrideDecls.push(`override ${name} : ${el.type};`);
+            argOverrides.push(name);
+            constants[name] = Number(el.value);
+          }
+          opArgs.push(`${arg.type}(${argOverrides.join(', ')})`);
+        }
+        t.expectPipelineResult({
+          expectedResult,
+          code: `${enables}
+${overrideDecls.join('\n')}
+var<private> v = ${opArgs[0]} ${binaryOp} ${opArgs[1]};`,
+          constants,
+          reference: ['v']
+        });
+        break;
+      }
+  }
+}
 /** @returns a sweep of the representable values for element type of `type` */
 export function fullRangeForType(type, count) {
   if (count === undefined) {

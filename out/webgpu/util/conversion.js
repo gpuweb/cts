@@ -2431,6 +2431,13 @@ export const kAllNumericScalarsAndVectors = [
 ...kConcreteIntegerScalarsAndVectors];
 
 
+/// All the concrete integer and floating point scalars and vectors.
+export const kConcreteNumericScalarsAndVectors = [
+...kConcreteIntegerScalarsAndVectors,
+...kConcreteF16ScalarsAndVectors,
+...kConcreteF32ScalarsAndVectors];
+
+
 /// All the scalar and vector types.
 export const kAllScalarsAndVectors = [
 Type.bool,
