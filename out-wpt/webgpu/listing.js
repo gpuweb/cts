@@ -1753,6 +1753,11 @@ export const listing = [
   },
   {
     "file": [
+      "print_environment"
+    ]
+  },
+  {
+    "file": [
       "shader"
     ],
     "readme": "Tests for full coverage of the shaders that can be passed to WebGPU."
