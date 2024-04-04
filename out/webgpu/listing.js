@@ -4257,6 +4257,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "frexp"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "inverseSqrt"
     ]
   },
