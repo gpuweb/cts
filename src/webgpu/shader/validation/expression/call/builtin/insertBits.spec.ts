@@ -5,14 +5,12 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { range } from '../../../../../../common/util/util.js';
 import {
   Type,
   kConcreteIntegerScalarsAndVectors,
   kFloatScalarsAndVectors,
   u32,
 } from '../../../../../util/conversion.js';
-import { linearRange } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -38,10 +36,20 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
-      .expand('newbits', u => fullRangeForType(kValuesTypes[u.type]))
-      .expand('offset', _ => linearRange(0, 32, 1).map(f => Math.floor(f)))
-      .expand('count', u => linearRange(0, 32 - u.offset, 1).map(f => Math.floor(f)))
+      .expand('value', u => fullRangeForType(kValuesTypes[u.type], 5))
+      .expand('newbits', u => fullRangeForType(kValuesTypes[u.type], 5))
+      .combineWithParams([
+        { offset: 0, count: 0 },
+        { offset: 0, count: 31 },
+        { offset: 0, count: 32 },
+        { offset: 4, count: 0 },
+        { offset: 4, count: 27 },
+        { offset: 4, count: 28 },
+        { offset: 16, count: 0 },
+        { offset: 16, count: 15 },
+        { offset: 16, count: 16 },
+        { offset: 32, count: 0 },
+      ] as const)
   )
   .fn(t => {
     const expectedResult = true; // insertBits() should never error
@@ -73,7 +81,7 @@ Validates that even with valid types, if arg0 and arg1 do not match types ${buil
       t,
       builtin,
       /* expectedResult */ t.params.arg0 === t.params.arg1,
-      [arg0.create(0), arg1.create(0), u32(0), u32(32)],
+      [arg0.create(0), arg1.create(1), u32(0), u32(32)],
       'constant'
     );
   });
@@ -88,21 +96,35 @@ Validates that count and offset must be smaller than the size of the primitive.
     u
       .combine('stage', kConstantAndOverrideStages)
       .beginSubcases()
-      .combine(
-        'offset',
-        range(34, i => i)
-      )
-      .combine(
-        'count',
-        range(34, i => i)
-      )
+      .combineWithParams([
+        // offset + count < 32
+        { offset: 0, count: 31 },
+        { offset: 1, count: 30 },
+        { offset: 31, count: 0 },
+        { offset: 30, count: 1 },
+        // offset + count == 32
+        { offset: 0, count: 32 },
+        { offset: 1, count: 31 },
+        { offset: 16, count: 16 },
+        { offset: 31, count: 1 },
+        { offset: 32, count: 0 },
+        // offset + count > 32
+        { offset: 2, count: 31 },
+        { offset: 31, count: 2 },
+        // offset > 32
+        { offset: 33, count: 0 },
+        { offset: 33, count: 1 },
+        // count > 32
+        { offset: 0, count: 33 },
+        { offset: 1, count: 33 },
+      ] as const)
   )
   .fn(t => {
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       /* expectedResult */ t.params.offset + t.params.count <= 32,
-      [u32(0), u32(0), u32(t.params.offset), u32(t.params.count)],
+      [u32(0), u32(1), u32(t.params.offset), u32(t.params.count)],
       t.params.stage
     );
   });
