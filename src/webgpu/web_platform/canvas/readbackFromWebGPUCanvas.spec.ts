@@ -491,7 +491,8 @@ g.test('transferToImageBitmap_unconfigured_nonzero_size')
   )
   .params(u => u.combine('readbackCanvasType', ['onscreen', 'offscreen'] as const))
   .fn(t => {
-    const kWidth = 2, kHeight = 3;
+    const kWidth = 2;
+    const kHeight = 3;
     const canvas = createCanvas(t, 'offscreen', kWidth, kHeight);
     canvas.getContext('webgpu');
 
