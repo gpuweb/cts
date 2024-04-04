@@ -4217,6 +4217,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "faceForward"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "firstLeadingBit"
     ]
   },
