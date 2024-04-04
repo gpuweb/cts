@@ -71,7 +71,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     const bc = quantizeFn(b * c);
     const dp = quantizeFn(bc * kValidArgumentTypes[t.params.type].width);
 
-    if (!Number.isFinite(bc) || !Number.isFinite(dp)) {
+    if (!Number.isFinite(dp)) {
       expectedResult = false;
     }
 
