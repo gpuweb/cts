@@ -14,9 +14,10 @@ import { GPUTest } from './gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 /** console.log is disallowed by WPT. Work around it when we're not in WPT. */
-function consoleLogIfNotWPT(_x: unknown) {
+function consoleLogIfNotWPT(x: unknown) {
   if (!('step_timeout' in globalThis)) {
-    eval('console.log(_x)');
+    const cons = console;
+    cons.log(x);
   }
 }
 
