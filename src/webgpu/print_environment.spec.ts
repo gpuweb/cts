@@ -13,9 +13,7 @@ import { GPUTest } from './gpu_test.js';
 
 export const g = makeTestGroup(GPUTest);
 
-/**
- * console.log is disallowed by WPT. Work around it when we're not in WPT.
- */
+/** console.log is disallowed by WPT. Work around it when we're not in WPT. */
 function consoleLogIfNotWPT(_x: unknown) {
   if (!('step_timeout' in globalThis)) {
     eval('console.log(_x)');
@@ -32,7 +30,8 @@ Run this test under various configurations to see different results
 (Window, worker scopes, Node, etc.)
 
 NOTE: If your test runtime elides logs when tests pass, you won't see the prints from this test
-in the logs. On non-WPT runtimes only, it will also print to the console with console.log.`
+in the logs. On non-WPT runtimes, it will also print to the console with console.log.
+WPT disallows console.log and doesn't support logs on passing tests, so this does nothing on WPT.`
   )
   .fn(async t => {
     function prettyPrint(x: unknown) {
