@@ -35,35 +35,33 @@ in the logs. On non-WPT runtimes, it will also print to the console with console
 WPT disallows console.log and doesn't support logs on passing tests, so this does nothing on WPT.`
   )
   .fn(async t => {
-    function prettyPrint(x: unknown) {
-      if (typeof x !== 'object') {
-        return `\n  ${JSON.stringify(x)}`;
-      }
-      const a = [];
-      for (const key in x) {
-        a.push(`${key}: ${JSON.stringify((x as Record<string, unknown>)[key])}`);
-      }
-      return '\n  - ' + a.join('\n  - ');
-    }
-
     const adapterInfo = await t.adapter.requestAdapterInfo();
-    const adapterInfoFlat = Object.fromEntries(
-      (function* () {
-        for (const key in adapterInfo) {
-          yield [key, adapterInfo[key as keyof GPUAdapterInfo]];
-        }
-      })()
-    );
 
-    const info = `
-Global scope:
-  ${Object.getPrototypeOf(globalThis).constructor.name}
-globalTestConfig: ${prettyPrint(globalTestConfig)}
-defaultRequestAdapterOptions: ${prettyPrint(getDefaultRequestAdapterOptions())}
-GPUAdapterInfo: ${prettyPrint(adapterInfoFlat)}
-navigator.userAgent (may not reflect reality):
-  ${navigator.userAgent}
-`;
+    const info = JSON.stringify(
+      {
+        globalScope: Object.getPrototypeOf(globalThis).constructor.name,
+        globalTestConfig,
+        defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
+        adapterInfo,
+        userAgent: navigator.userAgent,
+      },
+      // Flatten objects with prototype chains into plain objects, using `for..in`. (Otherwise,
+      // properties from the prototype chain will be ignored and things will print as `{}`.)
+      (_key, value) => {
+        if (value === undefined || value === null) return null;
+        if (typeof value !== 'object') return value;
+
+        const valueObj = value as Record<string, unknown>;
+        return Object.fromEntries(
+          (function* () {
+            for (const key in valueObj) {
+              yield [key, valueObj[key]];
+            }
+          })()
+        );
+      },
+      2
+    );
 
     t.info(info);
     consoleLogIfNotWPT(info);
