@@ -3860,6 +3860,14 @@ export const listing = [
       "shader",
       "validation",
       "decl",
+      "context_dependent_resolution"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "decl",
       "let"
     ]
   },
