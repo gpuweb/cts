@@ -34,6 +34,9 @@ const kAttributeCases = {
   must_use: `@must_use fn foo() -> u32 { return 0; }`,
   size: `struct S { @size(4) x : u32 }`,
   workgroup_size: `@compute @workgroup_size(1) fn main() { }`,
+  compute: `@compute @workgroup_size(1) fn main() { }`,
+  fragment: `@fragment fn main() { }`,
+  vertex: `@vertex fn main() -> @builtin(position) vec4f { return vec4f(); }`,
 };
 
 g.test('attribute_names')
@@ -48,6 +51,9 @@ g.test('attribute_names')
     const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
     ${kAttributeCases[t.params.case]}
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -100,6 +106,9 @@ g.test('builtin_value_names')
     const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
     ${kBuiltinCases[t.params.case]}
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -136,6 +145,9 @@ g.test('diagnostic_severity_names')
     const code = `
     ${kDiagnosticSeverityCases[t.params.case]}
     ${t.params.decl} ${t.params.case} : u32 = 0;
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -168,6 +180,9 @@ g.test('diagnostic_rule_names')
     const code = `
     ${kDiagnosticRuleCases[t.params.case]}
     ${t.params.decl} ${t.params.case} : u32 = 0;
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -192,6 +207,9 @@ g.test('enable_names')
     const code = `
     ${kEnableCases[t.params.case]}
     ${t.params.decl} ${t.params.case} : u32 = 0;
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -217,6 +235,9 @@ g.test('language_names')
     const code = `
     ${kLanguageCases[t.params.case]}
     ${t.params.decl} ${t.params.case} : u32 = 0;
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -265,7 +286,10 @@ g.test('swizzle_names')
         code += `_ = x.${t.params.case.padEnd(i, t.params.case[0])};\n`;
       }
     }
-    code += `}`;
+    code += `}
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }`;
     t.expectCompileResult(true, code);
   });
 
@@ -283,6 +307,9 @@ g.test('interpolation_type_names')
     const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
     @fragment fn main(@location(0) @interpolate(${t.params.case}) x : f32) { }
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
@@ -302,6 +329,9 @@ g.test('interpolation_sampling_names')
     const code = `
     ${t.params.decl} ${t.params.case} : u32 = 0;
     @fragment fn main(@location(0) @interpolate(perspective, ${t.params.case}) x : f32) { }
+    fn use_var() -> u32 {
+      return ${t.params.case};
+    }
     `;
 
     t.expectCompileResult(true, code);
