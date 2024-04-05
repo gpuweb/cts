@@ -5,7 +5,8 @@
 Examples of writing CTS tests with various features.
 
 Start here when looking for examples of basic framework usage.
-`;import { globalTestConfig } from '../common/framework/test_config.js';
+`;import { getResourcePath } from '../common/framework/resources.js';
+import { globalTestConfig } from '../common/framework/test_config.js';
 import { makeTestGroup } from '../common/framework/test_group.js';
 import { getDefaultRequestAdapterOptions } from '../common/util/navigator_gpu.js';
 
@@ -41,6 +42,7 @@ fn(async (t) => {
     {
       globalScope: Object.getPrototypeOf(globalThis).constructor.name,
       globalTestConfig,
+      baseResourcePath: getResourcePath(''),
       defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
       adapterInfo,
       userAgent: navigator.userAgent
