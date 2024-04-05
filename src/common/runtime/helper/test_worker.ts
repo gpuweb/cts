@@ -126,9 +126,12 @@ export class TestServiceWorker extends TestBaseWorker {
   ): Promise<void> {
     const [suite, name] = query.split(':', 2);
     const fileName = name.split(',').join('/');
+
+    const selfPath = import.meta.url;
+    const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
+    // Construct the path to the worker file, then use URL to resolve the `../` components.
     const serviceWorkerURL = new URL(
-      `/out/${suite}/webworker/${fileName}.worker.js`,
-      window.location.href
+      `${selfPathDir}/../../../${suite}/webworker/${fileName}.worker.js`
     ).toString();
 
     // If a registration already exists for this path, it will be ignored.

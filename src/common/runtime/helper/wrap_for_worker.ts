@@ -8,6 +8,13 @@ import { assert } from '../../util/util.js';
 
 import { setupWorkerEnvironment, WorkerTestRunRequest } from './utils_worker.js';
 
+/**
+ * Sets up the currently running Web Worker to wrap the TestGroup object `g`.
+ * `g` is the `g` exported from a `.spec.ts` file: a TestGroupBuilder<F> interface,
+ * which underneath is actually a TestGroup<F> object.
+ *
+ * This is used in the generated `.worker.js` files that are generated to use as service workers.
+ */
 export function wrapTestGroupForWorker(g: TestGroup<Fixture>) {
   self.onmessage = async (ev: MessageEvent) => {
     const { query, expectations, ctsOptions } = ev.data as WorkerTestRunRequest;
