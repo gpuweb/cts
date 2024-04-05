@@ -187,18 +187,24 @@ g.test('typed_arguments')
   .desc(
     `
 Test compilation validation of ${builtin} with variously typed arguments
-  - The input types and count/offset types are matching to reduce testing permutations. Mismatching
-    input types are validated in 'mismatched' test above.
+  - The input types are matching to reduce testing permutations. Mismatching input types are
+    validated in 'mismatched' test above.
+  - For failing input types, just use the same type for offset and count to reduce combinations.
 `
   )
   .params(u =>
-    u.combine('input', keysOf(kInputArgTypes)).combine('countOffset', keysOf(kInputArgTypes))
+    u
+      .combine('input', keysOf(kInputArgTypes))
+      .beginSubcases()
+      .combine('offset', keysOf(kInputArgTypes))
+      .expand('count', u => (kInputArgTypes[u.input].pass ? keysOf(kInputArgTypes) : [u.offset]))
   )
   .fn(t => {
     const input = kInputArgTypes[t.params.input];
-    const countOffset = kInputArgTypes[t.params.countOffset];
+    const offset = kInputArgTypes[t.params.offset];
+    const count = kInputArgTypes[t.params.count];
     t.expectCompileResult(
-      input.pass && countOffset.pass,
+      input.pass && offset.pass && count.pass,
       `alias u32_alias = u32;
 
       @group(0) @binding(0) var s: sampler;
@@ -218,8 +224,9 @@ Test compilation validation of ${builtin} with variously typed arguments
       @vertex
       fn main() -> @builtin(position) vec4<f32> {
         ${input.preamble ? input.preamble : ''}
-        ${countOffset.preamble && countOffset !== input ? countOffset.preamble : ''}
-        _ = ${builtin}(${input.arg},${input.arg},${countOffset.arg},${countOffset.arg});
+        ${offset.preamble && offset !== input ? offset.preamble : ''}
+        ${count.preamble && count !== input && count !== offset ? count.preamble : ''}
+        _ = ${builtin}(${input.arg},${input.arg},${offset.arg},${count.arg});
         return vec4<f32>(.4, .2, .3, .1);
       }`
     );
