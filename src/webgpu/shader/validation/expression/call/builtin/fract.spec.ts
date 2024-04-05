@@ -1,4 +1,4 @@
-const builtin = 'sign';
+const builtin = 'fract';
 export const description = `
 Validation tests for the ${builtin}() builtin.
 `;
@@ -7,8 +7,7 @@ import { makeTestGroup } from '../../../../../../common/framework/test_group.js'
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
 import {
   Type,
-  kFloatScalarsAndVectors,
-  kConcreteSignedIntegerScalarsAndVectors,
+  kConvertableToFloatScalarsAndVectors,
   scalarTypeOf,
 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
@@ -22,55 +21,58 @@ import {
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-const kValuesTypes = objectsToRecord([
-  ...kFloatScalarsAndVectors,
-  ...kConcreteSignedIntegerScalarsAndVectors,
-]);
+const kValidArgumentTypes = objectsToRecord(kConvertableToFloatScalarsAndVectors);
 
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() inputs rejects invalid values
+Validates that constant evaluation and override evaluation of ${builtin}() error on invalid inputs.
 `
   )
   .params(u =>
     u
       .combine('stage', kConstantAndOverrideStages)
-      .combine('type', keysOf(kValuesTypes))
-      .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
+      .combine('type', keysOf(kValidArgumentTypes))
+      .filter(u => stageSupportsType(u.stage, kValidArgumentTypes[u.type]))
       .beginSubcases()
-      .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
+      .expand('value', u => fullRangeForType(kValidArgumentTypes[u.type]))
   )
   .beforeAllSubcases(t => {
-    if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
+    if (scalarTypeOf(kValidArgumentTypes[t.params.type]) === Type.f16) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
-    const expectedResult = true; // Result should always be representable by the type
+    const expectedResult = true;
+
+    const type = kValidArgumentTypes[t.params.type];
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       expectedResult,
-      [kValuesTypes[t.params.type].create(t.params.value)],
+      [type.create(t.params.value)],
       t.params.stage
     );
   });
 
 const kArgCases = {
-  good: '(1.0)',
+  good: '(1.2)',
   bad_no_parens: '',
   // Bad number of args
   bad_0args: '()',
-  bad_2arg: '(1.0, 1.0)',
+  bad_2arg: '(1.2, 2.3)',
   // Bad value for arg 0
   bad_0bool: '(false)',
   bad_0array: '(array(1.1,2.2))',
   bad_0struct: '(modf(2.2))',
   bad_0uint: '(1u)',
-  bad_0vec2u: '(vec2u(1))',
-  bad_0vec3u: '(vec3u(1))',
-  bad_0vec4u: '(vec4u(1))',
+  bad_0int: '(1i)',
+  bad_0vec2i: '(vec2i())',
+  bad_0vec2u: '(vec2u())',
+  bad_0vec3i: '(vec3i())',
+  bad_0vec3u: '(vec3u())',
+  bad_0vec4i: '(vec4i())',
+  bad_0vec4u: '(vec4u())',
 };
 
 g.test('args')
