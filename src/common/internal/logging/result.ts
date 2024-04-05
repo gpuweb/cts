@@ -14,7 +14,8 @@ export interface LiveTestCaseResult extends TestCaseResult {
   logs?: LogMessageWithStack[];
 }
 
-/** Raw data for a test log message.
+/**
+ * Raw data for a test log message.
  *
  * This form is sendable over a message channel, except `extra` may get mangled.
  */
@@ -26,7 +27,8 @@ export interface LogMessageRawData {
   extra: unknown;
 }
 
-/** Test case results in a form sendable over a message channel.
+/**
+ * Test case results in a form sendable over a message channel.
  *
  * Note `extra` may get mangled by postMessage.
  */
