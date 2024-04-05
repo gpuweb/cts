@@ -141,7 +141,9 @@ export class TestCaseRecorder {
       this.skipped(ex);
       return;
     }
-    this.logImpl(LogSeverity.ThrewException, 'EXCEPTION', ex);
+    // logImpl will discard the original error's ex.name. Preserve it here.
+    const name = ex instanceof Error ? `EXCEPTION: ${ex.name}` : 'EXCEPTION';
+    this.logImpl(LogSeverity.ThrewException, name, ex);
   }
 
   private logImpl(level: LogSeverity, name: string, baseException: unknown): void {

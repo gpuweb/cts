@@ -8,8 +8,12 @@ export class LogMessageWithStack extends Error {
 
   private stackHiddenMessage: string | undefined = undefined;
 
-  /** Wrap an Error (which was created to capture the stack at that point) into a
+  /**
+   * Wrap an Error (which was created to capture the stack at that point) into a
    * LogMessageWithStack (which has extra stuff for good log messages).
+   *
+   * The original `ex.name` is ignored. Inclued it in the `name` parameter if it
+   * needs to be preseved.
    */
   static wrapError(name: string, ex: Error | ErrorWithExtra) {
     return new LogMessageWithStack({
@@ -34,7 +38,8 @@ export class LogMessageWithStack extends Error {
     this.stackHiddenMessage ??= stackHiddenMessage;
   }
 
-  /** Print the message for display.
+  /**
+   * Print the message for display.
    *
    * Note: This is toJSON instead of toString to make it easy to save logs using JSON.stringify.
    */
@@ -51,7 +56,8 @@ export class LogMessageWithStack extends Error {
     return m;
   }
 
-  /** Flatten the message for sending over a message channel.
+  /**
+   * Flatten the message for sending over a message channel.
    *
    * Note `extra` may get mangled by postMessage.
    */
