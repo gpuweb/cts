@@ -34,13 +34,15 @@ class TestBaseWorker {
 
   onmessage(ev: MessageEvent) {
     const query: string = ev.data.query;
-    const result: TransferredTestCaseResult = ev.data.result;
-    if (result.logs) {
-      for (const l of result.logs) {
-        Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-      }
-    }
-    this.resolvers.get(query)!(result as LiveTestCaseResult);
+    const transferredResult: TransferredTestCaseResult = ev.data.result;
+
+    const result: LiveTestCaseResult = {
+      status: transferredResult.status,
+      timems: transferredResult.timems,
+      logs: transferredResult.logs?.map(l => new LogMessageWithStack(l)),
+    };
+
+    this.resolvers.get(query)!(result);
     this.resolvers.delete(query);
 
     // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
