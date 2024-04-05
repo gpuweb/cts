@@ -628,6 +628,11 @@ export class ScalarType {
     return this._signed;
   }
 
+  // This allows width to be checked in cases where scalar and vector types are mixed.
+  get width() {
+    return 1;
+  }
+
   /** Constructs a ScalarValue of this type with `value` */
   create(value) {
     switch (typeof value) {

@@ -4185,6 +4185,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "distance"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "dot4I8Packed"
     ]
   },
