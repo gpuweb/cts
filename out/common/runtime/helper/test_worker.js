@@ -34,12 +34,14 @@ class TestBaseWorker {
 
   onmessage(ev) {
     const query = ev.data.query;
-    const result = ev.data.result;
-    if (result.logs) {
-      for (const l of result.logs) {
-        Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-      }
-    }
+    const transferredResult = ev.data.result;
+
+    const result = {
+      status: transferredResult.status,
+      timems: transferredResult.timems,
+      logs: transferredResult.logs?.map((l) => new LogMessageWithStack(l))
+    };
+
     this.resolvers.get(query)(result);
     this.resolvers.delete(query);
 
