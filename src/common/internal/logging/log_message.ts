@@ -13,7 +13,7 @@ export class LogMessageWithStack extends Error {
    * LogMessageWithStack (which has extra stuff for good log messages).
    *
    * The original `ex.name` is ignored. Inclued it in the `name` parameter if it
-   * needs to be preseved.
+   * needs to be preserved.
    */
   static wrapError(name: string, ex: Error | ErrorWithExtra) {
     return new LogMessageWithStack({
