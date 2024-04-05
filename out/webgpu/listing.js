@@ -4535,6 +4535,26 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureGather"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "textureGatherCompare"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureLoad"
     ]
   },
