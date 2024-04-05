@@ -1117,6 +1117,59 @@ export function scalarTypeOf(ty: Type): ScalarType {
   throw new Error(`unhandled type ${ty}`);
 }
 
+/**
+ * @returns the implicit concretized type of the given Type.
+ * @param abstractIntToF32 if true, returns f32 for abstractInt else i32
+ * Example: vec3<abstract-float> -> vec3<float>
+ */
+export function concreteTypeOf(ty: Type, allowedScalarTypes?: Type[]): Type {
+  if (allowedScalarTypes && allowedScalarTypes.length > 0) {
+    // https://www.w3.org/TR/WGSL/#conversion-rank
+    switch (ty) {
+      case Type.abstractInt:
+        if (allowedScalarTypes.includes(Type.i32)) {
+          return Type.i32;
+        }
+        if (allowedScalarTypes.includes(Type.u32)) {
+          return Type.u32;
+        }
+      // fallthrough.
+      case Type.abstractFloat:
+        if (allowedScalarTypes.includes(Type.f32)) {
+          return Type.f32;
+        }
+        if (allowedScalarTypes.includes(Type.f16)) {
+          return Type.f32;
+        }
+        throw new Error(`no ${ty}`);
+    }
+  } else {
+    switch (ty) {
+      case Type.abstractInt:
+        return Type.i32;
+      case Type.abstractFloat:
+        return Type.f32;
+    }
+  }
+  if (ty instanceof ScalarType) {
+    return ty;
+  }
+  if (ty instanceof VectorType) {
+    return Type.vec(ty.width, concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType);
+  }
+  if (ty instanceof MatrixType) {
+    return Type.mat(
+      ty.cols,
+      ty.rows,
+      concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType
+    );
+  }
+  if (ty instanceof ArrayType) {
+    return Type.array(ty.count, concreteTypeOf(ty.elementType, allowedScalarTypes));
+  }
+  throw new Error(`unhandled type ${ty}`);
+}
+
 function hex(sizeInBytes: number, bitsLow: number, bitsHigh?: number) {
   let hex = '';
   workingDataU32[0] = bitsLow;
@@ -2267,6 +2320,24 @@ export function isFloatType(ty: Type): boolean {
   if (ty instanceof ScalarType) {
     return (
       ty.kind === 'abstract-float' || ty.kind === 'f64' || ty.kind === 'f32' || ty.kind === 'f16'
+    );
+  }
+  return false;
+}
+
+/**
+ * @returns if `ty` is a type convertible to floating point type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isConvertibleToFloatType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return (
+      ty.kind === 'abstract-int' ||
+      ty.kind === 'abstract-float' ||
+      ty.kind === 'f64' ||
+      ty.kind === 'f32' ||
+      ty.kind === 'f16'
     );
   }
   return false;
