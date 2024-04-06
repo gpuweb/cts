@@ -104,48 +104,10 @@ const foo = lhs ${op.op} rhs;
   t.expectCompileResult(valid, code);
 });
 
-
-
-
-
-
-
-const kInvalidTypes = {
-  array: {
-    expr: 'arr',
-    control: (e) => `${e}[0]`
-  },
-
-  ptr: {
-    expr: '(&u)',
-    control: (e) => `*${e}`
-  },
-
-  atomic: {
-    expr: 'a',
-    control: (e) => `atomicLoad(&${e})`
-  },
-
-  texture: {
-    expr: 't',
-    control: (e) => `i32(textureLoad(${e}, vec2(), 0).x)`
-  },
-
-  sampler: {
-    expr: 's',
-    control: (e) => `i32(textureSampleLevel(t, ${e}, vec2(), 0).x)`
-  },
-
-  struct: {
-    expr: 'str',
-    control: (e) => `${e}.u`
-  }
-};
-
 g.test('scalar_vector_out_of_range').
 desc(
   `
-    Checks that constant or override evaluation of add/sub/mal operations on scalar/vectors that produce out of range values cause validation errors.
+    Checks that constant or override evaluation of add/sub/mul operations on scalar/vectors that produce out of range values cause validation errors.
       - Checks for all concrete numeric scalar and vector types, including scalar * vector and vector * scalar.
       - Checks for all vector elements that could cause the out of range to happen.
       - Checks for pairs of values at one ULP difference at the boundary of the out of range.
@@ -274,11 +236,50 @@ fn((t) => {
     t,
     kOperators[op].op,
     success,
+    t.params.stage,
     create(kScalarAndVectorTypes[lhs], nonZeroIndex, leftValue),
-    create(kScalarAndVectorTypes[rhs], nonZeroIndex, rightValue),
-    t.params.stage
+    t.params.stage,
+    create(kScalarAndVectorTypes[rhs], nonZeroIndex, rightValue)
   );
 });
+
+
+
+
+
+
+
+const kInvalidTypes = {
+  array: {
+    expr: 'arr',
+    control: (e) => `${e}[0]`
+  },
+
+  ptr: {
+    expr: '(&u)',
+    control: (e) => `*${e}`
+  },
+
+  atomic: {
+    expr: 'a',
+    control: (e) => `atomicLoad(&${e})`
+  },
+
+  texture: {
+    expr: 't',
+    control: (e) => `i32(textureLoad(${e}, vec2(), 0).x)`
+  },
+
+  sampler: {
+    expr: 's',
+    control: (e) => `i32(textureSampleLevel(t, ${e}, vec2(), 0).x)`
+  },
+
+  struct: {
+    expr: 'str',
+    control: (e) => `${e}.u`
+  }
+};
 
 g.test('invalid_type_with_itself').
 desc(

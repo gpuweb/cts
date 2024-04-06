@@ -128,6 +128,7 @@ export const kConstantAndOverrideStages = ['constant', 'override'];
 
 
 
+
 /**
  * @returns true if evaluation stage `stage` supports expressions of type @p.
  */
@@ -202,57 +203,66 @@ var<private> v = ${builtin}(${callArgs.join(', ')});`,
  * @param t the ShaderValidationTest
  * @param binaryOp the symbol of the binary operator
  * @param expectedResult false if an error is expected, true if no error is expected
+ * @param leftStage the evaluation stage for the left argument
  * @param left the left-hand side of the binary operation
+ * @param rightStage the evaluation stage for the right argument
  * @param right the right-hand side of the binary operation
- * @param stage the evaluation stage
  */
 export function validateConstOrOverrideBinaryOpEval(
 t,
 binaryOp,
 expectedResult,
+leftStage,
 left,
-right,
-stage)
+rightStage,
+right)
 {
   const allArgs = [left, right];
   const elTys = allArgs.map((arg) => elementTypeOf(arg.type));
   const enables = elTys.some((ty) => ty === Type.f16) ? 'enable f16;' : '';
 
-  switch (stage) {
-    case 'constant':{
-        t.expectCompileResult(
-          expectedResult,
-          `${enables}
-const v = ${left.wgsl()} ${binaryOp} ${right.wgsl()};`
-        );
-        break;
-      }
-    case 'override':{
-        assert(!elTys.some((ty) => isAbstractType(ty)));
-        const constants = {};
-        const overrideDecls = [];
-        const opArgs = [];
-        let numOverrides = 0;
-        for (const arg of allArgs) {
+  const codeLines = [enables];
+  const constants = {};
+  let numOverrides = 0;
+
+  function addOperand(name, stage, value) {
+    switch (stage) {
+      case 'runtime':
+        assert(!isAbstractType(value.type));
+        codeLines.push(`var<private> ${name} = ${value.wgsl()};`);
+        return name;
+
+      case 'constant':
+        codeLines.push(`const ${name} = ${value.wgsl()};`);
+        return name;
+
+      case 'override':{
+          assert(!isAbstractType(value.type));
           const argOverrides = [];
-          for (const el of scalarElementsOf(arg)) {
-            const name = `o${numOverrides++}`;
-            overrideDecls.push(`override ${name} : ${el.type};`);
-            argOverrides.push(name);
-            constants[name] = Number(el.value);
+          for (const el of scalarElementsOf(value)) {
+            const elName = `o${numOverrides++}`;
+            codeLines.push(`override ${elName} : ${el.type};`);
+            constants[elName] = Number(el.value);
+            argOverrides.push(elName);
           }
-          opArgs.push(`${arg.type}(${argOverrides.join(', ')})`);
+          return `${value.type}(${argOverrides.join(', ')})`;
         }
-        t.expectPipelineResult({
-          expectedResult,
-          code: `${enables}
-${overrideDecls.join('\n')}
-var<private> v = ${opArgs[0]} ${binaryOp} ${opArgs[1]};`,
-          constants,
-          reference: ['v']
-        });
-        break;
-      }
+    }
+  }
+
+  const leftOperand = addOperand('left', leftStage, left);
+  const rightOperand = addOperand('right', rightStage, right);
+
+  if (leftStage === 'override' || rightStage === 'override') {
+    t.expectPipelineResult({
+      expectedResult,
+      code: codeLines.join('\n'),
+      constants,
+      reference: [`${leftOperand} ${binaryOp} ${rightOperand}`]
+    });
+  } else {
+    codeLines.push(`fn f() { _ = ${leftOperand} ${binaryOp} ${rightOperand}; }`);
+    t.expectCompileResult(expectedResult, codeLines.join('\n'));
   }
 }
 /** @returns a sweep of the representable values for element type of `type` */
