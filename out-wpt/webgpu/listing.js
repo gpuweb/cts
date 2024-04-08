@@ -4532,6 +4532,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "smoothstep"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "sqrt"
     ]
   },
