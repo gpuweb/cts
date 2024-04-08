@@ -148,23 +148,26 @@ export function stageSupportsType(stage: ConstantOrOverrideStage, type: Type) {
  * @param expectedResult false if an error is expected, true if no error is expected
  * @param args the arguments to pass to the builtin
  * @param stage the evaluation stage
+ * @param returnType the explicit return type of the result variable, if provided (implicit otherwise)
  */
 export function validateConstOrOverrideBuiltinEval(
   t: ShaderValidationTest,
   builtin: string,
   expectedResult: boolean,
   args: Value[],
-  stage: ConstantOrOverrideStage
+  stage: ConstantOrOverrideStage,
+  returnType?: Type
 ) {
   const elTys = args.map(arg => elementTypeOf(arg.type)!);
   const enables = elTys.some(ty => ty === Type.f16) ? 'enable f16;' : '';
+  const optionalVarType = returnType ? `: ${returnType.toString()}` : '';
 
   switch (stage) {
     case 'constant': {
       t.expectCompileResult(
         expectedResult,
         `${enables}
-const v = ${builtin}(${args.map(arg => arg.wgsl()).join(', ')});`
+const v ${optionalVarType} = ${builtin}(${args.map(arg => arg.wgsl()).join(', ')});`
       );
       break;
     }
@@ -188,7 +191,7 @@ const v = ${builtin}(${args.map(arg => arg.wgsl()).join(', ')});`
         expectedResult,
         code: `${enables}
 ${overrideDecls.join('\n')}
-var<private> v = ${builtin}(${callArgs.join(', ')});`,
+var<private> v ${optionalVarType} = ${builtin}(${callArgs.join(', ')});`,
         constants,
         reference: ['v'],
       });
