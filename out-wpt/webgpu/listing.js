@@ -3421,6 +3421,14 @@ export const listing = [
       "shader",
       "execution",
       "expression",
+      "precedence"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
       "unary",
       "address_of_and_indirection"
     ]
@@ -4695,6 +4703,14 @@ export const listing = [
       "call",
       "builtin",
       "workgroupUniformLoad"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "precedence"
     ]
   },
   {
