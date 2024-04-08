@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { assert, unreachable } from '../../../../../../common/util/util.js';
 import { EncodableTextureFormat } from '../../../../../format_info.js';
 import { float32ToUint32 } from '../../../../../util/conversion.js';
@@ -6,11 +5,17 @@ import { align, clamp, hashU32, lerp, quantizeToF32 } from '../../../../../util/
 import {
   kTexelRepresentationInfo,
   PerTexelComponent,
+  TexelComponent,
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
 import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelView } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
+
+function getFiniteMaxForComponent(rep: TexelRepresentationInfo, component: TexelComponent) {
+  const finiteMax = rep.numericRange!.finiteMax;
+  return typeof finiteMax === 'number' ? finiteMax : finiteMax[component];
+}
 
 export function createRandomTexelView(info: {
   format: GPUTextureFormat;
@@ -22,7 +27,11 @@ export function createRandomTexelView(info: {
     for (const component of rep.componentOrder) {
       const rnd = hashU32(coords.x, coords.y, coords.z, component.charCodeAt(0));
       const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
-      texel[component] = lerp(rep.numericRange!.finiteMin, rep.numericRange!.finiteMax, normalized);
+      texel[component] = lerp(
+        rep.numericRange!.finiteMin,
+        getFiniteMaxForComponent(rep, component),
+        normalized
+      );
     }
     return quantize(texel, rep);
   };
@@ -450,7 +459,7 @@ export function generateSamplePoints(
         const v1 = Math.floor(v * q[i]);
         // If it's nearest and we're on the edge of a texel then move us off the edge
         // since the edge could choose one texel or another in nearest mode
-        const v2 = (nearest && v1 % kSubdivisionsPerTexel === 0) ? v1 + 1 : v1;
+        const v2 = nearest && v1 % kSubdivisionsPerTexel === 0 ? v1 + 1 : v1;
         // Convert back to texture coords
         return v2 / q[i];
       }) as vec2

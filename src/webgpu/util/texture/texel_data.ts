@@ -600,6 +600,7 @@ const identity = (n: number) => n;
 const kFloat11Format = { signed: 0, exponentBits: 5, mantissaBits: 6, bias: 15 } as const;
 const kFloat10Format = { signed: 0, exponentBits: 5, mantissaBits: 5, bias: 15 } as const;
 
+export type PerComponentFiniteMax = Record<TexelComponent, number>;
 export type TexelRepresentationInfo = {
   /** Order of components in the packed representation. */
   readonly componentOrder: TexelComponent[];
@@ -627,7 +628,12 @@ export type TexelRepresentationInfo = {
   /** Convert integer bit representations into ULPs-from-zero, e.g. unorm8 255 -> 255 ULPs */
   readonly bitsToULPFromZero: ComponentMapFn;
   /** The valid range of numeric "color" values, e.g. [0, Infinity] for ufloat. */
-  readonly numericRange: null | { min: number; max: number; finiteMin: number; finiteMax: number };
+  readonly numericRange: null | {
+    min: number;
+    max: number;
+    finiteMin: number;
+    finiteMax: number | PerComponentFiniteMax;
+  };
 
   // Add fields as needed
 };
@@ -821,7 +827,11 @@ export const kTexelRepresentationInfo: {
         min: 0,
         max: Number.POSITIVE_INFINITY,
         finiteMin: 0,
-        finiteMax: float32ToFloatBits(0b11110_111111, 0, 5, 6, 15),
+        finiteMax: {
+          R: floatBitsToNumber(0b111_1011_1111, kFloat11Format),
+          G: floatBitsToNumber(0b111_1011_1111, kFloat11Format),
+          B: floatBitsToNumber(0b11_1101_1111, kFloat10Format),
+        } as PerComponentFiniteMax,
       },
     },
     rgb9e5ufloat: {
@@ -871,7 +881,7 @@ export const kTexelRepresentationInfo: {
         min: 0,
         max: Number.POSITIVE_INFINITY,
         finiteMin: 0,
-        finiteMax: float32ToFloatBits(0b11110_111111111, 0, 5, 9, 15),
+        finiteMax: ufloatM9E5BitsToNumber(0b11_1111_1111_1111, kUFloat9e5Format),
       },
     },
     depth32float: makeFloatInfo([TexelComponent.Depth], 32, { restrictedDepth: true }),
