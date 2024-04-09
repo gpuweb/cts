@@ -1,4 +1,4 @@
-import { assert, unreachable } from '../../../../../../common/util/util.js';
+import { assert, range, unreachable } from '../../../../../../common/util/util.js';
 import { EncodableTextureFormat } from '../../../../../format_info.js';
 import { float32ToUint32 } from '../../../../../util/conversion.js';
 import { align, clamp, hashU32, lerp, quantizeToF32 } from '../../../../../util/math.js';
@@ -33,6 +33,9 @@ function getValueBetweenMinAndMaxTexelValueInclusive(
   );
 }
 
+/**
+ * Creates a TexelView filled with random values.
+ */
 export function createRandomTexelView(info: {
   format: GPUTextureFormat;
   size: GPUExtent3D;
@@ -102,6 +105,9 @@ export interface Texture {
   descriptor: GPUTextureDescriptor;
 }
 
+/**
+ * Returns the expect value for a WGSL builtin texture function
+ */
 export function expected<T extends Dimensionality>(
   call: TextureCall<T>,
   texture: Texture,
@@ -216,6 +222,12 @@ export function expected<T extends Dimensionality>(
   }
 }
 
+/**
+ * Puts random data in a texture, generates a shader that implements `calls`
+ * such that each call's result is written to the next consecutive texel of
+ * a rgba32float texture. It then checks the result of each call matches
+ * the expected result.
+ */
 export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensionality>(
   device: GPUDevice,
   texture: Texture,
@@ -279,7 +291,35 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
   return errs.length > 0 ? new Error(errs.join('\n')) : undefined;
 }
 
-export async function identifySamplePoints(
+/**
+ * Generates a text art grid showing which texels were sampled
+ * followed by a list of the samples and the weights used for each
+ * component.
+ *
+ * Example:
+ *
+ *     0   1   2   3   4   5   6   7
+ *   ┌───┬───┬───┬───┬───┬───┬───┬───┐
+ * 0 │   │   │   │   │   │   │   │   │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 1 │   │   │   │   │   │   │   │ a │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 2 │   │   │   │   │   │   │   │ b │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 3 │   │   │   │   │   │   │   │   │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 4 │   │   │   │   │   │   │   │   │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 5 │   │   │   │   │   │   │   │   │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 6 │   │   │   │   │   │   │   │   │
+ *   ├───┼───┼───┼───┼───┼───┼───┼───┤
+ * 7 │   │   │   │   │   │   │   │   │
+ *   └───┴───┴───┴───┴───┴───┴───┴───┘
+ * a: at: [7, 1], weights: [R: 0.75000]
+ * b: at: [7, 2], weights: [R: 0.25000]
+ */
+async function identifySamplePoints(
   info: GPUTextureDescriptor,
   run: (texels: TexelView) => Promise<PerTexelComponent<number>>
 ) {
@@ -289,7 +329,7 @@ export async function identifySamplePoints(
 
   // Identify all the texels that are sampled, and their weights.
   const sampledTexelWeights = new Map<number, PerTexelComponent<number>>();
-  const unclassifiedStack = [new Set<number>([...new Array(numTexels)].map((_, i) => i))];
+  const unclassifiedStack = [new Set<number>(range(numTexels, v => v))];
   while (unclassifiedStack.length > 0) {
     // Pop the an unclassified texels stack
     const unclassified = unclassifiedStack.pop()!;
