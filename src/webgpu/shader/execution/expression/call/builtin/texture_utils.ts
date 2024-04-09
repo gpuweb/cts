@@ -5,16 +5,32 @@ import { align, clamp, hashU32, lerp, quantizeToF32 } from '../../../../../util/
 import {
   kTexelRepresentationInfo,
   PerTexelComponent,
-  TexelComponent,
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
 import { TexelView } from '../../../../../util/texture/texel_view.js';
 import { createTextureFromTexelView } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
-function getFiniteMaxForComponent(rep: TexelRepresentationInfo, component: TexelComponent) {
-  const finiteMax = rep.numericRange!.finiteMax;
-  return typeof finiteMax === 'number' ? finiteMax : finiteMax[component];
+function getLimitValue(v: number) {
+  switch (v) {
+    case Number.POSITIVE_INFINITY:
+      return 1000;
+    case Number.NEGATIVE_INFINITY:
+      return -1000;
+    default:
+      return v;
+  }
+}
+
+function getValueBetweenMinAndMaxTexelValueInclusive(
+  rep: TexelRepresentationInfo,
+  normalized: number
+) {
+  return lerp(
+    getLimitValue(rep.numericRange!.min),
+    getLimitValue(rep.numericRange!.max),
+    normalized
+  );
 }
 
 export function createRandomTexelView(info: {
@@ -27,11 +43,7 @@ export function createRandomTexelView(info: {
     for (const component of rep.componentOrder) {
       const rnd = hashU32(coords.x, coords.y, coords.z, component.charCodeAt(0));
       const normalized = clamp(rnd / 0xffffffff, { min: 0, max: 1 });
-      texel[component] = lerp(
-        rep.numericRange!.finiteMin,
-        getFiniteMaxForComponent(rep, component),
-        normalized
-      );
+      texel[component] = getValueBetweenMinAndMaxTexelValueInclusive(rep, normalized);
     }
     return quantize(texel, rep);
   };
