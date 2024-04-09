@@ -989,18 +989,21 @@ export const Type = {
   vec2af: VectorType.create(2, abstractFloatType),
   vec2f: VectorType.create(2, f32Type),
   vec2h: VectorType.create(2, f16Type),
+  vec2b: VectorType.create(2, boolType),
   vec3ai: VectorType.create(3, abstractIntType),
   vec3i: VectorType.create(3, i32Type),
   vec3u: VectorType.create(3, u32Type),
   vec3af: VectorType.create(3, abstractFloatType),
   vec3f: VectorType.create(3, f32Type),
   vec3h: VectorType.create(3, f16Type),
+  vec3b: VectorType.create(3, boolType),
   vec4ai: VectorType.create(4, abstractIntType),
   vec4i: VectorType.create(4, i32Type),
   vec4u: VectorType.create(4, u32Type),
   vec4af: VectorType.create(4, abstractFloatType),
   vec4f: VectorType.create(4, f32Type),
   vec4h: VectorType.create(4, f16Type),
+  vec4b: VectorType.create(4, boolType),
 
   mat: (cols: number, rows: number, elementType: ScalarType) =>
     MatrixType.create(cols, rows, elementType),
@@ -2424,13 +2427,13 @@ export function isConvertible(src: Type, dst: Type) {
 const kFloatScalars = [Type.abstractFloat, Type.f32, Type.f16] as const;
 
 /// All floating-point vec2 types
-const kFloatVec2 = [Type.vec(2, Type.abstractFloat), Type.vec2f, Type.vec2h] as const;
+const kFloatVec2 = [Type.vec2af, Type.vec2f, Type.vec2h] as const;
 
 /// All floating-point vec3 types
-const kFloatVec3 = [Type.vec(3, Type.abstractFloat), Type.vec3f, Type.vec3h] as const;
+const kFloatVec3 = [Type.vec3af, Type.vec3f, Type.vec3h] as const;
 
 /// All floating-point vec4 types
-const kFloatVec4 = [Type.vec(4, Type.abstractFloat), Type.vec4f, Type.vec4h] as const;
+const kFloatVec4 = [Type.vec4af, Type.vec4f, Type.vec4h] as const;
 
 export const kConcreteF32ScalarsAndVectors = [
   Type.f32,
@@ -2494,19 +2497,19 @@ export const kConcreteIntegerScalarsAndVectors = [
 export const kConvertableToFloatScalar = [Type.abstractInt, ...kFloatScalars] as const;
 
 /// All types which are convertable to floating-point vector 2 types.
-export const kConvertableToFloatVec2 = [Type.vec(2, Type.abstractInt), ...kFloatVec2] as const;
+export const kConvertableToFloatVec2 = [Type.vec2ai, ...kFloatVec2] as const;
 
 /// All types which are convertable to floating-point vector 3 types.
-export const kConvertableToFloatVec3 = [Type.vec(3, Type.abstractInt), ...kFloatVec3] as const;
+export const kConvertableToFloatVec3 = [Type.vec3ai, ...kFloatVec3] as const;
 
 /// All types which are convertable to floating-point vector 4 types.
-export const kConvertableToFloatVec4 = [Type.vec(4, Type.abstractInt), ...kFloatVec4] as const;
+export const kConvertableToFloatVec4 = [Type.vec4ai, ...kFloatVec4] as const;
 
 /// All the types which are convertable to floating-point vector types.
 export const kConvertableToFloatVectors = [
-  Type.vec(2, Type.abstractInt),
-  Type.vec(3, Type.abstractInt),
-  Type.vec(4, Type.abstractInt),
+  Type.vec2ai,
+  Type.vec3ai,
+  Type.vec4ai,
   ...kFloatVectors,
 ] as const;
 
@@ -2530,11 +2533,11 @@ export const kConcreteNumericScalarsAndVectors = [
   ...kConcreteF32ScalarsAndVectors,
 ] as const;
 
+/// All boolean types.
+export const kAllBooleansAndVectors = [Type.bool, Type.vec2b, Type.vec3b, Type.vec4b] as const;
+
 /// All the scalar and vector types.
 export const kAllScalarsAndVectors = [
-  Type.bool,
-  Type.vec(2, Type.bool),
-  Type.vec(3, Type.bool),
-  Type.vec(4, Type.bool),
+  ...kAllBooleansAndVectors,
   ...kAllNumericScalarsAndVectors,
 ] as const;

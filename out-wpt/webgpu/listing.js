@@ -4332,6 +4332,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "insertBits"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "inverseSqrt"
     ]
   },
