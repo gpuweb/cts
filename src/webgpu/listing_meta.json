@@ -2406,6 +2406,8 @@
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_function:*": { "subcaseMS": 0.800 },
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_var:*": { "subcaseMS": 2.101 },
   "webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_vertex_shader:*": { "subcaseMS": 1.000 },
+  "webgpu:shader,validation,types,alias:any_type:*": { "subcaseMS": 42.329 },
+  "webgpu:shader,validation,types,alias:match_non_alias:*": { "subcaseMS": 3.767 },
   "webgpu:shader,validation,types,alias:no_direct_recursion:*": { "subcaseMS": 1.450 },
   "webgpu:shader,validation,types,alias:no_indirect_recursion:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,types,alias:no_indirect_recursion_via_array_element:*": { "subcaseMS": 1.050 },
