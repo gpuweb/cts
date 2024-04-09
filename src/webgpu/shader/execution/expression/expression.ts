@@ -1260,7 +1260,7 @@ async function buildPipeline(
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
-function packScalarsToVector(
+export function packScalarsToVector(
   parameterTypes: Array<Type>,
   resultType: Type,
   cases: Case[],

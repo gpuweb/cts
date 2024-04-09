@@ -628,6 +628,15 @@ export class ScalarType {
     return this._signed;
   }
 
+  // This allows width to be checked in cases where scalar and vector types are mixed.
+  public get width(): number {
+    return 1;
+  }
+
+  public requiresF16(): boolean {
+    return this.kind === 'f16';
+  }
+
   /** Constructs a ScalarValue of this type with `value` */
   public create(value: number | bigint): ScalarValue {
     switch (typeof value) {
@@ -734,6 +743,10 @@ export class VectorType {
     }
     return new VectorValue(value.map(v => this.elementType.create(v)));
   }
+
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
+  }
 }
 
 /** MatrixType describes the type of WGSL Matrix. */
@@ -798,6 +811,10 @@ export class MatrixType {
 
   public get alignment(): number {
     return VectorType.alignmentOf(this.rows, this.elementType);
+  }
+
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
   }
 
   /** Constructs a Matrix of this type with the given values */
@@ -870,6 +887,10 @@ export class ArrayType {
 
   public get alignment(): number {
     return this.elementType.alignment;
+  }
+
+  public requiresF16(): boolean {
+    return this.elementType.requiresF16();
   }
 
   /** Constructs an Array of this type with the given values */
@@ -1111,6 +1132,59 @@ export function scalarTypeOf(ty: Type): ScalarType {
   }
   if (ty instanceof ArrayType) {
     return scalarTypeOf(ty.elementType);
+  }
+  throw new Error(`unhandled type ${ty}`);
+}
+
+/**
+ * @returns the implicit concretized type of the given Type.
+ * @param abstractIntToF32 if true, returns f32 for abstractInt else i32
+ * Example: vec3<abstract-float> -> vec3<float>
+ */
+export function concreteTypeOf(ty: Type, allowedScalarTypes?: Type[]): Type {
+  if (allowedScalarTypes && allowedScalarTypes.length > 0) {
+    // https://www.w3.org/TR/WGSL/#conversion-rank
+    switch (ty) {
+      case Type.abstractInt:
+        if (allowedScalarTypes.includes(Type.i32)) {
+          return Type.i32;
+        }
+        if (allowedScalarTypes.includes(Type.u32)) {
+          return Type.u32;
+        }
+      // fallthrough.
+      case Type.abstractFloat:
+        if (allowedScalarTypes.includes(Type.f32)) {
+          return Type.f32;
+        }
+        if (allowedScalarTypes.includes(Type.f16)) {
+          return Type.f32;
+        }
+        throw new Error(`no ${ty}`);
+    }
+  } else {
+    switch (ty) {
+      case Type.abstractInt:
+        return Type.i32;
+      case Type.abstractFloat:
+        return Type.f32;
+    }
+  }
+  if (ty instanceof ScalarType) {
+    return ty;
+  }
+  if (ty instanceof VectorType) {
+    return Type.vec(ty.width, concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType);
+  }
+  if (ty instanceof MatrixType) {
+    return Type.mat(
+      ty.cols,
+      ty.rows,
+      concreteTypeOf(ty.elementType, allowedScalarTypes) as ScalarType
+    );
+  }
+  if (ty instanceof ArrayType) {
+    return Type.array(ty.count, concreteTypeOf(ty.elementType, allowedScalarTypes));
   }
   throw new Error(`unhandled type ${ty}`);
 }
@@ -2265,6 +2339,24 @@ export function isFloatType(ty: Type): boolean {
   if (ty instanceof ScalarType) {
     return (
       ty.kind === 'abstract-float' || ty.kind === 'f64' || ty.kind === 'f32' || ty.kind === 'f16'
+    );
+  }
+  return false;
+}
+
+/**
+ * @returns if `ty` is a type convertible to floating point type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isConvertibleToFloatType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return (
+      ty.kind === 'abstract-int' ||
+      ty.kind === 'abstract-float' ||
+      ty.kind === 'f64' ||
+      ty.kind === 'f32' ||
+      ty.kind === 'f16'
     );
   }
   return false;

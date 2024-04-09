@@ -24,7 +24,7 @@ window.addEventListener('beforeunload', () => {
   unregisterAllServiceWorkers();
 });
 
-class TestBaseWorker {
+abstract class TestBaseWorker {
   protected readonly ctsOptions: CTSOptions;
   protected readonly resolvers = new Map<string, (result: LiveTestCaseResult) => void>();
 
@@ -34,25 +34,26 @@ class TestBaseWorker {
 
   onmessage(ev: MessageEvent) {
     const query: string = ev.data.query;
-    const result: TransferredTestCaseResult = ev.data.result;
-    if (result.logs) {
-      for (const l of result.logs) {
-        Object.setPrototypeOf(l, LogMessageWithStack.prototype);
-      }
-    }
-    this.resolvers.get(query)!(result as LiveTestCaseResult);
+    const transferredResult: TransferredTestCaseResult = ev.data.result;
+
+    const result: LiveTestCaseResult = {
+      status: transferredResult.status,
+      timems: transferredResult.timems,
+      logs: transferredResult.logs?.map(l => new LogMessageWithStack(l)),
+    };
+
+    this.resolvers.get(query)!(result);
     this.resolvers.delete(query);
 
     // MAINTENANCE_TODO(kainino0x): update the Logger with this result (or don't have a logger and
     // update the entire results JSON somehow at some point).
   }
 
-  async makeRequestAndRecordResult(
+  makeRequestAndRecordResult(
     target: MessagePort | Worker | ServiceWorker,
-    rec: TestCaseRecorder,
     query: string,
     expectations: TestQueryWithExpectation[]
-  ) {
+  ): Promise<LiveTestCaseResult> {
     const request: WorkerTestRunRequest = {
       query,
       expectations,
@@ -60,57 +61,97 @@ class TestBaseWorker {
     };
     target.postMessage(request);
 
-    const workerResult = await new Promise<LiveTestCaseResult>(resolve => {
+    return new Promise<LiveTestCaseResult>(resolve => {
       assert(!this.resolvers.has(query), "can't request same query twice simultaneously");
       this.resolvers.set(query, resolve);
     });
-    rec.injectResult(workerResult);
   }
+
+  async run(
+    rec: TestCaseRecorder,
+    query: string,
+    expectations: TestQueryWithExpectation[] = []
+  ): Promise<void> {
+    try {
+      rec.injectResult(await this.runImpl(query, expectations));
+    } catch (ex) {
+      rec.start();
+      rec.threw(ex);
+      rec.finish();
+    }
+  }
+
+  protected abstract runImpl(
+    query: string,
+    expectations: TestQueryWithExpectation[]
+  ): Promise<LiveTestCaseResult>;
 }
 
 export class TestDedicatedWorker extends TestBaseWorker {
-  private readonly worker: Worker;
+  private readonly worker: Worker | Error;
 
   constructor(ctsOptions?: CTSOptions) {
     super('dedicated', ctsOptions);
-    const selfPath = import.meta.url;
-    const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
-    const workerPath = selfPathDir + '/test_worker-worker.js';
-    this.worker = new Worker(workerPath, { type: 'module' });
-    this.worker.onmessage = ev => this.onmessage(ev);
+    try {
+      if (typeof Worker === 'undefined') {
+        throw new Error('Dedicated Workers not available');
+      }
+
+      const selfPath = import.meta.url;
+      const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
+      const workerPath = selfPathDir + '/test_worker-worker.js';
+      this.worker = new Worker(workerPath, { type: 'module' });
+      this.worker.onmessage = ev => this.onmessage(ev);
+    } catch (ex) {
+      assert(ex instanceof Error);
+      // Save the exception to re-throw in runImpl().
+      this.worker = ex;
+    }
   }
 
-  async run(
-    rec: TestCaseRecorder,
-    query: string,
-    expectations: TestQueryWithExpectation[] = []
-  ): Promise<void> {
-    await this.makeRequestAndRecordResult(this.worker, rec, query, expectations);
+  override runImpl(query: string, expectations: TestQueryWithExpectation[] = []) {
+    if (this.worker instanceof Worker) {
+      return this.makeRequestAndRecordResult(this.worker, query, expectations);
+    } else {
+      throw this.worker;
+    }
   }
 }
 
+/** @deprecated Use TestDedicatedWorker instead. */
 export class TestWorker extends TestDedicatedWorker {}
 
 export class TestSharedWorker extends TestBaseWorker {
-  private readonly port: MessagePort;
+  /** MessagePort to the SharedWorker, or an Error if it couldn't be initialized. */
+  private readonly port: MessagePort | Error;
 
   constructor(ctsOptions?: CTSOptions) {
     super('shared', ctsOptions);
-    const selfPath = import.meta.url;
-    const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
-    const workerPath = selfPathDir + '/test_worker-worker.js';
-    const worker = new SharedWorker(workerPath, { type: 'module' });
-    this.port = worker.port;
-    this.port.start();
-    this.port.onmessage = ev => this.onmessage(ev);
+    try {
+      if (typeof SharedWorker === 'undefined') {
+        throw new Error('Shared Workers not available');
+      }
+
+      const selfPath = import.meta.url;
+      const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
+      const workerPath = selfPathDir + '/test_worker-worker.js';
+      const worker = new SharedWorker(workerPath, { type: 'module' });
+      this.port = worker.port;
+      this.port.start();
+      this.port.onmessage = ev => this.onmessage(ev);
+    } catch (ex) {
+      assert(ex instanceof Error);
+      // Save the exception to re-throw in runImpl().
+      this.port = ex;
+    }
   }
 
-  async run(
-    rec: TestCaseRecorder,
-    query: string,
-    expectations: TestQueryWithExpectation[] = []
-  ): Promise<void> {
-    await this.makeRequestAndRecordResult(this.port, rec, query, expectations);
+  override runImpl(query: string, expectations: TestQueryWithExpectation[] = []) {
+    if (this.port instanceof MessagePort) {
+      return this.makeRequestAndRecordResult(this.port, query, expectations);
+    } else {
+      throw this.port;
+    }
   }
 }
 
@@ -119,16 +160,18 @@ export class TestServiceWorker extends TestBaseWorker {
     super('service', ctsOptions);
   }
 
-  async run(
-    rec: TestCaseRecorder,
-    query: string,
-    expectations: TestQueryWithExpectation[] = []
-  ): Promise<void> {
+  override async runImpl(query: string, expectations: TestQueryWithExpectation[] = []) {
+    if (!('serviceWorker' in navigator)) {
+      throw new Error('Service Workers not available');
+    }
     const [suite, name] = query.split(':', 2);
     const fileName = name.split(',').join('/');
+
+    const selfPath = import.meta.url;
+    const selfPathDir = selfPath.substring(0, selfPath.lastIndexOf('/'));
+    // Construct the path to the worker file, then use URL to resolve the `../` components.
     const serviceWorkerURL = new URL(
-      `/out/${suite}/webworker/${fileName}.worker.js`,
-      window.location.href
+      `${selfPathDir}/../../../${suite}/webworker/${fileName}.worker.js`
     ).toString();
 
     // If a registration already exists for this path, it will be ignored.
@@ -143,6 +186,6 @@ export class TestServiceWorker extends TestBaseWorker {
     const serviceWorker = registration.active;
 
     navigator.serviceWorker.onmessage = ev => this.onmessage(ev);
-    await this.makeRequestAndRecordResult(serviceWorker, rec, query, expectations);
+    return this.makeRequestAndRecordResult(serviceWorker, query, expectations);
   }
 }
