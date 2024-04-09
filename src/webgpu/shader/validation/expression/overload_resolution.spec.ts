@@ -136,7 +136,7 @@ const kImplicitConversionCases: Record<string, Case> = {
   },
   vector_wrong_result_splat: {
     expr: `vec2(1.0).x == 1i`,
-    valid: false
+    valid: false,
   },
   array_absint_to_bool: {
     expr: `any(array(1)[0])`,
