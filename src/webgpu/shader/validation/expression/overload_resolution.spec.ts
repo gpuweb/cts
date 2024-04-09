@@ -102,6 +102,42 @@ const kImplicitConversionCases: Record<string, Case> = {
     valid: true,
     f16: true,
   },
+  vector_swizzle_integer: {
+    expr: `vec2(1).x == 1i`,
+    valid: true,
+  },
+  vector_swizzle_float: {
+    expr: `vec2(1).y == 1f`,
+    valid: true,
+  },
+  vector_default_ctor_integer: {
+    expr: `all(vec3().xy == vec2i())`,
+    valid: true,
+  },
+  vector_default_ctor_abstract: {
+    expr: `all(vec3().xy == vec2())`,
+    valid: true,
+  },
+  vector_swizzle_abstract: {
+    expr: `vec4(1f).x == 1`,
+    valid: true,
+  },
+  vector_abstract_to_integer: {
+    expr: `all(vec4(1) == vec4i(1))`,
+    valid: true,
+  },
+  vector_wrong_result_i32: {
+    expr: `vec2(1,2f).x == 1i`,
+    valid: false,
+  },
+  vector_wrong_result_f32: {
+    expr: `vec2(1,2i).y == 2f`,
+    valid: false,
+  },
+  vector_wrong_result_splat: {
+    expr: `vec2(1.0).x == 1i`,
+    valid: false
+  },
   array_absint_to_bool: {
     expr: `any(array(1)[0])`,
     valid: false,
@@ -142,6 +178,23 @@ const kImplicitConversionCases: Record<string, Case> = {
   array_absfloat_to_f16: {
     expr: `array(1.0)[0] == array<f16,1>(1h)[0]`,
     valid: true,
+    f16: true,
+  },
+  mat2x2_index_absint: {
+    expr: `all(mat2x2(1,2,3,4)[0] == vec2(1,2))`,
+    valid: true,
+  },
+  mat2x2_index_absfloat: {
+    expr: `all(mat2x2(1,2,3,4)[1] == vec2(3.0,4.0))`,
+    valid: true,
+  },
+  mat2x2_index_float: {
+    expr: `all(mat2x2(0,0,0,0)[1] == vec2f())`,
+    valid: true,
+  },
+  mat2x2_wrong_result: {
+    expr: `all(mat2x2(0f,0,0,0)[0] == vec2h())`,
+    valid: false,
     f16: true,
   },
 };
