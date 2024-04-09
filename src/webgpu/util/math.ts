@@ -413,7 +413,10 @@ export function oneULPF32(target: number, mode: FlushMode = 'flush'): number {
   }
 }
 
-/** @returns an integer value between 0..0xffffffff using a simple non-cryptographic hash function */
+/**
+ * @returns an integer value between 0..0xffffffff using a simple non-cryptographic hash function
+ * @param values integers to generate hash from.
+ */
 export function hashU32(...values: number[]) {
   let n = 0x3504_f333;
   for (const v of values) {
