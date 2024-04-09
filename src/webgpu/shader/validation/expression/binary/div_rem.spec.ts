@@ -1,5 +1,5 @@
 export const description = `
-Validation tests for add/sub/mul expressions.
+Validation tests for division and remainder expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -7,17 +7,15 @@ import { keysOf, objectsToRecord } from '../../../../../common/util/data_tables.
 import { assert } from '../../../../../common/util/util.js';
 import { kBit } from '../../../../util/constants.js';
 import {
-  kAllScalarsAndVectors,
-  kConcreteNumericScalarsAndVectors,
-  kConvertableToFloatScalar,
   ScalarType,
-  scalarTypeOf,
   Type,
   Value,
   VectorType,
+  kAllScalarsAndVectors,
+  kConcreteNumericScalarsAndVectors,
+  kConvertableToFloatScalar,
+  scalarTypeOf,
 } from '../../../../util/conversion.js';
-import { nextAfterF16, nextAfterF32 } from '../../../../util/math.js';
-import { reinterpretU16AsF16, reinterpretU32AsF32 } from '../../../../util/reinterpret.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 import {
   kConstantAndOverrideStages,
@@ -28,10 +26,9 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 // A list of operators tested in this file.
 const kOperators = {
-  add: { op: '+' },
-  sub: { op: '-' },
-  mul: { op: '*' },
-};
+  div: { op: '/' },
+  rem: { op: '%' },
+} as const;
 
 // A list of scalar and vector types.
 const kScalarAndVectorTypes = objectsToRecord(kAllScalarsAndVectors);
@@ -74,8 +71,8 @@ g.test('scalar_vector')
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
     const code = `
 ${hasF16 ? 'enable f16;' : ''}
-const lhs = ${lhs.create(0).wgsl()};
-const rhs = ${rhs.create(0).wgsl()};
+const lhs = ${lhs.create(1).wgsl()};
+const rhs = ${rhs.create(1).wgsl()};
 const foo = lhs ${op.op} rhs;
 `;
 
@@ -107,10 +104,10 @@ const foo = lhs ${op.op} rhs;
 g.test('scalar_vector_out_of_range')
   .desc(
     `
-    Checks that constant or override evaluation of add/sub/mul operations on scalar/vectors that produce out of range values cause validation errors.
+    Checks that constant or override evaluation of div/rem operations on scalar/vectors that produce out of division by 0 or out of range values cause validation errors.
       - Checks for all concrete numeric scalar and vector types, including scalar * vector and vector * scalar.
       - Checks for all vector elements that could cause the out of range to happen.
-      - Checks for pairs of values at one ULP difference at the boundary of the out of range.
+      - Checks for valid small cases and 0, also the minimum i32.
   `
   )
   .params(u =>
@@ -130,15 +127,37 @@ g.test('scalar_vector_out_of_range')
         }
         return [false, true];
       })
-      .combine('nonZeroIndex', [0, 1, 2, 3])
+      .combine('nonOneIndex', [0, 1, 2, 3])
       .filter(p => {
         const lType = kScalarAndVectorTypes[p.lhs];
         if (lType instanceof VectorType) {
-          return lType.width > p.nonZeroIndex;
+          return lType.width > p.nonOneIndex;
         }
-        return p.nonZeroIndex === 0;
+        return p.nonOneIndex === 0;
       })
-      .combine('valueCase', ['halfmax', 'halfmax+ulp', 'sqrtmax', 'sqrtmax+ulp'] as const)
+      .expandWithParams(p => {
+        const cases = [
+          { leftValue: 42, rightValue: 0, error: true, leftRuntime: false },
+          { leftValue: 42, rightValue: 0, error: true, leftRuntime: true },
+          { leftValue: 0, rightValue: 0, error: true, leftRuntime: true },
+          { leftValue: 0, rightValue: 42, error: false, leftRuntime: false },
+        ];
+        if (p.lhs === 'i32') {
+          cases.push({
+            leftValue: -kBit.i32.negative.min,
+            rightValue: -1,
+            error: true,
+            leftRuntime: false,
+          });
+          cases.push({
+            leftValue: -kBit.i32.negative.min + 1,
+            rightValue: -1,
+            error: false,
+            leftRuntime: false,
+          });
+        }
+        return cases;
+      })
       .combine('stage', kConstantAndOverrideStages)
   )
   .beforeAllSubcases(t => {
@@ -150,71 +169,12 @@ g.test('scalar_vector_out_of_range')
     }
   })
   .fn(t => {
-    const { op, valueCase, nonZeroIndex, swap } = t.params;
+    const { op, leftValue, rightValue, error, leftRuntime, nonOneIndex, swap } = t.params;
     let { lhs, rhs } = t.params;
-
-    const elementType = scalarTypeOf(kScalarAndVectorTypes[lhs]);
 
     // Handle the swapping of LHS and RHS to test all cases of scalar * vector.
     if (swap) {
       [rhs, lhs] = [lhs, rhs];
-    }
-
-    // What is the maximum representable value for the type? Also how do we add a ULP?
-    let maxValue = 0;
-    let nextAfter: (v: number) => number = v => v + 1;
-    let outOfRangeIsError = false;
-    switch (elementType) {
-      case Type.f16:
-        maxValue = reinterpretU16AsF16(kBit.f16.positive.max);
-        nextAfter = v => nextAfterF16(v, 'positive', 'no-flush');
-        outOfRangeIsError = true;
-        break;
-      case Type.f32:
-        maxValue = reinterpretU32AsF32(kBit.f32.positive.max);
-        nextAfter = v => nextAfterF32(v, 'positive', 'no-flush');
-        outOfRangeIsError = true;
-        break;
-      case Type.u32:
-        maxValue = kBit.u32.max;
-        break;
-      case Type.i32:
-        maxValue = kBit.i32.positive.max;
-        break;
-    }
-
-    // Decide on the test value that may or may not do an out of range computation.
-    let value;
-    switch (valueCase) {
-      case 'halfmax':
-        value = Math.floor(maxValue / 2);
-        break;
-      case 'halfmax+ulp':
-        value = nextAfter(Math.ceil(maxValue / 2));
-        break;
-      case 'sqrtmax':
-        value = Math.floor(Math.sqrt(maxValue));
-        break;
-      case 'sqrtmax+ulp':
-        value = nextAfter(Math.ceil(Math.sqrt(maxValue)));
-        break;
-    }
-
-    // What value will be computed by the test?
-    let computedValue;
-    let leftValue = value;
-    const rightValue = value;
-    switch (op) {
-      case 'add':
-        computedValue = value + value;
-        break;
-      case 'sub':
-        computedValue = -value - value;
-        leftValue = -value;
-        break;
-      case 'mul':
-        computedValue = value * value;
-        break;
     }
 
     // Creates either a scalar with the value, or a vector with the value only at a specific index.
@@ -224,22 +184,21 @@ g.test('scalar_vector_out_of_range')
       } else {
         assert(type instanceof VectorType);
         const values = new Array(type.width);
-        values.fill(0);
+        values.fill(1);
         values[index] = value;
         return type.create(values);
       }
     };
 
     // Check if there is overflow
-    const success = Math.abs(computedValue) <= maxValue || !outOfRangeIsError;
     validateConstOrOverrideBinaryOpEval(
       t,
       kOperators[op].op,
-      success,
+      !error,
+      leftRuntime ? 'runtime' : t.params.stage,
+      create(kScalarAndVectorTypes[lhs], nonOneIndex, leftValue),
       t.params.stage,
-      create(kScalarAndVectorTypes[lhs], nonZeroIndex, leftValue),
-      t.params.stage,
-      create(kScalarAndVectorTypes[rhs], nonZeroIndex, rightValue)
+      create(kScalarAndVectorTypes[rhs], nonOneIndex, rightValue)
     );
   });
 
