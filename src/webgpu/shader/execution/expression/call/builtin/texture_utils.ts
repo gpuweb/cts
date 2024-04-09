@@ -143,7 +143,7 @@ export function expected<T extends Dimensionality>(
       // ├───┼───┼───┼───┤
       // │   │   │   │ b │
       // └───┴───┴───┴───┘
-      let at = coords.map((v, i) => (v - 0.5 / textureSize[i]) * textureSize[i]);
+      let at = coords.map((v, i) => v * textureSize[i] - 0.5);
 
       // Apply offset in whole texel units
       if (call.offset !== undefined) {
@@ -548,6 +548,7 @@ function binKey<T extends Dimensionality>(call: TextureCall<T>): string {
     const value = call[name];
     if (value !== undefined) {
       if (name === 'offset') {
+        // offset must be a constant expression
         keys.push(`${name}: ${wgslExpr(value)}`);
       } else {
         keys.push(`${name}: ${wgslTypeFor(value, call.coordType)}`);

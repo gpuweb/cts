@@ -122,7 +122,7 @@ Parameters:
         builtin: 'textureSample',
         coordType: 'f',
         coords: c,
-        offset: t.params.offset ? [(hash & 15) - 8, ((hash >> 8) & 15) - 8] : undefined,
+        offset: t.params.offset ? [(hash & 15) - 8, (hash >> 4) - 8] : undefined,
       };
     });
     const sampler: GPUSamplerDescriptor = {
