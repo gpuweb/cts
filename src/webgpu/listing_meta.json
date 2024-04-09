@@ -2177,6 +2177,8 @@
   "webgpu:shader,validation,expression,call,builtin,unpack4xU8:unsupported:*": { "subcaseMS": 346.801 },
   "webgpu:shader,validation,expression,call,builtin,workgroupUniformLoad:no_atomics:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,expression,call,builtin,workgroupUniformLoad:only_in_compute:*": { "subcaseMS": 1.000 },
+  "webgpu:shader,validation,expression,overload_resolution:implicit_conversions:*": { "subcaseMS": 519.260 },
+  "webgpu:shader,validation,expression,overload_resolution:overload_resolution:*": { "subcaseMS": 436.603 },
   "webgpu:shader,validation,expression,precedence:binary_requires_parentheses:*": { "subcaseMS": 149.921 },
   "webgpu:shader,validation,expression,precedence:mixed_logical_requires_parentheses:*": { "subcaseMS": 6.107 },
   "webgpu:shader,validation,expression,precedence:other:*": { "subcaseMS": 5.459 },
