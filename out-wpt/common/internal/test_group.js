@@ -294,9 +294,11 @@ class TestBuilder {
     (this.description ? this.description + '\n\n' : '') + 'TODO: .unimplemented()';
     this.isUnimplemented = true;
 
-    this.testFn = () => {
+    // Use the beforeFn to skip the test, so we don't have to iterate the subcases.
+    this.beforeFn = () => {
       throw new SkipTestCase('test unimplemented');
     };
+    this.testFn = () => {};
   }
 
   /** Perform various validation/"lint" chenks. */
