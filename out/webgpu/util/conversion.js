@@ -633,6 +633,10 @@ export class ScalarType {
     return 1;
   }
 
+  requiresF16() {
+    return this.kind === 'f16';
+  }
+
   /** Constructs a ScalarValue of this type with `value` */
   create(value) {
     switch (typeof value) {
@@ -739,6 +743,10 @@ export class VectorType {
     }
     return new VectorValue(value.map((v) => this.elementType.create(v)));
   }
+
+  requiresF16() {
+    return this.elementType.requiresF16();
+  }
 }
 
 /** MatrixType describes the type of WGSL Matrix. */
@@ -803,6 +811,10 @@ export class MatrixType {
 
   get alignment() {
     return VectorType.alignmentOf(this.rows, this.elementType);
+  }
+
+  requiresF16() {
+    return this.elementType.requiresF16();
   }
 
   /** Constructs a Matrix of this type with the given values */
@@ -875,6 +887,10 @@ export class ArrayType {
 
   get alignment() {
     return this.elementType.alignment;
+  }
+
+  requiresF16() {
+    return this.elementType.requiresF16();
   }
 
   /** Constructs an Array of this type with the given values */

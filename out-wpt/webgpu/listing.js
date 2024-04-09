@@ -4720,6 +4720,14 @@ export const listing = [
       "shader",
       "validation",
       "expression",
+      "overload_resolution"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
       "precedence"
     ]
   },
