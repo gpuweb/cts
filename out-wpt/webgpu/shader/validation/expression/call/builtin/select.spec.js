@@ -222,7 +222,9 @@ beforeAllSubcases((t) => {
 }).
 fn((t) => {
   const src = kTests[t.params.test].src;
+  const enables = t.params.test.includes('f16') ? 'enable f16;' : '';
   const code = `
+  ${enables}
   alias bool_alias = bool;
   alias i32_alias = i32;
 
