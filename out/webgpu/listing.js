@@ -5062,6 +5062,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "shadow_builtins"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "source"
     ]
   },
