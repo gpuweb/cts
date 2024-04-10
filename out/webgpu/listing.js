@@ -4622,6 +4622,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "tanh"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureGather"
     ]
   },

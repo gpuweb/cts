@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 17089 variants generated from 2542 tests in 576 files -->
+<!-- Prefix: "?q="; 17118 variants generated from 2548 tests in 577 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -13233,7 +13233,8 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cos:args:*'><!-- estimated: 44.450 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cos:must_use:*'><!-- estimated: 1.052 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cosh:values:*'><!-- estimated: 310.080 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cosh:integer_argument:*'><!-- estimated: 8.001 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cosh:args:*'><!-- estimated: 627.480 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,cosh:must_use:*'><!-- estimated: 11.316 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,countLeadingZeros:values:stage="constant";type="i32"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,countLeadingZeros:values:stage="constant";type="vec2%3Ci32%3E"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,countLeadingZeros:values:stage="constant";type="vec3%3Ci32%3E"'><!-- estimated: undefined ms -->
@@ -14759,7 +14760,8 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sin:args:*'><!-- estimated: 44.430 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sin:must_use:*'><!-- estimated: 1.176 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sinh:values:*'><!-- estimated: 406.980 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sinh:integer_argument:*'><!-- estimated: 9.702 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sinh:args:*'><!-- estimated: 638.130 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,sinh:must_use:*'><!-- estimated: 11.960 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,smoothstep:values:stage="constant";type="abstract-int"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,smoothstep:values:stage="constant";type="abstract-float"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,smoothstep:values:stage="constant";type="f32"'><!-- estimated: undefined ms -->
@@ -14848,7 +14850,34 @@
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,step:args:*'><!-- estimated: 27.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,step:must_use:*'><!-- estimated: 2.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tan:values:*'><!-- estimated: 649.600 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tan:integer_argument:*'><!-- estimated: 15.606 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tan:args:*'><!-- estimated: 653.400 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tan:must_use:*'><!-- estimated: 10.802 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="abstract-int"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="abstract-float"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="f32"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="f16"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec2%3Cabstract-int%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec3%3Cabstract-int%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec4%3Cabstract-int%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec2%3Cabstract-float%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec2%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec2%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec3%3Cabstract-float%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec3%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec3%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec4%3Cabstract-float%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec4%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="constant";type="vec4%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="f32"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="f16"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec2%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec2%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec3%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec3%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec4%3Cf32%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:values:stage="override";type="vec4%3Cf16%3E"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:args:*'><!-- estimated: 653.565 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,tanh:must_use:*'><!-- estimated: 12.540 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureGather:component_argument:*'><!-- estimated: 1299.864 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureGather:component_argument,non_const:*'><!-- estimated: 31.158 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,expression,call,builtin,textureGather:coords_argument:*'><!-- estimated: 1297.920 ms -->
