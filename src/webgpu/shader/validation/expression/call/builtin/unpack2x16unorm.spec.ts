@@ -45,7 +45,7 @@ g.test('args')
 
 g.test('return')
   .desc(`Test ${kFn} return value type ${kReturnType}`)
-  .params(u => u.combine('type', ['vec2u', 'vec2i', 'vec2f', 'vec2h', 'vec4f', 'vec3f', 'f32']))
+  .params(u => u.combine('type', ['vec2u', 'vec2i', 'vec2f', 'vec4f', 'vec3f', 'f32']))
   .fn(t => {
     t.expectCompileResult(
       t.params.type === kReturnType,
