@@ -2534,10 +2534,32 @@ export const kConcreteNumericScalarsAndVectors = [
 
 
 /// All boolean types.
-export const kAllBooleansAndVectors = [Type.bool, Type.vec2b, Type.vec3b, Type.vec4b];
+export const kAllBoolScalarsAndVectors = [Type.bool, Type.vec2b, Type.vec3b, Type.vec4b];
 
 /// All the scalar and vector types.
 export const kAllScalarsAndVectors = [
-...kAllBooleansAndVectors,
+...kAllBoolScalarsAndVectors,
 ...kAllNumericScalarsAndVectors];
+
+
+/// All the matrix types
+export const kAllMatrices = [
+Type.mat2x2f,
+Type.mat2x2h,
+Type.mat2x3f,
+Type.mat2x3h,
+Type.mat2x4f,
+Type.mat2x4h,
+Type.mat3x2f,
+Type.mat3x2h,
+Type.mat3x3f,
+Type.mat3x3h,
+Type.mat3x4f,
+Type.mat3x4h,
+Type.mat4x2f,
+Type.mat4x2h,
+Type.mat4x3f,
+Type.mat4x3h,
+Type.mat4x4f,
+Type.mat4x4h];
 //# sourceMappingURL=conversion.js.map
