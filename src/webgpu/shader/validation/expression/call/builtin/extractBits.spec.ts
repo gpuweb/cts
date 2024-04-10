@@ -51,7 +51,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
       ] as const)
   )
   .fn(t => {
-    const expectedResult = true; // insertBits() should never error
+    const expectedResult = true; // extractBits() should never error
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
