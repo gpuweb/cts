@@ -505,7 +505,7 @@ const kTests = {
 };
 
 g.test('shadow_hides_builtin')
-  .desc(`Test that shadows hide buitins.`)
+  .desc(`Test that shadows hide builtins.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
@@ -552,7 +552,7 @@ const kFloat16Tests = {
 };
 
 g.test('shadow_hides_builtin_f16')
-  .desc(`Test that shadows hide buitins when shader-f16 is enabled.`)
+  .desc(`Test that shadows hide builtins when shader-f16 is enabled.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
@@ -670,7 +670,7 @@ const kTextureTypeTests = {
 };
 
 g.test('shadow_hides_builtin_handle_type')
-  .desc(`Test that shadows hide buitins when handle addresspace types are used.`)
+  .desc(`Test that shadows hide builtins when handle address space types are used.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'module'] as const)
@@ -756,7 +756,7 @@ const kTextureTests = {
 };
 
 g.test('shadow_hides_builtin_texture')
-  .desc(`Test that shadows hide texture buitins.`)
+  .desc(`Test that shadows hide texture builtins.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
@@ -799,7 +799,7 @@ fn main() -> @location(0) vec4f {
   });
 
 g.test('shadow_hides_builtin_atomic_type')
-  .desc(`Test that shadows hide buitins when atomic types are used.`)
+  .desc(`Test that shadows hide builtins when atomic types are used.`)
   .params(u => u.combine('inject', ['none', 'function', 'module'] as const).beginSubcases())
   .fn(t => {
     const local = `let atomic = 4;`;
@@ -859,7 +859,7 @@ const kAtomicTests = {
 };
 
 g.test('shadow_hides_builtin_atomic')
-  .desc(`Test that shadows hide buitin atomic methods.`)
+  .desc(`Test that shadows hide builtin atomic methods.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
@@ -914,7 +914,7 @@ const kBarrierTests = {
 };
 
 g.test('shadow_hides_builtin_barriers')
-  .desc(`Test that shadows hide buitin barrier methods.`)
+  .desc(`Test that shadows hide builtin barrier methods.`)
   .params(u =>
     u
       .combine('inject', ['none', 'function', 'sibling', 'module'] as const)
