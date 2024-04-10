@@ -11,7 +11,7 @@ import { validateConstOrOverrideBuiltinEval } from './const_override_validation.
 
 const kArgCases = {
   good: '(vec2f())',
-  good_abstract_float: '(vec2f(0.1))',
+  good_vec2_abstract_float: '(vec2(0.1))',
   bad_0args: '()',
   bad_2args: '(vec2f(),vec2f())',
   bad_abstract_int: '(1)',
@@ -42,7 +42,7 @@ g.test('args')
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
     t.expectCompileResult(
-      t.params.arg === 'good' || t.params.arg === 'good_abstract_float',
+      t.params.arg === 'good' || t.params.arg === 'good_vec2_abstract_float',
       `const c = ${kFn}${kArgCases[t.params.arg]};`
     );
   });
