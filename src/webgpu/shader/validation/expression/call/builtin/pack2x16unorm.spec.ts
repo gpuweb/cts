@@ -9,6 +9,7 @@ const kArgCases = {
   good: '(vec2f())',
   bad_0args: '()',
   bad_2args: '(vec2f(),vec2f())',
+  bad_abstract_int: '(1)',
   bad_i32: '(1i)',
   bad_f32: '(1f)',
   bad_u32: '(1u)',
