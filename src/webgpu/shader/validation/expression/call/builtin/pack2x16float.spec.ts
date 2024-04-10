@@ -4,15 +4,20 @@ export const description = `Validate ${kFn}`;
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { kValue } from '../../../../../../webgpu/util/constants.js';
+import { f32, vec2 } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
+
+import { validateConstOrOverrideBuiltinEval } from './const_override_validation.js';
 
 const kArgCases = {
   good: '(vec2f())',
   bad_0args: '()',
   bad_2args: '(vec2f(),vec2f())',
+  bad_abstract_int: '(1)',
   bad_i32: '(1i)',
   bad_f32: '(1f)',
   bad_u32: '(1u)',
+  bad_abstract_float: '(0.1)',
   bad_f32_over_largest_positive_f16_arg0: `(vec2f(f32(${kValue.f16.positive.max}) + 1.0, 0))`,
   bad_f32_beyond_smallest_negative_f16_arg0: `(vec2f(f32(${kValue.f16.negative.min}) - 1.0, 0))`,
   bad_f32_over_largest_positive_f16_arg1: `(vec2f(0, f32(${kValue.f16.positive.max}) + 1.0))`,
@@ -54,4 +59,42 @@ g.test('must_use')
   .fn(t => {
     const use_it = t.params.use ? '_ = ' : '';
     t.expectCompileResult(t.params.use, `fn f() { ${use_it}${kFn}${kGoodArgs}; }`);
+  });
+
+g.test('value_range_as_override_expression')
+  .desc(
+    `Test pipeline-creation failure of ${kFn} when at least one of the input value is out of the
+     range of binary16 in an override expression`
+  )
+  .params(u =>
+    u
+      .combine('value0', [
+        kValue.f16.positive.max,
+        kValue.f16.positive.max + 1,
+        kValue.f16.negative.min,
+        kValue.f16.negative.min - 1,
+      ])
+      .combine('value1', [
+        kValue.f16.positive.max,
+        kValue.f16.positive.max + 1,
+        kValue.f16.negative.min,
+        kValue.f16.negative.min - 1,
+      ])
+  )
+  .fn(t => {
+    const { value0, value1 } = t.params;
+
+    const success =
+      value0 >= kValue.f16.negative.min &&
+      value0 <= kValue.f16.positive.max &&
+      value1 >= kValue.f16.negative.min &&
+      value1 <= kValue.f16.positive.max;
+
+    validateConstOrOverrideBuiltinEval(
+      t,
+      kFn,
+      success,
+      [vec2(f32(value0), f32(value1))],
+      'override'
+    );
   });
