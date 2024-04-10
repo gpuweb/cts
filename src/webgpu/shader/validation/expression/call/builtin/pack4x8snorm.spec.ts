@@ -7,6 +7,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 const kArgCases = {
   good: '(vec4f())',
+  good_vec4_abstract_float: '(vec4(0.1))',
   bad_0args: '()',
   bad_2args: '(vec4f(),vec4f())',
   bad_abstract_int: '(1)',
@@ -32,7 +33,10 @@ g.test('args')
   .desc(`Test compilation failure of ${kFn} with various numbers of and types of arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
-    t.expectCompileResult(t.params.arg === 'good', `const c = ${kFn}${kArgCases[t.params.arg]};`);
+    t.expectCompileResult(
+      t.params.arg === 'good' || t.params.arg === 'good_vec4_abstract_float',
+      `const c = ${kFn}${kArgCases[t.params.arg]};`
+    );
   });
 
 g.test('return')
