@@ -2,9 +2,6 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Samples a texture.
-
-Must only be used in a fragment shader stage.
-Must only be invoked in uniform control flow.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { kEncodableTextureFormats, kTextureFormatInfo } from '../../../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
@@ -22,16 +19,6 @@ import {
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 export const g = makeTestGroup(TextureTestMixin(GPUTest));
-
-g.test('stage').
-specURL('https://www.w3.org/TR/WGSL/#texturesample').
-desc(
-  `
-Tests that 'textureSample' can only be called in 'fragment' shaders.
-`
-).
-params((u) => u.combine('stage', ['fragment', 'vertex', 'compute'])).
-unimplemented();
 
 g.test('control_flow').
 specURL('https://www.w3.org/TR/WGSL/#texturesample').
