@@ -6,7 +6,8 @@ import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 const kArgCases = {
-  good: '(1u)',
+  good_u32: '(1u)',
+  good_aint: '(1)',
   bad_0args: '()',
   bad_2args: '(1u,2u)',
   bad_i32: '(1i)',
@@ -19,7 +20,7 @@ const kArgCases = {
   bad_array: '(array(1))',
   bad_struct: '(modf(1.1))',
 };
-const kGoodArgs = kArgCases['good'];
+const kGoodArgs = kArgCases['good_u32'];
 const kReturnType = 'vec2f';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -39,7 +40,7 @@ g.test('args')
     }
     code += `const c = ${kFn}${kArgCases[t.params.arg]};`;
 
-    t.expectCompileResult(t.params.arg === 'good', code);
+    t.expectCompileResult(t.params.arg.startsWith('good'), code);
   });
 
 g.test('return')
