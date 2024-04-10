@@ -78,7 +78,6 @@ export const listing = ${JSON.stringify(listing, undefined, 2)};
         `\
 // AUTO-GENERATED - DO NOT EDIT. See ${myself}.
 
-// g is a TestGroup<Fixture> object (defined in common/internal/test_group.ts).
 import { g } from '${relPathToSuiteRoot}/${entry.file.join('/')}.spec.js';
 import { wrapTestGroupForWorker } from '${relPathToSuiteRoot}/../common/runtime/helper/wrap_for_worker.js';
 
