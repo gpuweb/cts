@@ -12,6 +12,7 @@ const kArgCases = {
   bad_abstract_int: '(1)',
   bad_i32: '(1i)',
   bad_f32: '(1f)',
+  bad_u32: '(1u)',
   bad_bool: '(false)',
   bad_vec4u: '(vec4u())',
   bad_vec4i: '(vec4i())',
