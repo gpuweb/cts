@@ -11,6 +11,7 @@ import { validateConstOrOverrideBuiltinEval } from './const_override_validation.
 
 const kArgCases = {
   good: '(vec2f())',
+  good_abstract_float: '(vec2f(0.1))',
   bad_0args: '()',
   bad_2args: '(vec2f(),vec2f())',
   bad_abstract_int: '(1)',
@@ -40,7 +41,10 @@ g.test('args')
   .desc(`Test compilation failure of ${kFn} with various numbers of and types of arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
-    t.expectCompileResult(t.params.arg === 'good', `const c = ${kFn}${kArgCases[t.params.arg]};`);
+    t.expectCompileResult(
+      t.params.arg === 'good' || t.params.arg === 'good_abstract_float',
+      `const c = ${kFn}${kArgCases[t.params.arg]};`
+    );
   });
 
 g.test('return')
