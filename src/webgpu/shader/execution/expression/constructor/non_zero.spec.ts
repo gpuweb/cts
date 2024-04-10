@@ -7,6 +7,7 @@ import { GPUTest } from '../../../../gpu_test.js';
 import {
   ArrayValue,
   MatrixType,
+  ScalarKind,
   Type,
   Value,
   VectorType,
@@ -741,4 +742,56 @@ g.test('abstract_array_elements')
 g.test('structure')
   .specURL('https://www.w3.org/TR/WGSL/#value-constructor-builtin-function')
   .desc(`Test that an structure constructed from element values produces the expected value`)
-  .unimplemented();
+  .params(u =>
+    u
+      .combine('member_types', [
+        ['bool'],
+        ['u32'],
+        ['vec3f'],
+        ['i32', 'u32'],
+        ['i32', 'f16', 'vec4i', 'mat3x2f'],
+        ['bool', 'u32', 'f16', 'vec3f', 'vec2i'],
+        ['i32', 'u32', 'f32', 'f16', 'vec3f', 'vec4i'],
+      ] as readonly ScalarKind[][])
+      .combine('nested', [false, true])
+      .beginSubcases()
+      .expand('member_index', t => t.member_types.map((_, i) => i))
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.member_types.includes('f16')) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const memberType = Type[t.params.member_types[t.params.member_index]];
+    const values = t.params.member_types.map((ty, i) => Type[ty].create(i));
+
+    const builder = basicExpressionBuilder(ops =>
+      t.params.nested
+        ? `OuterStruct(10, MyStruct(${ops.join(', ')}), 20).inner.member_${t.params.member_index}`
+        : `MyStruct(${ops.join(', ')}).member_${t.params.member_index}`
+    );
+    await run(
+      t,
+      (parameterTypes, resultType, cases, inputSource) => {
+        return `
+${t.params.member_types.includes('f16') ? 'enable f16;' : ''}
+
+${builder(parameterTypes, resultType, cases, inputSource)}
+
+struct MyStruct {
+${t.params.member_types.map((ty, i) => `  member_${i} : ${ty},`).join('\n')}
+};
+struct OuterStruct {
+  pre : i32,
+  inner : MyStruct,
+  post : i32,
+};
+`;
+      },
+      t.params.member_types.map(ty => Type[ty]),
+      memberType,
+      { inputSource: 'const' },
+      [{ input: values, expected: values[t.params.member_index] }]
+    );
+  });
