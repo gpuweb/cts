@@ -1,4 +1,4 @@
-const builtin = 'tan';
+const builtin = 'tanh';
 export const description = `
 Validation tests for the ${builtin}() builtin.
 `;
@@ -10,15 +10,13 @@ import {
   kConvertableToFloatScalarsAndVectors,
   scalarTypeOf,
 } from '../../../../../util/conversion.js';
-import { fpTraitsFor } from '../../../../../util/floating_point.js';
+import { isRepresentable } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  minusThreePiToThreePiRangeForType,
   stageSupportsType,
-  unique,
   validateConstOrOverrideBuiltinEval,
 } from './const_override_validation.js';
 
@@ -38,12 +36,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
       .combine('type', keysOf(kValuesTypes))
       .filter(u => stageSupportsType(u.stage, kValuesTypes[u.type]))
       .beginSubcases()
-      .expand('value', u =>
-        unique(
-          minusThreePiToThreePiRangeForType(kValuesTypes[u.type]),
-          fullRangeForType(kValuesTypes[u.type])
-        )
-      )
+      .expand('value', u => fullRangeForType(kValuesTypes[u.type]))
   )
   .beforeAllSubcases(t => {
     if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
@@ -52,13 +45,11 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   })
   .fn(t => {
     const type = kValuesTypes[t.params.type];
-    const fp = fpTraitsFor(
+    const expectedResult = isRepresentable(
+      Math.tanh(Number(t.params.value)),
       // AbstractInt is converted to AbstractFloat before calling into the builtin
       scalarTypeOf(type).kind === 'abstract-int' ? Type.abstractFloat : scalarTypeOf(type)
     );
-    const smallestPositive = fp.constants().positive.min;
-    const v = fp.quantize(Number(t.params.value));
-    const expectedResult = Math.abs(Math.cos(v)) > smallestPositive;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
