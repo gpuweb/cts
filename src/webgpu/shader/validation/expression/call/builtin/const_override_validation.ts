@@ -320,17 +320,19 @@ export function unique<T>(...arrays: Array<readonly T[]>): T[] {
 interface FloatLimits {
   positive: {
     max: number;
-  },
-  negative: {
     min: number;
-  },
+  };
+  negative: {
+    max: number;
+    min: number;
+  };
   emax: number;
 }
 
 /**
  * Provides an easy way to validate steps in an equation that will trigger a validation error with
  * constant or override values due to overflow/underflow. Typical call pattern is:
- * 
+ *
  * const vCheck = new ConstantOrOverrideValueChecker(t, Type.f32);
  * const c = vCheck.checkedResult(a + b);
  * const d = vCheck.checkedResult(c * c);
@@ -341,7 +343,10 @@ export class ConstantOrOverrideValueChecker {
   #floatLimits?: FloatLimits;
   #quantizeFn: QuantizeFunc<number>;
 
-  constructor(private t: ShaderValidationTest, type: ScalarType) {
+  constructor(
+    private t: ShaderValidationTest,
+    type: ScalarType
+  ) {
     switch (type) {
       case Type.f32:
         this.#quantizeFn = quantizeToF32;
@@ -364,20 +369,44 @@ export class ConstantOrOverrideValueChecker {
   // Some overflow floating point values may fall into an abiguously rounded scenario, where they
   // can either round up to Infinity or down to the maximum representable value. In these cases the
   // test should be skipped, because it's valid for implementations to differ.
+  // See: https://www.w3.org/TR/WGSL/#floating-point-overflow
   isAmbiguousOverflow(value: number): boolean {
-    if (!this.#floatLimits ||
-        (value <= this.#floatLimits.positive.max &&
-          value >= this.#floatLimits.negative.min)) {
-          return false;
+    // Non-finite values are not ambiguous, and can still be validated.
+    if (!Number.isFinite(value)) {
+      return false;
     }
-    return Math.abs(value) < Math.pow(2, this.#floatLimits.emax+1);
+
+    // Values within the min/max range for the given type are not ambiguous.
+    if (
+      !this.#floatLimits ||
+      (value <= this.#floatLimits.positive.max && value >= this.#floatLimits.negative.min)
+    ) {
+      return false;
+    }
+
+    // If a value falls outside the min/max range, check to see if it is under
+    // 2^(EMAX(T)+1). If so, the rounding behavior is implementation specific,
+    // and should not be validated.
+    return Math.abs(value) < Math.pow(2, this.#floatLimits.emax + 1);
+  }
+
+  // Returns true if the value may be quantized to zero with the given type.
+  isNearZero(value: number): boolean {
+    if (!Number.isFinite(value)) {
+      return false;
+    }
+    if (!this.#floatLimits) {
+      return value === 0;
+    }
+
+    return value < this.#floatLimits.positive.min && value > this.#floatLimits.negative.max;
   }
 
   checkedResult(value: number): number {
     if (this.isAmbiguousOverflow(value)) {
       this.t.skip(`Checked value, ${value}, was within the ambiguous overflow rounding range.`);
     }
-    
+
     const quantizedValue = this.quantize(value);
     if (!Number.isFinite(quantizedValue)) {
       this.#allChecksPassed = false;
@@ -385,5 +414,7 @@ export class ConstantOrOverrideValueChecker {
     return value;
   }
 
-  allChecksPassed(): boolean { return this.#allChecksPassed; }
+  allChecksPassed(): boolean {
+    return this.#allChecksPassed;
+  }
 }

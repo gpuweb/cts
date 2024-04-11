@@ -59,8 +59,10 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     if (kValidArgumentTypes[t.params.type].width > 1) {
       const ab2 = vCheck.checkedResult(ab * ab);
       const sqrLen = vCheck.checkedResult(ab2 * kValidArgumentTypes[t.params.type].width);
-      // Square root does not need to be calculated because it can never fail if
-      // the previous results are finite.
+      // If the squared length is near zero it may fail on some implementations, so skip the test.
+      if (vCheck.isNearZero(sqrLen)) {
+        t.skip(`Squared length of ${sqrLen} is at or near 0.`);
+      }
     }
 
     const type = kValidArgumentTypes[t.params.type];
