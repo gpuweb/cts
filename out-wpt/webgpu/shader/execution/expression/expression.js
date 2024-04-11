@@ -106,7 +106,7 @@ function strideOf(ty, source) {
  * Calls 'callback' with the layout information of each structure member with the types 'members'.
  * @returns the byte size, stride and alignment of the structure.
  */
-function structLayout(
+export function structLayout(
 members,
 source,
 callback)
@@ -146,7 +146,7 @@ callback)
 }
 
 /** @returns the stride in bytes between two consecutive structures with the given members */
-function structStride(members, source) {
+export function structStride(members, source) {
   return structLayout(members, source).stride;
 }
 

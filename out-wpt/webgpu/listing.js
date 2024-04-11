@@ -1795,6 +1795,16 @@ export const listing = [
       "execution",
       "expression",
       "access",
+      "structure",
+      "index"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
+      "expression",
+      "access",
       "vector",
       "components"
     ]
