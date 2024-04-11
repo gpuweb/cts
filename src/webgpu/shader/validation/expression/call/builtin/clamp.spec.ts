@@ -65,7 +65,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
 g.test('mismatched')
   .desc(
     `
-Validates that even with valid types, if arg0 and arg1 do not match types ${builtin}() errors
+Validates that even with valid types, if types do not match, ${builtin}() errors
 `
   )
   .params(u =>
