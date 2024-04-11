@@ -63,8 +63,7 @@ g.test('must_use')
 
 g.test('value_range')
   .desc(
-    `Test pipeline-creation failure of ${kFn} when at least one of the input value is out of the
-     range of binary16`
+    `Test failures of ${kFn} when at least one of the input value is out of the range of binary16`
   )
   .params(u =>
     u
