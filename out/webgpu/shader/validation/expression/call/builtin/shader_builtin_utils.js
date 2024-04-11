@@ -62,3 +62,34 @@
     `
   }
 };
+
+export const kTestTextureTypes = [
+'texture_1d<f32>',
+'texture_1d<u32>',
+'texture_2d<f32>',
+'texture_2d<u32>',
+'texture_2d_array<f32>',
+'texture_2d_array<u32>',
+'texture_3d<f32>',
+'texture_3d<u32>',
+'texture_cube<f32>',
+'texture_cube<u32>',
+'texture_cube_array<f32>',
+'texture_cube_array<u32>',
+'texture_multisampled_2d<f32>',
+'texture_multisampled_2d<u32>',
+'texture_depth_multisampled_2d',
+'texture_external',
+'texture_storage_1d<rgba8unorm, read>',
+'texture_storage_1d<r32uint, read>',
+'texture_storage_2d<rgba8unorm, read>',
+'texture_storage_2d<r32uint, read>',
+'texture_storage_2d_array<rgba8unorm, read>',
+'texture_storage_2d_a32uint8unorm, read>',
+'texture_storage_3d<rgba8unorm, read>',
+'texture_storage_3d<r32uint, read>',
+'texture_depth_2d',
+'texture_depth_2d_array',
+'texture_depth_cube',
+'texture_depth_cube_array'];
+//# sourceMappingURL=shader_builtin_utils.js.map
