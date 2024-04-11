@@ -4056,24 +4056,13 @@ const kAdditionInterval64BitsNormalCases = {
   { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0x2e66) + reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0x2e67) + reinterpretU16AsF16(0xae66)] }, // ~0.0
   // -0.1+0.1 expect f16 interval [0xAE67+0x2E66, 0xAE66+0x2E67]
   { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67) + reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0xae66) + reinterpretU16AsF16(0x2e67)] } // ~0.0
-  ],
-  abstract: [
-  // 0.1 isn't exactly representable in f64, but will be quantized to an
-  // exact value when storing to a 'number' (0x3FB999999999999A).
-  // This is why below the expectations are not intervals.
-  // f64 0x3FB999999999999A+0x3FB999999999999A = 0x3FC999999999999A
-  { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3FC999999999999An) }, // ~0.2
-  // f64 0xBFB999999999999A+0xBFB999999999999A = 0xBFC999999999999A
-  { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0xBFC999999999999An) }, // ~-0.2
-  { input: [0.1, -0.1], expected: 0 },
-  { input: [-0.1, 0.1], expected: 0 }]
-
+  ]
 };
 
 g.test('additionInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16', 'abstract']).
+combine('trait', ['f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
@@ -6693,7 +6682,7 @@ fn((t) => {
 g.test('additionMatrixMatrixInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16', 'abstract']).
+combine('trait', ['f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
   const trait = FP[p.trait];
