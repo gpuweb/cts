@@ -1,4 +1,4 @@
-const kFn = 'pack4x8snorm';
+const kFn = 'unpack2x16snorm';
 export const description = `Validate ${kFn}`;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -6,42 +6,46 @@ import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 const kArgCases = {
-  good: '(vec4f())',
-  good_vec4_abstract_float: '(vec4(0.1))',
+  good_u32: '(1u)',
+  good_aint: '(1)',
   bad_0args: '()',
-  bad_2args: '(vec4f(),vec4f())',
-  bad_abstract_int: '(1)',
+  bad_2args: '(1u,2u)',
   bad_i32: '(1i)',
   bad_f32: '(1f)',
-  bad_u32: '(1u)',
-  bad_abstract_float: '(0.1)',
+  bad_f16: '(1h)',
   bad_bool: '(false)',
+  bad_vec2u: '(vec2u())',
+  bad_vec3u: '(vec3u())',
   bad_vec4u: '(vec4u())',
-  bad_vec4i: '(vec4i())',
-  bad_vec4b: '(vec4<bool>())',
-  bad_vec2f: '(vec2f())',
-  bad_vec3f: '(vec3f())',
-  bad_array: '(array(1.0, 2.0, 3.0, 4.0))',
+  bad_array: '(array(1))',
   bad_struct: '(modf(1.1))',
 };
-const kGoodArgs = kArgCases['good'];
-const kReturnType = 'u32';
+const kGoodArgs = kArgCases['good_u32'];
+const kReturnType = 'vec2f';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('args')
   .desc(`Test compilation failure of ${kFn} with various numbers of and types of arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
+  .beforeAllSubcases(t => {
+    if (t.params.arg === 'bad_f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
   .fn(t => {
-    t.expectCompileResult(
-      t.params.arg === 'good' || t.params.arg === 'good_vec4_abstract_float',
-      `const c = ${kFn}${kArgCases[t.params.arg]};`
-    );
+    let code = '';
+    if (t.params.arg === 'bad_f16') {
+      code += 'enable f16;\n';
+    }
+    code += `const c = ${kFn}${kArgCases[t.params.arg]};`;
+
+    t.expectCompileResult(t.params.arg.startsWith('good'), code);
   });
 
 g.test('return')
-  .desc(`Test ${kFn} return value type`)
-  .params(u => u.combine('type', ['u32', 'i32', 'f32', 'bool', 'vec2u']))
+  .desc(`Test ${kFn} return value type ${kReturnType}`)
+  .params(u => u.combine('type', ['vec2u', 'vec2i', 'vec2f', 'vec2h', 'vec4f', 'vec3f', 'f32']))
   .fn(t => {
     t.expectCompileResult(
       t.params.type === kReturnType,

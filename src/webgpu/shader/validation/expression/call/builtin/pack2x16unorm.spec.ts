@@ -1,4 +1,4 @@
-const kFn = 'pack4x8snorm';
+const kFn = 'pack2x16unorm';
 export const description = `Validate ${kFn}`;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
@@ -6,20 +6,20 @@ import { keysOf } from '../../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 const kArgCases = {
-  good: '(vec4f())',
-  good_vec4_abstract_float: '(vec4(0.1))',
+  good: '(vec2f())',
+  good_vec2_abstract_float: '(vec2(0.1))',
   bad_0args: '()',
-  bad_2args: '(vec4f(),vec4f())',
+  bad_2args: '(vec2f(),vec2f())',
   bad_abstract_int: '(1)',
   bad_i32: '(1i)',
   bad_f32: '(1f)',
   bad_u32: '(1u)',
   bad_abstract_float: '(0.1)',
   bad_bool: '(false)',
+  bad_vec4f: '(vec4f())',
   bad_vec4u: '(vec4u())',
   bad_vec4i: '(vec4i())',
   bad_vec4b: '(vec4<bool>())',
-  bad_vec2f: '(vec2f())',
   bad_vec3f: '(vec3f())',
   bad_array: '(array(1.0, 2.0, 3.0, 4.0))',
   bad_struct: '(modf(1.1))',
@@ -34,7 +34,7 @@ g.test('args')
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
     t.expectCompileResult(
-      t.params.arg === 'good' || t.params.arg === 'good_vec4_abstract_float',
+      t.params.arg === 'good' || t.params.arg === 'good_vec2_abstract_float',
       `const c = ${kFn}${kArgCases[t.params.arg]};`
     );
   });
