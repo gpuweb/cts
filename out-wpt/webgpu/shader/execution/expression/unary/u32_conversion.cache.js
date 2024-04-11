@@ -10,7 +10,6 @@ u32 } from
 '../../../../util/conversion.js';
 import {
   fullI32Range,
-  fullI64Range,
   fullU32Range,
   quantizeToF16,
   quantizeToF32,
@@ -29,10 +28,8 @@ export const d = makeCaseCache('unary/u32_conversion', {
 
   },
   abstractInt: () => {
-    return fullI64Range().
-    filter((a) => a >= kValue.u32.min && a <= kValue.u32.max).
-    map((u) => {
-      return { input: abstractInt(u), expected: u32(Number(u)) };
+    return fullU32Range().map((u) => {
+      return { input: abstractInt(BigInt(u)), expected: u32(u) };
     });
   },
   u32: () => {
