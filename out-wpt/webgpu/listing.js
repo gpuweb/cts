@@ -4442,6 +4442,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "pack4x8unorm"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "pack4xI8"
     ]
   },
