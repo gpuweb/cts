@@ -1,6 +1,7 @@
 import { assert, unreachable } from '../../../../../../common/util/util.js';
 import { kValue } from '../../../../../util/constants.js';
 import {
+  ScalarType,
   Type,
   Value,
   elementTypeOf,
@@ -14,6 +15,9 @@ import {
   scalarF64Range,
   linearRange,
   linearRangeBigInt,
+  quantizeToF32,
+  quantizeToF16,
+  QuantizeFunc,
 } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
@@ -311,4 +315,75 @@ export function unique<T>(...arrays: Array<readonly T[]>): T[] {
     }
   }
   return [...set];
+}
+
+interface FloatLimits {
+  positive: {
+    max: number;
+  },
+  negative: {
+    min: number;
+  },
+  emax: number;
+}
+
+/**
+ * Provides an easy way to validate steps in an equation that will trigger a validation error with
+ * constant or override values due to overflow/underflow. Typical call pattern is:
+ * 
+ * const vCheck = new ConstantOrOverrideValueChecker(t, Type.f32);
+ * const c = vCheck.checkedResult(a + b);
+ * const d = vCheck.checkedResult(c * c);
+ * const expectedResult = vCheck.allChecksPassed();
+ */
+export class ConstantOrOverrideValueChecker {
+  #allChecksPassed = true;
+  #floatLimits?: FloatLimits;
+  #quantizeFn: QuantizeFunc<number>;
+
+  constructor(private t: ShaderValidationTest, type: ScalarType) {
+    switch (type) {
+      case Type.f32:
+        this.#quantizeFn = quantizeToF32;
+        this.#floatLimits = kValue.f32;
+        break;
+      case Type.f16:
+        this.#quantizeFn = quantizeToF16;
+        this.#floatLimits = kValue.f16;
+        break;
+      default:
+        this.#quantizeFn = (v: number) => v;
+        break;
+    }
+  }
+
+  quantize(value: number): number {
+    return this.#quantizeFn(value);
+  }
+
+  // Some overflow floating point values may fall into an abiguously rounded scenario, where they
+  // can either round up to Infinity or down to the maximum representable value. In these cases the
+  // test should be skipped, because it's valid for implementations to differ.
+  isAmbiguousOverflow(value: number): boolean {
+    if (!this.#floatLimits ||
+        (value <= this.#floatLimits.positive.max &&
+          value >= this.#floatLimits.negative.min)) {
+          return false;
+    }
+    return Math.abs(value) < Math.pow(2, this.#floatLimits.emax+1);
+  }
+
+  checkedResult(value: number): number {
+    if (this.isAmbiguousOverflow(value)) {
+      this.t.skip(`Checked value, ${value}, was within the ambiguous overflow rounding range.`);
+    }
+    
+    const quantizedValue = this.quantize(value);
+    if (!Number.isFinite(quantizedValue)) {
+      this.#allChecksPassed = false;
+    }
+    return value;
+  }
+
+  allChecksPassed(): boolean { return this.#allChecksPassed; }
 }
