@@ -30,7 +30,7 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   kEntryPointsToValidateFragmentOnlyBuiltins,
   kTestTextureTypes,
-} from './shader_stage_utils.js';
+} from './shader_builtin_utils.js';
 
 type TextureSampleArguments = {
   returnType: ScalarType | VectorType;
