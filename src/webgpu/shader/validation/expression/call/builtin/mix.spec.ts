@@ -5,16 +5,11 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import {
-  Type,
-  kConvertableToFloatVectors,
-  scalarTypeOf,
-  ScalarType,
-} from '../../../../../util/conversion.js';
-import { QuantizeFunc, quantizeToF16, quantizeToF32 } from '../../../../../util/math.js';
+import { Type, kConvertableToFloatVectors, scalarTypeOf } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  ConstantOrOverrideValueChecker,
   fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
@@ -24,17 +19,6 @@ import {
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
-
-function quantizeFunctionForScalarType(type: ScalarType): QuantizeFunc<number> {
-  switch (type) {
-    case Type.f32:
-      return quantizeToF32;
-    case Type.f16:
-      return quantizeToF16;
-    default:
-      return (v: number) => v;
-  }
-}
 
 g.test('values')
   .desc(
@@ -58,10 +42,8 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     }
   })
   .fn(t => {
-    let expectedResult = true;
-
     const scalarType = scalarTypeOf(kValidArgumentTypes[t.params.type]);
-    const quantizeFn = quantizeFunctionForScalarType(scalarType);
+    const vCheck = new ConstantOrOverrideValueChecker(t, scalarType);
 
     // Mix equation: a * (1 - c) + b * c
     // Should be invalid if the mix calculations result in intermediate
@@ -69,36 +51,27 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     const a = Number(t.params.a);
     const b = Number(t.params.b);
     const c = Number(t.params.c);
-    const c1 = quantizeFn(1 - c);
-    const ac1 = quantizeFn(a * c1);
-    const bc = quantizeFn(b * c);
-    const ac1bc = quantizeFn(ac1 + bc);
-
-    if (
-      !Number.isFinite(c1) ||
-      !Number.isFinite(ac1) ||
-      !Number.isFinite(bc) ||
-      !Number.isFinite(ac1bc)
-    ) {
-      expectedResult = false;
-    }
+    const c1 = vCheck.checkedResult(1 - c);
+    const ac1 = vCheck.checkedResult(a * c1);
+    const bc = vCheck.checkedResult(b * c);
+    vCheck.checkedResult(ac1 + bc);
 
     const type = kValidArgumentTypes[t.params.type];
 
-    // Validates mix(vecN(a, a, a), vecN(b, b, b), vecN(c, c, c));
+    // Validates mix(vecN(a), vecN(b), vecN(c));
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      vCheck.allChecksPassed(),
       [type.create(t.params.a), type.create(t.params.b), type.create(t.params.c)],
       t.params.stage
     );
 
-    // Validates mix(vecN(a, a, a), vecN(b, b, b), c));
+    // Validates mix(vecN(a), vecN(b), c));
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      vCheck.allChecksPassed(),
       [type.create(t.params.a), type.create(t.params.b), scalarType.create(t.params.c)],
       t.params.stage
     );
