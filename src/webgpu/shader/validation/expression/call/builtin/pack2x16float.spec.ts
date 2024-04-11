@@ -19,10 +19,6 @@ const kArgCases = {
   bad_f32: '(1f)',
   bad_u32: '(1u)',
   bad_abstract_float: '(0.1)',
-  bad_f32_over_largest_positive_f16_arg0: `(vec2f(f32(${kValue.f16.positive.max}) + 1.0, 0))`,
-  bad_f32_beyond_smallest_negative_f16_arg0: `(vec2f(f32(${kValue.f16.negative.min}) - 1.0, 0))`,
-  bad_f32_over_largest_positive_f16_arg1: `(vec2f(0, f32(${kValue.f16.positive.max}) + 1.0))`,
-  bad_f32_beyond_smallest_negative_f16_arg1: `(vec2f(0, f32(${kValue.f16.negative.min}) - 1.0))`,
   bad_bool: '(false)',
   bad_vec4f: '(vec4f())',
   bad_vec4u: '(vec4u())',
@@ -65,13 +61,14 @@ g.test('must_use')
     t.expectCompileResult(t.params.use, `fn f() { ${use_it}${kFn}${kGoodArgs}; }`);
   });
 
-g.test('value_range_as_override_expression')
+g.test('value_range')
   .desc(
     `Test pipeline-creation failure of ${kFn} when at least one of the input value is out of the
-     range of binary16 in an override expression`
+     range of binary16`
   )
   .params(u =>
     u
+      .combine('constantOrOverrideStage', ['constant', 'override'] as const)
       .combine('value0', [
         kValue.f16.positive.max,
         kValue.f16.positive.max + 1,
@@ -86,7 +83,7 @@ g.test('value_range_as_override_expression')
       ])
   )
   .fn(t => {
-    const { value0, value1 } = t.params;
+    const { constantOrOverrideStage, value0, value1 } = t.params;
 
     const success =
       value0 >= kValue.f16.negative.min &&
@@ -99,6 +96,6 @@ g.test('value_range_as_override_expression')
       kFn,
       success,
       [vec2(f32(value0), f32(value1))],
-      'override'
+      constantOrOverrideStage
     );
   });
