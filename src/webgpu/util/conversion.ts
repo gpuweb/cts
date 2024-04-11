@@ -2427,11 +2427,23 @@ export function isConvertible(src: Type, dst: Type) {
     return true;
   }
 
-  const widthOf = (ty: Type) => {
-    return ty instanceof VectorType ? ty.width : 1;
+  const shapeOf = (ty: Type) => {
+    if (ty instanceof ScalarType) {
+      return `scalar`;
+    }
+    if (ty instanceof VectorType) {
+      return `vec${ty.width}`;
+    }
+    if (ty instanceof MatrixType) {
+      return `mat${ty.cols}x${ty.rows}`;
+    }
+    if (ty instanceof ArrayType) {
+      return `array<${ty.count}>`;
+    }
+    unreachable(`unhandled type: ${ty}`);
   };
 
-  if (widthOf(src) !== widthOf(dst)) {
+  if (shapeOf(src) !== shapeOf(dst)) {
     return false;
   }
 
