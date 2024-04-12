@@ -2345,6 +2345,26 @@ export function isFloatType(ty: Type): boolean {
 }
 
 /**
+ * @returns if `ty` is an integer point type.
+ * @note this does not consider composite types.
+ * Use elementType() if you want to test the element type.
+ */
+export function isIntegerType(ty: Type): boolean {
+  if (ty instanceof ScalarType) {
+    return (
+      ty.kind === 'abstract-int' ||
+      ty.kind === 'i32' ||
+      ty.kind === 'i16' ||
+      ty.kind === 'i8' ||
+      ty.kind === 'u32' ||
+      ty.kind === 'u16' ||
+      ty.kind === 'u8'
+    );
+  }
+  return false;
+}
+
+/**
  * @returns if `ty` is a type convertible to floating point type.
  * @note this does not consider composite types.
  * Use elementType() if you want to test the element type.
