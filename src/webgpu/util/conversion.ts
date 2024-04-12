@@ -1030,6 +1030,21 @@ export const Type = {
   array: (count: number, elementType: Type) => ArrayType.create(count, elementType),
 };
 
+/**
+ * @returns a type from a string
+ * eg:
+ *  'f32' -> Type.f32
+ *  'vec4<f32>' -> Type.vec4f
+ *  'vec3i' -> Type.vec3i
+ */
+export function stringToType(s: string): Type {
+  const angleNdx = s.indexOf('<');
+  s = angleNdx < 0 ? s : `${s.substring(0, angleNdx)}${s[angleNdx + 1]}`;
+  const t = (Type as unknown as { [key: string]: Type })[s];
+  assert(!!t);
+  return t;
+}
+
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind: ScalarKind): ScalarType {
   switch (kind) {
