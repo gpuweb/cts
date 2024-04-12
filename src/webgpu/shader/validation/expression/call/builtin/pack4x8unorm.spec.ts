@@ -1,4 +1,4 @@
-const kFn = 'pack4x8snorm';
+const kFn = 'pack4x8unorm';
 export const description = `Validate ${kFn}`;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
