@@ -47,6 +47,7 @@ g.test('scalar_vector')
           value => !(value.startsWith('vec3') || value.startsWith('vec4'))
         )
       )
+      .combine('compound_assignment', [false, true] as const)
       .beginSubcases()
       .combine('op', ['<<', '>>'])
   )
@@ -64,7 +65,15 @@ g.test('scalar_vector')
     const lhsElement = scalarTypeOf(lhs);
     const rhsElement = scalarTypeOf(rhs);
     const hasF16 = lhsElement === Type.f16 || rhsElement === Type.f16;
-    const code = `
+    const code = t.params.compound_assignment
+      ? `
+${hasF16 ? 'enable f16;' : ''}
+fn f() {
+  var foo = ${lhs.create(0).wgsl()};
+  foo ${t.params.op}= ${rhs.create(0).wgsl()};
+}
+`
+      : `
 ${hasF16 ? 'enable f16;' : ''}
 const lhs = ${lhs.create(0).wgsl()};
 const rhs = ${rhs.create(0).wgsl()};
