@@ -1,4 +1,5 @@
 import { Colors } from '../../common/util/colors.js';
+import { objectsToRecord } from '../../common/util/data_tables.js';
 import { ROArrayArray } from '../../common/util/types.js';
 import { assert, objectEquals, TypedArrayBufferView, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
@@ -962,27 +963,7 @@ const boolType = new ScalarType('bool', 4, false, (buf: Uint8Array, offset: numb
 /** Type is a ScalarType, VectorType, MatrixType or ArrayType. */
 export type Type = ScalarType | VectorType | MatrixType | ArrayType;
 
-/** Type holds pre-declared Types along with helper constructor functions. */
-export const Type = {
-  abstractInt: abstractIntType,
-  'abstract-int': abstractIntType,
-  i32: i32Type,
-  u32: u32Type,
-  i16: i16Type,
-  u16: u16Type,
-  i8: i8Type,
-  u8: u8Type,
-
-  abstractFloat: abstractFloatType,
-  'abstract-float': abstractFloatType,
-  f64: f64Type,
-  f32: f32Type,
-  f16: f16Type,
-
-  bool: boolType,
-
-  vec: (width: number, elementType: ScalarType) => VectorType.create(width, elementType),
-
+const kVecTypes = {
   vec2ai: VectorType.create(2, abstractIntType),
   vec2i: VectorType.create(2, i32Type),
   vec2u: VectorType.create(2, u32Type),
@@ -1004,10 +985,9 @@ export const Type = {
   vec4f: VectorType.create(4, f32Type),
   vec4h: VectorType.create(4, f16Type),
   vec4b: VectorType.create(4, boolType),
+} as const;
 
-  mat: (cols: number, rows: number, elementType: ScalarType) =>
-    MatrixType.create(cols, rows, elementType),
-
+const kMatTypes = {
   mat2x2f: MatrixType.create(2, 2, f32Type),
   mat2x2h: MatrixType.create(2, 2, f16Type),
   mat3x2f: MatrixType.create(3, 2, f32Type),
@@ -1026,9 +1006,57 @@ export const Type = {
   mat3x4h: MatrixType.create(3, 4, f16Type),
   mat4x4f: MatrixType.create(4, 4, f32Type),
   mat4x4h: MatrixType.create(4, 4, f16Type),
+} as const;
+
+/** Type holds pre-declared Types along with helper constructor functions. */
+export const Type = {
+  abstractInt: abstractIntType,
+  'abstract-int': abstractIntType,
+  i32: i32Type,
+  u32: u32Type,
+  i16: i16Type,
+  u16: u16Type,
+  i8: i8Type,
+  u8: u8Type,
+
+  abstractFloat: abstractFloatType,
+  'abstract-float': abstractFloatType,
+  f64: f64Type,
+  f32: f32Type,
+  f16: f16Type,
+
+  bool: boolType,
+
+  vec: (width: number, elementType: ScalarType) => VectorType.create(width, elementType),
+
+  // add vec types like vec2i, vec3f,
+  ...kVecTypes,
+  // add vec<> types like vec2<i32>, vec3<f32>
+  ...objectsToRecord(Object.values(kVecTypes)),
+
+  mat: (cols: number, rows: number, elementType: ScalarType) =>
+    MatrixType.create(cols, rows, elementType),
+
+  // add mat types like mat2x2f,
+  ...kMatTypes,
+  // add mat<> types like mat2x2<f32>,
+  ...objectsToRecord(Object.values(kVecTypes)),
 
   array: (count: number, elementType: Type) => ArrayType.create(count, elementType),
 };
+
+/**
+ * @returns a type from a string
+ * eg:
+ *  'f32' -> Type.f32
+ *  'vec4<f32>' -> Type.vec4f
+ *  'vec3i' -> Type.vec3i
+ */
+export function stringToType(s: string): Type {
+  const t = (Type as unknown as { [key: string]: Type })[s];
+  assert(!!t);
+  return t;
+}
 
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind: ScalarKind): ScalarType {
@@ -2562,24 +2590,8 @@ export const kAllScalarsAndVectors = [
   ...kAllNumericScalarsAndVectors,
 ] as const;
 
+/// All the vector types
+export const kAllVecTypes = Object.values(kVecTypes);
+
 /// All the matrix types
-export const kAllMatrices = [
-  Type.mat2x2f,
-  Type.mat2x2h,
-  Type.mat2x3f,
-  Type.mat2x3h,
-  Type.mat2x4f,
-  Type.mat2x4h,
-  Type.mat3x2f,
-  Type.mat3x2h,
-  Type.mat3x3f,
-  Type.mat3x3h,
-  Type.mat3x4f,
-  Type.mat3x4h,
-  Type.mat4x2f,
-  Type.mat4x2h,
-  Type.mat4x3f,
-  Type.mat4x3h,
-  Type.mat4x4f,
-  Type.mat4x4h,
-] as const;
+export const kAllMatrices = Object.values(kMatTypes);
