@@ -41,7 +41,9 @@ const cases = (['f32', 'f16', 'abstract'] as const)
       return FP[trait].generateScalarToIntervalCases(
         [...kCommonValues, ...kTraitSpecificValues[trait], ...FP[trait].scalarRange()],
         trait === 'abstract' ? 'finite' : 'unfiltered',
-        FP[trait].fractInterval
+        // fract has an inherited accuracy, so abstract is only expected to be as accurate as f32
+        // This may be changed by the resolution of https://github.com/gpuweb/gpuweb/issues/4523
+        FP[trait !== 'abstract' ? trait : 'f32'].fractInterval
       );
     },
   }))
