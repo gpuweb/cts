@@ -5,16 +5,11 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import {
-  Type,
-  kConvertableToFloatVectors,
-  scalarTypeOf,
-  ScalarType,
-} from '../../../../../util/conversion.js';
-import { QuantizeFunc, quantizeToF16, quantizeToF32 } from '../../../../../util/math.js';
+import { Type, kConvertableToFloatVectors, scalarTypeOf } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  ConstantOrOverrideValueChecker,
   fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
@@ -24,17 +19,6 @@ import {
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
-
-function quantizeFunctionForScalarType(type: ScalarType): QuantizeFunc<number> {
-  switch (type) {
-    case Type.f32:
-      return quantizeToF32;
-    case Type.f16:
-      return quantizeToF16;
-    default:
-      return (v: number) => v;
-  }
-}
 
 g.test('values')
   .desc(
@@ -58,22 +42,25 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     }
   })
   .fn(t => {
-    let expectedResult = true;
-
     const scalarType = scalarTypeOf(kValidArgumentTypes[t.params.type]);
-    const quantizeFn = quantizeFunctionForScalarType(scalarType);
+    const vCheck = new ConstantOrOverrideValueChecker(t, scalarType);
 
     // Fused Multiply Add equation: a * b + c
     // Should be invalid if the calculations result in intermediate values that
     // exceed the maximum representable float value for the given type.
+    // IEEE fma, which is allowed by WGSL, allows cases where the intermediate
+    // values may overflow. In those cases only check the final result.
     const a = Number(t.params.a);
     const b = Number(t.params.b);
     const c = Number(t.params.c);
-    const ab = quantizeFn(a * b);
-    const abc = quantizeFn(ab + c);
+    vCheck.checkedResult(a * b + c);
 
-    if (!Number.isFinite(ab) || !Number.isFinite(abc)) {
-      expectedResult = false;
+    if (vCheck.allChecksPassed()) {
+      // If the end result is valid but the intermediate a*b multiplication
+      // fails then the test should be skipped, because implementations which
+      // perform a non-fused fma may still fail. Since it's ambiguous this
+      // should not be considered a CTS failure.
+      vCheck.skipIfCheckFails(a * b);
     }
 
     const type = kValidArgumentTypes[t.params.type];
@@ -82,7 +69,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      vCheck.allChecksPassed(),
       [type.create(t.params.a), type.create(t.params.b), type.create(t.params.c)],
       t.params.stage
     );
