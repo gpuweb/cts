@@ -4422,6 +4422,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "mix"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "modf"
     ]
   },
