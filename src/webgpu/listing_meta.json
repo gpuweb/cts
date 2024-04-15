@@ -1965,6 +1965,7 @@
   "webgpu:shader,validation,expression,call,builtin,atanh:values:*": { "subcaseMS": 0.231 },
   "webgpu:shader,validation,expression,call,builtin,atomics:atomic_parameterization:*": { "subcaseMS": 1.346 },
   "webgpu:shader,validation,expression,call,builtin,atomics:data_parameters:*": { "subcaseMS": 38.382 },
+  "webgpu:shader,validation,expression,call,builtin,atomics:non_atomic:*": { "subcaseMS": 32.435 },
   "webgpu:shader,validation,expression,call,builtin,atomics:return_types:*": { "subcaseMS": 28.021 },
   "webgpu:shader,validation,expression,call,builtin,atomics:stage:*": { "subcaseMS": 1.346 },
   "webgpu:shader,validation,expression,call,builtin,barriers:no_return_value:*": { "subcaseMS": 1.500 },
