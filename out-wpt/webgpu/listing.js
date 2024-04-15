@@ -5300,6 +5300,14 @@ export const listing = [
       "shader",
       "validation",
       "types",
+      "pointer"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "types",
       "ref"
     ]
   },
