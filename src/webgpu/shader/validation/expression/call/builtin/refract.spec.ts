@@ -5,16 +5,11 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import {
-  Type,
-  kConvertableToFloatVectors,
-  scalarTypeOf,
-  ScalarType,
-} from '../../../../../util/conversion.js';
-import { QuantizeFunc, quantizeToF16, quantizeToF32 } from '../../../../../util/math.js';
+import { Type, kConvertableToFloatVectors, scalarTypeOf } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  ConstantOrOverrideValueChecker,
   fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
@@ -25,21 +20,11 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
 
-function quantizeFunctionForScalarType(type: ScalarType): QuantizeFunc<number> {
-  switch (type) {
-    case Type.f32:
-      return quantizeToF32;
-    case Type.f16:
-      return quantizeToF16;
-    default:
-      return (v: number) => v;
-  }
-}
-
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() never errors
+Validates that constant evaluation and override evaluation of ${builtin}() only errors in cases
+where a the calculations result in a non-representable value for the given type.
 `
   )
   .params(u =>
@@ -58,11 +43,9 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     }
   })
   .fn(t => {
-    let expectedResult = true;
-
     const type = kValidArgumentTypes[t.params.type];
     const scalarType = scalarTypeOf(kValidArgumentTypes[t.params.type]);
-    const quantizeFn = quantizeFunctionForScalarType(scalarType);
+    const vCheck = new ConstantOrOverrideValueChecker(t, scalarType);
 
     // Refract equation:
     //   let k = 1.0 - c * c * (1.0 - dot(b, a) * dot(b, a))
@@ -74,49 +57,27 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     const b = Number(t.params.b);
     const c = Number(t.params.c);
 
-    const b_dot_a = quantizeFn(b * a * type.width);
-    const b_dot_a_2 = quantizeFn(b_dot_a * b_dot_a);
-    const c2 = quantizeFn(c * c);
-    const one_minus_b_dot_a_2 = quantizeFn(1.0 - b_dot_a_2);
-    const c2_one_minus_b_dot_a_2 = quantizeFn(c2 * one_minus_b_dot_a_2);
-    const k = quantizeFn(1.0 - c2_one_minus_b_dot_a_2);
-
-    if (
-      !Number.isFinite(b_dot_a) ||
-      !Number.isFinite(b_dot_a_2) ||
-      !Number.isFinite(c2) ||
-      !Number.isFinite(one_minus_b_dot_a_2) ||
-      !Number.isFinite(c2_one_minus_b_dot_a_2) ||
-      !Number.isFinite(k)
-    ) {
-      expectedResult = false;
-    }
+    const b_dot_a = vCheck.checkedResult(b * a * type.width);
+    const b_dot_a_2 = vCheck.checkedResult(b_dot_a * b_dot_a);
+    const one_minus_b_dot_a_2 = vCheck.checkedResult(1.0 - b_dot_a_2);
+    const c2 = vCheck.checkedResult(c * c);
+    const c2_one_minus_b_dot_a_2 = vCheck.checkedResult(c2 * one_minus_b_dot_a_2);
+    const k = vCheck.checkedResult(1.0 - c2_one_minus_b_dot_a_2);
 
     if (k >= 0) {
-      const ca = quantizeFn(c * a);
-      const cbda = quantizeFn(c * b_dot_a);
-      const sqrt_k = quantizeFn(Math.sqrt(k));
-      const cdba_sqrt_k = quantizeFn(cbda + sqrt_k);
-      const cdba_sqrt_k_b = quantizeFn(cdba_sqrt_k * b);
-      const result = quantizeFn(ca - cdba_sqrt_k_b);
-
-      if (
-        !Number.isFinite(ca) ||
-        !Number.isFinite(cbda) ||
-        !Number.isFinite(sqrt_k) ||
-        !Number.isFinite(cdba_sqrt_k) ||
-        !Number.isFinite(cdba_sqrt_k_b) ||
-        !Number.isFinite(result)
-      ) {
-        expectedResult = false;
-      }
+      const ca = vCheck.checkedResult(c * a);
+      const cbda = vCheck.checkedResult(c * b_dot_a);
+      const sqrt_k = vCheck.checkedResult(Math.sqrt(k));
+      const cdba_sqrt_k = vCheck.checkedResult(cbda + sqrt_k);
+      const cdba_sqrt_k_b = vCheck.checkedResult(cdba_sqrt_k * b);
+      vCheck.checkedResult(ca - cdba_sqrt_k_b);
     }
 
     // Validates refract(vecN(a), vecN(b), c);
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      vCheck.allChecksPassed(),
       [type.create(t.params.a), type.create(t.params.b), scalarType.create(t.params.c)],
       t.params.stage
     );
@@ -173,6 +134,18 @@ g.test('args')
     t.expectCompileResult(
       t.params.arg === 'good',
       `const c = ${builtin}${kArgCases[t.params.arg]};`
+    );
+  });
+
+const kReturnType = 'vec3f';
+
+g.test('return')
+  .desc(`Test ${builtin} return value type`)
+  .params(u => u.combine('type', ['vec3f', 'vec3u', 'vec3i', 'vec2f', 'u32', 'i32', 'f32', 'bool']))
+  .fn(t => {
+    t.expectCompileResult(
+      t.params.type === kReturnType,
+      `const c: ${t.params.type} = ${builtin}${kArgCases['good']};`
     );
   });
 
