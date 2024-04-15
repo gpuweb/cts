@@ -668,7 +668,7 @@ inputSource)
     // Constant eval
     //////////////////////////////////////////////////////////////////////////
     let body = '';
-    if (parameterTypes.some((ty) => isAbstractType(elementTypeOf(ty)))) {
+    if (parameterTypes.some((ty) => isAbstractType(scalarTypeOf(ty)))) {
       // Directly assign the expression to the output, to avoid an
       // intermediate store, which will concretize the value early
       body = cases.
