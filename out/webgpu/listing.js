@@ -5112,6 +5112,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "increment_decrement"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "literal"
     ]
   },
@@ -5289,6 +5297,14 @@ export const listing = [
       "validation",
       "shader_io",
       "workgroup_size"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "statement",
+      "increment_decrement"
     ]
   },
   {
