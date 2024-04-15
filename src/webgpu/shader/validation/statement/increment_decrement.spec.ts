@@ -94,7 +94,7 @@ const kComponentCases = {
   v3i_y: { type: 'vec3u', wgsl: 'a.y', pass: true },
   v3i_z: { type: 'vec3i', wgsl: 'a.z', pass: true },
   v4i_x: { type: 'vec4i', wgsl: 'a.x', pass: true },
-  v4i_y: { type: 'vec4u', wgsl: 'a.y', pass: true },
+  v4i_y: { type: 'vec4i', wgsl: 'a.y', pass: true },
   v4i_z: { type: 'vec4i', wgsl: 'a.z', pass: true },
   v4i_w: { type: 'vec4i', wgsl: 'a.w', pass: true },
   v2u_xx: { type: 'vec2u', wgsl: 'a.xx', pass: false },
