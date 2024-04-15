@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { Colors } from '../../common/util/colors.js';import { assert, objectEquals, unreachable } from '../../common/util/util.js';
+**/import { Colors } from '../../common/util/colors.js';import { objectsToRecord } from '../../common/util/data_tables.js';
+import { assert, objectEquals, unreachable } from '../../common/util/util.js';
 import { Float16Array } from '../../external/petamoriken/float16/float16.js';
 
 
@@ -962,6 +963,51 @@ bool(valueFromBytes(workingDataU32, buf, offset) !== 0)
 /** Type is a ScalarType, VectorType, MatrixType or ArrayType. */
 
 
+const kVecTypes = {
+  vec2ai: VectorType.create(2, abstractIntType),
+  vec2i: VectorType.create(2, i32Type),
+  vec2u: VectorType.create(2, u32Type),
+  vec2af: VectorType.create(2, abstractFloatType),
+  vec2f: VectorType.create(2, f32Type),
+  vec2h: VectorType.create(2, f16Type),
+  vec2b: VectorType.create(2, boolType),
+  vec3ai: VectorType.create(3, abstractIntType),
+  vec3i: VectorType.create(3, i32Type),
+  vec3u: VectorType.create(3, u32Type),
+  vec3af: VectorType.create(3, abstractFloatType),
+  vec3f: VectorType.create(3, f32Type),
+  vec3h: VectorType.create(3, f16Type),
+  vec3b: VectorType.create(3, boolType),
+  vec4ai: VectorType.create(4, abstractIntType),
+  vec4i: VectorType.create(4, i32Type),
+  vec4u: VectorType.create(4, u32Type),
+  vec4af: VectorType.create(4, abstractFloatType),
+  vec4f: VectorType.create(4, f32Type),
+  vec4h: VectorType.create(4, f16Type),
+  vec4b: VectorType.create(4, boolType)
+};
+
+const kMatTypes = {
+  mat2x2f: MatrixType.create(2, 2, f32Type),
+  mat2x2h: MatrixType.create(2, 2, f16Type),
+  mat3x2f: MatrixType.create(3, 2, f32Type),
+  mat3x2h: MatrixType.create(3, 2, f16Type),
+  mat4x2f: MatrixType.create(4, 2, f32Type),
+  mat4x2h: MatrixType.create(4, 2, f16Type),
+  mat2x3f: MatrixType.create(2, 3, f32Type),
+  mat2x3h: MatrixType.create(2, 3, f16Type),
+  mat3x3f: MatrixType.create(3, 3, f32Type),
+  mat3x3h: MatrixType.create(3, 3, f16Type),
+  mat4x3f: MatrixType.create(4, 3, f32Type),
+  mat4x3h: MatrixType.create(4, 3, f16Type),
+  mat2x4f: MatrixType.create(2, 4, f32Type),
+  mat2x4h: MatrixType.create(2, 4, f16Type),
+  mat3x4f: MatrixType.create(3, 4, f32Type),
+  mat3x4h: MatrixType.create(3, 4, f16Type),
+  mat4x4f: MatrixType.create(4, 4, f32Type),
+  mat4x4h: MatrixType.create(4, 4, f16Type)
+};
+
 /** Type holds pre-declared Types along with helper constructor functions. */
 export const Type = {
   abstractInt: abstractIntType,
@@ -983,52 +1029,34 @@ export const Type = {
 
   vec: (width, elementType) => VectorType.create(width, elementType),
 
-  vec2ai: VectorType.create(2, abstractIntType),
-  vec2i: VectorType.create(2, i32Type),
-  vec2u: VectorType.create(2, u32Type),
-  vec2af: VectorType.create(2, abstractFloatType),
-  vec2f: VectorType.create(2, f32Type),
-  vec2h: VectorType.create(2, f16Type),
-  vec2b: VectorType.create(2, boolType),
-  vec3ai: VectorType.create(3, abstractIntType),
-  vec3i: VectorType.create(3, i32Type),
-  vec3u: VectorType.create(3, u32Type),
-  vec3af: VectorType.create(3, abstractFloatType),
-  vec3f: VectorType.create(3, f32Type),
-  vec3h: VectorType.create(3, f16Type),
-  vec3b: VectorType.create(3, boolType),
-  vec4ai: VectorType.create(4, abstractIntType),
-  vec4i: VectorType.create(4, i32Type),
-  vec4u: VectorType.create(4, u32Type),
-  vec4af: VectorType.create(4, abstractFloatType),
-  vec4f: VectorType.create(4, f32Type),
-  vec4h: VectorType.create(4, f16Type),
-  vec4b: VectorType.create(4, boolType),
+  // add vec types like vec2i, vec3f,
+  ...kVecTypes,
+  // add vec<> types like vec2<i32>, vec3<f32>
+  ...objectsToRecord(Object.values(kVecTypes)),
 
   mat: (cols, rows, elementType) =>
   MatrixType.create(cols, rows, elementType),
 
-  mat2x2f: MatrixType.create(2, 2, f32Type),
-  mat2x2h: MatrixType.create(2, 2, f16Type),
-  mat3x2f: MatrixType.create(3, 2, f32Type),
-  mat3x2h: MatrixType.create(3, 2, f16Type),
-  mat4x2f: MatrixType.create(4, 2, f32Type),
-  mat4x2h: MatrixType.create(4, 2, f16Type),
-  mat2x3f: MatrixType.create(2, 3, f32Type),
-  mat2x3h: MatrixType.create(2, 3, f16Type),
-  mat3x3f: MatrixType.create(3, 3, f32Type),
-  mat3x3h: MatrixType.create(3, 3, f16Type),
-  mat4x3f: MatrixType.create(4, 3, f32Type),
-  mat4x3h: MatrixType.create(4, 3, f16Type),
-  mat2x4f: MatrixType.create(2, 4, f32Type),
-  mat2x4h: MatrixType.create(2, 4, f16Type),
-  mat3x4f: MatrixType.create(3, 4, f32Type),
-  mat3x4h: MatrixType.create(3, 4, f16Type),
-  mat4x4f: MatrixType.create(4, 4, f32Type),
-  mat4x4h: MatrixType.create(4, 4, f16Type),
+  // add mat types like mat2x2f,
+  ...kMatTypes,
+  // add mat<> types like mat2x2<f32>,
+  ...objectsToRecord(Object.values(kVecTypes)),
 
   array: (count, elementType) => ArrayType.create(count, elementType)
 };
+
+/**
+ * @returns a type from a string
+ * eg:
+ *  'f32' -> Type.f32
+ *  'vec4<f32>' -> Type.vec4f
+ *  'vec3i' -> Type.vec3i
+ */
+export function stringToType(s) {
+  const t = Type[s];
+  assert(!!t);
+  return t;
+}
 
 /** @returns the ScalarType from the ScalarKind */
 export function scalarType(kind) {
@@ -2562,23 +2590,8 @@ export const kAllScalarsAndVectors = [
 ...kAllNumericScalarsAndVectors];
 
 
+/// All the vector types
+export const kAllVecTypes = Object.values(kVecTypes);
+
 /// All the matrix types
-export const kAllMatrices = [
-Type.mat2x2f,
-Type.mat2x2h,
-Type.mat2x3f,
-Type.mat2x3h,
-Type.mat2x4f,
-Type.mat2x4h,
-Type.mat3x2f,
-Type.mat3x2h,
-Type.mat3x3f,
-Type.mat3x3h,
-Type.mat3x4f,
-Type.mat3x4h,
-Type.mat4x2f,
-Type.mat4x2h,
-Type.mat4x3f,
-Type.mat4x3h,
-Type.mat4x4f,
-Type.mat4x4h];
+export const kAllMatrices = Object.values(kMatTypes);

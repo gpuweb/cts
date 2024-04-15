@@ -1,13 +1,16 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/ /**
+**/import { assert } from '../../../../../../common/util/util.js';import { Type } from '../../../../../util/conversion.js';
+/**
  * Use to test that certain WGSL builtins are only available in the fragment stage.
  * Create WGSL that defines a function "foo" and its required variables that uses
  * the builtin being tested. Append it to these code strings then compile. It should
  * succeed or fail based on the value `expectSuccess`.
  *
  * See ./textureSample.spec.ts was one example
- */export const kEntryPointsToValidateFragmentOnlyBuiltins = { none: {
+ */
+export const kEntryPointsToValidateFragmentOnlyBuiltins = {
+  none: {
     expectSuccess: true,
     code: ``
   },
@@ -92,3 +95,21 @@ export const kTestTextureTypes = [
 'texture_depth_2d_array',
 'texture_depth_cube',
 'texture_depth_cube_array'];
+
+
+const kTextureTypeSuffixToType = {
+  f32: Type.vec4f,
+  u32: Type.vec4i,
+  'rgba8unorm, read': Type.vec4f,
+  'r32uint, read': Type.vec4u
+};
+
+/** @returns the base type and sample type for kTestTextureTypes */
+export function getSampleAndBaseTextureTypeForTextureType(
+textureType)
+{
+  const match = /^(.*?)<(.*?)>/.exec(textureType);
+  const sampleType = match ? kTextureTypeSuffixToType[match[2]] : Type.vec4f;
+  assert(!!sampleType);
+  return [match ? match[1] : textureType, sampleType];
+}
