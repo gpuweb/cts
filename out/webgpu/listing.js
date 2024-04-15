@@ -5344,6 +5344,14 @@ export const listing = [
       "shader",
       "validation",
       "types",
+      "enumerant"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "types",
       "matrix"
     ]
   },
