@@ -1851,6 +1851,8 @@
   "webgpu:shader,execution,statement,increment_decrement:scalar_u32_decrement_underflow:*": { "subcaseMS": 21.600 },
   "webgpu:shader,execution,statement,increment_decrement:scalar_u32_increment:*": { "subcaseMS": 5.900 },
   "webgpu:shader,execution,statement,increment_decrement:scalar_u32_increment_overflow:*": { "subcaseMS": 4.700 },
+  "webgpu:shader,execution,statement,increment_decrement:single_eval_decrement:*": { "subcaseMS": 14.013 },
+  "webgpu:shader,execution,statement,increment_decrement:single_eval_increment:*": { "subcaseMS": 14.762 },
   "webgpu:shader,execution,statement,increment_decrement:vec2_element_decrement:*": { "subcaseMS": 5.200 },
   "webgpu:shader,execution,statement,increment_decrement:vec2_element_increment:*": { "subcaseMS": 5.000 },
   "webgpu:shader,execution,statement,increment_decrement:vec3_element_decrement:*": { "subcaseMS": 17.700 },
