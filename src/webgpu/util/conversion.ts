@@ -2590,24 +2590,8 @@ export const kAllScalarsAndVectors = [
   ...kAllNumericScalarsAndVectors,
 ] as const;
 
+/// All the vector types
+export const kAllVecTypes = Object.values(kVecTypes);
+
 /// All the matrix types
-export const kAllMatrices = [
-  Type.mat2x2f,
-  Type.mat2x2h,
-  Type.mat2x3f,
-  Type.mat2x3h,
-  Type.mat2x4f,
-  Type.mat2x4h,
-  Type.mat3x2f,
-  Type.mat3x2h,
-  Type.mat3x3f,
-  Type.mat3x3h,
-  Type.mat3x4f,
-  Type.mat3x4h,
-  Type.mat4x2f,
-  Type.mat4x2h,
-  Type.mat4x3f,
-  Type.mat4x3h,
-  Type.mat4x4f,
-  Type.mat4x4h,
-] as const;
+export const kAllMatrices = Object.values(kMatTypes);
