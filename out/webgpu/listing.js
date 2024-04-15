@@ -5118,6 +5118,14 @@ export const listing = [
       "shader",
       "validation",
       "parse",
+      "phony"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "parse",
       "pipeline_stage"
     ]
   },
@@ -5271,6 +5279,14 @@ export const listing = [
       "validation",
       "shader_io",
       "workgroup_size"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "statement",
+      "phony"
     ]
   },
   {

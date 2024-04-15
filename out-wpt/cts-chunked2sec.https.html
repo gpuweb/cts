@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 18936 variants generated from 2593 tests in 585 files -->
+<!-- Prefix: "?q="; 18975 variants generated from 2596 tests in 587 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -17595,6 +17595,27 @@
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:ignore_result_of_non_must_use_that_returns_call_of_must_use:*'><!-- estimated: 0.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:builtin_must_use:*'><!-- estimated: 282.800 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:builtin_no_must_use:*'><!-- estimated: 24.120 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="literal";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="expr";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="var";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_for_init";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_for_init_semi";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_for_update";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_for_update_semi";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_block";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_continuing";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="in_paren";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="underscore";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="underscore_semi";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="underscore_equal";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="underscore_equal_semi";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="underscore_equal_underscore_semi";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="paren_underscore_paren";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="star_ampersand_undsscore";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="compound";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="equality";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="block";*'><!-- estimated: 149.639 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,parse,phony:parse:test="return";*'><!-- estimated: 149.639 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:vertex_parsing:*'><!-- estimated: 12.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:fragment_parsing:*'><!-- estimated: 20.800 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:compute_parsing:*'><!-- estimated: 8.000 ms -->
@@ -17720,6 +17741,24 @@
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_const:*'><!-- estimated: 3.400 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_var:*'><!-- estimated: 2.101 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,workgroup_size:workgroup_size_fp16:*'><!-- estimated: 1.400 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="bool";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="i32";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="u32";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="f32";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="f16";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="vec2f";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="vec3h";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="vec4u";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="vec3b";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="mat2x3f";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="mat4x2h";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="abstractInt";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="abstractFloat";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="array";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="struct";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="atomic_u32";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_constructible:type="atomic_i32";*'><!-- estimated: 244.513 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,statement,phony:rhs_with_decl:*'><!-- estimated: 365.102 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_direct_recursion:*'><!-- estimated: 2.900 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_indirect_recursion:*'><!-- estimated: 2.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,types,alias:no_indirect_recursion_via_vector_element:*'><!-- estimated: 2.100 ms -->
