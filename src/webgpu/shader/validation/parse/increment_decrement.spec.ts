@@ -87,13 +87,23 @@ const kTests = {
   },
   override: { wgsl: 'g++;', pass: false, gdecl: 'override g:i32;' },
   global_const: { wgsl: 'g++;', pass: false, gdecl: 'const g:i32 = 0;' },
+  workgroup_atomic: { wgsl: 'g++;', pass: false, gdecl: 'var<workgroup> g:atomic<i32>;' },
+  storage_atomic: {
+    wgsl: 'g++;',
+    pass: false,
+    gdecl: '@group(0) @binding(0) var<storage,read_write> g:atomic<u32>;',
+  },
 
   subexpr: { wgsl: 'a = b++;', pass: false },
   expr_paren: { wgsl: '(a++);', pass: false },
   expr_add: { wgsl: '0 + a++;', pass: false },
   expr_negate: { wgsl: '-a++;', pass: false },
   inc_inc: { wgsl: 'a++++;', pass: false },
+  inc_space_inc: { wgsl: 'a++ ++;', pass: false },
   inc_dec: { wgsl: 'a++--;', pass: false },
+  inc_space_dec: { wgsl: 'a++ --;', pass: false },
+  paren_inc: { wgsl: '(a++)++;', pass: false },
+  paren_dec: { wgsl: '(a++)--;', pass: false },
 
   in_block: { wgsl: '{ a++; }', pass: true },
   in_for_init: { wgsl: 'for (a++;false;) {}', pass: true },
