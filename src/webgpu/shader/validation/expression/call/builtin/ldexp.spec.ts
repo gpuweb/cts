@@ -13,10 +13,10 @@ import {
   kConcreteSignedIntegerScalarsAndVectors,
   VectorType,
 } from '../../../../../util/conversion.js';
-import { QuantizeFunc, quantizeToF16, quantizeToF32 } from '../../../../../util/math.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  ConstantOrOverrideValueChecker,
   fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
@@ -33,17 +33,6 @@ const kValidArgumentTypesB = objectsToRecord([
   Type.vec(4, Type.abstractInt),
   ...kConcreteSignedIntegerScalarsAndVectors,
 ]);
-
-function quantizeFunctionForScalarType(type: ScalarType): QuantizeFunc<number> {
-  switch (type) {
-    case Type.f32:
-      return quantizeToF32;
-    case Type.f16:
-      return quantizeToF16;
-    default:
-      return (v: number) => v;
-  }
-}
 
 function supportedSecondArgTypes(typeAKey: string) {
   const typeA = kValidArgumentTypesA[typeAKey];
@@ -104,26 +93,23 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     const typeA = kValidArgumentTypesA[t.params.typeA];
     const bias = biasForType(scalarTypeOf(typeA));
     const scalarTypeA = scalarTypeOf(typeA);
-    const quantizeFn = quantizeFunctionForScalarType(scalarTypeA);
+    const vCheck = new ConstantOrOverrideValueChecker(t, scalarTypeA);
 
     const typeB = kValidArgumentTypesB[t.params.typeB];
 
-    let expectedResult = Number(t.params.b) <= bias + 1;
+    const validExponent = Number(t.params.b) <= bias + 1;
 
     // Should be invalid if the calculations result in values that exceed the
     // maximum representable float value for the given type.
     const a = Number(t.params.a);
     const b = Number(t.params.b);
-    const ldexp = quantizeFn(a * Math.pow(2, b));
-    if (!Number.isFinite(ldexp)) {
-      expectedResult = false;
-    }
+    vCheck.checkedResult(a * Math.pow(2, b));
 
     // Validates ldexp(a, b) or ldexp(vecN(a), vecN(b));
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      validExponent && vCheck.allChecksPassed(),
       [typeA.create(t.params.a), typeB.create(t.params.b)],
       t.params.stage
     );
