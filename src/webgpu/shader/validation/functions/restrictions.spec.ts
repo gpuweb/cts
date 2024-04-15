@@ -913,7 +913,7 @@ fn ${name}() -> i32 {
 
 g.test('param_type_required')
   .specURL('https://www.w3.org/TR/WGSL/#function-declaration-sec')
-  .desc(`Tests the function name is required`)
+  .desc(`Tests the parameter type is required`)
   .params(u => u.combine('ty', [true, false]).combine('colon', [true, false]))
   .fn(t => {
     const has_ty = t.params.ty;
@@ -971,7 +971,7 @@ fn f ${args} {}
 
 g.test('non_module_scoped_function')
   .specURL('https://www.w3.org/TR/WGSL/#function-declaration-sec')
-  .desc(`Tests that the parens for a function are required`)
+  .desc(`Tests that a non-module-scope function is rejected`)
   .params(u => u.combine('loc', ['inner', 'outer']))
   .fn(t => {
     const o = `fn a() -> i32 { return 1; }`;
