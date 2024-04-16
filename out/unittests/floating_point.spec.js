@@ -3102,7 +3102,10 @@ const kFractIntervalCases = {
   { input: -1.1, expected: reinterpretU64AsF64(0x3fecccccccccccccn) },
 
   // https://github.com/gpuweb/cts/issues/2766
-  { input: 0x80000000, expected: 0 }]
+  { input: 0x80000000, expected: 0 },
+
+  // https://github.com/gpuweb/gpuweb/issues/4523
+  { input: 3937509.87755102, expected: [0, 0.75] }]
 
 
 };
@@ -3110,7 +3113,7 @@ const kFractIntervalCases = {
 g.test('fractInterval').
 params((u) =>
 u.
-combine('trait', ['f32', 'f16', 'abstract']).
+combine('trait', ['f32', 'f16']).
 beginSubcases().
 expandWithParams((p) => {
   const constants = FP[p.trait].constants();
@@ -3149,7 +3152,7 @@ const kInverseSqrtIntervalCases = {
   // 1/sqrt(0x3D23D70B)=4.9999998230487200185270893769213 rounded to f32 0x409FFFFF or 0x40A00000,
   // 1/sqrt(0x3D23D70A)=5.0000000558793553117506910583908 rounded to f32 0x40A00000 or 0x40A00001.
   { input: 0.04, expected: [reinterpretU32AsF32(0x409FFFFF), reinterpretU32AsF32(0x40A00001)] }, // ~5.0
-  // Maximium f32 0x7F7FFFFF = 3.4028234663852886e+38,
+  // Maximum f32 0x7F7FFFFF = 3.4028234663852886e+38,
   // 1/sqrt(0x7F7FFFFF)=5.4210110239862427800382690921791e-20 rounded to f32 0x1F800000 or 0x1F800001
   { input: kValue.f32.positive.max, expected: [reinterpretU32AsF32(0x1f800000), reinterpretU32AsF32(0x1f800001)] } // ~5.421...e-20
   ],
@@ -3158,7 +3161,7 @@ const kInverseSqrtIntervalCases = {
   // 1/sqrt(0x291F)=4.9994660279328446295684795818427 rounded to f16 0x44FF or 0x4500,
   // 1/sqrt(0x291E)=5.001373857053206453045376503367 rounded to f16 0x4500 or 0x4501.
   { input: 0.04, expected: [reinterpretU16AsF16(0x44FF), reinterpretU16AsF16(0x4501)] }, // ~5.0
-  // Maximium f16 0x7BFF = 65504,
+  // Maximum f16 0x7BFF = 65504,
   // 1/sqrt(0x7BFF)=0.00390720402370454101997160826062 rounded to f16 0x1C00 or 0x1C01
   { input: kValue.f16.positive.max, expected: [reinterpretU16AsF16(0x1c00), reinterpretU16AsF16(0x1c01)] } // ~3.9072...e-3
   ]
