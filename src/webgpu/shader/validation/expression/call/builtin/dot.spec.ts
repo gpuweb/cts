@@ -5,17 +5,11 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { kValue } from '../../../../../util/constants.js';
-import {
-  Type,
-  kConvertableToFloatVectors,
-  scalarTypeOf,
-  ScalarType,
-} from '../../../../../util/conversion.js';
-import { QuantizeFunc, quantizeToF16, quantizeToF32 } from '../../../../../util/math.js';
+import { Type, kConvertableToFloatVectors, scalarTypeOf } from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
+  ConstantOrOverrideValueChecker,
   fullRangeForType,
   kConstantAndOverrideStages,
   stageSupportsType,
@@ -25,66 +19,6 @@ import {
 export const g = makeTestGroup(ShaderValidationTest);
 
 const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function quantizeFunctionForScalarType(type: ScalarType): QuantizeFunc<any> {
-  switch (type) {
-    case Type.f32:
-      return quantizeToF32;
-    case Type.f16:
-      return quantizeToF16;
-    case Type.abstractInt:
-      return BigInt;
-    default:
-      return Number;
-  }
-}
-
-export interface CheckFunc {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (num: any): boolean;
-}
-
-function checkFunctionForScalarType(type: ScalarType): CheckFunc {
-  switch (type) {
-    case Type.abstractInt:
-      return (num: bigint) => !kValue.i64.isOOB(num);
-    default:
-      return (num: number) => Number.isFinite(num);
-  }
-}
-
-interface StepArgs {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [name: string]: any;
-}
-
-export interface EquationStep {
-  (args: StepArgs): StepArgs;
-}
-
-function checkEquation(type: ScalarType, args: StepArgs, steps: EquationStep[]) {
-  const quantizeFn = quantizeFunctionForScalarType(type);
-  const checkFn = checkFunctionForScalarType(type);
-
-  const quantizedArgs: StepArgs = {};
-  for (const key in args) {
-    quantizedArgs[key] = quantizeFn(args[key]);
-  }
-
-  for (const step of steps) {
-    const stepArgs = step(quantizedArgs);
-
-    for (const key in stepArgs) {
-      quantizedArgs[key] = quantizeFn(stepArgs[key]);
-      if (!checkFn(quantizedArgs[key])) {
-        return false;
-      }
-    }
-  }
-
-  return true;
-}
 
 g.test('values')
   .desc(
@@ -108,26 +42,26 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
   })
   .fn(t => {
     const scalarType = scalarTypeOf(kValidArgumentTypes[t.params.type]);
+    const vCheck = new ConstantOrOverrideValueChecker(t, scalarType);
 
     // Dot product equation: (a[0]*b[0]) + (a[1]*b[1]) + ... (a[N]*b[N])
     // Should be invalid if the dot product calculations result in intermediate
     // values that exceed the maximum representable float value for the given type.
-    const expectedResult = checkEquation(
-      scalarType,
-      {
-        a: t.params.a,
-        b: t.params.b,
-        vecSize: kValidArgumentTypes[t.params.type].width,
-      },
-      [
-        arg => {
-          return { ab: arg.a * arg.b };
-        },
-        arg => {
-          return { dp: arg.ab * arg.vecSize };
-        },
-      ]
-    );
+    if (scalarType === Type.abstractInt) {
+      // Need to handle the AbstractInt case separately becasue all values are
+      // treated as BigInt in that case.
+      const a = BigInt(t.params.a);
+      const b = BigInt(t.params.b);
+      const vecSize = BigInt(kValidArgumentTypes[t.params.type].width);
+      const ab = vCheck.checkedResultBigInt(a * b);
+      vCheck.checkedResultBigInt(ab * vecSize);
+    } else {
+      const a = Number(t.params.a);
+      const b = Number(t.params.b);
+      const vecSize = kValidArgumentTypes[t.params.type].width;
+      const ab = vCheck.checkedResult(a * b);
+      vCheck.checkedResult(ab * vecSize);
+    }
 
     const type = kValidArgumentTypes[t.params.type];
 
@@ -135,7 +69,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() never
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
-      expectedResult,
+      vCheck.allChecksPassed(),
       [type.create(t.params.a), type.create(t.params.b)],
       t.params.stage
     );
