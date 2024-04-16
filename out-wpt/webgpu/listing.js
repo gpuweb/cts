@@ -3927,6 +3927,15 @@ export const listing = [
       "validation",
       "expression",
       "access",
+      "array"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "access",
       "vector"
     ]
   },
