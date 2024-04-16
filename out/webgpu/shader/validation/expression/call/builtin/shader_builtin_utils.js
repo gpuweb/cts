@@ -1,6 +1,7 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from '../../../../../../common/util/util.js';import { Type } from '../../../../../util/conversion.js';
+**/import { keysOf } from '../../../../../../common/util/data_tables.js';import { assert } from '../../../../../../common/util/util.js';import { Type, scalarTypeOf } from '../../../../../util/conversion.js';
+
 /**
  * Use to test that certain WGSL builtins are only available in the fragment stage.
  * Create WGSL that defines a function "foo" and its required variables that uses
@@ -65,6 +66,53 @@ export const kEntryPointsToValidateFragmentOnlyBuiltins = {
     `
   }
 };
+
+const kCommonTexelTypes = [Type.vec4f, Type.vec4i, Type.vec4u];
+const kDepthTexelTypes = [Type.f32];
+const kExternalTexelTypes = [Type.vec4f];
+
+
+
+
+
+
+
+
+const kCommonTextureTypes = {
+  texture_1d: { texelTypes: kCommonTexelTypes },
+  texture_2d: { texelTypes: kCommonTexelTypes },
+  texture_2d_array: { texelTypes: kCommonTexelTypes },
+  texture_3d: { texelTypes: kCommonTexelTypes },
+  texture_cube: { texelTypes: kCommonTexelTypes },
+  texture_cube_array: { texelTypes: kCommonTexelTypes },
+  texture_multisampled_2d: { texelTypes: kCommonTexelTypes }
+};
+
+const kDepthTextureTypes = {
+  texture_depth_2d: { texelTypes: kDepthTexelTypes, noSuffix: true },
+  texture_depth_2d_array: { texelTypes: kDepthTexelTypes, noSuffix: true },
+  texture_depth_cube: { texelTypes: kDepthTexelTypes, noSuffix: true },
+  texture_depth_cube_array: { texelTypes: kDepthTexelTypes, noSuffix: true },
+  texture_depth_multisampled_2d: { texelTypes: kDepthTexelTypes, noSuffix: true }
+};
+
+export const kNonStorageTextureTypeInfo = {
+  ...kCommonTextureTypes,
+  ...kDepthTextureTypes,
+  texture_external: { texelTypes: kExternalTexelTypes, noSuffix: true }
+};
+
+export const kNonStorageTextureTypes = keysOf(kNonStorageTextureTypeInfo);
+
+
+/**
+ * @returns the WGSL needed to define a texture based on a textureType (eg: 'texture_2d')
+ * and a texelType (eg: Type.vec4f) which would return `texture_2d<f32>`
+ */
+export function getNonStorageTextureTypeWGSL(textureType, texelType) {
+  const info = kNonStorageTextureTypeInfo[textureType];
+  return info.noSuffix ? textureType : `${textureType}<${scalarTypeOf(texelType)}>`;
+}
 
 export const kTestTextureTypes = [
 'texture_1d<f32>',
