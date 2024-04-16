@@ -8,7 +8,12 @@ Validation tests for array access expressions
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../common/util/data_tables.js';
-import { Type, kAllScalarsAndVectors, VectorType } from '../../../../util/conversion.js';
+import {
+  Type,
+  elementTypeOf,
+  kConcreteNumericScalarsAndVectors,
+  kAllBoolScalarsAndVectors,
+} from '../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -45,7 +50,10 @@ g.test('index_type')
     t.expectCompileResult(expect, code);
   });
 
-const kTypes = objectsToRecord(kAllScalarsAndVectors);
+const kTypes = objectsToRecord([
+  ...kConcreteNumericScalarsAndVectors,
+  ...kAllBoolScalarsAndVectors,
+]);
 const kTypeKeys = keysOf(kTypes);
 
 g.test('result_type')
@@ -56,24 +64,9 @@ g.test('result_type')
       .combine('elements', [0, 4] as const)
       .filter(t => {
         const ty = kTypes[t.type];
-        if (ty instanceof VectorType) {
-          if (ty.elementType.kind === 'abstract-int' || ty.elementType.kind === 'abstract-float') {
-            return false;
-          }
-        } else {
-          if (ty.kind === 'abstract-int' || ty.kind === 'abstract-float') {
-            return false;
-          }
-        }
         if (t.elements === 0) {
-          if (ty instanceof VectorType) {
-            if (ty.elementType.kind === 'bool') {
-              return false;
-            }
-          } else {
-            if (ty.kind === 'bool') {
-              return false;
-            }
+          if (elementTypeOf(ty) === Type.bool) {
+            return false;
           }
         }
         return true;
