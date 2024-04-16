@@ -65,6 +65,12 @@ where a the calculations result in a non-representable value for the given type.
     const k = vCheck.checkedResult(1.0 - c2_one_minus_b_dot_a_2);
 
     if (k >= 0) {
+      // If the k is near zero it may fail on some implementations which implement sqrt as
+      // 1/inversesqrt, so skip the test.
+      if (vCheck.isNearZero(k)) {
+        t.skip(`K value, ${k}, is at or near 0.`);
+      }
+
       const ca = vCheck.checkedResult(c * a);
       const cbda = vCheck.checkedResult(c * b_dot_a);
       const sqrt_k = vCheck.checkedResult(Math.sqrt(k));
