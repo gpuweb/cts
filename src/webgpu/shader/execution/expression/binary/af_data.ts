@@ -1,4 +1,3 @@
-import { crc32 } from '../../../../../common/util/crc32.js';
 import { kValue } from '../../../../util/constants.js';
 import { FP, FPInterval } from '../../../../util/floating_point.js';
 import { sparseScalarF64Range } from '../../../../util/math.js';
@@ -29,11 +28,6 @@ export const kSparseMatrixAFValues = {
     4: sparseScalarF64Range().map(f => Array(4).fill(Array(4).fill(f))),
   },
 } as const;
-
-/** Hashing function for keys in lookup tables */
-function hashRawDataInputs(lhs: number, rhs: number): number {
-  return crc32(`lhs: ${lhs}, rhs: ${rhs}`);
-}
 
 /** Line format of af_data_gen/main.cpp outputs */
 interface RawBinaryData {
@@ -512,27 +506,27 @@ export const kSubtractionRawValues:  readonly RawBinaryData[] = [
 ] as const;
 
 /** Table mapping addition binary inputs to expectation intervals */
-const kAdditionTable: Readonly<Record<number, FPInterval>> = Object.fromEntries(
+const kAdditionTable: Readonly<Record<string, FPInterval>> = Object.fromEntries(
   kAdditionRawValues.map(value => [
-    hashRawDataInputs(value.lhs, value.rhs),
+    `${value.lhs} ${value.rhs}`,
     FP.abstract.spanIntervals(...value.expected.map(e => FP.abstract.correctlyRoundedInterval(e))),
   ])
 );
 
 /** External interface for fetching addition expectation intervals. */
 export function getAdditionAFInterval(lhs: number, rhs: number): FPInterval {
-  return kAdditionTable[hashRawDataInputs(lhs, rhs)];
+  return kAdditionTable[`${lhs} ${rhs}`];
 }
 
 /** Table mapping subtraction binary inputs to expectation intervals */
-const kSubtractionTable: Readonly<Record<number, FPInterval>> = Object.fromEntries(
+const kSubtractionTable: Readonly<Record<string, FPInterval>> = Object.fromEntries(
   kSubtractionRawValues.map(value => [
-    hashRawDataInputs(value.lhs, value.rhs),
+    `${value.lhs} ${value.rhs}`,
     FP.abstract.spanIntervals(...value.expected.map(e => FP.abstract.correctlyRoundedInterval(e))),
   ])
 );
 
 /** External interface for fetching subtraction expectation intervals. */
 export function getSubtractionAFInterval(lhs: number, rhs: number): FPInterval {
-  return kSubtractionTable[hashRawDataInputs(lhs, rhs)];
+  return kSubtractionTable[`${lhs} ${rhs}`];
 }
