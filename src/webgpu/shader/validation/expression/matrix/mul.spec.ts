@@ -3,21 +3,10 @@ Validation tests for matrix multiplication expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { keysOf, objectsToRecord } from '../../../../../common/util/data_tables.js';
-import {
-  isFloatType,
-  kAllScalarsAndVectors,
-  ScalarType,
-  scalarTypeOf,
-  Type,
-  VectorType,
-} from '../../../../util/conversion.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
-
-// A list of scalar and vector types.
-const kScalarAndVectorTypes = objectsToRecord(kAllScalarsAndVectors);
 
 interface Argument {
   /** Value as a string. */
@@ -26,7 +15,7 @@ interface Argument {
   readonly is_f16?: boolean;
 }
 
-const kTests : { readonly [name: string]: Argument } = {
+const kTests: { readonly [name: string]: Argument } = {
   match: {
     src: 'mat3x2f()',
   },
@@ -60,7 +49,7 @@ const kTests : { readonly [name: string]: Argument } = {
   matf_no_match: {
     src: 'mat4x4f()',
   },
-}
+};
 
 g.test('invalid')
   .desc(`Validates types for matrix multiplication`)
@@ -80,7 +69,7 @@ g.test('invalid')
     let rhs = t.params.rhs === 'ai' ? 'mat3x2(0, 0, 0, 0, 0, 0)' : t.params.rhs;
 
     if (t.params.swap) {
-      let a = lhs;
+      const a = lhs;
       lhs = rhs;
       rhs = a;
     }
@@ -102,17 +91,13 @@ fn main() {
 }
 `;
 
-    let pass = kTests[t.params.test].src === 'mat3x2f()' && t.params.rhs === 'mat2x3f()';
+    const pass = kTests[t.params.test].src === 'mat3x2f()' && t.params.rhs === 'mat2x3f()';
     t.expectCompileResult(pass, code);
   });
 
 g.test('f16_and_f32_matrix')
   .desc(`Validates that f16 multiplied by an f32 matrix is an error.`)
-  .params(u =>
-    u
-      .combine('rhs', ['mat2x3f()', 'mat2x3h()'])
-      .combine('swap', [true, false])
-  )
+  .params(u => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
@@ -120,7 +105,7 @@ g.test('f16_and_f32_matrix')
     let lhs = '1h';
     let rhs = t.params.rhs;
     if (t.params.swap) {
-      let a = lhs;
+      const a = lhs;
       lhs = rhs;
       rhs = a;
     }
@@ -134,17 +119,13 @@ fn main() {
 }
 `;
 
-    let pass = t.params.rhs === 'mat2x3h()';
+    const pass = t.params.rhs === 'mat2x3h()';
     t.expectCompileResult(pass, code);
   });
 
 g.test('f32_and_f16_matrix')
   .desc(`Validates that f32 multiplied by an f16 matrix is an error`)
-  .params(u =>
-    u
-      .combine('rhs', ['mat2x3f()', 'mat2x3h()'])
-      .combine('swap', [true, false])
-  )
+  .params(u => u.combine('rhs', ['mat2x3f()', 'mat2x3h()']).combine('swap', [true, false]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
@@ -152,7 +133,7 @@ g.test('f32_and_f16_matrix')
     let lhs = '1f';
     let rhs = t.params.rhs;
     if (t.params.swap) {
-      let a = lhs;
+      const a = lhs;
       lhs = rhs;
       rhs = a;
     }
@@ -166,10 +147,9 @@ fn main() {
 }
 `;
 
-    let pass = t.params.rhs === 'mat2x3f()';
+    const pass = t.params.rhs === 'mat2x3f()';
     t.expectCompileResult(pass, code);
   });
-
 
 g.test('mat_by_mat')
   .desc(`Validates that mat * mat is only valid for kxR * Cxk.`)
@@ -196,20 +176,20 @@ g.test('mat_by_mat')
 
     let t1_val = '';
     if (t.params.ty1 === '') {
-      for (let i in [...Array(c1).keys()]) {
-        for (let k in [...Array(r1).keys()]) {
-          t1_val += "0,";
-        }
-      }
+      [...Array(c1)].map((_, i) => {
+        [...Array(r1)].map((_, k) => {
+          t1_val += '0,';
+        });
+      });
     }
 
     let t2_val = '';
     if (t.params.ty2 === '') {
-      for (let i in [...Array(c2).keys()]) {
-        for (let k in [...Array(r2).keys()]) {
-          t2_val += "0,";
-        }
-      }
+      [...Array(c2)].map((_, i) => {
+        [...Array(r2)].map((_, k) => {
+          t2_val += '0,';
+        });
+      });
     }
 
     const code = `
@@ -220,10 +200,10 @@ fn main() {
 }
 `;
 
-    let pass = c1 === r2 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
+    const pass =
+      c1 === r2 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
     t.expectCompileResult(pass, code);
   });
-
 
 g.test('mat_by_vec')
   .desc(`Validates that mat * vec is only valid for CxR * C.`)
@@ -248,18 +228,18 @@ g.test('mat_by_vec')
 
     let t1_val = '';
     if (t.params.ty1 === '') {
-      for (let i in [...Array(c1).keys()]) {
-        for (let k in [...Array(r1).keys()]) {
-          t1_val += "0,";
-        }
-      }
+      [...Array(c1)].map((_, i) => {
+        [...Array(r1)].map((_, k) => {
+          t1_val += '0,';
+        });
+      });
     }
 
     let t2_val = '';
     if (t.params.ty2 === '') {
-      for (let k in [...Array(v1).keys()]) {
-          t2_val += "0,";
-        }
+      [...Array(v1)].map((_, i) => {
+        t2_val += '0,';
+      });
     }
 
     const code = `
@@ -270,7 +250,8 @@ fn main() {
 }
 `;
 
-    let pass = c1 === v1 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
+    const pass =
+      c1 === v1 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
     t.expectCompileResult(pass, code);
   });
 
@@ -297,18 +278,18 @@ g.test('vec_by_mat')
 
     let t1_val = '';
     if (t.params.ty1 === '') {
-      for (let i in [...Array(c1).keys()]) {
-        for (let k in [...Array(r1).keys()]) {
-          t1_val += "0,";
-        }
-      }
+      [...Array(c1)].map((_, i) => {
+        [...Array(r1)].map((_, k) => {
+          t1_val += '0,';
+        });
+      });
     }
 
     let t2_val = '';
     if (t.params.ty2 === '') {
-      for (let k in [...Array(v1).keys()]) {
-          t2_val += "0,";
-        }
+      [...Array(v1)].map((_, i) => {
+        t2_val += '0,';
+      });
     }
 
     const code = `
@@ -319,9 +300,7 @@ fn main() {
 }
 `;
 
-    let pass = r1 === v1 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
+    const pass =
+      r1 === v1 && (t.params.ty1 === t.params.ty2 || t.params.ty1 === '' || t.params.ty2 === '');
     t.expectCompileResult(pass, code);
   });
-
-
-

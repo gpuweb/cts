@@ -3,32 +3,20 @@ Validation tests for matrix comparison expressions.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
-import { keysOf, objectsToRecord } from '../../../../../common/util/data_tables.js';
-import {
-  isFloatType,
-  kAllScalarsAndVectors,
-  ScalarType,
-  scalarTypeOf,
-  Type,
-  VectorType,
-} from '../../../../util/conversion.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
-// A list of scalar and vector types.
-const kScalarAndVectorTypes = objectsToRecord(kAllScalarsAndVectors);
-
 // A list of comparison operators
 const kComparisonOperators = {
-  eq: { op: '=='},
+  eq: { op: '==' },
   ne: { op: '!=' },
   gt: { op: '>' },
   ge: { op: '>=' },
   lt: { op: '<' },
   le: { op: '<=' },
 };
-
 
 interface Argument {
   /** Value as a string. */
@@ -37,7 +25,7 @@ interface Argument {
   readonly is_f16?: boolean;
 }
 
-const kTests : { readonly [name: string]: Argument } = {
+const kTests: { readonly [name: string]: Argument } = {
   bool: {
     src: 'false',
   },
@@ -87,8 +75,8 @@ const kTests : { readonly [name: string]: Argument } = {
   math: {
     src: 'mat2x3h()',
     is_f16: true,
-  }
-}
+  },
+};
 
 g.test('invalid')
   .desc(`Validates that comparison expressions are never accepted for matrix types.`)
@@ -125,6 +113,6 @@ fn main() {
 }
 `;
 
-    let pass = (lhs === '1i' || lhs === '1') && rhs === '1i';
+    const pass = (lhs === '1i' || lhs === '1') && rhs === '1i';
     t.expectCompileResult(pass, code);
   });
