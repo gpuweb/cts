@@ -5425,6 +5425,14 @@ export const listing = [
       "shader",
       "validation",
       "statement",
+      "break_if"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "statement",
       "for"
     ]
   },
