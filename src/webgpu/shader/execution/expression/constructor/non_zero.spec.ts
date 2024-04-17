@@ -17,7 +17,12 @@ import {
   vec3,
 } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import { allInputSources, basicExpressionBuilder, run } from '../expression.js';
+import {
+  ShaderBuilderParams,
+  allInputSources,
+  basicExpressionBuilder,
+  run,
+} from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -729,7 +734,7 @@ g.test('abstract_array_elements')
       basicExpressionBuilder(_ => `${fn}(${elements.map(e => e.args).join(', ')})`),
       [],
       concreteArrayType,
-      { inputSource: 'const' },
+      { inputSource: 'const', constEvaluationMode: 'direct' },
       [
         {
           input: [],
@@ -773,11 +778,11 @@ g.test('structure')
     );
     await run(
       t,
-      (parameterTypes, resultType, cases, inputSource) => {
+      (params: ShaderBuilderParams) => {
         return `
 ${t.params.member_types.includes('f16') ? 'enable f16;' : ''}
 
-${builder(parameterTypes, resultType, cases, inputSource)}
+${builder(params)}
 
 struct MyStruct {
 ${t.params.member_types.map((ty, i) => `  member_${i} : ${ty},`).join('\n')}
