@@ -4919,6 +4919,60 @@ export const listing = [
       "shader",
       "validation",
       "expression",
+      "matrix",
+      "add_sub"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "matrix",
+      "and_or_xor"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "matrix",
+      "bitwise_shift"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "matrix",
+      "comparison"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "matrix",
+      "div_rem"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "matrix",
+      "mul"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
       "overload_resolution"
     ]
   },
