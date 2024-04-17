@@ -363,8 +363,8 @@ Validates that incompatible texture types don't work with ${builtin}
 params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
-combine('textureType', keysOf(kValidTextureSampleCompareParameterTypes)).
 beginSubcases().
+combine('textureType', keysOf(kValidTextureSampleCompareParameterTypes)).
 expand('offset', (t) =>
 kValidTextureSampleCompareParameterTypes[t.textureType].offsetArgType ?
 [false, true] :

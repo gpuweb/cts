@@ -430,6 +430,7 @@ Validates that incompatible texture types don't work with ${builtin}
 params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
+beginSubcases().
 combine('textureType', keysOf(kValidTextureLoadParameterTypesForNonStorageTextures))
 ).
 fn((t) => {
@@ -482,8 +483,8 @@ Validates that incompatible texture types don't work with ${builtin}
 params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
-combine('textureType', keysOf(kValidTextureLoadParameterTypesForStorageTextures)).
 beginSubcases().
+combine('textureType', keysOf(kValidTextureLoadParameterTypesForStorageTextures)).
 combine('format', kAllTextureFormats)
 ).
 fn((t) => {

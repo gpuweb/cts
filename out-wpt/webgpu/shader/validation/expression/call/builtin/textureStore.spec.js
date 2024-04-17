@@ -183,8 +183,8 @@ Validates that incompatible texture types don't work with ${builtin}
 params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
-combine('textureType', keysOf(kValidTextureStoreParameterTypes)).
 beginSubcases().
+combine('textureType', keysOf(kValidTextureStoreParameterTypes)).
 combine('format', kAllTextureFormats)
 // filter to only storage texture formats.
 .filter((t) => !!kTextureFormatInfo[t.format].color?.storage)
