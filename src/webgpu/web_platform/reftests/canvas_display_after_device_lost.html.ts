@@ -1,7 +1,17 @@
-import { runRefTest } from './gpu_ref_test.js';
+import { assert } from '../../../common/util/util.js';
+import { timeout } from '../../../common/util/timeout.js';
+import { takeScreenshotDelayed } from '../../../common/util/wpt_reftest_wait.js';
 
-runRefTest(t => {
-  const device = t.device;
+void (async () => {
+  assert(
+    typeof navigator !== 'undefined' && navigator.gpu !== undefined,
+    'No WebGPU implementation found'
+  );
+
+  const adapter = await navigator.gpu.requestAdapter();
+  assert(adapter !== null);
+  const device = await adapter.requestDevice();
+  assert(device !== null);
   const presentationFormat = navigator.gpu.getPreferredCanvasFormat();
   let deviceLost = false;
 
@@ -45,9 +55,11 @@ runRefTest(t => {
     if (!deviceLost) {
       device.destroy();
       deviceLost = true;
+      timeout(drawAll, 100);
+    } else {
+      takeScreenshotDelayed(50);
     }
   }
 
   drawAll();
-  requestAnimationFrame(drawAll);
-});
+})();
