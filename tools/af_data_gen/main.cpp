@@ -149,6 +149,10 @@ const BinaryOp kAdditionOp= [](const long double lhs, const long double rhs) {
     return lhs + rhs;
 };
 
+const BinaryOp kSubtractionOp= [](const long double lhs, const long double rhs) {
+    return lhs - rhs;
+};
+
 /**
  * Generates a string, that can be copied into a CTS test file, for all of the
  * tests cases for a binary operation.
@@ -208,5 +212,6 @@ int main() {
     }
 
     std::cout << printBinaryOpCases(kAdditionOp, "ADDITION") << std::endl;
+    std::cout << printBinaryOpCases(kSubtractionOp, "SUBTRACTION") << std::endl;
     return 0;
 }
