@@ -121,7 +121,7 @@ async function doTest(
     // using the ideal FLOAT -> SRGB conversion specified below but WITHOUT the rounding to integer,
     // and taking the floating point difference versus the original SRGB value to yield the error.
     // Exact conversion is required: 0.0f and 1.0f (the ends) must be exactly achievable.
-    // https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm#SRGBtoFLOAT
+    // https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm#3.2.3.7%20SRGB%20-%3E%20FLOAT
     const readBackValue = await t.readGPUBufferRangeTyped(outputBuffer, {
       type: Float32Array,
       typedLength: 4,
