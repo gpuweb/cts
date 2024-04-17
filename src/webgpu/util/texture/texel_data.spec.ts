@@ -8,6 +8,7 @@ import {
   EncodableTextureFormat,
 } from '../../format_info.js';
 import { GPUTest } from '../../gpu_test.js';
+import { gammaCompress, floatAsNormalizedIntegerScale } from '../conversion.js';
 
 import {
   kTexelRepresentationInfo,
@@ -17,7 +18,7 @@ import {
 
 export const g = makeTestGroup(GPUTest);
 
-function doTest(
+async function doTest(
   t: GPUTest & {
     params: {
       format: EncodableTextureFormat;
@@ -106,16 +107,67 @@ function doTest(
   pass.end();
   t.device.queue.submit([encoder.finish()]);
 
-  t.expectGPUBufferValuesEqual(
-    outputBuffer,
-    new ReadbackTypedArray(
-      rep.componentOrder.map(c => {
-        const value = rep.decode(componentData)[c];
-        assert(value !== undefined);
-        return value;
-      })
-    )
+  const idealReadbackData = new ReadbackTypedArray(
+    rep.componentOrder.map(c => {
+      const value = rep.decode(componentData)[c];
+      assert(value !== undefined);
+      return value;
+    })
   );
+
+  if (format === 'rgba8unorm-srgb' || format === 'bgra8unorm-srgb') {
+    // In D3D the SRGB -> Float conversion is permitted a tolerance of 0.5f ULP on the SRGB side.
+    // The procedure for measuring this tolerance is to convert the result back into SRGB space
+    // using the ideal FLOAT -> SRGB conversion specified below but WITHOUT the rounding to integer,
+    // and taking the floating point difference versus the original SRGB value to yield the error.
+    // Exact conversion is required: 0.0f and 1.0f (the ends) must be exactly achievable.
+    // https://microsoft.github.io/DirectX-Specs/d3d/archive/D3D11_3_FunctionalSpec.htm#SRGBtoFLOAT
+    const readBackValue = await t.readGPUBufferRangeTyped(outputBuffer, {
+      type: Float32Array,
+      typedLength: 4,
+    });
+    t.expect(idealReadbackData[3] === readBackValue.data[3]);
+
+    // Do the ideal FLOAT -> SRGB conversion on the readback float value WITHOUT the rounding to
+    // integer.
+    const readBackValueToSRGB = new Float32Array(3);
+    for (let i = 0; i < 3; ++i) {
+      const gamaCompressed = gammaCompress(readBackValue.data[i]);
+      let outputIndex = i;
+      if (format === 'bgra8unorm-srgb' && (i === 0 || i === 2)) {
+        outputIndex = 2 - i;
+      }
+      readBackValueToSRGB[outputIndex] = floatAsNormalizedIntegerScale(gamaCompressed, 8, false);
+    }
+
+    // Take the floating point difference versus the original SRGB value to yield the error.
+    const toleranceULP = 0.5;
+    assert(
+      componentData.R !== undefined &&
+        componentData.G !== undefined &&
+        componentData.B !== undefined
+    );
+
+    if (componentData.R === 0 || componentData.R === 255) {
+      t.expect(readBackValueToSRGB[0] === componentData.R);
+    } else {
+      t.expect(Math.abs(readBackValueToSRGB[0] - componentData.R) <= toleranceULP);
+    }
+
+    if (componentData.G === 0 || componentData.G === 255) {
+      t.expect(readBackValueToSRGB[1] === componentData.G);
+    } else {
+      t.expect(Math.abs(readBackValueToSRGB[1] - componentData.G) <= toleranceULP);
+    }
+
+    if (componentData.B === 0 || componentData.B === 255) {
+      t.expect(readBackValueToSRGB[2] === componentData.B);
+    } else {
+      t.expect(Math.abs(readBackValueToSRGB[2] - componentData.B) <= toleranceULP);
+    }
+  } else {
+    t.expectGPUBufferValuesEqual(outputBuffer, idealReadbackData);
+  }
 }
 
 // Make a test parameter by mapping a format and each component to a texel component
