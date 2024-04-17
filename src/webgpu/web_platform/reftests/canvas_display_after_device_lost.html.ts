@@ -1,5 +1,5 @@
-import { assert } from '../../../common/util/util.js';
 import { timeout } from '../../../common/util/timeout.js';
+import { assert } from '../../../common/util/util.js';
 import { takeScreenshotDelayed } from '../../../common/util/wpt_reftest_wait.js';
 
 void (async () => {
