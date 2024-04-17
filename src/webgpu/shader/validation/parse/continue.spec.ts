@@ -71,6 +71,22 @@ const kTests = {
     src: 'loop { if false { continue; } let cond = false; continuing { break if cond; } }',
     pass: false,
   },
+  loop_continue_expression: {
+    src: 'loop { if false { break; } continue true; }',
+    pass: false,
+  },
+  for_init_continue: {
+    src: 'for (continue;;) { break; }',
+    pass: false,
+  },
+  for_condition_continue: {
+    src: 'for (;continue;) { break; }',
+    pass: false,
+  },
+  for_continue_continue: {
+    src: 'for (;;continue) { break; }',
+    pass: false,
+  },
 };
 
 g.test('placement')
@@ -85,4 +101,13 @@ fn vtx() -> @builtin(position) vec4f {
 }
     `;
     t.expectCompileResult(kTests[t.params.stmt].pass, code);
+  });
+
+g.test('module_scope')
+  .desc('Test that continue is not valid at module-scope.')
+  .fn(t => {
+    const code = `
+continue;
+    `;
+    t.expectCompileResult(false, code);
   });

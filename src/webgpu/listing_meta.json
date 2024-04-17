@@ -2401,6 +2401,7 @@
   "webgpu:shader,validation,parse,compound:parse:*": { "subcaseMS": 4.315 },
   "webgpu:shader,validation,parse,const:placement:*": { "subcaseMS": 1.167 },
   "webgpu:shader,validation,parse,const_assert:parse:*": { "subcaseMS": 1.400 },
+  "webgpu:shader,validation,parse,continue:module_scope:*": { "subcaseMS": 0.278 },
   "webgpu:shader,validation,parse,continue:placement:*": { "subcaseMS": 53.998 },
   "webgpu:shader,validation,parse,continuing:placement:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,parse,diagnostic:after_other_directives:*": { "subcaseMS": 1.000 },
