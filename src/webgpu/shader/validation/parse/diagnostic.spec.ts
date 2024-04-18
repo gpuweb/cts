@@ -106,6 +106,18 @@ g.test('invalid_severity')
     t.expectCompileResult(false, code);
   });
 
+g.test('duplicate_attribute')
+  .desc('Tests that duplicate attribute is disallowed')
+  .params(u => u.combine('location', keysOf(kValidLocations)).combine('same_rule', [true, false] as const).filter(t => { if (t.location === 'module') { return false; } return true; }))
+  .fn(t => {
+    const rule1 = 'derivative_uniformity';
+    const rule2 = 'another_diagnostic_rule';
+    const d1 = generateDiagnostic('attribute', 'off', rule1);
+    const d2 = generateDiagnostic('attribute', 'off', t.params.same_rule ? rule1 : rule2);
+    const code = kValidLocations[t.params.location](`${d1} ${d2}`);
+    t.expectCompileResult(!t.params.same_rule, code);
+  });
+
 g.test('warning_unknown_rule')
   .specURL('https://gpuweb.github.io/gpuweb/wgsl/#diagnostics')
   .desc(`Tests unknown single token rules issue a warning`)

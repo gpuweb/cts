@@ -2428,6 +2428,7 @@
   "webgpu:shader,validation,parse,diagnostic:conflicting_attribute_same_location:*": { "subcaseMS": 1.400 },
   "webgpu:shader,validation,parse,diagnostic:conflicting_directive:*": { "subcaseMS": 1.244 },
   "webgpu:shader,validation,parse,diagnostic:diagnostic_scoping:*": { "subcaseMS": 1.244 },
+  "webgpu:shader,validation,parse,diagnostic:duplicate_attribute:*": { "subcaseMS": 12.467 },
   "webgpu:shader,validation,parse,diagnostic:invalid_locations:*": { "subcaseMS": 1.930 },
   "webgpu:shader,validation,parse,diagnostic:invalid_severity:*": { "subcaseMS": 1.361 },
   "webgpu:shader,validation,parse,diagnostic:valid_locations:*": { "subcaseMS": 1.368 },
