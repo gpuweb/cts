@@ -1,0 +1,370 @@
+export const description = `Test that variables in the shader are value initialized`;
+
+import { makeTestGroup } from '../../../common/framework/test_group.js';
+import { GPUTest } from '../../gpu_test.js';
+
+export const g = makeTestGroup(GPUTest);
+
+function paramTypeToTestType(ty: string): string {
+  let testValue = '';
+  switch (ty) {
+    case 'bool':
+      testValue = 'true';
+      break;
+    case 'f32':
+      testValue = '5.0f';
+      break;
+    case 'f16':
+      testValue = '5.0h';
+      break;
+    case 'i32':
+      testValue = '5i';
+      break;
+    case 'u32':
+      testValue = '5u';
+      break;
+  }
+  return testValue;
+}
+
+function generateShader(
+  isF16: boolean,
+  addressSpace: string,
+  typeDecl: string,
+  testValue: string,
+  comparison: string
+): string {
+  let moduleScope = `
+    ${isF16 ? 'enable f16;' : ''}
+    struct Output {
+      failed : atomic<u32>
+    }
+    @group(0) @binding(0) var<storage, read_write> output : Output;
+  `;
+
+  let functionScope = '';
+  switch (addressSpace) {
+    case 'private':
+      moduleScope += `\nvar<private> testVar: ${typeDecl} = ${testValue};`;
+      break;
+    case 'function':
+      functionScope += `\nvar testVar: ${typeDecl} = ${testValue};`;
+      break;
+  }
+
+  return `
+    ${moduleScope}
+    @compute @workgroup_size(1, 1, 1)
+    fn main() {
+      ${functionScope}
+      ${comparison}
+    }
+  `;
+}
+
+async function run(t: GPUTest, wgsl: string) {
+  const pipeline = await t.device.createComputePipelineAsync({
+    layout: 'auto',
+    compute: {
+      module: t.device.createShaderModule({
+        code: wgsl,
+      }),
+      entryPoint: 'main',
+    },
+  });
+
+  const resultBuffer = t.device.createBuffer({
+    size: 4,
+    usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
+  });
+  t.trackForCleanup(resultBuffer);
+
+  const zeroBuffer = t.device.createBuffer({
+    size: 4,
+    usage: GPUBufferUsage.UNIFORM,
+  });
+  t.trackForCleanup(zeroBuffer);
+
+  const bindGroup = t.device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 0,
+        resource: {
+          buffer: resultBuffer,
+        },
+      },
+    ],
+  });
+
+  const encoder = t.device.createCommandEncoder();
+  const pass = encoder.beginComputePass();
+  pass.setPipeline(pipeline);
+  pass.setBindGroup(0, bindGroup);
+  pass.dispatchWorkgroups(1);
+  pass.end();
+  t.queue.submit([encoder.finish()]);
+  t.expectGPUBufferValuesEqual(resultBuffer, new Uint32Array([0]));
+}
+
+g.test('scalars')
+  .desc(`Test that scalars in private, and function storage classes can be initialized to a value.`)
+  .params(u =>
+    u
+      .combine('addressSpace', ['private', 'function'] as const)
+      .combine('type', ['bool', 'f32', 'f16', 'i32', 'u32'] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const typeDecl = t.params.type;
+    const testValue = paramTypeToTestType(typeDecl);
+
+    const comparison = `if (testVar != ${testValue}) {
+      atomicStore(&output.failed, 1u);
+    }`;
+    const wgsl = generateShader(
+      t.params.type === 'f16',
+      t.params.addressSpace,
+      typeDecl,
+      testValue,
+      comparison
+    );
+
+    await run(t, wgsl);
+  });
+
+g.test('vec')
+  .desc(`Test that vectors in private, and function storage classes can be initialized to a value.`)
+  .params(u =>
+    u
+      .combine('addressSpace', ['private', 'function'] as const)
+      .combine('type', ['bool', 'f32', 'f16', 'i32', 'u32'] as const)
+      .combine('count', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const typeDecl = `vec${t.params.count}<${t.params.type}>`;
+    const testValue = `${typeDecl}(${paramTypeToTestType(t.params.type)})`;
+
+    const comparison = `if (!all(testVar == ${testValue})) {
+      atomicStore(&output.failed, 1u);
+    }`;
+    const wgsl = generateShader(
+      t.params.type === 'f16',
+      t.params.addressSpace,
+      typeDecl,
+      testValue,
+      comparison
+    );
+
+    await run(t, wgsl);
+  });
+
+g.test('mat')
+  .desc(
+    `Test that matrices in private, and function storage classes can be initialized to a value.`
+  )
+  .params(u =>
+    u
+      .combine('addressSpace', ['private', 'function'] as const)
+      .combine('type', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .combine('c', [2, 3, 4] as const)
+      .combine('r', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const typeDecl = `mat${t.params.c}x${t.params.r}<${t.params.type}>`;
+    let testScalarValue = '';
+    switch (t.params.type) {
+      case 'f32':
+        testScalarValue = '5.0f';
+        break;
+      case 'f16':
+        testScalarValue = '5.0h';
+        break;
+    }
+
+    let testValue = `${typeDecl}(`;
+    [...Array(t.params.c)].map((_, i) => {
+      [...Array(t.params.r)].map((_, k) => {
+        testValue += `${testScalarValue},`;
+      });
+    });
+    testValue += ')';
+
+    const comparison = `for ( var i = 0; i < ${t.params.c}; i++) {
+      for (var k = 0; k < ${t.params.r}; k++) {
+        if (testVar[i][k] != ${testScalarValue}) {
+          atomicStore(&output.failed, 1u);
+        }
+      }
+    }`;
+    const wgsl = generateShader(
+      t.params.type === 'f16',
+      t.params.addressSpace,
+      typeDecl,
+      testValue,
+      comparison
+    );
+
+    await run(t, wgsl);
+  });
+
+g.test('array')
+  .desc(`Test that arrays in private, and function storage classes can be initialized to a value.`)
+  .params(u =>
+    u
+      .combine('addressSpace', ['private', 'function'] as const)
+      .combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const arraySize = 4;
+    const typeDecl = `array<${t.params.type}, ${arraySize}>`;
+    const testScalarValue = paramTypeToTestType(t.params.type);
+
+    let testValue = `${typeDecl}(`;
+    [...Array(arraySize)].map((_, i) => {
+      testValue += `${testScalarValue},`;
+    });
+    testValue += ')';
+
+    const comparison = `for ( var i = 0; i < ${arraySize}; i++) {
+      if (testVar[i] != ${testScalarValue}) {
+        atomicStore(&output.failed, 1u);
+      }
+    }`;
+    const wgsl = generateShader(
+      t.params.type === 'f16',
+      t.params.addressSpace,
+      typeDecl,
+      testValue,
+      comparison
+    );
+
+    await run(t, wgsl);
+  });
+
+g.test('array,nested')
+  .desc(`Test that arrays in private, and function storage classes can be initialized to a value.`)
+  .params(u =>
+    u
+      .combine('addressSpace', ['private', 'function'] as const)
+      .combine('type', ['bool', 'i32', 'u32', 'f32', 'f16'] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    const arraySize = 4;
+
+    const innerDecl = `array<${t.params.type}, ${arraySize}>`;
+    const typeDecl = `array<${innerDecl}, ${arraySize}>`;
+    const testScalarValue = paramTypeToTestType(t.params.type);
+
+    let testValue = `${typeDecl}(`;
+    [...Array(arraySize)].map((_, i) => {
+      testValue += `${innerDecl}(`;
+      [...Array(arraySize)].map((_, i) => {
+        testValue += `${testScalarValue},`;
+      });
+      testValue += `),`;
+    });
+    testValue += ')';
+
+    const comparison = `
+    for ( var i = 0; i < ${arraySize}; i++) {
+      for ( var k = 0; k < ${arraySize}; k++) {
+        if (testVar[i][k] != ${testScalarValue}) {
+          atomicStore(&output.failed, 1u);
+        }
+      }
+    }
+    `;
+    const wgsl = generateShader(
+      t.params.type === 'f16',
+      t.params.addressSpace,
+      typeDecl,
+      testValue,
+      comparison
+    );
+
+    await run(t, wgsl);
+  });
+
+g.test('struct')
+  .desc(`Test that structs in private, and function storage classes can be initialized to a value.`)
+  .params(u => u.combine('addressSpace', ['private', 'function'] as const))
+  .beforeAllSubcases(t => {
+    if (t.params.type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(async t => {
+    let moduleScope = `
+    struct Output {
+      failed : atomic<u32>
+    }
+    @group(0) @binding(0) var<storage, read_write> output : Output;
+
+    struct A {
+        a: i32,
+        b: f32,
+    }
+
+    struct S {
+        c: f32,
+        d: A,
+        e: array<i32, 2>,
+    }
+  `;
+
+    const typeDecl = 'S';
+    const testValue = 'S(5.f, A(5i, 5.f), array<i32, 2>(5i, 5i))';
+
+    let functionScope = '';
+    switch (t.params.addressSpace) {
+      case 'private':
+        moduleScope += `\nvar<private> testVar: ${typeDecl} = ${testValue};`;
+        break;
+      case 'function':
+        functionScope += `\nvar testVar: ${typeDecl} = ${testValue};`;
+        break;
+    }
+
+    const comparison = `
+    if (testVar.c != 5f || testVar.d.a != 5i || testVar.d.b != 5.f || testVar.e[0] != 5i || testVar.e[1] != 5i) {
+      atomicStore(&output.failed, 1u);
+    }
+    `;
+
+    const wgsl = `
+      ${moduleScope}
+      @compute @workgroup_size(1, 1, 1)
+      fn main() {
+        ${functionScope}
+        ${comparison}
+      }
+    `;
+
+    await run(t, wgsl);
+  });
