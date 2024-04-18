@@ -165,12 +165,11 @@ g.test('return')
 
 g.test('must_use')
   .desc(`Result of ${builtin} must be used`)
-  .params(u =>
-    u
-      .combine('arg', keysOf(kValidArgs))
-      .combine('use', [true, false])
-  )
+  .params(u => u.combine('arg', keysOf(kValidArgs)).combine('use', [true, false]))
   .fn(t => {
     const use_it = t.params.use ? '_ = ' : '';
-    t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}${kValidArgs[t.params.arg]}; }`);
+    t.expectCompileResult(
+      t.params.use,
+      `fn f() { ${use_it}${builtin}${kValidArgs[t.params.arg]}; }`
+    );
   });
