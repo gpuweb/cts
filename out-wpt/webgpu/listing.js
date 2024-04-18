@@ -4369,6 +4369,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "fma"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "fract"
     ]
   },
