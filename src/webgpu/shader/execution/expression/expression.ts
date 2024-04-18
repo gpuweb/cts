@@ -51,17 +51,21 @@ export type ConstEvaluationMode = 'direct' | 'unrolled' | 'loop';
 
 /** Configuration for running a expression test */
 export type Config = {
-  // Where the input values are read from
+  /** Where the input values are read from */
   inputSource: InputSource;
-  // If defined, scalar test cases will be packed into vectors of the given
-  // width, which must be 2, 3 or 4.
-  // Requires that all parameters of the expression overload are of a scalar
-  // type, and the return type of the expression overload is also a scalar type.
-  // If the number of test cases is not a multiple of the vector width, then the
-  // last scalar value is repeated to fill the last vector value.
+  /**
+   * If defined, scalar test cases will be packed into vectors of the given
+   * width, which must be 2, 3 or 4.
+   * Requires that all parameters of the expression overload are of a scalar
+   * type, and the return type of the expression overload is also a scalar type.
+   * If the number of test cases is not a multiple of the vector width, then the
+   * last scalar value is repeated to fill the last vector value.
+   */
   vectorize?: number;
-  // The evaluation mode used when 'inputSource' is 'const'. If undefined, then an appropriate mode
-  // will be picked based on the input types.
+  /**
+   * The evaluation mode used when 'inputSource' is 'const'. If undefined, then an appropriate mode
+   * will be picked based on the input types.
+   */
   constEvaluationMode?: ConstEvaluationMode;
 };
 
