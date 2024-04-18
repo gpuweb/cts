@@ -5175,15 +5175,22 @@ class FPAbstractTraits extends FPTraits {
   );
   mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   modfInterval = this.modfIntervalImpl.bind(this);
-  multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
+  multiplicationInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'multiplicationInterval'
+  );
   multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
     this,
     'multiplicationMatrixMatrixInterval'
   );
-  multiplicationMatrixScalarInterval =
-  this.multiplicationMatrixScalarIntervalImpl.bind(this);
-  multiplicationScalarMatrixInterval =
-  this.multiplicationScalarMatrixIntervalImpl.bind(this);
+  multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(
+    this,
+    'multiplicationMatrixScalarInterval'
+  );
+  multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(
+    this,
+    'multiplicationScalarMatrixInterval'
+  );
   multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
     this,
     'multiplicationMatrixVectorInterval'
