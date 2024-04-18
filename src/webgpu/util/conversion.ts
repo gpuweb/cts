@@ -18,14 +18,14 @@ import {
 } from './math.js';
 
 /**
- * Encodes a JS `number` into "normalized" (unorm/snorm) integer scale with `bits` bits for ULP
- * comparison. Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
+ * Encode a JS `number` into the "normalized" (unorm/snorm) integer scale with `bits` bits but
+ * remain unquantized. Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
  * e.g. float 0.5 -> "unorm8" 127.5
  *
  * MAINTENANCE_TODO: See if performance of texel_data improves if this function is pre-specialized
  * for a particular `bits`/`signed`.
  */
-export function floatAsNormalizedIntegerScale(
+export function floatAsNormalizedIntegerUnquantized(
   float: number,
   bits: number,
   signed: boolean
@@ -49,7 +49,7 @@ export function floatAsNormalizedIntegerScale(
  * for a particular `bits`/`signed`.
  */
 export function floatAsNormalizedInteger(float: number, bits: number, signed: boolean): number {
-  return Math.round(floatAsNormalizedIntegerScale(float, bits, signed));
+  return Math.round(floatAsNormalizedIntegerUnquantized(float, bits, signed));
 }
 
 /**
