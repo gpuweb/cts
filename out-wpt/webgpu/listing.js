@@ -4739,6 +4739,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "textureDimensions"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "textureGather"
     ]
   },
@@ -4760,6 +4770,36 @@ export const listing = [
       "call",
       "builtin",
       "textureLoad"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "textureNumLayers"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "textureNumLevels"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
+      "textureNumSamples"
     ]
   },
   {
