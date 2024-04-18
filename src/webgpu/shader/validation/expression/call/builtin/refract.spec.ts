@@ -89,8 +89,14 @@ where a the calculations result in a non-representable value for the given type.
     );
   });
 
+const kValidArgs = {
+  vec2f: '(vec2(0), vec2(1), 2.0)',
+  vec3f: '(vec3(0), vec3(1), 2.0)',
+  vec4f: '(vec4(0), vec4(1), 2.0)',
+};
+
 const kArgCases = {
-  good: '(vec3(0), vec3(1), 2.0)',
+  ...kValidArgs,
   bad_no_parens: '',
   // Bad number of args
   bad_0args: '()',
@@ -138,27 +144,33 @@ g.test('args')
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
     t.expectCompileResult(
-      t.params.arg === 'good',
+      t.params.arg in kValidArgs,
       `const c = ${builtin}${kArgCases[t.params.arg]};`
     );
   });
 
-const kReturnType = 'vec3f';
-
 g.test('return')
   .desc(`Test ${builtin} return value type`)
-  .params(u => u.combine('type', ['vec3f', 'vec3u', 'vec3i', 'vec2f', 'u32', 'i32', 'f32', 'bool']))
+  .params(u =>
+    u
+      .combine('arg', keysOf(kValidArgs))
+      .combine('returnType', [...keysOf(kValidArgs), 'vec3u', 'vec3i', 'u32', 'i32', 'f32', 'bool'])
+  )
   .fn(t => {
     t.expectCompileResult(
-      t.params.type === kReturnType,
-      `const c: ${t.params.type} = ${builtin}${kArgCases['good']};`
+      t.params.returnType === t.params.arg,
+      `const c: ${t.params.returnType} = ${builtin}${kValidArgs[t.params.arg]};`
     );
   });
 
 g.test('must_use')
   .desc(`Result of ${builtin} must be used`)
-  .params(u => u.combine('use', [true, false]))
+  .params(u =>
+    u
+      .combine('arg', keysOf(kValidArgs))
+      .combine('use', [true, false])
+  )
   .fn(t => {
     const use_it = t.params.use ? '_ = ' : '';
-    t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}${kArgCases['good']}; }`);
+    t.expectCompileResult(t.params.use, `fn f() { ${use_it}${builtin}${kValidArgs[t.params.arg]}; }`);
   });
