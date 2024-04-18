@@ -414,6 +414,13 @@ export class ConstantOrOverrideValueChecker {
     return value;
   }
 
+  checkedResultBigInt(value: bigint): bigint {
+    if (kValue.i64.isOOB(value)) {
+      this.#allChecksPassed = false;
+    }
+    return value;
+  }
+
   allChecksPassed(): boolean {
     return this.#allChecksPassed;
   }
