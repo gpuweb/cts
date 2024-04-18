@@ -421,6 +421,18 @@ export class ConstantOrOverrideValueChecker {
     return value;
   }
 
+  skipIfCheckFails(value: number): number {
+    if (this.isAmbiguousOverflow(value)) {
+      this.t.skip(`Checked value, ${value}, was within the ambiguous overflow rounding range.`);
+    }
+
+    const quantizedValue = this.quantize(value);
+    if (!Number.isFinite(quantizedValue)) {
+      this.t.skip(`Checked value, ${value}, was not finite after quantization.`);
+    }
+    return value;
+  }
+
   allChecksPassed(): boolean {
     return this.#allChecksPassed;
   }
