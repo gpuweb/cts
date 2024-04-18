@@ -108,7 +108,14 @@ g.test('invalid_severity')
 
 g.test('duplicate_attribute')
   .desc('Tests that duplicate attribute is disallowed')
-  .params(u => u.combine('location', keysOf(kValidLocations)).combine('same_rule', [true, false] as const).filter(t => { if (t.location === 'module') { return false; } return true; }))
+  .params(u =>
+    u
+      .combine('location', keysOf(kValidLocations))
+      .combine('same_rule', [true, false] as const)
+      .filter(t => {
+        return t.location !== 'module';
+      })
+  )
   .fn(t => {
     const rule1 = 'derivative_uniformity';
     const rule2 = 'another_diagnostic_rule';
