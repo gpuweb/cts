@@ -23,7 +23,8 @@ const kValidArgumentTypes = objectsToRecord(kConvertableToFloatVectors);
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() never errors
+Validates that constant evaluation and override evaluation of ${builtin}() only errors in cases
+where the algorithm produces OOB results.
 `
   )
   .params(u =>
