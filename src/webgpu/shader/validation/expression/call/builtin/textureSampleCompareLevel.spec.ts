@@ -322,8 +322,8 @@ Validates that incompatible texture types don't work with ${builtin}
   .params(u =>
     u
       .combine('testTextureType', kTestTextureTypes)
-      .combine('textureType', keysOf(kValidTextureSampleCompareLevelParameterTypes))
       .beginSubcases()
+      .combine('textureType', keysOf(kValidTextureSampleCompareLevelParameterTypes))
       .expand('offset', t =>
         kValidTextureSampleCompareLevelParameterTypes[t.textureType].offsetArgType
           ? [false, true]
