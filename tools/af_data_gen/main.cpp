@@ -187,6 +187,10 @@ const BinaryOp kSubtractionOp= [](const long double lhs, const long double rhs) 
     return lhs - rhs;
 };
 
+const BinaryOp kMultiplicationOp= [](const long double lhs, const long double rhs) {
+    return lhs * rhs;
+};
+
 /**
  * Calculates all of the possible results for a binary operation given the
  * provided inputs. This handles both quantization and flushing behaviours.
@@ -259,6 +263,7 @@ int main() {
 
     std::cout << printBinaryOpCases(kAdditionOp, "ADDITION") << std::endl;
     std::cout << printBinaryOpCases(kSubtractionOp, "SUBTRACTION") << std::endl;
+    std::cout << printBinaryOpCases(kMultiplicationOp, "MULTIPLICATION") << std::endl;
     std::cout << printFractCases() << std::endl;
 
     return 0;
