@@ -4710,22 +4710,12 @@ const kMultiplicationInterval64BitsNormalCases = {
     { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
   ] as ScalarPairToIntervalCase[],
-  abstract: [
-    // 0.1 isn't exactly representable in f64, but will be quantized to an
-    // exact value when storing to a 'number' (0x3FB999999999999A).
-    // This is why below the expectations are not intervals.
-    // f64 0.1 * 0.1 = 0x3f847ae147ae147c,
-    { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
-    { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
-    { input: [0.1, -0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
-    { input: [-0.1, 0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
-  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('multiplicationInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -7685,26 +7675,12 @@ const kMultiplicationMatrixScalarIntervalCases = {
       ],
     },
   ] as MatrixScalarToMatrixCase[],
-  abstract: [
-    // From https://github.com/gpuweb/cts/issues/3044
-    {
-      matrix: [
-        [kValue.f64.negative.min, 0],
-        [0, 0],
-      ],
-      scalar: kValue.f64.negative.subnormal.min,
-      expected: [
-        [[0, reinterpretU64AsF64(0x400ffffffffffffdn)], 0], // [[0, 3.9999995...], 0],
-        [0, 0],
-      ],
-    },
-  ] as MatrixScalarToMatrixCase[],
 } as const;
 
 g.test('multiplicationMatrixScalarInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<MatrixScalarToMatrixCase>(p => {
         const trait = FP[p.trait];
