@@ -5,7 +5,7 @@ Execution Tests for zero value constructors
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { ScalarKind, Type } from '../../../../util/conversion.js';
-import { basicExpressionBuilder, run } from '../expression.js';
+import { ShaderBuilderParams, basicExpressionBuilder, run } from '../expression.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -138,11 +138,11 @@ g.test('structure')
     );
     await run(
       t,
-      (parameterTypes, resultType, cases, inputSource) => {
+      (params: ShaderBuilderParams) => {
         return `
 ${t.params.member_types.includes('f16') ? 'enable f16;' : ''}
 
-${builder(parameterTypes, resultType, cases, inputSource)}
+${builder(params)}
 
 struct MyStruct {
 ${t.params.member_types.map((ty, i) => `  member_${i} : ${ty},`).join('\n')}

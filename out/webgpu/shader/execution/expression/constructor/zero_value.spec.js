@@ -138,11 +138,11 @@ fn(async (t) => {
   );
   await run(
     t,
-    (parameterTypes, resultType, cases, inputSource) => {
+    (params) => {
       return `
 ${t.params.member_types.includes('f16') ? 'enable f16;' : ''}
 
-${builder(parameterTypes, resultType, cases, inputSource)}
+${builder(params)}
 
 struct MyStruct {
 ${t.params.member_types.map((ty, i) => `  member_${i} : ${ty},`).join('\n')}
