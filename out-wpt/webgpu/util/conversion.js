@@ -18,6 +18,30 @@ import {
 './math.js';
 
 /**
+ * Encode a JS `number` into the "normalized" (unorm/snorm) integer scale with `bits` bits but
+ * remain unquantized. Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
+ * e.g. float 0.5 -> "unorm8" 127.5
+ *
+ * MAINTENANCE_TODO: See if performance of texel_data improves if this function is pre-specialized
+ * for a particular `bits`/`signed`.
+ */
+export function floatAsNormalizedIntegerUnquantized(
+float,
+bits,
+signed)
+{
+  if (signed) {
+    assert(float >= -1 && float <= 1, () => `${float} out of bounds of snorm`);
+    const max = Math.pow(2, bits - 1) - 1;
+    return float * max;
+  } else {
+    assert(float >= 0 && float <= 1, () => `${float} out of bounds of unorm`);
+    const max = Math.pow(2, bits) - 1;
+    return float * max;
+  }
+}
+
+/**
  * Encodes a JS `number` into a "normalized" (unorm/snorm) integer representation with `bits` bits.
  * Input must be between -1 and 1 if signed, or 0 and 1 if unsigned.
  *
@@ -25,15 +49,7 @@ import {
  * for a particular `bits`/`signed`.
  */
 export function floatAsNormalizedInteger(float, bits, signed) {
-  if (signed) {
-    assert(float >= -1 && float <= 1, () => `${float} out of bounds of snorm`);
-    const max = Math.pow(2, bits - 1) - 1;
-    return Math.round(float * max);
-  } else {
-    assert(float >= 0 && float <= 1, () => `${float} out of bounds of unorm`);
-    const max = Math.pow(2, bits) - 1;
-    return Math.round(float * max);
-  }
+  return Math.round(floatAsNormalizedIntegerUnquantized(float, bits, signed));
 }
 
 /**
