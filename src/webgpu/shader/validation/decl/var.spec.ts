@@ -527,3 +527,42 @@ g.test('binding_collision_unused_helper')
 
     t.expectCompileResult(true, wgsl);
   });
+
+g.test('address_space_access_mode')
+  .desc('Test that only storage accepts an access mode')
+  .params(u =>
+    u
+      .combine('address_space', ['private', 'storage', 'uniform', 'function', 'workgroup'] as const)
+      .combine('access_mode', ['', ',', ',read', ',write', ',read_write'] as const)
+  )
+  .fn(t => {
+    let fdecl = ``;
+    let mdecl = ``;
+    // Most address spaces do not accept an access mode, but should accept no
+    // template argument or a trailing comma.
+    let shouldPass = t.params.access_mode === '' || t.params.access_mode === ',';
+    // 'handle' unchecked since it is untypable.
+    switch (t.params.address_space) {
+      case 'private':
+        mdecl = `var<private${t.params.access_mode}> x : u32;`;
+        break;
+      case 'storage':
+        mdecl = `@group(0) @binding(0) var<storage${t.params.access_mode}> x : u32;`;
+        shouldPass = t.params.access_mode !== ',write';
+        break;
+      case 'uniform':
+        mdecl = `@group(0) @binding(0) var<uniform${t.params.access_mode}> x : u32;`;
+        break;
+      case 'workgroup':
+        mdecl = `var<private${t.params.access_mode}> x : u32;`;
+        break;
+      case 'function':
+        fdecl = `var<function${t.params.access_mode}> x : u32;`;
+        break;
+    }
+    const code = `${mdecl}
+    fn foo() {
+      ${fdecl}
+    }`;
+    t.expectCompileResult(shouldPass, code);
+  });

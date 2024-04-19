@@ -1901,6 +1901,7 @@
   "webgpu:shader,validation,decl,ptr_spelling:ptr_bad_store_type:*": { "subcaseMS": 0.967 },
   "webgpu:shader,validation,decl,ptr_spelling:ptr_handle_space_invalid:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,ptr_spelling:ptr_not_instantiable:*": { "subcaseMS": 1.310 },
+  "webgpu:shader,validation,decl,var:address_space_access_mode:*": { "subcaseMS": 14.399 },
   "webgpu:shader,validation,decl,var:binding_collision_unused_helper:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,var:binding_collisions:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,decl,var:binding_point_on_function_var:*": { "subcaseMS": 1.000 },
