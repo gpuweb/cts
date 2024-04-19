@@ -45,6 +45,10 @@ const kMustUseDeclarations = {
   parameter: {
     code: `@must_use(0) fn foo() -> u32 { return 0; }`,
     valid: false
+  },
+  duplicate: {
+    code: `@must_use @must_use fn foo() -> u32 { return 0; }`,
+    valid: false
   }
 };
 

@@ -58,6 +58,10 @@ const kTests = {
   number_param: {
     src: `@builtin(2)`,
     pass: false
+  },
+  duplicate: {
+    src: `@builtin(position) @builtin(position)`,
+    pass: false
   }
 };
 

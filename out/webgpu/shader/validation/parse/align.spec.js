@@ -118,6 +118,10 @@ const kTests = {
   larger_than_max_i32: {
     src: '@align(2147483648)',
     pass: false
+  },
+  duplicate: {
+    src: '@align(4) @align(4)',
+    pass: false
   }
 };
 
