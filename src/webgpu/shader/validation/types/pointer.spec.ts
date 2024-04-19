@@ -9,14 +9,9 @@ export const g = makeTestGroup(ShaderValidationTest);
 g.test('missing_type')
   .desc('Test that pointer types require an element type')
   .params(u =>
-    u.combine('aspace', [
-      'function',
-      'private',
-      'workgroup',
-      'storage',
-      'uniform',
-    ] as const)
-     .combine('comma', ['', ','] as const)
+    u
+      .combine('aspace', ['function', 'private', 'workgroup', 'storage', 'uniform'] as const)
+      .combine('comma', ['', ','] as const)
   )
   .fn(t => {
     const code = `alias T = ptr<${t.params.aspace}${t.params.comma}>;`;
@@ -26,16 +21,17 @@ g.test('missing_type')
 g.test('address_space')
   .desc('Test address spaces in pointer type parameterization')
   .params(u =>
-    u.combine('aspace', [
-      'function',
-      'private',
-      'workgroup',
-      'storage',
-      'uniform',
-      'handle',
-      'bad_aspace',
-    ] as const)
-     .combine('comma', ['', ','] as const)
+    u
+      .combine('aspace', [
+        'function',
+        'private',
+        'workgroup',
+        'storage',
+        'uniform',
+        'handle',
+        'bad_aspace',
+      ] as const)
+      .combine('comma', ['', ','] as const)
   )
   .fn(t => {
     const code = `alias T = ptr<${t.params.aspace}, u32${t.params.comma}>;`;

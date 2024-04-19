@@ -111,9 +111,10 @@ Besides, the shader compilation should always pass regardless of whether the for
 `
   )
   .params(u =>
-    u.combine('access', [...kAccessModes, 'storage'] as const)
-     .combine('format', kAllTextureFormats)
-     .combine('comma', ['', ','] as const)
+    u
+      .combine('access', [...kAccessModes, 'storage'] as const)
+      .combine('format', kAllTextureFormats)
+      .combine('comma', ['', ','] as const)
   )
   .fn(t => {
     const { format, access, comma } = t.params;
