@@ -533,31 +533,39 @@ g.test('address_space_access_mode')
   .params(u =>
     u
       .combine('address_space', ['private', 'storage', 'uniform', 'function', 'workgroup'] as const)
-      .combine('access_mode', ['', ',', ',read', ',write', ',read_write'] as const)
+      .combine('access_mode', ['', 'read', 'write', 'read_write'] as const)
+      .combine('trailing_comma', [true, false] as const)
   )
   .fn(t => {
     let fdecl = ``;
     let mdecl = ``;
     // Most address spaces do not accept an access mode, but should accept no
     // template argument or a trailing comma.
-    let shouldPass = t.params.access_mode === '' || t.params.access_mode === ',';
+    let shouldPass = t.params.access_mode === '';
+    let suffix = ``;
+    if (t.params.access_mode === '') {
+      suffix += t.params.trailing_comma ? ',' : '';
+    } else {
+      suffix += `,${t.params.access_mode}`;
+      suffix += t.params.trailing_comma ? ',' : '';
+    }
     // 'handle' unchecked since it is untypable.
     switch (t.params.address_space) {
       case 'private':
-        mdecl = `var<private${t.params.access_mode}> x : u32;`;
+        mdecl = `var<private${suffix}> x : u32;`;
         break;
       case 'storage':
-        mdecl = `@group(0) @binding(0) var<storage${t.params.access_mode}> x : u32;`;
-        shouldPass = t.params.access_mode !== ',write';
+        mdecl = `@group(0) @binding(0) var<storage${suffix}> x : u32;`;
+        shouldPass = t.params.access_mode !== 'write';
         break;
       case 'uniform':
-        mdecl = `@group(0) @binding(0) var<uniform${t.params.access_mode}> x : u32;`;
+        mdecl = `@group(0) @binding(0) var<uniform${suffix}> x : u32;`;
         break;
       case 'workgroup':
-        mdecl = `var<private${t.params.access_mode}> x : u32;`;
+        mdecl = `var<workgroup${suffix}> x : u32;`;
         break;
       case 'function':
-        fdecl = `var<function${t.params.access_mode}> x : u32;`;
+        fdecl = `var<function${suffix}> x : u32;`;
         break;
     }
     const code = `${mdecl}
