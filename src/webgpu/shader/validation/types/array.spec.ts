@@ -61,6 +61,9 @@ const kValidCases = {
 
   // Shadow
   shadow: `alias array = vec2f;`,
+
+  trailing_comma1: `alias T = array<u32,4,>;`,
+  trailing_comma2: `alias T = array<u32,>;`,
 };
 
 g.test('valid')
