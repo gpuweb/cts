@@ -136,7 +136,7 @@ export const kTestTextureTypes = [
   'texture_storage_2d<rgba8unorm, read>',
   'texture_storage_2d<r32uint, read>',
   'texture_storage_2d_array<rgba8unorm, read>',
-  'texture_storage_2d_a32uint8unorm, read>',
+  'texture_storage_2d_array<r32uint, read>',
   'texture_storage_3d<rgba8unorm, read>',
   'texture_storage_3d<r32uint, read>',
   'texture_depth_2d',
