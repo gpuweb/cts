@@ -6,10 +6,23 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+g.test('missing_type').
+desc('Test that pointer types require an element type').
+params((u) =>
+u.
+combine('aspace', ['function', 'private', 'workgroup', 'storage', 'uniform']).
+combine('comma', ['', ','])
+).
+fn((t) => {
+  const code = `alias T = ptr<${t.params.aspace}${t.params.comma}>;`;
+  t.expectCompileResult(false, code);
+});
+
 g.test('address_space').
 desc('Test address spaces in pointer type parameterization').
 params((u) =>
-u.combine('aspace', [
+u.
+combine('aspace', [
 'function',
 'private',
 'workgroup',
@@ -17,10 +30,11 @@ u.combine('aspace', [
 'uniform',
 'handle',
 'bad_aspace']
-)
+).
+combine('comma', ['', ','])
 ).
 fn((t) => {
-  const code = `alias T = ptr<${t.params.aspace}, u32>;`;
+  const code = `alias T = ptr<${t.params.aspace}, u32${t.params.comma}>;`;
   const success = t.params.aspace !== 'handle' && t.params.aspace !== 'bad_aspace';
   t.expectCompileResult(success, code);
 });
@@ -30,11 +44,12 @@ desc('Test access mode in pointer type parameterization').
 params((u) =>
 u.
 combine('aspace', ['function', 'private', 'storage', 'uniform', 'workgroup']).
-combine('access', ['read', 'write', 'read_write'])
+combine('access', ['read', 'write', 'read_write']).
+combine('comma', ['', ','])
 ).
 fn((t) => {
   // Default access mode is tested above.
-  const code = `alias T = ptr<${t.params.aspace}, u32, ${t.params.access}>;`;
+  const code = `alias T = ptr<${t.params.aspace}, u32, ${t.params.access}${t.params.comma}>;`;
   const success = t.params.aspace === 'storage' && t.params.access !== 'write';
   t.expectCompileResult(success, code);
 });

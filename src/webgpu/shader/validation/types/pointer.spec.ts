@@ -6,21 +6,35 @@ import { ShaderValidationTest } from '../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
+g.test('missing_type')
+  .desc('Test that pointer types require an element type')
+  .params(u =>
+    u
+      .combine('aspace', ['function', 'private', 'workgroup', 'storage', 'uniform'] as const)
+      .combine('comma', ['', ','] as const)
+  )
+  .fn(t => {
+    const code = `alias T = ptr<${t.params.aspace}${t.params.comma}>;`;
+    t.expectCompileResult(false, code);
+  });
+
 g.test('address_space')
   .desc('Test address spaces in pointer type parameterization')
   .params(u =>
-    u.combine('aspace', [
-      'function',
-      'private',
-      'workgroup',
-      'storage',
-      'uniform',
-      'handle',
-      'bad_aspace',
-    ] as const)
+    u
+      .combine('aspace', [
+        'function',
+        'private',
+        'workgroup',
+        'storage',
+        'uniform',
+        'handle',
+        'bad_aspace',
+      ] as const)
+      .combine('comma', ['', ','] as const)
   )
   .fn(t => {
-    const code = `alias T = ptr<${t.params.aspace}, u32>;`;
+    const code = `alias T = ptr<${t.params.aspace}, u32${t.params.comma}>;`;
     const success = t.params.aspace !== 'handle' && t.params.aspace !== 'bad_aspace';
     t.expectCompileResult(success, code);
   });
@@ -30,11 +44,12 @@ g.test('access_mode')
   .params(u =>
     u
       .combine('aspace', ['function', 'private', 'storage', 'uniform', 'workgroup'] as const)
-      .combine('access', ['read', 'write', 'read_write'])
+      .combine('access', ['read', 'write', 'read_write'] as const)
+      .combine('comma', ['', ','] as const)
   )
   .fn(t => {
     // Default access mode is tested above.
-    const code = `alias T = ptr<${t.params.aspace}, u32, ${t.params.access}>;`;
+    const code = `alias T = ptr<${t.params.aspace}, u32, ${t.params.access}${t.params.comma}>;`;
     const success = t.params.aspace === 'storage' && t.params.access !== 'write';
     t.expectCompileResult(success, code);
   });

@@ -143,3 +143,11 @@ fn foo() {
 
   t.expectCompileResult(false, code);
 });
+
+g.test('trailing_comma').
+desc('Test that trailing commas are accepted').
+params((u) => u.combine('type', ['u32', 'i32']).combine('comma', ['', ','])).
+fn((t) => {
+  const code = `alias T = atomic<${t.params.type}${t.params.comma}>;`;
+  t.expectCompileResult(true, code);
+});

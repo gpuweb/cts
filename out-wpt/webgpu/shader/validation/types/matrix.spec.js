@@ -49,7 +49,7 @@ const kValidCases = {
   mat4x3h: `enable f16;\nalias T = mat4x3h;`,
   mat4x4h: `enable f16;\nalias T = mat4x4h;`,
 
-  trailing_comman: `alias T = mat2x2<f32,>;`,
+  trailing_comma: `alias T = mat2x2<f32,>;`,
 
   // Abstract matrices
   abstract_2x2: `const m = mat2x2(1,1,1,1);`,

@@ -97,3 +97,12 @@ struct S2 {
 `;
     t.expectCompileResult(t.params.target === 'i32', wgsl);
   });
+
+g.test('trailing_comma_after_member')
+  .desc('Test trailing comma after the last member declaration is allowed')
+  .fn(t => {
+    const code = `struct S {
+      x : u32,
+    }`;
+    t.expectCompileResult(true, code);
+  });
