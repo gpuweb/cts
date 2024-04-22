@@ -3832,6 +3832,13 @@ export const listing = [
     "file": [
       "shader",
       "execution",
+      "value_init"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "execution",
       "zero_init"
     ]
   },
