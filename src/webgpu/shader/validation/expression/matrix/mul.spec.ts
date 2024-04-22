@@ -306,7 +306,7 @@ fn main() {
     t.expectCompileResult(pass, code);
   });
 
-g.test('overflow,scalar,f32')
+g.test('overflow_scalar_f32')
   .desc(`Validates that f32 scalar multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
@@ -323,7 +323,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,vec,f32')
+g.test('overflow_vec_f32')
   .desc(`Validates that f32 vector multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
@@ -340,7 +340,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,mat,f32')
+g.test('overflow_mat_f32')
   .desc(`Validates that f32 matrix multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
@@ -357,7 +357,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,scalar,f16')
+g.test('overflow_scalar_f16')
   .desc(`Validates that f16 scalar multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
@@ -378,7 +378,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,vec,f16')
+g.test('overflow_vec_f16')
   .desc(`Validates that f16 vector multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
@@ -399,7 +399,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,mat,f16')
+g.test('overflow_mat_f16')
   .desc(`Validates that f16 matrix multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
@@ -420,7 +420,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,abstract')
+g.test('overflow_abstract')
   .desc(`Validates that abstract scalar multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
@@ -437,7 +437,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,vec,abstract')
+g.test('overflow_vec_abstract')
   .desc(`Validates that abstract vector multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
@@ -454,7 +454,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,mat,abstract')
+g.test('overflow_mat_abstract')
   .desc(`Validates that abstract matrix multiplication overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {

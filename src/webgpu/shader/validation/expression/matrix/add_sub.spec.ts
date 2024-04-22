@@ -165,7 +165,7 @@ fn main() {
     t.expectCompileResult(true, code);
   });
 
-g.test('overflow,f32')
+g.test('overflow_f32')
   .desc(`Validates that f32 add overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
@@ -182,8 +182,8 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('underflow,f32')
-  .desc(`Validates that f32 add overflows in shader creation`)
+g.test('underflow_f32')
+  .desc(`Validates that f32 add underflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
     const lhs = `mat2x2f(0, 0, ${kValue.f32.negative.min / 2}, 0)`;
@@ -199,7 +199,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,f16')
+g.test('overflow_f16')
   .desc(`Validates that f16 add overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
@@ -220,14 +220,14 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('underflow,f16')
-  .desc(`Validates that f16 add overflows in shader creation`)
+g.test('underflow_f16')
+  .desc(`Validates that f16 add underflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    const lhs = `mat2x2h(0, 0, ${kValue.f16.negative.max / 2}, 0)`;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.negative.min / 2}, 0)`;
     const rhs = `mat2x2h(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
@@ -241,7 +241,7 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('overflow,abstract')
+g.test('overflow_abstract')
   .desc(`Validates that abstract add overflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
@@ -258,8 +258,8 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-g.test('underflow,abstract')
-  .desc(`Validates that abstract add overflows in shader creation`)
+g.test('underflow_abstract')
+  .desc(`Validates that abstract add underflows in shader creation`)
   .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
     const lhs = `mat2x2(0, 0, ${kValue.f64.negative.min / 2}, 0)`;
