@@ -187,15 +187,7 @@ g.test('mat')
   })
   .fn(async t => {
     const typeDecl = `mat${t.params.c}x${t.params.r}<${t.params.type}>`;
-    let testScalarValue = '';
-    switch (t.params.type) {
-      case 'f32':
-        testScalarValue = '5.0f';
-        break;
-      case 'f16':
-        testScalarValue = '5.0h';
-        break;
-    }
+    const testScalarValue = Type[t.params.type].create(5).wgsl();
 
     let testValue = `${typeDecl}(`;
     for (let c = 0; c < t.params.c; c++) {
