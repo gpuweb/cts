@@ -119,6 +119,10 @@ const kTests = {
     src: '@align(2147483648)',
     pass: false,
   },
+  duplicate: {
+    src: '@align(4) @align(4)',
+    pass: false,
+  },
 };
 
 g.test('parsing')
