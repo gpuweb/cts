@@ -411,7 +411,7 @@ export class ConstantOrOverrideValueChecker {
     if (!Number.isFinite(quantizedValue)) {
       this.#allChecksPassed = false;
     }
-    return value;
+    return quantizedValue;
   }
 
   checkedResultBigInt(value) {
