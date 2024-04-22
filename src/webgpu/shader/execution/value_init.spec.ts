@@ -314,11 +314,6 @@ g.test('array,nested')
 g.test('struct')
   .desc(`Test that structs in private, and function storage classes can be initialized to a value.`)
   .params(u => u.combine('addressSpace', ['private', 'function'] as const))
-  .beforeAllSubcases(t => {
-    if (t.params.type === 'f16') {
-      t.selectDeviceOrSkipTestCase('shader-f16');
-    }
-  })
   .fn(async t => {
     let moduleScope = `
     struct Output {
