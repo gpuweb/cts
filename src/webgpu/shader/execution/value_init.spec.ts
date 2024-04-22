@@ -241,9 +241,9 @@ g.test('array')
     const testScalarValue = paramTypeToTestType(t.params.type);
 
     let testValue = `${typeDecl}(`;
-    [...Array(arraySize)].map((_, i) => {
+    for (let i = 0; i < arraySize; i++) {
       testValue += `${testScalarValue},`;
-    });
+    }
     testValue += ')';
 
     const comparison = `for ( var i = 0; i < ${arraySize}; i++) {
