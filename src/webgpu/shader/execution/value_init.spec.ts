@@ -198,11 +198,11 @@ g.test('mat')
     }
 
     let testValue = `${typeDecl}(`;
-    [...Array(t.params.c)].map((_, i) => {
-      [...Array(t.params.r)].map((_, k) => {
+    for (let c = 0; c < t.params.c; c++) {
+      for (let r = 0; r < t.params.r; r++) {
         testValue += `${testScalarValue},`;
-      });
-    });
+      }
+    }
     testValue += ')';
 
     const comparison = `for ( var i = 0; i < ${t.params.c}; i++) {
