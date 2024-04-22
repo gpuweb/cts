@@ -2,30 +2,9 @@ export const description = `Test that variables in the shader are value initiali
 
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { GPUTest } from '../../gpu_test.js';
+import { Type } from '../../util/conversion.js';
 
 export const g = makeTestGroup(GPUTest);
-
-function paramTypeToTestType(ty: string): string {
-  let testValue = '';
-  switch (ty) {
-    case 'bool':
-      testValue = 'true';
-      break;
-    case 'f32':
-      testValue = '5.0f';
-      break;
-    case 'f16':
-      testValue = '5.0h';
-      break;
-    case 'i32':
-      testValue = '5i';
-      break;
-    case 'u32':
-      testValue = '5u';
-      break;
-  }
-  return testValue;
-}
 
 function generateShader(
   isF16: boolean,
@@ -121,7 +100,7 @@ g.test('scalars')
   })
   .fn(async t => {
     const typeDecl = t.params.type;
-    const testValue = paramTypeToTestType(typeDecl);
+    const testValue = Type[typeDecl].create(5).wgsl();
 
     const comparison = `if (testVar != ${testValue}) {
       atomicStore(&output.failed, 1u);
@@ -152,7 +131,7 @@ g.test('vec')
   })
   .fn(async t => {
     const typeDecl = `vec${t.params.count}<${t.params.type}>`;
-    const testValue = `${typeDecl}(${paramTypeToTestType(t.params.type)})`;
+    const testValue = `${typeDecl}(${Type[t.params.type].create(5).wgsl()})`;
 
     const comparison = `if (!all(testVar == ${testValue})) {
       atomicStore(&output.failed, 1u);
@@ -230,7 +209,7 @@ g.test('array')
   .fn(async t => {
     const arraySize = 4;
     const typeDecl = `array<${t.params.type}, ${arraySize}>`;
-    const testScalarValue = paramTypeToTestType(t.params.type);
+    const testScalarValue = Type[t.params.type].create(5).wgsl();
 
     let testValue = `${typeDecl}(`;
     for (let i = 0; i < arraySize; i++) {
@@ -271,7 +250,7 @@ g.test('array,nested')
 
     const innerDecl = `array<${t.params.type}, ${arraySize}>`;
     const typeDecl = `array<${innerDecl}, ${arraySize}>`;
-    const testScalarValue = paramTypeToTestType(t.params.type);
+    const testScalarValue = Type[t.params.type].create(5).wgsl();
 
     let testValue = `${typeDecl}(`;
     for (let i = 0; i < arraySize; i++) {
