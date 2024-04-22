@@ -282,13 +282,13 @@ g.test('array,nested')
     const testScalarValue = paramTypeToTestType(t.params.type);
 
     let testValue = `${typeDecl}(`;
-    [...Array(arraySize)].map((_, i) => {
+    for (let i = 0; i < arraySize; i++) {
       testValue += `${innerDecl}(`;
-      [...Array(arraySize)].map((_, i) => {
+      for (let j = 0; j < arraySize; j++) {
         testValue += `${testScalarValue},`;
-      });
+      }
       testValue += `),`;
-    });
+    }
     testValue += ')';
 
     const comparison = `
