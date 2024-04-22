@@ -167,13 +167,10 @@ fn main() {
 
 g.test('overflow,f32')
   .desc(`Validates that f32 add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f32.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max / 2}, 0)`;
-    let rhs = `mat2x2f(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max / 2}, 0)`;
+    const rhs = `mat2x2f(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -187,13 +184,10 @@ fn main() {
 
 g.test('underflow,f32')
   .desc(`Validates that f32 add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f32.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2f(0, 0, ${kValue.f32.negative.min / 2}, 0)`;
-    let rhs = `mat2x2f(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2f(0, 0, ${kValue.f32.negative.min / 2}, 0)`;
+    const rhs = `mat2x2f(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -205,19 +199,15 @@ fn main() {
     t.expectCompileResult(t.params.rhs === 1, code);
   });
 
-
 g.test('overflow,f16')
   .desc(`Validates that f16 add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f16.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    let lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max / 2}, 0)`;
-    let rhs = `mat2x2h(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max / 2}, 0)`;
+    const rhs = `mat2x2h(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 enable f16;
@@ -232,16 +222,13 @@ fn main() {
 
 g.test('underflow,f16')
   .desc(`Validates that f16 add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f16.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    let lhs = `mat2x2h(0, 0, ${kValue.f16.negative.max / 2}, 0)`;
-    let rhs = `mat2x2h(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.negative.max / 2}, 0)`;
+    const rhs = `mat2x2h(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 enable f16;
@@ -256,13 +243,10 @@ fn main() {
 
 g.test('overflow,abstract')
   .desc(`Validates that abstract add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f64.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2(0, 0, ${kValue.f64.positive.max / 2}, 0)`;
-    let rhs = `mat2x2(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2(0, 0, ${kValue.f64.positive.max / 2}, 0)`;
+    const rhs = `mat2x2(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -276,13 +260,10 @@ fn main() {
 
 g.test('underflow,abstract')
   .desc(`Validates that abstract add overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f64.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2(0, 0, ${kValue.f64.negative.min / 2}, 0)`;
-    let rhs = `mat2x2(0, 0, ${t.params.rhs}, 0)`;
+    const lhs = `mat2x2(0, 0, ${kValue.f64.negative.min / 2}, 0)`;
+    const rhs = `mat2x2(0, 0, ${t.params.rhs}, 0)`;
 
     const code = `
 @compute @workgroup_size(1)

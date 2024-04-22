@@ -308,13 +308,10 @@ fn main() {
 
 g.test('overflow,scalar,f32')
   .desc(`Validates that f32 scalar multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f32.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
-    let rhs = t.params.rhs;
+    const lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
+    const rhs = t.params.rhs;
 
     const code = `
 @compute @workgroup_size(1)
@@ -328,13 +325,10 @@ fn main() {
 
 g.test('overflow,vec,f32')
   .desc(`Validates that f32 vector multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f32.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
-    let rhs = `vec2f(${t.params.rhs})`;
+    const lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
+    const rhs = `vec2f(${t.params.rhs})`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -348,13 +342,10 @@ fn main() {
 
 g.test('overflow,mat,f32')
   .desc(`Validates that f32 matrix multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f32.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f32.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
-    let rhs = `mat2x2f(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
+    const lhs = `mat2x2f(0, 0, ${kValue.f32.positive.max}, 0)`;
+    const rhs = `mat2x2f(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -368,16 +359,13 @@ fn main() {
 
 g.test('overflow,scalar,f16')
   .desc(`Validates that f16 scalar multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f16.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    let lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max }, 0)`;
-    let rhs = t.params.rhs;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max}, 0)`;
+    const rhs = t.params.rhs;
 
     const code = `
 enable f16;
@@ -392,16 +380,13 @@ fn main() {
 
 g.test('overflow,vec,f16')
   .desc(`Validates that f16 vector multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f16.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    let lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max}, 0)`;
-    let rhs = `vec2h(${t.params.rhs})`;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max}, 0)`;
+    const rhs = `vec2h(${t.params.rhs})`;
 
     const code = `
 enable f16;
@@ -416,16 +401,13 @@ fn main() {
 
 g.test('overflow,mat,f16')
   .desc(`Validates that f16 matrix multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f16.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f16.positive.max, 1]))
   .beforeAllSubcases(t => {
     t.selectDeviceOrSkipTestCase('shader-f16');
   })
   .fn(t => {
-    let lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max}, 0)`;
-    let rhs = `mat2x2h(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
+    const lhs = `mat2x2h(0, 0, ${kValue.f16.positive.max}, 0)`;
+    const rhs = `mat2x2h(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
 
     const code = `
 enable f16;
@@ -440,13 +422,10 @@ fn main() {
 
 g.test('overflow,abstract')
   .desc(`Validates that abstract scalar multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f64.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
-    let rhs = t.params.rhs;
+    const lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
+    const rhs = t.params.rhs;
 
     const code = `
 @compute @workgroup_size(1)
@@ -460,13 +439,10 @@ fn main() {
 
 g.test('overflow,vec,abstract')
   .desc(`Validates that abstract vector multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f64.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
-    let rhs = `vec2(${t.params.rhs})`;
+    const lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
+    const rhs = `vec2(${t.params.rhs})`;
 
     const code = `
 @compute @workgroup_size(1)
@@ -480,13 +456,10 @@ fn main() {
 
 g.test('overflow,mat,abstract')
   .desc(`Validates that abstract matrix multiplication overflows in shader creation`)
-  .params(u =>
-    u
-      .combine('rhs', [kValue.f64.positive.max, 1])
-  )
+  .params(u => u.combine('rhs', [kValue.f64.positive.max, 1]))
   .fn(t => {
-    let lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
-    let rhs = `mat2x2(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
+    const lhs = `mat2x2(0, 0, ${kValue.f64.positive.max}, 0)`;
+    const rhs = `mat2x2(${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs}, ${t.params.rhs})`;
 
     const code = `
 @compute @workgroup_size(1)
