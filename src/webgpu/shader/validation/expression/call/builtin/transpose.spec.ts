@@ -5,7 +5,14 @@ Validation tests for the ${builtin}() builtin.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf, objectsToRecord } from '../../../../../../common/util/data_tables.js';
-import { Type, kAllMatrices, scalarTypeOf } from '../../../../../util/conversion.js';
+import {
+  Type,
+  isConvertible,
+  kAllMatrices,
+  kConcreteFloatScalars,
+  kFloatScalars,
+  scalarTypeOf,
+} from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -22,7 +29,7 @@ const kValidArgumentTypes = objectsToRecord(kAllMatrices);
 g.test('values')
   .desc(
     `
-Validates that constant evaluation and override evaluation of ${builtin}() error on invalid inputs.
+Validates that constant evaluation and override evaluation of ${builtin}() accept valid inputs.
 `
   )
   .params(u =>
@@ -72,12 +79,56 @@ const kArgCases = {
 };
 
 g.test('args')
-  .desc(`Test compilation failure of ${builtin} with variously shaped and typed arguments`)
+  .desc(`Test compilation failure of ${builtin} with variously typed arguments`)
   .params(u => u.combine('arg', keysOf(kArgCases)))
   .fn(t => {
     t.expectCompileResult(
       t.params.arg === 'good',
       `const c = ${builtin}${kArgCases[t.params.arg]};`
+    );
+  });
+
+const kValidArgumentScalarTypes = objectsToRecord(kFloatScalars);
+const kValidReturnScalarTypes = objectsToRecord(kConcreteFloatScalars);
+
+g.test('return')
+  .desc(`Test compilation pass/failure of ${builtin} with variously shaped inputs and outputs`)
+  .params(u =>
+    u
+      .combine('input_type', keysOf(kValidArgumentScalarTypes))
+      .combine('input_rows', [2, 3, 4] as const)
+      .combine('input_cols', [2, 3, 4] as const)
+      .combine('output_type', keysOf(kValidReturnScalarTypes))
+      .combine('output_rows', [2, 3, 4] as const)
+      .combine('output_cols', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    if (t.params.input_type === 'f16' || t.params.output_type === 'f16') {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const input_type = t.params.input_type;
+    const input_cols = t.params.input_cols;
+    const input_rows = t.params.input_rows;
+    const input_values = Array(input_cols * input_rows)
+      .fill(kValidArgumentScalarTypes[t.params.input_type].create(0).wgsl())
+      .join(', ');
+    const input_str = `mat${input_cols}x${input_rows}(${input_values})`;
+
+    const output_type = t.params.output_type;
+    const output_cols = t.params.output_cols;
+    const output_rows = t.params.output_rows;
+
+    const enables = input_type === 'f16' || output_type === 'f16' ? 'enable f16;' : '';
+
+    const expectedResult =
+      input_cols === output_rows &&
+      input_rows === output_cols &&
+      isConvertible(kValidArgumentScalarTypes[input_type], kValidReturnScalarTypes[output_type]);
+    t.expectCompileResult(
+      expectedResult,
+      `${enables}\nconst c: mat${output_cols}x${output_rows}<${output_type}> = ${builtin}(${input_str});`
     );
   });
 

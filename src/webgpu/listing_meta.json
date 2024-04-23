@@ -2312,6 +2312,7 @@
   "webgpu:shader,validation,expression,call,builtin,textureStore:value_argument:*": { "subcaseMS": 1.442 },
   "webgpu:shader,validation,expression,call,builtin,transpose:args:*": { "subcaseMS": 23.126 },
   "webgpu:shader,validation,expression,call,builtin,transpose:must_use:*": { "subcaseMS": 2.980 },
+  "webgpu:shader,validation,expression,call,builtin,transpose:return:*": { "subcaseMS": 611.906 },
   "webgpu:shader,validation,expression,call,builtin,transpose:values:*": { "subcaseMS": 13473.412 },
   "webgpu:shader,validation,expression,call,builtin,trunc:args:*": { "subcaseMS": 1.000 },
   "webgpu:shader,validation,expression,call,builtin,trunc:must_use:*": { "subcaseMS": 1.000 },
