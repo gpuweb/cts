@@ -268,6 +268,7 @@ g.test('max_components_count,output')
       { numScalarDelta: 1, topology: 'triangle-list', _success: false },
       { numScalarDelta: 0, topology: 'point-list', _success: false },
       { numScalarDelta: -1, topology: 'point-list', _success: false },
+      { numScalarDelta: -3, topology: 'point-list', _success: false },
       { numScalarDelta: -4, topology: 'point-list', _success: true },
     ] as const)
   )
