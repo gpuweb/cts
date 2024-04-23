@@ -4,6 +4,7 @@
 Validation tests for matrix addition and subtraction expressions.
 `;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
+import { kValue } from '../../../../util/constants.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -162,5 +163,193 @@ fn main() {
 `;
 
   t.expectCompileResult(true, code);
+});
+
+g.test('overflow_f32').
+desc(`Validates that f32 add overflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f32.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}f(`;
+  let rhs = `mat${t.params.c}x${t.params.r}f(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f32.positive.max / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} + ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
+});
+
+g.test('underflow_f32').
+desc(`Validates that f32 add underflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f32.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}f(`;
+  let rhs = `mat${t.params.c}x${t.params.r}f(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f32.negative.min / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} - ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
+});
+
+g.test('overflow_f16').
+desc(`Validates that f16 add overflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f16.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}h(`;
+  let rhs = `mat${t.params.c}x${t.params.r}h(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f16.positive.max / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+enable f16;
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} + ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
+});
+
+g.test('underflow_f16').
+desc(`Validates that f16 add underflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f16.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  t.selectDeviceOrSkipTestCase('shader-f16');
+}).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}h(`;
+  let rhs = `mat${t.params.c}x${t.params.r}h(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f32.negative.min / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+enable f16;
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} - ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
+});
+
+g.test('overflow_abstract').
+desc(`Validates that abstract add overflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f64.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}(`;
+  let rhs = `mat${t.params.c}x${t.params.r}(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f64.positive.max / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} + ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
+});
+
+g.test('underflow_abstract').
+desc(`Validates that abstract add underflows in shader creation`).
+params((u) =>
+u.
+combine('rhs', [kValue.f64.positive.max, 1]).
+combine('c', [2, 3, 4]).
+combine('r', [2, 3, 4])
+).
+fn((t) => {
+  let lhs = `mat${t.params.c}x${t.params.r}(`;
+  let rhs = `mat${t.params.c}x${t.params.r}(`;
+  for (let i = 0; i < t.params.c; i++) {
+    for (let k = 0; k < t.params.r; k++) {
+      lhs += `${kValue.f64.negative.min / 2},`;
+      rhs += `${t.params.rhs},`;
+    }
+  }
+  rhs += ')';
+  lhs += ')';
+
+  const code = `
+@compute @workgroup_size(1)
+fn main() {
+  const foo = ${lhs} - ${rhs};
+}
+`;
+
+  t.expectCompileResult(t.params.rhs === 1, code);
 });
 //# sourceMappingURL=add_sub.spec.js.map
