@@ -11,6 +11,7 @@
     "checks": "grunt checks",
     "unittest": "grunt unittest",
     "typecheck": "grunt typecheck",
+    "lint": "grunt run:lint",
     "fix": "grunt fix",
     "gen_wpt_cts_html": "node tools/gen_wpt_cts_html",
     "gen_cache": "node tools/gen_cache",
