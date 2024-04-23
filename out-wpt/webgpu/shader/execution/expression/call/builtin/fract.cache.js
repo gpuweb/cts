@@ -1,7 +1,6 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert } from 'console';import { FP } from '../../../../../util/floating_point.js';
-import { kFractTable } from '../../binary/af_data.js';
+**/import { assert } from '../../../../../../common/util/util.js';import { FP } from '../../../../../util/floating_point.js';import { kFractTable } from '../../binary/af_data.js';
 import { makeCaseCache } from '../../case_cache.js';
 
 const kCommonValues = [

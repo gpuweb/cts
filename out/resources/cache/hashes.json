@@ -56,7 +56,7 @@
   "webgpu/shader/execution/faceForward.bin": "93106b04",
   "webgpu/shader/execution/floor.bin": "f423ef94",
   "webgpu/shader/execution/fma.bin": "49a0df16",
-  "webgpu/shader/execution/fract.bin": "1f75776f",
+  "webgpu/shader/execution/fract.bin": "c8b0ffb3",
   "webgpu/shader/execution/frexp.bin": "4d768906",
   "webgpu/shader/execution/inverseSqrt.bin": "6521f865",
   "webgpu/shader/execution/ldexp.bin": "75d2dc8b",
