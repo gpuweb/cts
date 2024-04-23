@@ -1,5 +1,4 @@
-import { assert } from 'console';
-
+import { assert } from '../../../../../../common/util/util.js';
 import { FP, FPInterval } from '../../../../../util/floating_point.js';
 import { kFractTable } from '../../binary/af_data.js';
 import { makeCaseCache } from '../../case_cache.js';
