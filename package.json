@@ -59,6 +59,7 @@
     "eslint-plugin-deprecation": "^2.0.0",
     "eslint-plugin-gpuweb-cts": "file:./tools/eslint-plugin-gpuweb-cts",
     "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^17.2.1",
     "express": "^4.18.2",
     "grunt": "^1.6.1",
     "grunt-cli": "^1.4.3",

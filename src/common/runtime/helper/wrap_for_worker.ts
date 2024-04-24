@@ -1,4 +1,4 @@
-import { Fixture } from '../../framework/fixture';
+import { Fixture } from '../../framework/fixture.js';
 import { LogMessageWithStack } from '../../internal/logging/log_message.js';
 import { comparePaths, comparePublicParamsPaths, Ordering } from '../../internal/query/compare.js';
 import { parseQuery } from '../../internal/query/parseQuery.js';
