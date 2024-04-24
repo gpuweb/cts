@@ -277,7 +277,7 @@ const kAbstractCases = {
     ok: (width: number) => width > 3,
   },
 
-  // single element conVenience name accesses
+  // single element convenience name accesses
   x: { wgsl: 'const r = V.x;', ok: true },
   y: { wgsl: 'const r = V.y;', ok: true },
   z: { wgsl: 'const r = V.z;', ok: (width: number) => width > 2 },
@@ -315,11 +315,11 @@ const kAbstractCases = {
   xyxz_rbg_yx: { wgsl: 'const r = V.xyxz.rbg.yx;', ok: (width: number) => width > 2 },
   wxyz_bga_xy: { wgsl: 'const r = V.wxyz.bga.xy;', ok: (width: number) => width > 3 },
 
-  // error: inValid conVenience letterings
+  // error: invalid convenience letterings
   xq: { wgsl: 'const r = V.xq;', ok: false },
   py: { wgsl: 'const r = V.py;', ok: false },
 
-  // error: mixed conVenience letterings
+  // error: mixed convenience letterings
   xg: { wgsl: 'const r = V.xg;', ok: false },
   ryb: { wgsl: 'const r = V.ryb;', ok: false },
   xgza: { wgsl: 'const r = V.xgza;', ok: false },
@@ -330,11 +330,11 @@ const kAbstractCases = {
   yxwxy: { wgsl: 'const r = V.yxwxy;', ok: false },
   rgbar: { wgsl: 'const r = V.rgbar;', ok: false },
 
-  // error: inValid index Value
+  // error: invalid index Value
   literal_5: { wgsl: 'const r = V[5];', ok: false },
   literal_minus_1: { wgsl: 'const r = V[-1];', ok: false },
 
-  // error: inValid index type
+  // error: invalid index type
   float_idx: { wgsl: 'const r = V[1.0];', ok: false },
   bool_idx: { wgsl: 'const r = V[true];', ok: false },
   array_idx: { wgsl: 'const r = V[array<i32, 2>()];', ok: false },
