@@ -2,6 +2,7 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/
 function node() {
+
   const { existsSync } = require('fs');
 
   return {
