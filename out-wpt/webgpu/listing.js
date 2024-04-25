@@ -5162,14 +5162,6 @@ export const listing = [
       "shader",
       "validation",
       "parse",
-      "align"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
       "attribute"
     ]
   },
@@ -5435,6 +5427,14 @@ export const listing = [
       "validation",
       "parse",
       "while"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
+      "align"
     ]
   },
   {
