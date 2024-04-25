@@ -4710,22 +4710,12 @@ const kMultiplicationInterval64BitsNormalCases = {
     { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xa120), reinterpretU16AsF16(0xa11e)] },  // ~-0.01
   ] as ScalarPairToIntervalCase[],
-  abstract: [
-    // 0.1 isn't exactly representable in f64, but will be quantized to an
-    // exact value when storing to a 'number' (0x3FB999999999999A).
-    // This is why below the expectations are not intervals.
-    // f64 0.1 * 0.1 = 0x3f847ae147ae147c,
-    { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
-    { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
-    { input: [0.1, -0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
-    { input: [-0.1, 0.1], expected: reinterpretU64AsF64(0xbf847ae147ae147cn) },  // ~-0.01
-  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('multiplicationInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -5039,23 +5029,12 @@ const kSubtractionInterval64BitsNormalCases = {
     // Expect f16 interval [0xAE67-0x2E67, 0xAE66-0x2E66]
     { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67)-reinterpretU16AsF16(0x2e67), reinterpretU16AsF16(0xae66)-reinterpretU16AsF16(0x2e66)] },
   ] as ScalarPairToIntervalCase[],
-  abstract: [
-    // 0.1 isn't exactly representable in f64, but will be quantized to an
-    // exact value when storing to a 'number' (0x3FB999999999999A).
-    // This is why below the expectations are not intervals.
-    { input: [0.1, 0.1], expected: 0 },
-    { input: [-0.1, -0.1], expected: 0 },
-    // f64 0x3FB999999999999A - 0xBFB999999999999A = 0x3FC999999999999A
-    { input: [0.1, -0.1], expected: reinterpretU64AsF64(0x3fc999999999999an) },  // ~0.2
-    // f64 0xBFB999999999999A - 0x3FB999999999999A = 0xBFC999999999999A
-    { input: [-0.1, 0.1], expected: reinterpretU64AsF64(0xbfc999999999999an) },  // ~-0.2,
-  ] as ScalarPairToIntervalCase[],
 } as const;
 
 g.test('subtractionInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -6903,7 +6882,7 @@ g.test('additionMatrixMatrixInterval')
 g.test('subtractionMatrixMatrixInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<MatrixPairToMatrixCase>(p => {
         const trait = FP[p.trait];
@@ -6911,7 +6890,7 @@ g.test('subtractionMatrixMatrixInterval')
         return [
           // Only testing that different shapes of matrices are handled correctly
           // here, to reduce test duplication.
-          // subtractionMatrixMatrixInterval uses AdditionIntervalOp for calculating intervals,
+          // subtractionMatrixMatrixInterval uses SubtractionIntervalOp for calculating intervals,
           // so the testing for subtractionInterval covers the actual interval
           // calculations.
           {
@@ -7696,26 +7675,12 @@ const kMultiplicationMatrixScalarIntervalCases = {
       ],
     },
   ] as MatrixScalarToMatrixCase[],
-  abstract: [
-    // From https://github.com/gpuweb/cts/issues/3044
-    {
-      matrix: [
-        [kValue.f64.negative.min, 0],
-        [0, 0],
-      ],
-      scalar: kValue.f64.negative.subnormal.min,
-      expected: [
-        [[0, reinterpretU64AsF64(0x400ffffffffffffdn)], 0], // [[0, 3.9999995...], 0],
-        [0, 0],
-      ],
-    },
-  ] as MatrixScalarToMatrixCase[],
 } as const;
 
 g.test('multiplicationMatrixScalarInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<MatrixScalarToMatrixCase>(p => {
         const trait = FP[p.trait];
