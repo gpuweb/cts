@@ -18,7 +18,6 @@ import { ShaderValidationTest } from '../../../shader_validation_test.js';
 import {
   fullRangeForType,
   kConstantAndOverrideStages,
-  stageSupportsType,
   validateConstOrOverrideBuiltinEval,
 } from './const_override_validation.js';
 
@@ -36,7 +35,6 @@ Validates that constant evaluation and override evaluation of ${builtin}() accep
     u
       .combine('stage', kConstantAndOverrideStages)
       .combine('type', keysOf(kValidArgumentTypes))
-      .filter(u => stageSupportsType(u.stage, kValidArgumentTypes[u.type]))
       .beginSubcases()
       .expand('value', u => fullRangeForType(kValidArgumentTypes[u.type]))
   )
