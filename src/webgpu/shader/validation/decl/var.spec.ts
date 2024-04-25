@@ -4,8 +4,9 @@ Validation tests for host-shareable types.
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../common/util/data_tables.js';
-import { ShaderValidationTest } from '../shader_validation_test.js';
 import { AddressSpace, kAccessModeInfo, kAddressSpaceInfo } from '../../types.js';
+import { ShaderValidationTest } from '../shader_validation_test.js';
+
 import {
   explicitSpaceExpander,
   getVarDeclShader,
