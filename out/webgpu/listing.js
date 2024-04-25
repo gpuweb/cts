@@ -3909,14 +3909,6 @@ export const listing = [
       "shader",
       "validation",
       "decl",
-      "ptr_spelling"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "decl",
       "var"
     ]
   },
