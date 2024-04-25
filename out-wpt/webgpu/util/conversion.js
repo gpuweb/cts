@@ -2500,7 +2500,10 @@ export function isConvertible(src, dst) {
 }
 
 /// All floating-point scalar types
-const kFloatScalars = [Type.abstractFloat, Type.f32, Type.f16];
+export const kFloatScalars = [Type.abstractFloat, Type.f32, Type.f16];
+
+/// All concrete floating-point scalar types
+export const kConcreteFloatScalars = [Type.f32, Type.f16];
 
 /// All floating-point vec2 types
 const kFloatVec2 = [Type.vec2af, Type.vec2f, Type.vec2h];
