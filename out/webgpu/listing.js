@@ -3924,14 +3924,6 @@ export const listing = [
     "file": [
       "shader",
       "validation",
-      "decl",
-      "var_access_mode"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
       "expression",
       "access",
       "array"
@@ -5411,14 +5403,6 @@ export const listing = [
       "validation",
       "parse",
       "unary_ops"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
-      "var_and_let"
     ]
   },
   {
