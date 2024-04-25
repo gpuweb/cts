@@ -5,6 +5,7 @@
   <link rel="help" href="https://gpuweb.github.io/gpuweb/" />
   <style>
     body { background-color: #F0E68C; }
+    canvas { border: 1px solid white; }
   </style>
   <canvas id="cvs00" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
   <canvas id="cvs01" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
@@ -15,6 +16,16 @@
   <canvas id="cvs11" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
   <canvas id="cvs12" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
   <canvas id="cvs13" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <br>
+  <canvas id="cvs20" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs21" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs22" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs23" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <br>
+  <canvas id="cvs30" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs31" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs32" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
+  <canvas id="cvs33" width="20" height="20" style="width: 20px; height: 20px;"></canvas>
   <script>
     function draw(canvas, color) {
       var c = document.getElementById(canvas);
@@ -32,5 +43,15 @@
     draw('cvs11', '#000000');
     draw('cvs12', '#00000000');
     draw('cvs13', '#00000000');
+
+    draw('cvs20', '#00000000');
+    draw('cvs21', '#00000000');
+    draw('cvs22', '#00000000');
+    draw('cvs23', '#00000000');
+
+    draw('cvs30', '#000000');
+    draw('cvs31', '#000000');
+    draw('cvs32', '#00000000');
+    draw('cvs33', '#00000000');
  </script>
 </html>
