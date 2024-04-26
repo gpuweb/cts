@@ -2680,7 +2680,7 @@
   "webgpu:shader,validation,types,struct:no_indirect_recursion_via_array_size:*": { "subcaseMS": 0.900 },
   "webgpu:shader,validation,types,struct:no_indirect_recursion_via_struct_attribute:*": { "subcaseMS": 1.467 },
   "webgpu:shader,validation,types,struct:no_indirect_recursion_via_struct_member_nested_in_alias:*": { "subcaseMS": 0.950 },
-  "webgpu:shader,validation,types,struct:trailing_comma_after_member:*": { "subcaseMS": 0.406 },
+  "webgpu:shader,validation,types,struct:structures:*": { "subcaseMS": 15.358 },
   "webgpu:shader,validation,types,textures:depth_texture_types:*": { "subcaseMS": 3.459 },
   "webgpu:shader,validation,types,textures:external_sampled_texture_types:*": { "subcaseMS": 0.340 },
   "webgpu:shader,validation,types,textures:sampled_texture_types:*": { "subcaseMS": 7.634 },
