@@ -227,6 +227,27 @@ const kStructureCases: Record<string, StructureCase> = {
     code: `struct S { x : u32, }`,
     valid: true,
   },
+
+  empty: {
+    code: `struct S { }`,
+    valid: false,
+  },
+
+  name_collision1: {
+    code: `struct S { x : u32 }
+    struct S { x : u32 }`,
+    valid: false,
+  },
+  name_collision2: {
+    code: `fn S() { }
+    struct S { x : u32 }`,
+    valid: false,
+  },
+  name_collision3: {
+    code: `struct S { x : u32 }
+    alias S = u32;`,
+    valid: false,
+  },
 };
 
 g.test('structures')
