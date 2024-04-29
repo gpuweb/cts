@@ -4,6 +4,7 @@ Validation tests for vector accesses
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../common/util/data_tables.js';
+import { Type, isConvertible } from '../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -228,32 +229,32 @@ const kAbstractCases = {
   },
 
   // indexing with 'let' variable
-  let_0: { wgsl: 'let i = 0; const r = V[i];', result_width: undefined, ok: false },
-  let_1: { wgsl: 'let i = 1; const r = V[i];', result_width: undefined, ok: false },
-  let_2: { wgsl: 'let i = 2; const r = V[i];', result_width: undefined, ok: false },
-  let_3: { wgsl: 'let i = 3; const r = V[i];', result_width: undefined, ok: false },
-  let_0i: { wgsl: 'let i = 0i; const r = V[i];', result_width: undefined, ok: false },
-  let_1i: { wgsl: 'let i = 1i; const r = V[i];', result_width: undefined, ok: false },
-  let_2i: { wgsl: 'let i = 2i; const r = V[i];', result_width: undefined, ok: false },
-  let_3i: { wgsl: 'let i = 3i; const r = V[i];', result_width: undefined, ok: false },
-  let_0u: { wgsl: 'let i = 0u; const r = V[i];', result_width: undefined, ok: false },
-  let_1u: { wgsl: 'let i = 1u; const r = V[i];', result_width: undefined, ok: false },
-  let_2u: { wgsl: 'let i = 2u; const r = V[i];', result_width: undefined, ok: false },
-  let_3u: { wgsl: 'let i = 3u; const r = V[i];', result_width: undefined, ok: false },
+  let_0: { wgsl: 'let i = 0; const r = V[i];', ok: false },
+  let_1: { wgsl: 'let i = 1; const r = V[i];', ok: false },
+  let_2: { wgsl: 'let i = 2; const r = V[i];', ok: false },
+  let_3: { wgsl: 'let i = 3; const r = V[i];', ok: false },
+  let_0i: { wgsl: 'let i = 0i; const r = V[i];', ok: false },
+  let_1i: { wgsl: 'let i = 1i; const r = V[i];', ok: false },
+  let_2i: { wgsl: 'let i = 2i; const r = V[i];', ok: false },
+  let_3i: { wgsl: 'let i = 3i; const r = V[i];', ok: false },
+  let_0u: { wgsl: 'let i = 0u; const r = V[i];', ok: false },
+  let_1u: { wgsl: 'let i = 1u; const r = V[i];', ok: false },
+  let_2u: { wgsl: 'let i = 2u; const r = V[i];', ok: false },
+  let_3u: { wgsl: 'let i = 3u; const r = V[i];', ok: false },
 
-  // indexing with 'Var' variable
-  Var_0: { wgsl: 'Var i = 0; const r = V[i];', result_width: undefined, ok: false },
-  Var_1: { wgsl: 'Var i = 1; const r = V[i];', result_width: undefined, ok: false },
-  Var_2: { wgsl: 'Var i = 2; const r = V[i];', result_width: undefined, ok: false },
-  Var_3: { wgsl: 'Var i = 3; const r = V[i];', result_width: undefined, ok: false },
-  Var_0i: { wgsl: 'Var i = 0i; const r = V[i];', result_width: undefined, ok: false },
-  Var_1i: { wgsl: 'Var i = 1i; const r = V[i];', result_width: undefined, ok: false },
-  Var_2i: { wgsl: 'Var i = 2i; const r = V[i];', result_width: undefined, ok: false },
-  Var_3i: { wgsl: 'Var i = 3i; const r = V[i];', result_width: undefined, ok: false },
-  Var_0u: { wgsl: 'Var i = 0u; const r = V[i];', result_width: undefined, ok: false },
-  Var_1u: { wgsl: 'Var i = 1u; const r = V[i];', result_width: undefined, ok: false },
-  Var_2u: { wgsl: 'Var i = 2u; const r = V[i];', result_width: undefined, ok: false },
-  Var_3u: { wgsl: 'Var i = 3u; const r = V[i];', result_width: undefined, ok: false },
+  // indexing with 'var' variable
+  var_0: { wgsl: 'var i = 0; const r = V[i];', ok: false },
+  var_1: { wgsl: 'var i = 1; const r = V[i];', ok: false },
+  var_2: { wgsl: 'var i = 2; const r = V[i];', ok: false },
+  var_3: { wgsl: 'var i = 3; const r = V[i];', ok: false },
+  var_0i: { wgsl: 'var i = 0i; const r = V[i];', ok: false },
+  var_1i: { wgsl: 'var i = 1i; const r = V[i];', ok: false },
+  var_2i: { wgsl: 'var i = 2i; const r = V[i];', ok: false },
+  var_3i: { wgsl: 'var i = 3i; const r = V[i];', ok: false },
+  var_0u: { wgsl: 'var i = 0u; const r = V[i];', ok: false },
+  var_1u: { wgsl: 'var i = 1u; const r = V[i];', ok: false },
+  var_2u: { wgsl: 'var i = 2u; const r = V[i];', ok: false },
+  var_3u: { wgsl: 'var i = 3u; const r = V[i];', ok: false },
 
   // indexing with const expression
   const_expr_0: { wgsl: 'const r = V[0 / 2];', result_width: 1, ok: true },
@@ -358,28 +359,28 @@ const kAbstractCases = {
   },
 
   // error: invalid convenience letterings
-  xq: { wgsl: 'const r = V.xq;', result_width: undefined, ok: false },
-  py: { wgsl: 'const r = V.py;', result_width: undefined, ok: false },
+  xq: { wgsl: 'const r = V.xq;', ok: false },
+  py: { wgsl: 'const r = V.py;', ok: false },
 
   // error: mixed convenience letterings
-  xg: { wgsl: 'const r = V.xg;', result_width: undefined, ok: false },
-  ryb: { wgsl: 'const r = V.ryb;', result_width: undefined, ok: false },
-  xgza: { wgsl: 'const r = V.xgza;', result_width: undefined, ok: false },
+  xg: { wgsl: 'const r = V.xg;', ok: false },
+  ryb: { wgsl: 'const r = V.ryb;', ok: false },
+  xgza: { wgsl: 'const r = V.xgza;', ok: false },
 
   // error: too many swizzle elements
-  xxxxx: { wgsl: 'const r = V.xxxxx;', result_width: undefined, ok: false },
-  rrrrr: { wgsl: 'const r = V.rrrrr;', result_width: undefined, ok: false },
-  yxwxy: { wgsl: 'const r = V.yxwxy;', result_width: undefined, ok: false },
-  rgbar: { wgsl: 'const r = V.rgbar;', result_width: undefined, ok: false },
+  xxxxx: { wgsl: 'const r = V.xxxxx;', ok: false },
+  rrrrr: { wgsl: 'const r = V.rrrrr;', ok: false },
+  yxwxy: { wgsl: 'const r = V.yxwxy;', ok: false },
+  rgbar: { wgsl: 'const r = V.rgbar;', ok: false },
 
   // error: invalid index Value
-  literal_5: { wgsl: 'const r = V[5];', result_width: undefined, ok: false },
-  literal_minus_1: { wgsl: 'const r = V[-1];', result_width: undefined, ok: false },
+  literal_5: { wgsl: 'const r = V[5];', ok: false },
+  literal_minus_1: { wgsl: 'const r = V[-1];', ok: false },
 
   // error: invalid index type
-  float_idx: { wgsl: 'const r = V[1.0];', result_width: undefined, ok: false },
-  bool_idx: { wgsl: 'const r = V[true];', result_width: undefined, ok: false },
-  array_idx: { wgsl: 'const r = V[array<i32, 2>()];', result_width: undefined, ok: false },
+  float_idx: { wgsl: 'const r = V[1.0];', ok: false },
+  bool_idx: { wgsl: 'const r = V[true];', ok: false },
+  array_idx: { wgsl: 'const r = V[array<i32, 2>()];', ok: false },
 };
 
 g.test('concrete')
@@ -437,7 +438,7 @@ g.test('abstract')
     u
       .combine('vector_width', [2, 3, 4] as const)
       .combine('abstract_type', ['int', 'float'] as const)
-      .combine('concrete_type', ['u32', 'i32', 'f32', 'f16'])
+      .combine('concrete_type', ['u32', 'i32', 'f32', 'f16'] as const)
       .beginSubcases()
       .combine('case', keysOf(kAbstractCases))
   )
@@ -455,12 +456,12 @@ g.test('abstract')
       .join(', ')})`;
 
     const conversion_type =
-      c.result_width !== undefined
+      'result_width' in c
         ? c.result_width === 1
           ? `${t.params.concrete_type}`
           : `vec${c.result_width}<${t.params.concrete_type}>`
         : '';
-    const conversion = c.result_width !== undefined ? `const c: ${conversion_type} = r;` : '';
+    const conversion = 'result_width' in c ? `const c: ${conversion_type} = r;` : '';
 
     const code = `${enables}
 struct S {
@@ -473,10 +474,10 @@ fn main() {
   ${conversion}
 }
 `;
-    const convertible =
-      t.params.abstract_type === 'int' ||
-      t.params.concrete_type === 'f32' ||
-      t.params.concrete_type === 'f16';
+    const convertible = isConvertible(
+      Type[`abstract-${t.params.abstract_type}`],
+      Type[t.params.concrete_type]
+    );
     const pass = convertible && (typeof c.ok === 'function' ? c.ok(t.params.vector_width) : c.ok);
     t.expectCompileResult(pass, code);
   });
