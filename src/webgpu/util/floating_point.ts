@@ -5112,8 +5112,14 @@ class FPAbstractTraits extends FPTraits {
     'acoshPrimaryInterval'
   );
   public readonly acoshIntervals = [this.acoshAlternativeInterval, this.acoshPrimaryInterval];
-  public readonly additionInterval = this.additionIntervalImpl.bind(this);
-  public readonly additionMatrixMatrixInterval = this.additionMatrixMatrixIntervalImpl.bind(this);
+  public readonly additionInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'additionInterval'
+  );
+  public readonly additionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
+    this,
+    'additionMatrixMatrixInterval'
+  );
   public readonly asinInterval = this.unimplementedScalarToInterval.bind(this, 'asinInterval');
   public readonly asinhInterval = this.unimplementedScalarToInterval.bind(this, 'asinhInterval');
   public readonly atanInterval = this.unimplementedScalarToInterval.bind(this, 'atanInterval');
@@ -5148,7 +5154,7 @@ class FPAbstractTraits extends FPTraits {
   public readonly faceForwardIntervals = this.unimplementedFaceForward.bind(this);
   public readonly floorInterval = this.floorIntervalImpl.bind(this);
   public readonly fmaInterval = this.unimplementedScalarTripleToInterval.bind(this, 'fmaInterval');
-  public readonly fractInterval = this.fractIntervalImpl.bind(this);
+  public readonly fractInterval = this.unimplementedScalarToInterval.bind(this, 'fractInterval');
   public readonly inverseSqrtInterval = this.unimplementedScalarToInterval.bind(
     this,
     'inverseSqrtInterval'
@@ -5169,15 +5175,22 @@ class FPAbstractTraits extends FPTraits {
   );
   public readonly mixIntervals = [this.mixImpreciseInterval, this.mixPreciseInterval];
   public readonly modfInterval = this.modfIntervalImpl.bind(this);
-  public readonly multiplicationInterval = this.multiplicationIntervalImpl.bind(this);
+  public readonly multiplicationInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'multiplicationInterval'
+  );
   public readonly multiplicationMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
     this,
     'multiplicationMatrixMatrixInterval'
   );
-  public readonly multiplicationMatrixScalarInterval =
-    this.multiplicationMatrixScalarIntervalImpl.bind(this);
-  public readonly multiplicationScalarMatrixInterval =
-    this.multiplicationScalarMatrixIntervalImpl.bind(this);
+  public readonly multiplicationMatrixScalarInterval = this.unimplementedMatrixScalarToMatrix.bind(
+    this,
+    'multiplicationMatrixScalarInterval'
+  );
+  public readonly multiplicationScalarMatrixInterval = this.unimplementedScalarMatrixToMatrix.bind(
+    this,
+    'multiplicationScalarMatrixInterval'
+  );
   public readonly multiplicationMatrixVectorInterval = this.unimplementedMatrixVectorToVector.bind(
     this,
     'multiplicationMatrixVectorInterval'
@@ -5213,9 +5226,14 @@ class FPAbstractTraits extends FPTraits {
   );
   public readonly sqrtInterval = this.unimplementedScalarToInterval.bind(this, 'sqrtInterval');
   public readonly stepInterval = this.stepIntervalImpl.bind(this);
-  public readonly subtractionInterval = this.subtractionIntervalImpl.bind(this);
-  public readonly subtractionMatrixMatrixInterval =
-    this.subtractionMatrixMatrixIntervalImpl.bind(this);
+  public readonly subtractionInterval = this.unimplementedScalarPairToInterval.bind(
+    this,
+    'subtractionInterval'
+  );
+  public readonly subtractionMatrixMatrixInterval = this.unimplementedMatrixPairToMatrix.bind(
+    this,
+    'subtractionMatrixMatrixInterval'
+  );
   public readonly tanInterval = this.unimplementedScalarToInterval.bind(this, 'tanInterval');
   public readonly tanhInterval = this.unimplementedScalarToInterval.bind(this, 'tanhInterval');
   public readonly transposeInterval = this.transposeIntervalImpl.bind(this);

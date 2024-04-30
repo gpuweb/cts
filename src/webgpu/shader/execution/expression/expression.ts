@@ -37,17 +37,36 @@ export const onlyConstInputSource: InputSource[] = ['const'];
 /** All input sources except const */
 export const allButConstInputSource: InputSource[] = ['uniform', 'storage_r', 'storage_rw'];
 
+/**
+ * An enumerator of methods the const-expression is evaluated and assigned to the output.
+ * direct:   Each case has a separate assignment statement to the output buffer, where the RHS of
+ *           the assignment holds the case's evaluated expression.
+ * unrolled: The case expressions are all evaluated and stored in a module-scope 'const' array.
+ *           This array is indexed and the value is copied to the output buffer using an unrolled
+ *           sequence of assignment statements.
+ * loop:     The case expressions are all evaluated and stored in a module-scope 'const' array.
+ *           This array is indexed and the value is copied to the output buffer using a for loop.
+ */
+export type ConstEvaluationMode = 'direct' | 'unrolled' | 'loop';
+
 /** Configuration for running a expression test */
 export type Config = {
-  // Where the input values are read from
+  /** Where the input values are read from */
   inputSource: InputSource;
-  // If defined, scalar test cases will be packed into vectors of the given
-  // width, which must be 2, 3 or 4.
-  // Requires that all parameters of the expression overload are of a scalar
-  // type, and the return type of the expression overload is also a scalar type.
-  // If the number of test cases is not a multiple of the vector width, then the
-  // last scalar value is repeated to fill the last vector value.
+  /**
+   * If defined, scalar test cases will be packed into vectors of the given
+   * width, which must be 2, 3 or 4.
+   * Requires that all parameters of the expression overload are of a scalar
+   * type, and the return type of the expression overload is also a scalar type.
+   * If the number of test cases is not a multiple of the vector width, then the
+   * last scalar value is repeated to fill the last vector value.
+   */
   vectorize?: number;
+  /**
+   * The evaluation mode used when 'inputSource' is 'const'. If undefined, then an appropriate mode
+   * will be picked based on the input types.
+   */
+  constEvaluationMode?: ConstEvaluationMode;
 };
 
 /**
@@ -106,7 +125,7 @@ function strideOf(ty: Type, source: InputSource): number {
  * Calls 'callback' with the layout information of each structure member with the types 'members'.
  * @returns the byte size, stride and alignment of the structure.
  */
-function structLayout(
+export function structLayout(
   members: Type[],
   source: InputSource,
   callback?: (m: {
@@ -146,7 +165,7 @@ function structLayout(
 }
 
 /** @returns the stride in bytes between two consecutive structures with the given members */
-function structStride(members: Type[], source: InputSource): number {
+export function structStride(members: Type[], source: InputSource): number {
   return structLayout(members, source).stride;
 }
 
@@ -385,15 +404,14 @@ export async function run(
   };
 
   const processBatch = async (batchCases: Case[]) => {
-    const checkBatch = await submitBatch(
-      t,
-      shaderBuilder,
+    const shaderBuilderParams: ShaderBuilderParams = {
       parameterTypes,
       resultType,
-      batchCases,
-      cfg.inputSource,
-      pipelineCache
-    );
+      cases: batchCases,
+      inputSource: cfg.inputSource,
+      constEvaluationMode: cfg.constEvaluationMode,
+    };
+    const checkBatch = await submitBatch(t, shaderBuilder, shaderBuilderParams, pipelineCache);
     checkBatch();
     void t.queue.onSubmittedWorkDone().finally(batchFinishedCallback);
   };
@@ -423,22 +441,18 @@ export async function run(
  * buffer binding limits of the given inputSource.
  * @param t the GPUTest
  * @param shaderBuilder the shader builder function
- * @param parameterTypes the list of expression parameter types
- * @param resultType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
+ * @param shaderBuilderParams the shader builder parameters
  * @param pipelineCache the cache of compute pipelines, shared between batches
  * @returns a function that checks the results are as expected
  */
 async function submitBatch(
   t: GPUTest,
   shaderBuilder: ShaderBuilder,
-  parameterTypes: Array<Type>,
-  resultType: Type,
-  cases: Case[],
-  inputSource: InputSource,
+  shaderBuilderParams: ShaderBuilderParams,
   pipelineCache: PipelineCache
 ): Promise<() => void> {
+  const { resultType, cases } = shaderBuilderParams;
+
   // Construct a buffer to hold the results of the expression tests
   const outputStride = structStride([resultType], 'storage_rw');
   const outputBufferSize = align(cases.length * outputStride, 4);
@@ -450,10 +464,7 @@ async function submitBatch(
   const [pipeline, group] = await buildPipeline(
     t,
     shaderBuilder,
-    parameterTypes,
-    resultType,
-    cases,
-    inputSource,
+    shaderBuilderParams,
     outputBuffer,
     pipelineCache
   );
@@ -519,20 +530,22 @@ function map<T, U>(v: T | readonly T[], fn: (value: T, index?: number) => U): U[
   return [fn(v, 0)];
 }
 
-/**
- * ShaderBuilder is a function used to construct the WGSL shader used by an
- * expression test.
- * @param parameterTypes the list of expression parameter types
- * @param resultType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
- */
-export type ShaderBuilder = (
-  parameterTypes: Array<Type>,
-  resultType: Type,
-  cases: Case[],
-  inputSource: InputSource
-) => string;
+/** The structured arguments for a ShaderBuilder function */
+export type ShaderBuilderParams = {
+  /**  the list of expression parameter types */
+  parameterTypes: Array<Type>;
+  /**  the return type for the expression overload */
+  resultType: Type;
+  /**  list of test cases that fit within the binding limits of the device */
+  cases: Case[];
+  /**  the source of the input values */
+  inputSource: InputSource;
+  /**  the optional evaluation mode when 'inputSource' is 'const' */
+  constEvaluationMode?: ConstEvaluationMode;
+};
+
+/** ShaderBuilder is a function used to construct the WGSL shader used by an expression test. */
+export type ShaderBuilder = (params: ShaderBuilderParams) => string;
 
 /**
  * Helper that returns the WGSL to declare the output storage buffer for a shader
@@ -594,12 +607,7 @@ struct Output {
 /**
  * Helper that returns the WGSL to declare the values array for a shader
  */
-function wgslValuesArray(
-  parameterTypes: Array<Type>,
-  resultType: Type,
-  cases: Case[],
-  expressionBuilder: ExpressionBuilder
-): string {
+function wgslValuesArray(cases: Case[], expressionBuilder: ExpressionBuilder): string {
   return `
 const values = array(
   ${cases.map(c => expressionBuilder(map(c.input, v => v.wgsl()))).join(',\n  ')}
@@ -640,16 +648,15 @@ function wgslHeader(parameterTypes: Array<Type>, resultType: Type) {
 export type ExpressionBuilder = (values: ReadonlyArray<string>) => string;
 
 /**
- * Returns a ShaderBuilder that builds a basic expression test shader.
+ * @returns the WGSL for a basic expression test shader.
  * @param expressionBuilder the expression builder
  */
 function basicExpressionShaderBody(
   expressionBuilder: ExpressionBuilder,
-  parameterTypes: Array<Type>,
-  resultType: Type,
-  cases: Case[],
-  inputSource: InputSource
+  params: ShaderBuilderParams
 ): string {
+  const { parameterTypes, resultType, cases, inputSource } = params;
+
   assert(
     scalarTypeOf(resultType).kind !== 'abstract-int',
     `abstractIntShaderBuilder should be used when result type is 'abstract-int'`
@@ -664,41 +671,53 @@ function basicExpressionShaderBody(
     uniqueID: () => `cts_symbol_${nextUniqueIDSuffix++}`,
   };
   if (inputSource === 'const') {
+    let constEvaluationMode = params.constEvaluationMode;
+    if (constEvaluationMode === undefined) {
+      if (parameterTypes.some(ty => isAbstractType(scalarTypeOf(ty)))) {
+        // Directly assign the expression to the output, to avoid an
+        // intermediate store, which will concretize the value early
+        constEvaluationMode = 'direct';
+      } else {
+        constEvaluationMode = globalTestConfig.unrollConstEvalLoops ? 'unrolled' : 'loop';
+      }
+    }
     //////////////////////////////////////////////////////////////////////////
     // Constant eval
     //////////////////////////////////////////////////////////////////////////
     let body = '';
-    if (parameterTypes.some(ty => isAbstractType(elementTypeOf(ty)))) {
-      // Directly assign the expression to the output, to avoid an
-      // intermediate store, which will concretize the value early
-      body = cases
-        .map(
-          (c, i) =>
-            `  outputs[${i}].value = ${toStorage(
-              resultType,
-              expressionBuilder(map(c.input, v => v.wgsl())),
-              convHelpers
-            )};`
-        )
-        .join('\n  ');
-    } else if (globalTestConfig.unrollConstEvalLoops) {
-      body = cases
-        .map((_, i) => {
-          const value = `values[${i}]`;
-          return `  outputs[${i}].value = ${toStorage(resultType, value, convHelpers)};`;
-        })
-        .join('\n  ');
-    } else {
-      body = `
+    let valuesArray = '';
+    switch (constEvaluationMode) {
+      case 'direct': {
+        body = cases
+          .map(
+            (c, i) =>
+              `  outputs[${i}].value = ${toStorage(
+                resultType,
+                expressionBuilder(map(c.input, v => v.wgsl())),
+                convHelpers
+              )};`
+          )
+          .join('\n  ');
+        break;
+      }
+      case 'unrolled': {
+        body = cases
+          .map((_, i) => {
+            const value = `values[${i}]`;
+            return `  outputs[${i}].value = ${toStorage(resultType, value, convHelpers)};`;
+          })
+          .join('\n  ');
+        valuesArray = wgslValuesArray(cases, expressionBuilder);
+        break;
+      }
+      case 'loop': {
+        body = `
   for (var i = 0u; i < ${cases.length}; i++) {
     outputs[i].value = ${toStorage(resultType, `values[i]`, convHelpers)};
   }`;
-    }
-
-    // If params are abstract, we will assign them directly to the storage array, so skip the values array.
-    let valuesArray = '';
-    if (!parameterTypes.some(isAbstractType)) {
-      valuesArray = wgslValuesArray(parameterTypes, resultType, cases, expressionBuilder);
+        valuesArray = wgslValuesArray(cases, expressionBuilder);
+        break;
+      }
     }
 
     return `
@@ -754,16 +773,11 @@ fn main() {
  * @param expressionBuilder the expression builder
  */
 export function basicExpressionBuilder(expressionBuilder: ExpressionBuilder): ShaderBuilder {
-  return (
-    parameterTypes: Array<Type>,
-    resultType: Type,
-    cases: Case[],
-    inputSource: InputSource
-  ) => {
+  return (params: ShaderBuilderParams) => {
     return `\
-${wgslHeader(parameterTypes, resultType)}
+${wgslHeader(params.parameterTypes, params.resultType)}
 
-${basicExpressionShaderBody(expressionBuilder, parameterTypes, resultType, cases, inputSource)}`;
+${basicExpressionShaderBody(expressionBuilder, params)}`;
   };
 }
 
@@ -777,18 +791,13 @@ export function basicExpressionWithPredeclarationBuilder(
   expressionBuilder: ExpressionBuilder,
   predeclaration: string
 ): ShaderBuilder {
-  return (
-    parameterTypes: Array<Type>,
-    resultType: Type,
-    cases: Case[],
-    inputSource: InputSource
-  ) => {
+  return (params: ShaderBuilderParams) => {
     return `\
-${wgslHeader(parameterTypes, resultType)}
+${wgslHeader(params.parameterTypes, params.resultType)}
 
 ${predeclaration}
 
-${basicExpressionShaderBody(expressionBuilder, parameterTypes, resultType, cases, inputSource)}`;
+${basicExpressionShaderBody(expressionBuilder, params)}`;
   };
 }
 
@@ -797,12 +806,9 @@ ${basicExpressionShaderBody(expressionBuilder, parameterTypes, resultType, cases
  * @param op the compound operator
  */
 export function compoundAssignmentBuilder(op: string): ShaderBuilder {
-  return (
-    parameterTypes: Array<Type>,
-    resultType: Type,
-    cases: Case[],
-    inputSource: InputSource
-  ) => {
+  return (params: ShaderBuilderParams) => {
+    const { parameterTypes, resultType, cases, inputSource } = params;
+
     //////////////////////////////////////////////////////////////////////////
     // Input validation
     //////////////////////////////////////////////////////////////////////////
@@ -1023,12 +1029,8 @@ function abstractFloatCaseBody(expr: string, resultType: Type, i: number): strin
  * @param expressionBuilder an expression builder that will return AbstractFloats
  */
 export function abstractFloatShaderBuilder(expressionBuilder: ExpressionBuilder): ShaderBuilder {
-  return (
-    parameterTypes: Array<Type>,
-    resultType: Type,
-    cases: Case[],
-    inputSource: InputSource
-  ) => {
+  return (params: ShaderBuilderParams) => {
+    const { parameterTypes, resultType, cases, inputSource } = params;
     assert(inputSource === 'const', `'abstract-float' results are only defined for const-eval`);
     assert(
       scalarTypeOf(resultType).kind === 'abstract-float',
@@ -1107,12 +1109,9 @@ function abstractIntCaseBody(expr: string, resultType: Type, i: number): string 
  * @param expressionBuilder an expression builder that will return AbstractInts
  */
 export function abstractIntShaderBuilder(expressionBuilder: ExpressionBuilder): ShaderBuilder {
-  return (
-    parameterTypes: Array<Type>,
-    resultType: Type,
-    cases: Case[],
-    inputSource: InputSource
-  ) => {
+  return (params: ShaderBuilderParams) => {
+    const { parameterTypes, resultType, cases, inputSource } = params;
+
     assert(inputSource === 'const', `'abstract-int' results are only defined for const-eval`);
     assert(
       scalarTypeOf(resultType).kind === 'abstract-int',
@@ -1145,23 +1144,19 @@ ${body}
  * pipeline.
  * @param t the GPUTest
  * @param shaderBuilder the shader builder
- * @param parameterTypes the list of expression parameter types
- * @param resultType the return type for the expression overload
- * @param cases list of test cases that fit within the binding limits of the device
- * @param inputSource the source of the input values
+ * @param shaderBuilderParams the parameters for the shader builder
  * @param outputBuffer the buffer that will hold the output values of the tests
  * @param pipelineCache the cache of compute pipelines, shared between batches
  */
 async function buildPipeline(
   t: GPUTest,
   shaderBuilder: ShaderBuilder,
-  parameterTypes: Array<Type>,
-  resultType: Type,
-  cases: Case[],
-  inputSource: InputSource,
+  shaderBuilderParams: ShaderBuilderParams,
   outputBuffer: GPUBuffer,
   pipelineCache: PipelineCache
 ): Promise<[GPUComputePipeline, GPUBindGroup]> {
+  const { parameterTypes, cases, inputSource } = shaderBuilderParams;
+
   cases.forEach(c => {
     const inputTypes = c.input instanceof Array ? c.input.map(i => i.type) : [c.input.type];
     if (!objectEquals(inputTypes, parameterTypes)) {
@@ -1173,7 +1168,7 @@ async function buildPipeline(
     }
   });
 
-  const source = shaderBuilder(parameterTypes, resultType, cases, inputSource);
+  const source = shaderBuilder(shaderBuilderParams);
 
   switch (inputSource) {
     case 'const': {
@@ -1260,7 +1255,7 @@ async function buildPipeline(
  * If `cases.length` is not a multiple of `vectorWidth`, then the last scalar
  * test case value is repeated to fill the vector value.
  */
-function packScalarsToVector(
+export function packScalarsToVector(
   parameterTypes: Array<Type>,
   resultType: Type,
   cases: Case[],
