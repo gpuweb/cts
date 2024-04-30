@@ -2726,12 +2726,12 @@ export abstract class FPTraits {
     },
   };
 
-  protected absIntervalImpl(n: number): FPInterval {
+  protected absIntervalImpl(n: number | FPInterval): FPInterval {
     return this.runScalarToIntervalOp(this.toInterval(n), this.AbsIntervalOp);
   }
 
   /** Calculate an acceptance interval for abs(n) */
-  public abstract readonly absInterval: (n: number) => FPInterval;
+  public abstract readonly absInterval: (n: number | FPInterval) => FPInterval;
 
   // This op is implemented differently for f32 and f16.
   private readonly AcosIntervalOp: ScalarToIntervalOp = {
