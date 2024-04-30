@@ -5000,6 +5000,16 @@ export const listing = [
       "expression",
       "call",
       "builtin",
+      "value_constructor"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "expression",
+      "call",
+      "builtin",
       "workgroupUniformLoad"
     ]
   },
