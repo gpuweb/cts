@@ -2350,6 +2350,7 @@
   "webgpu:shader,validation,expression,call,builtin,value_constructor:struct_zero_value:*": { "subcaseMS": 5.066 },
   "webgpu:shader,validation,expression,call,builtin,value_constructor:vector_copy:*": { "subcaseMS": 0.097 },
   "webgpu:shader,validation,expression,call,builtin,value_constructor:vector_elementwise:*": { "subcaseMS": 0.131 },
+  "webgpu:shader,validation,expression,call,builtin,value_constructor:vector_mixed:*": { "subcaseMS": 460.069 },
   "webgpu:shader,validation,expression,call,builtin,value_constructor:vector_splat:*": { "subcaseMS": 0.116 },
   "webgpu:shader,validation,expression,call,builtin,value_constructor:vector_zero_value:*": { "subcaseMS": 21.684 },
   "webgpu:shader,validation,expression,call,builtin,workgroupUniformLoad:no_atomics:*": { "subcaseMS": 1.000 },
