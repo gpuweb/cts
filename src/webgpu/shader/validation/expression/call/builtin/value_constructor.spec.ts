@@ -366,9 +366,79 @@ g.test('matrix_zero_value')
     t.expectCompileResult(true, code);
   });
 
-g.test('matrix_copy').unimplemented();
+g.test('matrix_copy')
+  .desc('Test matrix copy constructors')
+  .params(u =>
+    u
+      .combine('type1', ['f16', 'f32', 'abstract-float'] as const)
+      .combine('type2', ['f16', 'f32', 'abstract-float'] as const)
+      .beginSubcases()
+      .combine('c1', [2, 3, 4] as const)
+      .combine('r1', [2, 3, 4] as const)
+      .combine('c2', [2, 3, 4] as const)
+      .combine('r2', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    if (t1.requiresF16() || t2.requiresF16()) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    const m2 = Type['mat'](t.params.c2, t.params.r2, t2);
+    const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+    const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+    const call = `mat${t.params.c1}x${t.params.r1}${
+      isAbstractType(t1) ? '' : `<${t.params.type1}>`
+    }`;
+    const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${m2.create(0).wgsl()});`;
+    t.expectCompileResult(t.params.c1 === t.params.c2 && t.params.r1 === t.params.r2, code);
+  });
 
-g.test('matrix_column').unimplemented();
+g.test('matrix_column')
+  .desc('Test matrix column constructors')
+  .params(u =>
+    u
+      .combine('type1', ['f16', 'f32', 'abstract-float'] as const)
+      .combine('type2', ['f16', 'f32', 'abstract-float'] as const)
+      .beginSubcases()
+      .combine('c1', [2, 3, 4] as const)
+      .combine('r1', [2, 3, 4] as const)
+      .combine('c2', [2, 3, 4] as const)
+      .combine('r2', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    if (t1.requiresF16() || t2.requiresF16()) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+    const vecTy2 = Type['vec'](t.params.r2, t2);
+    let values = ``;
+    for (let i = 0; i < t.params.c2; i++) {
+      values += `${vecTy2.create(1).wgsl()},`;
+    }
+    const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+    const call = `mat${t.params.c1}x${t.params.r1}${
+      isAbstractType(t1) ? '' : `<${t.params.type1}>`
+    }`;
+    const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${values});`;
+    const expect =
+      t.params.c1 === t.params.c2 &&
+      t.params.r1 === t.params.r2 &&
+      (t1 === t2 || isAbstractType(t1) || isAbstractType(t2));
+    t.expectCompileResult(expect, code);
+  });
 
 g.test('matrix_elementwise').unimplemented();
 
