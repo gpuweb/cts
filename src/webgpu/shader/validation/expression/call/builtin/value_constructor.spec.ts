@@ -4,7 +4,13 @@ Validation tests for constructor built-in functions.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
-import { isConvertible, Type } from '../../../../../util/conversion.js';
+import {
+  isConvertible,
+  MatrixType,
+  scalarTypeOf,
+  Type,
+  VectorType,
+} from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -98,6 +104,10 @@ g.test('vector_elementwise')
         'f16',
         'abstract-int',
         'abstract-float',
+        'mat2x2f',
+        'mat3x3h',
+        'vec2i',
+        'vec3f',
       ] as const)
       .beginSubcases()
       .combine('size', [2, 3, 4] as const)
@@ -128,11 +138,14 @@ g.test('vector_elementwise')
     const ty = Type[t.params.type];
     // WGSL requires:
     // * number of elements match
-    // * element types match (or auto convert)
+    // * element types match (or auto convert, vector special case)
     //   * abstract decl works because it is untyped and inferred as a different type
+    const num_eles =
+      eleTy instanceof VectorType ? t.params.num_eles * eleTy.width : t.params.num_eles;
     const expect =
-      t.params.size === t.params.num_eles &&
-      (isConvertible(eleTy, ty) ||
+      !(eleTy instanceof MatrixType) &&
+      t.params.size === num_eles &&
+      (isConvertible(scalarTypeOf(eleTy), ty) ||
         t.params.type === 'abstract-int' ||
         t.params.type === 'abstract-float');
     t.expectCompileResult(expect, code);
