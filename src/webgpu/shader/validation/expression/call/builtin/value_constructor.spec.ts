@@ -7,6 +7,7 @@ import { keysOf } from '../../../../../../common/util/data_tables.js';
 import {
   isAbstractType,
   isConvertible,
+  isFloatType,
   MatrixType,
   ScalarType,
   scalarTypeOf,
@@ -404,7 +405,7 @@ g.test('matrix_column')
   .params(u =>
     u
       .combine('type1', ['f16', 'f32', 'abstract-float'] as const)
-      .combine('type2', ['f16', 'f32', 'abstract-float'] as const)
+      .combine('type2', ['f16', 'f32', 'abstract-float', 'i32', 'u32', 'bool'] as const)
       .beginSubcases()
       .combine('c1', [2, 3, 4] as const)
       .combine('r1', [2, 3, 4] as const)
@@ -434,13 +435,52 @@ g.test('matrix_column')
     const code = `${enable}
     const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${values});`;
     const expect =
+      isFloatType(t2) &&
       t.params.c1 === t.params.c2 &&
       t.params.r1 === t.params.r2 &&
       (t1 === t2 || isAbstractType(t1) || isAbstractType(t2));
     t.expectCompileResult(expect, code);
   });
 
-g.test('matrix_elementwise').unimplemented();
+g.test('matrix_elementwise')
+  .desc('Test matrix element-wise constructors')
+  .params(u =>
+    u
+      .combine('type1', ['f16', 'f32', 'abstract-float'] as const)
+      .combine('type2', ['f16', 'f32', 'abstract-float', 'i32', 'u32', 'bool'] as const)
+      .beginSubcases()
+      .combine('c1', [2, 3, 4] as const)
+      .combine('r1', [2, 3, 4] as const)
+      .combine('c2', [2, 3, 4] as const)
+      .combine('r2', [2, 3, 4] as const)
+  )
+  .beforeAllSubcases(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    if (t1.requiresF16() || t2.requiresF16()) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const t1 = Type[t.params.type1];
+    const t2 = Type[t.params.type2];
+    const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+    let values = ``;
+    for (let i = 0; i < t.params.c2 * t.params.r2; i++) {
+      values += `${t2.create(1).wgsl()},`;
+    }
+    const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+    const call = `mat${t.params.c1}x${t.params.r1}${
+      isAbstractType(t1) ? '' : `<${t.params.type1}>`
+    }`;
+    const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${values});`;
+    const expect =
+      isFloatType(t2) &&
+      t.params.c1 * t.params.r1 === t.params.c2 * t.params.r2 &&
+      (t1 === t2 || isAbstractType(t1) || isAbstractType(t2));
+    t.expectCompileResult(expect, code);
+  });
 
 interface ArrayCase {
   element: string;
