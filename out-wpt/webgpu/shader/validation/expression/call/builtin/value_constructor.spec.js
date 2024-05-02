@@ -5,8 +5,11 @@ Validation tests for constructor built-in functions.
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
 import {
+  isAbstractType,
   isConvertible,
+  isFloatType,
   MatrixType,
+  ScalarType,
   scalarTypeOf,
   Type,
   VectorType } from
@@ -79,9 +82,108 @@ fn((t) => {
   t.expectCompileResult(true, code);
 });
 
-g.test('vector_splat').unimplemented();
+g.test('vector_splat').
+desc('Test vector splat constructors').
+params((u) =>
+u.
+combine('type', [
+'bool',
+'i32',
+'u32',
+'f32',
+'f16',
+'abstract-int',
+'abstract-float']
+).
+combine('ele_type', [
+'bool',
+'i32',
+'u32',
+'f32',
+'f16',
+'abstract-int',
+'abstract-float',
+'mat2x2f',
+'mat3x3h',
+'vec2i',
+'vec3f']
+).
+beginSubcases().
+combine('size', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  const ty = Type[t.params.type];
+  const eleTy = Type[t.params.ele_type];
+  if (ty.requiresF16() || eleTy.requiresF16()) {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  }
+}).
+fn((t) => {
+  const eleTy = Type[t.params.ele_type];
+  const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
+  const param = abstract ? '' : `<${t.params.type}>`;
+  const decl = `vec${t.params.size}${param}`;
+  const enable = t.params.type === 'f16' || t.params.ele_type === 'f16' ? 'enable f16;' : '';
+  const eleValue = eleTy.create(1).wgsl();
+  const valueCall = decl;
+  const code = `${enable}
+    const x ${abstract ? '' : `: ${decl}`} = ${valueCall}(${eleValue});`;
+  const ty = Type[t.params.type];
+  const expect =
+  eleTy instanceof ScalarType && (isConvertible(eleTy, ty) || isAbstractType(ty)) ||
+  eleTy instanceof VectorType && eleTy.width === t.params.size;
+  t.expectCompileResult(expect, code);
+});
 
-g.test('vector_copy').unimplemented();
+g.test('vector_copy').
+desc('Test vector copy constructors').
+params((u) =>
+u.
+combine('decl_type', [
+'bool',
+'i32',
+'u32',
+'f32',
+'f16',
+'abstract-int',
+'abstract-float']
+).
+combine('value_type', [
+'bool',
+'i32',
+'u32',
+'f32',
+'f16',
+'abstract-int',
+'abstract-float']
+).
+beginSubcases().
+combine('decl_size', [2, 3, 4]).
+combine('value_size', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  const ty = Type[t.params.decl_type];
+  const eleTy = Type[t.params.value_type];
+  if (ty.requiresF16() || eleTy.requiresF16()) {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  }
+}).
+fn((t) => {
+  const declTy = Type[t.params.decl_type];
+  const valueTy = Type[t.params.value_type];
+  const valueVecTy = Type['vec'](t.params.value_size, valueTy);
+  const enable = declTy.requiresF16() || valueTy.requiresF16() ? 'enable f16;' : '';
+  const decl = `vec${t.params.decl_size}<${t.params.decl_type}>`;
+  const ctor = `vec${t.params.decl_size}${
+  isAbstractType(declTy) ? '' : `<${t.params.decl_type}>`
+  }`;
+  const code = `${enable}
+    const x ${isAbstractType(declTy) ? '' : `: ${decl}`} = ${ctor}(${valueVecTy.
+  create(1).
+  wgsl()});`;
+
+  t.expectCompileResult(t.params.decl_size === t.params.value_size, code);
+});
 
 g.test('vector_elementwise').
 desc('Test element-wise vector constructors').
@@ -265,11 +367,120 @@ fn((t) => {
   t.expectCompileResult(true, code);
 });
 
-g.test('matrix_copy').unimplemented();
+g.test('matrix_copy').
+desc('Test matrix copy constructors').
+params((u) =>
+u.
+combine('type1', ['f16', 'f32', 'abstract-float']).
+combine('type2', ['f16', 'f32', 'abstract-float']).
+beginSubcases().
+combine('c1', [2, 3, 4]).
+combine('r1', [2, 3, 4]).
+combine('c2', [2, 3, 4]).
+combine('r2', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  if (t1.requiresF16() || t2.requiresF16()) {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  }
+}).
+fn((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  const m2 = Type['mat'](t.params.c2, t.params.r2, t2);
+  const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+  const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+  const call = `mat${t.params.c1}x${t.params.r1}${
+  isAbstractType(t1) ? '' : `<${t.params.type1}>`
+  }`;
+  const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${m2.create(0).wgsl()});`;
+  t.expectCompileResult(t.params.c1 === t.params.c2 && t.params.r1 === t.params.r2, code);
+});
 
-g.test('matrix_column').unimplemented();
+g.test('matrix_column').
+desc('Test matrix column constructors').
+params((u) =>
+u.
+combine('type1', ['f16', 'f32', 'abstract-float']).
+combine('type2', ['f16', 'f32', 'abstract-float', 'i32', 'u32', 'bool']).
+beginSubcases().
+combine('c1', [2, 3, 4]).
+combine('r1', [2, 3, 4]).
+combine('c2', [2, 3, 4]).
+combine('r2', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  if (t1.requiresF16() || t2.requiresF16()) {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  }
+}).
+fn((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+  const vecTy2 = Type['vec'](t.params.r2, t2);
+  let values = ``;
+  for (let i = 0; i < t.params.c2; i++) {
+    values += `${vecTy2.create(1).wgsl()},`;
+  }
+  const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+  const call = `mat${t.params.c1}x${t.params.r1}${
+  isAbstractType(t1) ? '' : `<${t.params.type1}>`
+  }`;
+  const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${values});`;
+  const expect =
+  isFloatType(t2) &&
+  t.params.c1 === t.params.c2 &&
+  t.params.r1 === t.params.r2 && (
+  t1 === t2 || isAbstractType(t1) || isAbstractType(t2));
+  t.expectCompileResult(expect, code);
+});
 
-g.test('matrix_elementwise').unimplemented();
+g.test('matrix_elementwise').
+desc('Test matrix element-wise constructors').
+params((u) =>
+u.
+combine('type1', ['f16', 'f32', 'abstract-float']).
+combine('type2', ['f16', 'f32', 'abstract-float', 'i32', 'u32', 'bool']).
+beginSubcases().
+combine('c1', [2, 3, 4]).
+combine('r1', [2, 3, 4]).
+combine('c2', [2, 3, 4]).
+combine('r2', [2, 3, 4])
+).
+beforeAllSubcases((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  if (t1.requiresF16() || t2.requiresF16()) {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  }
+}).
+fn((t) => {
+  const t1 = Type[t.params.type1];
+  const t2 = Type[t.params.type2];
+  const enable = t1.requiresF16() || t2.requiresF16() ? 'enable f16;' : '';
+  let values = ``;
+  for (let i = 0; i < t.params.c2 * t.params.r2; i++) {
+    values += `${t2.create(1).wgsl()},`;
+  }
+  const decl = `mat${t.params.c1}x${t.params.r1}<${t.params.type1}>`;
+  const call = `mat${t.params.c1}x${t.params.r1}${
+  isAbstractType(t1) ? '' : `<${t.params.type1}>`
+  }`;
+  const code = `${enable}
+    const m ${isAbstractType(t1) ? '' : `: ${decl}`} = ${call}(${values});`;
+  const expect =
+  isFloatType(t2) &&
+  t.params.c1 * t.params.r1 === t.params.c2 * t.params.r2 && (
+  t1 === t2 || isAbstractType(t1) || isAbstractType(t2));
+  t.expectCompileResult(expect, code);
+});
 
 
 
