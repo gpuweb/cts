@@ -4,6 +4,13 @@ Validation tests for constructor built-in functions.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { keysOf } from '../../../../../../common/util/data_tables.js';
+import {
+  isConvertible,
+  MatrixType,
+  scalarTypeOf,
+  Type,
+  VectorType,
+} from '../../../../../util/conversion.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
@@ -76,7 +83,160 @@ g.test('vector_splat').unimplemented();
 
 g.test('vector_copy').unimplemented();
 
-g.test('vector_elementwise').unimplemented();
+g.test('vector_elementwise')
+  .desc('Test element-wise vector constructors')
+  .params(u =>
+    u
+      .combine('type', [
+        'bool',
+        'i32',
+        'u32',
+        'f32',
+        'f16',
+        'abstract-int',
+        'abstract-float',
+      ] as const)
+      .combine('ele_type', [
+        'bool',
+        'i32',
+        'u32',
+        'f32',
+        'f16',
+        'abstract-int',
+        'abstract-float',
+        'mat2x2f',
+        'mat3x3h',
+        'vec2i',
+        'vec3f',
+      ] as const)
+      .beginSubcases()
+      .combine('size', [2, 3, 4] as const)
+      .combine('num_eles', [2, 3, 4, 5] as const)
+      .combine('full_type', [true, false] as const)
+  )
+  .beforeAllSubcases(t => {
+    const ty = Type[t.params.type];
+    const eleTy = Type[t.params.ele_type];
+    if (ty.requiresF16() || eleTy.requiresF16()) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const eleTy = Type[t.params.ele_type];
+    const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
+    const param = abstract ? '' : `<${t.params.type}>`;
+    const decl = `vec${t.params.size}${param}`;
+    const enable = t.params.type === 'f16' || t.params.ele_type === 'f16' ? 'enable f16;' : '';
+    const eleValue = eleTy.create(1).wgsl();
+    const valueCall = t.params.full_type ? decl : `vec${t.params.size}`;
+    let code = `${enable}
+    const x ${abstract ? '' : `: ${decl}`} = ${valueCall}(`;
+    for (let i = 0; i < t.params.num_eles; i++) {
+      code += `${eleValue},`;
+    }
+    code += `);`;
+    const ty = Type[t.params.type];
+    // WGSL requires:
+    // * number of elements match
+    // * element types match (or auto convert, vector special case)
+    //   * abstract decl works because it is untyped and inferred as a different type
+    const num_eles =
+      eleTy instanceof VectorType ? t.params.num_eles * eleTy.width : t.params.num_eles;
+    const expect =
+      !(eleTy instanceof MatrixType) &&
+      t.params.size === num_eles &&
+      (isConvertible(scalarTypeOf(eleTy), ty) ||
+        t.params.type === 'abstract-int' ||
+        t.params.type === 'abstract-float');
+    t.expectCompileResult(expect, code);
+  });
+
+g.test('vector_mixed')
+  .desc('Test vector constructors with mixed elements and vectors')
+  .params(u =>
+    u
+      .combine('type', [
+        'bool',
+        'i32',
+        'u32',
+        'f32',
+        'f16',
+        'abstract-int',
+        'abstract-float',
+      ] as const)
+      .combine('ele_type', [
+        'bool',
+        'i32',
+        'u32',
+        'f32',
+        'f16',
+        'abstract-int',
+        'abstract-float',
+      ] as const)
+      .beginSubcases()
+      .combine('size', [3, 4] as const)
+      .combine('num_eles', [3, 4, 5] as const)
+      .combine('full_type', [true, false] as const)
+  )
+  .beforeAllSubcases(t => {
+    const ty = Type[t.params.type];
+    const eleTy = Type[t.params.ele_type];
+    if (ty.requiresF16() || eleTy.requiresF16()) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const eleTy = Type[t.params.ele_type];
+    const abstract = t.params.type === 'abstract-int' || t.params.type === 'abstract-float';
+    const param = abstract ? '' : `<${t.params.type}>`;
+    const decl = `vec${t.params.size}${param}`;
+    const enable = t.params.type === 'f16' || t.params.ele_type === 'f16' ? 'enable f16;' : '';
+    const v = eleTy.create(1).wgsl();
+    const call = t.params.full_type ? decl : `vec${t.params.size}`;
+    let code = `${enable}\n`;
+
+    switch (t.params.num_eles) {
+      case 3:
+        code += `const x1 ${abstract ? '' : `: ${decl}`} = ${call}(${v}, vec2(${v}, ${v}));\n`;
+        code += `const x2 ${abstract ? '' : `: ${decl}`} = ${call}(vec2(${v}, ${v}), ${v});\n`;
+        break;
+      case 4:
+        code += `const x1 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(${v}, vec2(${v}, ${v}), ${v});\n`;
+        code += `const x2 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(${v}, ${v}, vec2(${v}, ${v}));\n`;
+        code += `const x3 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(vec2(${v}, ${v}), ${v}, ${v});\n`;
+        code += `const x4 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(vec3(${v}, ${v}, ${v}), ${v});\n`;
+        code += `const x5 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(${v}, vec3(${v}, ${v}, ${v}));\n`;
+        break;
+      case 5:
+        // This case is always invalid so try a few only.
+        code += `const x1 ${
+          abstract ? '' : `: ${decl}`
+        } = ${call}(${v}, vec3(${v}, ${v}), ${v});\n`;
+        code += `const x1 ${abstract ? '' : `: ${decl}`} = ${call}(${v}, vec4(${v}}), ${v});\n`;
+        break;
+    }
+    const ty = Type[t.params.type];
+    // WGSL requires:
+    // * number of elements match (in total, not parameters)
+    // * element types match (or auto convert)
+    //   * abstract decl works because it is untyped and inferred as a different type
+    const expect =
+      t.params.size === t.params.num_eles &&
+      (isConvertible(eleTy, ty) ||
+        t.params.type === 'abstract-int' ||
+        t.params.type === 'abstract-float');
+    t.expectCompileResult(expect, code);
+  });
 
 g.test('matrix_zero_value')
   .desc('Tests zero value matrix constructors')
