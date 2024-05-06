@@ -1210,6 +1210,7 @@
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicStore:store_storage_basic:*": { "subcaseMS": 5.524 },
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicStore:store_workgroup_advanced:*": { "subcaseMS": 6.029 },
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicStore:store_workgroup_basic:*": { "subcaseMS": 6.632 },
+  "webgpu:shader,execution,expression,call,builtin,atomics,atomicSub:sub_i32_min:*": { "subcaseMS": 2.756 },
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicSub:sub_storage:*": { "subcaseMS": 5.757 },
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicSub:sub_workgroup:*": { "subcaseMS": 7.238 },
   "webgpu:shader,execution,expression,call,builtin,atomics,atomicXor:xor_storage:*": { "subcaseMS": 6.807 },
