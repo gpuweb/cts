@@ -2671,6 +2671,7 @@
   "webgpu:shader,validation,types,array:valid:*": { "subcaseMS": 449.293 },
   "webgpu:shader,validation,types,atomics:address_space:*": { "subcaseMS": 1.050 },
   "webgpu:shader,validation,types,atomics:invalid_operations:*": { "subcaseMS": 1.050 },
+  "webgpu:shader,validation,types,atomics:parse:*": { "subcaseMS": 7.692 },
   "webgpu:shader,validation,types,atomics:trailing_comma:*": { "subcaseMS": 2.053 },
   "webgpu:shader,validation,types,atomics:type:*": { "subcaseMS": 1.050 },
   "webgpu:shader,validation,types,enumerant:decl_value:*": { "subcaseMS": 45.257 },
