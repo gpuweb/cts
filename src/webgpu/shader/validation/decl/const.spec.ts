@@ -171,6 +171,10 @@ const kInitCases = {
     code: `const x = 0;`,
     valid: true,
   },
+  no_init_no_type: {
+    code: `const x;`,
+    valid: false,
+  },
   init_matching_type: {
     code: `const x : i32 = 1i;`,
     valid: true,
@@ -199,6 +203,15 @@ const kInitCases = {
     code: `var<private> x = 1i;\nconst y = x - 1;`,
     valid: false,
   },
+  init_func: {
+    code: `const x = max(1,2);`,
+    valid: true,
+  },
+  init_non_const_func: {
+    code: `const x = foo(1);
+    fn foo(p : i32) -> i32 { return p; }`,
+    valid: false,
+  },
 };
 
 g.test('initializer')
@@ -215,5 +228,25 @@ g.test('function_scope')
   .desc('Test that const declarations are allowed in functions')
   .fn(t => {
     const code = `fn foo() { const x = 0; }`;
+    t.expectCompileResult(true, code);
+  });
+
+g.test('immutable')
+  .desc('Test that const declarations are immutable')
+  .fn(t => {
+    const code = `
+    const x = 0;
+    fn foo() {
+      x = 1;
+    }`;
+    t.expectCompileResult(false, code);
+  });
+
+g.test('assert')
+  .desc('Test value can be checked by a const_assert')
+  .fn(t => {
+    const code = `
+    const x = 0;
+    const_assert x == 0;`;
     t.expectCompileResult(true, code);
   });
