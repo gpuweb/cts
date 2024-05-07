@@ -58,9 +58,7 @@ g.test('vector')
 g.test('vector_prefix')
   .desc(`Test that a zero value vector constructor produces the expected zero value`)
   .params(u =>
-    u
-      .combine('type', ['i32', 'u32', 'f32', 'f16'] as const)
-      .combine('width', [2, 3, 4] as const)
+    u.combine('type', ['i32', 'u32', 'f32', 'f16'] as const).combine('width', [2, 3, 4] as const)
   )
   .beforeAllSubcases(t => {
     if (t.params.type === 'f16') {
