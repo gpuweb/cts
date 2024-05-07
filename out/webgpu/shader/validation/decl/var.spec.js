@@ -768,4 +768,95 @@ fn((t) => {
   const ok = t.params.prefix === '<' && t.params.suffix === '>';
   t.expectCompileResult(ok, prog);
 });
+
+g.test('shader_stage').
+desc('Test the limitations of address space and shader stage').
+params((u) =>
+u.
+combine('stage', ['compute', 'vertex', 'fragment']).
+combine('kind', [
+'handle_ro',
+'handle_wo',
+'handle_rw',
+'function',
+'private',
+'storage_ro',
+'storage_rw',
+'uniform',
+'workgroup']
+)
+).
+fn((t) => {
+  t.skipIf(
+    !t.hasLanguageFeature('readonly_and_readwrite_storage_textures') &&
+    t.params.kind === 'handle_rw',
+    'Unsupported language feature'
+  );
+  let mdecl = ``;
+  let fdecl = ``;
+  let expect = true;
+  switch (t.params.kind) {
+    case 'handle_ro':
+      mdecl = `@group(0) @binding(0) var v : sampler;`;
+      break;
+    case 'handle_wo':
+      mdecl = `@group(0) @binding(0) var v : texture_storage_2d<r32uint, write>;`;
+      expect = t.params.stage !== 'vertex';
+      break;
+    case 'handle_rw':
+      mdecl = `@group(0) @binding(0) var v : texture_storage_2d<r32uint, read_write>;`;
+      expect = t.params.stage !== 'vertex';
+      break;
+    case 'function':
+      fdecl = `var v : u32;`;
+      break;
+    case 'private':
+      mdecl = `var<private> v : i32;`;
+      break;
+    case 'storage_ro':
+      mdecl = `@group(0) @binding(0) var<storage> v : u32;`;
+      break;
+    case 'storage_rw':
+      mdecl = `@group(0) @binding(0) var<storage, read_write> v : u32;`;
+      expect = t.params.stage !== 'vertex';
+      break;
+    case 'uniform':
+      mdecl = `@group(0) @binding(0) var<uniform> v : u32;`;
+      break;
+    case 'workgroup':
+      mdecl = `var<workgroup> v : u32;`;
+      expect = t.params.stage === 'compute';
+      break;
+  }
+  let func = ``;
+  switch (t.params.stage) {
+    case 'compute':
+      func = `@compute @workgroup_size(1)
+        fn main() {
+          ${fdecl}
+          _ = v;
+        }`;
+      break;
+    case 'vertex':
+      func = `@vertex
+        fn main() -> @builtin(position) vec4f {
+          ${fdecl}
+          _ = v;
+          return vec4f();
+        }`;
+      break;
+    case 'fragment':
+      func = `@fragment
+        fn main() {
+          ${fdecl}
+          _ = v;
+        }`;
+      break;
+  }
+
+  const code = `
+    ${mdecl}
+    ${func}`;
+  t.expectCompileResult(expect, code);
+});
 //# sourceMappingURL=var.spec.js.map
