@@ -1644,6 +1644,7 @@
   "webgpu:shader,execution,expression,constructor,zero_value:scalar:*": { "subcaseMS": 39.484 },
   "webgpu:shader,execution,expression,constructor,zero_value:structure:*": { "subcaseMS": 0.650 },
   "webgpu:shader,execution,expression,constructor,zero_value:vector:*": { "subcaseMS": 159.975 },
+  "webgpu:shader,execution,expression,constructor,zero_value:vector_prefix:*": { "subcaseMS": 23.267 },
   "webgpu:shader,execution,expression,precedence:precedence:*": { "subcaseMS": 531.048 },
   "webgpu:shader,execution,expression,unary,address_of_and_indirection:deref:*": { "subcaseMS": 0.000 },
   "webgpu:shader,execution,expression,unary,address_of_and_indirection:deref_index:*": { "subcaseMS": 0.000 },
