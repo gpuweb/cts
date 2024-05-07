@@ -776,6 +776,7 @@ g.test('shader_stage')
       .combine('stage', ['compute', 'vertex', 'fragment'] as const)
       .combine('kind', [
         'handle_ro',
+        'handle_wo',
         'handle_rw',
         'function',
         'private',
@@ -786,12 +787,21 @@ g.test('shader_stage')
       ])
   )
   .fn(t => {
+    t.skipIf(
+      !t.hasLanguageFeature('readonly_and_readwrite_storage_textures') &&
+        t.params.kind === 'handle_rw',
+      'Unsupported language feature'
+    );
     let mdecl = ``;
     let fdecl = ``;
     let expect = true;
     switch (t.params.kind) {
       case 'handle_ro':
         mdecl = `@group(0) @binding(0) var v : sampler;`;
+        break;
+      case 'handle_wo':
+        mdecl = `@group(0) @binding(0) var v : texture_storage_2d<r32uint, write>;`;
+        expect = t.params.stage !== 'vertex';
         break;
       case 'handle_rw':
         mdecl = `@group(0) @binding(0) var v : texture_storage_2d<r32uint, read_write>;`;
