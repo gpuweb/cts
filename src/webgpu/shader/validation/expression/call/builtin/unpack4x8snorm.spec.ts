@@ -77,22 +77,22 @@ g.test('arguments')
   .desc(`Test that ${builtin} is validated correctly when called with different arguments.`)
   .params(u =>
     u
-      .combine('arg', keysOf(kArgCases))
+      .combine('args', keysOf(kArgCases))
       .beginSubcases()
-      .expand('returnType', u => (u.arg.includes('good') ? keysOf(kAllValueTypes) : [kReturnType]))
+      .expand('returnType', u => (u.args.includes('good') ? keysOf(kAllValueTypes) : [kReturnType]))
   )
   .beforeAllSubcases(t => {
-    if (t.params.arg.includes('f16') || t.params.returnType?.toString().includes('f16')) {
+    if (t.params.args.includes('f16') || t.params.returnType?.toString().includes('f16')) {
       t.selectDeviceOrSkipTestCase('shader-f16');
     }
   })
   .fn(t => {
-    const expectedResult = t.params.arg.includes('good') && t.params.returnType === kReturnType;
+    const expectedResult = t.params.args.includes('good') && t.params.returnType === kReturnType;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,
       expectedResult,
-      kArgCases[t.params.arg],
+      kArgCases[t.params.args],
       'constant',
       kAllValueTypes[t.params.returnType]
     );
