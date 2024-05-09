@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 22153 variants generated from 2795 tests in 623 files -->
+<!-- Prefix: "?q="; 22157 variants generated from 2796 tests in 623 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -6225,6 +6225,10 @@
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:vector:inputSource="storage_rw";elementType="vec4f";indexType="u32"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:vector:inputSource="storage_rw";elementType="vec4h";indexType="i32"'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:vector:inputSource="storage_rw";elementType="vec4h";indexType="u32"'><!-- estimated: undefined ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:matrix:inputSource="const";*'><!-- estimated: 659.916 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:matrix:inputSource="uniform";*'><!-- estimated: 476.606 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:matrix:inputSource="storage_r";*'><!-- estimated: 659.916 ms -->
+<meta name=variant content='?q=webgpu:shader,execution,expression,access,array,index:matrix:inputSource="storage_rw";*'><!-- estimated: 659.916 ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,matrix,index:concrete_float_column:inputSource="const";elementType="f32";indexType="i32";columns=2;rows=2'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,matrix,index:concrete_float_column:inputSource="const";elementType="f32";indexType="i32";columns=2;rows=3'><!-- estimated: undefined ms -->
 <meta name=variant content='?q=webgpu:shader,execution,expression,access,matrix,index:concrete_float_column:inputSource="const";elementType="f32";indexType="i32";columns=2;rows=4'><!-- estimated: undefined ms -->

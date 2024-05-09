@@ -904,6 +904,7 @@
   "webgpu:shader,execution,expression,access,array,index:abstract_scalar:*": { "subcaseMS": 235.962 },
   "webgpu:shader,execution,expression,access,array,index:bool:*": { "subcaseMS": 663.038 },
   "webgpu:shader,execution,expression,access,array,index:concrete_scalar:*": { "subcaseMS": 1439.796 },
+  "webgpu:shader,execution,expression,access,array,index:matrix:*": { "subcaseMS": 18.331 },
   "webgpu:shader,execution,expression,access,array,index:runtime_sized:*": { "subcaseMS": 830.024 },
   "webgpu:shader,execution,expression,access,array,index:vector:*": { "subcaseMS": 2137.684 },
   "webgpu:shader,execution,expression,access,matrix,index:abstract_float_column:*": { "subcaseMS": 14.643 },
