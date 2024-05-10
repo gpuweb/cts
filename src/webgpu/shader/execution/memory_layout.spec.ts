@@ -829,7 +829,6 @@ const kLayoutCases: Record<string, LayoutCase> = {
     write_assign: `out[1][0][0] = f16(in)`,
     offset: 16,
     f16: true,
-    skip_uniform: true,
   },
   array_mat2x3f_stride: {
     type: `array<mat2x3f, 4>`,
@@ -844,7 +843,6 @@ const kLayoutCases: Record<string, LayoutCase> = {
     write_assign: `out[1][0][0] = f16(in)`,
     offset: 16,
     f16: true,
-    skip_uniform: true,
   },
   array_mat3x3f_stride: {
     type: `array<mat3x3f, 3>`,
@@ -874,7 +872,6 @@ const kLayoutCases: Record<string, LayoutCase> = {
     write_assign: `out[1][0][0] = f16(in)`,
     offset: 32,
     f16: true,
-    skip_uniform: true,
   },
   array_mat2x4f_stride: {
     type: `array<mat2x4f, 4>`,
@@ -889,7 +886,6 @@ const kLayoutCases: Record<string, LayoutCase> = {
     write_assign: `out[1][0][0] = f16(in)`,
     offset: 16,
     f16: true,
-    skip_uniform: true,
   },
   array_mat3x4f_stride: {
     type: `array<mat3x4f, 3>`,
@@ -919,7 +915,6 @@ const kLayoutCases: Record<string, LayoutCase> = {
     write_assign: `out[1][0][0] = f16(in)`,
     offset: 32,
     f16: true,
-    skip_uniform: true,
   },
 };
 
