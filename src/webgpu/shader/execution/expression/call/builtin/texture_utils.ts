@@ -1,14 +1,26 @@
 import { assert, range, unreachable } from '../../../../../../common/util/util.js';
 import { EncodableTextureFormat } from '../../../../../format_info.js';
+import { GPUTest, TextureTestMixinType } from '../../../../../gpu_test.js';
 import { float32ToUint32 } from '../../../../../util/conversion.js';
-import { align, clamp, hashU32, lerp, quantizeToF32 } from '../../../../../util/math.js';
+import {
+  align,
+  clamp,
+  dotProduct,
+  hashU32,
+  lerp,
+  quantizeToF32,
+} from '../../../../../util/math.js';
+import { virtualMipSize } from '../../../../../util/texture/base.js';
 import {
   kTexelRepresentationInfo,
   PerTexelComponent,
   TexelRepresentationInfo,
 } from '../../../../../util/texture/texel_data.js';
 import { TexelView } from '../../../../../util/texture/texel_view.js';
-import { createTextureFromTexelView } from '../../../../../util/texture.js';
+import {
+  createTextureFromTexelView,
+  createTextureFromTexelViews,
+} from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
 function getLimitValue(v: number) {
@@ -51,6 +63,27 @@ export function createRandomTexelView(info: {
     return quantize(texel, rep);
   };
   return TexelView.fromTexelsAsColors(info.format as EncodableTextureFormat, generator);
+}
+
+/**
+ * Creates a mip chain of TexelViews filled with random values
+ */
+export function createRandomTexelViewMipmap(info: {
+  format: GPUTextureFormat;
+  size: GPUExtent3D;
+  mipLevelCount?: number;
+  dimension?: GPUTextureDimension;
+}): TexelView[] {
+  const mipLevelCount = info.mipLevelCount ?? 1;
+  const dimension = info.dimension ?? '2d';
+  const size = reifyExtent3D(info.size);
+  const tSize = [size.width, size.height, size.depthOrArrayLayers] as const;
+  return range(mipLevelCount, i =>
+    createRandomTexelView({
+      format: info.format,
+      size: virtualMipSize(dimension, tSize, i),
+    })
+  );
 }
 
 export type vec2 = [number, number];
@@ -101,7 +134,7 @@ function apply(a: number[], b: number[], op: (x: number, y: number) => number) {
 const add = (a: number[], b: number[]) => apply(a, b, (x, y) => x + y);
 
 export interface Texture {
-  texels: TexelView;
+  texels: TexelView[];
   descriptor: GPUTextureDescriptor;
 }
 
@@ -111,11 +144,16 @@ export interface Texture {
 export function expected<T extends Dimensionality>(
   call: TextureCall<T>,
   texture: Texture,
-  sampler: GPUSamplerDescriptor
+  sampler: GPUSamplerDescriptor,
+  mipLevel = 0
 ): PerTexelComponent<number> {
-  const rep = kTexelRepresentationInfo[texture.texels.format];
-  const textureExtent = reifyExtent3D(texture.descriptor.size);
-  const textureSize = [textureExtent.width, textureExtent.height, textureExtent.depthOrArrayLayers];
+  const rep = kTexelRepresentationInfo[texture.texels[mipLevel].format];
+  const tSize = reifyExtent3D(texture.descriptor.size);
+  const textureSize = virtualMipSize(
+    texture.descriptor.dimension || '2d',
+    [tSize.width, tSize.height, tSize.depthOrArrayLayers],
+    mipLevel
+  );
   const addressMode = [
     sampler.addressModeU ?? 'clamp-to-edge',
     sampler.addressModeV ?? 'clamp-to-edge',
@@ -123,7 +161,7 @@ export function expected<T extends Dimensionality>(
   ];
 
   const load = (at: number[]) =>
-    texture.texels.color({
+    texture.texels[mipLevel].color({
       x: Math.floor(at[0]),
       y: Math.floor(at[1] ?? 0),
       z: Math.floor(at[2] ?? 0),
@@ -146,6 +184,8 @@ export function expected<T extends Dimensionality>(
       let at = coords.map((v, i) => v * textureSize[i] - 0.5);
 
       // Apply offset in whole texel units
+      // This means the offset is added at each mip level in texels. There's no
+      // scaling for each level.
       if (call.offset !== undefined) {
         at = add(at, toArray(call.offset));
       }
@@ -223,6 +263,73 @@ export function expected<T extends Dimensionality>(
 }
 
 /**
+ * The software version of a texture builtin (eg: textureSample)
+ * Note that this is not a complete implementation. Rather it's only
+ * what's needed to generate the correct expected value for the tests.
+ */
+export function softwareTextureRead<T extends Dimensionality>(
+  call: TextureCall<T>,
+  texture: Texture,
+  sampler: GPUSamplerDescriptor,
+  size: [number, number]
+): PerTexelComponent<number> {
+  assert(call.ddx !== undefined);
+  assert(call.ddy !== undefined);
+  const rep = kTexelRepresentationInfo[texture.texels[0].format];
+  const texSize = reifyExtent3D(texture.descriptor.size);
+  const textureSize = [texSize.width, texSize.height];
+
+  const ddx: readonly number[] = typeof call.ddx === 'number' ? [call.ddx] : call.ddx;
+  const ddy: readonly number[] = typeof call.ddy === 'number' ? [call.ddy] : call.ddy;
+  const sDdx = ddx.map((v, i) => (v * textureSize[i]) / size[i]);
+  const sDdy = ddy.map((v, i) => (v * textureSize[i]) / size[i]);
+  const dotDDX = dotProduct(sDdx, sDdx);
+  const dotDDY = dotProduct(sDdy, sDdy);
+  const deltaMax = Math.max(dotDDX, dotDDY);
+
+  // MAINTENANCE_TODO: handle texture view baseMipLevel and mipLevelCount?
+  const mipLevel = 0.5 * Math.log2(deltaMax);
+  const mipLevelCount = texture.texels.length;
+  const maxLevel = mipLevelCount - 1;
+
+  switch (sampler.mipmapFilter) {
+    case 'linear': {
+      const clampedMipLevel = clamp(mipLevel, { min: 0, max: maxLevel });
+      const baseMipLevel = Math.floor(clampedMipLevel);
+      const nextMipLevel = Math.ceil(clampedMipLevel);
+      const t0 = expected<T>(call, texture, sampler, baseMipLevel);
+      const t1 = expected<T>(call, texture, sampler, nextMipLevel);
+      const mix = mipLevel % 1;
+      const values = [
+        { v: t0, weight: 1 - mix },
+        { v: t1, weight: mix },
+      ];
+      const out: PerTexelComponent<number> = {};
+      for (const { v, weight } of values) {
+        for (const component of rep.componentOrder) {
+          out[component] = (out[component] ?? 0) + v[component]! * weight;
+        }
+      }
+      return out;
+    }
+    default: {
+      const baseMipLevel = Math.floor(
+        clamp(mipLevel + 0.5, { min: 0, max: texture.texels.length - 1 })
+      );
+      return expected<T>(call, texture, sampler, baseMipLevel);
+    }
+  }
+}
+
+export type TextureTestOptions = {
+  ddx?: number; // the derivative we want at sample time
+  ddy?: number;
+  ddxStart?: number; // the starting derivative value
+  ddyStart?: number;
+  offset?: [number, number]; // a constant offset
+};
+
+/**
  * Puts random data in a texture, generates a shader that implements `calls`
  * such that each call's result is written to the next consecutive texel of
  * a rgba32float texture. It then checks the result of each call matches
@@ -236,7 +343,7 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
 ) {
   const results = await doTextureCalls(device, texture, sampler, calls);
   const errs: string[] = [];
-  const rep = kTexelRepresentationInfo[texture.texels.format];
+  const rep = kTexelRepresentationInfo[texture.texels[0].format];
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const got = results[callIdx];
@@ -266,7 +373,7 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
           'expected:',
           ...(await identifySamplePoints(texture.descriptor, (texels: TexelView) => {
             return Promise.resolve(
-              expected(call, { texels, descriptor: texture.descriptor }, sampler)
+              expected(call, { texels: [texels], descriptor: texture.descriptor }, sampler)
             );
           })),
         ];
@@ -276,9 +383,12 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
             texture.descriptor,
             async (texels: TexelView) =>
               (
-                await doTextureCalls(device, { texels, descriptor: texture.descriptor }, sampler, [
-                  call,
-                ])
+                await doTextureCalls(
+                  device,
+                  { texels: [texels], descriptor: texture.descriptor },
+                  sampler,
+                  [call]
+                )
               )[0]
           )),
         ];
@@ -289,6 +399,212 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
   }
 
   return errs.length > 0 ? new Error(errs.join('\n')) : undefined;
+}
+
+/**
+ * "Renders a quad" to a TexelView with the given parameters,
+ * sampling from the given Texture.
+ */
+export function softwareRasterize<T extends Dimensionality>(
+  texture: Texture,
+  sampler: GPUSamplerDescriptor,
+  targetSize: [number, number],
+  options: TextureTestOptions
+) {
+  const [width, height] = targetSize;
+  const { ddx = 1, ddy = 1, ddxStart = 0, ddyStart = 0 } = options;
+  const format = 'rgba32float';
+
+  const rep = kTexelRepresentationInfo[format];
+
+  const expData = new Float32Array(width * height * 4);
+  for (let y = 0; y < height; ++y) {
+    const fragY = height - y - 1 + 0.5;
+    for (let x = 0; x < width; ++x) {
+      const fragX = x + 0.5;
+      const coords = [(fragX / width) * ddx - ddxStart, (fragY / height) * ddy - ddyStart] as T;
+      const call: TextureCall<T> = {
+        builtin: 'textureSample',
+        coordType: 'f',
+        coords,
+        ddx: [ddx, 0] as T,
+        ddy: [0, ddy] as T,
+        offset: options.offset as T,
+      };
+      const sample = softwareTextureRead<T>(call, texture, sampler, targetSize);
+      const rgba = { R: 0, G: 0, B: 0, A: 1, ...sample };
+      const asRgba32Float = new Float32Array(rep.pack(rgba));
+      expData.set(asRgba32Float, (y * width + x) * 4);
+    }
+  }
+
+  return TexelView.fromTextureDataByReference(format, new Uint8Array(expData.buffer), {
+    bytesPerRow: width * 4 * 4,
+    rowsPerImage: height,
+    subrectOrigin: [0, 0, 0],
+    subrectSize: targetSize,
+  });
+}
+
+/**
+ * Puts data in a texture. Renders a quad to a rgba32float. Then "software renders"
+ * to a TexelView the expected result and compares the rendered texture to the
+ * expected TexelView.
+ */
+export function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer<
+  T extends Dimensionality,
+>(
+  t: GPUTest & TextureTestMixinType,
+  texture: Texture,
+  sampler: GPUSamplerDescriptor,
+  options: TextureTestOptions
+) {
+  const device = t.device;
+
+  const format = 'rgba32float';
+  const renderTarget = device.createTexture({
+    format,
+    size: [32, 32],
+    usage: GPUTextureUsage.COPY_SRC | GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+  t.trackForCleanup(renderTarget);
+
+  const size = reifyExtent3D(texture.descriptor.size);
+  const ddx = ((options.ddx ?? 1) * renderTarget.width) / size.width;
+  const ddy = ((options.ddy ?? 1) * renderTarget.height) / size.height;
+  const ddxStart = ((options.ddxStart ?? 0) * renderTarget.width) / size.width;
+  const ddyStart = ((options.ddyStart ?? 0) * renderTarget.height) / size.height;
+  const offset = options.offset;
+
+  const code = `
+struct InOut {
+  @builtin(position) pos: vec4f,
+  @location(0) uv: vec2f,
+};
+
+@vertex fn vs(@builtin(vertex_index) vertex_index : u32) -> InOut {
+  let positions = array(
+    vec2f(-1,  1), vec2f( 1,  1),
+    vec2f(-1, -1), vec2f( 1, -1),
+  );
+  let pos = positions[vertex_index];
+  return InOut(
+    vec4f(pos, 0, 1),
+    (pos * 0.5 + 0.5) * vec2f(${ddx}, ${ddy}) - vec2f(${ddxStart}, ${ddyStart}),
+  );
+}
+
+@group(0) @binding(0) var          T    : texture_2d<f32>;
+@group(0) @binding(1) var          S    : sampler;
+
+@fragment fn fs(v: InOut) -> @location(0) vec4f {
+  return textureSample(T, S, v.uv${offset ? `, vec2i(${offset[0]},${offset[1]})` : ''});
+}
+`;
+
+  const shaderModule = device.createShaderModule({ code });
+
+  const pipeline = device.createRenderPipeline({
+    layout: 'auto',
+    vertex: { module: shaderModule },
+    fragment: {
+      module: shaderModule,
+      targets: [{ format }],
+    },
+    primitive: { topology: 'triangle-strip' },
+  });
+
+  const gpuTexture = createTextureFromTexelViews(device, texture.texels, texture.descriptor);
+  t.trackForCleanup(gpuTexture);
+  const gpuSampler = device.createSampler(sampler);
+
+  const bindGroup = device.createBindGroup({
+    layout: pipeline.getBindGroupLayout(0),
+    entries: [
+      { binding: 0, resource: gpuTexture.createView() },
+      { binding: 1, resource: gpuSampler },
+    ],
+  });
+
+  const encoder = device.createCommandEncoder();
+
+  const renderPass = encoder.beginRenderPass({
+    colorAttachments: [{ view: renderTarget.createView(), loadOp: 'clear', storeOp: 'store' }],
+  });
+
+  renderPass.setPipeline(pipeline);
+  renderPass.setBindGroup(0, bindGroup);
+  renderPass.draw(4);
+  renderPass.end();
+  device.queue.submit([encoder.finish()]);
+
+  const expTexelView = softwareRasterize<T>(
+    texture,
+    sampler,
+    [renderTarget.width, renderTarget.height],
+    { ddx, ddy, ddxStart, ddyStart, offset }
+  );
+
+  // Note: I'm not sure what we should do here. My assumption is, given texels
+  // have random values, the difference between 2 texels can be very large. In
+  // the current version, for a float texture they can be +/- 1000 difference.
+  // Sampling is very GPU dependent. So if one pixel gets a random value of
+  // -1000 and the neighboring pixel gets +1000 then any slight variation in how
+  // sampling is applied will generate a large difference when interpolating
+  // between -1000 and +1000.
+  //
+  // We could make some entry for every format but for now I just put the
+  // tolerances here based on format texture suffix.
+  //
+  // It's possible the math in the software rasterizer is just bad but the
+  // results certainly seem close.
+  //
+  // These tolerances started from the OpenGL ES dEQP tests.
+  // Those tests always render to an rgba8unorm texture. The shaders do effectively
+  //
+  //   result = textureSample(...) * scale + bias
+  //
+  // to get the results in a 0.0 to 1.0 range. After reading the values back they
+  // expand them to their original ranges with
+  //
+  //   value = (result - bias) / scale;
+  //
+  // Tolerances from dEQP
+  // --------------------
+  // 8unorm: 3.9 / 255
+  // 8snorm: 7.9 / 128
+  // 2unorm: 7.9 / 512
+  // ufloat: 156.249
+  //  float: 31.2498
+  //
+  // The numbers below have been set empirically to get the tests to pass on all
+  // devices. The devices with the most divergence from the calculated expected
+  // values are MacOS Intel and AMD.
+  //
+  // MAINTENANCE_TODO: Double check the software rendering math and lower these
+  // tolerances if possible.
+
+  let maxFractionalDiff = 0;
+  if (texture.descriptor.format.includes('8unorm')) {
+    maxFractionalDiff = 7 / 255; // 3.9 / 255;
+  } else if (texture.descriptor.format.includes('8snorm')) {
+    maxFractionalDiff = 7.9 / 128;
+  } else if (texture.descriptor.format.includes('2unorm')) {
+    maxFractionalDiff = 9 / 512; // 7.9 / 512;
+  } else if (texture.descriptor.format.endsWith('ufloat')) {
+    maxFractionalDiff = 156.249;
+  } else if (texture.descriptor.format.endsWith('float')) {
+    maxFractionalDiff = 44; // 31.2498;
+  } else {
+    unreachable();
+  }
+
+  t.expectTexelViewComparisonIsOkInTexture(
+    { texture: renderTarget },
+    expTexelView,
+    [renderTarget.width, renderTarget.height],
+    { maxFractionalDiff }
+  );
 }
 
 /**
@@ -734,16 +1050,15 @@ ${body}
 
   const pipeline = device.createRenderPipeline({
     layout: 'auto',
-    vertex: { module: shaderModule, entryPoint: 'vs_main' },
+    vertex: { module: shaderModule },
     fragment: {
       module: shaderModule,
-      entryPoint: 'fs_main',
       targets: [{ format: renderTarget.format }],
     },
-    primitive: { topology: 'triangle-strip', cullMode: 'none' },
+    primitive: { topology: 'triangle-strip' },
   });
 
-  const gpuTexture = createTextureFromTexelView(device, texture.texels, texture.descriptor);
+  const gpuTexture = createTextureFromTexelView(device, texture.texels[0], texture.descriptor);
   const gpuSampler = device.createSampler(sampler);
 
   const bindGroup = device.createBindGroup({
