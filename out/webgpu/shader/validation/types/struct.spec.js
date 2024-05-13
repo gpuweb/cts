@@ -247,6 +247,38 @@ const kStructureCases = {
     code: `struct S { x : u32 }
     alias S = u32;`,
     valid: false
+  },
+  member_collision: {
+    code: `struct S { x : u32, x : u32 }`,
+    valid: false
+  },
+  no_name: {
+    code: `struct { x : u32 }`,
+    valid: false
+  },
+  missing_l_brace: {
+    code: `struct S x : u32 }`,
+    valid: false
+  },
+  missing_r_brace: {
+    code: `struct S { x : u32`,
+    valid: false
+  },
+  bad_name: {
+    code: `struct 123 { x : u32 }`,
+    valid: false
+  },
+  bad_delimiter: {
+    code: `struct S { x : u32; y : u32 }`,
+    valid: false
+  },
+  missing_delimiter: {
+    code: `struct S { x : u32 y : u32 }`,
+    valid: false
+  },
+  bad_member_decl: {
+    code: `struct S { x u32 }`,
+    valid: false
   }
 };
 
