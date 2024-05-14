@@ -705,13 +705,9 @@ const kConstructors = {
   array: 'array<u32, 4>(1,2,3,4)',
 };
 
-
 g.test('must_use')
   .desc('Tests that value constructors must be used')
-  .params(u =>
-    u.combine('ctor', keysOf(kConstructors))
-     .combine('use', [true, false] as const)
-  )
+  .params(u => u.combine('ctor', keysOf(kConstructors)).combine('use', [true, false] as const))
   .beforeAllSubcases(t => {
     if (t.params.ctor.includes('f16')) {
       t.selectDeviceOrSkipTestCase('shader-f16');
@@ -727,5 +723,5 @@ g.test('must_use')
     fn foo() {
       ${t.params.use ? '_ =' : ''} ${kConstructors[t.params.ctor]};
     }`;
-    t.expectCompileResult(t.params.use, code)
+    t.expectCompileResult(t.params.use, code);
   });

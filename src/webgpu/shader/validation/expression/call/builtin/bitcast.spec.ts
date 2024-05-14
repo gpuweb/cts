@@ -395,14 +395,16 @@ fn main() {
 g.test('must_use')
   .desc('Test that bitcast result must be used')
   .params(u =>
-  u.combine('case', [
-    'bitcast<u32>(1i)',
-    'bitcast<f32>(1u)',
-    'bitcast<vec2f>(vec2i())',
-    'bitcast<vec3u>(vec3u())',
-    'bitcast<vec4i>(vec4f())',
-  ] as const)
-   .combine('use', [true, false] as const))
+    u
+      .combine('case', [
+        'bitcast<u32>(1i)',
+        'bitcast<f32>(1u)',
+        'bitcast<vec2f>(vec2i())',
+        'bitcast<vec3u>(vec3u())',
+        'bitcast<vec4i>(vec4f())',
+      ] as const)
+      .combine('use', [true, false] as const)
+  )
   .fn(t => {
     const code = `
     fn foo() {
@@ -410,4 +412,3 @@ g.test('must_use')
     }`;
     t.expectCompileResult(t.params.use, code);
   });
-

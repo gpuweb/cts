@@ -117,5 +117,5 @@ g.test('must_use')
     fn foo() {
       ${t.params.use ? '_ =' : ''} arrayLength(&v);
     }`;
-    t.expectCompileResult(t.params.use, code)
+    t.expectCompileResult(t.params.use, code);
   });

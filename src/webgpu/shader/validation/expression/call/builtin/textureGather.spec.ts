@@ -499,5 +499,5 @@ g.test('must_use')
     fn foo() {
       ${t.params.use ? '_ =' : ''} textureGather(0, t, s, vec2(0,0));
     }`;
-    t.expectCompileResult(t.params.use, code)
+    t.expectCompileResult(t.params.use, code);
   });

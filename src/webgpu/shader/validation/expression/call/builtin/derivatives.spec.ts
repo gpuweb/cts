@@ -130,10 +130,7 @@ fn foo() {
 
 g.test('must_use')
   .desc('Tests that the result must be used')
-  .params(u =>
-    u.combine('use', [true, false] as const)
-     .combine('func', kDerivativeBuiltins)
-  )
+  .params(u => u.combine('use', [true, false] as const).combine('func', kDerivativeBuiltins))
   .fn(t => {
     const code = `
     fn foo() {
