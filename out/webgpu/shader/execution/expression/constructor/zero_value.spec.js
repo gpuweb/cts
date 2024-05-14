@@ -72,7 +72,7 @@ fn(async (t) => {
     basicExpressionBuilder((ops) => `vec${t.params.width}()`),
     [],
     type,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [{ input: [], expected: type.create(0) }]
   );
 });

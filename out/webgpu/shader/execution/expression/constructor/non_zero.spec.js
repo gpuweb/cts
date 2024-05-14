@@ -191,7 +191,7 @@ fn(async (t) => {
     basicExpressionBuilder((_) => `${fn}(${t.params.value * 0x100000000}${suffix}) / 0x100000000`),
     [],
     concreteVectorType,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [{ input: [], expected: concreteVectorType.create(t.params.value) }]
   );
 });
@@ -269,7 +269,7 @@ fn(async (t) => {
     ),
     [],
     concreteVectorType,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [{ input: [], expected: concreteVectorType.create(elements) }]
   );
 });
@@ -391,7 +391,7 @@ fn(async (t) => {
     basicExpressionBuilder((_) => `${fn}(${args.join(', ')}) / 0x100000000`),
     [],
     concreteVectorType,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [
     {
       input: [],
@@ -514,7 +514,7 @@ fn(async (t) => {
     ),
     [],
     concreteMatrixType,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [
     {
       input: [],
@@ -605,7 +605,7 @@ fn(async (t) => {
     basicExpressionBuilder((_) => `${fn}(${columnVectors.join(', ')}) * (1.0 / 0x100000000)`),
     [],
     concreteMatrixType,
-    { inputSource: 'const' },
+    { inputSource: 'const', constEvaluationMode: 'direct' },
     [
     {
       input: [],
