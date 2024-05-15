@@ -1,8 +1,8 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/export const description = `Validation tests for binary ops`;import { makeTestGroup } from '../../../../common/framework/test_group.js';
-import { keysOf } from '../../../../common/util/data_tables.js';
-import { ShaderValidationTest } from '../shader_validation_test.js';
+**/export const description = `Validation tests for binary ops`;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+import { keysOf } from '../../../../../common/util/data_tables.js';
+import { ShaderValidationTest } from '../../shader_validation_test.js';
 
 export const g = makeTestGroup(ShaderValidationTest);
 
@@ -87,4 +87,4 @@ fn vtx() -> @builtin(position) vec4f {
     `;
   t.expectCompileResult(kTests[t.params.stmt].pass, code);
 });
-//# sourceMappingURL=binary_ops.spec.js.map
+//# sourceMappingURL=parse.spec.js.map
