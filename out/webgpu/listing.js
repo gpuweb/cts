@@ -5188,14 +5188,6 @@ export const listing = [
       "shader",
       "validation",
       "parse",
-      "builtin"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
       "comments"
     ]
   },
@@ -5245,14 +5237,6 @@ export const listing = [
       "validation",
       "parse",
       "must_use"
-    ]
-  },
-  {
-    "file": [
-      "shader",
-      "validation",
-      "parse",
-      "pipeline_stage"
     ]
   },
   {
@@ -5373,6 +5357,14 @@ export const listing = [
       "validation",
       "shader_io",
       "locations"
+    ]
+  },
+  {
+    "file": [
+      "shader",
+      "validation",
+      "shader_io",
+      "pipeline_stage"
     ]
   },
   {

@@ -32,7 +32,7 @@
 </script>
 <script type=module src=/webgpu/common/runtime/wpt.js></script>
 
-<!-- Prefix: "?q="; 22234 variants generated from 2813 tests in 613 files -->
+<!-- Prefix: "?q="; 22234 variants generated from 2813 tests in 612 files -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter:*'><!-- estimated: 1368.747 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapter:requestAdapter_no_parameters:*'><!-- estimated: 384.601 ms -->
 <meta name=variant content='?q=webgpu:api,operation,adapter,requestAdapterInfo:adapter_info:*'><!-- estimated: 136.601 ms -->
@@ -20229,8 +20229,6 @@
 <meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:null_characters:*'><!-- estimated: 19.302 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:blankspace:*'><!-- estimated: 15.301 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,blankspace:bom:*'><!-- estimated: 2.202 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,builtin:parse:*'><!-- estimated: 45.878 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,builtin:placement:*'><!-- estimated: 11.403 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,comments:comments:*'><!-- estimated: 1.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,comments:line_comment_eof:*'><!-- estimated: 4.500 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,comments:line_comment_terminators:*'><!-- estimated: 10.210 ms -->
@@ -20344,14 +20342,6 @@
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:declaration:*'><!-- estimated: 15.230 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:call:*'><!-- estimated: 33.150 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,must_use:ignore_result_of_non_must_use_that_returns_call_of_must_use:*'><!-- estimated: 0.000 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:vertex_parsing:*'><!-- estimated: 12.000 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:fragment_parsing:*'><!-- estimated: 20.800 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:compute_parsing:*'><!-- estimated: 8.000 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:multiple_entry_points:*'><!-- estimated: 1.100 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:extra_on_compute_function:*'><!-- estimated: 21.208 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:extra_on_fragment_function:*'><!-- estimated: 8.008 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:extra_on_vertex_function:*'><!-- estimated: 8.000 ms -->
-<meta name=variant content='?q=webgpu:shader,validation,parse,pipeline_stage:placement:*'><!-- estimated: 33.312 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,requires:requires:*'><!-- estimated: 15.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,requires:wgsl_matches_api:*'><!-- estimated: 4.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,parse,semicolon:module_scope_single:*'><!-- estimated: 2.100 ms -->
@@ -20702,6 +20692,8 @@
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,builtins:duplicates:*'><!-- estimated: 30.608 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,builtins:missing_vertex_position:*'><!-- estimated: 3.900 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,builtins:reuse_builtin_name:*'><!-- estimated: 84.140 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,builtins:parse:*'><!-- estimated: 141.596 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,builtins:placement:*'><!-- estimated: 93.339 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,entry_point:missing_attribute_on_param:*'><!-- estimated: 19.204 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,entry_point:missing_attribute_on_param_struct:*'><!-- estimated: 18.704 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,entry_point:missing_attribute_on_return_type:*'><!-- estimated: 7.101 ms -->
@@ -20737,6 +20729,14 @@
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,locations:validation:*'><!-- estimated: 28.512 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,locations:location_fp16:*'><!-- estimated: 1.002 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,locations:out_of_order:*'><!-- estimated: 19.440 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:vertex_parsing:*'><!-- estimated: 807.992 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:fragment_parsing:*'><!-- estimated: 68.840 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:compute_parsing:*'><!-- estimated: 48.808 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:multiple_entry_points:*'><!-- estimated: 1.613 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:extra_on_compute_function:*'><!-- estimated: 48.112 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:extra_on_fragment_function:*'><!-- estimated: 47.656 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:extra_on_vertex_function:*'><!-- estimated: 51.296 ms -->
+<meta name=variant content='?q=webgpu:shader,validation,shader_io,pipeline_stage:placement:*'><!-- estimated: 588.552 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,size:size:*'><!-- estimated: 30.450 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,size:size_fp16:*'><!-- estimated: 3.000 ms -->
 <meta name=variant content='?q=webgpu:shader,validation,shader_io,size:size_non_struct:*'><!-- estimated: 6.503 ms -->
