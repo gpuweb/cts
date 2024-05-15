@@ -662,3 +662,66 @@ g.test('struct_value')
     const x : ${testcase.name} = ${testcase.name}(${testcase.values});`;
     t.expectCompileResult(testcase.valid, code);
   });
+
+const kConstructors = {
+  u32_0: 'u32()',
+  i32_0: 'i32()',
+  bool_0: 'bool()',
+  f32_0: 'f32()',
+  f16_0: 'f16()',
+  vec2_0: 'vec2()',
+  vec3_0: 'vec3()',
+  vec4_0: 'vec4()',
+  mat2x2_0: 'mat2x2f()',
+  mat2x3_0: 'mat2x3f()',
+  mat2x4_0: 'mat2x4f()',
+  mat3x2_0: 'mat3x2f()',
+  mat3x3_0: 'mat3x3f()',
+  mat3x4_0: 'mat3x4f()',
+  mat4x2_0_f16: 'mat4x2h()',
+  mat4x3_0_f16: 'mat4x3h()',
+  mat4x4_0_f16: 'mat4x4h()',
+  S_0: 'S()',
+  array_0: 'array<u32, 4>()',
+  u32: 'u32(1)',
+  i32: 'i32(1)',
+  bool: 'bool(true)',
+  f32: 'f32(1)',
+  f16: 'f16(1)',
+  vec2f: 'vec2<f32>(1)',
+  vec3_f16: 'vec3<f16>(1)',
+  vec4: 'vec4(1)',
+  mat2x2: 'mat2x2f(1,1,1,1)',
+  mat2x3: 'mat2x3f(1,1,1,1,1,1)',
+  mat2x4: 'mat2x4f(1,1,1,1,1,1,1,1)',
+  mat3x2_f16: 'mat3x2<f16>(vec2h(),vec2h(),vec2h())',
+  mat3x3_f16: 'mat3x3<f16>(vec3h(),vec3h(),vec3h())',
+  mat3x4_f16: 'mat3x4<f16>(vec4h(),vec4h(),vec4h())',
+  mat4x2: 'mat4x2(vec2(),vec2(),vec2(),vec2())',
+  mat4x3: 'mat4x3(vec3(),vec3(),vec3(),vec3())',
+  mat4x4: 'mat4x4(vec4(),vec4(),vec4(),vec4())',
+  S: 'S(1,1)',
+  array_abs: 'array(1,2,3)',
+  array: 'array<u32, 4>(1,2,3,4)',
+};
+
+g.test('must_use')
+  .desc('Tests that value constructors must be used')
+  .params(u => u.combine('ctor', keysOf(kConstructors)).combine('use', [true, false] as const))
+  .beforeAllSubcases(t => {
+    if (t.params.ctor.includes('f16')) {
+      t.selectDeviceOrSkipTestCase('shader-f16');
+    }
+  })
+  .fn(t => {
+    const code = `
+    ${t.params.ctor.includes('f16') ? 'enable f16;' : ''}
+    struct S {
+      x : u32,
+      y : f32,
+    }
+    fn foo() {
+      ${t.params.use ? '_ =' : ''} ${kConstructors[t.params.ctor]};
+    }`;
+    t.expectCompileResult(t.params.use, code);
+  });

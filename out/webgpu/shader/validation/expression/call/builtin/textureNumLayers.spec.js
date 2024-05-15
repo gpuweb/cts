@@ -126,4 +126,16 @@ fn((t) => {
 
   t.expectCompileResult(expectSuccess, code);
 });
+
+g.test('must_use').
+desc('Tests that the result must be used').
+params((u) => u.combine('use', [true, false])).
+fn((t) => {
+  const code = `
+    @group(0) @binding(0) var t : texture_2d_array<f32>;
+    fn foo() {
+      ${t.params.use ? '_ =' : ''} textureNumLayers(t);
+    }`;
+  t.expectCompileResult(t.params.use, code);
+});
 //# sourceMappingURL=textureNumLayers.spec.js.map

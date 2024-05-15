@@ -202,6 +202,11 @@ const kTests = {
     src: `_ = ${builtin}(1.0, 2.0, 3.0, 4.0);`,
     pass: false,
   },
+
+  must_use: {
+    src: `${builtin}(1.0,2.0,3.0);`,
+    pass: false,
+  },
 };
 
 g.test('arguments')

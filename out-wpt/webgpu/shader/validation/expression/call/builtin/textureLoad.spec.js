@@ -526,3 +526,15 @@ fn((t) => {
 
   t.expectCompileResult(expectSuccess, code);
 });
+
+g.test('must_use').
+desc('Tests that the result must be used').
+params((u) => u.combine('use', [true, false])).
+fn((t) => {
+  const code = `
+    @group(0) @binding(0) var t : texture_2d<f32>;
+    fn foo() {
+      ${t.params.use ? '_ =' : ''} textureLoad(t, vec2(0,0), 0);
+    }`;
+  t.expectCompileResult(t.params.use, code);
+});

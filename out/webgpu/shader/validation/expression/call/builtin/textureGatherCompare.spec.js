@@ -358,4 +358,17 @@ fn((t) => {
   const expectSuccess = typesMatch;
   t.expectCompileResult(expectSuccess, code);
 });
+
+g.test('must_use').
+desc('Tests that the result must be used').
+params((u) => u.combine('use', [true, false])).
+fn((t) => {
+  const code = `
+    @group(0) @binding(0) var t : texture_depth_2d;
+    @group(0) @binding(1) var s : sampler_comparison;
+    fn foo() {
+      ${t.params.use ? '_ =' : ''} textureGatherCompare(t, s, vec2(0,0), 0);
+    }`;
+  t.expectCompileResult(t.params.use, code);
+});
 //# sourceMappingURL=textureGatherCompare.spec.js.map

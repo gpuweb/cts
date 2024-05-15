@@ -201,6 +201,11 @@ const kTests = {
   too_many_args: {
     src: `_ = ${builtin}(1.0, 2.0, 3.0, 4.0);`,
     pass: false
+  },
+
+  must_use: {
+    src: `${builtin}(1.0,2.0,3.0);`,
+    pass: false
   }
 };
 
