@@ -254,7 +254,6 @@ g.test('early_eval_errors')
       .beginSubcases()
       .combineWithParams([
         { low: 1, high: 2 },
-        { low: 1, high: 2 },
         { low: 2, high: 1 },
         { low: 1, high: 1 },
       ] as const)
