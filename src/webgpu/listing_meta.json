@@ -2438,6 +2438,7 @@
   "webgpu:shader,validation,expression,precedence:binary_requires_parentheses:*": { "subcaseMS": 149.921 },
   "webgpu:shader,validation,expression,precedence:mixed_logical_requires_parentheses:*": { "subcaseMS": 6.107 },
   "webgpu:shader,validation,expression,precedence:other:*": { "subcaseMS": 5.459 },
+  "webgpu:shader,validation,expression,precedence:other_lhs:*": { "subcaseMS": 6.156 },
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:basic:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:composite:*": { "subcaseMS": 0.000 },
   "webgpu:shader,validation,expression,unary,address_of_and_indirection:invalid:*": { "subcaseMS": 0.000 },
