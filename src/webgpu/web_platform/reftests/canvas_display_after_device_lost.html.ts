@@ -58,6 +58,7 @@ void (async () => {
         threw = true;
       }
 
+      // If this assert fails, takeScreenshotDelayed will never be called, and the test will time out .
       assert(
         threw === (deviceLost && unconfigureBeforeLost && !reconfigureAfterLost),
         'getCurrentTexture() should throw iff the canvas is unconfigured'
