@@ -139,9 +139,10 @@ export interface Texture {
 }
 
 /**
- * Returns the expect value for a WGSL builtin texture function
+ * Returns the expect value for a WGSL builtin texture function for a single
+ * mip level
  */
-export function expected<T extends Dimensionality>(
+export function softwareTextureReadMipLevel<T extends Dimensionality>(
   call: TextureCall<T>,
   texture: Texture,
   sampler: GPUSamplerDescriptor,
@@ -270,8 +271,7 @@ export function expected<T extends Dimensionality>(
 export function softwareTextureRead<T extends Dimensionality>(
   call: TextureCall<T>,
   texture: Texture,
-  sampler: GPUSamplerDescriptor,
-  size: [number, number]
+  sampler: GPUSamplerDescriptor
 ): PerTexelComponent<number> {
   assert(call.ddx !== undefined);
   assert(call.ddy !== undefined);
@@ -279,16 +279,22 @@ export function softwareTextureRead<T extends Dimensionality>(
   const texSize = reifyExtent3D(texture.descriptor.size);
   const textureSize = [texSize.width, texSize.height];
 
+  // ddx and ddy are the values that would be passed to textureSampleGrad
+  // If we're emulating textureSample then they're the computed derivatives
+  // such that if we passed them to textureSampleGrad they'd produce the
+  // same result.
   const ddx: readonly number[] = typeof call.ddx === 'number' ? [call.ddx] : call.ddx;
   const ddy: readonly number[] = typeof call.ddy === 'number' ? [call.ddy] : call.ddy;
-  const sDdx = ddx.map((v, i) => (v * textureSize[i]) / size[i]);
-  const sDdy = ddy.map((v, i) => (v * textureSize[i]) / size[i]);
-  const dotDDX = dotProduct(sDdx, sDdx);
-  const dotDDY = dotProduct(sDdy, sDdy);
-  const deltaMax = Math.max(dotDDX, dotDDY);
 
+  // Compute the mip level the same way textureSampleGrad does
+  const scaledDdx = ddx.map((v, i) => v * textureSize[i]);
+  const scaledDdy = ddy.map((v, i) => v * textureSize[i]);
+  const dotDDX = dotProduct(scaledDdx, scaledDdx);
+  const dotDDY = dotProduct(scaledDdy, scaledDdy);
+  const deltaMax = Math.max(dotDDX, dotDDY);
   // MAINTENANCE_TODO: handle texture view baseMipLevel and mipLevelCount?
   const mipLevel = 0.5 * Math.log2(deltaMax);
+
   const mipLevelCount = texture.texels.length;
   const maxLevel = mipLevelCount - 1;
 
@@ -297,8 +303,8 @@ export function softwareTextureRead<T extends Dimensionality>(
       const clampedMipLevel = clamp(mipLevel, { min: 0, max: maxLevel });
       const baseMipLevel = Math.floor(clampedMipLevel);
       const nextMipLevel = Math.ceil(clampedMipLevel);
-      const t0 = expected<T>(call, texture, sampler, baseMipLevel);
-      const t1 = expected<T>(call, texture, sampler, nextMipLevel);
+      const t0 = softwareTextureReadMipLevel<T>(call, texture, sampler, baseMipLevel);
+      const t1 = softwareTextureReadMipLevel<T>(call, texture, sampler, nextMipLevel);
       const mix = mipLevel % 1;
       const values = [
         { v: t0, weight: 1 - mix },
@@ -316,7 +322,7 @@ export function softwareTextureRead<T extends Dimensionality>(
       const baseMipLevel = Math.floor(
         clamp(mipLevel + 0.5, { min: 0, max: texture.texels.length - 1 })
       );
-      return expected<T>(call, texture, sampler, baseMipLevel);
+      return softwareTextureReadMipLevel<T>(call, texture, sampler, baseMipLevel);
     }
   }
 }
@@ -324,9 +330,8 @@ export function softwareTextureRead<T extends Dimensionality>(
 export type TextureTestOptions = {
   ddx?: number; // the derivative we want at sample time
   ddy?: number;
-  ddxStart?: number; // the starting derivative value
-  ddyStart?: number;
-  offset?: [number, number]; // a constant offset
+  uvwStart?: readonly [number, number]; // the starting uv value (these are used make the coordinates negative as it uncovered issues on some hardware)
+  offset?: readonly [number, number]; // a constant offset
 };
 
 /**
@@ -347,7 +352,7 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const got = results[callIdx];
-    const expect = expected(call, texture, sampler);
+    const expect = softwareTextureReadMipLevel(call, texture, sampler);
 
     const gULP = rep.bitsToULPFromZero(rep.numberToBits(got));
     const eULP = rep.bitsToULPFromZero(rep.numberToBits(expect));
@@ -373,7 +378,11 @@ export async function putDataInTextureThenDrawAndCheckResults<T extends Dimensio
           'expected:',
           ...(await identifySamplePoints(texture.descriptor, (texels: TexelView) => {
             return Promise.resolve(
-              expected(call, { texels: [texels], descriptor: texture.descriptor }, sampler)
+              softwareTextureReadMipLevel(
+                call,
+                { texels: [texels], descriptor: texture.descriptor },
+                sampler
+              )
             );
           })),
         ];
@@ -412,8 +421,12 @@ export function softwareRasterize<T extends Dimensionality>(
   options: TextureTestOptions
 ) {
   const [width, height] = targetSize;
-  const { ddx = 1, ddy = 1, ddxStart = 0, ddyStart = 0 } = options;
+  const { ddx = 1, ddy = 1, uvwStart = [0, 0] } = options;
   const format = 'rgba32float';
+
+  const textureSize = reifyExtent3D(texture.descriptor.size);
+  const screenSpaceDDX = (ddx * width) / textureSize.width;
+  const screenSpaceDDY = (ddy * height) / textureSize.height;
 
   const rep = kTexelRepresentationInfo[format];
 
@@ -422,16 +435,35 @@ export function softwareRasterize<T extends Dimensionality>(
     const fragY = height - y - 1 + 0.5;
     for (let x = 0; x < width; ++x) {
       const fragX = x + 0.5;
-      const coords = [(fragX / width) * ddx - ddxStart, (fragY / height) * ddy - ddyStart] as T;
+      // This code calculates the same value that will be passed to
+      // `textureSample` in the fragment shader for a given frag coord. That
+      // shader renders a clip space quad and includes a inter-stage "uv"
+      // coordinates that start with a unit quad (0,0) to (1,1) and is
+      // multiplied by ddx,ddy and as added in uStart and vStart
+      //
+      // uv = unitQuad * vec2(ddx, ddy) + vec2(vStart, uStart);
+      //
+      // softwareTextureRead<T> simulates a single call to `textureSample` so
+      // here we're computing the `uv` value that will be passed for a
+      // particular fragment coordinate. fragX / width, fragY / height provides
+      // the unitQuad value.
+      //
+      // ddx and ddy in this case are the derivative values we want to test. We
+      // pass those into the softwareTextureRead<T> as they would normally be
+      // derived from the change in coord.
+      const coords = [
+        (fragX / width) * screenSpaceDDX + uvwStart[0],
+        (fragY / height) * screenSpaceDDY + uvwStart[1],
+      ] as T;
       const call: TextureCall<T> = {
         builtin: 'textureSample',
         coordType: 'f',
         coords,
-        ddx: [ddx, 0] as T,
-        ddy: [0, ddy] as T,
+        ddx: [ddx / textureSize.width, 0] as T,
+        ddy: [0, ddy / textureSize.height] as T,
         offset: options.offset as T,
       };
-      const sample = softwareTextureRead<T>(call, texture, sampler, targetSize);
+      const sample = softwareTextureRead<T>(call, texture, sampler);
       const rgba = { R: 0, G: 0, B: 0, A: 1, ...sample };
       const asRgba32Float = new Float32Array(rep.pack(rgba));
       expData.set(asRgba32Float, (y * width + x) * 4);
@@ -460,6 +492,7 @@ export function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasteri
   options: TextureTestOptions
 ) {
   const device = t.device;
+  const { ddx = 1, ddy = 1, uvwStart = [0, 0, 0], offset } = options;
 
   const format = 'rgba32float';
   const renderTarget = device.createTexture({
@@ -469,12 +502,14 @@ export function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasteri
   });
   t.trackForCleanup(renderTarget);
 
-  const size = reifyExtent3D(texture.descriptor.size);
-  const ddx = ((options.ddx ?? 1) * renderTarget.width) / size.width;
-  const ddy = ((options.ddy ?? 1) * renderTarget.height) / size.height;
-  const ddxStart = ((options.ddxStart ?? 0) * renderTarget.width) / size.width;
-  const ddyStart = ((options.ddyStart ?? 0) * renderTarget.height) / size.height;
-  const offset = options.offset;
+  const textureSize = reifyExtent3D(texture.descriptor.size);
+
+  // Compute the amount we need to multiply the unitQuad by get the
+  // derivatives we want.
+  const uMult = (ddx * renderTarget.width) / textureSize.width;
+  const vMult = (ddy * renderTarget.height) / textureSize.height;
+
+  const offsetWGSL = offset ? `, vec2i(${offset[0]},${offset[1]})` : '';
 
   const code = `
 struct InOut {
@@ -490,7 +525,7 @@ struct InOut {
   let pos = positions[vertex_index];
   return InOut(
     vec4f(pos, 0, 1),
-    (pos * 0.5 + 0.5) * vec2f(${ddx}, ${ddy}) - vec2f(${ddxStart}, ${ddyStart}),
+    (pos * 0.5 + 0.5) * vec2f(${uMult}, ${vMult}) + vec2f(${uvwStart[0]}, ${uvwStart[1]}),
   );
 }
 
@@ -498,7 +533,7 @@ struct InOut {
 @group(0) @binding(1) var          S    : sampler;
 
 @fragment fn fs(v: InOut) -> @location(0) vec4f {
-  return textureSample(T, S, v.uv${offset ? `, vec2i(${offset[0]},${offset[1]})` : ''});
+  return textureSample(T, S, v.uv${offsetWGSL});
 }
 `;
 
@@ -542,7 +577,7 @@ struct InOut {
     texture,
     sampler,
     [renderTarget.width, renderTarget.height],
-    { ddx, ddy, ddxStart, ddyStart, offset }
+    options
   );
 
   // Note: I'm not sure what we should do here. My assumption is, given texels
@@ -586,15 +621,15 @@ struct InOut {
 
   let maxFractionalDiff = 0;
   if (texture.descriptor.format.includes('8unorm')) {
-    maxFractionalDiff = 7 / 255; // 3.9 / 255;
+    maxFractionalDiff = 7 / 255;
   } else if (texture.descriptor.format.includes('8snorm')) {
     maxFractionalDiff = 7.9 / 128;
   } else if (texture.descriptor.format.includes('2unorm')) {
-    maxFractionalDiff = 9 / 512; // 7.9 / 512;
+    maxFractionalDiff = 9 / 512;
   } else if (texture.descriptor.format.endsWith('ufloat')) {
     maxFractionalDiff = 156.249;
   } else if (texture.descriptor.format.endsWith('float')) {
-    maxFractionalDiff = 44; // 31.2498;
+    maxFractionalDiff = 44;
   } else {
     unreachable();
   }

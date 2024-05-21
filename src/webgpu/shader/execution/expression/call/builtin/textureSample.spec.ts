@@ -157,9 +157,9 @@ test mip level selection based on derivatives
         { ddx: 1, ddy: 4 }, // test level 2 via ddy
         { ddx: 1.5, ddy: 1.5 }, // test mix between 1 and 2
         { ddx: 6, ddy: 6 }, // test mix between 2 and 3 (there is no 3 so we should get just 2)
-        { ddx: 1.5, ddy: 1.5, offset: [7, -8] }, // test mix between 1 and 2 with offset
-        { ddx: 1.5, ddy: 1.5, offset: [3, -3] }, // test mix between 1 and 2 with offset
-        { ddx: 1.5, ddy: 1.5, ddxStart: -3, ddyStart: -4 }, // test mix between 1 and 2 with negative coords
+        { ddx: 1.5, ddy: 1.5, offset: [7, -8] as const }, // test mix between 1 and 2 with offset
+        { ddx: 1.5, ddy: 1.5, offset: [3, -3] as const }, // test mix between 1 and 2 with offset
+        { ddx: 1.5, ddy: 1.5, uvwStart: [-3.5, -4] as const }, // test mix between 1 and 2 with negative coords
       ])
   )
   .beforeAllSubcases(t => {
@@ -175,7 +175,7 @@ test mip level selection based on derivatives
     }
   })
   .fn(t => {
-    const { format, mipmapFilter, ddx, ddy, ddxStart, ddyStart, offset } = t.params;
+    const { format, mipmapFilter, ddx, ddy, uvwStart, offset } = t.params;
     const descriptor: GPUTextureDescriptor = {
       format,
       mipLevelCount: 3,
@@ -194,7 +194,7 @@ test mip level selection based on derivatives
       t,
       { texels: texelViews, descriptor },
       sampler,
-      { ddx, ddy, ddxStart, ddyStart, offset: offset as vec2 }
+      { ddx, ddy, uvwStart, offset }
     );
   });
 
