@@ -84,31 +84,47 @@ g.test('command_buffer,submit_invalidates')
     `
   )
   .fn(t => {
-    const cb0 = t.createCommandBuffer();
+    const cb = t.createCommandBuffer();
 
     // Initial submit of a valid command buffer should pass.
-    t.device.queue.submit([cb0]);
+    t.device.queue.submit([cb]);
 
     // Subsequent submits of the same command buffer should fail.
     t.expectValidationError(() => {
-      t.device.queue.submit([cb0]);
+      t.device.queue.submit([cb]);
     });
+  });
 
-    // Valid command buffers should be invalidated even if they're part of an invalid submit
-    const cb1 = t.createCommandBuffer();
-    const cb1_invalid = t.createCommandBuffer({ valid: false });
+g.test('command_buffer,invalid_submit_invalidates')
+  .desc(
+    `
+    Tests that calling submit invalidates all command buffers passed to it, even
+    if they're part of an invalid submit.
+    `
+  )
+  .fn(t => {
+    const cb = t.createCommandBuffer();
+    const cb_invalid = t.createCommandBuffer({ valid: false });
 
     // Submit should fail because on of the command buffers is invalid
     t.expectValidationError(() => {
-      t.device.queue.submit([cb1, cb1_invalid]);
+      t.device.queue.submit([cb, cb_invalid]);
     });
 
     // Subsequent submits of the previously valid command buffer should fail.
     t.expectValidationError(() => {
-      t.device.queue.submit([cb1]);
+      t.device.queue.submit([cb]);
     });
+  });
 
-    // The order of the invalid and valid command buffers in the submit array should not matter.
+g.test('command_buffer,submit_invalidate_order')
+  .desc(
+    `
+    Tests that the order of the invalid and valid command buffers in the submit
+    array does not affect the command buffer invalidation.
+    `
+  )
+  .fn(t => {
     const cb2 = t.createCommandBuffer();
     const cb2_invalid = t.createCommandBuffer({ valid: false });
 
