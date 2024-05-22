@@ -425,8 +425,8 @@ export function softwareRasterize<T extends Dimensionality>(
   const format = 'rgba32float';
 
   const textureSize = reifyExtent3D(texture.descriptor.size);
-  const screenSpaceDDX = (ddx * width) / textureSize.width;
-  const screenSpaceDDY = (ddy * height) / textureSize.height;
+  const screenSpaceUMult = (ddx * width) / textureSize.width;
+  const screenSpaceVMult = (ddy * height) / textureSize.height;
 
   const rep = kTexelRepresentationInfo[format];
 
@@ -453,8 +453,8 @@ export function softwareRasterize<T extends Dimensionality>(
       // pass those into the softwareTextureRead<T> as they would normally be
       // derived from the change in coord.
       const coords = [
-        (fragX / width) * screenSpaceDDX + uvwStart[0],
-        (fragY / height) * screenSpaceDDY + uvwStart[1],
+        (fragX / width) * screenSpaceUMult + uvwStart[0],
+        (fragY / height) * screenSpaceVMult + uvwStart[1],
       ] as T;
       const call: TextureCall<T> = {
         builtin: 'textureSample',
