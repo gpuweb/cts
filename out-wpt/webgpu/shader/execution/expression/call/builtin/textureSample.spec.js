@@ -10,11 +10,12 @@ import { kTexelRepresentationInfo } from '../../../../../util/texture/texel_data
 
 import {
 
-  createRandomTexelView,
 
   putDataInTextureThenDrawAndCheckResults,
+  putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer,
   generateSamplePoints,
-  kSamplePointMethods } from
+  kSamplePointMethods,
+  createRandomTexelViewMipmap } from
 './texture_utils.js';
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
@@ -98,7 +99,7 @@ fn(async (t) => {
     size: { width: 8, height: 8 },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
   };
-  const texelView = createRandomTexelView(descriptor);
+  const texelViews = createRandomTexelViewMipmap(descriptor);
   const calls = generateSamplePoints(50, t.params.minFilter === 'nearest', {
     method: t.params.sample_points,
     textureWidth: 8,
@@ -120,7 +121,7 @@ fn(async (t) => {
   };
   const res = await putDataInTextureThenDrawAndCheckResults(
     t.device,
-    { texels: texelView, descriptor },
+    { texels: texelViews, descriptor },
     sampler,
     calls
   );
@@ -137,7 +138,65 @@ fn textureSample(t: texture_2d<f32>, s: sampler, coords: vec2<f32>, offset: vec2
 test mip level selection based on derivatives
     `
 ).
-unimplemented();
+params((u) =>
+u.
+combine('format', kEncodableTextureFormats).
+filter((t) => {
+  const type = kTextureFormatInfo[t.format].color?.type;
+  return type === 'float' || type === 'unfilterable-float';
+}).
+combine('mipmapFilter', ['nearest', 'linear'])
+// note: this is the derivative we want at sample time. It is not the value
+// passed directly to the shader. This way if we change the texture size
+// or render target size we can compute the correct values to achieve the
+// same results.
+.combineWithParams([
+{ ddx: 0.5, ddy: 0.5 }, // test mag filter
+{ ddx: 1, ddy: 1 }, // test level 0
+{ ddx: 2, ddy: 1 }, // test level 1 via ddx
+{ ddx: 1, ddy: 4 }, // test level 2 via ddy
+{ ddx: 1.5, ddy: 1.5 }, // test mix between 1 and 2
+{ ddx: 6, ddy: 6 }, // test mix between 2 and 3 (there is no 3 so we should get just 2)
+{ ddx: 1.5, ddy: 1.5, offset: [7, -8] }, // test mix between 1 and 2 with offset
+{ ddx: 1.5, ddy: 1.5, offset: [3, -3] }, // test mix between 1 and 2 with offset
+{ ddx: 1.5, ddy: 1.5, uvwStart: [-3.5, -4] } // test mix between 1 and 2 with negative coords
+])
+).
+beforeAllSubcases((t) => {
+  const { format } = t.params;
+  const formatInfo = kTexelRepresentationInfo[format];
+  t.skipIfTextureFormatNotSupported(format);
+  const hasFloat32 = formatInfo.componentOrder.some((c) => {
+    const info = formatInfo.componentInfo[c];
+    return info.dataType === 'float' && info.bitLength === 32;
+  });
+  if (hasFloat32) {
+    t.selectDeviceOrSkipTestCase('float32-filterable');
+  }
+}).
+fn((t) => {
+  const { format, mipmapFilter, ddx, ddy, uvwStart, offset } = t.params;
+  const descriptor = {
+    format,
+    mipLevelCount: 3,
+    size: { width: 8, height: 8 },
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+  };
+  const texelViews = createRandomTexelViewMipmap(descriptor);
+  const sampler = {
+    addressModeU: 'repeat',
+    addressModeV: 'repeat',
+    minFilter: 'linear',
+    magFilter: 'linear',
+    mipmapFilter
+  };
+  putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
+    t,
+    { texels: texelViews, descriptor },
+    sampler,
+    { ddx, ddy, uvwStart, offset }
+  );
+});
 
 g.test('sampled_3d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesample').
