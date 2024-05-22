@@ -425,6 +425,14 @@ export function softwareRasterize<T extends Dimensionality>(
   const format = 'rgba32float';
 
   const textureSize = reifyExtent3D(texture.descriptor.size);
+
+  // MAINTENANCE_TODO: Consider passing these in as a similar computation
+  // happens in putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer.
+  // The issue is there, the calculation is "what do we need to multiply the unitQuad
+  // by to get the derivatives we want". The calculation here is "what coordinate
+  // will we get for a given frag coordinate". It turns out to be the same calculation
+  // but needs rephrasing them so they are more obviously the same would help
+  // consolidate them into one calculation.
   const screenSpaceUMult = (ddx * width) / textureSize.width;
   const screenSpaceVMult = (ddy * height) / textureSize.height;
 
