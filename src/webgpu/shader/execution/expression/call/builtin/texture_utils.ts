@@ -436,7 +436,8 @@ export function softwareRasterize<T extends Dimensionality>(
     for (let x = 0; x < width; ++x) {
       const fragX = x + 0.5;
       // This code calculates the same value that will be passed to
-      // `textureSample` in the fragment shader for a given frag coord. That
+      // `textureSample` in the fragment shader for a given frag coord (see the
+      // WGSL code which uses the same formula, but using interpolation). That
       // shader renders a clip space quad and includes a inter-stage "uv"
       // coordinates that start with a unit quad (0,0) to (1,1) and is
       // multiplied by ddx,ddy and as added in uStart and vStart
