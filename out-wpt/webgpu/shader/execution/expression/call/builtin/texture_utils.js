@@ -1,6 +1,11 @@
 /**
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
-**/import { assert, range, unreachable } from '../../../../../../common/util/util.js';
+**/import { assert, range, unreachable } from '../../../../../../common/util/util.js';import {
+  isCompressedTextureFormat,
+  kEncodableTextureFormats,
+  kTextureFormatInfo } from
+'../../../../../format_info.js';
+
 import { float32ToUint32 } from '../../../../../util/conversion.js';
 import {
   align,
@@ -10,17 +15,14 @@ import {
   lerp,
   quantizeToF32 } from
 '../../../../../util/math.js';
-import { virtualMipSize } from '../../../../../util/texture/base.js';
+import { physicalMipSizeFromTexture, virtualMipSize } from '../../../../../util/texture/base.js';
 import {
   kTexelRepresentationInfo } from
 
 
 '../../../../../util/texture/texel_data.js';
 import { TexelView } from '../../../../../util/texture/texel_view.js';
-import {
-  createTextureFromTexelView,
-  createTextureFromTexelViews } from
-'../../../../../util/texture.js';
+import { createTextureFromTexelViews } from '../../../../../util/texture.js';
 import { reifyExtent3D } from '../../../../../util/unions.js';
 
 function getLimitValue(v) {
@@ -43,6 +45,16 @@ normalized)
     getLimitValue(rep.numericRange.max),
     normalized
   );
+}
+
+/**
+ * We need the software rendering to do the same interpolation as the hardware
+ * rendered so for -srgb formats we set the TexelView to an -srgb format as
+ * TexelView handles this case. Note: It might be nice to add rgba32float-srgb
+ * or something similar to TexelView.
+ */
+export function getTexelViewFormatForTextureFormat(format) {
+  return format.endsWith('-srgb') ? 'rgba8unorm-srgb' : 'rgba32float';
 }
 
 /**
@@ -146,7 +158,7 @@ export function softwareTextureReadMipLevel(
 call,
 texture,
 sampler,
-mipLevel = 0)
+mipLevel)
 {
   const rep = kTexelRepresentationInfo[texture.texels[mipLevel].format];
   const tSize = reifyExtent3D(texture.descriptor.size);
@@ -335,24 +347,22 @@ sampler)
 
 
 /**
- * Puts random data in a texture, generates a shader that implements `calls`
- * such that each call's result is written to the next consecutive texel of
- * a rgba32float texture. It then checks the result of each call matches
- * the expected result.
+ * Checks the result of each call matches the expected result.
  */
-export async function putDataInTextureThenDrawAndCheckResults(
+export async function checkCallResults(
 device,
 texture,
 sampler,
-calls)
+calls,
+results)
 {
-  const results = await doTextureCalls(device, texture, sampler, calls);
   const errs = [];
   const rep = kTexelRepresentationInfo[texture.texels[0].format];
+  const maxFractionalDiff = getMaxFractionalDiffForTextureFormat(texture.descriptor.format);
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const got = results[callIdx];
-    const expect = softwareTextureReadMipLevel(call, texture, sampler);
+    const expect = softwareTextureReadMipLevel(call, texture, sampler, 0);
 
     const gULP = rep.bitsToULPFromZero(rep.numberToBits(got));
     const eULP = rep.bitsToULPFromZero(rep.numberToBits(expect));
@@ -362,7 +372,7 @@ calls)
       const absDiff = Math.abs(g - e);
       const ulpDiff = Math.abs(gULP[component] - eULP[component]);
       const relDiff = absDiff / Math.max(Math.abs(g), Math.abs(e));
-      if (ulpDiff > 3 && relDiff > 0.03) {
+      if (ulpDiff > 3 && relDiff > maxFractionalDiff) {
         const desc = describeTextureCall(call);
         errs.push(`component was not as expected:
       call: ${desc}
@@ -381,25 +391,20 @@ calls)
             softwareTextureReadMipLevel(
               call,
               { texels: [texels], descriptor: texture.descriptor },
-              sampler
+              sampler,
+              0
             )
           );
         }))];
 
         const gotSamplePoints = [
         'got:',
-        ...(await identifySamplePoints(
-          texture.descriptor,
-          async (texels) =>
-          (
-          await doTextureCalls(
-            device,
-            { texels: [texels], descriptor: texture.descriptor },
-            sampler,
-            [call]
-          ))[
-          0]
-        ))];
+        ...(await identifySamplePoints(texture.descriptor, async (texels) => {
+          const gpuTexture = createTextureFromTexelViews(device, [texels], texture.descriptor);
+          const result = (await doTextureCalls(device, gpuTexture, sampler, [call]))[0];
+          gpuTexture.destroy();
+          return result;
+        }))];
 
         errs.push(layoutTwoColumns(expectedSamplePoints, gotSamplePoints).join('\n'));
         errs.push('', '');
@@ -488,16 +493,12 @@ options)
 }
 
 /**
- * Puts data in a texture. Renders a quad to a rgba32float. Then "software renders"
- * to a TexelView the expected result and compares the rendered texture to the
- * expected TexelView.
+ * Render textured quad to an rgba32float texture.
  */
-export function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
-
-
+export function drawTexture(
 t,
 texture,
-sampler,
+samplerDesc,
 options)
 {
   const device = t.device;
@@ -511,12 +512,10 @@ options)
   });
   t.trackForCleanup(renderTarget);
 
-  const textureSize = reifyExtent3D(texture.descriptor.size);
-
   // Compute the amount we need to multiply the unitQuad by get the
   // derivatives we want.
-  const uMult = ddx * renderTarget.width / textureSize.width;
-  const vMult = ddy * renderTarget.height / textureSize.height;
+  const uMult = ddx * renderTarget.width / texture.width;
+  const vMult = ddy * renderTarget.height / texture.height;
 
   const offsetWGSL = offset ? `, vec2i(${offset[0]},${offset[1]})` : '';
 
@@ -558,15 +557,13 @@ struct InOut {
     primitive: { topology: 'triangle-strip' }
   });
 
-  const gpuTexture = createTextureFromTexelViews(device, texture.texels, texture.descriptor);
-  t.trackForCleanup(gpuTexture);
-  const gpuSampler = device.createSampler(sampler);
+  const sampler = device.createSampler(samplerDesc);
 
   const bindGroup = device.createBindGroup({
     layout: pipeline.getBindGroupLayout(0),
     entries: [
-    { binding: 0, resource: gpuTexture.createView() },
-    { binding: 1, resource: gpuSampler }]
+    { binding: 0, resource: texture.createView() },
+    { binding: 1, resource: sampler }]
 
   });
 
@@ -582,13 +579,10 @@ struct InOut {
   renderPass.end();
   device.queue.submit([encoder.finish()]);
 
-  const expTexelView = softwareRasterize(
-    texture,
-    sampler,
-    [renderTarget.width, renderTarget.height],
-    options
-  );
+  return renderTarget;
+}
 
+function getMaxFractionalDiffForTextureFormat(format) {
   // Note: I'm not sure what we should do here. My assumption is, given texels
   // have random values, the difference between 2 texels can be very large. In
   // the current version, for a float texture they can be +/- 1000 difference.
@@ -628,33 +622,244 @@ struct InOut {
   // MAINTENANCE_TODO: Double check the software rendering math and lower these
   // tolerances if possible.
 
-  let maxFractionalDiff = 0;
-  if (texture.descriptor.format.includes('8unorm')) {
-    maxFractionalDiff = 7 / 255;
-  } else if (texture.descriptor.format.includes('8snorm')) {
-    maxFractionalDiff = 7.9 / 128;
-  } else if (texture.descriptor.format.includes('2unorm')) {
-    maxFractionalDiff = 9 / 512;
-  } else if (texture.descriptor.format.endsWith('ufloat')) {
-    maxFractionalDiff = 156.249;
-  } else if (texture.descriptor.format.endsWith('float')) {
-    maxFractionalDiff = 44;
+  if (format.includes('8unorm')) {
+    return 7 / 255;
+  } else if (format.includes('2unorm')) {
+    return 9 / 512;
+  } else if (format.includes('unorm')) {
+    return 7 / 255;
+  } else if (format.includes('8snorm')) {
+    return 7.9 / 128;
+  } else if (format.includes('snorm')) {
+    return 7.9 / 128;
+  } else if (format.endsWith('ufloat')) {
+    return 156.249;
+  } else if (format.endsWith('float')) {
+    return 44;
   } else {
     unreachable();
   }
+}
 
+export function checkTextureMatchesExpectedTexelView(
+t,
+format,
+actualTexture,
+expectedTexelView)
+{
+  const maxFractionalDiff = getMaxFractionalDiffForTextureFormat(format);
   t.expectTexelViewComparisonIsOkInTexture(
-    { texture: renderTarget },
-    expTexelView,
-    [renderTarget.width, renderTarget.height],
+    { texture: actualTexture },
+    expectedTexelView,
+    [actualTexture.width, actualTexture.height],
     { maxFractionalDiff }
   );
+}
+
+/**
+ * Puts data in a texture. Renders a quad to a rgba32float. Then "software renders"
+ * to a TexelView the expected result and compares the rendered texture to the
+ * expected TexelView.
+ */
+export async function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
+
+
+t,
+descriptor,
+samplerDesc,
+options)
+{
+  const { texture, texels } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+
+  const actualTexture = drawTexture(t, texture, samplerDesc, options);
+  const expectedTexelView = softwareRasterize(
+    { descriptor, texels },
+    samplerDesc,
+    [actualTexture.width, actualTexture.height],
+    options
+  );
+
+  checkTextureMatchesExpectedTexelView(t, texture.format, actualTexture, expectedTexelView);
+}
+
+/**
+ * Fills a texture with random data. Assumes all values are valid.
+ * so this function is not useful for floating point formats, where it would
+ * insert NaNs. This function mostly useful for compressed formats.
+ */
+export function fillTextureWithRandomBytes(device, texture) {
+  const info = kTextureFormatInfo[texture.format];
+  const hashBase = texture.format.
+  toString().
+  split('').
+  reduce((sum, c) => sum + c.charCodeAt(0), 0);
+  for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
+    const size = physicalMipSizeFromTexture(texture, mipLevel);
+    const blocksAcross = Math.ceil(size[0] / info.blockWidth);
+    const blocksDown = Math.ceil(size[1] / info.blockHeight);
+    const bytesPerRow = blocksAcross * info.color.bytes;
+    const bytesNeeded = bytesPerRow * blocksDown * size[2];
+    const data = new Uint8Array(bytesNeeded);
+    for (let i = 0; i < bytesNeeded; ++i) {
+      data[i] = hashU32(hashBase, mipLevel, i);
+    }
+    device.queue.writeTexture(
+      { texture, mipLevel },
+      data,
+      { bytesPerRow, rowsPerImage: blocksDown },
+      size
+    );
+  }
+}
+
+const s_readTextureToRGBA32DeviceToPipeline = new WeakMap();
+
+export async function readTextureToTexelViews(
+t,
+texture,
+format)
+{
+  const device = t.device;
+  let pipeline = s_readTextureToRGBA32DeviceToPipeline.get(device);
+  if (!pipeline) {
+    const module = device.createShaderModule({
+      code: `
+        @group(0) @binding(0) var<uniform> mipLevel: u32;
+        @group(0) @binding(1) var tex: texture_2d<f32>;
+        @group(0) @binding(2) var<storage, read_write> data: array<vec4f>;
+        @compute @workgroup_size(1) fn cs(
+          @builtin(global_invocation_id) global_invocation_id : vec3<u32>) {
+          let size = textureDimensions(tex, mipLevel);
+          let ndx = global_invocation_id.y * size.x + global_invocation_id.x;
+          data[ndx] = textureLoad(tex, global_invocation_id.xy, mipLevel);
+        }
+      `
+    });
+    pipeline = device.createComputePipeline({ layout: 'auto', compute: { module } });
+    s_readTextureToRGBA32DeviceToPipeline.set(device, pipeline);
+  }
+
+  const encoder = device.createCommandEncoder();
+
+  const readBuffers = [];
+  const textureSize = [texture.width, texture.height, texture.depthOrArrayLayers];
+  for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
+    const size = virtualMipSize(texture.dimension, textureSize, mipLevel);
+
+    const uniformValues = new Uint32Array([mipLevel, 0, 0, 0]); // min size is 16 bytes
+    const uniformBuffer = device.createBuffer({
+      size: uniformValues.byteLength,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+    });
+    t.trackForCleanup(uniformBuffer);
+    device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+
+    const storageBuffer = device.createBuffer({
+      size: size[0] * size[1] * size[2] * 4 * 4, // rgba32float
+      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
+    });
+    t.trackForCleanup(storageBuffer);
+
+    const readBuffer = device.createBuffer({
+      size: storageBuffer.size,
+      usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST
+    });
+    t.trackForCleanup(readBuffer);
+    readBuffers.push({ size, readBuffer });
+
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+      { binding: 0, resource: { buffer: uniformBuffer } },
+      { binding: 1, resource: texture.createView() },
+      { binding: 2, resource: { buffer: storageBuffer } }]
+
+    });
+
+    const pass = encoder.beginComputePass();
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.dispatchWorkgroups(...size);
+    pass.end();
+    encoder.copyBufferToBuffer(storageBuffer, 0, readBuffer, 0, readBuffer.size);
+  }
+
+  device.queue.submit([encoder.finish()]);
+
+  const texelViews = [];
+
+  for (const { readBuffer, size } of readBuffers) {
+    await readBuffer.mapAsync(GPUMapMode.READ);
+
+    // need a copy of the data since unmapping will nullify the typedarray view.
+    const data = new Float32Array(readBuffer.getMappedRange()).slice();
+    readBuffer.unmap();
+
+    texelViews.push(
+      TexelView.fromTexelsAsColors(format, (coord) => {
+        const offset = (coord.z * size[0] * size[1] + coord.y * size[0] + coord.x) * 4;
+        return {
+          R: data[offset + 0],
+          G: data[offset + 1],
+          B: data[offset + 2],
+          A: data[offset + 3]
+        };
+      })
+    );
+  }
+
+  return texelViews;
+}
+
+/**
+ * Fills a texture with random data and returns that data as
+ * an array of TexelView.
+ *
+ * For compressed textures the texture is filled with random bytes
+ * and then read back from the GPU by sampling so the GPU decompressed
+ * the texture.
+ *
+ * For uncompressed textures the TexelViews are generated and then
+ * copied to the texture.
+ */
+export async function createTextureWithRandomDataAndGetTexels(
+t,
+descriptor)
+{
+  if (isCompressedTextureFormat(descriptor.format)) {
+    const texture = t.device.createTexture(descriptor);
+    t.trackForCleanup(texture);
+
+    fillTextureWithRandomBytes(t.device, texture);
+    const texels = await readTextureToTexelViews(
+      t,
+      texture,
+      getTexelViewFormatForTextureFormat(texture.format)
+    );
+    return { texture, texels };
+  } else {
+    const texels = createRandomTexelViewMipmap(descriptor);
+    const texture = createTextureFromTexelViews(t.device, texels, descriptor);
+    return { texture, texels };
+  }
 }
 
 /**
  * Generates a text art grid showing which texels were sampled
  * followed by a list of the samples and the weights used for each
  * component.
+ *
+ * It works by making an index for every pixel in the texture. Then,
+ * for each index it generates texture data using TexelView.fromTexelsAsColor
+ * with a single [1, 1, 1, 1] texel at the texel for the current index.
+ *
+ * In then calls 'run' which renders a single `call`. `run` uses either
+ * the software renderer or WebGPU. The result ends up being the weights
+ * used when sampling that pixel. 0 = that texel was not sampled. > 0 =
+ * it was sampled.
+ *
+ * This lets you see if the weights from the software renderer match the
+ * weights from WebGPU.
  *
  * Example:
  *
@@ -685,7 +890,25 @@ run)
 {
   const textureSize = reifyExtent3D(info.size);
   const numTexels = textureSize.width * textureSize.height;
-  const rep = kTexelRepresentationInfo[info.format];
+  // This isn't perfect. We already know there was an error. We're just
+  // generating info so it seems okay it's not perfect. This format will
+  // be used to generate weights by drawing with a texture of this format
+  // with a specific pixel set to [1, 1, 1, 1]. As such, if the result
+  // is > 0 then that pixel was sampled and the results are the weights.
+  //
+  // Ideally, this texture with a single pixel set to [1, 1, 1, 1] would
+  // be the same format we were originally testing, the one we already
+  // detected an error for. This way, whatever subtle issues there are
+  // from that format will affect the weight values we're computing. But,
+  // if that format is not encodable, for example if it's a compressed
+  // texture format, then we have no way to build a texture so we use
+  // rgba8unorm instead.
+  const format =
+  kEncodableTextureFormats.includes(info.format) ?
+  info.format :
+  'rgba8unorm';
+
+  const rep = kTexelRepresentationInfo[format];
 
   // Identify all the texels that are sampled, and their weights.
   const sampledTexelWeights = new Map();
@@ -707,7 +930,7 @@ run)
     // See if any of the texels in setA were sampled.
     const results = await run(
       TexelView.fromTexelsAsColors(
-        info.format,
+        format,
         (coords) => {
           const isCandidate = setA.has(coords.x + coords.y * textureSize.width);
           const texel = {};
@@ -746,7 +969,7 @@ run)
   {
     let line = '  ';
     for (let x = 0; x < textureSize.width; x++) {
-      line += `  ${x} `;
+      line += `  ${x.toString().padEnd(2)}`;
     }
     lines.push(line);
   }
@@ -759,7 +982,7 @@ run)
   }
   for (let y = 0; y < textureSize.height; y++) {
     {
-      let line = `${y} │`;
+      let line = `${y.toString().padEnd(2)}│`;
       for (let x = 0; x < textureSize.width; x++) {
         const texelIdx = x + y * textureSize.height;
         const weight = sampledTexelWeights.get(texelIdx);
@@ -1019,7 +1242,7 @@ export function describeTextureCall(call) {
  */
 export async function doTextureCalls(
 device,
-texture,
+gpuTexture,
 sampler,
 calls)
 {
@@ -1090,6 +1313,7 @@ ${body}
   return result;
 }
 `;
+
   const shaderModule = device.createShaderModule({ code });
 
   const pipeline = device.createRenderPipeline({
@@ -1102,7 +1326,6 @@ ${body}
     primitive: { topology: 'triangle-strip' }
   });
 
-  const gpuTexture = createTextureFromTexelView(device, texture.texels[0], texture.descriptor);
   const gpuSampler = device.createSampler(sampler);
 
   const bindGroup = device.createBindGroup({
@@ -1122,7 +1345,13 @@ ${body}
   const encoder = device.createCommandEncoder();
 
   const renderPass = encoder.beginRenderPass({
-    colorAttachments: [{ view: renderTarget.createView(), loadOp: 'clear', storeOp: 'store' }]
+    colorAttachments: [
+    {
+      view: renderTarget.createView(),
+      loadOp: 'clear',
+      storeOp: 'store'
+    }]
+
   });
 
   renderPass.setPipeline(pipeline);
@@ -1161,7 +1390,6 @@ ${body}
   }
 
   renderTarget.destroy();
-  gpuTexture.destroy();
   resultBuffer.destroy();
 
   return out;

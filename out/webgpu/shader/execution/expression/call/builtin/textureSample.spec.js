@@ -2,34 +2,33 @@
 * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
 **/export const description = `
 Samples a texture.
+
+note: uniformity validation is covered in src/webgpu/shader/validation/uniformity/uniformity.spec.ts
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
-import { kEncodableTextureFormats, kTextureFormatInfo } from '../../../../../format_info.js';
+import {
+  isCompressedTextureFormat,
+  kCompressedTextureFormats,
+  kEncodableTextureFormats,
+  kTextureFormatInfo } from
+'../../../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
-import { hashU32 } from '../../../../../util/math.js';
-import { kTexelRepresentationInfo } from '../../../../../util/texture/texel_data.js';
+import { align, hashU32 } from '../../../../../util/math.js';
 
 import {
 
 
-  putDataInTextureThenDrawAndCheckResults,
   putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer,
   generateSamplePoints,
   kSamplePointMethods,
-  createRandomTexelViewMipmap } from
+  doTextureCalls,
+  checkCallResults,
+  createTextureWithRandomDataAndGetTexels } from
 './texture_utils.js';
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
-export const g = makeTestGroup(TextureTestMixin(GPUTest));
+const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
 
-g.test('control_flow').
-specURL('https://www.w3.org/TR/WGSL/#texturesample').
-desc(
-  `
-Tests that 'textureSample' can only be called in uniform control flow.
-`
-).
-params((u) => u.combine('stage', ['fragment', 'vertex', 'compute'])).
-unimplemented();
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 g.test('sampled_1d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesample').
@@ -71,60 +70,69 @@ Parameters:
 ).
 params((u) =>
 u.
-combine('format', kEncodableTextureFormats).
+combine('format', kTestableColorFormats).
 filter((t) => {
   const type = kTextureFormatInfo[t.format].color?.type;
-  return type === 'float' || type === 'unfilterable-float';
+  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
+  // We can't easily put random bytes into compressed textures if they are float formats
+  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
+  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
+  return canPotentialFilter && isFillable;
 }).
 combine('sample_points', kSamplePointMethods).
+beginSubcases().
 combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
 combine('minFilter', ['nearest', 'linear']).
 combine('offset', [false, true])
 ).
 beforeAllSubcases((t) => {
-  const format = kTexelRepresentationInfo[t.params.format];
-  t.skipIfTextureFormatNotSupported(t.params.format);
-  const hasFloat32 = format.componentOrder.some((c) => {
-    const info = format.componentInfo[c];
-    return info.dataType === 'float' && info.bitLength === 32;
-  });
-  if (hasFloat32) {
+  const { format } = t.params;
+  t.skipIfTextureFormatNotSupported(format);
+  const info = kTextureFormatInfo[format];
+  if (info.color?.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
+  } else {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   }
 }).
 fn(async (t) => {
+  const device = t.device;
+  const { format, sample_points, addressModeU, addressModeV, minFilter, offset } = t.params;
+
+  // We want at least 4 blocks or something wide enough for 3 mip levels.
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const width = align(Math.max(8, blockWidth * 4), blockWidth);
+  const height = blockHeight * 4;
+
   const descriptor = {
-    format: t.params.format,
-    size: { width: 8, height: 8 },
+    format,
+    size: { width, height },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
   };
-  const texelViews = createRandomTexelViewMipmap(descriptor);
-  const calls = generateSamplePoints(50, t.params.minFilter === 'nearest', {
-    method: t.params.sample_points,
-    textureWidth: 8,
-    textureHeight: 8
+  const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+
+  const calls = generateSamplePoints(50, minFilter === 'nearest', {
+    method: sample_points,
+    textureWidth: texture.width,
+    textureHeight: texture.height
   }).map((c, i) => {
     const hash = hashU32(i) & 0xff;
     return {
       builtin: 'textureSample',
       coordType: 'f',
       coords: c,
-      offset: t.params.offset ? [(hash & 15) - 8, (hash >> 4) - 8] : undefined
+      offset: offset ? [(hash & 15) - 8, (hash >> 4) - 8] : undefined
     };
   });
   const sampler = {
-    addressModeU: t.params.addressModeU,
-    addressModeV: t.params.addressModeV,
-    minFilter: t.params.minFilter,
-    magFilter: t.params.minFilter
+    addressModeU,
+    addressModeV,
+    minFilter,
+    magFilter: minFilter
   };
-  const res = await putDataInTextureThenDrawAndCheckResults(
-    t.device,
-    { texels: texelViews, descriptor },
-    sampler,
-    calls
-  );
+  const results = await doTextureCalls(t.device, texture, sampler, calls);
+  const res = await checkCallResults(device, { texels, descriptor }, sampler, calls, results);
   t.expectOK(res);
 });
 
@@ -140,12 +148,17 @@ test mip level selection based on derivatives
 ).
 params((u) =>
 u.
-combine('format', kEncodableTextureFormats).
+combine('format', kTestableColorFormats).
 filter((t) => {
   const type = kTextureFormatInfo[t.format].color?.type;
-  return type === 'float' || type === 'unfilterable-float';
+  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
+  // We can't easily put random bytes into compressed textures if they are float formats
+  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
+  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
+  return canPotentialFilter && isFillable;
 }).
-combine('mipmapFilter', ['nearest', 'linear'])
+combine('mipmapFilter', ['nearest', 'linear']).
+beginSubcases()
 // note: this is the derivative we want at sample time. It is not the value
 // passed directly to the shader. This way if we change the texture size
 // or render target size we can compute the correct values to achieve the
@@ -164,25 +177,29 @@ combine('mipmapFilter', ['nearest', 'linear'])
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
-  const formatInfo = kTexelRepresentationInfo[format];
   t.skipIfTextureFormatNotSupported(format);
-  const hasFloat32 = formatInfo.componentOrder.some((c) => {
-    const info = formatInfo.componentInfo[c];
-    return info.dataType === 'float' && info.bitLength === 32;
-  });
-  if (hasFloat32) {
+  const info = kTextureFormatInfo[format];
+  if (info.color?.type === 'unfilterable-float') {
     t.selectDeviceOrSkipTestCase('float32-filterable');
+  } else {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
   }
 }).
-fn((t) => {
+fn(async (t) => {
   const { format, mipmapFilter, ddx, ddy, uvwStart, offset } = t.params;
+
+  // We want at least 4 blocks or something wide enough for 3 mip levels.
+  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
+  const width = align(Math.max(8, blockWidth * 4), blockWidth);
+  const height = blockHeight * 4;
+
   const descriptor = {
     format,
     mipLevelCount: 3,
-    size: { width: 8, height: 8 },
+    size: { width, height },
     usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
   };
-  const texelViews = createRandomTexelViewMipmap(descriptor);
+
   const sampler = {
     addressModeU: 'repeat',
     addressModeV: 'repeat',
@@ -190,9 +207,9 @@ fn((t) => {
     magFilter: 'linear',
     mipmapFilter
   };
-  putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
+  await putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
     t,
-    { texels: texelViews, descriptor },
+    descriptor,
     sampler,
     { ddx, ddy, uvwStart, offset }
   );
