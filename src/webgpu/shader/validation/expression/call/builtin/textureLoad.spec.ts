@@ -430,6 +430,7 @@ Validates that incompatible texture types don't work with ${builtin}
   .params(u =>
     u
       .combine('testTextureType', kTestTextureTypes)
+      .beginSubcases()
       .combine('textureType', keysOf(kValidTextureLoadParameterTypesForNonStorageTextures))
   )
   .fn(t => {
@@ -482,8 +483,8 @@ Validates that incompatible texture types don't work with ${builtin}
   .params(u =>
     u
       .combine('testTextureType', kTestTextureTypes)
-      .combine('textureType', keysOf(kValidTextureLoadParameterTypesForStorageTextures))
       .beginSubcases()
+      .combine('textureType', keysOf(kValidTextureLoadParameterTypesForStorageTextures))
       .combine('format', kAllTextureFormats)
   )
   .fn(t => {
@@ -524,4 +525,16 @@ Validates that incompatible texture types don't work with ${builtin}
     }
 
     t.expectCompileResult(expectSuccess, code);
+  });
+
+g.test('must_use')
+  .desc('Tests that the result must be used')
+  .params(u => u.combine('use', [true, false] as const))
+  .fn(t => {
+    const code = `
+    @group(0) @binding(0) var t : texture_2d<f32>;
+    fn foo() {
+      ${t.params.use ? '_ =' : ''} textureLoad(t, vec2(0,0), 0);
+    }`;
+    t.expectCompileResult(t.params.use, code);
   });
