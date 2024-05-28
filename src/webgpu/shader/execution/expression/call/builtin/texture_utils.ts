@@ -358,6 +358,7 @@ export async function checkCallResults<T extends Dimensionality>(
 ) {
   const errs: string[] = [];
   const rep = kTexelRepresentationInfo[texture.texels[0].format];
+  const maxFractionalDiff = getMaxFractionalDiffForTextureFormat(texture.descriptor.format);
   for (let callIdx = 0; callIdx < calls.length; callIdx++) {
     const call = calls[callIdx];
     const got = results[callIdx];
@@ -371,7 +372,7 @@ export async function checkCallResults<T extends Dimensionality>(
       const absDiff = Math.abs(g - e);
       const ulpDiff = Math.abs(gULP[component]! - eULP[component]!);
       const relDiff = absDiff / Math.max(Math.abs(g), Math.abs(e));
-      if (ulpDiff > 3 && relDiff > 0.03) {
+      if (ulpDiff > 3 && relDiff > maxFractionalDiff) {
         const desc = describeTextureCall(call);
         errs.push(`component was not as expected:
       call: ${desc}
@@ -581,12 +582,7 @@ struct InOut {
   return renderTarget;
 }
 
-export function checkTextureMatchesExpectedTexelView(
-  t: GPUTest & TextureTestMixinType,
-  format: GPUTextureFormat,
-  actualTexture: GPUTexture,
-  expectedTexelView: TexelView
-) {
+function getMaxFractionalDiffForTextureFormat(format: GPUTextureFormat) {
   // Note: I'm not sure what we should do here. My assumption is, given texels
   // have random values, the difference between 2 texels can be very large. In
   // the current version, for a float texture they can be +/- 1000 difference.
@@ -626,23 +622,32 @@ export function checkTextureMatchesExpectedTexelView(
   // MAINTENANCE_TODO: Double check the software rendering math and lower these
   // tolerances if possible.
 
-  let maxFractionalDiff = 0;
   if (format.includes('8unorm')) {
-    maxFractionalDiff = 7 / 255;
-  } else if (format.includes('8snorm')) {
-    maxFractionalDiff = 7.9 / 128;
+    return 7 / 255;
   } else if (format.includes('2unorm')) {
-    maxFractionalDiff = 9 / 512;
+    return 9 / 512;
+  } else if (format.includes('unorm')) {
+    return 7 / 255;
+  } else if (format.includes('8snorm')) {
+    return 7.9 / 128;
+  } else if (format.includes('snorm')) {
+    return 7.9 / 128;
   } else if (format.endsWith('ufloat')) {
-    maxFractionalDiff = 156.249;
+    return 156.249;
   } else if (format.endsWith('float')) {
-    maxFractionalDiff = 44;
-  } else if (isCompressedTextureFormat(format)) {
-    maxFractionalDiff = 7 / 255;
+    return 44;
   } else {
     unreachable();
   }
+}
 
+export function checkTextureMatchesExpectedTexelView(
+  t: GPUTest & TextureTestMixinType,
+  format: GPUTextureFormat,
+  actualTexture: GPUTexture,
+  expectedTexelView: TexelView
+) {
+  const maxFractionalDiff = getMaxFractionalDiffForTextureFormat(format);
   t.expectTexelViewComparisonIsOkInTexture(
     { texture: actualTexture },
     expectedTexelView,
