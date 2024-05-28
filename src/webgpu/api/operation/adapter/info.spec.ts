@@ -21,8 +21,8 @@ g.test('adapter_info')
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adapterInfo = (adapter as any)['info'];
+    const adapterInfo = adapter.info;
+    assert(adapterInfo instanceof GPUAdapterInfo);
 
     t.expect(
       normalizedIdentifierRegex.test(adapterInfo.vendor),
