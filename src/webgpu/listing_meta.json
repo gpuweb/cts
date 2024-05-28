@@ -72,6 +72,7 @@
   "webgpu:api,operation,compute,basic:large_dispatch:*": { "subcaseMS": 9.237 },
   "webgpu:api,operation,compute,basic:memcpy:*": { "subcaseMS": 16.901 },
   "webgpu:api,operation,compute_pipeline,overrides:basic:*": { "subcaseMS": 15.100 },
+  "webgpu:api,operation,compute_pipeline,overrides:computed:*": { "subcaseMS": 508.356 },
   "webgpu:api,operation,compute_pipeline,overrides:multi_entry_points:*": { "subcaseMS": 15.900 },
   "webgpu:api,operation,compute_pipeline,overrides:numeric_id:*": { "subcaseMS": 14.300 },
   "webgpu:api,operation,compute_pipeline,overrides:precision:*": { "subcaseMS": 16.151 },
