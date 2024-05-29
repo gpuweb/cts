@@ -35,14 +35,17 @@ NOTE: If your test runtime elides logs when tests pass, you won't see the prints
 in the logs. On non-WPT runtimes, it will also print to the console with console.log.
 WPT disallows console.log and doesn't support logs on passing tests, so this does nothing on WPT.`
   )
-  .fn(t => {
+  .fn(async t => {
+    // MAINTENANCE_TODO: Remove requestAdapterInfo when info is implemented.
+    const adapterInfo = t.adapter.info || await t.adapter.requestAdapterInfo();
+
     const info = JSON.stringify(
       {
         globalScope: Object.getPrototypeOf(globalThis).constructor.name,
         globalTestConfig,
         baseResourcePath: getResourcePath(''),
         defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
-        adapterInfo: t.adapter.info,
+        adapterInfo: adapterInfo,
         userAgent: navigator.userAgent,
       },
       // Flatten objects with prototype chains into plain objects, using `for..in`. (Otherwise,
