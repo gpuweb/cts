@@ -45,7 +45,7 @@ WPT disallows console.log and doesn't support logs on passing tests, so this doe
         globalTestConfig,
         baseResourcePath: getResourcePath(''),
         defaultRequestAdapterOptions: getDefaultRequestAdapterOptions(),
-        adapterInfo: adapterInfo,
+        adapterInfo,
         userAgent: navigator.userAgent,
       },
       // Flatten objects with prototype chains into plain objects, using `for..in`. (Otherwise,
