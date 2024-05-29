@@ -68,9 +68,10 @@ export function getGPU(recorder: TestCaseRecorder | null): GPU {
     ): Promise<GPUAdapter | null> {
       const promise = oldFn.call(this, { ...defaultRequestAdapterOptions, ...options });
       if (recorder) {
-        void promise.then(adapter => {
+        void promise.then(async adapter => {
           if (adapter) {
-            const info = adapter.info;
+            // MAINTENANCE_TODO: Remove requestAdapterInfo when info is implemented.
+            const info = adapter.info || await adapter.requestAdapterInfo();
             const infoString = `Adapter: ${info.vendor} / ${info.architecture} / ${info.device}`;
             recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo: info })));
           }
