@@ -372,7 +372,7 @@ export async function checkCallResults<T extends Dimensionality>(
       const absDiff = Math.abs(g - e);
       const ulpDiff = Math.abs(gULP[component]! - eULP[component]!);
       const relDiff = absDiff / Math.max(Math.abs(g), Math.abs(e));
-      if (ulpDiff > 3 && relDiff > maxFractionalDiff) {
+      if (ulpDiff > 3 && absDiff > maxFractionalDiff) {
         const desc = describeTextureCall(call);
         errs.push(`component was not as expected:
       call: ${desc}
@@ -682,26 +682,96 @@ export async function putDataInTextureThenDrawAndCheckResultsComparedToSoftwareR
   checkTextureMatchesExpectedTexelView(t, texture.format, actualTexture, expectedTexelView);
 }
 
-/**
- * Fills a texture with random data. Assumes all values are valid.
- * so this function is not useful for floating point formats, where it would
- * insert NaNs. This function mostly useful for compressed formats.
- */
-export function fillTextureWithRandomBytes(device: GPUDevice, texture: GPUTexture) {
-  const info = kTextureFormatInfo[texture.format];
-  const hashBase = texture.format
-    .toString()
+const sumOfCharCodesOfString = (s: unknown) =>
+  String(s)
     .split('')
     .reduce((sum, c) => sum + c.charCodeAt(0), 0);
+
+/**
+ * Makes a function that fills a block portion of a Uint8Array with random valid data
+ * for an astc block.
+ *
+ * The astc format is fairly complicated. For now we do the simplest thing.
+ * which is to set the block as a "void-extent" block (a solid color).
+ * This makes our test have far less precision.
+ *
+ * MAINTENANCE_TODO: generate other types of astc blocks. One option would
+ * be to randomly select from set of pre-made blocks.
+ *
+ * See Spec:
+ * https://registry.khronos.org/OpenGL/extensions/KHR/KHR_texture_compression_astc_hdr.txt
+ */
+function makeAstcBlockFiller(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  const bytesPerBlock = info.color!.bytes;
+  return (data: Uint8Array, offset: number, hashBase: number) => {
+    // set the block to be a void-extent block
+    data.set(
+      [
+        0b1111_1100, // 0
+        0b1111_1101, // 1
+        0b1111_1111, // 2
+        0b1111_1111, // 3
+        0b1111_1111, // 4
+        0b1111_1111, // 5
+        0b1111_1111, // 6
+        0b1111_1111, // 7
+      ],
+      offset
+    );
+    // fill the rest of the block with random data
+    const end = offset + bytesPerBlock;
+    for (let i = offset + 8; i < end; ++i) {
+      data[i] = hashU32(hashBase, i);
+    }
+  };
+}
+
+/**
+ * Makes a function that fills a block portion of a Uint8Array with random bytes.
+ */
+function makeRandomBytesBlockFiller(format: GPUTextureFormat) {
+  const info = kTextureFormatInfo[format];
+  const bytesPerBlock = info.color!.bytes;
+  return (data: Uint8Array, offset: number, hashBase: number) => {
+    const end = offset + bytesPerBlock;
+    for (let i = offset; i < end; ++i) {
+      data[i] = hashU32(hashBase, i);
+    }
+  };
+}
+
+function getBlockFiller(format: GPUTextureFormat) {
+  if (format.startsWith('astc')) {
+    return makeAstcBlockFiller(format);
+  } else {
+    return makeRandomBytesBlockFiller(format);
+  }
+}
+
+/**
+ * Fills a texture with random data.
+ */
+export function fillTextureWithRandomData(device: GPUDevice, texture: GPUTexture) {
+  const info = kTextureFormatInfo[texture.format];
+  const hashBase =
+    sumOfCharCodesOfString(texture.format) +
+    sumOfCharCodesOfString(texture.dimension) +
+    texture.width +
+    texture.height +
+    texture.depthOrArrayLayers +
+    texture.mipLevelCount;
+  const bytesPerBlock = info.color!.bytes;
+  const fillBlock = getBlockFiller(texture.format);
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
     const size = physicalMipSizeFromTexture(texture, mipLevel);
     const blocksAcross = Math.ceil(size[0] / info.blockWidth);
     const blocksDown = Math.ceil(size[1] / info.blockHeight);
-    const bytesPerRow = blocksAcross * info.color!.bytes;
+    const bytesPerRow = blocksAcross * bytesPerBlock;
     const bytesNeeded = bytesPerRow * blocksDown * size[2];
     const data = new Uint8Array(bytesNeeded);
-    for (let i = 0; i < bytesNeeded; ++i) {
-      data[i] = hashU32(hashBase, mipLevel, i);
+    for (let offset = 0; offset < bytesNeeded; offset += bytesPerBlock) {
+      fillBlock(data, offset, hashBase);
     }
     device.queue.writeTexture(
       { texture, mipLevel },
@@ -830,7 +900,7 @@ export async function createTextureWithRandomDataAndGetTexels(
     const texture = t.device.createTexture(descriptor);
     t.trackForCleanup(texture);
 
-    fillTextureWithRandomBytes(t.device, texture);
+    fillTextureWithRandomData(t.device, texture);
     const texels = await readTextureToTexelViews(
       t,
       texture,
