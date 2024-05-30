@@ -1,5 +1,6 @@
 export const description = `createTexture validation tests.`;
 
+import { SkipTestCase } from '../../../common/framework/fixture.js';
 import { makeTestGroup } from '../../../common/framework/test_group.js';
 import { assert, makeValueTestVariant } from '../../../common/util/util.js';
 import { kTextureDimensions, kTextureUsages } from '../../capability_info.js';
@@ -100,8 +101,7 @@ g.test('zero_size_and_usage')
 
 g.test('dimension_type_and_format_compatibility')
   .desc(
-    `Test every dimension type on every format. Note that compressed formats are not valid for 1D dimension type and
-    depth/stencil formats are not valid for 1D/3D dimension types.`
+    `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid for 1D/3D dimension types.`
   )
   .params(u =>
     u //
@@ -220,6 +220,7 @@ g.test('mipLevelCount,bound_check')
         ({ format, size, dimension }) =>
           format === 'bc1-rgba-unorm' &&
           (dimension === '1d' ||
+            dimension === '3d' ||
             size[0] % kTextureFormatInfo[format].blockWidth !== 0 ||
             size[1] % kTextureFormatInfo[format].blockHeight !== 0)
       )
@@ -458,8 +459,8 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
   )
   .params(u =>
     u
-      // Compressed formats are invalid for 1D.
-      .combine('dimension', [undefined, '2d', '3d'] as const)
+      // Compressed formats are invalid for 1D and 3D.
+      .combine('dimension', [undefined, '2d'] as const)
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
       .expandWithParams(p => {
@@ -988,9 +989,11 @@ g.test('texture_size,3d_texture,compressed_format')
       })
   )
   .beforeAllSubcases(t => {
+    // Compressed formats are not supported in 3D in WebGPU v1 because they are complicated but not very useful for now.
+    throw new SkipTestCase('Compressed 3D texture is not supported');
+
     const { format } = t.params;
     const info = kTextureFormatInfo[format];
-    t.skipIfTextureFormatNotSupported(format);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
