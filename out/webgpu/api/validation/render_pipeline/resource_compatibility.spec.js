@@ -51,7 +51,8 @@ fn((t) => {
   t.skipIf(
     t.params.stage === 'vertex' && (
     wgslResource.buffer !== undefined && wgslResource.buffer.type === 'storage' ||
-    wgslResource.storageTexture !== undefined),
+    wgslResource.storageTexture !== undefined &&
+    wgslResource.storageTexture.access !== 'read-only'),
     'Storage buffers and textures cannot be used in vertex shaders'
   );
   const emptyVS = `
