@@ -36,7 +36,8 @@ in the logs. On non-WPT runtimes, it will also print to the console with console
 WPT disallows console.log and doesn't support logs on passing tests, so this does nothing on WPT.`
 ).
 fn(async (t) => {
-  const adapterInfo = await t.adapter.requestAdapterInfo();
+  // MAINTENANCE_TODO: Remove requestAdapterInfo when info is implemented.
+  const adapterInfo = t.adapter.info || (await t.adapter.requestAdapterInfo());
 
   const info = JSON.stringify(
     {

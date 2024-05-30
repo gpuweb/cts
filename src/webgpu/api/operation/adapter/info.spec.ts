@@ -1,8 +1,5 @@
 export const description = `
-Tests various ways of calling GPUAdapter.requestAdapterInfo.
-
-TODO:
-- Find a way to perform tests with and without user activation
+Tests GPUAdapter.info members formatting.
 `;
 
 import { Fixture } from '../../../../common/framework/fixture.js';
@@ -17,16 +14,15 @@ const normalizedIdentifierRegex = /^$|^[a-z0-9]+(-[a-z0-9]+)*$/;
 g.test('adapter_info')
   .desc(
     `
-  Test that calling requestAdapterInfo with no arguments:
-    - Returns a GPUAdapterInfo structure
-    - Every member in the structure except description is properly formatted`
+  Test that every member in the GPUAdapter.info except description is properly formatted`
   )
   .fn(async t => {
     const gpu = getGPU(t.rec);
     const adapter = await gpu.requestAdapter();
     assert(adapter !== null);
 
-    const adapterInfo = await adapter.requestAdapterInfo();
+    const adapterInfo = adapter.info;
+    assert(adapterInfo instanceof GPUAdapterInfo);
 
     t.expect(
       normalizedIdentifierRegex.test(adapterInfo.vendor),
@@ -43,12 +39,3 @@ g.test('adapter_info')
       `adapterInfo.device should be a normalized identifier. But it's '${adapterInfo.device}'`
     );
   });
-
-g.test('adapter_info_with_hints')
-  .desc(
-    `
-  Test that calling requestAdapterInfo with hints:
-    - Rejects without user activation
-    - Succeed with user activation`
-  )
-  .unimplemented();
