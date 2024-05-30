@@ -15,7 +15,7 @@ class F extends ValidationTest {
   createBindGroupLayoutForTest(
   textureUsage,
   sampleType,
-  visibility = GPUShaderStage['FRAGMENT'])
+  visibility = GPUShaderStage.FRAGMENT)
   {
     const bindGroupLayoutEntry = {
       binding: 0,
@@ -60,7 +60,7 @@ class F extends ValidationTest {
   textureView,
   textureUsage,
   sampleType,
-  visibility = GPUShaderStage['FRAGMENT'])
+  visibility = GPUShaderStage.FRAGMENT)
   {
     return this.device.createBindGroup({
       layout: this.createBindGroupLayoutForTest(textureUsage, sampleType, visibility),

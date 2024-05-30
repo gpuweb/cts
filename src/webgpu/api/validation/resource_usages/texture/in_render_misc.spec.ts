@@ -15,7 +15,7 @@ class F extends ValidationTest {
   createBindGroupLayoutForTest(
     textureUsage: TextureBindingType,
     sampleType: 'unfilterable-float' | 'depth' | 'uint',
-    visibility: GPUShaderStage['FRAGMENT'] | GPUShaderStage['COMPUTE'] = GPUShaderStage['FRAGMENT']
+    visibility: number = GPUShaderStage.FRAGMENT
   ): GPUBindGroupLayout {
     const bindGroupLayoutEntry: GPUBindGroupLayoutEntry = {
       binding: 0,
@@ -60,7 +60,7 @@ class F extends ValidationTest {
     textureView: GPUTextureView,
     textureUsage: TextureBindingType,
     sampleType: 'unfilterable-float' | 'depth' | 'uint',
-    visibility: GPUShaderStage['FRAGMENT'] | GPUShaderStage['COMPUTE'] = GPUShaderStage['FRAGMENT']
+    visibility: number = GPUShaderStage.FRAGMENT
   ) {
     return this.device.createBindGroup({
       layout: this.createBindGroupLayoutForTest(textureUsage, sampleType, visibility),
