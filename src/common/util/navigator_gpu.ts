@@ -71,7 +71,7 @@ export function getGPU(recorder: TestCaseRecorder | null): GPU {
         void promise.then(async adapter => {
           if (adapter) {
             // MAINTENANCE_TODO: Remove requestAdapterInfo when info is implemented.
-            const info = adapter.info || await adapter.requestAdapterInfo();
+            const info = adapter.info || (await adapter.requestAdapterInfo());
             const infoString = `Adapter: ${info.vendor} / ${info.architecture} / ${info.device}`;
             recorder.debug(new ErrorWithExtra(infoString, () => ({ adapterInfo: info })));
           }
