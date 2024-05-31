@@ -12,7 +12,7 @@ export const g = makeTestGroup(CompatibilityTest);
 g.test('sample_mask')
   .desc(`Tests that you can not create a shader module that uses sample_mask in compat mode.`)
   .fn(t => {
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () =>
         t.device.createShaderModule({
@@ -40,7 +40,7 @@ g.test('sample_mask')
 g.test('sample_index')
   .desc(`Tests that you can not create a shader module that uses sample_index in compat mode.`)
   .fn(t => {
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () =>
         t.device.createShaderModule({
@@ -77,7 +77,7 @@ g.test('interpolate')
   .fn(t => {
     const { interpolate, success } = t.params;
 
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () =>
         t.device.createShaderModule({
@@ -109,7 +109,7 @@ g.test('unsupportedStorageTextureFormats')
   .fn(t => {
     const { format } = t.params;
 
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () =>
         t.device.createShaderModule({
@@ -140,7 +140,7 @@ g.test('textureLoad_with_depth_textures')
     const { type } = t.params;
     const params = kDepthTextureTypeToParams[type];
 
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () =>
         t.device.createShaderModule({

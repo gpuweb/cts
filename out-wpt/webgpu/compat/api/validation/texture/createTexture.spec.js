@@ -15,7 +15,7 @@ export const g = makeTestGroup(CompatibilityTest);
 g.test('unsupportedTextureFormats').
 desc(`Tests that you can not create a bgra8unorm-srgb texture in compat mode.`).
 fn((t) => {
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
     t.device.createTexture({
@@ -32,7 +32,7 @@ desc(
   `Tests that you can not create a bgra8unorm texture with a bgra8unorm-srgb viewFormat in compat mode.`
 ).
 fn((t) => {
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
     t.device.createTexture({
@@ -56,9 +56,9 @@ combine('textureBindingViewDimension', kTextureViewDimensions)
 ).
 fn((t) => {
   const { dimension, textureBindingViewDimension } = t.params;
-  const depthOrArrayLayers = textureBindingViewDimension === '1d' || textureBindingViewDimension === '2d' ? 1 : 6;
+  const depthOrArrayLayers = dimension === '1d' || textureBindingViewDimension === '1d' || textureBindingViewDimension === '2d' ? 1 : 6;
   const shouldError = getTextureDimensionFromView(textureBindingViewDimension) !== dimension;
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () => {
       const texture = t.device.createTexture({
@@ -91,7 +91,7 @@ fn((t) => {
   const shouldError =
   textureBindingViewDimension === '2d' && depthOrArrayLayers !== 1 ||
   textureBindingViewDimension === 'cube' && depthOrArrayLayers !== 6;
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () => {
       const texture = t.device.createTexture({
@@ -138,7 +138,7 @@ fn((t) => {
   { format: info.baseFormat, viewFormats: [format, info.baseFormat] }];
 
   for (const { format, viewFormats } of formatPairs) {
-    t.expectGPUError(
+    t.expectGPUErrorInCompatibilityMode(
       'validation',
       () => {
         const texture = t.device.createTexture({
@@ -159,7 +159,7 @@ desc(`Tests that you can not create unsupported storage texture formats in compa
 params((u) => u.combine('format', kCompatModeUnsupportedStorageTextureFormats)).
 fn((t) => {
   const { format } = t.params;
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () =>
     t.device.createTexture({

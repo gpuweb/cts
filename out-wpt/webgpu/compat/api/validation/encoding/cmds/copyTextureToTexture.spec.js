@@ -44,7 +44,7 @@ fn((t) => {
   blockHeight,
   1]
   );
-  t.expectGPUError('validation', () => {
+  t.expectGPUErrorInCompatibilityMode('validation', () => {
     encoder.finish();
   });
 });
@@ -88,7 +88,7 @@ fn((t) => {
   blockHeight,
   1]
   );
-  t.expectGPUError('validation', () => {
+  t.expectGPUErrorInCompatibilityMode('validation', () => {
     encoder.finish();
   });
 });

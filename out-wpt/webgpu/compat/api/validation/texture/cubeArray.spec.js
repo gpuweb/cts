@@ -18,7 +18,7 @@ fn((t) => {
   });
 
   const isValid = dimension === 'cube';
-  t.expectGPUError(
+  t.expectGPUErrorInCompatibilityMode(
     'validation',
     () => texture.createView({ dimension, format: 'rgba8unorm' }),
     !isValid

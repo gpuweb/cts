@@ -169,7 +169,7 @@ fn((t) => {
   const resource = texture.createView({ dimension: viewDimension });
   const shouldError = effectiveTextureBindingViewDimension !== effectiveViewDimension;
 
-  t.expectValidationError(() => {
+  t.expectValidationErrorInCompatibilityMode(() => {
     t.device.createBindGroup({
       layout,
       entries: [{ binding: 0, resource }]

@@ -48,7 +48,7 @@ fn((t) => {
     }
   };
 
-  const success = !depthBiasClamp;
+  const success = !t.isCompatibility || !depthBiasClamp;
   t.doCreateRenderPipelineTest(async, success, pipelineDescriptor);
 });
 //# sourceMappingURL=depth_stencil_state.spec.js.map

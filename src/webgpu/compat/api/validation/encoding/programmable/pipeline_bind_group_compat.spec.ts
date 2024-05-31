@@ -337,7 +337,7 @@ Tests that you can not use 2 different views of the same texture in a render pas
     encoder.setPipeline(pipeline);
     const { shouldSucceed } = fn(t.device, pipeline, encoder, texture);
     kDrawUseCases[useCase](t, encoder as GPURenderCommandsMixin);
-    validateFinish(shouldSucceed);
+    validateFinish(!t.isCompatibility || shouldSucceed);
   });
 
 g.test('twoDifferentTextureViews,render_pass,unused')
@@ -399,7 +399,7 @@ Tests that you can not use 2 different views of the same texture in a compute pa
     encoder.setPipeline(pipeline);
     const { shouldSucceed } = fn(t.device, pipeline, encoder, texture);
     kDispatchUseCases[useCase](t, encoder);
-    validateFinish(shouldSucceed);
+    validateFinish(!t.isCompatibility || shouldSucceed);
   });
 
 g.test('twoDifferentTextureViews,compute_pass,unused')
