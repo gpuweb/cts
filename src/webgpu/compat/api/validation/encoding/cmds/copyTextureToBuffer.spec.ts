@@ -39,7 +39,7 @@ g.test('compressed')
 
     const encoder = t.device.createCommandEncoder();
     encoder.copyTextureToBuffer({ texture }, { buffer, bytesPerRow }, textureSize);
-    t.expectGPUError('validation', () => {
+    t.expectGPUErrorInCompatibilityMode('validation', () => {
       encoder.finish();
     });
   });

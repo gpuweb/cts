@@ -44,7 +44,7 @@ g.test('compressed')
       blockHeight,
       1,
     ]);
-    t.expectGPUError('validation', () => {
+    t.expectGPUErrorInCompatibilityMode('validation', () => {
       encoder.finish();
     });
   });
@@ -88,7 +88,7 @@ g.test('multisample')
       blockHeight,
       1,
     ]);
-    t.expectGPUError('validation', () => {
+    t.expectGPUErrorInCompatibilityMode('validation', () => {
       encoder.finish();
     });
   });
