@@ -101,7 +101,7 @@ g.test('zero_size_and_usage')
 
 g.test('dimension_type_and_format_compatibility')
   .desc(
-    `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid for 1D/3D dimension types.`
+    `Test every dimension type on every format. Note that compressed formats are not valid for 1D dimension type with only partial support for 3D dimension type and depth/stencil formats are not valid for 1D/3D dimension types.`
   )
   .params(u =>
     u //
@@ -220,7 +220,6 @@ g.test('mipLevelCount,bound_check')
         ({ format, size, dimension }) =>
           format === 'bc1-rgba-unorm' &&
           (dimension === '1d' ||
-            dimension === '3d' ||
             size[0] % kTextureFormatInfo[format].blockWidth !== 0 ||
             size[1] % kTextureFormatInfo[format].blockHeight !== 0)
       )
@@ -459,8 +458,8 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
   )
   .params(u =>
     u
-      // Compressed formats are invalid for 1D and 3D.
-      .combine('dimension', [undefined, '2d'] as const)
+      // Compressed formats are invalid for 1D.
+      .combine('dimension', [undefined, '2d', '3d'] as const)
       .combine('format', kCompressedTextureFormats)
       .beginSubcases()
       .expandWithParams(p => {
@@ -476,8 +475,10 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
       })
   )
   .beforeAllSubcases(t => {
-    const { format } = t.params;
+    const { dimension, format } = t.params;
     const info = kTextureFormatInfo[format];
+    // Skip if the dimension is 3D and format is not compatible
+    t.skipIf(dimension === '3d' && !info.texture3D, `${format} is not compatible with 3D texture`);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
