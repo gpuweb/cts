@@ -76,6 +76,12 @@ g.test('stage_inout')
       .combine('target_io', ['in', 'out'] as const)
       .beginSubcases()
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(
+      t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
+      'compatibility mode does not support sample_index or sample_mask'
+    );
+  })
   .fn(t => {
     const code = generateShader({
       attribute: `@builtin(${t.params.name})`,
@@ -108,6 +114,12 @@ g.test('type')
       .combine('target_type', kTestTypes)
       .combine('use_struct', [true, false] as const)
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(
+      t.isCompatibility && ['sample_index', 'sample_mask'].includes(t.params.name),
+      'compatibility mode does not support sample_index or sample_mask'
+    );
+  })
   .fn(t => {
     let code = '';
 
@@ -146,10 +158,10 @@ g.test('nesting')
       .beginSubcases()
   )
   .fn(t => {
-    // Generate a struct that contains a sample_mask builtin, nested inside another struct.
+    // Generate a struct that contains a frag_depth builtin, nested inside another struct.
     let code = `
     struct Inner {
-      @builtin(sample_mask) value : u32
+      @builtin(frag_depth) value : f32
     };
     struct Outer {
       inner : Inner
@@ -182,6 +194,9 @@ g.test('duplicates')
       .combine('second', ['p2', 's1b', 's2b', 'rb'] as const)
       .beginSubcases()
   )
+  .beforeAllSubcases(t => {
+    t.skipIf(t.isCompatibility, 'compatibility mode does not support sample_mask');
+  })
   .fn(t => {
     const p1 =
       t.params.first === 'p1' ? '@builtin(sample_mask)' : '@location(1) @interpolate(flat)';

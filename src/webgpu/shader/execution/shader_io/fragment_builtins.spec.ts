@@ -1351,6 +1351,7 @@ g.test('inputs,sample_mask')
       interpolation: { type, sampling },
     } = t.params;
     t.skipIfInterpolationTypeOrSamplingNotSupported({ type, sampling });
+    t.skipIf(t.isCompatibility, 'sample_mask is not supported in compatibility mode');
   })
   .fn(async t => {
     const {
