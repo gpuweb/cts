@@ -335,12 +335,12 @@ fn((t) => {
   }
 
   if (useExtraBuiltinInputs) {
-    inputs.push(
-      '@builtin(front_facing) front_facing_in: bool',
-      '@builtin(sample_mask) sample_mask_in: u32'
-    );
+    inputs.push('@builtin(front_facing) front_facing_in: bool');
     if (!t.isCompatibility) {
-      inputs.push('@builtin(sample_index) sample_index_in: u32');
+      inputs.push(
+        '@builtin(sample_mask) sample_mask_in: u32',
+        '@builtin(sample_index) sample_index_in: u32'
+      );
     }
   }
 
