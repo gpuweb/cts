@@ -101,7 +101,8 @@ fn((t) => {
 
 g.test('dimension_type_and_format_compatibility').
 desc(
-  `Test every dimension type on every format. Note that compressed formats and depth/stencil formats are not valid for 1D/3D dimension types.`
+  `Test every dimension type on every format. Depth/stencil formats only support 2d;
+    compressed formats support either 2d or 2d+3d.`
 ).
 params((u) =>
 u //
@@ -220,7 +221,6 @@ unless(
   ({ format, size, dimension }) =>
   format === 'bc1-rgba-unorm' && (
   dimension === '1d' ||
-  dimension === '3d' ||
   size[0] % kTextureFormatInfo[format].blockWidth !== 0 ||
   size[1] % kTextureFormatInfo[format].blockHeight !== 0)
 )
@@ -459,8 +459,8 @@ desc(
 ).
 params((u) =>
 u
-// Compressed formats are invalid for 1D and 3D.
-.combine('dimension', [undefined, '2d']).
+// Compressed formats are invalid for 1D.
+.combine('dimension', [undefined, '2d', '3d']).
 combine('format', kCompressedTextureFormats).
 beginSubcases().
 expandWithParams((p) => {
@@ -474,6 +474,10 @@ expandWithParams((p) => {
   { size: [blockWidth, blockHeight, 1], _success: true }];
 
 })
+// Filter if the dimension is 3D and format is not compatible
+.unless(
+  ({ dimension, format }) => dimension === '3d' && !kTextureFormatInfo[format].texture3D
+)
 ).
 beforeAllSubcases((t) => {
   const { format } = t.params;
