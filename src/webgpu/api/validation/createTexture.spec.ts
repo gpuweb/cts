@@ -474,12 +474,14 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
           { size: [blockWidth, blockHeight, 1], _success: true },
         ];
       })
+      // Filter if the dimension is 3D and format is not compatible
+      .filter(
+        ({ dimension, format }) => !(dimension === '3d' && !kTextureFormatInfo[format].texture3D)
+      )
   )
   .beforeAllSubcases(t => {
-    const { dimension, format } = t.params;
+    const { _dimension, format } = t.params;
     const info = kTextureFormatInfo[format];
-    // Skip if the dimension is 3D and format is not compatible
-    t.skipIf(dimension === '3d' && !info.texture3D, `${format} is not compatible with 3D texture`);
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
