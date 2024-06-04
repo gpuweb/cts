@@ -101,7 +101,8 @@ g.test('zero_size_and_usage')
 
 g.test('dimension_type_and_format_compatibility')
   .desc(
-    `Test every dimension type on every format. Note that compressed formats are not valid for 1D dimension type with only partial support for 3D dimension type and depth/stencil formats are not valid for 1D/3D dimension types.`
+    `Test every dimension type on every format. Depth/stencil formats only support 2d;
+    compressed formats support either 2d or 2d+3d.`
   )
   .params(u =>
     u //
