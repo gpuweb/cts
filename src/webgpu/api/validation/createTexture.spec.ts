@@ -475,12 +475,12 @@ g.test('texture_size,default_value_and_smallest_size,compressed_format')
         ];
       })
       // Filter if the dimension is 3D and format is not compatible
-      .filter(
-        ({ dimension, format }) => !(dimension === '3d' && !kTextureFormatInfo[format].texture3D)
+      .unless(
+        ({ dimension, format }) => dimension === '3d' && !kTextureFormatInfo[format].texture3D
       )
   )
   .beforeAllSubcases(t => {
-    const { _dimension, format } = t.params;
+    const { format } = t.params;
     const info = kTextureFormatInfo[format];
     t.selectDeviceOrSkipTestCase(info.feature);
   })
