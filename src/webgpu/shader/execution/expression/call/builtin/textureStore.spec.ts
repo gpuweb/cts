@@ -225,8 +225,7 @@ g.test('out_of_bounds')
       })
   )
   .fn(t => {
-    const format = 'r32uint';
-    const bytes_per_texel = 4;
+    const texel_format = 'r32uint';
     const num_texels = 4096;
     const view_texels = num_texels / (t.params.mip === 0 ? 1 : 1 << (t.params.mip * 2));
 
@@ -235,7 +234,7 @@ g.test('out_of_bounds')
     mip_size.width = (texture_size as GPUExtent3DDict).width / (1 << t.params.mip);
     mip_size.height = ((texture_size as GPUExtent3DDict).height ?? 1) / (1 << t.params.mip);
     const texture = t.device.createTexture({
-      format: format,
+      format: texel_format,
       dimension: t.params.dim,
       size: texture_size,
       mipLevelCount: t.params.mipCount,
@@ -279,7 +278,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
         {
           binding: 0,
           resource: texture.createView({
-            format: format,
+            format: texel_format,
             dimension: t.params.dim,
             baseArrayLayer: 0,
             arrayLayerCount: 1,
