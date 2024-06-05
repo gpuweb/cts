@@ -13,12 +13,12 @@ If an out-of-bounds access occurs, the built-in function should not be executed.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { iterRange } from '../../../../../../common/util/util.js';
-import { GPUTest } from '../../../../../gpu_test.js';
+import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
 import { TexelFormats } from '../../../../types.js';
 
 import { generateCoordBoundaries } from './utils.js';
 
-export const g = makeTestGroup(GPUTest);
+export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
 g.test('store_1d_coords')
   .specURL('https://www.w3.org/TR/WGSL/#texturestore')
@@ -121,7 +121,8 @@ Parameters:
   .unimplemented();
 
 // Texture width for dimensions >1D.
-const kWidth = 64;
+// Sized such that mip level 2 will be at least 256 bytes/row.
+const kWidth = 256;
 
 // Returns the texture geometry based on a given number of texels.
 function getTextureSize(numTexels: number, dim: string, array: number): GPUExtent3D {
@@ -163,7 +164,7 @@ fn indexToCoord(id : u32) -> ${type} {
     case '2d':
       return `
 fn indexToCoord(id : u32) -> vec2<${type}> {
-  return vec2<${type}>(${type}(id % (wgx * num_wgs_x)), ${type}(id / (wgx * num_wgs_x)));
+  return vec2<${type}>(${type}(id % width), ${type}(id / width));
 }`;
       break;
     case '3d':
@@ -173,12 +174,12 @@ fn indexToCoord(id : u32) -> vec2<${type}> {
 }
 
 // Mutates 'coords' to produce an out-of-bounds value.
-// 'global_index' is defined in as linear global id in the shader.
+// 1D workgroups are launched so 'gid.x' is the linear id.
 function outOfBoundsValue(dim: string, type: string): string {
   switch (dim) {
     case '1d': {
       if (type === 'i32') {
-        return `if global_index % 3 == 1 {
+        return `if gid.x % 3 == 1 {
           coords = -coords;
         } else {
           coords = coords + numTexels;
@@ -190,13 +191,13 @@ function outOfBoundsValue(dim: string, type: string): string {
     }
     case '2d': {
       if (type === 'i32') {
-        return `if global_index % 3 == 1 {
+        return `if gid.x % 3 == 1 {
           coords.x = -coords.x;
         } else {
           coords.y = coords.y + numTexels;
         }`;
       } else {
-        return `if global_index % 3 == 1 {
+        return `if gid.x % 3 == 1 {
           coords.x = coords.x + numTexels;
         } else {
           coords.y = coords.y + numTexels;
@@ -224,18 +225,17 @@ g.test('out_of_bounds')
       })
   )
   .fn(t => {
-    // 4096 is the default byte limit for compat texture size.
-    // Each texel is 4 bytes.
-    const bytes_per_texel = 4; // always r32uint
-    const num_texels = 4096 / bytes_per_texel;
-    const view_texels = num_texels / (1 << t.params.mip);
+    const format = 'r32uint';
+    const bytes_per_texel = 4;
+    const num_texels = 4096;
+    const view_texels = num_texels / (t.params.mip === 0 ? 1 : 1 << (t.params.mip * 2));
 
     const texture_size = getTextureSize(num_texels, t.params.dim, 1);
     const mip_size: GPUExtent3D = { width: 1, height: 1, depthOrArrayLayers: 1 };
     mip_size.width = (texture_size as GPUExtent3DDict).width / (1 << t.params.mip);
     mip_size.height = ((texture_size as GPUExtent3DDict).height ?? 1) / (1 << t.params.mip);
     const texture = t.device.createTexture({
-      format: 'r32uint',
+      format: format,
       dimension: t.params.dim,
       size: texture_size,
       mipLevelCount: t.params.mipCount,
@@ -243,34 +243,25 @@ g.test('out_of_bounds')
     });
     t.trackForCleanup(texture);
 
-    const buffer = t.device.createBuffer({
-      size: view_texels * bytes_per_texel,
-      usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC,
-    });
-    t.trackForCleanup(buffer);
-
     const oob_value = outOfBoundsValue(t.params.dim, t.params.coords);
-    const num_wgs_x = view_texels / 32;
+    const wgx_size = 16;
+    const num_wgs_x = view_texels / wgx_size;
 
     const wgsl = `
 @group(0) @binding(0) var tex : ${textureType(t.params.dim)};
 
 const numTexels = ${view_texels};
+const width = ${mip_size.width};
+
 ${indexToCoord(t.params.dim, t.params.coords)}
 
-const wgx = 32u;
-const wgy = 1u;
-const num_wgs_x = ${num_wgs_x}u;
-const num_wgs_y = 1u;
-
-@compute @workgroup_size(wgx)
+@compute @workgroup_size(${wgx_size})
 fn main(@builtin(global_invocation_id) gid : vec3u) {
-  let global_index = gid.x + gid.y * num_wgs_x * wgx;
-  var coords = indexToCoord(global_index);
-  if global_index % 2 == 1 {
+  var coords = indexToCoord(gid.x);
+  if gid.x % 2 == 1 {
     ${oob_value}
   }
-  textureStore(tex, coords, vec4u(global_index));
+  textureStore(tex, coords, vec4u(gid.x));
 }`;
 
     const pipeline = t.device.createComputePipeline({
@@ -288,7 +279,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
         {
           binding: 0,
           resource: texture.createView({
-            format: 'r32uint',
+            format: format,
             dimension: t.params.dim,
             baseArrayLayer: 0,
             arrayLayerCount: 1,
@@ -305,21 +296,10 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
     pass.setBindGroup(0, bg);
     pass.dispatchWorkgroups(num_wgs_x, 1, 1);
     pass.end();
-    encoder.copyTextureToBuffer(
-      {
-        texture,
-        mipLevel: t.params.mip as GPUIntegerCoordinate,
-      },
-      {
-        buffer,
-        offset: 0,
-        bytesPerRow:
-          t.params.dim === '1d' ? num_texels * bytes_per_texel : kWidth * bytes_per_texel,
-        rowsPerImage: (texture_size as GPUExtent3DDict).height,
-      },
-      mip_size
-    );
     t.queue.submit([encoder.finish()]);
+
+    const buffer = t.copyWholeTextureToNewBufferSimple(texture, t.params.mip);
+
     const expectedOutput = new Uint32Array([
       ...iterRange(view_texels, x => {
         if (x >= view_texels) {
