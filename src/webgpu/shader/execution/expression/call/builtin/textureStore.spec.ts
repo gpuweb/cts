@@ -503,7 +503,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
         if (base_texels * (t.params.baseLevel + t.params.arrayLevels) <= x) {
           return 0;
         }
-        if (x % 2 == 1) {
+        if (x % 2 === 1) {
           return 0;
         }
         return x - baseOffset;
