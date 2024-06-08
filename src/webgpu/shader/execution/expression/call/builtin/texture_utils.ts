@@ -1475,7 +1475,7 @@ function normalize(v: vec3): vec3 {
 }
 
 /**
- * Converts a cube map coordinate to a uv coordinate and layer.
+ * Converts a cube map coordinate to a uv coordinate (0 to 1) and layer (0.5/6.0 to 5.5/6.0).
  * Also returns the length of the original coordinate.
  */
 function convertCubeCoordToNormalized3DTextureCoord(v: vec3): vec3 {
