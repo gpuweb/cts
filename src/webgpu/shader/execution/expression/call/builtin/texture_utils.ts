@@ -1439,14 +1439,13 @@ export function generateSamplePoints3D(...args: GenerateSamplePointsImplArgs) {
   return generateSamplePointsImpl<vec3>((x: number, y: number, z: number) => [x, y, z], ...args);
 }
 
-/* eslint-disable prettier/prettier */
-type mat3 = [
+type mat3 = /* prettier-ignore */ [
   number, number, number,
   number, number, number,
   number, number, number,
 ];
 
-const kFaceUVMatrices: mat3[] = [
+const kFaceUVMatrices: mat3[] = /* prettier-ignore */[
   [ 0,  0,  -2,  0, -2,   0,  1,  1,   1],   // pos-x
   [ 0,  0,   2,  0, -2,   0, -1,  1,  -1],   // neg-x
   [ 2,  0,   0,  0,  0,   2, -1,  1,  -1],   // pos-y
@@ -1454,7 +1453,6 @@ const kFaceUVMatrices: mat3[] = [
   [ 2,  0,   0,  0, -2,   0, -1,  1,   1],   // pos-z
   [-2,  0,   0,  0, -2,   0,  1,  1,  -1],   // neg-z
 ];
-/* eslint-enable prettier/prettier */
 
 /** multiply a vec3 by mat3 */
 function transformMat3(v: vec3, m: mat3): vec3 {
