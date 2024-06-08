@@ -1513,8 +1513,8 @@ function convertNormalized3DTexCoordToCubeCoord(uvLayer: vec3) {
 }
 
 /**
- * We have a face texture in texels coord where UV choose a texel and W chooses the face
- * If UV are outside the size of the texture then, when normalized they'll and converted
+ * We have a face texture in texels coord where U/V choose a texel and W chooses the face.
+ * If U/V are outside the size of the texture then, when normalized and converted
  * to a cube map coordinate, they'll end up pointing to a different face.
  *
  * addressMode is effectively ignored for cube
