@@ -1439,13 +1439,15 @@ export function generateSamplePoints3D(...args: GenerateSamplePointsImplArgs) {
   return generateSamplePointsImpl<vec3>((x: number, y: number, z: number) => [x, y, z], ...args);
 }
 
-type mat3 = /* prettier-ignore */ [
+type mat3 =
+  /* prettier-ignore */ [
   number, number, number,
   number, number, number,
   number, number, number,
 ];
 
-const kFaceUVMatrices: mat3[] = /* prettier-ignore */[
+const kFaceUVMatrices: mat3[] =
+  /* prettier-ignore */ [
   [ 0,  0,  -2,  0, -2,   0,  1,  1,   1],   // pos-x
   [ 0,  0,   2,  0, -2,   0, -1,  1,  -1],   // neg-x
   [ 2,  0,   0,  0,  0,   2, -1,  1,  -1],   // pos-y
@@ -1638,12 +1640,7 @@ function applyFaceWrap(textureSize: number, faceCoord: vec3): vec3 {
 }
 
 function wrapFaceCoordToCubeFaceAtEdgeBoundaries(textureSize: number, faceCoord: vec3) {
-  // // convert faceCoord from texels to normalized coords
-  // const uvw = faceCoord.map((v, i) => v / textureSize[i]) as vec3;
-  // // convert to cube coord and back, this may switch faces, wrapping the coord to a different face.
-  // const cubeCoord = convertNormalized3DTexCoordToCubeCoord(uvw);
-  // const coord = convertCubeCoordToNormalized3DTextureCoord(cubeCoord);
-  // // convert back to texels.
+  // If we're off both edges we need to wrap twice, once for each edge.
   faceCoord = applyFaceWrap(textureSize, faceCoord);
   faceCoord = applyFaceWrap(textureSize, faceCoord);
   return faceCoord;
@@ -1729,7 +1726,7 @@ export function generateSamplePointsCube(
       break;
     }
     case 'cube-edges': {
-      /* eslint-disable prettier/prettier */
+      /* prettier-ignore */
       out.push(
         // between edges
         [-1.01, -1.02,  0],
@@ -1758,7 +1755,6 @@ export function generateSamplePointsCube(
         // [-1.01,  1.02,  1.03],
         // [ 1.01,  1.02,  1.03],
       );
-      /* eslint-enable prettier/prettier */
       break;
     }
   }
@@ -1805,7 +1801,7 @@ function wgslTypeFor(data: number | Dimensionality, type: 'f' | 'i' | 'u'): stri
   if (Array.isArray(data)) {
     switch (data.length) {
       case 1:
-        return `${type}f32`;
+        return `${type}32`;
       case 2:
         return `vec2${type}`;
       case 3:
@@ -1814,7 +1810,7 @@ function wgslTypeFor(data: number | Dimensionality, type: 'f' | 'i' | 'u'): stri
         unreachable();
     }
   }
-  return `${type}f32`;
+  return `${type}32`;
 }
 
 function wgslExpr(data: number | vec1 | vec2 | vec3 | vec4): string {

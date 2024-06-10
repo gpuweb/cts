@@ -279,6 +279,8 @@ Parameters:
     * The offset expression must be a creation-time expression (e.g. vec2<i32>(1, 2)).
     * Each offset component must be at least -8 and at most 7.
       Values outside of this range will result in a shader-creation error.
+
+* TODO: test 3d compressed textures formats. Just remove the filter below 'viewDimension'
 `
   )
   .params(u =>
@@ -293,7 +295,6 @@ Parameters:
         return canPotentialFilter && isFillable;
       })
       .combine('viewDimension', ['3d', 'cube'] as const)
-      // MAINTENANCE_TODO: remove this once 3d compressed textures are allowed.
       .filter(t => !isCompressedTextureFormat(t.format) || t.viewDimension === 'cube')
       .combine('sample_points', kCubeSamplePointMethods)
       .filter(t => t.sample_points !== 'cube-edges' || t.viewDimension !== '3d')
