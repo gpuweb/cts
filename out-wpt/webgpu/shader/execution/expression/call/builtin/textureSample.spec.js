@@ -5,6 +5,7 @@ Samples a texture.
 
 note: uniformity validation is covered in src/webgpu/shader/validation/uniformity/uniformity.spec.ts
 `;import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { unreachable } from '../../../../../../common/util/util.js';
 import {
   isCompressedTextureFormat,
   kCompressedTextureFormats,
@@ -12,21 +13,53 @@ import {
   kTextureFormatInfo } from
 '../../../../../format_info.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
-import { align, hashU32 } from '../../../../../util/math.js';
+import { hashU32 } from '../../../../../util/math.js';
 
 import {
 
 
+
   putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer,
-  generateSamplePoints,
+  generateSamplePoints2D,
+  generateSamplePoints3D,
   kSamplePointMethods,
   doTextureCalls,
   checkCallResults,
-  createTextureWithRandomDataAndGetTexels } from
+  createTextureWithRandomDataAndGetTexels,
+  generateSamplePointsCube,
+  kCubeSamplePointMethods,
+
+  chooseTextureSize } from
 './texture_utils.js';
 import { generateCoordBoundaries, generateOffsets } from './utils.js';
 
 const kTestableColorFormats = [...kEncodableTextureFormats, ...kCompressedTextureFormats];
+
+function getDepthOrArrayLayersForViewDimension(viewDimension) {
+  switch (viewDimension) {
+    case '2d':
+      return 1;
+    case '3d':
+      return 8;
+    case 'cube':
+      return 6;
+    default:
+      unreachable();
+  }
+}
+
+function getTextureTypeForTextureViewDimension(viewDimension) {
+  switch (viewDimension) {
+    case '2d':
+      return 'texture_2d<f32>';
+    case '3d':
+      return 'texture_3d<f32>';
+    case 'cube':
+      return 'texture_cube<f32>';
+    default:
+      unreachable();
+  }
+}
 
 export const g = makeTestGroup(TextureTestMixin(GPUTest));
 
@@ -101,9 +134,7 @@ fn(async (t) => {
   const { format, sample_points, addressModeU, addressModeV, minFilter, offset } = t.params;
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
-  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
-  const width = align(Math.max(8, blockWidth * 4), blockWidth);
-  const height = blockHeight * 4;
+  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
 
   const descriptor = {
     format,
@@ -112,17 +143,17 @@ fn(async (t) => {
   };
   const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
 
-  const calls = generateSamplePoints(50, minFilter === 'nearest', {
+  const calls = generateSamplePoints2D(50, minFilter === 'nearest', {
     method: sample_points,
     textureWidth: texture.width,
     textureHeight: texture.height
   }).map((c, i) => {
-    const hash = hashU32(i) & 0xff;
+    const hash = hashU32(i);
     return {
       builtin: 'textureSample',
       coordType: 'f',
       coords: c,
-      offset: offset ? [(hash & 15) - 8, (hash >> 4) - 8] : undefined
+      offset: offset ? [(hash & 0xf) - 8, (hash >> 4 & 0xf) - 8] : undefined
     };
   });
   const sampler = {
@@ -131,8 +162,23 @@ fn(async (t) => {
     minFilter,
     magFilter: minFilter
   };
-  const results = await doTextureCalls(t.device, texture, sampler, calls);
-  const res = await checkCallResults(device, { texels, descriptor }, sampler, calls, results);
+  const viewDescriptor = {};
+  const results = await doTextureCalls(
+    t.device,
+    texture,
+    viewDescriptor,
+    'texture_2d<f32>',
+    sampler,
+    calls
+  );
+  const res = await checkCallResults(
+    device,
+    { texels, descriptor, viewDescriptor },
+    'texture_2d<f32>',
+    sampler,
+    calls,
+    results
+  );
   t.expectOK(res);
 });
 
@@ -189,9 +235,7 @@ fn(async (t) => {
   const { format, mipmapFilter, ddx, ddy, uvwStart, offset } = t.params;
 
   // We want at least 4 blocks or something wide enough for 3 mip levels.
-  const { blockWidth, blockHeight } = kTextureFormatInfo[format];
-  const width = align(Math.max(8, blockWidth * 4), blockWidth);
-  const height = blockHeight * 4;
+  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 4, format });
 
   const descriptor = {
     format,
@@ -207,9 +251,11 @@ fn(async (t) => {
     magFilter: 'linear',
     mipmapFilter
   };
+  const viewDescriptor = {};
   await putDataInTextureThenDrawAndCheckResultsComparedToSoftwareRasterizer(
     t,
     descriptor,
+    viewDescriptor,
     sampler,
     { ddx, ddy, uvwStart, offset }
   );
@@ -233,17 +279,112 @@ Parameters:
     * The offset expression must be a creation-time expression (e.g. vec2<i32>(1, 2)).
     * Each offset component must be at least -8 and at most 7.
       Values outside of this range will result in a shader-creation error.
+
+* TODO: test 3d compressed textures formats. Just remove the filter below 'viewDimension'
 `
 ).
 params((u) =>
 u.
-combine('texture_type', ['texture_3d', 'texture_cube']).
+combine('format', kTestableColorFormats).
+filter((t) => {
+  const type = kTextureFormatInfo[t.format].color?.type;
+  const canPotentialFilter = type === 'float' || type === 'unfilterable-float';
+  // We can't easily put random bytes into compressed textures if they are float formats
+  // since we want the range to be +/- 1000 and not +/- infinity or NaN.
+  const isFillable = !isCompressedTextureFormat(t.format) || !t.format.endsWith('float');
+  return canPotentialFilter && isFillable;
+}).
+combine('viewDimension', ['3d', 'cube']).
+filter((t) => !isCompressedTextureFormat(t.format) || t.viewDimension === 'cube').
+combine('sample_points', kCubeSamplePointMethods).
+filter((t) => t.sample_points !== 'cube-edges' || t.viewDimension !== '3d').
 beginSubcases().
-combine('S', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
-combine('coords', generateCoordBoundaries(3)).
-combine('offset', generateOffsets(3))
+combine('addressModeU', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
+combine('addressModeV', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
+combine('addressModeW', ['clamp-to-edge', 'repeat', 'mirror-repeat']).
+combine('minFilter', ['nearest', 'linear']).
+combine('offset', [false, true]).
+filter((t) => t.viewDimension !== 'cube' || t.offset !== true)
 ).
-unimplemented();
+beforeAllSubcases((t) => {
+  const { format } = t.params;
+  t.skipIfTextureFormatNotSupported(format);
+  const info = kTextureFormatInfo[format];
+  if (info.color?.type === 'unfilterable-float') {
+    t.selectDeviceOrSkipTestCase('float32-filterable');
+  } else {
+    t.selectDeviceForTextureFormatOrSkipTestCase(t.params.format);
+  }
+}).
+fn(async (t) => {
+  const device = t.device;
+  const { format, viewDimension, sample_points, addressModeU, addressModeV, minFilter, offset } =
+  t.params;
+
+  const [width, height] = chooseTextureSize({ minSize: 8, minBlocks: 2, format, viewDimension });
+  const depthOrArrayLayers = getDepthOrArrayLayersForViewDimension(viewDimension);
+
+  const descriptor = {
+    format,
+    dimension: viewDimension === '3d' ? '3d' : '2d',
+    ...(t.isCompatibility && { textureBindingViewDimension: viewDimension }),
+    size: { width, height, depthOrArrayLayers },
+    usage: GPUTextureUsage.COPY_DST | GPUTextureUsage.TEXTURE_BINDING
+  };
+  const { texels, texture } = await createTextureWithRandomDataAndGetTexels(t, descriptor);
+
+  const calls = (
+  viewDimension === '3d' ?
+  generateSamplePoints3D(50, minFilter === 'nearest', {
+    method: sample_points,
+    textureWidth: texture.width,
+    textureHeight: texture.height,
+    textureDepthOrArrayLayers: texture.depthOrArrayLayers
+  }) :
+  generateSamplePointsCube(50, minFilter === 'nearest', {
+    method: sample_points,
+    textureWidth: texture.width,
+    textureDepthOrArrayLayers: texture.depthOrArrayLayers
+  })).
+  map((c, i) => {
+    const hash = hashU32(i);
+    return {
+      builtin: 'textureSample',
+      coordType: 'f',
+      coords: c,
+      offset: offset ?
+      [(hash & 0xf) - 8, (hash >> 4 & 0xf) - 8, (hash >> 8 & 0xf) - 8] :
+      undefined
+    };
+  });
+  const sampler = {
+    addressModeU,
+    addressModeV,
+    minFilter,
+    magFilter: minFilter
+  };
+  const viewDescriptor = {
+    dimension: viewDimension
+  };
+  const textureType = getTextureTypeForTextureViewDimension(viewDimension);
+  const results = await doTextureCalls(
+    t.device,
+    texture,
+    viewDescriptor,
+    textureType,
+    sampler,
+    calls
+  );
+  const res = await checkCallResults(
+    device,
+    { texels, descriptor, viewDescriptor },
+    textureType,
+    sampler,
+    calls,
+    results
+  );
+  t.expectOK(res);
+});
 
 g.test('depth_2d_coords').
 specURL('https://www.w3.org/TR/WGSL/#texturesample').

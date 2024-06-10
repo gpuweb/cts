@@ -32,6 +32,7 @@ desc)
   for (let mipLevel = 0; mipLevel < texelViews.length; mipLevel++) {
     const {
       bytesPerRow,
+      rowsPerImage,
       mipSize: [mipWidth, mipHeight, mipDepthOrArray]
     } = getTextureCopyLayout(format, desc.dimension ?? '2d', [width, height, depthOrArrayLayers], {
       mipLevel
@@ -56,7 +57,7 @@ desc)
 
     // Copy from the staging buffer into the texture.
     commandEncoder.copyBufferToTexture(
-      { buffer: stagingBuffer, bytesPerRow },
+      { buffer: stagingBuffer, bytesPerRow, rowsPerImage },
       { texture, mipLevel },
       [mipWidth, mipHeight, mipDepthOrArray]
     );

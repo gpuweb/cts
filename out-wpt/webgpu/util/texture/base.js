@@ -76,13 +76,19 @@ level)
           () =>
           `level (${level}) too large for base size (${baseSize.width}x${baseSize.height}x${baseSize.depthOrArrayLayers})`
         );
-        assert(
-          kTextureFormatInfo[format].blockWidth === 1 && kTextureFormatInfo[format].blockHeight === 1,
-          'not implemented for 3d block formats'
+        const virtualWidthAtLevel = Math.max(baseSize.width >> level, 1);
+        const virtualHeightAtLevel = Math.max(baseSize.height >> level, 1);
+        const physicalWidthAtLevel = align(
+          virtualWidthAtLevel,
+          kTextureFormatInfo[format].blockWidth
+        );
+        const physicalHeightAtLevel = align(
+          virtualHeightAtLevel,
+          kTextureFormatInfo[format].blockHeight
         );
         return {
-          width: Math.max(baseSize.width >> level, 1),
-          height: Math.max(baseSize.height >> level, 1),
+          width: physicalWidthAtLevel,
+          height: physicalHeightAtLevel,
           depthOrArrayLayers: Math.max(baseSize.depthOrArrayLayers >> level, 1)
         };
       }
