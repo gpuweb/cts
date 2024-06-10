@@ -97,7 +97,10 @@ const foo ${resTypeIsTypeable ? `: ${resType}` : ''} = lhs ${op.op} rhs;
     const integral = scalarLHS === Type.u32 || scalarLHS === Type.i32;
     let valid = !hasBool && resType !== null;
     if (valid && t.params.compound_assignment) {
-      valid = valid && isConvertible(resType!, concreteTypeOf(lhs)) && (!integral || t.params.rhs_value === 1);
+      valid =
+        valid &&
+        isConvertible(resType!, concreteTypeOf(lhs)) &&
+        (!integral || t.params.rhs_value === 1);
     } else {
       valid = valid && t.params.rhs_value === 1;
     }
