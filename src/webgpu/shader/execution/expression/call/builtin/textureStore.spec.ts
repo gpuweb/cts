@@ -14,6 +14,7 @@ If an out-of-bounds access occurs, the built-in function should not be executed.
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { iterRange } from '../../../../../../common/util/util.js';
 import { GPUTest, TextureTestMixin } from '../../../../../gpu_test.js';
+import { virtualMipSize } from '../../../../../util/texture/base.js';
 import { TexelFormats } from '../../../../types.js';
 
 import { generateCoordBoundaries } from './utils.js';
@@ -125,7 +126,7 @@ Parameters:
 const kWidth = 256;
 
 // Returns the texture geometry based on a given number of texels.
-function getTextureSize(numTexels: number, dim: string, array: number): GPUExtent3D {
+function getTextureSize(numTexels: number, dim: GPUTextureDimension, array: number): GPUExtent3D {
   const size: GPUExtent3D = { width: 1, height: 1, depthOrArrayLayers: 1 };
   switch (dim) {
     case '1d':
@@ -148,12 +149,12 @@ function getTextureSize(numTexels: number, dim: string, array: number): GPUExten
 }
 
 // WGSL declaration type for the texture.
-function textureType(dim: string): string {
+function textureType(dim: GPUTextureDimension): string {
   return `texture_storage_${dim}<r32uint, write>`;
 }
 
 // Defines a function to convert linear global id into a texture coordinate.
-function indexToCoord(dim: string, type: string): string {
+function indexToCoord(dim: GPUTextureDimension, type: string): string {
   switch (dim) {
     case '1d':
       return `
@@ -181,7 +182,7 @@ fn indexToCoord(id : u32) -> vec3<${type}> {
 
 // Mutates 'coords' to produce an out-of-bounds value.
 // 1D workgroups are launched so 'gid.x' is the linear id.
-function outOfBoundsValue(dim: string, type: string): string {
+function outOfBoundsValue(dim: GPUTextureDimension, type: string): string {
   switch (dim) {
     case '1d': {
       if (type === 'i32') {
@@ -235,7 +236,7 @@ function outOfBoundsValue(dim: string, type: string): string {
   return ``;
 }
 
-function getMipTexels(numTexels: number, dim: string, mip: number): number {
+function getMipTexels(numTexels: number, dim: GPUTextureDimension, mip: number): number {
   let texels = numTexels;
   if (mip === 0) {
     return texels;
@@ -251,31 +252,13 @@ function getMipTexels(numTexels: number, dim: string, mip: number): number {
   return texels;
 }
 
-function getMipSize(baseSize: GPUExtent3D, dim: string, mip: number): GPUExtent3D {
-  const size: GPUExtent3D = {
-    width: (baseSize as GPUExtent3DDict).width,
-    height: (baseSize as GPUExtent3DDict).height ?? 1,
-    depthOrArrayLayers: (baseSize as GPUExtent3DDict).depthOrArrayLayers ?? 1,
-  };
-  if (mip === 0) {
-    return size;
-  }
-  if (dim === '2d') {
-    size.width = size.width / (1 << mip);
-    size.height = (size.height ?? 1) / (1 << mip);
-  } else if (dim === '3d') {
-    size.width = size.width / (1 << mip);
-    size.height = (size.height ?? 1) / (1 << mip);
-    size.depthOrArrayLayers = (size.depthOrArrayLayers ?? 1) / (1 << mip);
-  }
-  return size;
-}
+const kDims: GPUTextureDimension[] = ['1d', '2d', '3d'];
 
 g.test('out_of_bounds')
   .desc('Test that textureStore on out-of-bounds coordinates have no effect')
   .params(u =>
     u
-      .combine('dim', ['1d', '2d', '3d'] as const)
+      .combine('dim', kDims)
       .combine('coords', ['i32', 'u32'] as const)
       .combine('mipCount', [1, 2, 3] as const)
       .combine('mip', [0, 1, 2] as const)
@@ -295,7 +278,17 @@ g.test('out_of_bounds')
     const view_texels = getMipTexels(num_texels, t.params.dim, t.params.mip);
 
     const texture_size = getTextureSize(num_texels, t.params.dim, 1);
-    const mip_size = getMipSize(texture_size, t.params.dim, t.params.mip);
+    const t_sizes: [number, number, number] = [
+      (texture_size as GPUExtent3DDict).width,
+      (texture_size as GPUExtent3DDict).height ?? 1,
+      (texture_size as GPUExtent3DDict).depthOrArrayLayers ?? 1,
+    ];
+    const mip_sizes = virtualMipSize(t.params.dim, t_sizes, t.params.mip);
+    const mip_size: GPUExtent3DDict = {
+      width: mip_sizes[0],
+      height: mip_sizes[1],
+      depthOrArrayLayers: mip_sizes[2],
+    };
     const texture = t.device.createTexture({
       format: texel_format,
       dimension: t.params.dim,
@@ -313,9 +306,9 @@ g.test('out_of_bounds')
 @group(0) @binding(0) var tex : ${textureType(t.params.dim)};
 
 const numTexels = ${view_texels};
-const width = ${(mip_size as GPUExtent3DDict).width};
-const height = ${(mip_size as GPUExtent3DDict).height ?? 1};
-const depth = ${(mip_size as GPUExtent3DDict).depthOrArrayLayers ?? 1};
+const width = ${mip_sizes[0]};
+const height = ${mip_sizes[1]};
+const depth = ${mip_sizes[2]};
 
 ${indexToCoord(t.params.dim, t.params.coords)}
 
@@ -344,7 +337,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
           binding: 0,
           resource: texture.createView({
             format: texel_format,
-            dimension: t.params.dim,
+            dimension: t.params.dim as GPUTextureViewDimension,
             baseArrayLayer: 0,
             arrayLayerCount: 1,
             baseMipLevel: t.params.mip,
