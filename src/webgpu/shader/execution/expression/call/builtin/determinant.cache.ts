@@ -68,7 +68,7 @@ const numSamples = 20;
 
 // Returns a random element in a range suitable for a square matrix
 // that can have an accurately computed determinant.
-function randomMatrixEntry(p: PRNG, dim: Dim, fpwidth: FPWidth) {
+function randomMatrixEntry(p: PRNG, dim: Dim, fpwidth: FPWidth): number {
   // See above for the justification.
   const rangeTable = {
     16: {
@@ -83,22 +83,25 @@ function randomMatrixEntry(p: PRNG, dim: Dim, fpwidth: FPWidth) {
     },
   };
   const N = rangeTable[fpwidth][dim];
-  // Centre the distribution roughtly at zero.
+  // Centre the distribution roughly at zero.
   const balanced = p.uniformInt(N) - Math.floor(N / 2);
   return balanced;
 }
 
 // Returns a random square matrix that should have an exactly computed
 // determinant for the given floating point width.
-function randomSquareMatrix(p: PRNG, dim: Dim, fpwidth: FPWidth) {
-  const result = Array(dim);
+// At least some of the matrices returned by this function should have
+// a non-zero determinant. This will be checked later by the nonTrivialMatrices
+// function.
+function randomSquareMatrix(p: PRNG, dim: Dim, fpwidth: FPWidth): number[][] {
+  const result: number[][] = [...Array(dim)].map(_ => [...Array(dim)]);
   // Scale each element by a simple power of two. This should only affect
   // the exponent of the result.
   const multiplier = [1, 2, 0.25][p.uniformInt(3)];
-  for (let r = 0; r < dim; r++) {
-    result[r] = Array(dim)
-      .fill(0)
-      .map(i => multiplier * randomMatrixEntry(p, dim, fpwidth));
+  for (let c = 0; c < dim; c++) {
+    for (let r = 0; r < dim; r++) {
+      result[c][r] = multiplier * randomMatrixEntry(p, dim, fpwidth);
+    }
   }
   return result;
 }
@@ -119,9 +122,9 @@ const f32_cases = ([2, 3, 4] as const)
     ([true, false] as const).map(nonConst => ({
       [`f32_mat${dim}x${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
         const p = new PRNG(dim + 32);
-        const matrices = Array(numSamples)
-          .fill(0)
-          .map(x => randomSquareMatrix(p, dim, 32));
+        const matrices: number[][][] = [...Array(numSamples)].map(_ =>
+          randomSquareMatrix(p, dim, 32)
+        );
         assert(nonTrivialMatrices(matrices, FP.f32.determinantInterval));
         return FP.f32.generateMatrixToScalarCases(
           matrices,
@@ -139,9 +142,9 @@ const f16_cases = ([2, 3, 4] as const)
     ([true, false] as const).map(nonConst => ({
       [`f16_mat${dim}x${dim}_${nonConst ? 'non_const' : 'const'}`]: () => {
         const p = new PRNG(dim + 16);
-        const matrices = Array(numSamples)
-          .fill(0)
-          .map(x => randomSquareMatrix(p, dim, 16));
+        const matrices: number[][][] = [...Array(numSamples)].map(_ =>
+          randomSquareMatrix(p, dim, 16)
+        );
         assert(nonTrivialMatrices(matrices, FP.f16.determinantInterval));
         return FP.f16.generateMatrixToScalarCases(
           matrices,
@@ -159,9 +162,9 @@ const abstract_cases = ([2, 3, 4] as const)
     [`abstract_mat${dim}x${dim}`]: () => {
       const p = new PRNG(dim + 64);
       // Use f32 values range for abstract float.
-      const matrices = Array(numSamples)
-        .fill(0)
-        .map(x => randomSquareMatrix(p, dim, 32));
+      const matrices: number[][][] = [...Array(numSamples)].map(_ =>
+        randomSquareMatrix(p, dim, 32)
+      );
       assert(nonTrivialMatrices(matrices, FP.f32.determinantInterval));
       return FP.abstract.generateMatrixToScalarCases(
         matrices,
