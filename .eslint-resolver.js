@@ -1,5 +1,5 @@
 const path = require('path');
-const resolve = require('resolve')
+const resolve = require('resolve'); // eslint-disable-line node/no-extraneous-require
 
 // Implements the following resolver spec:
 // https://github.com/benmosher/eslint-plugin-import/blob/master/resolvers/README.md

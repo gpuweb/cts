@@ -1,5 +1,4 @@
 /* eslint-disable node/no-unpublished-require */
-/* eslint-disable prettier/prettier */
 /* eslint-disable no-console */
 
 const timer = require('grunt-timer');
@@ -7,6 +6,15 @@ const { spawnSync } = require('child_process');
 const path = require('path');
 
 const kAllSuites = ['webgpu', 'stress', 'manual', 'unittests', 'demo'];
+
+const kFilesForEslint = [
+  // TS
+  'src/**/*.ts',
+  // JS
+  '*.js',
+  '.*.js',
+  'tools/**/*.js',
+];
 
 module.exports = function (grunt) {
   timer.init(grunt);
@@ -128,11 +136,11 @@ module.exports = function (grunt) {
       },
       lint: {
         cmd: 'node',
-        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--max-warnings=0'],
+        args: ['node_modules/eslint/bin/eslint', ...kFilesForEslint, '--max-warnings=0'],
       },
       fix: {
         cmd: 'node',
-        args: ['node_modules/eslint/bin/eslint', 'src/**/*.ts', '--fix'],
+        args: ['node_modules/eslint/bin/eslint', ...kFilesForEslint, '--fix'],
       },
       'autoformat-out-wpt': {
         cmd: 'node',

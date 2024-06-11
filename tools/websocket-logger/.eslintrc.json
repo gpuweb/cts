@@ -1,0 +1,12 @@
+{
+  "parserOptions": {
+    "ecmaVersion": "2022",
+    // Needed because eslint doesn't pick up the subdirectory package.json.
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-process-exit": "off",
+    // Needed because eslint doesn't pick up the subdirectory package.json.
+    "node/no-unsupported-features/es-syntax": "off"
+  }
+}
