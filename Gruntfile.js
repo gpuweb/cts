@@ -1,4 +1,5 @@
 /* eslint-disable node/no-unpublished-require */
+/* eslint-disable prettier/prettier */
 /* eslint-disable no-console */
 
 const timer = require('grunt-timer');
