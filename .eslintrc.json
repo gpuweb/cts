@@ -11,7 +11,6 @@
       "parser": "@typescript-eslint/parser",
       "parserOptions": { "project": "./tsconfig.json" },
       "extends": [
-        "./node_modules/gts",
         "plugin:import/errors",
         "plugin:import/warnings",
         "plugin:import/typescript",
