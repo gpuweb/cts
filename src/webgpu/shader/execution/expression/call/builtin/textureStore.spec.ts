@@ -252,7 +252,7 @@ function getMipTexels(numTexels: number, dim: GPUTextureDimension, mip: number):
   return texels;
 }
 
-const kDims: GPUTextureDimension[] = ['1d', '2d', '3d'];
+const kDims = ['1d', '2d', '3d'] as const;
 
 g.test('out_of_bounds')
   .desc('Test that textureStore on out-of-bounds coordinates have no effect')
@@ -327,7 +327,7 @@ fn main(@builtin(global_invocation_id) gid : vec3u) {
           binding: 0,
           resource: texture.createView({
             format: texel_format,
-            dimension: t.params.dim as GPUTextureViewDimension,
+            dimension: t.params.dim,
             baseArrayLayer: 0,
             arrayLayerCount: 1,
             baseMipLevel: t.params.mip,
