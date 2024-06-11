@@ -278,17 +278,7 @@ g.test('out_of_bounds')
     const view_texels = getMipTexels(num_texels, t.params.dim, t.params.mip);
 
     const texture_size = getTextureSize(num_texels, t.params.dim, 1);
-    const t_sizes: [number, number, number] = [
-      (texture_size as GPUExtent3DDict).width,
-      (texture_size as GPUExtent3DDict).height ?? 1,
-      (texture_size as GPUExtent3DDict).depthOrArrayLayers ?? 1,
-    ];
-    const mip_sizes = virtualMipSize(t.params.dim, t_sizes, t.params.mip);
-    const mip_size: GPUExtent3DDict = {
-      width: mip_sizes[0],
-      height: mip_sizes[1],
-      depthOrArrayLayers: mip_sizes[2],
-    };
+    const mip_size = virtualMipSize(t.params.dim, texture_size, t.params.mip);
     const texture = t.device.createTexture({
       format: texel_format,
       dimension: t.params.dim,
@@ -306,9 +296,9 @@ g.test('out_of_bounds')
 @group(0) @binding(0) var tex : ${textureType(t.params.dim)};
 
 const numTexels = ${view_texels};
-const width = ${mip_sizes[0]};
-const height = ${mip_sizes[1]};
-const depth = ${mip_sizes[2]};
+const width = ${mip_size[0]};
+const height = ${mip_size[1]};
+const depth = ${mip_size[2]};
 
 ${indexToCoord(t.params.dim, t.params.coords)}
 
