@@ -94,12 +94,10 @@ export function createRandomTexelViewMipmap(info: {
 }): TexelView[] {
   const mipLevelCount = info.mipLevelCount ?? 1;
   const dimension = info.dimension ?? '2d';
-  const size = reifyExtent3D(info.size);
-  const tSize = [size.width, size.height, size.depthOrArrayLayers] as const;
   return range(mipLevelCount, i =>
     createRandomTexelView({
       format: info.format,
-      size: virtualMipSize(dimension, tSize, i),
+      size: virtualMipSize(dimension, info.size, i),
     })
   );
 }
@@ -202,10 +200,9 @@ export function softwareTextureReadMipLevel<T extends Dimensionality>(
   mipLevel: number
 ): PerTexelComponent<number> {
   const rep = kTexelRepresentationInfo[texture.texels[mipLevel].format];
-  const tSize = reifyExtent3D(texture.descriptor.size);
   const textureSize = virtualMipSize(
     texture.descriptor.dimension || '2d',
-    [tSize.width, tSize.height, tSize.depthOrArrayLayers],
+    texture.descriptor.size,
     mipLevel
   );
   const addressMode = [
@@ -1005,9 +1002,8 @@ export async function readTextureToTexelViews(
   const encoder = device.createCommandEncoder();
 
   const readBuffers = [];
-  const textureSize = [texture.width, texture.height, texture.depthOrArrayLayers] as const;
   for (let mipLevel = 0; mipLevel < texture.mipLevelCount; ++mipLevel) {
-    const size = virtualMipSize(texture.dimension, textureSize, mipLevel);
+    const size = virtualMipSize(texture.dimension, texture, mipLevel);
 
     const uniformValues = new Uint32Array([mipLevel, 0, 0, 0]); // min size is 16 bytes
     const uniformBuffer = device.createBuffer({

@@ -353,9 +353,10 @@ export class TextureZeroInitTest extends GPUTest {
     const firstSubresource = subresourceRange.each().next().value;
     assert(typeof firstSubresource !== 'undefined');
 
+    const textureSize = [this.textureWidth, this.textureHeight, this.textureDepth];
     const [largestWidth, largestHeight, largestDepth] = virtualMipSize(
       this.p.dimension,
-      [this.textureWidth, this.textureHeight, this.textureDepth],
+      textureSize,
       firstSubresource.level
     );
 
@@ -372,11 +373,7 @@ export class TextureZeroInitTest extends GPUTest {
     const commandEncoder = this.device.createCommandEncoder();
 
     for (const { level, layer } of subresourceRange.each()) {
-      const [width, height, depth] = virtualMipSize(
-        this.p.dimension,
-        [this.textureWidth, this.textureHeight, this.textureDepth],
-        level
-      );
+      const [width, height, depth] = virtualMipSize(this.p.dimension, textureSize, level);
 
       commandEncoder.copyBufferToTexture(
         {

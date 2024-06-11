@@ -303,11 +303,7 @@ fn((t) => {
     success = false;
   }
 
-  const levelSize = virtualMipSize(
-    dimension,
-    [size.width, size.height, size.depthOrArrayLayers],
-    mipLevel
-  );
+  const levelSize = virtualMipSize(dimension, size, mipLevel);
   const copySize = [
   levelSize[0] + copyWidthModifier * info.blockWidth,
   levelSize[1] + copyHeightModifier * info.blockHeight,
