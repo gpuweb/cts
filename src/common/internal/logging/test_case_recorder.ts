@@ -18,7 +18,13 @@ enum LogSeverity {
 const kMaxLogStacks = 2;
 const kMinSeverityForStack = LogSeverity.Warn;
 
-function logSeverityToString(status: LogSeverity): Status {
+function logSeverityToString(severity: LogSeverity): string {
+  return ['NotRun', 'Skip', 'Pass', 'Warn', 'ExpectFailed', 'ValidationFailed', 'ThrewException'][
+    severity
+  ];
+}
+
+function logSeverityToStatus(status: LogSeverity): Status {
   switch (status) {
     case LogSeverity.NotRun:
       return 'notrun';
@@ -42,6 +48,7 @@ export class TestCaseRecorder {
   private finalCaseStatus = LogSeverity.NotRun;
   private hideStacksBelowSeverity = kMinSeverityForStack;
   private startTime = -1;
+  private preambleLog?: LogMessageWithStack;
   private logs: LogMessageWithStack[] = [];
   private logLinesAtCurrentSeverity = 0;
   private debugging = false;
@@ -70,7 +77,7 @@ export class TestCaseRecorder {
     }
 
     // Convert numeric enum back to string (but expose 'exception' as 'fail')
-    this.result.status = logSeverityToString(this.finalCaseStatus);
+    this.result.status = logSeverityToStatus(this.finalCaseStatus);
 
     this.result.logs = this.logs;
   }
@@ -146,6 +153,18 @@ export class TestCaseRecorder {
     this.logImpl(LogSeverity.ThrewException, name, ex);
   }
 
+  private updatePreamble() {
+    if (this.preambleLog === undefined) {
+      const preambleError = new Error();
+      preambleError.stack = undefined;
+      this.preambleLog = new LogMessageWithStack('SUMMARY', preambleError);
+      this.logs.unshift(this.preambleLog);
+    }
+    this.preambleLog.message = `highest severity is ☆ ${logSeverityToString(
+      this.hideStacksBelowSeverity
+    )}`;
+  }
+
   private logImpl(level: LogSeverity, name: string, baseException: unknown): void {
     assert(baseException instanceof Error, 'test threw a non-Error object');
     globalTestConfig.testHeartbeatCallback();
@@ -158,25 +177,26 @@ export class TestCaseRecorder {
       this.finalCaseStatus = Math.max(this.finalCaseStatus, level);
     }
 
-    // setFirstLineOnly for all logs except `kMaxLogStacks` stacks at the highest severity
+    // Hide stack for all logs except `kMaxLogStacks` stacks at the highest severity
     if (level > this.hideStacksBelowSeverity) {
       this.logLinesAtCurrentSeverity = 0;
       this.hideStacksBelowSeverity = level;
+      this.updatePreamble();
 
-      // Go back and setFirstLineOnly for everything of a lower log level
+      // Go back and hide stack for everything of a lower log level
       for (const log of this.logs) {
-        log.setStackHidden('below max severity');
+        log.setPrintOptions(false, 'below max severity');
       }
     }
     if (level === this.hideStacksBelowSeverity) {
       this.logLinesAtCurrentSeverity++;
+      if (this.logLinesAtCurrentSeverity > kMaxLogStacks) {
+        logMessage.setPrintOptions(true, `only ${kMaxLogStacks} shown`);
+      }
     } else if (level < kMinSeverityForStack) {
-      logMessage.setStackHidden('');
+      logMessage.setPrintOptions(false, '');
     } else if (level < this.hideStacksBelowSeverity) {
-      logMessage.setStackHidden('below max severity');
-    }
-    if (this.logLinesAtCurrentSeverity > kMaxLogStacks) {
-      logMessage.setStackHidden(`only ${kMaxLogStacks} shown`);
+      logMessage.setPrintOptions(false, 'below max severity');
     }
 
     this.logs.push(logMessage);

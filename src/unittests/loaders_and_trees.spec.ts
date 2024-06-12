@@ -287,7 +287,7 @@ g.test('end2end').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
     [],
     'pass',
-    logs => objectEquals(logs, ['"DEBUG: OK"'])
+    logs => objectEquals(logs, ['"  DEBUG: OK"'])
   );
   await runTestcase(
     t,
@@ -297,7 +297,7 @@ g.test('end2end').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['bleh'], { a: 1 }),
     [],
     'pass',
-    logs => objectEquals(logs, ['"DEBUG: OK"', '"DEBUG: OK"'])
+    logs => objectEquals(logs, ['"  DEBUG: OK"', '"  DEBUG: OK"'])
   );
   await runTestcase(
     t,
@@ -308,9 +308,9 @@ g.test('end2end').fn(async t => {
     [],
     'fail',
     logs =>
-      logs.length === 1 &&
-      logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n') &&
-      logs[0].indexOf('loaders_and_trees.spec.') !== -1
+      logs.length === 2 &&
+      logs[1].startsWith('"☆ EXPECTATION FAILED: goodbye\\n') &&
+      logs[1].indexOf('loaders_and_trees.spec.') !== -1
   );
 });
 
@@ -334,7 +334,7 @@ g.test('expectations,single_case').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
     zedExpectationsSkipA1B2,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -413,7 +413,7 @@ g.test('expectations,multi_case').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
     zedExpectationsSkipB3,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -436,7 +436,7 @@ g.test('expectations,multi_case_all').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
     zedExpectationsSkipA1,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -447,7 +447,7 @@ g.test('expectations,multi_case_all').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
     zedExpectationsSkipA1,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -470,7 +470,7 @@ g.test('expectations,multi_case_none').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
     zedExpectationsSkipZed,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -481,7 +481,7 @@ g.test('expectations,multi_case_none').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 3 }),
     zedExpectationsSkipZed,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -505,7 +505,7 @@ g.test('expectations,multi_test').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['wye'], {}),
     expectationsSkipAllInBaz,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -516,7 +516,7 @@ g.test('expectations,multi_test').fn(async t => {
     new TestQuerySingleCase('suite1', ['baz'], ['zed'], { a: 1, b: 2 }),
     expectationsSkipAllInBaz,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -575,7 +575,7 @@ g.test('expectations,multi_file').fn(async t => {
     new TestQuerySingleCase('suite1', ['foo'], ['hello'], {}),
     expectationsSkipAll,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -586,7 +586,7 @@ g.test('expectations,multi_file').fn(async t => {
     new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
     expectationsSkipAll,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -610,7 +610,7 @@ g.test('expectations,catches_failure').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
     expectedFailures,
     'pass',
-    logs => objectEquals(logs, ['"DEBUG: OK"'])
+    logs => objectEquals(logs, ['"  DEBUG: OK"'])
   );
 
   // Status is passed, but failure is logged.
@@ -622,7 +622,7 @@ g.test('expectations,catches_failure').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
     expectedFailures,
     'pass',
-    logs => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
+    logs => logs.length === 2 && logs[1].startsWith('"☆ EXPECTATION FAILED: goodbye\\n')
   );
 });
 
@@ -649,7 +649,7 @@ g.test('expectations,skip_dominates_failure').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
     expectedFailures,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 });
 
@@ -676,7 +676,7 @@ g.test('expectations,skip_inside_failure').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['blah'], {}),
     expectedFailures,
     'skip',
-    logs => logs.length === 1 && logs[0].startsWith('"SKIP: Skipped by expectations"')
+    logs => logs.length === 1 && logs[0].startsWith('"  SKIP: Skipped by expectations"')
   );
 
   await runTestcase(
@@ -687,7 +687,10 @@ g.test('expectations,skip_inside_failure').fn(async t => {
     new TestQuerySingleCase('suite2', ['foof'], ['bluh', 'a'], {}),
     expectedFailures,
     'pass',
-    logs => logs.length === 1 && logs[0].startsWith('"EXPECTATION FAILED: goodbye\\n')
+    logs =>
+      logs.length === 2 &&
+      logs[0] === '"  SUMMARY: highest severity is ☆ ExpectFailed"' &&
+      logs[1].startsWith('"☆ EXPECTATION FAILED: goodbye\\n')
   );
 });
 

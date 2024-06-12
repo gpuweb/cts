@@ -6,6 +6,7 @@ import { LogMessageRawData } from './result.js';
 export class LogMessageWithStack extends Error {
   readonly extra: unknown;
 
+  private showStar: boolean = true;
   private stackHiddenMessage: string | undefined = undefined;
 
   /**
@@ -33,9 +34,10 @@ export class LogMessageWithStack extends Error {
     this.extra = o.extra;
   }
 
-  /** Set a flag so the stack is not printed in toJSON(). */
-  setStackHidden(stackHiddenMessage: string) {
-    this.stackHiddenMessage ??= stackHiddenMessage;
+  /** Set a flag so the stack is not printed in toJSON(), and important messages are starred. */
+  setPrintOptions(showStar: boolean, stackHiddenMessage: string) {
+    this.showStar = showStar;
+    this.stackHiddenMessage = stackHiddenMessage;
   }
 
   /**
@@ -44,13 +46,13 @@ export class LogMessageWithStack extends Error {
    * Note: This is toJSON instead of toString to make it easy to save logs using JSON.stringify.
    */
   toJSON(): string {
-    let m = this.name;
+    let m = (this.showStar ? '☆ ' : '  ') + this.name;
     if (this.message) m += ': ' + this.message;
     if (this.stack) {
       if (this.stackHiddenMessage === undefined) {
         m += '\n' + extractImportantStackTrace(this);
       } else if (this.stackHiddenMessage) {
-        m += `\n  at (elided: ${this.stackHiddenMessage})`;
+        m += `\n    at (elided: ${this.stackHiddenMessage})`;
       }
     }
     return m;
