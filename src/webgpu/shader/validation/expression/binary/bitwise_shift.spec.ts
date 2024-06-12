@@ -279,7 +279,6 @@ g.test('partial_eval_errors')
       .combine('value', [32, 33, 64] as const)
   )
   .fn(t => {
-    const type = Type[t.params.type];
     const u32 = Type.u32;
     let rhs = 'o';
     if (t.params.stage === 'shader') {
