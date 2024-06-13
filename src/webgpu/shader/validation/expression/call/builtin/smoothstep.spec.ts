@@ -64,7 +64,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
     );
   });
 
-const kStages = [...kConstantAndOverrideStages, 'runtime'] as const
+const kStages = [...kConstantAndOverrideStages, 'runtime'] as const;
 
 g.test('partial_eval_errors')
   .desc('Validates that low < high')
@@ -79,8 +79,8 @@ g.test('partial_eval_errors')
         return scalarTy !== Type.abstractInt && scalarTy !== Type.abstractFloat;
       })
       .beginSubcases()
-      .expand('low', u => [0,10])
-      .expand('high', u => [0,10])
+      .expand('low', u => [0, 10])
+      .expand('high', u => [0, 10])
   )
   .beforeAllSubcases(t => {
     if (scalarTypeOf(kValuesTypes[t.params.type]) === Type.f16) {
@@ -126,23 +126,23 @@ fn foo() {
   let tmp = smoothstep(${lowArg}, ${highArg}, x);
 }`;
 
-  const error = t.params.low >= t.params.high;
-  const shader_error =
-    error && t.params.lowStage === 'constant' && t.params.highStage === 'constant';
-  const pipeline_error =
-    error && t.params.lowStage !== 'runtime' && t.params.highStage !== 'runtime';
-  t.expectCompileResult(!shader_error, wgsl);
-  if (!shader_error) {
-    const constants: Record<string, number> = {};
-    constants['o_low'] = t.params.low;
-    constants['o_high'] = t.params.high;
-    t.expectPipelineResult({
-      expectedResult: !pipeline_error,
-      code: wgsl,
-      constants,
-      reference: ['o_low', 'o_high'],
-    });
-  }
+    const error = t.params.low >= t.params.high;
+    const shader_error =
+      error && t.params.lowStage === 'constant' && t.params.highStage === 'constant';
+    const pipeline_error =
+      error && t.params.lowStage !== 'runtime' && t.params.highStage !== 'runtime';
+    t.expectCompileResult(!shader_error, wgsl);
+    if (!shader_error) {
+      const constants: Record<string, number> = {};
+      constants['o_low'] = t.params.low;
+      constants['o_high'] = t.params.high;
+      t.expectPipelineResult({
+        expectedResult: !pipeline_error,
+        code: wgsl,
+        constants,
+        reference: ['o_low', 'o_high'],
+      });
+    }
   });
 
 g.test('argument_types')
