@@ -2122,6 +2122,7 @@
   "webgpu:shader,validation,expression,call,builtin,inverseSqrt:values:*": { "subcaseMS": 0.315 },
   "webgpu:shader,validation,expression,call,builtin,ldexp:args:*": { "subcaseMS": 86.955 },
   "webgpu:shader,validation,expression,call,builtin,ldexp:must_use:*": { "subcaseMS": 6.088 },
+  "webgpu:shader,validation,expression,call,builtin,ldexp:partial_values:*": { "subcaseMS": 102.253 },
   "webgpu:shader,validation,expression,call,builtin,ldexp:values:*": { "subcaseMS": 7707.260 },
   "webgpu:shader,validation,expression,call,builtin,length:args:*": { "subcaseMS": 5.046 },
   "webgpu:shader,validation,expression,call,builtin,length:integer_argument:*": { "subcaseMS": 2.011 },
