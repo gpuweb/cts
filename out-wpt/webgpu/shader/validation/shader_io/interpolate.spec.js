@@ -9,8 +9,15 @@ import { generateShader } from './util.js';
 export const g = makeTestGroup(ShaderValidationTest);
 
 // List of valid interpolation attributes.
-const kValidInterpolationAttributes = new Set([
+const kValidCompatInterpolationAttributes = new Set([
 '',
+'@interpolate(flat)',
+'@interpolate(perspective)',
+'@interpolate(perspective, center)',
+'@interpolate(perspective, centroid)']
+);
+const kValidInterpolationAttributes = new Set([
+...kValidCompatInterpolationAttributes,
 '@interpolate(flat)',
 '@interpolate(perspective)',
 '@interpolate(perspective, center)',
@@ -37,7 +44,9 @@ combine('type', [
 'center', // Invalid as first param
 'centroid', // Invalid as first param
 'sample' // Invalid as first param
-]).
+])
+// vertex output must include a position builtin, so must use a struct
+.filter((t) => !(t.stage === 'vertex' && t.use_struct === false)).
 combine('sampling', [
 '',
 'center',
@@ -50,10 +59,6 @@ combine('sampling', [
 beginSubcases()
 ).
 fn((t) => {
-  if (t.params.stage === 'vertex' && t.params.use_struct === false) {
-    t.skip('vertex output must include a position builtin, so must use a struct');
-  }
-
   let interpolate = '';
   if (t.params.type !== '' || t.params.sampling !== '') {
     interpolate = '@interpolate(';
@@ -72,8 +77,10 @@ fn((t) => {
     io: t.params.io,
     use_struct: t.params.use_struct
   });
-
-  t.expectCompileResult(kValidInterpolationAttributes.has(interpolate), code);
+  const validInterpolationAttributes = t.isCompatibility ?
+  kValidCompatInterpolationAttributes :
+  kValidInterpolationAttributes;
+  t.expectCompileResult(validInterpolationAttributes.has(interpolate), code);
 });
 
 g.test('require_location').
