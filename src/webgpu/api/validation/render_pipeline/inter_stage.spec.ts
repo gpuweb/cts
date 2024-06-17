@@ -4,11 +4,22 @@ Interface matching between vertex and fragment shader validation for createRende
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
+import { GPUTestSubcaseBatchState } from '../../../gpu_test.js';
 
 import { CreateRenderPipelineValidationTest } from './common.js';
 
 function getVarName(i: number) {
   return `v${i}`;
+}
+
+function skipIfDisallowedInterpolationParameter(t: GPUTestSubcaseBatchState, ...wgsl: string[]) {
+  if (t.isCompatibility) {
+    for (const s of wgsl) {
+      if (s.includes('linear') || s.includes('sample')) {
+        t.skip(`unsupported interpolation parameter in compat: ${wgsl}`);
+      }
+    }
+  }
 }
 
 class InterStageMatchingValidationTest extends CreateRenderPipelineValidationTest {
@@ -176,6 +187,9 @@ g.test('interpolation_type')
       },
     ])
   )
+  .beforeAllSubcases(t => {
+    skipIfDisallowedInterpolationParameter(t, t.params.output, t.params.input);
+  })
   .fn(t => {
     const { isAsync, output, input, _success, _compat_success } = t.params;
 
@@ -219,6 +233,9 @@ g.test('interpolation_sampling')
       { output: '@interpolate(perspective, centroid)', input: '@interpolate(perspective)' },
     ])
   )
+  .beforeAllSubcases(t => {
+    skipIfDisallowedInterpolationParameter(t, t.params.output, t.params.input);
+  })
   .fn(t => {
     const { isAsync, output, input, _success, _compat_success } = t.params;
 
