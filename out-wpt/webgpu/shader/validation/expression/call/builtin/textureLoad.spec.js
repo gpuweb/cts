@@ -114,6 +114,7 @@ expand('texelType', (t) =>
 kNonStorageTextureTypeInfo[t.textureType].texelTypes.map((v) => v.toString())
 )
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType)).
 fn((t) => {
   const { returnType, textureType, texelType } = t.params;
   const returnVarType = kValuesTypes[returnType];
@@ -158,6 +159,7 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.coordType]) || t.value >= 0)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType)).
 fn((t) => {
   const { textureType, coordType, texelType, value } = t.params;
   const coordArgType = kValuesTypes[coordType];
@@ -251,6 +253,7 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.arrayIndexType]) || t.value >= 0)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType)).
 fn((t) => {
   const { textureType, arrayIndexType, texelType, value } = t.params;
   const arrayIndexArgType = kValuesTypes[arrayIndexType];
@@ -348,6 +351,7 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.levelType]) || t.value >= 0)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType)).
 fn((t) => {
   const { textureType, levelType, texelType, value } = t.params;
   const levelArgType = kValuesTypes[levelType];
@@ -395,6 +399,7 @@ combine('value', [-1, 0, 1])
 // filter out unsigned types with negative values
 .filter((t) => !isUnsignedType(kValuesTypes[t.sampleIndexType]) || t.value >= 0)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.textureType)).
 fn((t) => {
   const { textureType, sampleIndexType, texelType, value } = t.params;
   const sampleIndexArgType = kValuesTypes[sampleIndexType];
@@ -431,8 +436,9 @@ params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
 beginSubcases().
-combine('textureType', keysOf(kValidTextureLoadParameterTypesForNonStorageTextures))
+combine('textureType', kNonStorageTextureTypes)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.testTextureType)).
 fn((t) => {
   const { testTextureType, textureType } = t.params;
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
@@ -484,9 +490,10 @@ params((u) =>
 u.
 combine('testTextureType', kTestTextureTypes).
 beginSubcases().
-combine('textureType', keysOf(kValidTextureLoadParameterTypesForStorageTextures)).
+combine('textureType', kStorageTextureTypes).
 combine('format', kAllTextureFormats)
 ).
+beforeAllSubcases((t) => t.skipIfTextureLoadNotSupportedForTextureType(t.params.testTextureType)).
 fn((t) => {
   const { testTextureType, textureType } = t.params;
   const { coordsArgTypes, hasArrayIndexArg, hasLevelArg, hasSampleIndexArg } =
