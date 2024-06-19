@@ -262,6 +262,19 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     }
   }
 
+  skipIfTextureLoadNotSupportedForTextureType(...types: (string | undefined | null)[]) {
+    if (this.isCompatibility) {
+      for (const type of types) {
+        switch (type) {
+          case 'texture_depth_2d':
+          case 'texture_depth_2d_array':
+          case 'texture_depth_multisampled_2d':
+            this.skip(`${type} is not supported by textureLoad in compatibility mode`);
+        }
+      }
+    }
+  }
+
   /**
    * Skips test if the given interpolation type or sampling is not supported.
    */
