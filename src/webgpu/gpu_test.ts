@@ -491,6 +491,14 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
     }
   }
 
+  skipIfTextureFormatNotUsableAsStorageTexture(...formats: (GPUTextureFormat | undefined)[]) {
+    for (const format of formats) {
+      if (format && !isTextureFormatUsableAsStorageFormat(format, this.isCompatibility)) {
+        this.skip(`Texture with ${format} is not usable as a storage texture`);
+      }
+    }
+  }
+
   /** Skips this test case if the `langFeature` is *not* supported. */
   skipIfLanguageFeatureNotSupported(langFeature: WGSLLanguageFeature) {
     if (!this.hasLanguageFeature(langFeature)) {
