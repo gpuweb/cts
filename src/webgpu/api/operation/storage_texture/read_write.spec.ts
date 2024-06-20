@@ -8,7 +8,11 @@ TODO:
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { assert, unreachable } from '../../../../common/util/util.js';
 import { kTextureDimensions } from '../../../capability_info.js';
-import { kColorTextureFormats, kTextureFormatInfo } from '../../../format_info.js';
+import {
+  ColorTextureFormat,
+  kColorTextureFormats,
+  kTextureFormatInfo,
+} from '../../../format_info.js';
 import { GPUTest } from '../../../gpu_test.js';
 import { align } from '../../../util/math.js';
 
@@ -17,10 +21,8 @@ type ShaderStageForReadWriteStorageTexture =
   (typeof kShaderStagesForReadWriteStorageTexture)[number];
 
 class F extends GPUTest {
-  GetInitialData(storageTexture: GPUTexture): ArrayBuffer {
-    const format = storageTexture.format;
-    const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
-    assert(bytesPerBlock !== undefined);
+  GetInitialData(format: ColorTextureFormat, storageTexture: GPUTexture): ArrayBuffer {
+    const bytesPerBlock = kTextureFormatInfo[format].color.bytes;
 
     const width = storageTexture.width;
     const height = storageTexture.height;
@@ -64,11 +66,11 @@ class F extends GPUTest {
 
   GetExpectedData(
     shaderStage: ShaderStageForReadWriteStorageTexture,
+    format: ColorTextureFormat,
     storageTexture: GPUTexture,
     initialData: ArrayBuffer
   ): ArrayBuffer {
-    const format = storageTexture.format;
-    const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
+    const bytesPerBlock = kTextureFormatInfo[format].color.bytes;
     assert(bytesPerBlock !== undefined);
 
     const width = storageTexture.width;
@@ -310,7 +312,7 @@ g.test('basic')
   .params(u =>
     u
       .combine('format', kColorTextureFormats)
-      .filter(p => kTextureFormatInfo[p.format].color?.readWriteStorage === true)
+      .filter(p => kTextureFormatInfo[p.format].color.readWriteStorage === true)
       .combine('shaderStage', kShaderStagesForReadWriteStorageTexture)
       .combine('textureDimension', kTextureDimensions)
       .combine('depthOrArrayLayers', [1, 2] as const)
@@ -335,8 +337,8 @@ g.test('basic')
     });
     t.trackForCleanup(storageTexture);
 
-    const bytesPerBlock = kTextureFormatInfo[format].bytesPerBlock;
-    const initialData = t.GetInitialData(storageTexture);
+    const bytesPerBlock = kTextureFormatInfo[format].color.bytes;
+    const initialData = t.GetInitialData(format, storageTexture);
     t.queue.writeTexture(
       { texture: storageTexture },
       initialData,
@@ -351,7 +353,7 @@ g.test('basic')
 
     t.RecordCommandsToTransform(t.device, shaderStage, commandEncoder, storageTexture);
 
-    const expectedData = t.GetExpectedData(shaderStage, storageTexture, initialData);
+    const expectedData = t.GetExpectedData(shaderStage, format, storageTexture, initialData);
     const readbackBuffer = t.device.createBuffer({
       size: expectedData.byteLength,
       usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,

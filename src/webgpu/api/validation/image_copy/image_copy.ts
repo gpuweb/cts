@@ -4,10 +4,27 @@ import {
   SizedTextureFormat,
   kTextureFormatInfo,
   isCompressedTextureFormat,
+  kCompressedTextureFormats,
+  kDepthStencilFormats,
 } from '../../../format_info.js';
 import { align } from '../../../util/math.js';
 import { ImageCopyType } from '../../../util/texture/layout.js';
 import { ValidationTest } from '../validation_test.js';
+
+export const kReducedFormatsList = [
+  'r8unorm',
+  'rg8uint',
+  'rgba8snorm',
+  'r16sint',
+  'rg16float',
+  'rgba16float',
+  'r32float',
+  'rg32float',
+  'rgba32float',
+  'rgb9e5ufloat',
+  ...kCompressedTextureFormats,
+  ...kDepthStencilFormats,
+] as const;
 
 export class ImageCopyTest extends ValidationTest {
   testRun(
@@ -123,7 +140,7 @@ export class ImageCopyTest extends ValidationTest {
 
   testBuffer(
     buffer: GPUBuffer,
-    texture: GPUTexture,
+    texture: GPUImageCopyTexture,
     textureDataLayout: GPUImageDataLayout,
     size: GPUExtent3D,
     {
@@ -145,14 +162,14 @@ export class ImageCopyTest extends ValidationTest {
         const data = new Uint8Array(dataSize);
 
         this.expectValidationError(() => {
-          this.device.queue.writeTexture({ texture }, data, textureDataLayout, size);
+          this.device.queue.writeTexture(texture, data, textureDataLayout, size);
         }, !success);
 
         break;
       }
       case 'CopyB2T': {
         const { encoder, validateFinish, validateFinishAndSubmit } = this.createEncoder('non-pass');
-        encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, { texture }, size);
+        encoder.copyBufferToTexture({ buffer, ...textureDataLayout }, texture, size);
 
         if (submit) {
           // validation error is expected to come from the submit and encoding should succeed
@@ -165,13 +182,13 @@ export class ImageCopyTest extends ValidationTest {
         break;
       }
       case 'CopyT2B': {
-        if (this.isCompatibility && isCompressedTextureFormat(texture.format)) {
+        if (this.isCompatibility && isCompressedTextureFormat(texture.texture.format)) {
           this.skip(
             'copyTextureToBuffer is not supported for compressed texture formats in compatibility mode.'
           );
         }
         const { encoder, validateFinish, validateFinishAndSubmit } = this.createEncoder('non-pass');
-        encoder.copyTextureToBuffer({ texture }, { buffer, ...textureDataLayout }, size);
+        encoder.copyTextureToBuffer(texture, { buffer, ...textureDataLayout }, size);
 
         if (submit) {
           // validation error is expected to come from the submit and encoding should succeed
@@ -244,7 +261,11 @@ export function texelBlockAlignmentTestExpanderForValueToCoordinate({
   }
 }
 
-// This is a helper function used for filtering test parameters
+/**
+ * This is a helper function used for filtering test parameters.
+ *
+ * @deprecated Prefer `aspectCopyableWithMethod` if possible.
+ */
 export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod): boolean {
   const info = kTextureFormatInfo[format];
   if (info.depth || info.stencil) {
@@ -258,6 +279,20 @@ export function formatCopyableWithMethod({ format, method }: WithFormatAndMethod
     return info.color.copySrc;
   } else {
     return info.color.copyDst;
+  }
+}
+
+/** True iff the (format,aspect) pair can be copied with this method. */
+export function aspectCopyableWithMethod(
+  format: GPUTextureFormat,
+  aspect: 'color' | 'depth' | 'stencil',
+  method: ImageCopyType
+) {
+  const info = kTextureFormatInfo[format][aspect]!;
+  if (method === 'CopyT2B') {
+    return info.copySrc;
+  } else {
+    return info.copyDst;
   }
 }
 
