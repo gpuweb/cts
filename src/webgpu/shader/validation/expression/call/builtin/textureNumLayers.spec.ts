@@ -89,6 +89,8 @@ Validates the return type of ${builtin} is the expected type.
   )
   .fn(t => {
     const { returnType, textureType, format } = t.params;
+    t.skipIfTextureFormatNotUsableAsStorageTexture(format);
+
     const returnVarType = kValuesTypes[returnType];
 
     const varWGSL = returnVarType.toString();

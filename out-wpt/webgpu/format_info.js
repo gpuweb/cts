@@ -1788,7 +1788,8 @@ isCompatibilityMode)
       return false;
     }
   }
-  return !!kTextureFormatInfo[format].color?.storage;
+  const info = kTextureFormatInfo[format];
+  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
 }
 
 export function isRegularTextureFormat(format) {
