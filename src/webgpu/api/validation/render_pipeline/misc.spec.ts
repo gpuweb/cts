@@ -35,6 +35,10 @@ state (and thus has no color state), and can be created with or without depth st
         '',
       ] as const)
       .combine('hasColor', [false, true])
+      .unless(({ depthStencilFormat, hasColor }) => {
+        // Render pipeline needs at least one attachement
+        return hasColor === false && depthStencilFormat === '';
+      })
   )
   .fn(t => {
     const { isAsync, depthStencilFormat, hasColor } = t.params;
