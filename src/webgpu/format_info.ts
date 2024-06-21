@@ -1782,13 +1782,14 @@ export const kCompatModeUnsupportedStorageTextureFormats: readonly GPUTextureFor
 export function isTextureFormatUsableAsStorageFormat(
   format: GPUTextureFormat,
   isCompatibilityMode: boolean
-) {
+): boolean {
   if (isCompatibilityMode) {
     if (kCompatModeUnsupportedStorageTextureFormats.indexOf(format) >= 0) {
       return false;
     }
   }
-  return !!kTextureFormatInfo[format].color?.storage;
+  const info = kTextureFormatInfo[format];
+  return !!(info.color?.storage || info.depth?.storage || info.stencil?.storage);
 }
 
 export function isRegularTextureFormat(format: GPUTextureFormat) {
