@@ -20,7 +20,7 @@ g.test('basic')
   });
 
 g.test('no_attachment')
-  .desc(`Test that createRenderPipeline without any attachment.`)
+  .desc(`Test that createRenderPipeline fails without any attachment.`)
   .params(u => u.combine('isAsync', [false, true]))
   .fn(t => {
     const { isAsync } = t.params;
