@@ -1962,6 +1962,7 @@
   "webgpu:shader,validation,expression,binary,and_or_xor:invalid_types:*": { "subcaseMS": 24.069 },
   "webgpu:shader,validation,expression,binary,and_or_xor:scalar_vector:*": { "subcaseMS": 666.807 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:invalid_types:*": { "subcaseMS": 22.058 },
+  "webgpu:shader,validation,expression,binary,bitwise_shift:partial_eval_errors:*": { "subcaseMS": 116.339 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:scalar_vector:*": { "subcaseMS": 525.052 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_left_concrete:*": { "subcaseMS": 1.216 },
   "webgpu:shader,validation,expression,binary,bitwise_shift:shift_right_concrete:*": { "subcaseMS": 1.237 },
