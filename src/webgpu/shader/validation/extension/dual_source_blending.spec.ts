@@ -9,18 +9,23 @@ export const g = makeTestGroup(ShaderValidationTest);
 
 g.test('use_blend_src_requires_extension_enabled')
   .desc(
-    `Checks that the blend_src attribute is only allowed with the extension dual_source_blending
-     supported`
+    `Checks that the blend_src attribute is only allowed with the WGSL extension
+     dual_source_blending enabled in shader and the WebGPU extension dual-source-blending supported
+     on the device.`
+  )
+  .params(u =>
+    u.combine('requireExtension', [true, false]).combine('enableExtension', [true, false])
   )
   .beforeAllSubcases(t => {
-    t.selectDeviceOrSkipTestCase({ requiredFeatures: ['dual-source-blending'] });
+    if (t.params.requireExtension) {
+      t.selectDeviceOrSkipTestCase({ requiredFeatures: ['dual-source-blending'] });
+    }
   })
-  .params(u => u.combine('enableExtension', [true, false] as const))
   .fn(t => {
-    const { enableExtension } = t.params;
+    const { requireExtension, enableExtension } = t.params;
 
     t.expectCompileResult(
-      enableExtension,
+      requireExtension && enableExtension,
       `
         ${enableExtension ? 'enable dual_source_blending;' : ''}
         struct FragOut {
